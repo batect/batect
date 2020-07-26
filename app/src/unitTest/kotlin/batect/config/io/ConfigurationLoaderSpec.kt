@@ -34,7 +34,9 @@ import batect.config.RunAsCurrentUserConfig
 import batect.config.Task
 import batect.config.TaskMap
 import batect.config.TaskRunConfiguration
+import batect.config.includes.GitRepositoryReference
 import batect.config.includes.IncludeResolver
+import batect.git.GitException
 import batect.os.Command
 import batect.os.DefaultPathResolutionContext
 import batect.os.PathResolverFactory
@@ -56,7 +58,9 @@ import com.natpryce.hamkrest.isEmptyString
 import com.natpryce.hamkrest.throws
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doAnswer
+import com.nhaarman.mockitokotlin2.doThrow
 import com.nhaarman.mockitokotlin2.mock
+import com.nhaarman.mockitokotlin2.whenever
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Duration
@@ -79,9 +83,9 @@ object ConfigurationLoaderSpec : Spek({
                 }
 
                 on { rootPathFor(any()) } doAnswer { invocation ->
-                    val include = invocation.arguments[0] as GitInclude
+                    val repositoryReference = invocation.arguments[0] as GitRepositoryReference
 
-                    pathForGitInclude(include.repo, include.ref, "")
+                    pathForGitInclude(repositoryReference.remote, repositoryReference.ref, "")
                 }
             }
         }
@@ -2098,6 +2102,32 @@ object ConfigurationLoaderSpec : Spek({
 
             it("should fail with an error message") {
                 assertThat({ loadConfiguration(files, rootConfigPath) }, throws(withMessage("The config variable 'config-var-1' is defined in multiple files: /project/batect.yml, 1.yml from https://myrepo.com/bundles/bundle.git@v1.2.3")))
+            }
+        }
+
+        on("loading a configuration file that references another configuration file from a Git repository that cannot be cloned") {
+            beforeEachTest {
+                whenever(includeResolver.resolve(GitInclude("https://myrepo.com/bundles/bundle.git", "v1.2.3", "1.yml"))).doThrow(GitException("Something went wrong."))
+            }
+
+            val rootConfigPath by createForEachTest { fileSystem.getPath("/project/batect.yml") }
+
+            val files by createForEachTest {
+                mapOf(
+                    rootConfigPath to """
+                        |include:
+                        | - type: git
+                        |   repo: https://myrepo.com/bundles/bundle.git
+                        |   ref: v1.2.3
+                        |   path: 1.yml
+                    """.trimMargin()
+                )
+            }
+
+            it("should fail with an error message") {
+                assertThat({ loadConfiguration(files, rootConfigPath) }, throws(
+                    withMessage("Could not load include '1.yml' from https://myrepo.com/bundles/bundle.git@v1.2.3: Something went wrong.") and withFileName("/project/batect.yml")
+                ))
             }
         }
     }

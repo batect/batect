@@ -16,6 +16,7 @@
 
 package batect.config
 
+import batect.config.includes.GitRepositoryReference
 import batect.config.io.ConfigurationException
 import batect.config.io.deserializers.SimpleStringOrObjectSerializer
 import batect.os.PathResolutionResult
@@ -29,6 +30,7 @@ import kotlinx.serialization.PrimitiveKind
 import kotlinx.serialization.SerialDescriptor
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import kotlinx.serialization.builtins.set
 import kotlinx.serialization.decode
 
@@ -51,6 +53,9 @@ data class GitInclude(
     val path: String = "batect.yml"
 ) : Include() {
     override fun toString(): String = "$repo@$ref: $path"
+
+    @Transient
+    val repositoryReference = GitRepositoryReference(repo, ref)
 }
 
 object FileIncludePathSerializer : KSerializer<Path> {

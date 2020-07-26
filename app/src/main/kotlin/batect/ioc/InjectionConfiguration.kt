@@ -29,6 +29,7 @@ import batect.cli.commands.UpgradeCommand
 import batect.cli.commands.VersionInfoCommand
 import batect.cli.options.defaultvalues.EnvironmentVariableDefaultValueProviderFactory
 import batect.config.ProjectPaths
+import batect.config.includes.GitRepositoryCache
 import batect.config.includes.IncludeResolver
 import batect.config.io.ConfigurationLoader
 import batect.docker.DockerContainerCreationRequestFactory
@@ -214,7 +215,8 @@ private val cliModule = Kodein.Module("cli") {
 
 private val configModule = Kodein.Module("config") {
     bind<ConfigurationLoader>() with singletonWithLogger { logger -> ConfigurationLoader(instance(), instance(), logger) }
-    bind<IncludeResolver>() with singleton { IncludeResolver() }
+    bind<GitRepositoryCache>() with singleton { GitRepositoryCache(instance(), instance(), instance()) }
+    bind<IncludeResolver>() with singleton { IncludeResolver(instance()) }
     bind<PathResolverFactory>() with singleton { PathResolverFactory(instance()) }
     bind<ProjectPaths>() with singleton { ProjectPaths(commandLineOptions().configurationFileName) }
 }

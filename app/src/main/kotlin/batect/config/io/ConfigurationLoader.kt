@@ -30,6 +30,7 @@ import batect.config.includes.GitIncludePathResolutionContext
 import batect.config.includes.IncludeResolver
 import batect.config.io.deserializers.PathDeserializer
 import batect.docker.DockerImageNameValidator
+import batect.git.GitException
 import batect.logging.LogMessageBuilder
 import batect.logging.Logger
 import batect.os.DefaultPathResolutionContext
@@ -140,15 +141,21 @@ class ConfigurationLoader(
         }
     }
 
-    // File includes are checked as part of the deserialization process.
+    // File includes are checked as part of the deserialization process, so we don't need to check them here.
     private fun checkGitIncludesExist(file: ConfigurationFile) {
-        file.includes.filterIsInstance<GitInclude>().forEach { include ->
-            val path = includeResolver.resolve(include)
+        file.includes
+            .filterIsInstance<GitInclude>()
+            .forEach { include ->
+                val path = try {
+                    includeResolver.resolve(include)
+                } catch (e: GitException) {
+                    throw ConfigurationException("Could not load include '${include.path}' from ${include.repo}@${include.ref}: ${e.message}", null, null, e)
+                }
 
-            if (!Files.exists(path)) {
-                throw ConfigurationException("Included file '${include.path}' (${include.path} from ${include.repo}@${include.ref}) does not exist.")
+                if (!Files.exists(path)) {
+                    throw ConfigurationException("Included file '${include.path}' (${include.path} from ${include.repo}@${include.ref}) does not exist.")
+                }
             }
-        }
     }
 
     private fun checkForProjectName(file: ConfigurationFile, includedAs: Include) {
@@ -229,14 +236,14 @@ class ConfigurationLoader(
     }
 
     private fun pathResolverFor(file: Path, includedAs: Include?): PathResolver = when {
-        includedAs is GitInclude -> pathResolverFactory.createResolver(GitIncludePathResolutionContext(file.parent, includeResolver.rootPathFor(includedAs), includedAs))
+        includedAs is GitInclude -> pathResolverFactory.createResolver(GitIncludePathResolutionContext(file.parent, includeResolver.rootPathFor(includedAs.repositoryReference), includedAs))
         else -> pathResolverFactory.createResolver(DefaultPathResolutionContext(file.parent))
     }
 
     private fun ConfigurationFile.replaceFileIncludesWithGitIncludes(sourceInclude: GitInclude): ConfigurationFile =
         this.copy(includes = this.includes.mapToSet { include ->
             if (include is FileInclude) {
-                val rootPath = includeResolver.rootPathFor(sourceInclude)
+                val rootPath = includeResolver.rootPathFor(sourceInclude.repositoryReference)
                 val newInclude = sourceInclude.copy(path = rootPath.relativize(include.path).toString())
 
                 logger.info {

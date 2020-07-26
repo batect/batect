@@ -20,12 +20,21 @@ import batect.config.FileInclude
 import batect.config.GitInclude
 import batect.config.Include
 import java.nio.file.Path
+import java.util.concurrent.ConcurrentHashMap
 
-class IncludeResolver {
+class IncludeResolver(private val gitRepositoryCache: GitRepositoryCache) {
+    private val gitRepositoryPaths = ConcurrentHashMap<GitRepositoryReference, Path>()
+
     fun resolve(include: Include): Path = when (include) {
         is FileInclude -> include.path
-        else -> TODO()
+        is GitInclude -> {
+            val rootPath = rootPathFor(include.repositoryReference)
+
+            rootPath.resolve(include.path)
+        }
     }
 
-    fun rootPathFor(include: GitInclude): Path = TODO()
+    fun rootPathFor(repo: GitRepositoryReference): Path = gitRepositoryPaths.getOrPut(repo) {
+        gitRepositoryCache.ensureCached(repo)
+    }
 }

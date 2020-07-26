@@ -42,6 +42,7 @@ import batect.os.Command
 import batect.testutils.createLoggerForEachTest
 import batect.testutils.given
 import batect.testutils.on
+import batect.testutils.pathResolutionContextDoesNotMatter
 import batect.testutils.runForEachTest
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
@@ -50,7 +51,6 @@ import com.natpryce.hamkrest.hasSize
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
-import java.nio.file.Paths
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.Suite
 import org.spekframework.spek2.style.specification.describe
@@ -109,7 +109,7 @@ object RunStagePlannerSpec : Spek({
                 }
 
                 on("that container builds an image from a Dockerfile") {
-                    val imageSource = BuildImage(LiteralValue("./my-image"), Paths.get("/"), mapOf("some_arg" to LiteralValue("some_value")), "some-Dockerfile")
+                    val imageSource = BuildImage(LiteralValue("./my-image"), pathResolutionContextDoesNotMatter(), mapOf("some_arg" to LiteralValue("some_value")), "some-Dockerfile")
                     val container = Container(task.runConfiguration!!.container, imageSource)
                     val config = Configuration("the-project", TaskMap(task), ContainerMap(container))
                     val graph = ContainerDependencyGraph(config, task, commandResolver, entrypointResolver)
@@ -174,13 +174,13 @@ object RunStagePlannerSpec : Spek({
             val task = Task("the-task", TaskRunConfiguration("task-container", additionalEnvironmentVariables = mapOf("SOME_VAR" to LiteralValue("some value")), additionalPortMappings = setOf(PortMapping(123, 456))))
 
             given("each container has a unique build directory or existing image to pull") {
-                val container1ImageSource = BuildImage(LiteralValue("./container-1"), Paths.get("/"))
+                val container1ImageSource = BuildImage(LiteralValue("./container-1"), pathResolutionContextDoesNotMatter())
                 val container1 = Container("container-1", container1ImageSource)
                 val container2ImageSource = PullImage("image-2")
                 val container2 = Container("container-2", container2ImageSource)
                 val container3ImageSource = PullImage("image-3")
                 val container3 = Container("container-3", container3ImageSource, dependencies = setOf(container2.name))
-                val taskContainerImageSource = BuildImage(LiteralValue("./task-container"), Paths.get("/"))
+                val taskContainerImageSource = BuildImage(LiteralValue("./task-container"), pathResolutionContextDoesNotMatter())
                 val taskContainer = Container(task.runConfiguration!!.container, taskContainerImageSource, dependencies = setOf(container1.name, container2.name, container3.name))
                 val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer, container1, container2, container3))
                 val graph = ContainerDependencyGraph(config, task, commandResolver, entrypointResolver)

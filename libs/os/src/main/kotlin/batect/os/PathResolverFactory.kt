@@ -17,9 +17,8 @@
 package batect.os
 
 import java.nio.file.FileSystem
-import java.nio.file.Path
 
 class PathResolverFactory(private val fileSystem: FileSystem) {
-    fun createResolver(relativeTo: Path): PathResolver = PathResolver(relativeTo)
-    fun createResolverForCurrentDirectory(): PathResolver = PathResolver(fileSystem.getPath("."))
+    fun createResolver(context: PathResolutionContext): PathResolver = PathResolver(context)
+    fun createResolverForCurrentDirectory(): PathResolver = PathResolver(DefaultPathResolutionContext(fileSystem.getPath(".")))
 }

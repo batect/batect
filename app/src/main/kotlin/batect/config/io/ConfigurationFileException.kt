@@ -16,12 +16,29 @@
 
 package batect.config.io
 
-data class ConfigurationException(
+data class ConfigurationFileException(
     override val message: String,
+    val fileName: String,
     val lineNumber: Int?,
     val column: Int?,
     override val cause: Throwable? = null
 ) : RuntimeException(message, cause) {
 
-    constructor(message: String) : this(message, null, null, null)
+    constructor(message: String, fileName: String) : this(message, fileName, null, null, null)
+
+    override fun toString(): String {
+        val location = locationString()
+
+        return if (location != "") {
+            "$location: $message"
+        } else {
+            message
+        }
+    }
+
+    private fun locationString() = when {
+        lineNumber != null && column != null -> "$fileName (line $lineNumber, column $column)"
+        lineNumber != null -> "$fileName (line $lineNumber)"
+        else -> fileName
+    }
 }

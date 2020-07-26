@@ -20,6 +20,7 @@ import batect.cli.CommandLineOptionsParser
 import batect.config.Configuration
 import batect.config.ProjectPaths
 import batect.config.io.ConfigurationException
+import batect.config.io.ConfigurationFileException
 import com.charleskorn.kaml.Yaml
 import com.charleskorn.kaml.YamlException
 import com.charleskorn.kaml.YamlInput
@@ -67,7 +68,7 @@ class ConfigVariablesProvider(
 
             return Yaml().parse(MapSerializer(nameSerializer, String.serializer()), configFileContent)
         } catch (e: YamlException) {
-            throw ConfigurationException(e.message, absolutePath.toString(), e.line, e.column, e)
+            throw ConfigurationFileException(e.message, absolutePath.toString(), e.line, e.column, e)
         }
     }
 
@@ -91,7 +92,7 @@ class ConfigVariablesProvider(
                 val yaml = decoder as YamlInput
                 val location = yaml.getCurrentLocation()
 
-                throw ConfigurationException("The config variable '$name' has not been defined.", sourceFile.toString(), location.line, location.column)
+                throw ConfigurationFileException("The config variable '$name' has not been defined.", sourceFile.toString(), location.line, location.column)
             }
 
             return name

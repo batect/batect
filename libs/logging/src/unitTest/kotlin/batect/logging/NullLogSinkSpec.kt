@@ -30,7 +30,6 @@ object NullLogSinkSpec : Spek({
 
             sink.write(Severity.Info, emptyMap()) {
                 invoked = true
-                this
             }
 
             it("does not invoke the builder function") {

@@ -21,16 +21,23 @@ import batect.config.Configuration
 import batect.config.ConfigurationFile
 import batect.config.ContainerMap
 import batect.config.FileInclude
+import batect.config.GitInclude
+import batect.config.Include
+import batect.config.IncludeConfigSerializer
 import batect.config.NamedObjectMap
 import batect.config.TaskMap
+import batect.config.includes.GitIncludePathResolutionContext
+import batect.config.includes.IncludeResolver
 import batect.config.io.deserializers.PathDeserializer
 import batect.docker.DockerImageNameValidator
 import batect.logging.LogMessageBuilder
 import batect.logging.Logger
+import batect.os.DefaultPathResolutionContext
 import batect.os.PathResolutionResult
 import batect.os.PathResolver
 import batect.os.PathResolverFactory
 import batect.primitives.flatMapToSet
+import batect.primitives.mapToSet
 import com.charleskorn.kaml.EmptyYamlDocumentException
 import com.charleskorn.kaml.PolymorphismStyle
 import com.charleskorn.kaml.Yaml
@@ -42,6 +49,7 @@ import java.nio.file.Path
 import kotlinx.serialization.modules.serializersModuleOf
 
 class ConfigurationLoader(
+    private val includeResolver: IncludeResolver,
     private val pathResolverFactory: PathResolverFactory,
     private val logger: Logger
 ) {
@@ -62,16 +70,16 @@ class ConfigurationLoader(
             throw ConfigurationException("The file '$absolutePathToRootConfigFile' does not exist.")
         }
 
-        val rootConfigFile = loadConfigFile(absolutePathToRootConfigFile)
-        val filesLoaded = mutableMapOf(FileInclude(absolutePathToRootConfigFile) to rootConfigFile)
-        val remainingIncludesToLoad = mutableSetOf<FileInclude>()
+        val rootConfigFile = loadConfigFile(absolutePathToRootConfigFile, null)
+        val filesLoaded = mutableMapOf<Include, ConfigurationFile>(FileInclude(absolutePathToRootConfigFile) to rootConfigFile)
+        val remainingIncludesToLoad = mutableSetOf<Include>()
         remainingIncludesToLoad += rootConfigFile.includes
 
         while (remainingIncludesToLoad.isNotEmpty()) {
             val includeToLoad = remainingIncludesToLoad.first()
-            val pathToLoad = includeToLoad.path
-            val file = loadConfigFile(pathToLoad)
-            checkForProjectName(file, pathToLoad)
+            val pathToLoad = includeResolver.resolve(includeToLoad)
+            val file = loadConfigFile(pathToLoad, includeToLoad)
+            checkForProjectName(file, includeToLoad)
 
             filesLoaded[includeToLoad] = file
             remainingIncludesToLoad.remove(includeToLoad)
@@ -90,14 +98,18 @@ class ConfigurationLoader(
         return config
     }
 
-    private fun loadConfigFile(path: Path): ConfigurationFile {
+    private fun loadConfigFile(path: Path, includedAs: Include?): ConfigurationFile {
         logger.info {
             message("Loading configuration file.")
             data("path", path)
+
+            if (includedAs != null) {
+                data("includedAs", includedAs)
+            }
         }
 
         val content = Files.readAllBytes(path).toString(Charset.defaultCharset())
-        val pathResolver = pathResolverFor(path)
+        val pathResolver = pathResolverFor(path, includedAs)
         val pathDeserializer = PathDeserializer(pathResolver)
         val module = serializersModuleOf(PathResolutionResult::class, pathDeserializer)
         val config = YamlConfiguration(extensionDefinitionPrefix = ".", polymorphismStyle = PolymorphismStyle.Property)
@@ -105,6 +117,7 @@ class ConfigurationLoader(
 
         try {
             val file = parser.parse(ConfigurationFile.serializer(), content)
+            checkGitIncludesExist(file)
 
             logger.info {
                 message("Configuration file loaded.")
@@ -112,7 +125,10 @@ class ConfigurationLoader(
                 data("file", file)
             }
 
-            return file
+            return when (includedAs) {
+                is GitInclude -> file.replaceFileIncludesWithGitIncludes(includedAs)
+                else -> file
+            }
         } catch (e: Throwable) {
             logger.error {
                 message("Exception thrown while loading configuration.")
@@ -120,27 +136,38 @@ class ConfigurationLoader(
                 exception(e)
             }
 
-            throw mapException(e, path.toString())
+            throw mapException(e, path.toString(), includedAs)
         }
     }
 
-    private fun checkForProjectName(file: ConfigurationFile, path: Path) {
+    // File includes are checked as part of the deserialization process.
+    private fun checkGitIncludesExist(file: ConfigurationFile) {
+        file.includes.filterIsInstance<GitInclude>().forEach { include ->
+            val path = includeResolver.resolve(include)
+
+            if (!Files.exists(path)) {
+                throw ConfigurationException("Included file '${include.path}' (${include.path} from ${include.repo}@${include.ref}) does not exist.")
+            }
+        }
+    }
+
+    private fun checkForProjectName(file: ConfigurationFile, includedAs: Include) {
         if (file.projectName != null) {
-            throw ConfigurationException("Only the root configuration file can contain the project name, but this file has a project name.", path.toString())
+            throw ConfigurationFileException("Only the root configuration file can contain the project name, but this file has a project name.", includedAs.toString())
         }
     }
 
     private fun inferProjectName(pathToRootConfigFile: Path): String {
-        val pathResolver = pathResolverFor(pathToRootConfigFile)
+        val projectDirectory = pathToRootConfigFile.parent
 
-        if (pathResolver.relativeTo.root == pathResolver.relativeTo) {
-            throw ConfigurationException("No project name has been given explicitly, but the configuration file is in the root directory and so a project name cannot be inferred.", pathToRootConfigFile.toString())
+        if (projectDirectory.root == projectDirectory) {
+            throw ConfigurationFileException("No project name has been given explicitly, but the configuration file is in the root directory and so a project name cannot be inferred.", pathToRootConfigFile.toString())
         }
 
-        val inferredProjectName = pathResolver.relativeTo.fileName.toString().toLowerCase()
+        val inferredProjectName = projectDirectory.fileName.toString().toLowerCase()
 
         if (!DockerImageNameValidator.isValidImageName(inferredProjectName)) {
-            throw ConfigurationException(
+            throw ConfigurationFileException(
                 "The inferred project name '$inferredProjectName' is invalid. The project name must be a valid Docker reference: it ${DockerImageNameValidator.validNameDescription}. Provide a valid project name explicitly with 'project_name'.",
                 pathToRootConfigFile.toString()
             )
@@ -149,49 +176,83 @@ class ConfigurationLoader(
         return inferredProjectName
     }
 
-    private fun mergeContainers(filesLoaded: Map<FileInclude, ConfigurationFile>): ContainerMap {
+    private fun mergeContainers(filesLoaded: Map<Include, ConfigurationFile>): ContainerMap {
         checkForDuplicateDefinitions("container", filesLoaded) { it.containers }
 
         return ContainerMap(filesLoaded.flatMap { it.value.containers })
     }
 
-    private fun mergeTasks(filesLoaded: Map<FileInclude, ConfigurationFile>): TaskMap {
+    private fun mergeTasks(filesLoaded: Map<Include, ConfigurationFile>): TaskMap {
         checkForDuplicateDefinitions("task", filesLoaded) { it.tasks }
 
         return TaskMap(filesLoaded.flatMap { it.value.tasks })
     }
 
-    private fun mergeConfigVariables(filesLoaded: Map<FileInclude, ConfigurationFile>): ConfigVariableMap {
+    private fun mergeConfigVariables(filesLoaded: Map<Include, ConfigurationFile>): ConfigVariableMap {
         checkForDuplicateDefinitions("config variable", filesLoaded) { it.configVariables }
 
         return ConfigVariableMap(filesLoaded.flatMap { it.value.configVariables })
     }
 
-    private fun <T> checkForDuplicateDefinitions(type: String, filesLoaded: Map<FileInclude, ConfigurationFile>, collectionSelector: (ConfigurationFile) -> NamedObjectMap<T>) {
+    private fun <T> checkForDuplicateDefinitions(type: String, filesLoaded: Map<Include, ConfigurationFile>, collectionSelector: (ConfigurationFile) -> NamedObjectMap<T>) {
         val allNames = filesLoaded.values.flatMapToSet { collectionSelector(it).keys }
 
         allNames.forEach { name ->
             val files = filesLoaded.filterValues { collectionSelector(it).containsKey(name) }.keys
 
             if (files.size > 1) {
-                throw ConfigurationException("The $type '$name' is defined in multiple files: ${files.joinToString(", ")}")
+                val formattedFileNames = files.map {
+                    when (it) {
+                        is FileInclude -> it.path.toString()
+                        is GitInclude -> "${it.path} from ${it.repo}@${it.ref}"
+                    }
+                }.joinToString(", ")
+
+                throw ConfigurationException("The $type '$name' is defined in multiple files: $formattedFileNames")
             }
         }
     }
 
-    private fun mapException(e: Throwable, fileName: String): ConfigurationException = when (e) {
-        is YamlException -> ConfigurationException(mapYamlExceptionMessage(e, fileName), fileName, e.line, e.column, e)
-        is ConfigurationException -> ConfigurationException(e.message, e.fileName ?: fileName, e.lineNumber, e.column, e)
-        else -> ConfigurationException("Could not load configuration file: ${e.message}", fileName, null, null, e)
+    private fun mapException(e: Throwable, filePath: String, includedAs: Include?): ConfigurationFileException {
+        val pathToUse = includedAs?.toString() ?: filePath
+
+        return when (e) {
+            is YamlException -> ConfigurationFileException(mapYamlExceptionMessage(e), pathToUse, e.line, e.column, e)
+            is ConfigurationException -> ConfigurationFileException(e.message, pathToUse, e.lineNumber, e.column, e)
+            else -> ConfigurationFileException("Could not load configuration file: ${e.message}", pathToUse, null, null, e)
+        }
     }
 
-    private fun mapYamlExceptionMessage(e: YamlException, fileName: String): String = when (e) {
-        is EmptyYamlDocumentException -> "File '$fileName' contains no configuration."
+    private fun mapYamlExceptionMessage(e: YamlException): String = when (e) {
+        is EmptyYamlDocumentException -> "File contains no configuration."
         else -> e.message
     }
 
-    private fun pathResolverFor(file: Path): PathResolver = pathResolverFactory.createResolver(file.parent)
+    private fun pathResolverFor(file: Path, includedAs: Include?): PathResolver = when {
+        includedAs is GitInclude -> pathResolverFactory.createResolver(GitIncludePathResolutionContext(file.parent, includeResolver.rootPathFor(includedAs), includedAs))
+        else -> pathResolverFactory.createResolver(DefaultPathResolutionContext(file.parent))
+    }
+
+    private fun ConfigurationFile.replaceFileIncludesWithGitIncludes(sourceInclude: GitInclude): ConfigurationFile =
+        this.copy(includes = this.includes.mapToSet { include ->
+            if (include is FileInclude) {
+                val rootPath = includeResolver.rootPathFor(sourceInclude)
+                val newInclude = sourceInclude.copy(path = rootPath.relativize(include.path).toString())
+
+                logger.info {
+                    message("Rewrote file include in file included from Git.")
+                    data("sourceInclude", sourceInclude)
+                    data("oldInclude", include)
+                    data("newInclude", newInclude)
+                }
+
+                newInclude
+            } else {
+                include
+            }
+        })
 }
 
 private fun LogMessageBuilder.data(key: String, value: Configuration) = this.data(key, value, Configuration.serializer())
 private fun LogMessageBuilder.data(key: String, value: ConfigurationFile) = this.data(key, value, ConfigurationFile.serializer())
+private fun LogMessageBuilder.data(key: String, value: Include) = this.data(key, value, IncludeConfigSerializer)

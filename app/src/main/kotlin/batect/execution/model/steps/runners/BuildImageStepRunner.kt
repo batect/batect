@@ -79,16 +79,16 @@ class BuildImageStepRunner(
     }
 
     private fun resolveBuildDirectory(source: BuildImage): Path {
-        val pathResolver = pathResolverFactory.createResolver(source.relativeTo)
+        val pathResolver = pathResolverFactory.createResolver(source.pathResolutionContext)
         val evaluatedBuildDirectory = evaluateBuildDirectory(source.buildDirectory)
 
-        when (val buildDirectory = pathResolver.resolve(evaluatedBuildDirectory)) {
-            is PathResolutionResult.Resolved -> when (buildDirectory.pathType) {
-                PathType.Directory -> return buildDirectory.absolutePath
-                PathType.DoesNotExist -> throw ImageBuildFailedException("Build directory '${buildDirectory.originalPath}' (resolved to '${buildDirectory.absolutePath}') does not exist.")
-                else -> throw ImageBuildFailedException("Build directory '${buildDirectory.originalPath}' (resolved to '${buildDirectory.absolutePath}') is not a directory.")
+        when (val resolutionResult = pathResolver.resolve(evaluatedBuildDirectory)) {
+            is PathResolutionResult.Resolved -> when (resolutionResult.pathType) {
+                PathType.Directory -> return resolutionResult.absolutePath
+                PathType.DoesNotExist -> throw ImageBuildFailedException("Build directory '${resolutionResult.originalPath}' (${resolutionResult.resolutionDescription}) does not exist.")
+                else -> throw ImageBuildFailedException("Build directory '${resolutionResult.originalPath}' (${resolutionResult.resolutionDescription}) is not a directory.")
             }
-            is PathResolutionResult.InvalidPath -> throw ImageBuildFailedException("Build directory '${buildDirectory.originalPath}' is not a valid path.")
+            is PathResolutionResult.InvalidPath -> throw ImageBuildFailedException("Build directory '${resolutionResult.originalPath}' is not a valid path.")
         }
     }
 

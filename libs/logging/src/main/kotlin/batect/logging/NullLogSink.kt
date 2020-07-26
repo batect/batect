@@ -17,5 +17,5 @@
 package batect.logging
 
 class NullLogSink : LogSink {
-    override fun write(severity: Severity, loggerAdditionalData: Map<String, Jsonable>, build: LogMessageBuilder.() -> LogMessageBuilder) {}
+    override fun write(severity: Severity, loggerAdditionalData: Map<String, Jsonable>, build: LogMessageBuilder.() -> Unit) {}
 }

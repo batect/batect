@@ -44,6 +44,7 @@ import batect.testutils.createForEachTest
 import batect.testutils.given
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.on
+import batect.testutils.pathResolutionContextDoesNotMatter
 import batect.ui.Console
 import batect.ui.FailureErrorMessageFormatter
 import batect.ui.text.Text
@@ -57,7 +58,6 @@ import com.nhaarman.mockitokotlin2.times
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.verifyZeroInteractions
 import com.nhaarman.mockitokotlin2.whenever
-import java.nio.file.Paths
 import java.time.Duration
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
@@ -65,7 +65,7 @@ import org.spekframework.spek2.style.specification.describe
 object SimpleEventLoggerSpec : Spek({
     describe("a simple event logger") {
         val taskContainer = Container("task-container", PullImage("some-image"))
-        val otherContainer = Container("other-container", BuildImage(LiteralValue("/some-image-dir"), Paths.get("/")))
+        val otherContainer = Container("other-container", BuildImage(LiteralValue("/some-image-dir"), pathResolutionContextDoesNotMatter()))
         val containers = setOf(taskContainer, otherContainer)
 
         val failureErrorMessageFormatter by createForEachTest { mock<FailureErrorMessageFormatter>() }

@@ -51,11 +51,11 @@ import batect.testutils.equivalentTo
 import batect.testutils.given
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.on
+import batect.testutils.pathResolutionContextDoesNotMatter
 import batect.testutils.runForEachTest
 import batect.ui.text.Text
 import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockitokotlin2.mock
-import java.nio.file.Paths
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -64,11 +64,11 @@ object ContainerStartupProgressLineSpec : Spek({
         val dependencyA = Container("dependency-a", imageSourceDoesNotMatter())
         val dependencyB = Container("dependency-b", imageSourceDoesNotMatter())
         val dependencyC = Container("dependency-c", imageSourceDoesNotMatter())
-        val otherContainer = Container("other-container", BuildImage(LiteralValue("/other-build-dir"), Paths.get("/")))
+        val otherContainer = Container("other-container", BuildImage(LiteralValue("/other-build-dir"), pathResolutionContextDoesNotMatter()))
         val containerName = "some-container"
 
         given("the container's image comes from building an image") {
-            val imageSource = BuildImage(LiteralValue("/some-image-dir"), Paths.get("/"))
+            val imageSource = BuildImage(LiteralValue("/some-image-dir"), pathResolutionContextDoesNotMatter())
             val setupCommands = listOf("a", "b", "c", "d").map { SetupCommand(Command.parse(it)) }
             val container = Container(containerName, imageSource, setupCommands = setupCommands)
 
@@ -706,7 +706,7 @@ object ContainerStartupProgressLineSpec : Spek({
 
         given("the container has one or more cache mounts") {
             given("the container's image is one that needs to be built") {
-                val imageSource = BuildImage(LiteralValue("/some-image-dir"), Paths.get("/"))
+                val imageSource = BuildImage(LiteralValue("/some-image-dir"), pathResolutionContextDoesNotMatter())
                 val container = Container(containerName, imageSource, volumeMounts = setOf(CacheMount("some-cache", "/cache")))
 
                 val line: ContainerStartupProgressLine by createForEachTest {

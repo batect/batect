@@ -19,16 +19,16 @@ package batect.config
 import batect.config.io.ConfigurationException
 import batect.docker.Capability
 import batect.os.Command
+import batect.os.DefaultPathResolutionContext
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.osIndependentPath
+import batect.testutils.pathResolutionContextDoesNotMatter
 import batect.testutils.withMessage
 import batect.utils.Json
-import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.throws
-import java.nio.file.Paths
 import java.time.Duration
 import org.araqnid.hamkrest.json.equivalentTo
 import org.spekframework.spek2.Spek
@@ -98,7 +98,7 @@ object ConfigurationSpec : Spek({
             }
 
             given("a single container with many options that pulls an image and runs as the current user") {
-                val fileSystem = Jimfs.newFileSystem(com.google.common.jimfs.Configuration.unix())
+                val pathResolutionContext = DefaultPathResolutionContext(osIndependentPath("/some/project/path"))
 
                 val container = Container(
                     "the-container",
@@ -107,7 +107,7 @@ object ConfigurationSpec : Spek({
                     Command.parse("sh"),
                     mapOf("SOME_VAR" to LiteralValue("some-value")),
                     "/some/working/dir",
-                    setOf(LocalMount(LiteralValue("/local/path"), fileSystem.getPath("/relative-to"), "/container/path", "some-options")),
+                    setOf(LocalMount(LiteralValue("/local/path"), pathResolutionContext, "/container/path", "some-options")),
                     setOf(DeviceMount("/dev/local", "/dev/container", "device-options")),
                     setOf(PortMapping(123, 456)),
                     setOf("other-container"),
@@ -146,7 +146,10 @@ object ConfigurationSpec : Spek({
                                         {
                                             "type": "local",
                                             "local": {"type":"LiteralValue", "value":"/local/path"},
-                                            "relativeTo": "/relative-to",
+                                            "pathResolutionContext": {
+                                                "type": "default",
+                                                "relativeTo": "/some/project/path"
+                                            },
                                             "container": "/container/path",
                                             "options": "some-options"
                                         }
@@ -196,7 +199,7 @@ object ConfigurationSpec : Spek({
                     "the-container",
                     BuildImage(
                         LiteralValue("/some/build/dir"),
-                        osIndependentPath("/"),
+                        pathResolutionContextDoesNotMatter(),
                         mapOf(
                             "SOME_VAR" to LiteralValue("blah")
                         ),
@@ -279,7 +282,7 @@ object ConfigurationSpec : Spek({
         }
 
         describe("overriding image sources") {
-            val container1 = Container("container-1", BuildImage(LiteralValue("some-build-dir"), Paths.get("/")))
+            val container1 = Container("container-1", BuildImage(LiteralValue("some-build-dir"), pathResolutionContextDoesNotMatter()))
             val container2 = Container("container-2", PullImage("some-image"))
             val originalConfig = createConfiguration(container1, container2)
 

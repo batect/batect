@@ -37,9 +37,9 @@ object FileDefaultValueProviderSpec : Spek({
 
         val pathResolver by createForEachTest {
             mock<PathResolver> {
-                on { resolve("file-that-exists") } doReturn PathResolutionResult.Resolved("file-that-exists", fileSystem.getPath("/resolved/file-that-exists"), PathType.File)
-                on { resolve("not-found") } doReturn PathResolutionResult.Resolved("not-found", fileSystem.getPath("/resolved/not-found"), PathType.DoesNotExist)
-                on { resolve("directory") } doReturn PathResolutionResult.Resolved("directory", fileSystem.getPath("/resolved/directory"), PathType.Directory)
+                on { resolve("file-that-exists") } doReturn PathResolutionResult.Resolved("file-that-exists", fileSystem.getPath("/resolved/file-that-exists"), PathType.File, "described as file by resolver")
+                on { resolve("not-found") } doReturn PathResolutionResult.Resolved("not-found", fileSystem.getPath("/resolved/not-found"), PathType.DoesNotExist, "described as not found by resolver")
+                on { resolve("directory") } doReturn PathResolutionResult.Resolved("directory", fileSystem.getPath("/resolved/directory"), PathType.Directory, "described as directory by resolver")
             }
         }
 
@@ -77,7 +77,7 @@ object FileDefaultValueProviderSpec : Spek({
             val provider by createForEachTest { FileDefaultValueProvider("directory", pathResolverFactory) }
 
             it("returns an error for the default value") {
-                assertThat(provider.value, equalTo(PossibleValue.Invalid("The path 'directory' (resolved to '/resolved/directory') is not a file.")))
+                assertThat(provider.value, equalTo(PossibleValue.Invalid("The path 'directory' (described as directory by resolver) is not a file.")))
             }
 
             it("provides a description of the value") {

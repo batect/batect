@@ -16,6 +16,9 @@
 
 package batect.utils
 
+import batect.config.includes.GitIncludePathResolutionContext
+import batect.os.DefaultPathResolutionContext
+import batect.os.PathResolutionContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonConfiguration
 import kotlinx.serialization.modules.SerializersModule
@@ -23,6 +26,11 @@ import kotlinx.serialization.modules.SerializersModule
 object Json {
     private val loggingModule = SerializersModule {
         include(batect.execution.model.rules.serializersModule)
+
+        polymorphic(PathResolutionContext::class) {
+            DefaultPathResolutionContext::class with DefaultPathResolutionContext.serializer()
+            GitIncludePathResolutionContext::class with GitIncludePathResolutionContext.serializer()
+        }
     }
 
     private val defaultConfiguration = JsonConfiguration.Stable

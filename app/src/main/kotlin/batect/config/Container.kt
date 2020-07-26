@@ -61,7 +61,7 @@ data class Container(
     val additionalHostnames: Set<String> = emptySet(),
     val additionalHosts: Map<String, String> = emptyMap(),
     val setupCommands: List<SetupCommand> = emptyList(),
-    val logDriver: String = Container.defaultLogDriver,
+    val logDriver: String = defaultLogDriver,
     val logOptions: Map<String, String> = emptyMap()
 ) {
     @Serializer(forClass = Container::class)
@@ -170,7 +170,7 @@ data class Container(
             var additionalHostnames = emptySet<String>()
             var additionalHosts = emptyMap<String, String>()
             var setupCommands = emptyList<SetupCommand>()
-            var logDriver = Container.defaultLogDriver
+            var logDriver = defaultLogDriver
             var logOptions = emptyMap<String, String>()
 
             loop@ while (true) {
@@ -255,9 +255,9 @@ data class Container(
 
             if (buildDirectory != null) {
                 val loader = input.context.getContextual(PathResolutionResult::class)!! as PathDeserializer
-                val relativeTo = loader.pathResolver.relativeTo
+                val context = loader.pathResolver.context
 
-                return BuildImage(buildDirectory, relativeTo, buildArgs ?: emptyMap(), dockerfilePath ?: "Dockerfile")
+                return BuildImage(buildDirectory, context, buildArgs ?: emptyMap(), dockerfilePath ?: "Dockerfile")
             } else {
                 return PullImage(imageName!!)
             }

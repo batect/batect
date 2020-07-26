@@ -49,7 +49,9 @@ data class GitInclude(
     val repo: String,
     val ref: String,
     val path: String = "batect.yml"
-) : Include()
+) : Include() {
+    override fun toString(): String = "$repo@$ref: $path"
+}
 
 object FileIncludePathSerializer : KSerializer<Path> {
     override val descriptor: SerialDescriptor = SerialDescriptor("Path", PrimitiveKind.STRING)
@@ -62,8 +64,8 @@ object FileIncludePathSerializer : KSerializer<Path> {
         when (resolutionResult) {
             is PathResolutionResult.Resolved -> when (resolutionResult.pathType) {
                 PathType.File -> return resolutionResult.absolutePath
-                PathType.DoesNotExist -> throw ConfigurationException("Included file '${resolutionResult.originalPath}' (resolved to '${resolutionResult.absolutePath}') does not exist.", location.line, location.column)
-                else -> throw ConfigurationException("'${resolutionResult.originalPath}' (resolved to '${resolutionResult.absolutePath}') is not a file.", location.line, location.column)
+                PathType.DoesNotExist -> throw ConfigurationException("Included file '${resolutionResult.originalPath}' (${resolutionResult.resolutionDescription}) does not exist.", location.line, location.column)
+                else -> throw ConfigurationException("'${resolutionResult.originalPath}' (${resolutionResult.resolutionDescription}) is not a file.", location.line, location.column)
             }
             is PathResolutionResult.InvalidPath -> throw ConfigurationException("Include path '${resolutionResult.originalPath}' is not a valid path.", location.line, location.column)
         }

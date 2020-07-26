@@ -146,10 +146,10 @@ object ValueConvertersSpec : Spek({
             val fileSystem = Jimfs.newFileSystem(Configuration.unix())
 
             val pathResolver = mock<PathResolver> {
-                on { resolve("file") } doReturn PathResolutionResult.Resolved("file", fileSystem.getPath("/resolved/file"), PathType.File)
-                on { resolve("directory") } doReturn PathResolutionResult.Resolved("directory", fileSystem.getPath("/resolved/directory"), PathType.Directory)
-                on { resolve("other") } doReturn PathResolutionResult.Resolved("other", fileSystem.getPath("/resolved/other"), PathType.Other)
-                on { resolve("does-not-exist") } doReturn PathResolutionResult.Resolved("does-not-exist", fileSystem.getPath("/resolved/does-not-exist"), PathType.DoesNotExist)
+                on { resolve("file") } doReturn PathResolutionResult.Resolved("file", fileSystem.getPath("/resolved/file"), PathType.File, "described as file by resolver")
+                on { resolve("directory") } doReturn PathResolutionResult.Resolved("directory", fileSystem.getPath("/resolved/directory"), PathType.Directory, "described as directory by resolver")
+                on { resolve("other") } doReturn PathResolutionResult.Resolved("other", fileSystem.getPath("/resolved/other"), PathType.Other, "described as other by resolver")
+                on { resolve("does-not-exist") } doReturn PathResolutionResult.Resolved("does-not-exist", fileSystem.getPath("/resolved/does-not-exist"), PathType.DoesNotExist, "described as does not exist by resolver")
                 on { resolve("invalid") } doReturn PathResolutionResult.InvalidPath("invalid")
             }
 
@@ -168,13 +168,13 @@ object ValueConvertersSpec : Spek({
 
                 given("a path to a directory") {
                     it("returns an error") {
-                        assertThat(converter("directory"), equalTo(ValueConversionResult.ConversionFailed("The path 'directory' (resolved to '/resolved/directory') refers to a directory.")))
+                        assertThat(converter("directory"), equalTo(ValueConversionResult.ConversionFailed("The path 'directory' (described as directory by resolver) refers to a directory.")))
                     }
                 }
 
                 given("a path to something other than a file or directory") {
                     it("returns an error") {
-                        assertThat(converter("other"), equalTo(ValueConversionResult.ConversionFailed("The path 'other' (resolved to '/resolved/other') refers to something other than a file.")))
+                        assertThat(converter("other"), equalTo(ValueConversionResult.ConversionFailed("The path 'other' (described as other by resolver) refers to something other than a file.")))
                     }
                 }
 
@@ -202,19 +202,19 @@ object ValueConvertersSpec : Spek({
 
                 given("a path to a directory") {
                     it("returns an error") {
-                        assertThat(converter("directory"), equalTo(ValueConversionResult.ConversionFailed("The path 'directory' (resolved to '/resolved/directory') refers to a directory.")))
+                        assertThat(converter("directory"), equalTo(ValueConversionResult.ConversionFailed("The path 'directory' (described as directory by resolver) refers to a directory.")))
                     }
                 }
 
                 given("a path to something other than a file or directory") {
                     it("returns an error") {
-                        assertThat(converter("other"), equalTo(ValueConversionResult.ConversionFailed("The path 'other' (resolved to '/resolved/other') refers to something other than a file.")))
+                        assertThat(converter("other"), equalTo(ValueConversionResult.ConversionFailed("The path 'other' (described as other by resolver) refers to something other than a file.")))
                     }
                 }
 
                 given("a path to a file that does not exist") {
                     it("returns an error") {
-                        assertThat(converter("does-not-exist"), equalTo(ValueConversionResult.ConversionFailed("The file 'does-not-exist' (resolved to '/resolved/does-not-exist') does not exist.")))
+                        assertThat(converter("does-not-exist"), equalTo(ValueConversionResult.ConversionFailed("The file 'does-not-exist' (described as does not exist by resolver) does not exist.")))
                     }
                 }
 
@@ -230,10 +230,10 @@ object ValueConvertersSpec : Spek({
             val fileSystem = Jimfs.newFileSystem(Configuration.unix())
 
             val pathResolver = mock<PathResolver> {
-                on { resolve("file") } doReturn PathResolutionResult.Resolved("file", fileSystem.getPath("/resolved/file"), PathType.File)
-                on { resolve("directory") } doReturn PathResolutionResult.Resolved("directory", fileSystem.getPath("/resolved/directory"), PathType.Directory)
-                on { resolve("other") } doReturn PathResolutionResult.Resolved("other", fileSystem.getPath("/resolved/other"), PathType.Other)
-                on { resolve("does-not-exist") } doReturn PathResolutionResult.Resolved("does-not-exist", fileSystem.getPath("/resolved/does-not-exist"), PathType.DoesNotExist)
+                on { resolve("file") } doReturn PathResolutionResult.Resolved("file", fileSystem.getPath("/resolved/file"), PathType.File, "described as file by resolver")
+                on { resolve("directory") } doReturn PathResolutionResult.Resolved("directory", fileSystem.getPath("/resolved/directory"), PathType.Directory, "described as directory by resolver")
+                on { resolve("other") } doReturn PathResolutionResult.Resolved("other", fileSystem.getPath("/resolved/other"), PathType.Other, "described as other by resolver")
+                on { resolve("does-not-exist") } doReturn PathResolutionResult.Resolved("does-not-exist", fileSystem.getPath("/resolved/does-not-exist"), PathType.DoesNotExist, "described as does not exist by resolver")
                 on { resolve("invalid") } doReturn PathResolutionResult.InvalidPath("invalid")
             }
 
@@ -246,7 +246,7 @@ object ValueConvertersSpec : Spek({
 
                 given("a path to a file") {
                     it("returns an error") {
-                        assertThat(converter("file"), equalTo(ValueConversionResult.ConversionFailed("The path 'file' (resolved to '/resolved/file') refers to a file.")))
+                        assertThat(converter("file"), equalTo(ValueConversionResult.ConversionFailed("The path 'file' (described as file by resolver) refers to a file.")))
                     }
                 }
 
@@ -258,7 +258,7 @@ object ValueConvertersSpec : Spek({
 
                 given("a path to something other than a file or directory") {
                     it("returns an error") {
-                        assertThat(converter("other"), equalTo(ValueConversionResult.ConversionFailed("The path 'other' (resolved to '/resolved/other') refers to something other than a directory.")))
+                        assertThat(converter("other"), equalTo(ValueConversionResult.ConversionFailed("The path 'other' (described as other by resolver) refers to something other than a directory.")))
                     }
                 }
 
@@ -280,7 +280,7 @@ object ValueConvertersSpec : Spek({
 
                 given("a path to a file") {
                     it("returns an error") {
-                        assertThat(converter("file"), equalTo(ValueConversionResult.ConversionFailed("The path 'file' (resolved to '/resolved/file') refers to a file.")))
+                        assertThat(converter("file"), equalTo(ValueConversionResult.ConversionFailed("The path 'file' (described as file by resolver) refers to a file.")))
                     }
                 }
 
@@ -292,13 +292,13 @@ object ValueConvertersSpec : Spek({
 
                 given("a path to something other than a file or directory") {
                     it("returns an error") {
-                        assertThat(converter("other"), equalTo(ValueConversionResult.ConversionFailed("The path 'other' (resolved to '/resolved/other') refers to something other than a directory.")))
+                        assertThat(converter("other"), equalTo(ValueConversionResult.ConversionFailed("The path 'other' (described as other by resolver) refers to something other than a directory.")))
                     }
                 }
 
                 given("a path to a directory that does not exist") {
                     it("returns an error") {
-                        assertThat(converter("does-not-exist"), equalTo(ValueConversionResult.ConversionFailed("The directory 'does-not-exist' (resolved to '/resolved/does-not-exist') does not exist.")))
+                        assertThat(converter("does-not-exist"), equalTo(ValueConversionResult.ConversionFailed("The directory 'does-not-exist' (described as does not exist by resolver) does not exist.")))
                     }
                 }
 

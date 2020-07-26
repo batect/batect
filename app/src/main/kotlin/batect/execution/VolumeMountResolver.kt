@@ -50,7 +50,7 @@ class VolumeMountResolver(
             return DockerVolumeMount(DockerVolumeMountSource.LocalPath(evaluatedLocalPath), mount.containerPath, mount.options)
         }
 
-        val pathResolver = pathResolverFactory.createResolver(mount.relativeTo)
+        val pathResolver = pathResolverFactory.createResolver(mount.pathResolutionContext)
 
         return when (val resolvedLocalPath = pathResolver.resolve(evaluatedLocalPath)) {
             is PathResolutionResult.Resolved -> DockerVolumeMount(DockerVolumeMountSource.LocalPath(resolvedLocalPath.absolutePath.toString()), mount.containerPath, mount.options)

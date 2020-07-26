@@ -21,20 +21,22 @@ import java.nio.file.InvalidPathException
 import java.nio.file.Path
 import java.util.Properties
 
-data class PathResolver(val relativeTo: Path, private val systemProperties: Properties = System.getProperties()) {
+data class PathResolver(val context: PathResolutionContext, private val systemProperties: Properties = System.getProperties()) {
     private val homeDir = getPath(systemProperties.getProperty("user.home"))
 
     fun resolve(path: String): PathResolutionResult {
         try {
             val originalPath = resolveHomeDir(getPath(path))
-            val resolvedPath = relativeTo.resolve(originalPath).normalize().toAbsolutePath()
-            return PathResolutionResult.Resolved(path, resolvedPath, pathType(resolvedPath))
+            val resolvedPath = context.relativeTo.resolve(originalPath).normalize().toAbsolutePath()
+            val description = context.getResolutionDescription(resolvedPath)
+
+            return PathResolutionResult.Resolved(path, resolvedPath, pathType(resolvedPath), description)
         } catch (e: InvalidPathException) {
             return PathResolutionResult.InvalidPath(path)
         }
     }
 
-    private fun getPath(path: String): Path = relativeTo.fileSystem.getPath(path)
+    private fun getPath(path: String): Path = context.relativeTo.fileSystem.getPath(path)
 
     private fun resolveHomeDir(path: Path): Path {
         val homeSymbol = getPath("~")
@@ -57,7 +59,13 @@ data class PathResolver(val relativeTo: Path, private val systemProperties: Prop
 }
 
 sealed class PathResolutionResult(open val originalPath: String) {
-    data class Resolved(override val originalPath: String, val absolutePath: Path, val pathType: PathType) : PathResolutionResult(originalPath)
+    data class Resolved(
+        override val originalPath: String,
+        val absolutePath: Path,
+        val pathType: PathType,
+        val resolutionDescription: String
+    ) : PathResolutionResult(originalPath)
+
     data class InvalidPath(override val originalPath: String) : PathResolutionResult(originalPath)
 }
 

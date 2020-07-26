@@ -23,32 +23,11 @@ import com.natpryce.hamkrest.equalTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
-object ConfigurationExceptionSpec : Spek({
-    describe("a configuration exception") {
+object ConfigurationFileExceptionSpec : Spek({
+    describe("a configuration file exception") {
         describe("formatting") {
-            given("an exception with just a message") {
-                val exception = ConfigurationException("This is the error message")
-
-                on("converting to a string") {
-                    it("returns just the message") {
-                        assertThat(exception.toString(), equalTo("This is the error message"))
-                    }
-                }
-            }
-
-            given("an exception with a message and a cause") {
-                val cause = RuntimeException("Something went wrong")
-                val exception = ConfigurationException("This is the error message", null, null, null, cause)
-
-                on("converting to a string") {
-                    it("returns the message and details of the cause") {
-                        assertThat(exception.toString(), equalTo("This is the error message"))
-                    }
-                }
-            }
-
             given("an exception with a message and a file name") {
-                val exception = ConfigurationException("This is the error message", "source.txt", null, null, null)
+                val exception = ConfigurationFileException("This is the error message", "source.txt", null, null, null)
 
                 on("converting to a string") {
                     it("returns the message and the file name") {
@@ -58,7 +37,7 @@ object ConfigurationExceptionSpec : Spek({
             }
 
             given("an exception with a message, a file name and a line number") {
-                val exception = ConfigurationException("This is the error message", "source.txt", 12, null, null)
+                val exception = ConfigurationFileException("This is the error message", "source.txt", 12, null, null)
 
                 on("converting to a string") {
                     it("returns the message, the file name and the line number") {
@@ -68,7 +47,7 @@ object ConfigurationExceptionSpec : Spek({
             }
 
             given("an exception with a message, a file name, a line number and a column") {
-                val exception = ConfigurationException("This is the error message", "source.txt", 12, 54, null)
+                val exception = ConfigurationFileException("This is the error message", "source.txt", 12, 54, null)
 
                 on("converting to a string") {
                     it("returns the message, the file name, the line number and the column") {
@@ -79,10 +58,10 @@ object ConfigurationExceptionSpec : Spek({
 
             given("an exception with a message, a file name, a line number, a column and a cause") {
                 val cause = RuntimeException("Something went wrong")
-                val exception = ConfigurationException("This is the error message", "source.txt", 12, 54, cause)
+                val exception = ConfigurationFileException("This is the error message", "source.txt", 12, 54, cause)
 
                 on("converting to a string") {
-                    it("returns the message, the file name, the line number, the column and the cause") {
+                    it("returns the message, the file name, the line number and the column, but not the cause") {
                         assertThat(exception.toString(), equalTo("source.txt (line 12, column 54): This is the error message"))
                     }
                 }

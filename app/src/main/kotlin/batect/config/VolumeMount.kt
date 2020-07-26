@@ -19,9 +19,10 @@ package batect.config
 import batect.config.io.ConfigurationException
 import batect.config.io.deserializers.PathDeserializer
 import batect.config.io.deserializers.StringOrObjectSerializer
+import batect.os.PathResolutionContext
+import batect.os.PathResolutionContextSerializer
 import batect.os.PathResolutionResult
 import com.charleskorn.kaml.YamlInput
-import java.nio.file.Path
 import kotlinx.serialization.CompositeDecoder
 import kotlinx.serialization.CompositeEncoder
 import kotlinx.serialization.Encoder
@@ -75,7 +76,7 @@ sealed class VolumeMount(
 
             val resolvedLocal = LiteralValue(local)
 
-            return LocalMount(resolvedLocal, input.configFileDirectory, container, options)
+            return LocalMount(resolvedLocal, input.pathResolutionContext, container, options)
         }
 
         private fun invalidMountDefinitionException(value: String, input: YamlInput) =
@@ -118,7 +119,7 @@ sealed class VolumeMount(
                         throw ConfigurationException("Field '${objectDescriptor.getElementName(nameFieldIndex)}' is not permitted for local path mounts.", input.node.location.line, input.node.location.column)
                     }
 
-                    LocalMount(localPath, input.configFileDirectory, containerPath, options)
+                    LocalMount(localPath, input.pathResolutionContext, containerPath, options)
                 }
 
                 VolumeMountType.Cache -> {
@@ -152,12 +153,12 @@ sealed class VolumeMount(
             output.endStructure(objectDescriptor)
         }
 
-        private val YamlInput.configFileDirectory: Path
+        private val YamlInput.pathResolutionContext: PathResolutionContext
             get() {
                 val deserializer = this.context.getContextual(PathResolutionResult::class)!! as PathDeserializer
                 val resolver = deserializer.pathResolver
 
-                return resolver.relativeTo
+                return resolver.context
             }
 
         @Serializable
@@ -170,21 +171,18 @@ sealed class VolumeMount(
 
 data class LocalMount(
     val localPath: Expression,
-    val relativeTo: Path,
+    val pathResolutionContext: PathResolutionContext,
     override val containerPath: String,
     override val options: String? = null
 ) : VolumeMount(containerPath, options) {
     private val descriptor: SerialDescriptor = SerialDescriptor("VolumeMount") {
         element("local", Expression.serializer().descriptor)
-        element("relativeTo", String.serializer().descriptor)
+        element("pathResolutionContext", PathResolutionContextSerializer.descriptor)
     }
 
-    private val localPathFieldIndex = descriptor.getElementIndex("local")
-    private val relativeToFieldIndex = descriptor.getElementIndex("relativeTo")
-
-    protected override fun serialize(output: CompositeEncoder) {
-        output.encodeSerializableElement(descriptor, localPathFieldIndex, Expression.serializer(), localPath)
-        output.encodeStringElement(descriptor, relativeToFieldIndex, relativeTo.toString())
+    override fun serialize(output: CompositeEncoder) {
+        output.encodeSerializableElement(descriptor, descriptor.getElementIndex("local"), Expression.serializer(), localPath)
+        output.encodeSerializableElement(descriptor, descriptor.getElementIndex("pathResolutionContext"), PathResolutionContextSerializer, pathResolutionContext)
     }
 }
 
@@ -197,9 +195,7 @@ data class CacheMount(
         element("name", Expression.serializer().descriptor)
     }
 
-    private val nameFieldIndex = descriptor.getElementIndex("name")
-
-    protected override fun serialize(output: CompositeEncoder) {
-        output.encodeStringElement(descriptor, nameFieldIndex, name)
+    override fun serialize(output: CompositeEncoder) {
+        output.encodeStringElement(descriptor, descriptor.getElementIndex("name"), name)
     }
 }

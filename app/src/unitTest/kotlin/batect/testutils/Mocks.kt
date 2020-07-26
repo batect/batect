@@ -14,8 +14,11 @@
    limitations under the License.
 */
 
-package batect.logging
+package batect.testutils
 
-interface LogSink {
-    fun write(severity: Severity, loggerAdditionalData: Map<String, Jsonable>, build: LogMessageBuilder.() -> Unit)
-}
+import batect.config.ImageSource
+import batect.os.PathResolutionContext
+import com.nhaarman.mockitokotlin2.mock
+
+fun imageSourceDoesNotMatter(): ImageSource = mock<ImageSource>()
+fun pathResolutionContextDoesNotMatter(): PathResolutionContext = mock<PathResolutionContext>()

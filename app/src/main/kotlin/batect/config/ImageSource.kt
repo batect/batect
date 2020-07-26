@@ -16,14 +16,14 @@
 
 package batect.config
 
-import java.nio.file.Path
+import batect.os.PathResolutionContext
 import kotlinx.serialization.Serializable
 
 sealed class ImageSource
 
 data class BuildImage(
     val buildDirectory: Expression,
-    val relativeTo: Path,
+    val pathResolutionContext: PathResolutionContext,
     val buildArgs: Map<String, Expression> = emptyMap(),
     val dockerfilePath: String = "Dockerfile"
 ) : ImageSource()

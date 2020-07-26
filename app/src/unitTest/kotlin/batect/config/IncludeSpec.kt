@@ -54,8 +54,10 @@ object IncludeSpec : Spek({
             val parser by createForEachTest { Yaml(configuration = configuration, context = serializersModuleOf(PathResolutionResult::class, pathDeserializer)) }
 
             fun LifecycleAware.givenPathResolvesTo(type: PathType) {
+                val absolutePath = osIndependentPath("/resolved/some/path.yml")
+
                 beforeEachTest {
-                    whenever(pathResolver.resolve("../some/path.yml")).doReturn(PathResolutionResult.Resolved("../some/path.yml", osIndependentPath("/resolved/some/path.yml"), type))
+                    whenever(pathResolver.resolve("../some/path.yml")).doReturn(PathResolutionResult.Resolved("../some/path.yml", absolutePath, type, "described as '/resolved/some/path.yml'"))
                 }
             }
 
@@ -78,7 +80,7 @@ object IncludeSpec : Spek({
 
                         it("throws an appropriate exception") {
                             assertThat({ parser.parse(IncludeConfigSerializer, yaml) }, throws<ConfigurationException>(
-                                withMessage("'../some/path.yml' (resolved to '/resolved/some/path.yml') is not a file.") and
+                                withMessage("'../some/path.yml' (described as '/resolved/some/path.yml') is not a file.") and
                                     withLineNumber(1) and
                                     withColumn(1)
                             ))
@@ -90,7 +92,7 @@ object IncludeSpec : Spek({
 
                         it("throws an appropriate exception") {
                             assertThat({ parser.parse(IncludeConfigSerializer, yaml) }, throws<ConfigurationException>(
-                                withMessage("Included file '../some/path.yml' (resolved to '/resolved/some/path.yml') does not exist.") and
+                                withMessage("Included file '../some/path.yml' (described as '/resolved/some/path.yml') does not exist.") and
                                     withLineNumber(1) and
                                     withColumn(1)
                             ))
@@ -119,7 +121,7 @@ object IncludeSpec : Spek({
 
                         it("throws an appropriate exception") {
                             assertThat({ parser.parse(IncludeConfigSerializer, yaml) }, throws<ConfigurationException>(
-                                withMessage("'../some/path.yml' (resolved to '/resolved/some/path.yml') is not a file.") and
+                                withMessage("'../some/path.yml' (described as '/resolved/some/path.yml') is not a file.") and
                                     withLineNumber(2) and
                                     withColumn(7)
                             ))
@@ -131,7 +133,7 @@ object IncludeSpec : Spek({
 
                         it("throws an appropriate exception") {
                             assertThat({ parser.parse(IncludeConfigSerializer, yaml) }, throws<ConfigurationException>(
-                                withMessage("Included file '../some/path.yml' (resolved to '/resolved/some/path.yml') does not exist.") and
+                                withMessage("Included file '../some/path.yml' (described as '/resolved/some/path.yml') does not exist.") and
                                     withLineNumber(2) and
                                     withColumn(7)
                             ))

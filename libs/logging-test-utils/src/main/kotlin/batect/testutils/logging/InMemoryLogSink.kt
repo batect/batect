@@ -47,7 +47,7 @@ class InMemoryLogSink(private val json: Json) : LogSink {
         on { getAdditionalData() } doReturn emptyMap()
     }
 
-    override fun write(severity: Severity, loggerAdditionalData: Map<String, Jsonable>, build: LogMessageBuilder.() -> LogMessageBuilder) {
+    override fun write(severity: Severity, loggerAdditionalData: Map<String, Jsonable>, build: LogMessageBuilder.() -> Unit) {
         val builder = LogMessageBuilder(severity, loggerAdditionalData)
         build(builder)
 

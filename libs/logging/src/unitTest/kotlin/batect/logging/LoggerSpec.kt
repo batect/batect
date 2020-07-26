@@ -29,7 +29,7 @@ object LoggerSpec : Spek({
         val logger by createForEachTest { Logger("some.source", sink) }
 
         val loggerAdditionalInfo = mapOf("@source" to JsonableObject("some.source", String.serializer()))
-        val buildFun: LogMessageBuilder.() -> LogMessageBuilder = { this }
+        val buildFun: LogMessageBuilder.() -> Unit = { }
 
         describe("logging a debug-level message") {
             beforeEachTest { logger.debug(buildFun) }

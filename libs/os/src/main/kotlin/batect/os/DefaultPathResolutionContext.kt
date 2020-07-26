@@ -14,9 +14,20 @@
    limitations under the License.
 */
 
-package batect.testutils
+@file:UseSerializers(
+    PathSerializer::class
+)
 
-import batect.config.ImageSource
-import com.nhaarman.mockitokotlin2.mock
+package batect.os
 
-fun imageSourceDoesNotMatter(): ImageSource = mock<ImageSource>()
+import batect.logging.PathSerializer
+import java.nio.file.Path
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.UseSerializers
+
+@Serializable
+@SerialName("default")
+data class DefaultPathResolutionContext(override val relativeTo: Path) : PathResolutionContext {
+    override fun getResolutionDescription(absolutePath: Path): String = "resolved to '$absolutePath'"
+}

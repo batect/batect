@@ -16,11 +16,15 @@
 
 package batect.config
 
+import batect.config.includes.GitIncludePathResolutionContext
 import batect.config.io.deserializers.PathDeserializer
+import batect.os.DefaultPathResolutionContext
+import batect.os.PathResolutionContext
 import batect.os.PathResolutionResult
 import batect.os.PathResolver
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
+import batect.testutils.given
 import batect.testutils.on
 import batect.testutils.osIndependentPath
 import batect.testutils.runForEachTest
@@ -45,9 +49,11 @@ import org.spekframework.spek2.style.specification.describe
 object VolumeMountSpec : Spek({
     describe("a volume mount") {
         describe("deserializing from YAML") {
+            val pathResolutionContext by createForEachTest { mock<PathResolutionContext>() }
+
             val pathResolver by createForEachTest {
                 mock<PathResolver> {
-                    on { relativeTo } doReturn osIndependentPath("/relative-to")
+                    on { context } doReturn pathResolutionContext
                 }
             }
 
@@ -76,7 +82,7 @@ object VolumeMountSpec : Spek({
                     }
 
                     it("returns the correct path to resolve the local path relative to") {
-                        assertThat((volumeMount as LocalMount).relativeTo, equalTo(osIndependentPath("/relative-to")))
+                        assertThat((volumeMount as LocalMount).pathResolutionContext, equalTo(pathResolutionContext))
                     }
                 }
 
@@ -96,7 +102,7 @@ object VolumeMountSpec : Spek({
                     }
 
                     it("returns the correct path to resolve the local path relative to") {
-                        assertThat((volumeMount as LocalMount).relativeTo, equalTo(osIndependentPath("/relative-to")))
+                        assertThat((volumeMount as LocalMount).pathResolutionContext, equalTo(pathResolutionContext))
                     }
                 }
 
@@ -120,7 +126,7 @@ object VolumeMountSpec : Spek({
                         }
 
                         it("returns the correct path to resolve the local path relative to") {
-                            assertThat((volumeMount as LocalMount).relativeTo, equalTo(osIndependentPath("/relative-to")))
+                            assertThat((volumeMount as LocalMount).pathResolutionContext, equalTo(pathResolutionContext))
                         }
                     }
 
@@ -140,7 +146,7 @@ object VolumeMountSpec : Spek({
                         }
 
                         it("returns the correct path to resolve the local path relative to") {
-                            assertThat((volumeMount as LocalMount).relativeTo, equalTo(osIndependentPath("/relative-to")))
+                            assertThat((volumeMount as LocalMount).pathResolutionContext, equalTo(pathResolutionContext))
                         }
                     }
                 }
@@ -196,7 +202,7 @@ object VolumeMountSpec : Spek({
                     }
 
                     it("returns the correct path to resolve the local path relative to") {
-                        assertThat((volumeMount as LocalMount).relativeTo, equalTo(osIndependentPath("/relative-to")))
+                        assertThat((volumeMount as LocalMount).pathResolutionContext, equalTo(pathResolutionContext))
                     }
                 }
 
@@ -222,7 +228,7 @@ object VolumeMountSpec : Spek({
                     }
 
                     it("returns the correct path to resolve the local path relative to") {
-                        assertThat((volumeMount as LocalMount).relativeTo, equalTo(osIndependentPath("/relative-to")))
+                        assertThat((volumeMount as LocalMount).pathResolutionContext, equalTo(pathResolutionContext))
                     }
                 }
 
@@ -248,7 +254,7 @@ object VolumeMountSpec : Spek({
                     }
 
                     it("returns the correct path to resolve the local path relative to") {
-                        assertThat((volumeMount as LocalMount).relativeTo, equalTo(osIndependentPath("/relative-to")))
+                        assertThat((volumeMount as LocalMount).pathResolutionContext, equalTo(pathResolutionContext))
                     }
                 }
 
@@ -416,18 +422,51 @@ object VolumeMountSpec : Spek({
 
         describe("serializing to JSON for logs") {
             describe("serializing a local path mount") {
-                val mount = LocalMount(LiteralValue("/local"), osIndependentPath("/relative-to"), "/container", "ro")
+                given("the default filesystem path resolution context is being used") {
+                    val pathResolutionContext by createForEachTest { DefaultPathResolutionContext(osIndependentPath("/root-path")) }
+                    val mount by createForEachTest { LocalMount(LiteralValue("/local"), pathResolutionContext, "/container", "ro") }
 
-                it("serializes to the expected format") {
-                    assertThat(Json.forLogging.stringify(VolumeMount.serializer(), mount), equivalentTo("""
-                        |{
-                        |   "type": "local",
-                        |   "local": {"type":"LiteralValue","value":"/local"},
-                        |   "relativeTo": "/relative-to",
-                        |   "container": "/container",
-                        |   "options": "ro"
-                        |}
-                    """.trimMargin()))
+                    it("serializes to the expected format") {
+                        assertThat(Json.forLogging.stringify(VolumeMount.serializer(), mount), equivalentTo("""
+                            |{
+                            |   "type": "local",
+                            |   "local": {"type":"LiteralValue","value":"/local"},
+                            |   "pathResolutionContext": {
+                            |       "type": "default",
+                            |       "relativeTo": "/root-path"
+                            |   },
+                            |   "container": "/container",
+                            |   "options": "ro"
+                            |}
+                        """.trimMargin()))
+                    }
+                }
+
+                given("a Git include path resolution context is being used") {
+                    val include = GitInclude("https://myrepo.com/bundles/bundle.git", "v1.2.3")
+                    val pathResolutionContext by createForEachTest { GitIncludePathResolutionContext(osIndependentPath("/git/repo/includes"), osIndependentPath("/git/repo"), include) }
+                    val mount by createForEachTest { LocalMount(LiteralValue("/local"), pathResolutionContext, "/container", "ro") }
+
+                    it("serializes to the expected format") {
+                        assertThat(Json.forLogging.stringify(VolumeMount.serializer(), mount), equivalentTo("""
+                            |{
+                            |   "type": "local",
+                            |   "local": {"type":"LiteralValue","value":"/local"},
+                            |   "pathResolutionContext": {
+                            |       "type": "git",
+                            |       "relativeTo": "/git/repo/includes",
+                            |       "repoRootDirectory": "/git/repo",
+                            |       "include": {
+                            |           "repo": "https://myrepo.com/bundles/bundle.git",
+                            |           "ref": "v1.2.3",
+                            |           "path": "batect.yml"
+                            |       }
+                            |   },
+                            |   "container": "/container",
+                            |   "options": "ro"
+                            |}
+                        """.trimMargin()))
+                    }
                 }
             }
 

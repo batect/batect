@@ -80,12 +80,12 @@ object ValueConverters {
                 is PathResolutionResult.Resolved -> when (result.pathType) {
                     PathType.File -> ValueConversionResult.ConversionSucceeded(result.absolutePath)
                     PathType.DoesNotExist -> if (mustExist) {
-                        ValueConversionResult.ConversionFailed("The file '$value' (resolved to '${result.absolutePath}') does not exist.")
+                        ValueConversionResult.ConversionFailed("The file '$value' (${result.resolutionDescription}) does not exist.")
                     } else {
                         ValueConversionResult.ConversionSucceeded(result.absolutePath)
                     }
-                    PathType.Directory -> ValueConversionResult.ConversionFailed("The path '$value' (resolved to '${result.absolutePath}') refers to a directory.")
-                    PathType.Other -> ValueConversionResult.ConversionFailed("The path '$value' (resolved to '${result.absolutePath}') refers to something other than a file.")
+                    PathType.Directory -> ValueConversionResult.ConversionFailed("The path '$value' (${result.resolutionDescription}) refers to a directory.")
+                    PathType.Other -> ValueConversionResult.ConversionFailed("The path '$value' (${result.resolutionDescription}) refers to something other than a file.")
                 }
                 is PathResolutionResult.InvalidPath -> ValueConversionResult.ConversionFailed("'$value' is not a valid path.")
             }
@@ -98,14 +98,14 @@ object ValueConverters {
         return { value ->
             when (val result = resolver.resolve(value)) {
                 is PathResolutionResult.Resolved -> when (result.pathType) {
-                    PathType.File -> ValueConversionResult.ConversionFailed("The path '$value' (resolved to '${result.absolutePath}') refers to a file.")
+                    PathType.File -> ValueConversionResult.ConversionFailed("The path '$value' (${result.resolutionDescription}) refers to a file.")
                     PathType.DoesNotExist -> if (mustExist) {
-                        ValueConversionResult.ConversionFailed("The directory '$value' (resolved to '${result.absolutePath}') does not exist.")
+                        ValueConversionResult.ConversionFailed("The directory '$value' (${result.resolutionDescription}) does not exist.")
                     } else {
                         ValueConversionResult.ConversionSucceeded(result.absolutePath)
                     }
                     PathType.Directory -> ValueConversionResult.ConversionSucceeded(result.absolutePath)
-                    PathType.Other -> ValueConversionResult.ConversionFailed("The path '$value' (resolved to '${result.absolutePath}') refers to something other than a directory.")
+                    PathType.Other -> ValueConversionResult.ConversionFailed("The path '$value' (${result.resolutionDescription}) refers to something other than a directory.")
                 }
                 is PathResolutionResult.InvalidPath -> ValueConversionResult.ConversionFailed("'$value' is not a valid path.")
             }

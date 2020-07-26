@@ -40,12 +40,11 @@ import batect.testutils.given
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.logRepresentationOf
 import batect.testutils.on
-import batect.testutils.osIndependentPath
+import batect.testutils.pathResolutionContextDoesNotMatter
 import batect.testutils.runForEachTest
 import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
-import java.nio.file.Paths
 import org.araqnid.hamkrest.json.equivalentTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
@@ -60,7 +59,7 @@ object CreateContainerStepRuleSpec : Spek({
             val imageSource = PullImage(imageName)
 
             given("the container has no cache mounts") {
-                val container = Container("the-container", imageSource, volumeMounts = setOf(LocalMount(LiteralValue("/some-local-path"), osIndependentPath("/relative-to"), "/some-container-path")))
+                val container = Container("the-container", imageSource, volumeMounts = setOf(LocalMount(LiteralValue("/some-local-path"), pathResolutionContextDoesNotMatter(), "/some-container-path")))
                 val rule = CreateContainerStepRule(container, config)
 
                 given("the task network is ready") {
@@ -159,7 +158,7 @@ object CreateContainerStepRuleSpec : Spek({
         }
 
         given("the container uses an image that must be built") {
-            val source = BuildImage(LiteralValue("/some-image-directory"), Paths.get("/"))
+            val source = BuildImage(LiteralValue("/some-image-directory"), pathResolutionContextDoesNotMatter())
             val container = Container("the-container", source)
             val rule = CreateContainerStepRule(container, config)
 

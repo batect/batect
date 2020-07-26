@@ -14,8 +14,14 @@
    limitations under the License.
 */
 
-package batect.logging
+package batect.os
 
-interface LogSink {
-    fun write(severity: Severity, loggerAdditionalData: Map<String, Jsonable>, build: LogMessageBuilder.() -> Unit)
+import java.nio.file.Path
+import kotlinx.serialization.PolymorphicSerializer
+
+interface PathResolutionContext {
+    val relativeTo: Path
+    fun getResolutionDescription(absolutePath: Path): String
 }
+
+val PathResolutionContextSerializer = PolymorphicSerializer<PathResolutionContext>(PathResolutionContext::class)

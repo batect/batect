@@ -33,10 +33,6 @@ fun withColumn(column: Int): Matcher<ConfigurationException> {
     return has(ConfigurationException::column, equalTo(column))
 }
 
-fun withFileName(fileName: String): Matcher<ConfigurationException> {
-    return has(ConfigurationException::fileName, equalTo(fileName))
-}
-
 fun <K, V> isEmptyMap() = Matcher(Map<K, V>::isEmpty)
 
 fun equivalentTo(expected: TextRun): Matcher<TextRun> =

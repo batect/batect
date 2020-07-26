@@ -30,7 +30,7 @@ data class FileDefaultValueProvider(val default: String, val pathResolverFactory
             when (resolutionResult.pathType) {
                 PathType.File -> PossibleValue.Valid<Path?>(resolutionResult.absolutePath)
                 PathType.DoesNotExist -> PossibleValue.Valid<Path?>(null)
-                else -> PossibleValue.Invalid("The path '$default' (resolved to '${resolutionResult.absolutePath}') is not a file.")
+                else -> PossibleValue.Invalid("The path '$default' (${resolutionResult.resolutionDescription}) is not a file.")
             }
         }
         is PathResolutionResult.InvalidPath -> PossibleValue.Invalid("The path '$default' is invalid.")

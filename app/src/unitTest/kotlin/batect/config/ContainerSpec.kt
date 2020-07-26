@@ -19,13 +19,13 @@ package batect.config
 import batect.config.io.deserializers.PathDeserializer
 import batect.docker.Capability
 import batect.os.Command
+import batect.os.PathResolutionContext
 import batect.os.PathResolutionResult
 import batect.os.PathResolver
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.on
-import batect.testutils.osIndependentPath
 import batect.testutils.runForEachTest
 import batect.testutils.withColumn
 import batect.testutils.withLineNumber
@@ -43,9 +43,11 @@ import org.spekframework.spek2.style.specification.describe
 
 object ContainerSpec : Spek({
     describe("a container") {
+        val pathResolverContext by createForEachTest { mock<PathResolutionContext>() }
+
         val pathResolver by createForEachTest {
             mock<PathResolver> {
-                on { relativeTo } doReturn osIndependentPath("/relative-to")
+                on { context } doReturn pathResolverContext
             }
         }
 
@@ -64,7 +66,7 @@ object ContainerSpec : Spek({
                 val result by runForEachTest { parser.parse(Container.Companion, yaml) }
 
                 it("returns the expected container configuration") {
-                    assertThat(result, equalTo(Container("UNNAMED-FROM-CONFIG-FILE", BuildImage(LiteralValue("/some_build_dir"), osIndependentPath("/relative-to"), emptyMap(), "Dockerfile"))))
+                    assertThat(result, equalTo(Container("UNNAMED-FROM-CONFIG-FILE", BuildImage(LiteralValue("/some_build_dir"), pathResolverContext, emptyMap(), "Dockerfile"))))
                 }
             }
         }
@@ -201,7 +203,7 @@ object ContainerSpec : Spek({
                 val result by runForEachTest { parser.parse(Container.Companion, yaml) }
 
                 it("returns the expected container configuration") {
-                    assertThat(result.imageSource, equalTo(BuildImage(LiteralValue("/container-1-build-dir"), osIndependentPath("/relative-to"), mapOf("SOME_ARG" to LiteralValue("some_value"), "SOME_DYNAMIC_VALUE" to EnvironmentVariableReference("host_var")), "some-Dockerfile")))
+                    assertThat(result.imageSource, equalTo(BuildImage(LiteralValue("/container-1-build-dir"), pathResolverContext, mapOf("SOME_ARG" to LiteralValue("some_value"), "SOME_DYNAMIC_VALUE" to EnvironmentVariableReference("host_var")), "some-Dockerfile")))
                     assertThat(result.command, equalTo(Command.parse("do-the-thing.sh some-param")))
                     assertThat(result.entrypoint, equalTo(Command.parse("sh")))
                     assertThat(
@@ -219,8 +221,8 @@ object ContainerSpec : Spek({
                     assertThat(
                         result.volumeMounts, equalTo(
                             setOf(
-                                LocalMount(LiteralValue("/volume1"), osIndependentPath("/relative-to"), "/here", null),
-                                LocalMount(LiteralValue("/somewhere"), osIndependentPath("/relative-to"), "/else", "ro")
+                                LocalMount(LiteralValue("/volume1"), pathResolverContext, "/here", null),
+                                LocalMount(LiteralValue("/somewhere"), pathResolverContext, "/else", "ro")
                             )
                         )
                     )

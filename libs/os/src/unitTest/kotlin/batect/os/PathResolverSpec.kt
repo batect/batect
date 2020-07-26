@@ -22,6 +22,7 @@ import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.assertion.assertThat
 import java.nio.file.Files
+import java.nio.file.Path
 import java.util.Properties
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
@@ -38,7 +39,12 @@ object PathResolverSpec : Spek({
         val systemProperties = Properties()
         systemProperties.setProperty("user.home", homeDir.toString())
 
-        val resolver = PathResolver(relativeTo, systemProperties)
+        val context = object : PathResolutionContext {
+            override val relativeTo: Path = relativeTo
+            override fun getResolutionDescription(absolutePath: Path): String = "described as $absolutePath"
+        }
+
+        val resolver = PathResolver(context, systemProperties)
 
         beforeGroup {
             Files.createDirectories(homeDir)
@@ -49,7 +55,7 @@ object PathResolverSpec : Spek({
             val path = ""
 
             it("resolves to the original directory") {
-                assertThat(resolver.resolve(path), equalTo(PathResolutionResult.Resolved("", fileSystem.getPath("/thing/place"), PathType.Directory)))
+                assertThat(resolver.resolve(path), equalTo(PathResolutionResult.Resolved("", fileSystem.getPath("/thing/place"), PathType.Directory, "described as /thing/place")))
             }
         }
 
@@ -57,7 +63,7 @@ object PathResolverSpec : Spek({
             val path = "."
 
             it("resolves to the original directory") {
-                assertThat(resolver.resolve(path), equalTo(PathResolutionResult.Resolved(".", fileSystem.getPath("/thing/place"), PathType.Directory)))
+                assertThat(resolver.resolve(path), equalTo(PathResolutionResult.Resolved(".", fileSystem.getPath("/thing/place"), PathType.Directory, "described as /thing/place")))
             }
         }
 
@@ -69,7 +75,7 @@ object PathResolverSpec : Spek({
             }
 
             it("resolves to the subdirectory") {
-                assertThat(resolver.resolve(path), equalTo(PathResolutionResult.Resolved("stuff", fileSystem.getPath("/thing/place/stuff"), PathType.Directory)))
+                assertThat(resolver.resolve(path), equalTo(PathResolutionResult.Resolved("stuff", fileSystem.getPath("/thing/place/stuff"), PathType.Directory, "described as /thing/place/stuff")))
             }
         }
 
@@ -77,7 +83,7 @@ object PathResolverSpec : Spek({
             val path = ".."
 
             it("resolves to the parent directory") {
-                assertThat(resolver.resolve(path), equalTo(PathResolutionResult.Resolved("..", fileSystem.getPath("/thing"), PathType.Directory)))
+                assertThat(resolver.resolve(path), equalTo(PathResolutionResult.Resolved("..", fileSystem.getPath("/thing"), PathType.Directory, "described as /thing")))
             }
         }
 
@@ -89,7 +95,7 @@ object PathResolverSpec : Spek({
             }
 
             it("resolves to the parent directory") {
-                assertThat(resolver.resolve(path), equalTo(PathResolutionResult.Resolved("../something", fileSystem.getPath("/thing/something"), PathType.Directory)))
+                assertThat(resolver.resolve(path), equalTo(PathResolutionResult.Resolved("../something", fileSystem.getPath("/thing/something"), PathType.Directory, "described as /thing/something")))
             }
         }
 
@@ -101,7 +107,7 @@ object PathResolverSpec : Spek({
             }
 
             it("resolves to the absolute path") {
-                assertThat(resolver.resolve(path), equalTo(PathResolutionResult.Resolved("/other", fileSystem.getPath("/other"), PathType.Directory)))
+                assertThat(resolver.resolve(path), equalTo(PathResolutionResult.Resolved("/other", fileSystem.getPath("/other"), PathType.Directory, "described as /other")))
             }
         }
 
@@ -109,7 +115,7 @@ object PathResolverSpec : Spek({
             val path = "doesnotexist"
 
             it("reports that the path does not exist") {
-                assertThat(resolver.resolve(path), equalTo(PathResolutionResult.Resolved("doesnotexist", fileSystem.getPath("/thing/place/doesnotexist"), PathType.DoesNotExist)))
+                assertThat(resolver.resolve(path), equalTo(PathResolutionResult.Resolved("doesnotexist", fileSystem.getPath("/thing/place/doesnotexist"), PathType.DoesNotExist, "described as /thing/place/doesnotexist")))
             }
         }
 
@@ -121,7 +127,7 @@ object PathResolverSpec : Spek({
             }
 
             it("resolves to the file") {
-                assertThat(resolver.resolve(path), equalTo(PathResolutionResult.Resolved("thefile.txt", fileSystem.getPath("/thing/place/thefile.txt"), PathType.File)))
+                assertThat(resolver.resolve(path), equalTo(PathResolutionResult.Resolved("thefile.txt", fileSystem.getPath("/thing/place/thefile.txt"), PathType.File, "described as /thing/place/thefile.txt")))
             }
         }
 
@@ -129,7 +135,7 @@ object PathResolverSpec : Spek({
             val path = "~"
 
             it("resolves to the user's home directory") {
-                assertThat(resolver.resolve(path), equalTo(PathResolutionResult.Resolved("~", fileSystem.getPath("/home/username"), PathType.Directory)))
+                assertThat(resolver.resolve(path), equalTo(PathResolutionResult.Resolved("~", fileSystem.getPath("/home/username"), PathType.Directory, "described as /home/username")))
             }
         }
 
@@ -141,7 +147,7 @@ object PathResolverSpec : Spek({
             }
 
             it("resolves to the full path to the file") {
-                assertThat(resolver.resolve(path), equalTo(PathResolutionResult.Resolved("~/somefile.txt", fileSystem.getPath("/home/username/somefile.txt"), PathType.File)))
+                assertThat(resolver.resolve(path), equalTo(PathResolutionResult.Resolved("~/somefile.txt", fileSystem.getPath("/home/username/somefile.txt"), PathType.File, "described as /home/username/somefile.txt")))
             }
         }
 
@@ -154,7 +160,7 @@ object PathResolverSpec : Spek({
         }
 
         given("a path resolver with the current directory as the base path") {
-            val currentDirectoryResolver = PathResolver(fileSystem.getPath("."), systemProperties)
+            val currentDirectoryResolver = PathResolver(DefaultPathResolutionContext(fileSystem.getPath(".")), systemProperties)
             val path = "somefile.txt"
 
             it("resolves the path to the absolute path") {
@@ -162,7 +168,8 @@ object PathResolverSpec : Spek({
                     PathResolutionResult.Resolved(
                         "somefile.txt",
                         fileSystem.getPath("/some-work-dir/somefile.txt"),
-                        PathType.DoesNotExist
+                        PathType.DoesNotExist,
+                        "resolved to '/some-work-dir/somefile.txt'"
                     )
                 ))
             }

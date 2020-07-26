@@ -14,8 +14,18 @@
    limitations under the License.
 */
 
-package batect.logging
+package batect.config.includes
 
-interface LogSink {
-    fun write(severity: Severity, loggerAdditionalData: Map<String, Jsonable>, build: LogMessageBuilder.() -> Unit)
+import batect.config.FileInclude
+import batect.config.GitInclude
+import batect.config.Include
+import java.nio.file.Path
+
+class IncludeResolver {
+    fun resolve(include: Include): Path = when (include) {
+        is FileInclude -> include.path
+        else -> TODO()
+    }
+
+    fun rootPathFor(include: GitInclude): Path = TODO()
 }

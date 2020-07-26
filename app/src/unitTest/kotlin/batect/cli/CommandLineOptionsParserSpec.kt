@@ -47,8 +47,9 @@ object CommandLineOptionsParserSpec : Spek({
             on { resolve(any()) } doAnswer { invocation ->
                 val originalPath = invocation.getArgument<String>(0)
                 val pathType = if (originalPath.contains("dir")) { PathType.Directory } else { PathType.File }
+                val resolvedPath = fileSystem.getPath("/resolved", originalPath)
 
-                PathResolutionResult.Resolved(originalPath, fileSystem.getPath("/resolved", originalPath), pathType)
+                PathResolutionResult.Resolved(originalPath, resolvedPath, pathType, "resolved to $resolvedPath")
             }
         }
 

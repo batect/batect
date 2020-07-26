@@ -21,16 +21,17 @@ import batect.config.ConfigVariableMap
 import batect.config.Configuration
 import batect.config.ProjectPaths
 import batect.config.io.ConfigurationException
+import batect.config.io.ConfigurationFileException
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given
-import batect.testutils.withFileName
-import batect.testutils.withLineNumber
 import batect.testutils.withMessage
 import com.google.common.jimfs.Configuration as JimfsConfiguration
 import com.google.common.jimfs.Jimfs
+import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.throws
 import java.nio.file.Files
 import java.nio.file.Path
@@ -90,7 +91,7 @@ object ConfigVariablesProviderSpec : Spek({
 
                         it("throws an appropriate exception") {
                             assertThat(
-                                { provider.build(config) }, throws<ConfigurationException>(
+                                { provider.build(config) }, throws<ConfigurationFileException>(
                                     withMessage("The config variable 'some_var' has not been defined.")
                                         and withLineNumber(1) and withFileName(sourceFile.toString())
                                 )
@@ -123,7 +124,7 @@ object ConfigVariablesProviderSpec : Spek({
                     beforeEachTest { Files.write(sourceFile, listOf("blah")) }
 
                     it("throws an appropriate exception") {
-                        assertThat({ provider.build(config) }, throws<ConfigurationException>(
+                        assertThat({ provider.build(config) }, throws<ConfigurationFileException>(
                             withMessage("Expected a map, but got a scalar value")
                                 and withLineNumber(1) and withFileName(sourceFile.toString())
                         ))
@@ -188,3 +189,9 @@ object ConfigVariablesProviderSpec : Spek({
 
 private fun configWithVariables(vararg variables: ConfigVariableDefinition): Configuration =
     Configuration("the_project", configVariables = ConfigVariableMap(*variables))
+
+private fun withLineNumber(lineNumber: Int): Matcher<ConfigurationFileException> =
+    has(ConfigurationFileException::lineNumber, equalTo(lineNumber))
+
+private fun withFileName(fileName: String): Matcher<ConfigurationFileException> =
+    has(ConfigurationFileException::fileName, equalTo(fileName))

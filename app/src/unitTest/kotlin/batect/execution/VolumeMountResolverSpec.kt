@@ -25,6 +25,7 @@ import batect.config.ProjectPaths
 import batect.docker.DockerVolumeMount
 import batect.docker.DockerVolumeMountSource
 import batect.os.HostEnvironmentVariables
+import batect.os.PathResolutionContext
 import batect.os.PathResolutionResult
 import batect.os.PathResolver
 import batect.os.PathResolverFactory
@@ -49,21 +50,21 @@ object VolumeMountResolverSpec : Spek({
         val fileSystem by createForEachTest { Jimfs.newFileSystem(Configuration.unix()) }
 
         describe("resolving local mounts") {
-            val relativeTo by createForEachTest { fileSystem.getPath("/relative-to-path") }
+            val context by createForEachTest { mock<PathResolutionContext>() }
 
             val pathResolver by createForEachTest {
                 mock<PathResolver> {
-                    on { resolve("file") } doReturn PathResolutionResult.Resolved("file", fileSystem.getPath("/resolved/file"), PathType.File)
-                    on { resolve("directory") } doReturn PathResolutionResult.Resolved("directory", fileSystem.getPath("/resolved/directory"), PathType.Directory)
-                    on { resolve("other") } doReturn PathResolutionResult.Resolved("other", fileSystem.getPath("/resolved/other"), PathType.Other)
-                    on { resolve("does-not-exist") } doReturn PathResolutionResult.Resolved("does-not-exist", fileSystem.getPath("/resolved/does-not-exist"), PathType.DoesNotExist)
+                    on { resolve("file") } doReturn PathResolutionResult.Resolved("file", fileSystem.getPath("/resolved/file"), PathType.File, "described as file by resolver context")
+                    on { resolve("directory") } doReturn PathResolutionResult.Resolved("directory", fileSystem.getPath("/resolved/directory"), PathType.Directory, "described as directory by resolver context")
+                    on { resolve("other") } doReturn PathResolutionResult.Resolved("other", fileSystem.getPath("/resolved/other"), PathType.Other, "described as other by resolver context")
+                    on { resolve("does-not-exist") } doReturn PathResolutionResult.Resolved("does-not-exist", fileSystem.getPath("/resolved/does-not-exist"), PathType.DoesNotExist, "described as does not exist by resolver context")
                     on { resolve("invalid") } doReturn PathResolutionResult.InvalidPath("invalid")
                 }
             }
 
             val pathResolverFactory by createForEachTest {
                 mock<PathResolverFactory> {
-                    on { createResolver(relativeTo) } doReturn pathResolver
+                    on { createResolver(context) } doReturn pathResolver
                 }
             }
 
@@ -74,10 +75,10 @@ object VolumeMountResolverSpec : Spek({
             given("a set of volume mounts from the configuration file that resolve to valid paths") {
                 val mounts by createForEachTest {
                     setOf(
-                        LocalMount(LiteralValue("file"), relativeTo, "/container-1"),
-                        LocalMount(LiteralValue("directory"), relativeTo, "/container-2", "options-2"),
-                        LocalMount(LiteralValue("other"), relativeTo, "/container-3"),
-                        LocalMount(LiteralValue("does-not-exist"), relativeTo, "/container-4")
+                        LocalMount(LiteralValue("file"), context, "/container-1"),
+                        LocalMount(LiteralValue("directory"), context, "/container-2", "options-2"),
+                        LocalMount(LiteralValue("other"), context, "/container-3"),
+                        LocalMount(LiteralValue("does-not-exist"), context, "/container-4")
                     )
                 }
 
@@ -98,7 +99,7 @@ object VolumeMountResolverSpec : Spek({
             given("a volume mount for the Docker socket") {
                 val mounts by createForEachTest {
                     setOf(
-                        LocalMount(LiteralValue("/var/run/docker.sock"), relativeTo, "/container-1", "some-options")
+                        LocalMount(LiteralValue("/var/run/docker.sock"), context, "/container-1", "some-options")
                     )
                 }
 
@@ -117,7 +118,7 @@ object VolumeMountResolverSpec : Spek({
                 given("the path does not contain an expression") {
                     val mounts by createForEachTest {
                         setOf(
-                            LocalMount(LiteralValue("invalid"), relativeTo, "/container-1")
+                            LocalMount(LiteralValue("invalid"), context, "/container-1")
                         )
                     }
 
@@ -129,7 +130,7 @@ object VolumeMountResolverSpec : Spek({
                 given("the path contains an expression") {
                     val mounts by createForEachTest {
                         setOf(
-                            LocalMount(EnvironmentVariableReference("INVALID", originalExpression = "the-original-invalid-expression"), relativeTo, "/container-1")
+                            LocalMount(EnvironmentVariableReference("INVALID", originalExpression = "the-original-invalid-expression"), context, "/container-1")
                         )
                     }
 
@@ -142,7 +143,7 @@ object VolumeMountResolverSpec : Spek({
             given("a volume mount with an expression that cannot be evaluated") {
                 val mounts by createForEachTest {
                     setOf(
-                        LocalMount(EnvironmentVariableReference("DOES_NOT_EXIST", originalExpression = "the-original-expression"), relativeTo, "/container-1")
+                        LocalMount(EnvironmentVariableReference("DOES_NOT_EXIST", originalExpression = "the-original-expression"), context, "/container-1")
                     )
                 }
 

@@ -57,6 +57,7 @@ import batect.os.Command
 import batect.testutils.createForEachTest
 import batect.testutils.given
 import batect.testutils.on
+import batect.testutils.pathResolutionContextDoesNotMatter
 import batect.ui.FailureErrorMessageFormatter
 import batect.ui.text.Text
 import batect.ui.text.TextRun
@@ -76,7 +77,7 @@ import org.spekframework.spek2.style.specification.describe
 
 object InterleavedEventLoggerSpec : Spek({
     describe("an interleaved event logger") {
-        val container1ImageSource = BuildImage(LiteralValue("/some-image-dir"), Paths.get("/"))
+        val container1ImageSource = BuildImage(LiteralValue("/some-image-dir"), pathResolutionContextDoesNotMatter())
         val container2And3ImageSource = PullImage("another-image")
         val taskContainerImageSource = PullImage("some-image")
         val taskContainer = Container("task-container", taskContainerImageSource)

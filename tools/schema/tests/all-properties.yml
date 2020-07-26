@@ -192,3 +192,15 @@ config_variables:
   my_fully_featured_var:
     description: The description
     default: Some default value
+
+include:
+  - some/file.yml
+  - type: file
+    path: some/other/file.yml
+  - type: git
+    repo: https://github.com/me/my-repo.git
+    ref: v1.2.3
+  - type: git
+    repo: https://github.com/me/my-repo.git
+    ref: v1.2.3
+    path: my-file.yml

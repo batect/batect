@@ -598,8 +598,70 @@
       "type": "array",
       "description": "List of configuration files to include in this project",
       "items": {
-        "type": "string"
+        "$ref": "#/definitions/include"
       }
+    },
+    "include": {
+      "oneOf": [
+        {
+          "type": "string",
+          "description": "Path (relative to this file) to the file to include"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "description": "The type of include",
+              "enum": [
+                "file"
+              ]
+            },
+            "path": {
+              "type": "string",
+              "description": "Path (relative to this file) of the file to include",
+              "minLength": 1
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "path"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "description": "The type of include",
+              "enum": [
+                "git"
+              ]
+            },
+            "repo": {
+              "type": "string",
+              "description": "Git repository containing the file to include",
+              "minLength": 1
+            },
+            "ref": {
+              "type": "string",
+              "description": "Git reference (commit, tag or branch) containing the file to include"
+            },
+            "path": {
+              "type": "string",
+              "description": "Path (relative to the root of the repository) of the file to include (defaults to batect.yml if not set)",
+              "minLength": 1
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "repo",
+            "ref"
+          ]
+        }
+      ]
     }
   }
 }

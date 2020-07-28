@@ -42,6 +42,7 @@ object PathResolverSpec : Spek({
         val context = object : PathResolutionContext {
             override val relativeTo: Path = relativeTo
             override fun getResolutionDescription(absolutePath: Path): String = "described as $absolutePath"
+            override fun getPathForDisplay(absolutePath: Path): String = throw NotImplementedError()
         }
 
         val resolver = PathResolver(context, systemProperties)

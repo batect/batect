@@ -34,10 +34,6 @@ import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
 object IncludeResolverSpec : Spek({
-    // Resolve Git include:
-    // - not seen before: call ensureCached and return resolved absolute path
-    // - seen before: return resolved absolute path
-
     describe("an include resolver") {
         val fileSystem by createForEachTest { Jimfs.newFileSystem(Configuration.unix()) }
         val gitRepositoryCache by createForEachTest { mock<GitRepositoryCache>() }

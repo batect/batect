@@ -37,6 +37,7 @@ class GitRepositoryCache(
     private val applicationPaths: ApplicationPaths,
     private val gitClient: GitClient,
     private val versionInfo: VersionInfo,
+    private val listener: GitRepositoryCacheNotificationListener,
     private val timeSource: TimeSource = ZonedDateTime::now
 ) {
     private val gitCacheDirectory = applicationPaths.rootLocalStorageDirectory.resolve("git").toAbsolutePath()
@@ -56,7 +57,9 @@ class GitRepositoryCache(
 
     private fun cloneRepoIfMissing(repo: GitRepositoryReference, workingCopyPath: Path) {
         if (!Files.exists(workingCopyPath)) {
+            listener.onCloning(repo)
             gitClient.clone(repo.remote, repo.ref, workingCopyPath)
+            listener.onCloneComplete()
         }
     }
 

@@ -33,9 +33,11 @@ import com.natpryce.hamkrest.isEmpty
 import com.natpryce.hamkrest.throws
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doReturn
+import com.nhaarman.mockitokotlin2.inOrder
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.verify
+import com.nhaarman.mockitokotlin2.verifyZeroInteractions
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.ZoneOffset
@@ -57,8 +59,9 @@ object GitRepositoryCacheSpec : Spek({
             }
         }
 
+        val listener by createForEachTest { mock<GitRepositoryCacheNotificationListener>() }
         val currentTime = ZonedDateTime.of(2020, 7, 5, 1, 2, 3, 456789012, ZoneOffset.UTC)
-        val cache by createForEachTest { GitRepositoryCache(paths, gitClient, versionInfo, { currentTime }) }
+        val cache by createForEachTest { GitRepositoryCache(paths, gitClient, versionInfo, listener, { currentTime }) }
 
         describe("ensuring a repository is cached") {
             val repo = GitRepositoryReference("https://github.com/me/my-bundle.git", "my-tag")
@@ -88,11 +91,23 @@ object GitRepositoryCacheSpec : Spek({
                 it("clones the repository into the expected directory") {
                     verify(gitClient).clone(repo.remote, repo.ref, expectedWorkingCopyDirectory)
                 }
+
+                it("notifies the listener that the repository is being cloned before cloning the repository, and after the clone has finished") {
+                    inOrder(listener, gitClient) {
+                        verify(listener).onCloning(repo)
+                        verify(gitClient).clone(any(), any(), any())
+                        verify(listener).onCloneComplete()
+                    }
+                }
             }
 
             fun Suite.itDoesNotCloneTheRepository() {
                 it("does not clone the repository") {
                     verify(gitClient, never()).clone(any(), any(), any())
+                }
+
+                it("does not notify the listener that the repository is being cloned or has finished cloning") {
+                    verifyZeroInteractions(listener)
                 }
             }
 

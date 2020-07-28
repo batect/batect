@@ -17,34 +17,63 @@
 package batect.config.includes
 
 import batect.testutils.createForEachTest
+import batect.testutils.given
 import batect.ui.Console
+import batect.ui.OutputStyle
 import batect.ui.text.Text
-import com.nhaarman.mockitokotlin2.inOrder
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
+import com.nhaarman.mockitokotlin2.verifyZeroInteractions
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
 object GitRepositoryCacheNotificationListenerSpec : Spek({
     describe("a Git repository cache notification listener") {
         val console by createForEachTest { mock<Console>() }
-        val listener by createForEachTest { GitRepositoryCacheNotificationListener(console) }
 
-        describe("when a repository is being cloned") {
-            val repo = GitRepositoryReference("https://myrepo.com/bundles/bundle.git", "v1.2.3")
+        given("quiet output is not being used") {
+            val outputStyle = OutputStyle.Simple
+            val listener by createForEachTest { GitRepositoryCacheNotificationListener(console, outputStyle) }
 
-            beforeEachTest { listener.onCloning(repo) }
+            describe("when a repository is being cloned") {
+                val repo = GitRepositoryReference("https://myrepo.com/bundles/bundle.git", "v1.2.3")
 
-            it("prints a message to the console") {
-                verify(console).println(Text.white(Text("Cloning ") + Text.bold("https://myrepo.com/bundles/bundle.git") + Text(" ") + Text.bold("v1.2.3") + Text("...")))
+                beforeEachTest { listener.onCloning(repo) }
+
+                it("prints a message to the console") {
+                    verify(console).println(Text.white(Text("Cloning ") + Text.bold("https://myrepo.com/bundles/bundle.git") + Text(" ") + Text.bold("v1.2.3") + Text("...")))
+                }
+            }
+
+            describe("when a repository has been cloned") {
+                beforeEachTest { listener.onCloneComplete() }
+
+                it("prints a blank line to the console to separate any output from Git from any further output from batect") {
+                    verify(console).println()
+                }
             }
         }
 
-        describe("when a repository has been cloned") {
-            beforeEachTest { listener.onCloneComplete() }
+        given("quiet output is being used") {
+            val outputStyle = OutputStyle.Quiet
+            val listener by createForEachTest { GitRepositoryCacheNotificationListener(console, outputStyle) }
 
-            it("prints a blank line to the console to separate any output from Git from any further output from batect") {
-                verify(console).println()
+            describe("when a repository is being cloned") {
+                val repo = GitRepositoryReference("https://myrepo.com/bundles/bundle.git", "v1.2.3")
+
+                beforeEachTest { listener.onCloning(repo) }
+
+                it("does not print anything to the console") {
+                    verifyZeroInteractions(console)
+                }
+            }
+
+            describe("when a repository has been cloned") {
+                beforeEachTest { listener.onCloneComplete() }
+
+                it("prints a blank line to the console to separate any output from Git from any further output from batect") {
+                    verifyZeroInteractions(console)
+                }
             }
         }
     }

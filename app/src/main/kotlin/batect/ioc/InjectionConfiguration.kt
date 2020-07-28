@@ -217,7 +217,7 @@ private val cliModule = Kodein.Module("cli") {
 private val configModule = Kodein.Module("config") {
     bind<ConfigurationLoader>() with singletonWithLogger { logger -> ConfigurationLoader(instance(), instance(), logger) }
     bind<GitRepositoryCache>() with singleton { GitRepositoryCache(instance(), instance(), instance(), instance()) }
-    bind<GitRepositoryCacheNotificationListener>() with singleton { GitRepositoryCacheNotificationListener(instance(StreamType.Output)) }
+    bind<GitRepositoryCacheNotificationListener>() with singleton { GitRepositoryCacheNotificationListener(instance(StreamType.Output), commandLineOptions().requestedOutputStyle) }
     bind<IncludeResolver>() with singleton { IncludeResolver(instance()) }
     bind<PathResolverFactory>() with singleton { PathResolverFactory(instance()) }
     bind<ProjectPaths>() with singleton { ProjectPaths(commandLineOptions().configurationFileName) }

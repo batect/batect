@@ -17,14 +17,26 @@
 package batect.config.includes
 
 import batect.ui.Console
+import batect.ui.OutputStyle
 import batect.ui.text.Text
 
-class GitRepositoryCacheNotificationListener(private val console: Console) {
+class GitRepositoryCacheNotificationListener(
+    private val console: Console,
+    private val outputStyle: OutputStyle?
+) {
     fun onCloning(repo: GitRepositoryReference) {
+        if (outputStyle == OutputStyle.Quiet) {
+            return
+        }
+
         console.println(Text.white(Text("Cloning ") + Text.bold(repo.remote) + Text(" ") + Text.bold(repo.ref) + Text("...")))
     }
 
     fun onCloneComplete() {
+        if (outputStyle == OutputStyle.Quiet) {
+            return
+        }
+
         console.println()
     }
 }

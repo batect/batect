@@ -22,6 +22,7 @@ import kotlinx.serialization.PolymorphicSerializer
 interface PathResolutionContext {
     val relativeTo: Path
     fun getResolutionDescription(absolutePath: Path): String
+    fun getPathForDisplay(absolutePath: Path): String
 }
 
 val PathResolutionContextSerializer = PolymorphicSerializer<PathResolutionContext>(PathResolutionContext::class)

@@ -126,10 +126,10 @@ object BuildImageStepRunnerSpec : Spek({
                 val update2 = DockerImageBuildProgress(2, 2, "Second step", null)
 
                 beforeEachTest {
-                    whenever(imagesClient.build(eq(resolvedBuildDirectory), any(), eq(dockerfilePath), eq(setOf("some-project-some-container")), eq(outputSink), eq(cancellationContext), any()))
+                    whenever(imagesClient.build(eq(resolvedBuildDirectory), any(), eq(dockerfilePath), eq(pathResolutionContext), eq(setOf("some-project-some-container")), eq(outputSink), eq(cancellationContext), any()))
                         .then { invocation ->
                             @Suppress("UNCHECKED_CAST")
-                            val onStatusUpdate = invocation.arguments[6] as (DockerImageBuildProgress) -> Unit
+                            val onStatusUpdate = invocation.arguments[7] as (DockerImageBuildProgress) -> Unit
 
                             onStatusUpdate(update1)
                             onStatusUpdate(update2)
@@ -148,7 +148,7 @@ object BuildImageStepRunnerSpec : Spek({
                         "SOME_HOST_VAR" to "some env var value"
                     )
 
-                    verify(imagesClient).build(any(), eq(expectedArgs), any(), any(), any(), any(), any())
+                    verify(imagesClient).build(any(), eq(expectedArgs), any(), any(), any(), any(), any(), any())
                 }
 
                 it("emits a 'image build progress' event for each update received from Docker") {
@@ -179,7 +179,7 @@ object BuildImageStepRunnerSpec : Spek({
                 }
 
                 beforeEachTest {
-                    whenever(imagesClient.build(eq(resolvedBuildDirectory), any(), eq(dockerfilePath), eq(setOf("some-project-some-container")), eq(outputSink), eq(cancellationContext), any())).thenReturn(image)
+                    whenever(imagesClient.build(eq(resolvedBuildDirectory), any(), eq(dockerfilePath), eq(pathResolutionContext), eq(setOf("some-project-some-container")), eq(outputSink), eq(cancellationContext), any())).thenReturn(image)
 
                     runnerWithProxyEnvironmentVariablePropagationDisabled.run(step, eventSink)
                 }
@@ -191,7 +191,7 @@ object BuildImageStepRunnerSpec : Spek({
                         "SOME_HOST_VAR" to "some env var value"
                     )
 
-                    verify(imagesClient).build(any(), eq(expectedArgs), any(), any(), any(), any(), any())
+                    verify(imagesClient).build(any(), eq(expectedArgs), any(), any(), any(), any(), any(), any())
                 }
 
                 it("emits a 'image built' event") {
@@ -202,7 +202,7 @@ object BuildImageStepRunnerSpec : Spek({
 
         on("when building the image fails") {
             beforeEachTest {
-                whenever(imagesClient.build(eq(resolvedBuildDirectory), any(), eq(dockerfilePath), eq(setOf("some-project-some-container")), eq(outputSink), eq(cancellationContext), any())).thenThrow(ImageBuildFailedException("Something went wrong.\nMore details on this line."))
+                whenever(imagesClient.build(eq(resolvedBuildDirectory), any(), eq(dockerfilePath), eq(pathResolutionContext), eq(setOf("some-project-some-container")), eq(outputSink), eq(cancellationContext), any())).thenThrow(ImageBuildFailedException("Something went wrong.\nMore details on this line."))
                 runner.run(step, eventSink)
             }
 

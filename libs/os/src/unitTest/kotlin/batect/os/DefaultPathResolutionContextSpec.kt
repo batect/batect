@@ -34,5 +34,11 @@ object DefaultPathResolutionContextSpec : Spek({
                 assertThat(context.getResolutionDescription(fileSystem.getPath("/some/path")), equalTo("resolved to '/some/path'"))
             }
         }
+
+        describe("formatting a path for display") {
+            it("returns the absolute path in single quotes") {
+                assertThat(context.getPathForDisplay(fileSystem.getPath("/some/path")), equalTo("'/some/path'"))
+            }
+        }
     }
 })

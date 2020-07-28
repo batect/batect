@@ -1986,7 +1986,7 @@ object ConfigurationLoaderSpec : Spek({
 
             it("should fail with an error message with the user-facing configuration file path") {
                 assertThat({ loadConfiguration(files, rootConfigPath) }, throws(
-                    withMessage("Included file '2.yml' (2.yml from https://myrepo.com/bundles/bundle.git@v1.2.3) does not exist.") and
+                    withMessage("Included file '2.yml' ('2.yml' from https://myrepo.com/bundles/bundle.git@v1.2.3) does not exist.") and
                     withFileName("https://myrepo.com/bundles/bundle.git@v1.2.3: 1.yml") and
                         withLineNumber(2) and withColumn(4)
                 ))
@@ -2014,7 +2014,7 @@ object ConfigurationLoaderSpec : Spek({
 
             it("should fail with an error message with the user-facing configuration file path") {
                 assertThat({ loadConfiguration(files, rootConfigPath) }, throws(
-                    withMessage("Included file '../2.yml' (2.yml from https://myrepo.com/bundles/bundle.git@v1.2.3) does not exist.") and
+                    withMessage("Included file '../2.yml' ('2.yml' from https://myrepo.com/bundles/bundle.git@v1.2.3) does not exist.") and
                         withFileName("https://myrepo.com/bundles/bundle.git@v1.2.3: things/1.yml") and
                         withLineNumber(2) and withColumn(4)
                 ))

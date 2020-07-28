@@ -37,7 +37,11 @@ object GitIncludePathResolutionContextSpec : Spek({
             val resolvedPath by createForEachTest { fileSystem.getPath("/git/some-repo/the-thing") }
 
             it("returns a description describing the path relative to the root of the repository") {
-                assertThat(context.getResolutionDescription(resolvedPath), equalTo("the-thing from https://myrepo.com/bundles/bundle.git@v1.2.3"))
+                assertThat(context.getResolutionDescription(resolvedPath), equalTo("'the-thing' from https://myrepo.com/bundles/bundle.git@v1.2.3"))
+            }
+
+            it("returns the same description when formatting the path for display") {
+                assertThat(context.getPathForDisplay(resolvedPath), equalTo("'the-thing' from https://myrepo.com/bundles/bundle.git@v1.2.3"))
             }
         }
 
@@ -45,7 +49,11 @@ object GitIncludePathResolutionContextSpec : Spek({
             val resolvedPath by createForEachTest { fileSystem.getPath("/git/some-repo/some-directory/the-thing") }
 
             it("returns a description describing the path relative to the root of the repository") {
-                assertThat(context.getResolutionDescription(resolvedPath), equalTo("some-directory/the-thing from https://myrepo.com/bundles/bundle.git@v1.2.3"))
+                assertThat(context.getResolutionDescription(resolvedPath), equalTo("'some-directory/the-thing' from https://myrepo.com/bundles/bundle.git@v1.2.3"))
+            }
+
+            it("returns the same description when formatting the path for display") {
+                assertThat(context.getPathForDisplay(resolvedPath), equalTo("'some-directory/the-thing' from https://myrepo.com/bundles/bundle.git@v1.2.3"))
             }
         }
 
@@ -54,6 +62,10 @@ object GitIncludePathResolutionContextSpec : Spek({
 
             it("returns a description describing the absolute path") {
                 assertThat(context.getResolutionDescription(resolvedPath), equalTo("resolved to '/git/some-thing'"))
+            }
+
+            it("returns the absolute path in single quotes when formatting the path for display") {
+                assertThat(context.getPathForDisplay(resolvedPath), equalTo("'/git/some-thing'"))
             }
         }
     }

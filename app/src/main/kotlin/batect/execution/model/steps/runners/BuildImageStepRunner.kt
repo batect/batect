@@ -64,6 +64,7 @@ class BuildImageStepRunner(
                 resolveBuildDirectory(buildConfig),
                 buildArgs,
                 buildConfig.dockerfilePath,
+                buildConfig.pathResolutionContext,
                 setOf(imageTagFor(step)),
                 ioStreamingOptions.stdoutForImageBuild(step.container),
                 cancellationContext,

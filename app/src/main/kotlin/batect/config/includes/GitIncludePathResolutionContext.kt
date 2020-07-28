@@ -39,9 +39,19 @@ data class GitIncludePathResolutionContext(
         if (absolutePath.startsWith(repoRootDirectory)) {
             val relativePath = repoRootDirectory.relativize(absolutePath)
 
-            return "$relativePath from ${include.repo}@${include.ref}"
+            return "'$relativePath' from ${include.repo}@${include.ref}"
         }
 
         return "resolved to '$absolutePath'"
+    }
+
+    override fun getPathForDisplay(absolutePath: Path): String {
+        if (absolutePath.startsWith(repoRootDirectory)) {
+            val relativePath = repoRootDirectory.relativize(absolutePath)
+
+            return "'$relativePath' from ${include.repo}@${include.ref}"
+        }
+
+        return "'$absolutePath'"
     }
 }

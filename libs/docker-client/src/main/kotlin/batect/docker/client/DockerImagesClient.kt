@@ -28,6 +28,7 @@ import batect.docker.pull.DockerImageProgress
 import batect.docker.pull.DockerImageProgressReporter
 import batect.docker.pull.DockerRegistryCredentialsProvider
 import batect.logging.Logger
+import batect.os.PathResolutionContext
 import batect.primitives.CancellationContext
 import java.nio.file.Files
 import java.nio.file.LinkOption
@@ -49,6 +50,7 @@ class DockerImagesClient(
         buildDirectory: Path,
         buildArgs: Map<String, String>,
         dockerfilePath: String,
+        pathResolutionContext: PathResolutionContext,
         imageTags: Set<String>,
         outputSink: Sink?,
         cancellationContext: CancellationContext,
@@ -66,11 +68,11 @@ class DockerImagesClient(
             val resolvedDockerfilePath = buildDirectory.resolve(dockerfilePath)
 
             if (!Files.exists(resolvedDockerfilePath)) {
-                throw ImageBuildFailedException("Could not build image: the Dockerfile '$dockerfilePath' does not exist in '$buildDirectory'")
+                throw ImageBuildFailedException("Could not build image: the Dockerfile '$dockerfilePath' does not exist in the build directory ${pathResolutionContext.getPathForDisplay(buildDirectory)}")
             }
 
             if (!resolvedDockerfilePath.toRealPath(LinkOption.NOFOLLOW_LINKS).startsWith(buildDirectory.toRealPath(LinkOption.NOFOLLOW_LINKS))) {
-                throw ImageBuildFailedException("Could not build image: the Dockerfile '$dockerfilePath' is not a child of '$buildDirectory'")
+                throw ImageBuildFailedException("Could not build image: the Dockerfile '$dockerfilePath' is not a child of the build directory ${pathResolutionContext.getPathForDisplay(buildDirectory)}")
             }
 
             val context = imageBuildContextFactory.createFromDirectory(buildDirectory, dockerfilePath)

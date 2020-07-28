@@ -21,6 +21,7 @@ import batect.docker.DockerContainerCreationRequest
 import batect.docker.DockerImage
 import batect.docker.DockerNetwork
 import batect.docker.client.DockerClient
+import batect.os.DefaultPathResolutionContext
 import batect.os.Dimensions
 import batect.primitives.CancellationContext
 import java.io.ByteArrayInputStream
@@ -54,7 +55,7 @@ fun DockerClient.pull(imageName: String): DockerImage = retry(3) {
 }
 
 fun DockerClient.build(imageDirectory: Path, tag: String): DockerImage =
-    this.images.build(imageDirectory, emptyMap(), "Dockerfile", setOf(tag), null, CancellationContext()) {}
+    this.images.build(imageDirectory, emptyMap(), "Dockerfile", DefaultPathResolutionContext(imageDirectory), setOf(tag), null, CancellationContext()) {}
 
 fun DockerClient.runContainerAndWaitForCompletion(container: DockerContainer, stdout: Sink = System.out.sink(), useTTY: Boolean = true) =
     this.runContainer(container, stdout, useTTY) {}

@@ -29,6 +29,7 @@ import batect.docker.pull.DockerImageProgress
 import batect.docker.pull.DockerImageProgressReporter
 import batect.docker.pull.DockerRegistryCredentials
 import batect.docker.pull.DockerRegistryCredentialsProvider
+import batect.os.PathResolutionContext
 import batect.primitives.CancellationContext
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
@@ -79,6 +80,13 @@ object DockerImagesClientSpec : Spek({
 
             val dockerfilePath = "some-Dockerfile-path"
             val imageTags = setOf("some_image_tag", "some_other_image_tag")
+
+            val pathResolutionContext by createForEachTest {
+                mock<PathResolutionContext> {
+                    on { getPathForDisplay(buildDirectory) } doReturn "<a nicely formatted version of the build directory>"
+                }
+            }
+
             val outputSink by createForEachTest { mock<Sink>() }
             val cancellationContext by createForEachTest { mock<CancellationContext>() }
             val context = DockerImageBuildContext(emptySet())
@@ -141,7 +149,7 @@ object DockerImagesClientSpec : Spek({
                             statusUpdates.add(p)
                         }
 
-                        val result by runForEachTest { client.build(buildDirectory, buildArgs, dockerfilePath, imageTags, outputSink, cancellationContext, onStatusUpdate) }
+                        val result by runForEachTest { client.build(buildDirectory, buildArgs, dockerfilePath, pathResolutionContext, imageTags, outputSink, cancellationContext, onStatusUpdate) }
 
                         it("builds the image") {
                             verify(api).build(eq(context), eq(buildArgs), eq(dockerfilePath), eq(imageTags), eq(setOf(image1Credentials, image2Credentials)), eq(outputSink), eq(cancellationContext), any())
@@ -188,7 +196,7 @@ object DockerImagesClientSpec : Spek({
                                 statusUpdates.add(p)
                             }
 
-                            client.build(buildDirectory, buildArgs, dockerfilePath, imageTags, outputSink, cancellationContext, onStatusUpdate)
+                            client.build(buildDirectory, buildArgs, dockerfilePath, pathResolutionContext, imageTags, outputSink, cancellationContext, onStatusUpdate)
                         }
 
                         it("sends status updates only once the first step is started") {
@@ -215,7 +223,7 @@ object DockerImagesClientSpec : Spek({
                     on("building the image") {
                         it("throws an appropriate exception") {
                             assertThat(
-                                { client.build(buildDirectory, buildArgs, dockerfilePath, imageTags, outputSink, cancellationContext, {}) }, throws<ImageBuildFailedException>(
+                                { client.build(buildDirectory, buildArgs, dockerfilePath, pathResolutionContext, imageTags, outputSink, cancellationContext, {}) }, throws<ImageBuildFailedException>(
                                     withMessage("Could not build image: Could not load credentials: something went wrong.")
                                         and withCause(exception)
                                 )
@@ -229,8 +237,8 @@ object DockerImagesClientSpec : Spek({
                 on("building the image") {
                     it("throws an appropriate exception") {
                         assertThat(
-                            { client.build(buildDirectory, buildArgs, dockerfilePath, imageTags, outputSink, cancellationContext, {}) },
-                            throws<ImageBuildFailedException>(withMessage("Could not build image: the Dockerfile 'some-Dockerfile-path' does not exist in '/path/to/build/dir'"))
+                            { client.build(buildDirectory, buildArgs, dockerfilePath, pathResolutionContext, imageTags, outputSink, cancellationContext, {}) },
+                            throws<ImageBuildFailedException>(withMessage("Could not build image: the Dockerfile 'some-Dockerfile-path' does not exist in the build directory <a nicely formatted version of the build directory>"))
                         )
                     }
                 }
@@ -248,8 +256,8 @@ object DockerImagesClientSpec : Spek({
                 on("building the image") {
                     it("throws an appropriate exception") {
                         assertThat(
-                            { client.build(buildDirectory, buildArgs, dockerfilePathOutsideBuildDir, imageTags, outputSink, cancellationContext, {}) },
-                            throws<ImageBuildFailedException>(withMessage("Could not build image: the Dockerfile '../some-Dockerfile' is not a child of '/path/to/build/dir'"))
+                            { client.build(buildDirectory, buildArgs, dockerfilePathOutsideBuildDir, pathResolutionContext, imageTags, outputSink, cancellationContext, {}) },
+                            throws<ImageBuildFailedException>(withMessage("Could not build image: the Dockerfile '../some-Dockerfile' is not a child of the build directory <a nicely formatted version of the build directory>"))
                         )
                     }
                 }

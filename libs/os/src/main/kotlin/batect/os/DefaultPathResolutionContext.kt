@@ -30,4 +30,5 @@ import kotlinx.serialization.UseSerializers
 @SerialName("default")
 data class DefaultPathResolutionContext(override val relativeTo: Path) : PathResolutionContext {
     override fun getResolutionDescription(absolutePath: Path): String = "resolved to '$absolutePath'"
+    override fun getPathForDisplay(absolutePath: Path): String = "'$absolutePath'"
 }

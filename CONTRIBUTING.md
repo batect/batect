@@ -11,9 +11,14 @@ It's entirely up to you, do whatever you're most interested in. Some suggestions
 
 * take a look at any open [issues](https://github.com/batect/batect/issues?q=is%3Aopen+is%3Aissue), especially those tagged with
   ['good first issue'](https://github.com/batect/batect/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)
-* take a look at the [roadmap](https://github.com/batect/batect/blob/master/ROADMAP.md) and pick a feature you'd like to implement
-* improve the [documentation](https://batect.dev/) - add further examples, tips and tricks or clarify sections
+* take a look at the [roadmap](https://github.com/batect/batect/blob/master/ROADMAP.md),
+  especially those tagged with ![good first issue](https://img.shields.io/badge/-good%20first%20issue-green)
+* improve the [documentation](https://batect.dev/) - add further examples or tips and tricks, clarify sections or even just fix typos
 * create a [sample project](https://batect.dev/SampleProjects.html) for a language or framework that doesn't already have one
+* share your experiences using batect with others so that they can learn from you - for example, write a blog post or present a talk
+
+If you'd like some pointers with how to go about implementing a feature or fixing an issue, please feel free to comment on the relevant
+issue, or start a conversation on [the Spectrum chat group](http://spectrum.chat/batect).
 
 ## Prerequisites
 
@@ -30,11 +35,11 @@ with `./app/build/install/app-shadow/bin/batect`).
 
 ### Running the unit tests and linter
 
-`./gradlew check`
+`./gradlew app:check`
 
 Or, to run the tests and linter once and then automatically re-run them when the code changes:
 
-`./gradlew --continuous check`
+`./gradlew --continuous app:check`
 
 ### Fixing linting issues
 
@@ -62,6 +67,7 @@ All pull requests are welcome and warmly encouraged. Some things to keep in mind
 * if you've added a new feature or changed the behaviour of an existing feature, please update the documentation to reflect this
 * please keep PRs limited to a single bugfix or feature - if you would like to fix multiple issues or add multiple features, please submit a separate PR for each
 * submitting work-in-progress PRs for feedback is welcome and encouraged
+* [GPG signed commits](https://docs.github.com/en/github/authenticating-to-github/about-commit-signature-verification) are required
 
 ## Technical overview
 

@@ -3,7 +3,7 @@
 This file reflects my current plans. Something being listed here does not guarantee that I will implement it soon (or even ever),
 and, similarly, just because something isn't here doesn't mean I won't ever implement it.
 
-If there's something you're really keen to see, pull requests are always welcome :)
+If there's something you're really keen to see, pull requests are always welcome :) Check out the [contributing guide](CONTRIBUTING.md) for some hints on where to start.
 
 ## v1.0
 
@@ -19,6 +19,7 @@ If there's something you're really keen to see, pull requests are always welcome
   * warn when proxy environment variables aren't in URL format or don't have the `http` or `https` schemes
   * warn when proxy settings for daemon don't match local environment (can get this through API)
   * warn when a container used as a dependency does not have a health check defined
+  * warn when containers or tasks don't follow expected naming convention
 * support for Windows
   * send updated console dimensions to daemon if console is resized while container is running
   * fix issue where app appears to hang when running on a 32-bit JVM (field size / alignment issue in named pipes calls?)
@@ -32,14 +33,11 @@ If there's something you're really keen to see, pull requests are always welcome
 * some way to clean up old images when they're no longer needed
 * some way to reference another Dockerfile as the base image for a Dockerfile
 * support setting `ulimit` values (`--ulimit` - https://docs.docker.com/engine/reference/commandline/run/#set-ulimits-in-container---ulimit)
-* allow `home_directory` to match local user's home directory path
-* allow `working_directory` and container side of volume mount to reference home directory (inside container)
-* allow container side of volume mount to use path of local directory (eg. mount current directory at same path inside container) - will be tricky on Windows
 * show build context upload progress when building image
 * some way to kill a misbehaving task (eg. one that is not responding to Ctrl+C)
 * support for BuildKit - https://github.com/moby/moby/pull/37151 has links to references
-* shell tab completion for options (eg. `batect --h<tab>` completes to `batect --help`) - #116
-* shell tab completion for tasks (eg. `batect b<tab>` completes to `batect build`) - #116
+* shell tab completion for options (eg. `batect --h<tab>` completes to `batect --help`) - #116 ![good first issue](https://img.shields.io/badge/-good%20first%20issue-green)
+* shell tab completion for tasks (eg. `batect b<tab>` completes to `batect build`) - #116 ![good first issue](https://img.shields.io/badge/-good%20first%20issue-green)
 * Kubernetes-style health checks from outside the container (don't require `curl` / `wget` to be installed in the container, just provide HTTP endpoint)
 * ability to build one or more container images separate to running a task (two use cases: build and push an application image, and pre-build all CI environment images in parallel rather than waiting until they're needed and building them effectively serially)
 
@@ -55,7 +53,7 @@ If there's something you're really keen to see, pull requests are always welcome
 * documentation
   * add page explaining basic concepts (eg. explain what a task and a container are)
   * add check for broken internal or external links
-  * examples for common languages and scenarios
+  * examples for common languages and scenarios ![good first issue](https://img.shields.io/badge/-good%20first%20issue-green)
     * Android app
   * add FAQs
     * when to mount files / directories as a volume, and when to copy them into the image
@@ -117,26 +115,24 @@ If there's something you're really keen to see, pull requests are always welcome
 * process creation / monitoring support
 
 ## Future improvements
-* warn if dependency exits before task finishes (include exit code)
+* warn if dependency exits before task finishes (include exit code) ![good first issue](https://img.shields.io/badge/-good%20first%20issue-green)
 * enhancements to running multiple containers at once (eg. stereotypical 'run' configuration that starts up the service with its dependencies)
   * exit options (close all after any container stops, wait for all to stop)
   * return code options (any non-zero, particular container, first to exit)
-* wildcard includes (eg. `include: containers/*.yaml`)
-* requires / provides relationships (eg. 'app' requires 'service-a', and 'service-a-fake' and 'service-a-real' provide 'service-a')
+* wildcard includes (eg. `include: containers/*.yaml`) ![good first issue](https://img.shields.io/badge/-good%20first%20issue-green)
 * when starting up containers and displaying progress, show countdown to health check (eg. 'waiting for container to become healthy, next check in 3 seconds, will timeout after 2 more retries')
 * default to just terminating all containers at clean up time with option to gracefully shut down on individual containers
   (eg. database where data is shared between invocations and we don't want to corrupt it)
 * add dependency relationship between containers and tasks (eg. running the app container requires running the build first - removes the need to specify
   build task as a prerequisite on every task that starts the app)
 * some way to check for outdated base images (eg. using `postgres:10.0` and suggests updating to `postgres:10.5`)
-  * maybe contribute support for batect to Dependabot?
+  * maybe contribute support for batect to Dependabot or Renovate? ![good first issue](https://img.shields.io/badge/-good%20first%20issue-green)
 * make the last mile easier: pushing images and deploying applications
 * init containers: containers that must start, run and complete before a container can start (eg. populating a database with data)
 * some way to handle secrets easily
-* YAML aliases and anchors across files ([chat message](https://spectrum.chat/batect/general/anchors-aliases-and-includes~62eccc45-9b8c-4592-8664-a313a773409f))
 * include file from URL / some kind of repository of shared config snippets that can be included (eg. shared tasks)
 * merge or replace containers or tasks when including files
   * eg. scenario described in [Cam's chat message](https://spectrum.chat/batect/general/workflows-for-making-changes-across-multiple-repos~99e11eee-cc8a-4118-ba4c-52d8e188813a)
 * easy way to run all containers with output going to a tool like Seq (eg. `./batect --output=seq my-task` starts a Seq instance and uses Docker to send all containers' output there)
 * IDE integration
-  * eg. language server (https://microsoft.github.io/language-server-protocol/)
+  * eg. language server (https://microsoft.github.io/language-server-protocol/) ![good first issue](https://img.shields.io/badge/-good%20first%20issue-green)

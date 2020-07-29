@@ -71,6 +71,24 @@ All pull requests are welcome and warmly encouraged. Some things to keep in mind
 
 ## Technical overview
 
+### Codebase structure
+
+* `app`: main application code and associated tests
+   * `app/src/journeyTest`: journey tests for whole application
+
+* `docs`: documentation
+
+* `libs`: supporting packages (eg. Docker client and Git clients) and associated tests
+
+   Splitting the application up into smaller modules like this helps keep build times fast, as Gradle can determine which modules have and haven't changed,
+   and therefore what needs to be rebuild or retested.
+
+* `tools`: various development and user-facing tools
+
+   * `tools/schema`: config file schema used to power code completion in compatible IDEs and associated tests
+
+* `wrapper`: wrapper script (`batect` and `batect.cmd`) and associated tests
+
 ### Task execution phases
 
 When executing a task, the following steps are performed:

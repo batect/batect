@@ -65,8 +65,8 @@ object GitRepositoryCacheSpec : Spek({
 
         describe("ensuring a repository is cached") {
             val repo = GitRepositoryReference("https://github.com/me/my-bundle.git", "my-tag")
-            val expectedWorkingCopyDirectory by createForEachTest { fileSystem.getPath("/some/.batect/dir/git/${repo.cacheKey}") }
-            val expectedInfoFile by createForEachTest { fileSystem.getPath("/some/.batect/dir/git/${repo.cacheKey}.json") }
+            val expectedWorkingCopyDirectory by createForEachTest { fileSystem.getPath("/some/.batect/dir/incl/${repo.cacheKey}") }
+            val expectedInfoFile by createForEachTest { fileSystem.getPath("/some/.batect/dir/incl/${repo.cacheKey}.json") }
 
             fun createWorkingCopy() {
                 Files.createDirectories(expectedWorkingCopyDirectory)
@@ -76,6 +76,7 @@ object GitRepositoryCacheSpec : Spek({
                 Files.createDirectories(expectedInfoFile.parent)
 
                 Files.write(expectedInfoFile, """{
+                    |    "type": "git",
                     |    "repo": {
                     |        "remote": "https://github.com/me/my-bundle.git",
                     |        "ref": "my-tag",
@@ -121,6 +122,7 @@ object GitRepositoryCacheSpec : Spek({
                 it("creates the info file with details of the repository and the current time") {
                     assertThat(Files.readAllBytes(expectedInfoFile).toString(Charsets.UTF_8), equivalentTo("""
                         |{
+                        |    "type": "git",
                         |    "repo": {
                         |        "remote": "https://github.com/me/my-bundle.git",
                         |        "ref": "my-tag"
@@ -136,6 +138,7 @@ object GitRepositoryCacheSpec : Spek({
                 it("updates the info file with details of the repository and the current time, preserving any other information in the file") {
                     assertThat(Files.readAllBytes(expectedInfoFile).toString(Charsets.UTF_8), equivalentTo("""
                         |{
+                        |    "type": "git",
                         |    "repo": {
                         |        "remote": "https://github.com/me/my-bundle.git",
                         |        "ref": "my-tag",
@@ -201,7 +204,7 @@ object GitRepositoryCacheSpec : Spek({
             }
 
             given("the Git cache directory exists") {
-                beforeEachTest { Files.createDirectories(fileSystem.getPath("/some/.batect/dir/git")) }
+                beforeEachTest { Files.createDirectories(fileSystem.getPath("/some/.batect/dir/incl")) }
 
                 given("the Git cache directory contains no files") {
                     val cachedRepos by runForEachTest { cache.listAll() }
@@ -212,7 +215,7 @@ object GitRepositoryCacheSpec : Spek({
                 }
 
                 given("the Git cache directory contains a single info file") {
-                    val infoPath by createForEachTest { fileSystem.getPath("/some/.batect/dir/git/some-key.json") }
+                    val infoPath by createForEachTest { fileSystem.getPath("/some/.batect/dir/incl/some-key.json") }
 
                     given("the info file is well-formed") {
                         beforeEachTest {
@@ -240,7 +243,7 @@ object GitRepositoryCacheSpec : Spek({
                         }
 
                         given("the Git cache directory contains a corresponding working copy directory") {
-                            val workingCopyPath by createForEachTest { fileSystem.getPath("/some/.batect/dir/git/some-key") }
+                            val workingCopyPath by createForEachTest { fileSystem.getPath("/some/.batect/dir/incl/some-key") }
                             beforeEachTest { Files.createDirectories(workingCopyPath) }
 
                             val cachedRepos by runForEachTest { cache.listAll() }
@@ -254,7 +257,7 @@ object GitRepositoryCacheSpec : Spek({
 
                         given("the Git cache directory contains another file") {
                             beforeEachTest {
-                                Files.write(fileSystem.getPath("/some/.batect/dir/git/something-else.txt"), "Hello".toByteArray(Charsets.UTF_8))
+                                Files.write(fileSystem.getPath("/some/.batect/dir/incl/something-else.txt"), "Hello".toByteArray(Charsets.UTF_8))
                             }
 
                             val cachedRepos by runForEachTest { cache.listAll() }
@@ -273,7 +276,7 @@ object GitRepositoryCacheSpec : Spek({
                         }
 
                         it("throws an appropriate exception") {
-                            assertThat({ cache.listAll() }, throws<GitRepositoryCacheException>(withMessage("The file /some/.batect/dir/git/some-key.json could not be loaded: Element class kotlinx.serialization.json.JsonLiteral is not a JsonObject")))
+                            assertThat({ cache.listAll() }, throws<GitRepositoryCacheException>(withMessage("The file /some/.batect/dir/incl/some-key.json could not be loaded: Element class kotlinx.serialization.json.JsonLiteral is not a JsonObject")))
                         }
                     }
 
@@ -291,14 +294,14 @@ object GitRepositoryCacheSpec : Spek({
                         }
 
                         it("throws an appropriate exception") {
-                            assertThat({ cache.listAll() }, throws<GitRepositoryCacheException>(withMessage("The file /some/.batect/dir/git/some-key.json could not be loaded: Key remote is missing in the map.")))
+                            assertThat({ cache.listAll() }, throws<GitRepositoryCacheException>(withMessage("The file /some/.batect/dir/incl/some-key.json could not be loaded: Key remote is missing in the map.")))
                         }
                     }
                 }
 
                 given("the Git cache directory contains multiple info files") {
-                    val infoPath1 by createForEachTest { fileSystem.getPath("/some/.batect/dir/git/some-key-1.json") }
-                    val infoPath2 by createForEachTest { fileSystem.getPath("/some/.batect/dir/git/some-key-2.json") }
+                    val infoPath1 by createForEachTest { fileSystem.getPath("/some/.batect/dir/incl/some-key-1.json") }
+                    val infoPath2 by createForEachTest { fileSystem.getPath("/some/.batect/dir/incl/some-key-2.json") }
 
                     beforeEachTest {
                         Files.write(infoPath1, """
@@ -336,8 +339,8 @@ object GitRepositoryCacheSpec : Spek({
                     }
 
                     given("both have a corresponding working copy directory") {
-                        val workingCopyPath1 by createForEachTest { fileSystem.getPath("/some/.batect/dir/git/some-key-1") }
-                        val workingCopyPath2 by createForEachTest { fileSystem.getPath("/some/.batect/dir/git/some-key-2") }
+                        val workingCopyPath1 by createForEachTest { fileSystem.getPath("/some/.batect/dir/incl/some-key-1") }
+                        val workingCopyPath2 by createForEachTest { fileSystem.getPath("/some/.batect/dir/incl/some-key-2") }
 
                         beforeEachTest {
                             Files.createDirectories(workingCopyPath1)
@@ -356,7 +359,7 @@ object GitRepositoryCacheSpec : Spek({
                 }
 
                 given("the Git cache directory contains a directory but no corresponding info file") {
-                    val workingCopyPath by createForEachTest { fileSystem.getPath("/some/.batect/dir/git/some-key") }
+                    val workingCopyPath by createForEachTest { fileSystem.getPath("/some/.batect/dir/incl/some-key") }
 
                     beforeEachTest { Files.createDirectories(workingCopyPath) }
 
@@ -374,10 +377,10 @@ object GitRepositoryCacheSpec : Spek({
         }
 
         describe("deleting a repository") {
-            val infoPath by createForEachTest { fileSystem.getPath("/some/.batect/dir/git/some-key.json") }
-            val workingCopyPath by createForEachTest { fileSystem.getPath("/some/.batect/dir/git/some-key") }
+            val infoPath by createForEachTest { fileSystem.getPath("/some/.batect/dir/incl/some-key.json") }
+            val workingCopyPath by createForEachTest { fileSystem.getPath("/some/.batect/dir/incl/some-key") }
 
-            beforeEachTest { Files.createDirectories(fileSystem.getPath("/some/.batect/dir/git")) }
+            beforeEachTest { Files.createDirectories(fileSystem.getPath("/some/.batect/dir/incl")) }
 
             fun createInfoFile() {
                 Files.createFile(infoPath)

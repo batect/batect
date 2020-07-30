@@ -36,8 +36,8 @@ object GitRepositoryReferenceSpec : Spek({
                 val reference = GitRepositoryReference("https://github.com/me/my-bundle.git", "my-branch-2")
 
                 it("returns the truncated filename-safe base64-encoded version of the SHA512/224 hash of the repository URL and reference") {
-                    // This should be equivalent to base64UrlSafe(sha51224("https://github.com/me/my-bundle.git @my-branch-2".utf8Bytes)), without trailing '=' characters
-                    assertThat(reference.cacheKey, equalTo("t5z25WV_7-6cy2_CzKjVYCb31wFTbvGapfsNmg"))
+                    // This should be equivalent to base64UrlSafe(sha51224("git https://github.com/me/my-bundle.git @my-branch-2".utf8Bytes)), without trailing '=' characters
+                    assertThat(reference.cacheKey, equalTo("glpCHeGNoaQ-MPzEoOEycnITrl98zPLzpt_kFA"))
                 }
             }
 

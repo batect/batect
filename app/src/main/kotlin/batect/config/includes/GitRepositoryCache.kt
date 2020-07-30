@@ -40,7 +40,7 @@ class GitRepositoryCache(
     private val listener: GitRepositoryCacheNotificationListener,
     private val timeSource: TimeSource = ZonedDateTime::now
 ) {
-    private val gitCacheDirectory = applicationPaths.rootLocalStorageDirectory.resolve("git").toAbsolutePath()
+    private val gitCacheDirectory = applicationPaths.rootLocalStorageDirectory.resolve("incl").toAbsolutePath()
 
     fun ensureCached(repo: GitRepositoryReference): Path {
         Files.createDirectories(gitCacheDirectory)
@@ -68,6 +68,7 @@ class GitRepositoryCache(
             Json.default.parseJson(Files.readAllBytes(infoPath).toString(Charsets.UTF_8)).jsonObject
         } else {
             JsonObject(mapOf(
+                "type" to JsonLiteral("git"),
                 "repo" to json {
                     "remote" to repo.remote
                     "ref" to repo.ref

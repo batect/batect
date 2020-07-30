@@ -25,7 +25,7 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider
 data class GitRepositoryReference(val remote: String, val ref: String) {
     val cacheKey: String by lazy {
         val digestInstance = MessageDigest.getInstance("SHA-512/224", BouncyCastleProvider())
-        val data = "$remote @$ref".toByteArray(Charsets.UTF_8)
+        val data = "git $remote @$ref".toByteArray(Charsets.UTF_8)
         val digest = digestInstance.digest(data)
 
         digest.toByteString().base64Url().trimEnd('=')

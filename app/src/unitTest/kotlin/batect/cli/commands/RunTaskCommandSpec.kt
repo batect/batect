@@ -23,6 +23,7 @@ import batect.config.PullImage
 import batect.config.Task
 import batect.config.TaskMap
 import batect.config.TaskRunConfiguration
+import batect.config.includes.GitRepositoryCacheCleanupTask
 import batect.config.io.ConfigurationLoader
 import batect.execution.CleanupOption
 import batect.execution.RunOptions
@@ -80,12 +81,15 @@ object RunTaskCommandSpec : Spek({
             val logSink = InMemoryLogSink()
             val logger = Logger("test.source", logSink)
 
-            val configLoader = mock<ConfigurationLoader> {
-                on { loadConfig(configFile) } doReturn config
+            val configLoader by createForEachTest {
+                mock<ConfigurationLoader> {
+                    on { loadConfig(configFile) } doReturn config
+                }
             }
 
             val updateNotifier by createForEachTest { mock<UpdateNotifier>() }
             val wrapperCacheCleanupTask by createForEachTest { mock<WrapperCacheCleanupTask>() }
+            val gitRepositoryCacheCleanupTask by createForEachTest { mock<GitRepositoryCacheCleanupTask>() }
             val console by createForEachTest { mock<Console>() }
             val errorConsole by createForEachTest { mock<Console>() }
             val taskRunner by createForEachTest { mock<TaskRunner>() }
@@ -116,7 +120,7 @@ object RunTaskCommandSpec : Spek({
 
                         given("quiet output mode is not being used") {
                             val outputMode = OutputStyle.Fancy
-                            val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, updateNotifier, wrapperCacheCleanupTask, dockerConnectivity, outputMode, console, errorConsole, logger) }
+                            val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, updateNotifier, wrapperCacheCleanupTask, gitRepositoryCacheCleanupTask, dockerConnectivity, outputMode, console, errorConsole, logger) }
                             val exitCode by runForEachTest { command.run() }
 
                             it("runs the task") {
@@ -145,6 +149,14 @@ object RunTaskCommandSpec : Spek({
                                 }
                             }
 
+                            it("triggers Git repository cache cleanup after loading the config but before running the task") {
+                                inOrder(configLoader, gitRepositoryCacheCleanupTask, taskRunner) {
+                                    verify(configLoader).loadConfig(any())
+                                    verify(gitRepositoryCacheCleanupTask).start()
+                                    verify(taskRunner).run(any(), any())
+                                }
+                            }
+
                             it("does not print anything to the error console") {
                                 verifyZeroInteractions(errorConsole)
                             }
@@ -152,7 +164,7 @@ object RunTaskCommandSpec : Spek({
 
                         given("quiet output mode is being used") {
                             val outputMode = OutputStyle.Quiet
-                            val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, updateNotifier, wrapperCacheCleanupTask, dockerConnectivity, outputMode, console, errorConsole, logger) }
+                            val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, updateNotifier, wrapperCacheCleanupTask, gitRepositoryCacheCleanupTask, dockerConnectivity, outputMode, console, errorConsole, logger) }
                             beforeEachTest { command.run() }
 
                             it("does not display any update notifications") {
@@ -166,7 +178,7 @@ object RunTaskCommandSpec : Spek({
                             whenever(taskRunner.run(mainTask, runOptions)).thenReturn(expectedTaskExitCode)
                         }
 
-                        val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, updateNotifier, wrapperCacheCleanupTask, dockerConnectivity, null, console, errorConsole, logger) }
+                        val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, updateNotifier, wrapperCacheCleanupTask, gitRepositoryCacheCleanupTask, dockerConnectivity, null, console, errorConsole, logger) }
                         val exitCode by runForEachTest { command.run() }
 
                         it("runs the task") {
@@ -195,6 +207,14 @@ object RunTaskCommandSpec : Spek({
                             }
                         }
 
+                        it("triggers Git repository cache cleanup after loading the config but before running the task") {
+                            inOrder(configLoader, gitRepositoryCacheCleanupTask, taskRunner) {
+                                verify(configLoader).loadConfig(any())
+                                verify(gitRepositoryCacheCleanupTask).start()
+                                verify(taskRunner).run(any(), any())
+                            }
+                        }
+
                         it("does not print anything to the error console") {
                             verifyZeroInteractions(errorConsole)
                         }
@@ -217,7 +237,7 @@ object RunTaskCommandSpec : Spek({
 
                         given("quiet output mode is not being used") {
                             val outputStyle = OutputStyle.Fancy
-                            val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, updateNotifier, wrapperCacheCleanupTask, dockerConnectivity, outputStyle, console, errorConsole, logger) }
+                            val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, updateNotifier, wrapperCacheCleanupTask, gitRepositoryCacheCleanupTask, dockerConnectivity, outputStyle, console, errorConsole, logger) }
                             val exitCode by runForEachTest { command.run() }
 
                             it("runs the dependency task with cleanup on success enabled") {
@@ -254,6 +274,14 @@ object RunTaskCommandSpec : Spek({
                                 }
                             }
 
+                            it("triggers Git repository cache cleanup after loading the config but before running the task") {
+                                inOrder(configLoader, gitRepositoryCacheCleanupTask, taskRunner) {
+                                    verify(configLoader).loadConfig(any())
+                                    verify(gitRepositoryCacheCleanupTask).start()
+                                    verify(taskRunner, atLeastOnce()).run(any(), any())
+                                }
+                            }
+
                             it("does not print anything to the error console") {
                                 verifyZeroInteractions(errorConsole)
                             }
@@ -261,7 +289,7 @@ object RunTaskCommandSpec : Spek({
 
                         given("quiet output mode is being used") {
                             val outputStyle = OutputStyle.Quiet
-                            val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, updateNotifier, wrapperCacheCleanupTask, dockerConnectivity, outputStyle, console, errorConsole, logger) }
+                            val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, updateNotifier, wrapperCacheCleanupTask, gitRepositoryCacheCleanupTask, dockerConnectivity, outputStyle, console, errorConsole, logger) }
                             beforeEachTest { command.run() }
 
                             it("runs the dependency before the main task, and does not print a blank line in between") {
@@ -279,7 +307,7 @@ object RunTaskCommandSpec : Spek({
                             whenever(taskRunner.run(otherTask, runOptionsForOtherTask)).thenReturn(1)
                         }
 
-                        val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, updateNotifier, wrapperCacheCleanupTask, dockerConnectivity, null, console, errorConsole, logger) }
+                        val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, updateNotifier, wrapperCacheCleanupTask, gitRepositoryCacheCleanupTask, dockerConnectivity, null, console, errorConsole, logger) }
                         val exitCode by runForEachTest { command.run() }
 
                         it("runs the dependency task") {
@@ -308,6 +336,14 @@ object RunTaskCommandSpec : Spek({
                             }
                         }
 
+                        it("triggers Git repository cache cleanup after loading the config but before running the task") {
+                            inOrder(configLoader, gitRepositoryCacheCleanupTask, taskRunner) {
+                                verify(configLoader).loadConfig(any())
+                                verify(gitRepositoryCacheCleanupTask).start()
+                                verify(taskRunner).run(any(), any())
+                            }
+                        }
+
                         it("does not print anything to the error console") {
                             verifyZeroInteractions(errorConsole)
                         }
@@ -320,7 +356,7 @@ object RunTaskCommandSpec : Spek({
                         on { resolveExecutionOrder(configWithImageOverrides, taskName) } doThrow exception
                     }
 
-                    val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, updateNotifier, wrapperCacheCleanupTask, dockerConnectivity, null, console, errorConsole, logger) }
+                    val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, updateNotifier, wrapperCacheCleanupTask, gitRepositoryCacheCleanupTask, dockerConnectivity, null, console, errorConsole, logger) }
                     val exitCode by runForEachTest { command.run() }
 
                     it("prints a message to the output") {

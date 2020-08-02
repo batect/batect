@@ -153,7 +153,7 @@ object IncludeSpec : Spek({
                     val result by runForEachTest { parser.parse(IncludeConfigSerializer, yaml) }
 
                     it("returns an include with a default file name") {
-                        assertThat(result, equalTo(GitInclude("https://github.com/my-org/my-repo.git", "v1.2.3", "batect.yml")))
+                        assertThat(result, equalTo(GitInclude("https://github.com/my-org/my-repo.git", "v1.2.3", "batect-bundle.yml")))
                     }
                 }
 

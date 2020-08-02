@@ -650,7 +650,7 @@
             },
             "path": {
               "type": "string",
-              "description": "Path (relative to the root of the repository) of the file to include (defaults to batect.yml if not set)",
+              "description": "Path (relative to the root of the repository) of the file to include (defaults to batect-bundle.yml if not set)",
               "minLength": 1
             }
           },

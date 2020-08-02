@@ -459,7 +459,7 @@ object VolumeMountSpec : Spek({
                             |       "include": {
                             |           "repo": "https://myrepo.com/bundles/bundle.git",
                             |           "ref": "v1.2.3",
-                            |           "path": "batect.yml"
+                            |           "path": "batect-bundle.yml"
                             |       }
                             |   },
                             |   "container": "/container",

@@ -50,7 +50,7 @@ data class FileInclude(
 data class GitInclude(
     val repo: String,
     val ref: String,
-    val path: String = "batect.yml"
+    val path: String = "batect-bundle.yml"
 ) : Include() {
     override fun toString(): String = "$repo@$ref: $path"
 

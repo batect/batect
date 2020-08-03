@@ -28,6 +28,8 @@ Furthermore, Docker Compose has no concept of tasks, further cementing the need 
 to execute different commands, run prerequisite tasks or setup commands and provide the discoverability that comes with a
 [go script](https://www.thoughtworks.com/insights/blog/praise-go-script-part-i).
 
+Docker Compose also has equivalent concept to [bundles](Bundles.md).
+
 Docker Compose is also significantly slower than batect, as it does not parallelise all operations - in one test, batect was 17%
 faster than Docker Compose.
 
@@ -58,6 +60,8 @@ There are a number of differences between Dojo and batect:
 
 * Dojo has no concept of tasks and requires documentation such as a readme or a separate script to communicate these to developers.
   Batect supports tasks and prerequisites, removing the need for a separate [go script](https://www.thoughtworks.com/insights/blog/praise-go-script-part-i).
+  Batect also supports the concept of [bundles](Bundles.md), making it easy to share configuration between projects and bootstrap
+  projects quickly with sensible defaults.
 
 * Dojo has very verbose and detailed default output. batect omits details that would largely be irrelevant in day-to-day development
   work by default and instead focuses on output from tasks.

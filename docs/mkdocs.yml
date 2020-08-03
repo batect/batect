@@ -10,7 +10,7 @@ edit_uri: edit/master/docs/content
 
 docs_dir: content
 site_dir: build/docs
-strict: true
+strict: false # Because of https://github.com/mkdocs/mkdocs/issues/2108.
 use_directory_urls: false
 
 theme:

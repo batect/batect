@@ -15,7 +15,7 @@
 */
 
 def outputDir = getBuildDir().toPath().resolve("docs")
-def imageName = 'squidfunk/mkdocs-material:5.1.4'
+def imageName = 'squidfunk/mkdocs-material:5.5.1'
 
 tasks.register("buildDocs", Exec) {
     commandLine 'docker', 'run', '--rm', '-v', "${project.projectDir}:/docs", '--entrypoint', 'sh', imageName, 'build.sh'

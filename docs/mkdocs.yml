@@ -37,14 +37,15 @@ extra:
 
 markdown_extensions:
   - admonition
+  - attr_list
   - codehilite:
       guess_lang: false
   - toc:
       permalink: true
   - pymdownx.details
   - pymdownx.emoji:
-      emoji_index: !!python/name:pymdownx.emoji.twemoji
-      emoji_generator: !!python/name:pymdownx.emoji.to_svg
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
   - pymdownx.superfences
 
 nav:
@@ -57,7 +58,9 @@ nav:
     - Overview: "config/Overview.md"
     - Config Variables: "config/ConfigVariables.md"
     - Containers: "config/Containers.md"
+    - Includes: "config/Includes.md"
     - Tasks: "config/Tasks.md"
+    - Expressions: "config/Expressions.md"
 
   - CLI reference: "CLIReference.md"
 
@@ -87,6 +90,7 @@ nav:
     - Proxies: "tips/Proxies.md"
     - Windows: "tips/Windows.md"
 
+  - Bundles: "Bundles.md"
   - Sample projects: "SampleProjects.md"
   - Release notes: "https://github.com/batect/batect/releases"
   - Roadmap: "https://github.com/batect/batect/blob/master/ROADMAP.md"

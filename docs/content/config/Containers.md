@@ -61,7 +61,7 @@ containers:
 ## `build_args`
 <small>**Equivalent Docker CLI option**: `--build-arg` to `docker build`, **equivalent Docker Compose option**: `build.args`</small>
 
-List of build args (in `name: value` format) to use when building the image in [`build_directory`](#build_directory). Values can be [expressions](Overview.md#expressions).
+List of build args (in `name: value` format) to use when building the image in [`build_directory`](#build_directory). Values can be [expressions](Expressions.md).
 
 Each build arg must be defined in the Dockerfile with an `ARG` instruction otherwise the value provided will have no effect.
 
@@ -83,7 +83,7 @@ containers:
 Path (relative to the configuration file's directory) to a directory containing a Dockerfile to build and use as an image for this container.
 **One of `image` or `build_directory` is required.**
 
-Value can be an [expression](Overview.md#expressions).
+Value can be an [expression](Expressions.md).
 
 On Windows, `build_directory` can use either Windows-style (`path\to\thing`) or Unix-style (`path/to/thing`) paths, but for compatibility
 with users running on other operating systems, using Unix-style paths is recommended.
@@ -283,7 +283,7 @@ containers:
 
 List of environment variables (in `name: value` format) for the container.
 
-Values can be [expressions](Overview.md#expressions).
+Values can be [expressions](Expressions.md).
 
 ### Example
 Let's assume we have the following configuration:
@@ -621,7 +621,7 @@ Two formats are supported:
 
 In both formats, the following fields are supported:
 
-* `local`: path to the local file or directory to mount. Can be an [expression](Overview.md#expressions) when using the expanded format. Required.
+* `local`: path to the local file or directory to mount. Can be an [expression](Expressions.md) when using the expanded format. Required.
 
     Relative paths will be resolved relative to the current configuration file's directory.
 

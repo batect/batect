@@ -90,63 +90,11 @@ Container names must be valid Docker references:
 
 ## `include`
 
-List of configuration files to include in this project.
+List of configuration files or bundles to include in this project.
 
 This is useful for breaking up a large project into smaller files, or for sharing configuration between projects.
 
-The format for included files is the same as described on this page. Included files can include further files, but
-cannot include a [project name](#project_name).
-
-### Example
-If `/my-project/a.yml` contains:
-
-```yaml
-containers:
-  my-container:
-    image: alpine:1.2.3
-
-include:
-  - includes/b.yml
-```
-
-And `/my-project/includes/b.yml` contains:
-
-```yaml
-tasks:
-  my-task:
-    run:
-      container: my-container
-```
-
-Then the resulting configuration is as if `/my-project/a.yml` was:
-
-```yaml
-containers:
-  my-container:
-    image: alpine:1.2.3
-
-tasks:
-  my-task:
-    run:
-      container: my-container
-```
-
-### Paths in included files
-
-Relative paths in included files such as in volume mount paths or [build directories](Containers.md#build_directory) will be resolved relative to that file's
-directory (`/my-project` in `a.yml` and `/my-project/includes` in `b.yml` in the example above).
-
-Use the built-in [`batect.project_directory` config variable](ConfigVariables.md#batectproject_directory) to get the path to the root project directory
-(`/my-project` in the example above), for example:
-
-```yaml
-containers:
-  my-other-container:
-    image: alpine:1.2.3
-    volumes:
-      - local: <{batect.project_directory}/scripts
-        container: /code/scripts
-```
+[Detailed reference for `includes`](Includes.md)
 
 ## `tasks`
 
@@ -158,49 +106,7 @@ Definitions for each of your tasks, the actions you launch through batect, in `n
 
 Some fields support expressions - references to environment variables on the host or [config variables](ConfigVariables.md).
 
-Expressions are supported in:
-
-* [`build_args`](Containers.md#build_args) on containers
-* [`build_directory`](Containers.md#build_directory) on containers
-* `environment` on [containers](Containers.md#environment) and [tasks](Tasks.md#environment)
-* the local path in [volume mounts](Containers.md#volumes) on containers
-
-### Environment variables
-
-You can pass environment variables from the host (ie. where you run batect) to the container by using any of the following formats:
-
-* `$name` or `${name}`: use the value of `name` from the host as the value inside the container.
-
-    If `name` is not set on the host, batect will show an error message and not start the task.
-
-* `${name:-default}`: use the value of `name` from the host as the value inside the container.
-
-    If `name` is not set on the host, `default` is used instead.
-
-    `default` can be empty, so `${name:-}` will use the value of `name` from the host if it is
-    set, or a blank value if it is not set.
-
-    `default` is treated as a literal, it cannot be a reference to another variable.
-
-For example, to refer to the value of the `MY_PASSWORD` environment variable on the host, use `$MY_PASSWORD` or
-`${MY_PASSWORD}`. Or, to default to `insecure` if `MY_PASSWORD` is not set, use `${MY_PASSWORD:-insecure}`.
-
-### Config variables
-
-You can refer to the value of a [config variable](ConfigVariables.md) with `<name` or `<{name}`.
-Default values for config variables can be specified with [`default`](ConfigVariables.md#default) when defining them.
-
-### Notes
-
-When given without braces, `name` can only contain letters, numbers and underscores.
-Any other characters are treated as literals (eg. `$MY_VAR, 2, 3` with `MY_VAR` set to `1` results
-in `1, 2, 3`).
-
-When given with braces, `name` can contain any character except a closing brace (`}`) or colon (`:`).
-
-Combining expressions and literal values is supported (eg. `My password is $MY_PASSWORD` or `<{SERVER}:8080`).
-
-In fields that support expressions, you can escape `$` and `<` with a backslash (`\`).
+[Detailed reference for expressions](Expressions.md)
 
 ## Anchors, aliases, extensions and merging
 
@@ -259,6 +165,6 @@ value in `map-1` is used.)
 
 ## Examples
 
-Examples are provided in the reference for [`config_variables`](ConfigVariables.md#examples), [`containers`](Containers.md#examples) and [`tasks`](Tasks.md#examples).
+Examples are provided in the reference for [`config_variables`](ConfigVariables.md#examples), [`containers`](Containers.md#examples), [`includes`](Includes.md#examples) and [`tasks`](Tasks.md#examples).
 
 For further examples and real-world scenarios, take a look at the [sample projects](../SampleProjects.md).

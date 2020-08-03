@@ -12,7 +12,7 @@ They are useful for a number of use cases:
 * Simplifying management of developer-specific preferences (eg. a developer's preferred log output level)
 * Simplifying management of sets of environment-specific settings (eg. managing sets of test environment connection settings for a CI server)
 
-Config variables can be used anywhere [expressions](Overview.md#expressions) are supported. Reference config variables with the syntax `<name` or `<{name}`.
+Config variables can be used anywhere [expressions](Expressions.md) are supported. Reference config variables with the syntax `<name` or `<{name}`.
 
 ## Values
 

@@ -48,7 +48,7 @@ List of environment variables (in `name: value` format) to pass to the container
 
 If a variable is specified both here and on the container itself, the value given here will override the value defined on the container.
 
-Values can be [expressions](Overview.md#expressions).
+Values can be [expressions](Expressions.md).
 
 ### `ports`
 List of port mappings to create for the container, in addition to those defined on the container itself.

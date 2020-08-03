@@ -11,19 +11,19 @@ The following bundles are available:
 
 * [`golang-bundle`](https://github.com/batect/golang-bundle) :octicons-check-circle-fill-16:{: .green }
   Provides a development container for Golang, with preconfigured sensible defaults.
-  
+
 * [`hadolint-bundle`](https://github.com/batect/hadolint-bundle) :octicons-check-circle-fill-16:{: .green }
   Provides a task to lint Dockerfiles with [Hadolint](https://github.com/hadolint/hadolint).
 
 * [`hello-world-bundle`](https://github.com/batect/hello-world-bundle) :octicons-check-circle-fill-16:{: .green }
   A sample bundle that demonstrates a basic development experience for creating a bundle, including an automated test setup.
-  
+
 * [`java-bundle`](https://github.com/batect/java-bundle) :octicons-check-circle-fill-16:{: .green }
   Provides a development container for JVM-based languages that use Gradle, with preconfigured sensible defaults.
-  
+
 * [`node-bundle`](https://github.com/batect/node-bundle) :octicons-check-circle-fill-16:{: .green }
   Provides a development container for Node.js, with preconfigured sensible defaults.
-  
+
 * [`shellcheck-bundle`](https://github.com/batect/shellcheck-bundle) :octicons-check-circle-fill-16:{: .green }
   Provides a task to lint shell scripts with [ShellCheck](https://github.com/koalaman/shellcheck).
 
@@ -36,7 +36,7 @@ If you'd like to share a bundle that you've created, please feel free to submit 
 * **Consider building and publishing any Docker images your bundle uses rather than using [`build_directory`](config/Containers.md#build_directory).**
 
     Pulling a pre-built image is generally faster than building an image from a Dockerfile.
-    
+
     It also prevents issues when packages or other external resources are removed.
 
 * **Do not store state from tasks in the bundle's working copy.**

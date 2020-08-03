@@ -11,7 +11,12 @@ PROJECTS=(
     batect-sample-ruby
     batect-sample-seq
     batect-sample-typescript
+    golang-bundle
+    hadolint-bundle
     hello-world-bundle
+    java-bundle
+    node-bundle
+    shellcheck-bundle
 )
 
 function getLatestVersion {

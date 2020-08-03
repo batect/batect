@@ -2,6 +2,8 @@
 
 You can see an example of configuring and using Java and Gradle with batect in the [Java sample project](https://github.com/batect/batect-sample-java).
 
+The [Java bundle](https://github.com/batect/java-bundle) provides a container with all of these options pre-configured.
+
 ## Example configuration
 
 ```yaml

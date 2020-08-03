@@ -130,7 +130,6 @@ If there's something you're really keen to see, pull requests are always welcome
 * make the last mile easier: pushing images and deploying applications
 * init containers: containers that must start, run and complete before a container can start (eg. populating a database with data)
 * some way to handle secrets easily
-* include file from URL / some kind of repository of shared config snippets that can be included (eg. shared tasks)
 * merge or replace containers or tasks when including files
   * eg. scenario described in [Cam's chat message](https://spectrum.chat/batect/general/workflows-for-making-changes-across-multiple-repos~99e11eee-cc8a-4118-ba4c-52d8e188813a)
 * easy way to run all containers with output going to a tool like Seq (eg. `./batect --output=seq my-task` starts a Seq instance and uses Docker to send all containers' output there)

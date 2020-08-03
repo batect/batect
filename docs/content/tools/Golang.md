@@ -2,6 +2,8 @@
 
 You can see a full example of using batect with Golang in [the Golang sample project](https://github.com/batect/batect-sample-golang).
 
+The [Golang bundle](https://github.com/batect/golang-bundle) provides a container with all of these options pre-configured.
+
 ## Example configuration
 
 ```yaml

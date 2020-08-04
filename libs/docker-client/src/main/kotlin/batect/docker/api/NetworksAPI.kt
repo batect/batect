@@ -22,7 +22,6 @@ import batect.docker.Json
 import batect.docker.data
 import batect.logging.Logger
 import batect.os.SystemInfo
-import java.util.UUID
 import java.util.concurrent.TimeUnit
 import kotlinx.serialization.json.json
 import okhttp3.HttpUrl
@@ -34,9 +33,14 @@ class NetworksAPI(
     systemInfo: SystemInfo,
     logger: Logger
 ) : APIBase(httpConfig, systemInfo, logger) {
-    fun create(driver: String): DockerNetwork {
+    fun create(
+        name: String,
+        driver: String
+    ): DockerNetwork {
         logger.info {
             message("Creating new network.")
+            data("name", name)
+            data("driver", driver)
         }
 
         val url = urlForNetworks.newBuilder()
@@ -44,7 +48,7 @@ class NetworksAPI(
             .build()
 
         val body = json {
-            "Name" to UUID.randomUUID().toString()
+            "Name" to name
             "CheckDuplicate" to true
             "Driver" to driver
         }

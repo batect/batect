@@ -26,12 +26,13 @@ import batect.os.Dimensions
 import batect.primitives.CancellationContext
 import java.io.ByteArrayInputStream
 import java.nio.file.Path
+import java.util.UUID
 import okio.Sink
 import okio.sink
 import okio.source
 
 fun <T> DockerClient.withNetwork(action: (DockerNetwork) -> T): T {
-    val network = this.networks.create("bridge")
+    val network = this.networks.create(UUID.randomUUID().toString(), "bridge")
 
     try {
         return action(network)

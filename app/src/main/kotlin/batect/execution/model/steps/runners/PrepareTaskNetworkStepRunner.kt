@@ -18,6 +18,7 @@ package batect.execution.model.steps.runners
 
 import batect.cli.CommandLineOptions
 import batect.docker.DockerException
+import batect.docker.DockerResourceNameGenerator
 import batect.docker.api.NetworkCreationFailedException
 import batect.docker.client.DockerContainerType
 import batect.docker.client.DockerNetworksClient
@@ -28,6 +29,7 @@ import batect.execution.model.events.TaskNetworkCreatedEvent
 import batect.execution.model.events.TaskNetworkCreationFailedEvent
 
 class PrepareTaskNetworkStepRunner(
+    private val nameGenerator: DockerResourceNameGenerator,
     private val containerType: DockerContainerType,
     private val networksClient: DockerNetworksClient,
     private val commandLineOptions: CommandLineOptions
@@ -47,7 +49,8 @@ class PrepareTaskNetworkStepRunner(
                 DockerContainerType.Windows -> "nat"
             }
 
-            val network = networksClient.create(driver)
+            val name = nameGenerator.generateNameFor("network")
+            val network = networksClient.create(name, driver)
             eventSink.postEvent(TaskNetworkCreatedEvent(network))
         } catch (e: NetworkCreationFailedException) {
             eventSink.postEvent(TaskNetworkCreationFailedEvent(e.outputFromDocker))

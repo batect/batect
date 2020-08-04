@@ -51,7 +51,7 @@ fun <T> DockerClient.withContainer(creationRequest: DockerContainerCreationReque
 }
 
 fun DockerClient.pull(imageName: String): DockerImage = retry(3) {
-    this.images.pull(imageName, CancellationContext(), {})
+    this.images.pull(imageName, false, CancellationContext(), {})
 }
 
 fun DockerClient.build(imageDirectory: Path, tag: String): DockerImage =

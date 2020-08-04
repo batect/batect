@@ -35,7 +35,7 @@ object ImagePullFailedEventSpec : Spek({
                     logRepresentationOf(event), equivalentTo("""
                     |{
                     |   "type": "${event::class.qualifiedName}",
-                    |   "source": {"imageName": "some-image"},
+                    |   "source": {"imageName": "some-image", "imagePullPolicy": "IfNotPresent"},
                     |   "message": "Something went wrong"
                     |}
                 """.trimMargin())

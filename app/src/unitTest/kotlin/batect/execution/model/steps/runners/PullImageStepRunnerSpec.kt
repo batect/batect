@@ -16,6 +16,7 @@
 
 package batect.execution.model.steps.runners
 
+import batect.config.ImagePullPolicy
 import batect.config.PullImage
 import batect.docker.DockerImage
 import batect.docker.ImagePullFailedException
@@ -28,6 +29,7 @@ import batect.execution.model.events.TaskEventSink
 import batect.execution.model.steps.PullImageStep
 import batect.primitives.CancellationContext
 import batect.testutils.createForEachTest
+import batect.testutils.given
 import batect.testutils.on
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.eq
@@ -39,9 +41,6 @@ import org.spekframework.spek2.style.specification.describe
 
 object PullImageStepRunnerSpec : Spek({
     describe("running a 'pull image' step") {
-        val source = PullImage("some-image")
-        val step = PullImageStep(source)
-
         val imagesClient by createForEachTest { mock<DockerImagesClient>() }
         val cancellationContext by createForEachTest { mock<CancellationContext>() }
         val eventSink by createForEachTest { mock<TaskEventSink>() }
@@ -54,32 +53,68 @@ object PullImageStepRunnerSpec : Spek({
             val update2 = DockerImageProgress("Update 2", 15, 20)
 
             beforeEachTest {
-                whenever(imagesClient.pull(eq("some-image"), eq(cancellationContext), any())).then { invocation ->
+                whenever(imagesClient.pull(eq("some-image"), any(), eq(cancellationContext), any())).then { invocation ->
                     @Suppress("UNCHECKED_CAST")
-                    val onStatusUpdate = invocation.arguments[2] as (DockerImageProgress) -> Unit
+                    val onStatusUpdate = invocation.arguments[3] as (DockerImageProgress) -> Unit
 
                     onStatusUpdate(update1)
                     onStatusUpdate(update2)
 
                     image
                 }
-
-                runner.run(step, eventSink)
             }
 
-            it("emits a 'image pulled' event") {
-                verify(eventSink).postEvent(ImagePulledEvent(source, image))
+            given("the image pull policy is set to 'if not present'") {
+                val source = PullImage("some-image", ImagePullPolicy.IfNotPresent)
+                val step = PullImageStep(source)
+
+                beforeEachTest {
+                    runner.run(step, eventSink)
+                }
+
+                it("emits a 'image pulled' event") {
+                    verify(eventSink).postEvent(ImagePulledEvent(source, image))
+                }
+
+                it("emits a 'image pull progress' event for each update received from Docker") {
+                    verify(eventSink).postEvent(ImagePullProgressEvent(source, update1))
+                    verify(eventSink).postEvent(ImagePullProgressEvent(source, update2))
+                }
+
+                it("calls the Docker API with forcibly pulling the image disabled") {
+                    verify(imagesClient).pull(any(), eq(false), any(), any())
+                }
             }
 
-            it("emits a 'image pull progress' event for each update received from Docker") {
-                verify(eventSink).postEvent(ImagePullProgressEvent(source, update1))
-                verify(eventSink).postEvent(ImagePullProgressEvent(source, update2))
+            given("the image pull policy is set to 'always'") {
+                val source = PullImage("some-image", ImagePullPolicy.Always)
+                val step = PullImageStep(source)
+
+                beforeEachTest {
+                    runner.run(step, eventSink)
+                }
+
+                it("emits a 'image pulled' event") {
+                    verify(eventSink).postEvent(ImagePulledEvent(source, image))
+                }
+
+                it("emits a 'image pull progress' event for each update received from Docker") {
+                    verify(eventSink).postEvent(ImagePullProgressEvent(source, update1))
+                    verify(eventSink).postEvent(ImagePullProgressEvent(source, update2))
+                }
+
+                it("calls the Docker API with forcibly pulling the image enabled") {
+                    verify(imagesClient).pull(any(), eq(true), any(), any())
+                }
             }
         }
 
         on("when building the image fails") {
+            val source = PullImage("some-image")
+            val step = PullImageStep(source)
+
             beforeEachTest {
-                whenever(imagesClient.pull(eq("some-image"), eq(cancellationContext), any())).thenThrow(ImagePullFailedException("Pulling image 'some-image' failed. Output from Docker was: Something went wrong."))
+                whenever(imagesClient.pull(eq("some-image"), any(), eq(cancellationContext), any())).thenThrow(ImagePullFailedException("Pulling image 'some-image' failed. Output from Docker was: Something went wrong."))
 
                 runner.run(step, eventSink)
             }

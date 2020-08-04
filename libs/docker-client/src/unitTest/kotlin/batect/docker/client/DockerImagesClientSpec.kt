@@ -268,10 +268,91 @@ object DockerImagesClientSpec : Spek({
         describe("pulling an image") {
             val cancellationContext by createForEachTest { mock<CancellationContext>() }
 
-            given("the image does not exist locally") {
-                beforeEachTest {
-                    whenever(api.hasImage("some-image")).thenReturn(false)
+            given("forcibly pulling the image is disabled") {
+                val forcePull = false
+
+                given("the image does not exist locally") {
+                    beforeEachTest {
+                        whenever(api.hasImage("some-image")).thenReturn(false)
+                    }
+
+                    given("getting credentials for the image succeeds") {
+                        val credentials = mock<DockerRegistryCredentials>()
+
+                        beforeEachTest {
+                            whenever(credentialsProvider.getCredentials("some-image")).thenReturn(credentials)
+                        }
+
+                        on("pulling the image") {
+                            val firstProgressUpdate = Json.default.parseJson("""{"thing": "value"}""").jsonObject
+                            val secondProgressUpdate = Json.default.parseJson("""{"thing": "other value"}""").jsonObject
+
+                            beforeEachTest {
+                                whenever(imageProgressReporter.processProgressUpdate(firstProgressUpdate)).thenReturn(DockerImageProgress("Doing something", 10, 20))
+                                whenever(imageProgressReporter.processProgressUpdate(secondProgressUpdate)).thenReturn(null)
+
+                                whenever(api.pull(any(), any(), any(), any())).then { invocation ->
+                                    @Suppress("UNCHECKED_CAST")
+                                    val onProgressUpdate = invocation.arguments[3] as (JsonObject) -> Unit
+                                    onProgressUpdate(firstProgressUpdate)
+                                    onProgressUpdate(secondProgressUpdate)
+
+                                    null
+                                }
+                            }
+
+                            val progressUpdatesReceived by createForEachTest { mutableListOf<DockerImageProgress>() }
+                            val image by runForEachTest { client.pull("some-image", forcePull, cancellationContext) { progressUpdatesReceived.add(it) } }
+
+                            it("calls the Docker API to pull the image") {
+                                verify(api).pull(eq("some-image"), eq(credentials), eq(cancellationContext), any())
+                            }
+
+                            it("sends notifications for all relevant progress updates") {
+                                assertThat(progressUpdatesReceived, equalTo(listOf(DockerImageProgress("Doing something", 10, 20))))
+                            }
+
+                            it("returns the Docker image") {
+                                assertThat(image, equalTo(DockerImage("some-image")))
+                            }
+                        }
+                    }
+
+                    given("getting credentials for the image fails") {
+                        val exception = DockerRegistryCredentialsException("Could not load credentials: something went wrong.")
+
+                        beforeEachTest {
+                            whenever(credentialsProvider.getCredentials("some-image")).thenThrow(exception)
+                        }
+
+                        on("pulling the image") {
+                            it("throws an appropriate exception") {
+                                assertThat({ client.pull("some-image", forcePull, cancellationContext, {}) }, throws<ImagePullFailedException>(
+                                    withMessage("Could not pull image 'some-image': Could not load credentials: something went wrong.")
+                                        and withCause(exception)
+                                ))
+                            }
+                        }
+                    }
                 }
+
+                on("when the image already exists locally") {
+                    beforeEachTest { whenever(api.hasImage("some-image")).thenReturn(true) }
+
+                    val image by runForEachTest { client.pull("some-image", forcePull, cancellationContext, {}) }
+
+                    it("does not call the Docker API to pull the image again") {
+                        verify(api, never()).pull(any(), any(), any(), any())
+                    }
+
+                    it("returns the Docker image") {
+                        assertThat(image, equalTo(DockerImage("some-image")))
+                    }
+                }
+            }
+
+            given("forcibly pulling the image is enabled") {
+                val forcePull = true
 
                 given("getting credentials for the image succeeds") {
                     val credentials = mock<DockerRegistryCredentials>()
@@ -281,69 +362,20 @@ object DockerImagesClientSpec : Spek({
                     }
 
                     on("pulling the image") {
-                        val firstProgressUpdate = Json.default.parseJson("""{"thing": "value"}""").jsonObject
-                        val secondProgressUpdate = Json.default.parseJson("""{"thing": "other value"}""").jsonObject
+                        val image by runForEachTest { client.pull("some-image", forcePull, cancellationContext, {}) }
 
-                        beforeEachTest {
-                            whenever(imageProgressReporter.processProgressUpdate(firstProgressUpdate)).thenReturn(DockerImageProgress("Doing something", 10, 20))
-                            whenever(imageProgressReporter.processProgressUpdate(secondProgressUpdate)).thenReturn(null)
-
-                            whenever(api.pull(any(), any(), any(), any())).then { invocation ->
-                                @Suppress("UNCHECKED_CAST")
-                                val onProgressUpdate = invocation.arguments[3] as (JsonObject) -> Unit
-                                onProgressUpdate(firstProgressUpdate)
-                                onProgressUpdate(secondProgressUpdate)
-
-                                null
-                            }
-                        }
-
-                        val progressUpdatesReceived by createForEachTest { mutableListOf<DockerImageProgress>() }
-                        val image by runForEachTest { client.pull("some-image", cancellationContext) { progressUpdatesReceived.add(it) } }
-
-                        it("calls the Docker CLI to pull the image") {
+                        it("calls the Docker API to pull the image") {
                             verify(api).pull(eq("some-image"), eq(credentials), eq(cancellationContext), any())
-                        }
-
-                        it("sends notifications for all relevant progress updates") {
-                            assertThat(progressUpdatesReceived, equalTo(listOf(DockerImageProgress("Doing something", 10, 20))))
                         }
 
                         it("returns the Docker image") {
                             assertThat(image, equalTo(DockerImage("some-image")))
                         }
-                    }
-                }
 
-                given("getting credentials for the image fails") {
-                    val exception = DockerRegistryCredentialsException("Could not load credentials: something went wrong.")
-
-                    beforeEachTest {
-                        whenever(credentialsProvider.getCredentials("some-image")).thenThrow(exception)
-                    }
-
-                    on("pulling the image") {
-                        it("throws an appropriate exception") {
-                            assertThat({ client.pull("some-image", cancellationContext, {}) }, throws<ImagePullFailedException>(
-                                withMessage("Could not pull image 'some-image': Could not load credentials: something went wrong.")
-                                    and withCause(exception)
-                            ))
+                        it("does not call the Docker API to check if the image has already been pulled") {
+                            verify(api, never()).hasImage(any())
                         }
                     }
-                }
-            }
-
-            on("when the image already exists locally") {
-                beforeEachTest { whenever(api.hasImage("some-image")).thenReturn(true) }
-
-                val image by runForEachTest { client.pull("some-image", cancellationContext, {}) }
-
-                it("does not call the Docker CLI to pull the image again") {
-                    verify(api, never()).pull(any(), any(), any(), any())
-                }
-
-                it("returns the Docker image") {
-                    assertThat(image, equalTo(DockerImage("some-image")))
                 }
             }
         }

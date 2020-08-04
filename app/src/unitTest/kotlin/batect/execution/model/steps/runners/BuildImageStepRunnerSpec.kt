@@ -23,6 +23,7 @@ import batect.config.EnvironmentVariableReference
 import batect.config.Expression
 import batect.config.ExpressionEvaluationContext
 import batect.config.ExpressionEvaluationException
+import batect.config.ImagePullPolicy
 import batect.config.LiteralValue
 import batect.docker.DockerImage
 import batect.docker.ImageBuildFailedException
@@ -44,11 +45,13 @@ import batect.os.SystemInfo
 import batect.primitives.CancellationContext
 import batect.proxies.ProxyEnvironmentVariablesProvider
 import batect.testutils.createForEachTest
+import batect.testutils.given
 import batect.testutils.on
 import batect.testutils.osIndependentPath
 import batect.testutils.pathResolutionContextDoesNotMatter
 import batect.ui.containerio.ContainerIOStreamingOptions
 import com.nhaarman.mockitokotlin2.any
+import com.nhaarman.mockitokotlin2.anyOrNull
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.doThrow
 import com.nhaarman.mockitokotlin2.eq
@@ -125,39 +128,71 @@ object BuildImageStepRunnerSpec : Spek({
                 val update1 = DockerImageBuildProgress(1, 2, "First step", null)
                 val update2 = DockerImageBuildProgress(2, 2, "Second step", null)
 
-                beforeEachTest {
-                    whenever(imagesClient.build(eq(resolvedBuildDirectory), any(), eq(dockerfilePath), eq(pathResolutionContext), eq(setOf("some-project-some-container")), eq(false), eq(outputSink), eq(cancellationContext), any()))
-                        .then { invocation ->
-                            @Suppress("UNCHECKED_CAST")
-                            val onStatusUpdate = invocation.arguments[8] as (DockerImageBuildProgress) -> Unit
+                describe("regardless of the image pull policy") {
+                    beforeEachTest {
+                        whenever(imagesClient.build(eq(resolvedBuildDirectory), any(), eq(dockerfilePath), eq(pathResolutionContext), eq(setOf("some-project-some-container")), eq(false), eq(outputSink), eq(cancellationContext), any()))
+                            .then { invocation ->
+                                @Suppress("UNCHECKED_CAST")
+                                val onStatusUpdate = invocation.arguments[8] as (DockerImageBuildProgress) -> Unit
 
-                            onStatusUpdate(update1)
-                            onStatusUpdate(update2)
+                                onStatusUpdate(update1)
+                                onStatusUpdate(update2)
 
-                            image
-                        }
+                                image
+                            }
 
-                    runner.run(step, eventSink)
+                        runner.run(step, eventSink)
+                    }
+
+                    it("passes the image build args provided by the user as well as any proxy-related build args, with user-provided build args overriding the generated proxy-related build args, and with the cache setup command included") {
+                        val expectedArgs = mapOf(
+                            "some_arg" to "some_value",
+                            "SOME_PROXY_CONFIG" to "overridden",
+                            "SOME_OTHER_PROXY_CONFIG" to "some_other_value",
+                            "SOME_HOST_VAR" to "some env var value"
+                        )
+
+                        verify(imagesClient).build(any(), eq(expectedArgs), any(), any(), any(), any(), any(), any(), any())
+                    }
+
+                    it("emits a 'image build progress' event for each update received from Docker") {
+                        verify(eventSink).postEvent(ImageBuildProgressEvent(container, update1))
+                        verify(eventSink).postEvent(ImageBuildProgressEvent(container, update2))
+                    }
+
+                    it("emits a 'image built' event") {
+                        verify(eventSink).postEvent(ImageBuiltEvent(container, image))
+                    }
                 }
 
-                it("passes the image build args provided by the user as well as any proxy-related build args, with user-provided build args overriding the generated proxy-related build args, and with the cache setup command included") {
-                    val expectedArgs = mapOf(
-                        "some_arg" to "some_value",
-                        "SOME_PROXY_CONFIG" to "overridden",
-                        "SOME_OTHER_PROXY_CONFIG" to "some_other_value",
-                        "SOME_HOST_VAR" to "some env var value"
-                    )
+                given("the image pull policy is set to 'if not present'") {
+                    val containerWithImagePullPolicy = Container("some-container", BuildImage(buildDirectory, pathResolutionContext, imagePullPolicy = ImagePullPolicy.IfNotPresent))
+                    val stepWithImagePullPolicy = BuildImageStep(containerWithImagePullPolicy)
 
-                    verify(imagesClient).build(any(), eq(expectedArgs), any(), any(), any(), any(), any(), any(), any())
+                    beforeEachTest {
+                        whenever(imagesClient.build(any(), any(), any(), any(), any(), any(), anyOrNull(), any(), any())).doReturn(image)
+
+                        runner.run(stepWithImagePullPolicy, eventSink)
+                    }
+
+                    it("calls the Docker API with forcibly pulling the image disabled") {
+                        verify(imagesClient).build(any(), any(), any(), any(), any(), eq(false), anyOrNull(), any(), any())
+                    }
                 }
 
-                it("emits a 'image build progress' event for each update received from Docker") {
-                    verify(eventSink).postEvent(ImageBuildProgressEvent(container, update1))
-                    verify(eventSink).postEvent(ImageBuildProgressEvent(container, update2))
-                }
+                given("the image pull policy is set to 'always'") {
+                    val containerWithImagePullPolicy = Container("some-container", BuildImage(buildDirectory, pathResolutionContext, imagePullPolicy = ImagePullPolicy.Always))
+                    val stepWithImagePullPolicy = BuildImageStep(containerWithImagePullPolicy)
 
-                it("emits a 'image built' event") {
-                    verify(eventSink).postEvent(ImageBuiltEvent(container, image))
+                    beforeEachTest {
+                        whenever(imagesClient.build(any(), any(), any(), any(), any(), any(), anyOrNull(), any(), any())).doReturn(image)
+
+                        runner.run(stepWithImagePullPolicy, eventSink)
+                    }
+
+                    it("calls the Docker API with forcibly pulling the image enabled") {
+                        verify(imagesClient).build(any(), any(), any(), any(), any(), eq(true), anyOrNull(), any(), any())
+                    }
                 }
             }
 

@@ -34,7 +34,7 @@ object PullImageStepSpec : Spek({
                 assertThat(logRepresentationOf(step), equivalentTo("""
                     |{
                     |   "type": "${step::class.qualifiedName}",
-                    |   "source": {"imageName": "the-image"}
+                    |   "source": {"imageName": "the-image", "imagePullPolicy": "IfNotPresent"}
                     |}
                 """.trimMargin())
                 )

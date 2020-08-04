@@ -91,6 +91,7 @@ data class Container(
         private const val setupCommandsFieldName = "setup_commands"
         private const val logDriverFieldName = "log_driver"
         private const val logOptionsFieldName = "log_options"
+        private const val imagePullPolicyFieldName = "image_pull_policy"
 
         override val descriptor: SerialDescriptor = SerialDescriptor("Container") {
             element(buildDirectoryFieldName, String.serializer().descriptor, isOptional = true)
@@ -116,6 +117,7 @@ data class Container(
             element(setupCommandsFieldName, SetupCommand.serializer().list.descriptor, isOptional = true)
             element(logDriverFieldName, String.serializer().descriptor, isOptional = true)
             element(logOptionsFieldName, MapSerializer(String.serializer(), String.serializer()).descriptor, isOptional = true)
+            element(imagePullPolicyFieldName, ImagePullPolicy.serializer().descriptor, isOptional = true)
         }
 
         private val buildDirectoryFieldIndex = descriptor.getElementIndex(buildDirectoryFieldName)
@@ -141,6 +143,7 @@ data class Container(
         private val setupCommandsFieldIndex = descriptor.getElementIndex(setupCommandsFieldName)
         private val logDriverFieldIndex = descriptor.getElementIndex(logDriverFieldName)
         private val logOptionsFieldIndex = descriptor.getElementIndex(logOptionsFieldName)
+        private val imagePullPolicyFieldIndex = descriptor.getElementIndex(imagePullPolicyFieldName)
 
         override fun deserialize(decoder: Decoder): Container {
             val input = decoder.beginStructure(descriptor) as YamlInput
@@ -172,6 +175,7 @@ data class Container(
             var setupCommands = emptyList<SetupCommand>()
             var logDriver = defaultLogDriver
             var logOptions = emptyMap<String, String>()
+            var imagePullPolicy = ImagePullPolicy.IfNotPresent
 
             loop@ while (true) {
                 when (val i = input.decodeElementIndex(descriptor)) {
@@ -199,6 +203,7 @@ data class Container(
                     setupCommandsFieldIndex -> setupCommands = input.decodeSerializableElement(descriptor, i, SetupCommand.serializer().list)
                     logDriverFieldIndex -> logDriver = input.decodeStringElement(descriptor, i)
                     logOptionsFieldIndex -> logOptions = input.decodeSerializableElement(descriptor, i, MapSerializer(String.serializer(), String.serializer()))
+                    imagePullPolicyFieldIndex -> imagePullPolicy = input.decodeSerializableElement(descriptor, i, ImagePullPolicy.serializer())
 
                     else -> throw SerializationException("Unknown index $i")
                 }
@@ -206,7 +211,7 @@ data class Container(
 
             return Container(
                 "UNNAMED-FROM-CONFIG-FILE",
-                resolveImageSource(input, buildDirectory, buildArgs, dockerfilePath, imageName, input.node.location),
+                resolveImageSource(input, buildDirectory, buildArgs, dockerfilePath, imageName, imagePullPolicy, input.node.location),
                 command,
                 entrypoint,
                 environment,
@@ -235,6 +240,7 @@ data class Container(
             buildArgs: Map<String, Expression>?,
             dockerfilePath: String?,
             imageName: String?,
+            imagePullPolicy: ImagePullPolicy,
             location: Location
         ): ImageSource {
             if (buildDirectory == null && imageName == null) {
@@ -253,13 +259,13 @@ data class Container(
                 throw ConfigurationException("dockerfile cannot be used with image, but both have been provided.", location.line, location.column)
             }
 
-            if (buildDirectory != null) {
+            return if (buildDirectory != null) {
                 val loader = input.context.getContextual(PathResolutionResult::class)!! as PathDeserializer
                 val context = loader.pathResolver.context
 
-                return BuildImage(buildDirectory, context, buildArgs ?: emptyMap(), dockerfilePath ?: "Dockerfile")
+                BuildImage(buildDirectory, context, buildArgs ?: emptyMap(), dockerfilePath ?: "Dockerfile", imagePullPolicy)
             } else {
-                return PullImage(imageName!!)
+                PullImage(imageName!!, imagePullPolicy)
             }
         }
 
@@ -274,6 +280,8 @@ data class Container(
                     output.encodeSerializableElement(descriptor, dockerfileFieldIndex, String.serializer().nullable, value.imageSource.dockerfilePath)
                 }
             }
+
+            output.encodeSerializableElement(descriptor, imagePullPolicyFieldIndex, ImagePullPolicy.serializer(), value.imageSource.imagePullPolicy)
 
             output.encodeSerializableElement(descriptor, commandFieldIndex, CommandSerializer.nullable, value.command)
             output.encodeSerializableElement(descriptor, entrypointFieldIndex, CommandSerializer.nullable, value.entrypoint)

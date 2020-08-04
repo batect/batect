@@ -102,7 +102,7 @@ object ConfigurationSpec : Spek({
 
                 val container = Container(
                     "the-container",
-                    PullImage("the-image"),
+                    PullImage("the-image", ImagePullPolicy.Always),
                     Command.parse("the-command"),
                     Command.parse("sh"),
                     mapOf("SOME_VAR" to LiteralValue("some-value")),
@@ -185,7 +185,8 @@ object ConfigurationSpec : Spek({
                                         { "command": ["some-command"], "working_directory": "/some/dir" }
                                     ],
                                     "log_driver": "the-log-driver",
-                                    "log_options": { "option-1": "value-1" }
+                                    "log_options": { "option-1": "value-1" },
+                                    "image_pull_policy": "Always"
                                 }
                             },
                             "config_variables": {}
@@ -249,7 +250,8 @@ object ConfigurationSpec : Spek({
                                     "additional_hosts": {},
                                     "setup_commands": [],
                                     "log_driver": "json-file",
-                                    "log_options": {}
+                                    "log_options": {},
+                                    "image_pull_policy": "IfNotPresent"
                                 }
                             },
                             "config_variables": {}

@@ -45,7 +45,7 @@ object PullImageStepRuleSpec : Spek({
                 assertThat(logRepresentationOf(rule), equivalentTo("""
                     |{
                     |   "type": "${rule::class.qualifiedName}",
-                    |   "source": {"imageName": "the-image"}
+                    |   "source": {"imageName": "the-image", "imagePullPolicy": "IfNotPresent"}
                     |}
                 """.trimMargin()))
             }

@@ -35,7 +35,7 @@ object ImagePullProgressEventSpec : Spek({
                 assertThat(logRepresentationOf(event), equivalentTo("""
                     |{
                     |   "type": "${event::class.qualifiedName}",
-                    |   "source": {"imageName": "some-image"},
+                    |   "source": {"imageName": "some-image", "imagePullPolicy": "IfNotPresent"},
                     |   "progress": {
                     |       "currentOperation": "Doing stuff",
                     |       "completedBytes": 10,

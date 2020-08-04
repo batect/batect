@@ -31,7 +31,7 @@ class PullImageStepRunner(
 ) {
     fun run(step: PullImageStep, eventSink: TaskEventSink) {
         try {
-            val image = imagesClient.pull(step.source.imageName, cancellationContext) { progressUpdate ->
+            val image = imagesClient.pull(step.source.imageName, step.source.imagePullPolicy.forciblyPull, cancellationContext) { progressUpdate ->
                 eventSink.postEvent(ImagePullProgressEvent(step.source, progressUpdate))
             }
 

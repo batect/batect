@@ -29,6 +29,7 @@ There are a number of configuration options for containers:
 * [`additional_hosts`](#additional_hosts): extra entries to add to `/etc/hosts` inside the container
 * [`log_driver`](#log_driver): Docker log driver to use when running the container
 * [`log_options`](#log_options): additional options for the log driver in use
+* [`image_pull_policy`](#image_pull_policy): when to pull the image used by this container
 
 ## `additional_hostnames`
 <small>**Equivalent Docker CLI option**: `--network-alias` to `docker run`, **equivalent Docker Compose option**: `extra_hosts`</small>
@@ -381,6 +382,30 @@ containers:
 !!! tip
     It is highly recommended that you specify a specific image version, and not use `latest`, to ensure that the same image is used
     everywhere. For example, use `alpine:3.7`, not `alpine` or `alpine:latest`.
+
+## `image_pull_policy`
+<small>**Equivalent Docker CLI option**: `--pull` to `docker build` or re-running `docker pull`, **equivalent Docker Compose option**: none</small>
+
+Controls when to pull the image used by this container. 
+
+Applies to all containers. If the image is specified as [`image`](#image), this policy controls the behaviour for pulling `image`. If the image is built from
+a [`build_directory`](#build_directory), this policy controls the behaviour for pulling any base images.
+
+Valid options are:
+
+* `IfNotPresent` (default): pull the image / base image(s) for the container only if an image with the same tag has not already been pulled
+* `Always`: always attempt to pull the image / base image(s) every time the container is started
+
+For example, the container `my-container` from the following configuration will use the `IfNotPresent` image pull policy:
+
+```yaml
+containers:
+  my-container:
+    image_pull_policy: IfNotPresent
+```
+
+!!! tip
+    It is highly recommended that you use `IfNotPresent`. Using `Always` can incur a significant performance penalty. 
 
 ## `log_driver`
 <small>**Equivalent Docker CLI option**: `--log-driver` to `docker run`, **equivalent Docker Compose option**: `logging.driver`</small>

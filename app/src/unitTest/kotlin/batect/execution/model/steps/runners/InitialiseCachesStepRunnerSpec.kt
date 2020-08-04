@@ -66,7 +66,7 @@ object InitialiseCachesStepRunnerSpec : Spek({
         val cacheInitImage = DockerImage("batect-cache-init")
         val imagesClient by createForEachTest {
             mock<DockerImagesClient> {
-                on { pull(eq(cacheInitImageName), any(), any()) } doReturn cacheInitImage
+                on { pull(eq(cacheInitImageName), any(), any(), any()) } doReturn cacheInitImage
             }
         }
 
@@ -109,7 +109,7 @@ object InitialiseCachesStepRunnerSpec : Spek({
 
         fun Suite.itDoesNotRunTheCacheInitImage() {
             it("does not pull any images") {
-                verify(imagesClient, never()).pull(any(), any(), any())
+                verify(imagesClient, never()).pull(any(), any(), any(), any())
             }
 
             it("does not run any containers") {
@@ -119,7 +119,7 @@ object InitialiseCachesStepRunnerSpec : Spek({
 
         fun Suite.itPullsTheCacheInitImage() {
             it("pulls the cache init image") {
-                verify(imagesClient).pull(eq(cacheInitImageName), eq(cancellationContext), any())
+                verify(imagesClient).pull(eq(cacheInitImageName), eq(false), eq(cancellationContext), any())
             }
         }
 
@@ -235,7 +235,7 @@ object InitialiseCachesStepRunnerSpec : Spek({
 
                         given("pulling the image fails") {
                             beforeEachTest {
-                                whenever(imagesClient.pull(any(), any(), any())).thenThrow(DockerException("Something went wrong."))
+                                whenever(imagesClient.pull(any(), any(), any(), any())).thenThrow(DockerException("Something went wrong."))
                             }
 
                             beforeEachTest { runWithContainers(containerType, container) }

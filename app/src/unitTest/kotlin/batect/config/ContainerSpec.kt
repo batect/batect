@@ -197,13 +197,21 @@ object ContainerSpec : Spek({
                 log_driver: my_log_driver
                 log_options:
                   option_1: value_1
+                image_pull_policy: Always
             """.trimIndent()
 
             on("loading the configuration from the config file") {
                 val result by runForEachTest { parser.parse(Container.Companion, yaml) }
 
                 it("returns the expected container configuration") {
-                    assertThat(result.imageSource, equalTo(BuildImage(LiteralValue("/container-1-build-dir"), pathResolverContext, mapOf("SOME_ARG" to LiteralValue("some_value"), "SOME_DYNAMIC_VALUE" to EnvironmentVariableReference("host_var")), "some-Dockerfile")))
+                    assertThat(result.imageSource, equalTo(BuildImage(
+                        LiteralValue("/container-1-build-dir"),
+                        pathResolverContext,
+                        mapOf("SOME_ARG" to LiteralValue("some_value"), "SOME_DYNAMIC_VALUE" to EnvironmentVariableReference("host_var")),
+                        "some-Dockerfile",
+                        ImagePullPolicy.Always
+                    )))
+
                     assertThat(result.command, equalTo(Command.parse("do-the-thing.sh some-param")))
                     assertThat(result.entrypoint, equalTo(Command.parse("sh")))
                     assertThat(

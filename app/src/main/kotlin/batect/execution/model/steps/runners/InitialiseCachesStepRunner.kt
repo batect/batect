@@ -160,7 +160,7 @@ class InitialiseCachesStepRunner(
     }
 
     private fun pullImage(): DockerImage = try {
-        imagesClient.pull(cacheInitImageName, cancellationContext, {})
+        imagesClient.pull(cacheInitImageName, false, cancellationContext, {})
     } catch (e: DockerException) {
         throw CacheInitialisationException("Pulling the cache initialisation image '$cacheInitImageName' failed: ${e.message}", e)
     }

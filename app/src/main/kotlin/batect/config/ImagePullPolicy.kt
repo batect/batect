@@ -16,23 +16,10 @@
 
 package batect.config
 
-import batect.os.PathResolutionContext
 import kotlinx.serialization.Serializable
 
-sealed class ImageSource {
-    abstract val imagePullPolicy: ImagePullPolicy
-}
-
-data class BuildImage(
-    val buildDirectory: Expression,
-    val pathResolutionContext: PathResolutionContext,
-    val buildArgs: Map<String, Expression> = emptyMap(),
-    val dockerfilePath: String = "Dockerfile",
-    override val imagePullPolicy: ImagePullPolicy = ImagePullPolicy.IfNotPresent
-) : ImageSource()
-
 @Serializable
-data class PullImage(
-    val imageName: String,
-    override val imagePullPolicy: ImagePullPolicy = ImagePullPolicy.IfNotPresent
-) : ImageSource()
+enum class ImagePullPolicy(val forciblyPull: Boolean) {
+    IfNotPresent(forciblyPull = false),
+    Always(forciblyPull = true)
+}

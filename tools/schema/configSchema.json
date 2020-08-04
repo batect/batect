@@ -136,6 +136,14 @@
           "additionalProperties": {
             "type": "string"
           }
+        },
+        "image_pull_policy": {
+          "description": "Whether or not to pull image (including base image for containers that use a built image), even if it has already been pulled",
+          "type": "string",
+          "enum": [
+            "Always",
+            "IfNotPresent"
+          ]
         }
       },
       "oneOf": [

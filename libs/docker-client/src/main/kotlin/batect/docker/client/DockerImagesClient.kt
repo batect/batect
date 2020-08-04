@@ -115,9 +115,14 @@ class DockerImagesClient(
         }
     }
 
-    fun pull(imageName: String, cancellationContext: CancellationContext, onProgressUpdate: (DockerImageProgress) -> Unit): DockerImage {
+    fun pull(
+        imageName: String,
+        forcePull: Boolean,
+        cancellationContext: CancellationContext,
+        onProgressUpdate: (DockerImageProgress) -> Unit
+    ): DockerImage {
         try {
-            if (!api.hasImage(imageName)) {
+            if (forcePull || !api.hasImage(imageName)) {
                 val credentials = credentialsProvider.getCredentials(imageName)
                 val reporter = imageProgressReporterFactory()
 

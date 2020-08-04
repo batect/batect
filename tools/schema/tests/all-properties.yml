@@ -148,6 +148,7 @@ containers:
     log_driver: the-log-driver
     log_options:
       option-1: value-1
+    image_pull_policy: Always
 
   with-build-dir:
     build_directory: test
@@ -156,6 +157,7 @@ containers:
     dockerfile: some-dockerfile
     run_as_current_user:
       enabled: false
+    image_pull_policy: IfNotPresent
 
 tasks:
   task-1:

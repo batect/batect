@@ -41,7 +41,7 @@ object TaskWithOnlyPrerequisiteJourneyTest : Spek({
             }
 
             it("prints a message indicating that the main task only defines prerequisites") {
-                assert(result).output().contains("The task do-stuff only defines prerequisite tasks, nothing to do.$platformLineSeparator")
+                assert(result).output().contains("The task do-stuff only defines prerequisite tasks, nothing more to do.$platformLineSeparator")
             }
 
             it("returns a zero exit code") {

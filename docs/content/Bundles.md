@@ -9,6 +9,9 @@ Bundles are pre-built sets of containers and tasks you can pull into your projec
 
 The following bundles are available:
 
+* [`bundle-dev-bundle`](https://github.com/batect/bundle-dev-bundle) :octicons-check-circle-fill-16:{: .green }
+  Provides an opinionated, sensible default environment for bundle development.
+
 * [`golang-bundle`](https://github.com/batect/golang-bundle) :octicons-check-circle-fill-16:{: .green }
   Provides a development container for Golang, with preconfigured sensible defaults.
 

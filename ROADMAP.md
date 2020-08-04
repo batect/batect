@@ -135,3 +135,5 @@ If there's something you're really keen to see, pull requests are always welcome
 * easy way to run all containers with output going to a tool like Seq (eg. `./batect --output=seq my-task` starts a Seq instance and uses Docker to send all containers' output there)
 * IDE integration
   * eg. language server (https://microsoft.github.io/language-server-protocol/) ![good first issue](https://img.shields.io/badge/-good%20first%20issue-green)
+* pull / clone Git repositories in parallel
+  * how would this work with repositories that require interactive authentication?

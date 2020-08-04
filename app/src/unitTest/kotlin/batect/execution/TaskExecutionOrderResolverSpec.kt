@@ -16,6 +16,7 @@
 
 package batect.execution
 
+import batect.cli.CommandLineOptions
 import batect.config.Configuration
 import batect.config.ContainerMap
 import batect.config.Task
@@ -52,253 +53,345 @@ object TaskExecutionOrderResolverSpec : Spek({
         val logger by createForEachTest { Logger("some.source", logSink) }
         val taskRunConfiguration = TaskRunConfiguration("some-container")
 
-        val resolver by createForEachTest { TaskExecutionOrderResolver(suggester, logger) }
+        given("skipping prerequisites is not enabled") {
+            val commandLineOptions by createForEachTest { CommandLineOptions(skipPrerequisites = false) }
+            val resolver by createForEachTest { TaskExecutionOrderResolver(commandLineOptions, suggester, logger) }
 
-        on("resolving the execution order for a task that does not depend on any tasks") {
-            val task = Task("some-task", taskRunConfiguration)
-            val config = Configuration("some-project", TaskMap(task), ContainerMap())
+            on("resolving the execution order for a task that does not depend on any tasks") {
+                val task = Task("some-task", taskRunConfiguration)
+                val config = Configuration("some-project", TaskMap(task), ContainerMap())
 
-            val executionOrder by runForEachTest { resolver.resolveExecutionOrder(config, task.name) }
+                val executionOrder by runForEachTest { resolver.resolveExecutionOrder(config, task.name) }
 
-            it("returns just that task") {
-                assertThat(executionOrder, equalTo(listOf(task)))
-            }
+                it("returns just that task") {
+                    assertThat(executionOrder, equalTo(listOf(task)))
+                }
 
-            it("logs the execution order") {
-                assertThat(logSink, hasMessage(
-                    withSeverity(Severity.Info) and
-                        withLogMessage("Resolved task execution order.") and
-                        withAdditionalData("executionOrder", listOf(task.name))
-                ))
-            }
-        }
-
-        describe("resolving the execution order for a task that does not exist") {
-            val config = Configuration("some-project", TaskMap(), ContainerMap())
-
-            given("there are no suggested task name corrections") {
-                beforeEachTest { whenever(suggester.suggestCorrections(config, "some-task")).doReturn(emptyList()) }
-
-                it("throws an appropriate exception without any correction suggestions") {
-                    assertThat({ resolver.resolveExecutionOrder(config, "some-task") },
-                        throws<TaskExecutionOrderResolutionException>(withMessage("The task 'some-task' does not exist. (Run './batect --list-tasks' for a list of all tasks in this project, or './batect --help' for help.)")))
+                it("logs the execution order") {
+                    assertThat(
+                        logSink, hasMessage(
+                            withSeverity(Severity.Info) and
+                                withLogMessage("Resolved task execution order.") and
+                                withAdditionalData("executionOrder", listOf(task.name)) and
+                                withAdditionalData("skipPrerequisites", false)
+                        )
+                    )
                 }
             }
 
-            given("there is one suggested task name correction") {
-                beforeEachTest { whenever(suggester.suggestCorrections(config, "some-task")).doReturn(listOf("some-other-task")) }
+            describe("resolving the execution order for a task that does not exist") {
+                val config = Configuration("some-project", TaskMap(), ContainerMap())
 
-                it("throws an appropriate exception without any correction suggestions") {
-                    assertThat({ resolver.resolveExecutionOrder(config, "some-task") },
-                        throws<TaskExecutionOrderResolutionException>(withMessage("The task 'some-task' does not exist. Did you mean 'some-other-task'? (Run './batect --list-tasks' for a list of all tasks in this project, or './batect --help' for help.)")))
+                given("there are no suggested task name corrections") {
+                    beforeEachTest { whenever(suggester.suggestCorrections(config, "some-task")).doReturn(emptyList()) }
+
+                    it("throws an appropriate exception without any correction suggestions") {
+                        assertThat(
+                            { resolver.resolveExecutionOrder(config, "some-task") },
+                            throws<TaskExecutionOrderResolutionException>(withMessage("The task 'some-task' does not exist. (Run './batect --list-tasks' for a list of all tasks in this project, or './batect --help' for help.)"))
+                        )
+                    }
+                }
+
+                given("there is one suggested task name correction") {
+                    beforeEachTest { whenever(suggester.suggestCorrections(config, "some-task")).doReturn(listOf("some-other-task")) }
+
+                    it("throws an appropriate exception without any correction suggestions") {
+                        assertThat(
+                            { resolver.resolveExecutionOrder(config, "some-task") },
+                            throws<TaskExecutionOrderResolutionException>(withMessage("The task 'some-task' does not exist. Did you mean 'some-other-task'? (Run './batect --list-tasks' for a list of all tasks in this project, or './batect --help' for help.)"))
+                        )
+                    }
+                }
+
+                given("there are two suggested task name corrections") {
+                    beforeEachTest { whenever(suggester.suggestCorrections(config, "some-task")).doReturn(listOf("some-other-task", "some-other-task-2")) }
+
+                    it("throws an appropriate exception without any correction suggestions") {
+                        assertThat(
+                            { resolver.resolveExecutionOrder(config, "some-task") },
+                            throws<TaskExecutionOrderResolutionException>(withMessage("The task 'some-task' does not exist. Did you mean 'some-other-task' or 'some-other-task-2'? (Run './batect --list-tasks' for a list of all tasks in this project, or './batect --help' for help.)"))
+                        )
+                    }
+                }
+
+                given("there are three suggested task name corrections") {
+                    beforeEachTest { whenever(suggester.suggestCorrections(config, "some-task")).doReturn(listOf("some-other-task", "some-other-task-2", "some-other-task-3")) }
+
+                    it("throws an appropriate exception without any correction suggestions") {
+                        assertThat(
+                            { resolver.resolveExecutionOrder(config, "some-task") },
+                            throws<TaskExecutionOrderResolutionException>(withMessage("The task 'some-task' does not exist. Did you mean 'some-other-task', 'some-other-task-2' or 'some-other-task-3'? (Run './batect --list-tasks' for a list of all tasks in this project, or './batect --help' for help.)"))
+                        )
+                    }
                 }
             }
 
-            given("there are two suggested task name corrections") {
-                beforeEachTest { whenever(suggester.suggestCorrections(config, "some-task")).doReturn(listOf("some-other-task", "some-other-task-2")) }
+            on("resolving the execution order for a task that has a single dependency") {
+                val dependencyTask = Task("dependency-task", taskRunConfiguration)
+                val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = listOf(dependencyTask.name))
+                val config = Configuration("some-project", TaskMap(mainTask, dependencyTask), ContainerMap())
 
-                it("throws an appropriate exception without any correction suggestions") {
-                    assertThat({ resolver.resolveExecutionOrder(config, "some-task") },
-                        throws<TaskExecutionOrderResolutionException>(withMessage("The task 'some-task' does not exist. Did you mean 'some-other-task' or 'some-other-task-2'? (Run './batect --list-tasks' for a list of all tasks in this project, or './batect --help' for help.)")))
+                val executionOrder by runForEachTest { resolver.resolveExecutionOrder(config, mainTask.name) }
+
+                it("schedules the dependency to execute before the main task") {
+                    assertThat(executionOrder, dependencyTask executesBefore mainTask)
+                }
+
+                it("logs the execution order") {
+                    assertThat(
+                        logSink, hasMessage(
+                            withSeverity(Severity.Info) and
+                                withLogMessage("Resolved task execution order.") and
+                                withAdditionalData("executionOrder", listOf(dependencyTask.name, mainTask.name)) and
+                                withAdditionalData("skipPrerequisites", false)
+                        )
+                    )
                 }
             }
 
-            given("there are three suggested task name corrections") {
-                beforeEachTest { whenever(suggester.suggestCorrections(config, "some-task")).doReturn(listOf("some-other-task", "some-other-task-2", "some-other-task-3")) }
+            describe("resolving the execution order for a task that has a dependency that does not exist") {
+                val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = listOf("dependency-task"))
+                val config = Configuration("some-project", TaskMap(mainTask), ContainerMap())
 
-                it("throws an appropriate exception without any correction suggestions") {
-                    assertThat({ resolver.resolveExecutionOrder(config, "some-task") },
-                        throws<TaskExecutionOrderResolutionException>(withMessage("The task 'some-task' does not exist. Did you mean 'some-other-task', 'some-other-task-2' or 'some-other-task-3'? (Run './batect --list-tasks' for a list of all tasks in this project, or './batect --help' for help.)")))
+                given("there are no suggested task name corrections") {
+                    beforeEachTest { whenever(suggester.suggestCorrections(config, "dependency-task")).doReturn(emptyList()) }
+
+                    it("throws an appropriate exception without any correction suggestions") {
+                        assertThat(
+                            { resolver.resolveExecutionOrder(config, mainTask.name) },
+                            throws<TaskExecutionOrderResolutionException>(withMessage("The task 'dependency-task' given as a prerequisite of 'main-task' does not exist."))
+                        )
+                    }
+                }
+
+                given("there is one suggested task name correction") {
+                    beforeEachTest { whenever(suggester.suggestCorrections(config, "dependency-task")).doReturn(listOf("some-other-task")) }
+
+                    it("throws an appropriate exception without any correction suggestions") {
+                        assertThat(
+                            { resolver.resolveExecutionOrder(config, mainTask.name) },
+                            throws<TaskExecutionOrderResolutionException>(withMessage("The task 'dependency-task' given as a prerequisite of 'main-task' does not exist. Did you mean 'some-other-task'?"))
+                        )
+                    }
+                }
+
+                given("there are two suggested task name corrections") {
+                    beforeEachTest { whenever(suggester.suggestCorrections(config, "dependency-task")).doReturn(listOf("some-other-task", "some-other-task-2")) }
+
+                    it("throws an appropriate exception without any correction suggestions") {
+                        assertThat(
+                            { resolver.resolveExecutionOrder(config, mainTask.name) },
+                            throws<TaskExecutionOrderResolutionException>(withMessage("The task 'dependency-task' given as a prerequisite of 'main-task' does not exist. Did you mean 'some-other-task' or 'some-other-task-2'?"))
+                        )
+                    }
+                }
+
+                given("there are three suggested task name corrections") {
+                    beforeEachTest { whenever(suggester.suggestCorrections(config, "dependency-task")).doReturn(listOf("some-other-task", "some-other-task-2", "some-other-task-3")) }
+
+                    it("throws an appropriate exception without any correction suggestions") {
+                        assertThat(
+                            { resolver.resolveExecutionOrder(config, mainTask.name) },
+                            throws<TaskExecutionOrderResolutionException>(withMessage("The task 'dependency-task' given as a prerequisite of 'main-task' does not exist. Did you mean 'some-other-task', 'some-other-task-2' or 'some-other-task-3'?"))
+                        )
+                    }
+                }
+            }
+
+            on("resolving the execution order for a task that has multiple dependencies") {
+                val dependencyTask1 = Task("dependency-task-1", taskRunConfiguration)
+                val dependencyTask2 = Task("dependency-task-2", taskRunConfiguration)
+                val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = listOf(dependencyTask1.name, dependencyTask2.name))
+                val config = Configuration("some-project", TaskMap(mainTask, dependencyTask1, dependencyTask2), ContainerMap())
+
+                val executionOrder by runForEachTest { resolver.resolveExecutionOrder(config, mainTask.name) }
+
+                it("schedules the dependencies to execute before the main task") {
+                    assertThat(executionOrder, dependencyTask1 executesBefore mainTask)
+                    assertThat(executionOrder, dependencyTask2 executesBefore mainTask)
+                }
+
+                it("schedules the dependencies in the same order they are specified in the configuration file") {
+                    assertThat(executionOrder, dependencyTask1 executesBefore dependencyTask2)
+                }
+            }
+
+            on("resolving the execution order for a task that depends on itself") {
+                val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = listOf("main-task"))
+                val config = Configuration("some-project", TaskMap(mainTask), ContainerMap())
+
+                it("throws an appropriate exception") {
+                    assertThat(
+                        { resolver.resolveExecutionOrder(config, mainTask.name) },
+                        throws<TaskExecutionOrderResolutionException>(withMessage("There is a dependency cycle between tasks: task 'main-task' has 'main-task' as a prerequisite."))
+                    )
+                }
+            }
+
+            on("resolving the execution order for a task that depends on a task A, which then depends on a task B") {
+                val dependencyTaskB = Task("dependency-task-b", taskRunConfiguration)
+                val dependencyTaskA = Task("dependency-task-a", taskRunConfiguration, prerequisiteTasks = listOf(dependencyTaskB.name))
+                val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = listOf(dependencyTaskA.name))
+                val config = Configuration("some-project", TaskMap(mainTask, dependencyTaskA, dependencyTaskB), ContainerMap())
+
+                val executionOrder by runForEachTest { resolver.resolveExecutionOrder(config, mainTask.name) }
+
+                it("schedules task A to execute before the main task") {
+                    assertThat(executionOrder, dependencyTaskA executesBefore mainTask)
+                }
+
+                it("schedules task B to execute before task A") {
+                    assertThat(executionOrder, dependencyTaskB executesBefore dependencyTaskA)
+                }
+            }
+
+            on("resolving the execution order for a task that depends on tasks A and B, where B also depends on A") {
+                val dependencyTaskA = Task("dependency-task-a", taskRunConfiguration)
+                val dependencyTaskB = Task("dependency-task-b", taskRunConfiguration, prerequisiteTasks = listOf(dependencyTaskA.name))
+                val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = listOf(dependencyTaskA.name, dependencyTaskB.name))
+                val config = Configuration("some-project", TaskMap(mainTask, dependencyTaskA, dependencyTaskB), ContainerMap())
+
+                val executionOrder by runForEachTest { resolver.resolveExecutionOrder(config, mainTask.name) }
+
+                it("schedules task B to execute before the main task") {
+                    assertThat(executionOrder, dependencyTaskB executesBefore mainTask)
+                }
+
+                it("schedules task A to execute before task B") {
+                    assertThat(executionOrder, dependencyTaskA executesBefore dependencyTaskB)
+                }
+            }
+
+            on("resolving the execution order for a task that depends on tasks A and B, where B also depends on A and B is listed first in the main task's list of prerequisites") {
+                val dependencyTaskA = Task("dependency-task-a", taskRunConfiguration)
+                val dependencyTaskB = Task("dependency-task-b", taskRunConfiguration, prerequisiteTasks = listOf(dependencyTaskA.name))
+                val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = listOf(dependencyTaskB.name, dependencyTaskA.name))
+                val config = Configuration("some-project", TaskMap(mainTask, dependencyTaskA, dependencyTaskB), ContainerMap())
+
+                val executionOrder by runForEachTest { resolver.resolveExecutionOrder(config, mainTask.name) }
+
+                it("schedules task B to execute before the main task") {
+                    assertThat(executionOrder, dependencyTaskB executesBefore mainTask)
+                }
+
+                it("schedules task A to execute before task B") {
+                    assertThat(executionOrder, dependencyTaskA executesBefore dependencyTaskB)
+                }
+            }
+
+            on("resolving the execution order for a complex set of tasks from issue 53 (https://github.com/batect/batect/issues/53)") {
+                val getSandwichContentsTask = Task("getSandwichContents", taskRunConfiguration)
+                val putContentsInBreadTask = Task("putContentsInBread", taskRunConfiguration, prerequisiteTasks = listOf("getSandwichContents"))
+                val prepareTheTableTask = Task("prepareTheTable", taskRunConfiguration)
+                val makeTheSandwichTask = Task("makeTheSandwich", taskRunConfiguration, prerequisiteTasks = listOf("putContentsInBread", "prepareTheTable"))
+                val takeABiteOfTheSandwichTask = Task("takeABiteOfTheSandwich", taskRunConfiguration, prerequisiteTasks = listOf("prepareTheTable"))
+                val eatTheSandwichTask = Task("eatTheSandwich", taskRunConfiguration, prerequisiteTasks = listOf("takeABiteOfTheSandwich"))
+                val sandwichHasBeenEatenTask = Task("sandwichHasBeenEaten", taskRunConfiguration, prerequisiteTasks = listOf("makeTheSandwich", "eatTheSandwich"))
+                val config = Configuration("some-project", TaskMap(getSandwichContentsTask, putContentsInBreadTask, prepareTheTableTask, makeTheSandwichTask, takeABiteOfTheSandwichTask, eatTheSandwichTask, sandwichHasBeenEatenTask), ContainerMap())
+
+                val executionOrder by runForEachTest { resolver.resolveExecutionOrder(config, sandwichHasBeenEatenTask.name) }
+
+                it("schedules the tasks to run in an order that respects the relative ordering of each prerequisite list") {
+                    assertThat(executionOrder, getSandwichContentsTask executesBefore putContentsInBreadTask)
+                    assertThat(executionOrder, putContentsInBreadTask executesBefore prepareTheTableTask)
+                    assertThat(executionOrder, prepareTheTableTask executesBefore makeTheSandwichTask)
+                    assertThat(executionOrder, makeTheSandwichTask executesBefore takeABiteOfTheSandwichTask)
+                    assertThat(executionOrder, takeABiteOfTheSandwichTask executesBefore eatTheSandwichTask)
+                    assertThat(executionOrder, eatTheSandwichTask executesBefore sandwichHasBeenEatenTask)
+                }
+            }
+
+            on("resolving the execution order for a task that depends on a second task that depends on the first task") {
+                val otherTask = Task("other-task", taskRunConfiguration, prerequisiteTasks = listOf("main-task"))
+                val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = listOf("other-task"))
+                val config = Configuration("some-project", TaskMap(mainTask, otherTask), ContainerMap())
+
+                it("throws an appropriate exception") {
+                    assertThat(
+                        { resolver.resolveExecutionOrder(config, mainTask.name) },
+                        throws<TaskExecutionOrderResolutionException>(withMessage("There is a dependency cycle between tasks: task 'main-task' has 'other-task' as a prerequisite, which has 'main-task' as a prerequisite."))
+                    )
+                }
+            }
+
+            on("resolving the execution order for a task that depends on task A, which depends on task B, which depends on the main task") {
+                val taskA = Task("task-A", taskRunConfiguration, prerequisiteTasks = listOf("task-B"))
+                val taskB = Task("task-B", taskRunConfiguration, prerequisiteTasks = listOf("main-task"))
+                val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = listOf("task-A"))
+                val config = Configuration("some-project", TaskMap(mainTask, taskA, taskB), ContainerMap())
+
+                it("throws an appropriate exception") {
+                    assertThat(
+                        { resolver.resolveExecutionOrder(config, mainTask.name) },
+                        throws<TaskExecutionOrderResolutionException>(withMessage("There is a dependency cycle between tasks: task 'main-task' has 'task-A' as a prerequisite, which has 'task-B' as a prerequisite, which has 'main-task' as a prerequisite."))
+                    )
+                }
+            }
+
+            on("resolving the execution order for a task that depends on task A, which depends on task B, which depends on task A") {
+                val taskA = Task("task-A", taskRunConfiguration, prerequisiteTasks = listOf("task-B"))
+                val taskB = Task("task-B", taskRunConfiguration, prerequisiteTasks = listOf("task-A"))
+                val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = listOf("task-A"))
+                val config = Configuration("some-project", TaskMap(mainTask, taskA, taskB), ContainerMap())
+
+                it("throws an appropriate exception") {
+                    assertThat(
+                        { resolver.resolveExecutionOrder(config, mainTask.name) },
+                        throws<TaskExecutionOrderResolutionException>(withMessage("There is a dependency cycle between tasks: task 'main-task' has 'task-A' as a prerequisite, which has 'task-B' as a prerequisite, which has 'task-A' as a prerequisite."))
+                    )
                 }
             }
         }
 
-        on("resolving the execution order for a task that has a single dependency") {
-            val dependencyTask = Task("dependency-task", taskRunConfiguration)
-            val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = listOf(dependencyTask.name))
-            val config = Configuration("some-project", TaskMap(mainTask, dependencyTask), ContainerMap())
+        given("skipping prerequisites is enabled") {
+            val commandLineOptions by createForEachTest { CommandLineOptions(skipPrerequisites = true) }
+            val resolver by createForEachTest { TaskExecutionOrderResolver(commandLineOptions, suggester, logger) }
 
-            val executionOrder by runForEachTest { resolver.resolveExecutionOrder(config, mainTask.name) }
+            on("resolving the execution order for a task that does not depend on any tasks") {
+                val task = Task("some-task", taskRunConfiguration)
+                val config = Configuration("some-project", TaskMap(task), ContainerMap())
 
-            it("schedules the dependency to execute before the main task") {
-                assertThat(executionOrder, dependencyTask executesBefore mainTask)
-            }
-        }
+                val executionOrder by runForEachTest { resolver.resolveExecutionOrder(config, task.name) }
 
-        describe("resolving the execution order for a task that has a dependency that does not exist") {
-            val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = listOf("dependency-task"))
-            val config = Configuration("some-project", TaskMap(mainTask), ContainerMap())
+                it("returns just that task") {
+                    assertThat(executionOrder, equalTo(listOf(task)))
+                }
 
-            given("there are no suggested task name corrections") {
-                beforeEachTest { whenever(suggester.suggestCorrections(config, "dependency-task")).doReturn(emptyList()) }
-
-                it("throws an appropriate exception without any correction suggestions") {
-                    assertThat({ resolver.resolveExecutionOrder(config, mainTask.name) },
-                        throws<TaskExecutionOrderResolutionException>(withMessage("The task 'dependency-task' given as a prerequisite of 'main-task' does not exist.")))
+                it("logs the execution order") {
+                    assertThat(
+                        logSink, hasMessage(
+                            withSeverity(Severity.Info) and
+                                withLogMessage("Resolved task execution order.") and
+                                withAdditionalData("executionOrder", listOf(task.name)) and
+                                withAdditionalData("skipPrerequisites", true)
+                        )
+                    )
                 }
             }
 
-            given("there is one suggested task name correction") {
-                beforeEachTest { whenever(suggester.suggestCorrections(config, "dependency-task")).doReturn(listOf("some-other-task")) }
+            on("resolving the execution order for a task that has multiple dependencies") {
+                val dependencyTask1 = Task("dependency-task-1", taskRunConfiguration)
+                val dependencyTask2 = Task("dependency-task-2", taskRunConfiguration)
+                val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = listOf(dependencyTask1.name, dependencyTask2.name))
+                val config = Configuration("some-project", TaskMap(mainTask, dependencyTask1, dependencyTask2), ContainerMap())
 
-                it("throws an appropriate exception without any correction suggestions") {
-                    assertThat({ resolver.resolveExecutionOrder(config, mainTask.name) },
-                        throws<TaskExecutionOrderResolutionException>(withMessage("The task 'dependency-task' given as a prerequisite of 'main-task' does not exist. Did you mean 'some-other-task'?")))
+                val executionOrder by runForEachTest { resolver.resolveExecutionOrder(config, mainTask.name) }
+
+                it("returns just the main task") {
+                    assertThat(executionOrder, equalTo(listOf(mainTask)))
                 }
-            }
 
-            given("there are two suggested task name corrections") {
-                beforeEachTest { whenever(suggester.suggestCorrections(config, "dependency-task")).doReturn(listOf("some-other-task", "some-other-task-2")) }
-
-                it("throws an appropriate exception without any correction suggestions") {
-                    assertThat({ resolver.resolveExecutionOrder(config, mainTask.name) },
-                        throws<TaskExecutionOrderResolutionException>(withMessage("The task 'dependency-task' given as a prerequisite of 'main-task' does not exist. Did you mean 'some-other-task' or 'some-other-task-2'?")))
+                it("logs the execution order") {
+                    assertThat(
+                        logSink, hasMessage(
+                            withSeverity(Severity.Info) and
+                                withLogMessage("Resolved task execution order.") and
+                                withAdditionalData("executionOrder", listOf(mainTask.name)) and
+                                withAdditionalData("skipPrerequisites", true)
+                        )
+                    )
                 }
-            }
-
-            given("there are three suggested task name corrections") {
-                beforeEachTest { whenever(suggester.suggestCorrections(config, "dependency-task")).doReturn(listOf("some-other-task", "some-other-task-2", "some-other-task-3")) }
-
-                it("throws an appropriate exception without any correction suggestions") {
-                    assertThat({ resolver.resolveExecutionOrder(config, mainTask.name) },
-                        throws<TaskExecutionOrderResolutionException>(withMessage("The task 'dependency-task' given as a prerequisite of 'main-task' does not exist. Did you mean 'some-other-task', 'some-other-task-2' or 'some-other-task-3'?")))
-                }
-            }
-        }
-
-        on("resolving the execution order for a task that has multiple dependencies") {
-            val dependencyTask1 = Task("dependency-task-1", taskRunConfiguration)
-            val dependencyTask2 = Task("dependency-task-2", taskRunConfiguration)
-            val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = listOf(dependencyTask1.name, dependencyTask2.name))
-            val config = Configuration("some-project", TaskMap(mainTask, dependencyTask1, dependencyTask2), ContainerMap())
-
-            val executionOrder by runForEachTest { resolver.resolveExecutionOrder(config, mainTask.name) }
-
-            it("schedules the dependencies to execute before the main task") {
-                assertThat(executionOrder, dependencyTask1 executesBefore mainTask)
-                assertThat(executionOrder, dependencyTask2 executesBefore mainTask)
-            }
-
-            it("schedules the dependencies in the same order they are specified in the configuration file") {
-                assertThat(executionOrder, dependencyTask1 executesBefore dependencyTask2)
-            }
-        }
-
-        on("resolving the execution order for a task that depends on itself") {
-            val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = listOf("main-task"))
-            val config = Configuration("some-project", TaskMap(mainTask), ContainerMap())
-
-            it("throws an appropriate exception") {
-                assertThat({ resolver.resolveExecutionOrder(config, mainTask.name) },
-                    throws<TaskExecutionOrderResolutionException>(withMessage("There is a dependency cycle between tasks: task 'main-task' has 'main-task' as a prerequisite.")))
-            }
-        }
-
-        on("resolving the execution order for a task that depends on a task A, which then depends on a task B") {
-            val dependencyTaskB = Task("dependency-task-b", taskRunConfiguration)
-            val dependencyTaskA = Task("dependency-task-a", taskRunConfiguration, prerequisiteTasks = listOf(dependencyTaskB.name))
-            val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = listOf(dependencyTaskA.name))
-            val config = Configuration("some-project", TaskMap(mainTask, dependencyTaskA, dependencyTaskB), ContainerMap())
-
-            val executionOrder by runForEachTest { resolver.resolveExecutionOrder(config, mainTask.name) }
-
-            it("schedules task A to execute before the main task") {
-                assertThat(executionOrder, dependencyTaskA executesBefore mainTask)
-            }
-
-            it("schedules task B to execute before task A") {
-                assertThat(executionOrder, dependencyTaskB executesBefore dependencyTaskA)
-            }
-        }
-
-        on("resolving the execution order for a task that depends on tasks A and B, where B also depends on A") {
-            val dependencyTaskA = Task("dependency-task-a", taskRunConfiguration)
-            val dependencyTaskB = Task("dependency-task-b", taskRunConfiguration, prerequisiteTasks = listOf(dependencyTaskA.name))
-            val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = listOf(dependencyTaskA.name, dependencyTaskB.name))
-            val config = Configuration("some-project", TaskMap(mainTask, dependencyTaskA, dependencyTaskB), ContainerMap())
-
-            val executionOrder by runForEachTest { resolver.resolveExecutionOrder(config, mainTask.name) }
-
-            it("schedules task B to execute before the main task") {
-                assertThat(executionOrder, dependencyTaskB executesBefore mainTask)
-            }
-
-            it("schedules task A to execute before task B") {
-                assertThat(executionOrder, dependencyTaskA executesBefore dependencyTaskB)
-            }
-        }
-
-        on("resolving the execution order for a task that depends on tasks A and B, where B also depends on A and B is listed first in the main task's list of prerequisites") {
-            val dependencyTaskA = Task("dependency-task-a", taskRunConfiguration)
-            val dependencyTaskB = Task("dependency-task-b", taskRunConfiguration, prerequisiteTasks = listOf(dependencyTaskA.name))
-            val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = listOf(dependencyTaskB.name, dependencyTaskA.name))
-            val config = Configuration("some-project", TaskMap(mainTask, dependencyTaskA, dependencyTaskB), ContainerMap())
-
-            val executionOrder by runForEachTest { resolver.resolveExecutionOrder(config, mainTask.name) }
-
-            it("schedules task B to execute before the main task") {
-                assertThat(executionOrder, dependencyTaskB executesBefore mainTask)
-            }
-
-            it("schedules task A to execute before task B") {
-                assertThat(executionOrder, dependencyTaskA executesBefore dependencyTaskB)
-            }
-        }
-
-        on("resolving the execution order for a complex set of tasks from issue 53 (https://github.com/batect/batect/issues/53)") {
-            val getSandwichContentsTask = Task("getSandwichContents", taskRunConfiguration)
-            val putContentsInBreadTask = Task("putContentsInBread", taskRunConfiguration, prerequisiteTasks = listOf("getSandwichContents"))
-            val prepareTheTableTask = Task("prepareTheTable", taskRunConfiguration)
-            val makeTheSandwichTask = Task("makeTheSandwich", taskRunConfiguration, prerequisiteTasks = listOf("putContentsInBread", "prepareTheTable"))
-            val takeABiteOfTheSandwichTask = Task("takeABiteOfTheSandwich", taskRunConfiguration, prerequisiteTasks = listOf("prepareTheTable"))
-            val eatTheSandwichTask = Task("eatTheSandwich", taskRunConfiguration, prerequisiteTasks = listOf("takeABiteOfTheSandwich"))
-            val sandwichHasBeenEatenTask = Task("sandwichHasBeenEaten", taskRunConfiguration, prerequisiteTasks = listOf("makeTheSandwich", "eatTheSandwich"))
-            val config = Configuration("some-project", TaskMap(getSandwichContentsTask, putContentsInBreadTask, prepareTheTableTask, makeTheSandwichTask, takeABiteOfTheSandwichTask, eatTheSandwichTask, sandwichHasBeenEatenTask), ContainerMap())
-
-            val executionOrder by runForEachTest { resolver.resolveExecutionOrder(config, sandwichHasBeenEatenTask.name) }
-
-            it("schedules the tasks to run in an order that respects the relative ordering of each prerequisite list") {
-                assertThat(executionOrder, getSandwichContentsTask executesBefore putContentsInBreadTask)
-                assertThat(executionOrder, putContentsInBreadTask executesBefore prepareTheTableTask)
-                assertThat(executionOrder, prepareTheTableTask executesBefore makeTheSandwichTask)
-                assertThat(executionOrder, makeTheSandwichTask executesBefore takeABiteOfTheSandwichTask)
-                assertThat(executionOrder, takeABiteOfTheSandwichTask executesBefore eatTheSandwichTask)
-                assertThat(executionOrder, eatTheSandwichTask executesBefore sandwichHasBeenEatenTask)
-            }
-        }
-
-        on("resolving the execution order for a task that depends on a second task that depends on the first task") {
-            val otherTask = Task("other-task", taskRunConfiguration, prerequisiteTasks = listOf("main-task"))
-            val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = listOf("other-task"))
-            val config = Configuration("some-project", TaskMap(mainTask, otherTask), ContainerMap())
-
-            it("throws an appropriate exception") {
-                assertThat({ resolver.resolveExecutionOrder(config, mainTask.name) },
-                    throws<TaskExecutionOrderResolutionException>(withMessage("There is a dependency cycle between tasks: task 'main-task' has 'other-task' as a prerequisite, which has 'main-task' as a prerequisite.")))
-            }
-        }
-
-        on("resolving the execution order for a task that depends on task A, which depends on task B, which depends on the main task") {
-            val taskA = Task("task-A", taskRunConfiguration, prerequisiteTasks = listOf("task-B"))
-            val taskB = Task("task-B", taskRunConfiguration, prerequisiteTasks = listOf("main-task"))
-            val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = listOf("task-A"))
-            val config = Configuration("some-project", TaskMap(mainTask, taskA, taskB), ContainerMap())
-
-            it("throws an appropriate exception") {
-                assertThat({ resolver.resolveExecutionOrder(config, mainTask.name) },
-                    throws<TaskExecutionOrderResolutionException>(withMessage("There is a dependency cycle between tasks: task 'main-task' has 'task-A' as a prerequisite, which has 'task-B' as a prerequisite, which has 'main-task' as a prerequisite.")))
-            }
-        }
-
-        on("resolving the execution order for a task that depends on task A, which depends on task B, which depends on task A") {
-            val taskA = Task("task-A", taskRunConfiguration, prerequisiteTasks = listOf("task-B"))
-            val taskB = Task("task-B", taskRunConfiguration, prerequisiteTasks = listOf("task-A"))
-            val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = listOf("task-A"))
-            val config = Configuration("some-project", TaskMap(mainTask, taskA, taskB), ContainerMap())
-
-            it("throws an appropriate exception") {
-                assertThat({ resolver.resolveExecutionOrder(config, mainTask.name) },
-                    throws<TaskExecutionOrderResolutionException>(withMessage("There is a dependency cycle between tasks: task 'main-task' has 'task-A' as a prerequisite, which has 'task-B' as a prerequisite, which has 'task-A' as a prerequisite.")))
             }
         }
     }

@@ -91,6 +91,19 @@ Example:
 ./batect --no-proxy-vars the-task
 ```
 
+### Skip prerequisites <small>(`--skip-prerequisites`)</small>
+
+Normally, batect will run all tasks defined as [prerequisites](config/Tasks.md#prerequisites) for the task given on the command line, before then
+running the requested task.
+
+Use this option to run only the requested task.
+
+Example:
+
+```shell
+./batect --skip-prerequisites the-task
+```
+
 ### Use an existing network for tasks <small>(`--use-network`)</small>
 
 By default, batect will create a new Docker network for each task, as described in [the task lifecycle](TaskLifecycle.md).

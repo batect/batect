@@ -59,7 +59,8 @@ data class CommandLineOptions(
     val dockerTLSKeyPath: Path = Paths.get("set-to-default-value-in", "CommandLineOptionsParser"),
     val cacheType: CacheType = CacheType.Volume,
     val linuxCacheInitImageName: String = CacheInitialisationImage.linuxDefault,
-    val existingNetworkToUse: String? = null
+    val existingNetworkToUse: String? = null,
+    val skipPrerequisites: Boolean = false
 ) {
     fun extend(originalKodein: DKodein): DKodein = Kodein.direct {
         extend(originalKodein, copy = Copy.All)

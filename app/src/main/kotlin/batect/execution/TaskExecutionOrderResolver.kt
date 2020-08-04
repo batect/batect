@@ -16,12 +16,14 @@
 
 package batect.execution
 
+import batect.cli.CommandLineOptions
 import batect.config.Configuration
 import batect.config.Task
 import batect.logging.Logger
 import batect.utils.asHumanReadableList
 
 class TaskExecutionOrderResolver(
+    private val commandLineOptions: CommandLineOptions,
     private val suggester: TaskSuggester,
     private val logger: Logger
 ) {
@@ -32,11 +34,16 @@ class TaskExecutionOrderResolver(
             throw TaskExecutionOrderResolutionException("The task '$taskName' does not exist." + formatTaskSuggestions(config, taskName) + " (Run './batect --list-tasks' for a list of all tasks in this project, or './batect --help' for help.)")
         }
 
-        val executionOrder = resolvePrerequisitesForTask(config, task, listOf(task), emptyList())
+        val executionOrder = if (commandLineOptions.skipPrerequisites) {
+            listOf(task)
+        } else {
+            resolvePrerequisitesForTask(config, task, listOf(task), emptyList())
+        }
 
         logger.info {
             message("Resolved task execution order.")
             data("executionOrder", executionOrder.map { it.name })
+            data("skipPrerequisites", commandLineOptions.skipPrerequisites)
         }
 
         return executionOrder

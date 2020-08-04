@@ -21,31 +21,31 @@ import batect.journeytests.testutils.exitCode
 import batect.journeytests.testutils.output
 import batect.testutils.createForGroup
 import batect.testutils.on
-import batect.testutils.platformLineSeparator
 import batect.testutils.runBeforeGroup
 import ch.tutteli.atrium.api.fluent.en_GB.contains
+import ch.tutteli.atrium.api.fluent.en_GB.containsNot
 import ch.tutteli.atrium.api.fluent.en_GB.toBe
 import ch.tutteli.atrium.api.verbs.assert
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
-object TaskWithOnlyPrerequisiteTest : Spek({
-    describe("a task with only prerequisites") {
-        val runner by createForGroup { ApplicationRunner("task-with-only-prerequisite") }
+object SkipPrerequisitesJourneyTest : Spek({
+    describe("a task with a prerequisite being run with 'skip prerequisites' enabled") {
+        val runner by createForGroup { ApplicationRunner("task-with-prerequisite") }
 
         on("running that task") {
-            val result by runBeforeGroup { runner.runApplication(listOf("do-stuff")) }
+            val result by runBeforeGroup { runner.runApplication(listOf("--skip-prerequisites", "do-stuff")) }
 
-            it("prints the output from the prerequisite task") {
-                assert(result).output().contains("This is some output from the build task\n")
+            it("prints the output from the main task") {
+                assert(result).output().contains("This is some output from the main task\n")
             }
 
-            it("prints a message indicating that the main task only defines prerequisites") {
-                assert(result).output().contains("The task do-stuff only defines prerequisite tasks, nothing to do.$platformLineSeparator")
+            it("does not print the output from the prerequisite task") {
+                assert(result).output().containsNot("This is some output from the build task\n")
             }
 
-            it("returns a zero exit code") {
-                assert(result).exitCode().toBe(0)
+            it("returns the exit code from that task") {
+                assert(result).exitCode().toBe(123)
             }
         }
     }

@@ -17,7 +17,7 @@ Group name used to group tasks when running `batect --list-tasks`.
 ## `run`
 Specifies what to do when this task starts.
 
-If `run` is not provided, then `prerequisites` is required and the tasks listed in `prerequisites` are run to completion before considering this task complete.
+If `run` is not provided, then `prerequisites` is required and the tasks listed in [`prerequisites`](#prerequisites) are run to completion before considering this task complete.
 
 `run` is made up of the following fields:
 
@@ -75,6 +75,8 @@ If a prerequisite task finishes with a non-zero exit code, then neither this tas
 
 The tasks are run in the same order that they are declared in, unless reordering is required to satisfy the prerequisites of
 this task's prerequisites.
+
+Passing the [`--skip-prerequisites`](../CLIReference.md#skip-prerequisites-skip-prerequisites) command line flag skips all defined prerequisites and runs only the task specified on the command line.
 
 ## Examples
 

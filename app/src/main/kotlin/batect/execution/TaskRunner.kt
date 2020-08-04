@@ -39,7 +39,7 @@ data class TaskRunner(
                 data("taskName", task.name)
             }
 
-            console.println(Text.white(Text("The task ") + Text.bold(task.name) + Text(" only defines prerequisite tasks, nothing to do.")))
+            console.println(Text.white(Text("The task ") + Text.bold(task.name) + Text(" only defines prerequisite tasks, nothing more to do.")))
 
             return 0
         }

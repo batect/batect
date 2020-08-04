@@ -214,7 +214,7 @@ object TaskRunnerSpec : Spek({
                     }
 
                     it("writes a message to the console indicating that the task only has prerequisite tasks") {
-                        verify(console).println(Text.white(Text("The task ") + Text.bold("some-task") + Text(" only defines prerequisite tasks, nothing to do.")))
+                        verify(console).println(Text.white(Text("The task ") + Text.bold("some-task") + Text(" only defines prerequisite tasks, nothing more to do.")))
                     }
                 }
             }

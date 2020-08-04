@@ -22,24 +22,25 @@ import batect.journeytests.testutils.output
 import batect.testutils.createForGroup
 import batect.testutils.on
 import batect.testutils.runBeforeGroup
+import ch.tutteli.atrium.api.fluent.en_GB.contains
 import ch.tutteli.atrium.api.fluent.en_GB.toBe
 import ch.tutteli.atrium.api.verbs.assert
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
-object QuietOutputTest : Spek({
-    describe("running a task in quiet output mode") {
-        val runner by createForGroup { ApplicationRunner("task-with-prerequisite") }
+object PrivilegedContainerJourneyTest : Spek({
+    describe("when running a container that requires privileged mode") {
+        val runner by createForGroup { ApplicationRunner("privileged-container") }
 
-        on("running that task") {
-            val result by runBeforeGroup { runner.runApplication(listOf("--output=quiet", "do-stuff")) }
+        on("running a task that uses that container") {
+            val result by runBeforeGroup { runner.runApplication(listOf("the-task")) }
 
-            it("prints the only the output from the task commands") {
-                assert(result).output().toBe("This is some output from the build task\nThis is some output from the main task\n")
+            it("runs the container in privileged mode") {
+                assert(result).output().contains("Container is privileged\n")
             }
 
-            it("returns the exit code from that task") {
-                assert(result).exitCode().toBe(123)
+            it("runs successfully") {
+                assert(result).exitCode().toBe(0)
             }
         }
     }

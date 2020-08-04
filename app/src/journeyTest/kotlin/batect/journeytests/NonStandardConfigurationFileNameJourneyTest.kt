@@ -29,7 +29,7 @@ import ch.tutteli.atrium.api.verbs.assert
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
-object NonStandardConfigurationFileNameTest : Spek({
+object NonStandardConfigurationFileNameJourneyTest : Spek({
     describe("a configuration file with a non-standard name") {
         on("listing available tasks") {
             val runner by createForGroup { ApplicationRunner("non-standard-name") }

@@ -28,15 +28,15 @@ import ch.tutteli.atrium.api.verbs.assert
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
-object AdditionalArgumentsTest : Spek({
-    describe("a task with additional arguments for the main task container") {
-        val runner by createForGroup { ApplicationRunner("additional-arguments") }
+object WorkingDirectoryOverrideJourneyTest : Spek({
+    describe("when a task overrides the container's working directory") {
+        val runner by createForGroup { ApplicationRunner("working-directory-override") }
 
-        on("running that task") {
-            val result by runBeforeGroup { runner.runApplication(listOf("the-task", "--", "This is some output from the additional arguments.")) }
+        on("running the task") {
+            val result by runBeforeGroup { runner.runApplication(listOf("the-task")) }
 
-            it("prints the output from the main task (which includes the additional arguments") {
-                assert(result).output().contains("This is the output from the config file. This is some output from the additional arguments.\n")
+            it("runs the container with the task's working directory, not the container's default") {
+                assert(result).output().contains("/usr/bin\n")
             }
 
             it("returns the exit code from that task") {

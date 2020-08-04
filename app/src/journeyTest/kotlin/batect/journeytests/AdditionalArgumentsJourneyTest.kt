@@ -22,32 +22,25 @@ import batect.journeytests.testutils.output
 import batect.testutils.createForGroup
 import batect.testutils.on
 import batect.testutils.runBeforeGroup
-import batect.testutils.withPlatformSpecificLineSeparator
 import ch.tutteli.atrium.api.fluent.en_GB.contains
-import ch.tutteli.atrium.api.fluent.en_GB.notToBe
+import ch.tutteli.atrium.api.fluent.en_GB.toBe
 import ch.tutteli.atrium.api.verbs.assert
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
-object TaskWithUnhealthyDependencyTest : Spek({
-    describe("a task with an unhealthy dependency") {
-        val runner by createForGroup { ApplicationRunner("task-with-unhealthy-dependency") }
+object AdditionalArgumentsJourneyTest : Spek({
+    describe("a task with additional arguments for the main task container") {
+        val runner by createForGroup { ApplicationRunner("additional-arguments") }
 
         on("running that task") {
-            val result by runBeforeGroup { runner.runApplication(listOf("--no-color", "the-task")) }
+            val result by runBeforeGroup { runner.runApplication(listOf("the-task", "--", "This is some output from the additional arguments.")) }
 
-            it("prints an appropriate error message") {
-                assert(result).output().contains("Container http-server did not become healthy.\nThe configured health check did not indicate that the container was healthy within the timeout period.".withPlatformSpecificLineSeparator())
+            it("prints the output from the main task (which includes the additional arguments") {
+                assert(result).output().contains("This is the output from the config file. This is some output from the additional arguments.\n")
             }
 
-            it("prints details of the failing health check") {
-                assert(result).output().contains("The last health check exited with code 1 and output:")
-                assert(result).output().contains("This is some normal output")
-                assert(result).output().contains("This is some error output")
-            }
-
-            it("returns a non-zero exit code") {
-                assert(result).exitCode().notToBe(0)
+            it("returns the exit code from that task") {
+                assert(result).exitCode().toBe(0)
             }
         }
     }

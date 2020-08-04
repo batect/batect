@@ -28,19 +28,19 @@ import ch.tutteli.atrium.api.verbs.assert
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
-object PrivilegedContainerTest : Spek({
-    describe("when running a container that requires privileged mode") {
-        val runner by createForGroup { ApplicationRunner("privileged-container") }
+object TaskUsingLogDriverJourneyTest : Spek({
+    describe("a task with a log driver that does not support streaming output") {
+        val runner by createForGroup { ApplicationRunner("task-using-log-driver") }
 
-        on("running a task that uses that container") {
+        on("running that task") {
             val result by runBeforeGroup { runner.runApplication(listOf("the-task")) }
 
-            it("runs the container in privileged mode") {
-                assert(result).output().contains("Container is privileged\n")
+            it("prints the output from that task") {
+                assert(result).output().contains("Error attaching: configured logging driver does not support reading")
             }
 
-            it("runs successfully") {
-                assert(result).exitCode().toBe(0)
+            it("returns the exit code from that task") {
+                assert(result).exitCode().toBe(123)
             }
         }
     }

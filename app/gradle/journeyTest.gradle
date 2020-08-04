@@ -88,3 +88,12 @@ tasks.register("journeyTest") {
     dependsOn journeyTestWindowsContainers
     dependsOn journeyTestLinuxContainers
 }
+
+checkJourneyTestNaming {
+    ignoreFileNameCheck = fileTree(
+        dir: 'src/journeyTest/kotlin',
+        includes: [
+            'batect/journeytests/testutils/**',
+        ]
+    )
+}

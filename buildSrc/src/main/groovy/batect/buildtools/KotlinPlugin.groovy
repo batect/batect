@@ -20,6 +20,7 @@ import org.gradle.api.JavaVersion
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.tasks.testing.Test
+import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 
 class KotlinPlugin implements Plugin<Project> {
     @Override
@@ -83,6 +84,7 @@ class KotlinPlugin implements Plugin<Project> {
         configureCommonTesting(project)
         configureUnitTesting(project)
         configureUnitTestLayoutCheck(project)
+        configureJourneyTestNameCheck(project)
     }
 
     private void configureCommonTesting(Project project) {
@@ -163,6 +165,29 @@ class KotlinPlugin implements Plugin<Project> {
 
         project.tasks.named('check') {
             dependsOn checkUnitTestLayoutTask
+        }
+    }
+
+    private void configureJourneyTestNameCheck(Project project) {
+        def checkJourneyTestNamingExtension = project.extensions.create("checkJourneyTestNaming", JourneyTestNamingCheckExtension.class, project)
+
+        project.afterEvaluate {
+            def kotlin = project.extensions.getByType(KotlinJvmProjectExtension)
+
+            if (!kotlin.sourceSets.names.contains('journeyTest')) {
+                return
+            }
+
+            def checkJourneyTestNamingTask = project.tasks.register('checkJourneyTestNaming', JourneyTestNamingCheckTask.class) {
+                mustRunAfter 'test'
+
+                files.set(kotlin.sourceSets.named('journeyTest').get().kotlin)
+                ignoreFileNameCheck.set(checkJourneyTestNamingExtension.ignoreFileNameCheck)
+            }
+
+            project.tasks.named('check') {
+                dependsOn checkJourneyTestNamingTask
+            }
         }
     }
 

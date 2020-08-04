@@ -28,19 +28,19 @@ import ch.tutteli.atrium.api.verbs.assert
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
-object TaskWithEnvironmentFromHostTest : Spek({
-    describe("a task with an environment variable from the host") {
-        val runner by createForGroup { ApplicationRunner("task-with-environment-from-host") }
+object ContainerWithCapabilityJourneyTest : Spek({
+    describe("when running a container that requires a capability") {
+        val runner by createForGroup { ApplicationRunner("container-with-capability") }
 
-        on("running that task") {
-            val result by runBeforeGroup { runner.runApplication(listOf("the-task"), mapOf("MESSAGE" to "This is some output from the environment variable")) }
+        on("running a task that uses that container") {
+            val result by runBeforeGroup { runner.runApplication(listOf("the-task")) }
 
-            it("prints the output from that task") {
-                assert(result).output().contains("This is some output from the environment variable\nThis is the default message\n")
+            it("runs the container with that capability") {
+                assert(result).output().contains("Container has capability\n")
             }
 
-            it("returns the exit code from that task") {
-                assert(result).exitCode().toBe(123)
+            it("runs successfully") {
+                assert(result).exitCode().toBe(0)
             }
         }
     }

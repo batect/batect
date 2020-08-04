@@ -22,25 +22,24 @@ import batect.journeytests.testutils.output
 import batect.testutils.createForGroup
 import batect.testutils.on
 import batect.testutils.runBeforeGroup
-import ch.tutteli.atrium.api.fluent.en_GB.contains
 import ch.tutteli.atrium.api.fluent.en_GB.toBe
 import ch.tutteli.atrium.api.verbs.assert
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
-object WorkingDirectoryOverrideTest : Spek({
-    describe("when a task overrides the container's working directory") {
-        val runner by createForGroup { ApplicationRunner("working-directory-override") }
+object QuietOutputJourneyTest : Spek({
+    describe("running a task in quiet output mode") {
+        val runner by createForGroup { ApplicationRunner("task-with-prerequisite") }
 
-        on("running the task") {
-            val result by runBeforeGroup { runner.runApplication(listOf("the-task")) }
+        on("running that task") {
+            val result by runBeforeGroup { runner.runApplication(listOf("--output=quiet", "do-stuff")) }
 
-            it("runs the container with the task's working directory, not the container's default") {
-                assert(result).output().contains("/usr/bin\n")
+            it("prints the only the output from the task commands") {
+                assert(result).output().toBe("This is some output from the build task\nThis is some output from the main task\n")
             }
 
             it("returns the exit code from that task") {
-                assert(result).exitCode().toBe(0)
+                assert(result).exitCode().toBe(123)
             }
         }
     }

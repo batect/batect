@@ -100,6 +100,7 @@ object ImagesAPISpec : Spek({
             val buildArgs = mapOf("someArg" to "someValue")
             val dockerfilePath = "some-Dockerfile-path"
             val imageTags = setOf("some_image_tag", "some_other_image_tag")
+            val pullImage = false
             val registryCredentials = setOf(TokenDockerRegistryCredentials("some_token", "registry.com"))
 
             val expectedUrl = hasScheme("http") and
@@ -108,7 +109,8 @@ object ImagesAPISpec : Spek({
                 hasQueryParameter("buildargs", """{"someArg":"someValue"}""") and
                 hasQueryParameter("t", "some_image_tag") and
                 hasQueryParameter("t", "some_other_image_tag") and
-                hasQueryParameter("dockerfile", dockerfilePath)
+                hasQueryParameter("dockerfile", dockerfilePath) and
+                hasQueryParameter("pull", "0")
 
             val base64EncodedJSONCredentials = "eyJyZWdpc3RyeS5jb20iOnsiaWRlbnRpdHl0b2tlbiI6InNvbWVfdG9rZW4ifX0="
             val expectedHeadersForAuthentication = Headers.Builder().set("X-Registry-Config", base64EncodedJSONCredentials).build()
@@ -141,7 +143,7 @@ object ImagesAPISpec : Spek({
                 val call by createForEachTest { clientWithLongTimeout.mock("POST", expectedUrl, successResponse, 200, expectedHeadersForAuthentication) }
                 val output by createForEachTest { ByteArrayOutputStream() }
                 val progressReceiver by createForEachTest { ProgressReceiver() }
-                val image by runForEachTest { api.build(context, buildArgs, dockerfilePath, imageTags, registryCredentials, output.sink(), cancellationContext, progressReceiver::onProgressUpdate) }
+                val image by runForEachTest { api.build(context, buildArgs, dockerfilePath, imageTags, pullImage, registryCredentials, output.sink(), cancellationContext, progressReceiver::onProgressUpdate) }
 
                 it("sends a request to the Docker daemon to build the image") {
                     verify(call).execute()
@@ -188,10 +190,24 @@ object ImagesAPISpec : Spek({
                 }
             }
 
+            on("the build running with all images re-pulled") {
+                val expectedUrlWithRePullingEnabled = hasScheme("http") and
+                    hasHost(dockerHost) and
+                    hasPath("/v1.37/build") and
+                    hasQueryParameter("pull", "1")
+
+                val call by createForEachTest { clientWithLongTimeout.mock("POST", expectedUrlWithRePullingEnabled, successResponse, 200, expectedHeadersForAuthentication) }
+                beforeEachTest { api.build(context, emptyMap(), dockerfilePath, imageTags, true, registryCredentials, null, cancellationContext, {}) }
+
+                it("sends a request to the Docker daemon to build the image with re-pulling all images enabled") {
+                    verify(call).execute()
+                }
+            }
+
             on("the build having no registry credentials") {
                 val expectedHeadersForNoAuthentication = Headers.Builder().build()
                 val call by createForEachTest { clientWithLongTimeout.mock("POST", expectedUrl, successResponse, 200, expectedHeadersForNoAuthentication) }
-                beforeEachTest { api.build(context, buildArgs, dockerfilePath, imageTags, emptySet(), null, cancellationContext, {}) }
+                beforeEachTest { api.build(context, buildArgs, dockerfilePath, imageTags, pullImage, emptySet(), null, cancellationContext, {}) }
 
                 it("sends a request to the Docker daemon to build the image with no authentication header") {
                     verify(call).execute()
@@ -205,7 +221,7 @@ object ImagesAPISpec : Spek({
                     hasQueryParameter("buildargs", """{}""")
 
                 val call by createForEachTest { clientWithLongTimeout.mock("POST", expectedUrlWithNoBuildArgs, successResponse, 200, expectedHeadersForAuthentication) }
-                beforeEachTest { api.build(context, emptyMap(), dockerfilePath, imageTags, registryCredentials, null, cancellationContext, {}) }
+                beforeEachTest { api.build(context, emptyMap(), dockerfilePath, imageTags, pullImage, registryCredentials, null, cancellationContext, {}) }
 
                 it("sends a request to the Docker daemon to build the image with an empty set of build args") {
                     verify(call).execute()
@@ -218,7 +234,7 @@ object ImagesAPISpec : Spek({
                 }
 
                 it("throws an appropriate exception") {
-                    assertThat({ api.build(context, buildArgs, dockerfilePath, imageTags, registryCredentials, null, cancellationContext, {}) }, throws<ImageBuildFailedException>(
+                    assertThat({ api.build(context, buildArgs, dockerfilePath, imageTags, pullImage, registryCredentials, null, cancellationContext, {}) }, throws<ImageBuildFailedException>(
                         withMessage("Building image failed: $errorMessageWithCorrectLineEndings")
                     ))
                 }
@@ -240,7 +256,7 @@ object ImagesAPISpec : Spek({
                 beforeEachTest { clientWithLongTimeout.mock("POST", expectedUrl, response, 200, expectedHeadersForAuthentication) }
 
                 it("throws an appropriate exception with all line endings corrected for the host system") {
-                    assertThat({ api.build(context, buildArgs, dockerfilePath, imageTags, registryCredentials, output.sink(), cancellationContext, {}) }, throws<ImageBuildFailedException>(
+                    assertThat({ api.build(context, buildArgs, dockerfilePath, imageTags, pullImage, registryCredentials, output.sink(), cancellationContext, {}) }, throws<ImageBuildFailedException>(
                         withMessage(
                             "Building image failed: The command '/bin/sh -c exit 1' returned a non-zero code: 1. Output from build process was:SYSTEM_LINE_SEPARATOR" +
                             "Step 1/6 : FROM nginx:1.13.0SYSTEM_LINE_SEPARATOR" +
@@ -253,7 +269,7 @@ object ImagesAPISpec : Spek({
                 }
 
                 it("writes all output from the build process to the output stream") {
-                    try { api.build(context, buildArgs, dockerfilePath, imageTags, registryCredentials, output.sink(), cancellationContext, {}) } catch (_: Throwable) {}
+                    try { api.build(context, buildArgs, dockerfilePath, imageTags, pullImage, registryCredentials, output.sink(), cancellationContext, {}) } catch (_: Throwable) {}
                     assertThat(output.toString(), equalTo("""
                         Step 1/6 : FROM nginx:1.13.0
                          ---> 3448f27c273f
@@ -274,7 +290,7 @@ object ImagesAPISpec : Spek({
                 }
 
                 it("throws an appropriate exception") {
-                    assertThat({ api.build(context, buildArgs, dockerfilePath, imageTags, registryCredentials, null, cancellationContext, {}) }, throws<ImageBuildFailedException>(
+                    assertThat({ api.build(context, buildArgs, dockerfilePath, imageTags, pullImage, registryCredentials, null, cancellationContext, {}) }, throws<ImageBuildFailedException>(
                         withMessage("Building image failed: daemon never sent built image ID.")
                     ))
                 }

@@ -52,6 +52,7 @@ class DockerImagesClient(
         dockerfilePath: String,
         pathResolutionContext: PathResolutionContext,
         imageTags: Set<String>,
+        forcePull: Boolean,
         outputSink: Sink?,
         cancellationContext: CancellationContext,
         onStatusUpdate: (DockerImageBuildProgress) -> Unit
@@ -82,7 +83,7 @@ class DockerImagesClient(
             val reporter = imageProgressReporterFactory()
             var lastStepProgressUpdate: DockerImageBuildProgress? = null
 
-            val image = api.build(context, buildArgs, dockerfilePath, imageTags, credentials, outputSink, cancellationContext) { line ->
+            val image = api.build(context, buildArgs, dockerfilePath, imageTags, forcePull, credentials, outputSink, cancellationContext) { line ->
                 logger.debug {
                     message("Received output from Docker during image build.")
                     data("outputLine", line.toString())
@@ -142,17 +143,8 @@ data class DockerImageBuildProgress(val currentStep: Int, val totalSteps: Int, v
         private val buildStepLineRegex = """^Step (\d+)/(\d+) : (.*)$""".toRegex()
 
         fun fromBuildOutput(line: JsonObject): DockerImageBuildProgress? {
-            val output = line.getPrimitiveOrNull("stream")?.content
-
-            if (output == null) {
-                return null
-            }
-
-            val stepLineMatch = buildStepLineRegex.matchEntire(output)
-
-            if (stepLineMatch == null) {
-                return null
-            }
+            val output = line.getPrimitiveOrNull("stream")?.content ?: return null
+            val stepLineMatch = buildStepLineRegex.matchEntire(output) ?: return null
 
             return DockerImageBuildProgress(stepLineMatch.groupValues[1].toInt(), stepLineMatch.groupValues[2].toInt(), stepLineMatch.groupValues[3], null)
         }

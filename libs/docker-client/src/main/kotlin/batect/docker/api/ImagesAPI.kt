@@ -52,6 +52,7 @@ class ImagesAPI(
         buildArgs: Map<String, String>,
         dockerfilePath: String,
         imageTags: Set<String>,
+        forcePull: Boolean,
         registryCredentials: Set<DockerRegistryCredentials>,
         outputSink: Sink?,
         cancellationContext: CancellationContext,
@@ -62,9 +63,10 @@ class ImagesAPI(
             data("context", context)
             data("buildArgs", buildArgs)
             data("imageTags", imageTags)
+            data("forcePull", forcePull)
         }
 
-        val request = createBuildRequest(context, buildArgs, dockerfilePath, imageTags, registryCredentials)
+        val request = createBuildRequest(context, buildArgs, dockerfilePath, imageTags, forcePull, registryCredentials)
 
         clientWithNoTimeout()
             .newCall(request)
@@ -94,12 +96,14 @@ class ImagesAPI(
         buildArgs: Map<String, String>,
         dockerfilePath: String,
         imageTags: Set<String>,
+        forcePull: Boolean,
         registryCredentials: Set<DockerRegistryCredentials>
     ): Request {
         val url = baseUrl.newBuilder()
             .addPathSegment("build")
             .addQueryParameter("buildargs", buildArgs.toJsonObject().toString())
             .addQueryParameter("dockerfile", dockerfilePath)
+            .addQueryParameter("pull", if (forcePull) "1" else "0")
 
         imageTags.forEach { url.addQueryParameter("t", it) }
 

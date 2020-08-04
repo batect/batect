@@ -24,4 +24,10 @@ data class ConfigurationException(
 ) : RuntimeException(message, cause) {
 
     constructor(message: String) : this(message, null, null, null)
+
+    override fun toString(): String = when {
+        lineNumber != null && column != null -> "Error on line $lineNumber, column $column: $message"
+        lineNumber != null -> "Error on line $lineNumber: $message"
+        else -> message
+    }
 }

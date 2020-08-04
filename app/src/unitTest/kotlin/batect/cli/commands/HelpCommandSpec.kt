@@ -80,15 +80,15 @@ object HelpCommandSpec : Spek({
                         |Usage: batect [options] task [-- additional arguments to pass to task]
                         |
                         |Group 1 options:
-                        |      --enable-extra-stuff                            Something you can enable if you want.
-                        |                                                      (extra help info)
-                        |  -f, --file=some_custom_value_format                 File name to use. (extra help info)
+                        |     --enable-extra-stuff                            Something you can enable if you want.
+                        |                                                     (extra help info)
+                        | -f, --file=some_custom_value_format                 File name to use. (extra help info)
                         |
                         |Group 2 options:
-                        |      --awesomeness-level=some_custom_value_format    Level of awesomeness to use. (extra help
-                        |                                                      info)
-                        |      --booster-level=some_custom_value_format        Level of boosters to use. (extra help
-                        |                                                      info)
+                        |     --awesomeness-level=some_custom_value_format    Level of awesomeness to use. (extra help
+                        |                                                     info)
+                        |     --booster-level=some_custom_value_format        Level of boosters to use. (extra help
+                        |                                                     info)
                         |
                         |For documentation and further information on batect, visit https://github.com/batect/batect.
                         |

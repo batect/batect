@@ -69,14 +69,14 @@ class HelpCommand(
         val firstLineIndentationCount = 4 + alignToColumn - first.length
         val firstLineIndentation = " ".repeat(firstLineIndentationCount)
 
-        val secondLineIndentationCount = 6 + alignToColumn
+        val secondLineIndentationCount = 5 + alignToColumn
         val secondLineIndentation = " ".repeat(secondLineIndentationCount)
 
         val secondColumnWidth = consoleWidth - secondLineIndentationCount
         val secondColumnLines = second.breakAt(secondColumnWidth).lines()
         val secondColumn = alternate(secondColumnLines, secondLineIndentation)
 
-        return "  $first$firstLineIndentation$secondColumn"
+        return " $first$firstLineIndentation$secondColumn"
     }
 
     private fun alternate(lines: List<String>, separator: String): String {

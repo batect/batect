@@ -15,7 +15,7 @@ batect is:
   project and batect takes care of the rest.
 
 * :sparkles: **consistent**: batect uses Docker to create a clean, isolated environment every time you run a task, freeing you from "works on my machine"
-  issues - including on CI.
+  issues - including on CI. And you can easily share tasks between projects with bundles.
 
 * :white_check_mark: **versatile**: Anything that can run in a Docker container can be run with batect - builds, unit testing, integration testing, linting,
   local environments, deployments; frontend, backend or somewhere in between, batect can do it all.

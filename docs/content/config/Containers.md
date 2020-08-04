@@ -386,7 +386,7 @@ containers:
 ## `image_pull_policy`
 <small>**Equivalent Docker CLI option**: `--pull` to `docker build` or re-running `docker pull`, **equivalent Docker Compose option**: none</small>
 
-Controls when to pull the image used by this container. 
+Controls when to pull the image used by this container.
 
 Applies to all containers. If the image is specified as [`image`](#image), this policy controls the behaviour for pulling `image`. If the image is built from
 a [`build_directory`](#build_directory), this policy controls the behaviour for pulling any base images.
@@ -405,7 +405,7 @@ containers:
 ```
 
 !!! tip
-    It is highly recommended that you use `IfNotPresent`. Using `Always` can incur a significant performance penalty. 
+    It is highly recommended that you use `IfNotPresent`. Using `Always` can incur a significant performance penalty.
 
 ## `log_driver`
 <small>**Equivalent Docker CLI option**: `--log-driver` to `docker run`, **equivalent Docker Compose option**: `logging.driver`</small>

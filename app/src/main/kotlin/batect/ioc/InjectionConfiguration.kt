@@ -36,10 +36,10 @@ import batect.config.includes.IncludeResolver
 import batect.config.io.ConfigurationLoader
 import batect.docker.DockerContainerCreationRequestFactory
 import batect.docker.DockerContainerEnvironmentVariableProvider
-import batect.docker.DockerContainerNameGenerator
 import batect.docker.DockerHostNameResolver
 import batect.docker.DockerHttpConfig
 import batect.docker.DockerHttpConfigDefaults
+import batect.docker.DockerResourceNameGenerator
 import batect.docker.DockerTLSConfig
 import batect.docker.api.ContainersAPI
 import batect.docker.api.ExecAPI
@@ -235,7 +235,6 @@ private val dockerModule = Kodein.Module("docker") {
     bind<ContainerWaiter>() with singleton { ContainerWaiter(instance()) }
     bind<DockerContainerCreationRequestFactory>() with scoped(TaskScope).singleton { DockerContainerCreationRequestFactory(instance(), instance()) }
     bind<DockerContainerEnvironmentVariableProvider>() with scoped(TaskScope).singleton { DockerContainerEnvironmentVariableProvider(instance(), instance(), instance()) }
-    bind<DockerContainerNameGenerator>() with scoped(TaskScope).singleton { DockerContainerNameGenerator() }
     bind<DockerfileParser>() with singleton { DockerfileParser() }
     bind<DockerIgnoreParser>() with singleton { DockerIgnoreParser() }
     bind<DockerImageBuildContextFactory>() with singleton { DockerImageBuildContextFactory(instance()) }
@@ -246,6 +245,7 @@ private val dockerModule = Kodein.Module("docker") {
     bind<DockerRegistryCredentialsProvider>() with singleton { DockerRegistryCredentialsProvider(instance(), instance(), instance()) }
     bind<DockerRegistryDomainResolver>() with singleton { DockerRegistryDomainResolver() }
     bind<DockerRegistryIndexResolver>() with singleton { DockerRegistryIndexResolver() }
+    bind<DockerResourceNameGenerator>() with scoped(TaskScope).singleton { DockerResourceNameGenerator() }
     bind<DockerTLSConfig>() with singleton {
         val options = commandLineOptions()
 

@@ -20,11 +20,11 @@ import batect.config.CacheMount
 import batect.config.Container
 import batect.docker.DockerContainer
 import batect.docker.DockerContainerCreationRequest
-import batect.docker.DockerContainerNameGenerator
 import batect.docker.DockerException
 import batect.docker.DockerHealthCheckConfig
 import batect.docker.DockerImage
 import batect.docker.DockerNetwork
+import batect.docker.DockerResourceNameGenerator
 import batect.docker.DockerVolumeMount
 import batect.docker.DockerVolumeMountSource
 import batect.docker.UserAndGroup
@@ -50,7 +50,7 @@ class InitialiseCachesStepRunner(
     private val imagesClient: DockerImagesClient,
     private val containersClient: DockerContainersClient,
     private val cancellationContext: CancellationContext,
-    private val containerNameGenerator: DockerContainerNameGenerator,
+    private val resourceNameGenerator: DockerResourceNameGenerator,
     private val volumeMountResolver: VolumeMountResolver,
     private val runAsCurrentUserConfigurationProvider: RunAsCurrentUserConfigurationProvider,
     private val containerDependencyGraph: ContainerDependencyGraph
@@ -118,7 +118,7 @@ class InitialiseCachesStepRunner(
 
     private fun containerCreationRequest(volumes: Map<DockerVolumeMountSource.Volume, UserAndGroup?>): DockerContainerCreationRequest {
         val image = pullImage()
-        val containerName = containerNameGenerator.generateNameFor("batect-cache-init")
+        val containerName = resourceNameGenerator.generateNameFor("batect-cache-init")
         val mounts = mutableSetOf<DockerVolumeMount>()
         val configs = mutableSetOf<CacheConfig>()
 

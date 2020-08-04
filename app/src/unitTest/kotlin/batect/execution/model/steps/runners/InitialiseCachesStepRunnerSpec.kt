@@ -22,12 +22,12 @@ import batect.config.LiteralValue
 import batect.config.LocalMount
 import batect.docker.DockerContainer
 import batect.docker.DockerContainerCreationRequest
-import batect.docker.DockerContainerNameGenerator
 import batect.docker.DockerContainerRunResult
 import batect.docker.DockerException
 import batect.docker.DockerHealthCheckConfig
 import batect.docker.DockerImage
 import batect.docker.DockerNetwork
+import batect.docker.DockerResourceNameGenerator
 import batect.docker.DockerVolumeMount
 import batect.docker.DockerVolumeMountSource
 import batect.docker.UserAndGroup
@@ -81,7 +81,7 @@ object InitialiseCachesStepRunnerSpec : Spek({
         val cancellationContext by createForEachTest { mock<CancellationContext>() }
         val containerName = "batect-cache-init-abc123"
         val containerNameGenerator by createForEachTest {
-            mock<DockerContainerNameGenerator> {
+            mock<DockerResourceNameGenerator> {
                 on { generateNameFor("batect-cache-init") } doReturn containerName
             }
         }

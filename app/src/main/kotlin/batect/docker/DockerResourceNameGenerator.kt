@@ -19,7 +19,7 @@ package batect.docker
 import batect.config.Container
 import batect.utils.generateId
 
-class DockerContainerNameGenerator {
+class DockerResourceNameGenerator {
     fun generateNameFor(container: Container): String = generateNameFor(container.name)
     fun generateNameFor(name: String): String = "$name-$suffix"
 

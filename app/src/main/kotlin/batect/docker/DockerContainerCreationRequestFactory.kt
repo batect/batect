@@ -22,7 +22,7 @@ import batect.primitives.mapToSet
 
 class DockerContainerCreationRequestFactory(
     private val environmentVariableProvider: DockerContainerEnvironmentVariableProvider,
-    private val containerNameGenerator: DockerContainerNameGenerator
+    private val resourceNameGenerator: DockerResourceNameGenerator
 ) {
     fun create(
         container: Container,
@@ -37,7 +37,7 @@ class DockerContainerCreationRequestFactory(
         attachStdin: Boolean
     ): DockerContainerCreationRequest {
         return DockerContainerCreationRequest(
-            containerNameGenerator.generateNameFor(container),
+            resourceNameGenerator.generateNameFor(container),
             image,
             network,
             if (config.command != null) config.command.parsedCommand else emptyList(),

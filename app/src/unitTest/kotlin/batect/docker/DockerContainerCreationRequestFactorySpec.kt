@@ -53,7 +53,7 @@ object DockerContainerCreationRequestFactorySpec : Spek({
             on { environmentVariablesFor(any(), any(), eq(propagateProxyEnvironmentVariables), eq(terminalType)) } doReturn expectedEnvironmentVariables
         }
 
-        val nameGenerator = mock<DockerContainerNameGenerator> {
+        val nameGenerator = mock<DockerResourceNameGenerator> {
             on { generateNameFor(any<Container>()) } doReturn "the-container-name"
         }
 

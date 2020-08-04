@@ -24,9 +24,9 @@ import com.natpryce.hamkrest.matches
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
-object DockerContainerNameGeneratorSpec : Spek({
-    describe("a Docker container name generator") {
-        val generator = DockerContainerNameGenerator()
+object DockerResourceNameGeneratorSpec : Spek({
+    describe("a Docker resource name generator") {
+        val generator = DockerResourceNameGenerator()
         val container1 = Container("container-1", imageSourceDoesNotMatter())
         val container2 = Container("container-2", imageSourceDoesNotMatter())
 

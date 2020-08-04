@@ -19,6 +19,7 @@ package batect.execution
 import batect.config.Configuration
 import batect.config.Task
 import batect.logging.Logger
+import batect.utils.asHumanReadableList
 
 class TaskExecutionOrderResolver(
     private val suggester: TaskSuggester,
@@ -91,13 +92,7 @@ class TaskExecutionOrderResolver(
             return ""
         }
 
-        if (suggestions.size == 1) {
-            return " Did you mean ${suggestions.first()}?"
-        }
-
-        val allButLast = suggestions.dropLast(1)
-
-        return " Did you mean " + allButLast.joinToString(", ") + " or " + suggestions.last() + "?"
+        return " Did you mean ${suggestions.asHumanReadableList("or")}?"
     }
 }
 

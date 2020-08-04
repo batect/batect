@@ -1527,7 +1527,7 @@ object ConfigurationLoaderSpec : Spek({
             }
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(files, rootConfigPath) }, throws(withMessage("The container 'container-1' is defined in multiple files: /project/batect.yml, /project/1.yml")))
+                assertThat({ loadConfiguration(files, rootConfigPath) }, throws(withMessage("The container 'container-1' is defined in multiple files: /project/batect.yml and /project/1.yml")))
             }
         }
 
@@ -1554,7 +1554,7 @@ object ConfigurationLoaderSpec : Spek({
             }
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(files, rootConfigPath) }, throws(withMessage("The task 'task-1' is defined in multiple files: /project/batect.yml, /project/1.yml")))
+                assertThat({ loadConfiguration(files, rootConfigPath) }, throws(withMessage("The task 'task-1' is defined in multiple files: /project/batect.yml and /project/1.yml")))
             }
         }
 
@@ -1577,7 +1577,7 @@ object ConfigurationLoaderSpec : Spek({
             }
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(files, rootConfigPath) }, throws(withMessage("The config variable 'config-var-1' is defined in multiple files: /project/batect.yml, /project/1.yml")))
+                assertThat({ loadConfiguration(files, rootConfigPath) }, throws(withMessage("The config variable 'config-var-1' is defined in multiple files: /project/batect.yml and /project/1.yml")))
             }
         }
 
@@ -2045,7 +2045,7 @@ object ConfigurationLoaderSpec : Spek({
             }
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(files, rootConfigPath) }, throws(withMessage("The container 'container-1' is defined in multiple files: /project/batect.yml, 1.yml from https://myrepo.com/bundles/bundle.git@v1.2.3")))
+                assertThat({ loadConfiguration(files, rootConfigPath) }, throws(withMessage("The container 'container-1' is defined in multiple files: /project/batect.yml and 1.yml from https://myrepo.com/bundles/bundle.git@v1.2.3")))
             }
         }
 
@@ -2075,7 +2075,7 @@ object ConfigurationLoaderSpec : Spek({
             }
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(files, rootConfigPath) }, throws(withMessage("The task 'task-1' is defined in multiple files: /project/batect.yml, 1.yml from https://myrepo.com/bundles/bundle.git@v1.2.3")))
+                assertThat({ loadConfiguration(files, rootConfigPath) }, throws(withMessage("The task 'task-1' is defined in multiple files: /project/batect.yml and 1.yml from https://myrepo.com/bundles/bundle.git@v1.2.3")))
             }
         }
 
@@ -2101,7 +2101,7 @@ object ConfigurationLoaderSpec : Spek({
             }
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(files, rootConfigPath) }, throws(withMessage("The config variable 'config-var-1' is defined in multiple files: /project/batect.yml, 1.yml from https://myrepo.com/bundles/bundle.git@v1.2.3")))
+                assertThat({ loadConfiguration(files, rootConfigPath) }, throws(withMessage("The config variable 'config-var-1' is defined in multiple files: /project/batect.yml and 1.yml from https://myrepo.com/bundles/bundle.git@v1.2.3")))
             }
         }
 

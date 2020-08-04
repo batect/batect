@@ -42,3 +42,18 @@ fun pluralize(count: Int, singular: String, plural: String = singular + "s"): St
     } else {
         "$count $plural"
     }
+
+fun Collection<String>.asHumanReadableList(conjunction: String = "and"): String {
+    return this.foldIndexed("") { index, acc, current ->
+        val secondLastItem = index == this.size - 2
+        val beforeSecondLastItem = index < this.size - 2
+
+        val separator = when {
+            secondLastItem -> " $conjunction "
+            beforeSecondLastItem -> ", "
+            else -> ""
+        }
+
+        acc + current + separator
+    }
+}

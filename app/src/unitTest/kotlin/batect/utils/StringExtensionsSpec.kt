@@ -90,4 +90,40 @@ object StringExtensionsSpec : Spek({
             }
         }
     }
+
+    describe("producing a human-readable list of a list of strings") {
+        given("an empty list") {
+            it("returns an empty string") {
+                assertThat(emptyList<String>().asHumanReadableList(), equalTo(""))
+            }
+        }
+
+        given("a list with a single item") {
+            it("returns just that item") {
+                assertThat(listOf("item 1").asHumanReadableList(), equalTo("item 1"))
+            }
+        }
+
+        given("a list with two items") {
+            it("returns both items, separated by 'and'") {
+                assertThat(listOf("item 1", "item 2").asHumanReadableList(), equalTo("item 1 and item 2"))
+            }
+        }
+
+        given("a list with three items") {
+            it("returns all items, with the first pair separated by a comma, and the second pair by 'and'") {
+                assertThat(listOf("item 1", "item 2", "item 3").asHumanReadableList(), equalTo("item 1, item 2 and item 3"))
+            }
+        }
+
+        given("a list with many items") {
+            it("returns all items, with all but the last pair separated by a comma, and the last pair by 'and'") {
+                assertThat(listOf("item 1", "item 2", "item 3", "item 4", "item 5").asHumanReadableList(), equalTo("item 1, item 2, item 3, item 4 and item 5"))
+            }
+
+            it("returns all items, with all but the last pair separated by a comma, and the last pair by the provided custom conjunction") {
+                assertThat(listOf("item 1", "item 2", "item 3", "item 4", "item 5").asHumanReadableList("or"), equalTo("item 1, item 2, item 3, item 4 or item 5"))
+            }
+        }
+    }
 })

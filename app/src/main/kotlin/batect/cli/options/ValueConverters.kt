@@ -19,6 +19,7 @@ package batect.cli.options
 import batect.os.PathResolutionResult
 import batect.os.PathResolverFactory
 import batect.os.PathType
+import batect.utils.asHumanReadableList
 import java.nio.file.Path
 import java.util.Locale
 
@@ -65,7 +66,7 @@ object ValueConverters {
                     .sorted()
                     .map { "'$it'" }
 
-                val optionsDescription = validOptions.dropLast(1).joinToString(", ") + " or " + validOptions.last()
+                val optionsDescription = validOptions.asHumanReadableList("or")
 
                 ValueConversionResult.ConversionFailed("Value must be one of $optionsDescription.")
             }

@@ -39,6 +39,7 @@ import batect.os.PathResolver
 import batect.os.PathResolverFactory
 import batect.primitives.flatMapToSet
 import batect.primitives.mapToSet
+import batect.utils.asHumanReadableList
 import com.charleskorn.kaml.EmptyYamlDocumentException
 import com.charleskorn.kaml.PolymorphismStyle
 import com.charleskorn.kaml.Yaml
@@ -213,7 +214,7 @@ class ConfigurationLoader(
                         is FileInclude -> it.path.toString()
                         is GitInclude -> "${it.path} from ${it.repo}@${it.ref}"
                     }
-                }.joinToString(", ")
+                }.asHumanReadableList()
 
                 throw ConfigurationException("The $type '$name' is defined in multiple files: $formattedFileNames")
             }

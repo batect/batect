@@ -110,7 +110,7 @@ class CommandLineOptionsParser(
     private val requestedOutputStyle: OutputStyle? by valueOption<OutputStyle?, OutputStyle>(
         outputOptionsGroup,
         "output",
-        "Force a particular style of output from batect (does not affect task command output). Valid values are: fancy (default value if your console supports this), simple (no updating text), all (interleaved output from all containers) or quiet (only error messages).",
+        "Force a particular style of output from batect. Does not affect task command output. Valid values are: fancy (default value if your console supports this), simple (no updating text), all (interleaved output from all containers) or quiet (only error messages).",
         null,
         ValueConverters.enum(),
         'o'

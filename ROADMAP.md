@@ -137,3 +137,6 @@ If there's something you're really keen to see, pull requests are always welcome
   * eg. language server (https://microsoft.github.io/language-server-protocol/) ![good first issue](https://img.shields.io/badge/-good%20first%20issue-green)
 * pull / clone Git repositories in parallel
   * how would this work with repositories that require interactive authentication?
+* better integration with GitHub actions using [workflow commands](https://docs.github.com/en/actions/reference/workflow-commands-for-github-actions)
+  * configuration errors
+  * errors from tasks ![good first issue](https://img.shields.io/badge/-good%20first%20issue-green)

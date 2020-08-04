@@ -16,12 +16,15 @@
 
 package batect.docker
 
+import batect.config.Configuration
 import batect.config.Container
 import batect.utils.generateId
 
-class DockerResourceNameGenerator {
+class DockerResourceNameGenerator(
+    private val config: Configuration
+) {
     fun generateNameFor(container: Container): String = generateNameFor(container.name)
-    fun generateNameFor(name: String): String = "$name-$suffix"
+    fun generateNameFor(name: String): String = "${config.projectName}-$name-$suffix"
 
     private val suffix = generateId(6)
 }

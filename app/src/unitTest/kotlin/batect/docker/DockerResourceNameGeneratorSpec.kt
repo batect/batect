@@ -16,6 +16,7 @@
 
 package batect.docker
 
+import batect.config.Configuration
 import batect.config.Container
 import batect.testutils.imageSourceDoesNotMatter
 import com.natpryce.hamkrest.assertion.assertThat
@@ -26,7 +27,8 @@ import org.spekframework.spek2.style.specification.describe
 
 object DockerResourceNameGeneratorSpec : Spek({
     describe("a Docker resource name generator") {
-        val generator = DockerResourceNameGenerator()
+        val config = Configuration("my_project")
+        val generator = DockerResourceNameGenerator(config)
         val container1 = Container("container-1", imageSourceDoesNotMatter())
         val container2 = Container("container-2", imageSourceDoesNotMatter())
 
@@ -34,13 +36,13 @@ object DockerResourceNameGeneratorSpec : Spek({
         val nameForContainer2 = generator.generateNameFor(container2)
         val nameForOtherContainer = generator.generateNameFor("batect-cache-init")
 
-        it("returns the container's name with a random suffix") {
-            assertThat(nameForContainer1, matches("""^container\-1\-[a-z0-9]{6}$""".toRegex()))
+        it("returns the project and container's name with a random suffix") {
+            assertThat(nameForContainer1, matches("""^my_project-container\-1\-[a-z0-9]{6}$""".toRegex()))
         }
 
         it("uses the same suffix for other containers named by the same instance") {
-            assertThat(nameForContainer1.substringAfter("container-1-"), equalTo(nameForContainer2.substringAfter("container-2-")))
-            assertThat(nameForContainer1.substringAfter("container-1-"), equalTo(nameForOtherContainer.substringAfter("batect-cache-init-")))
+            assertThat(nameForContainer1.substringAfter("my_project-container-1-"), equalTo(nameForContainer2.substringAfter("my_project-container-2-")))
+            assertThat(nameForContainer1.substringAfter("my_project-container-1-"), equalTo(nameForOtherContainer.substringAfter("my_project-batect-cache-init-")))
         }
     }
 })

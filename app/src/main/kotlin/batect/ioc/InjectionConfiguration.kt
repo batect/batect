@@ -245,7 +245,7 @@ private val dockerModule = Kodein.Module("docker") {
     bind<DockerRegistryCredentialsProvider>() with singleton { DockerRegistryCredentialsProvider(instance(), instance(), instance()) }
     bind<DockerRegistryDomainResolver>() with singleton { DockerRegistryDomainResolver() }
     bind<DockerRegistryIndexResolver>() with singleton { DockerRegistryIndexResolver() }
-    bind<DockerResourceNameGenerator>() with scoped(TaskScope).singleton { DockerResourceNameGenerator() }
+    bind<DockerResourceNameGenerator>() with scoped(TaskScope).singleton { DockerResourceNameGenerator(instance()) }
     bind<DockerTLSConfig>() with singleton {
         val options = commandLineOptions()
 

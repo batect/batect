@@ -14,12 +14,21 @@
    limitations under the License.
 */
 
+@file:UseSerializers(
+    UUIDSerializer::class,
+    ZonedDateTimeSerializer::class
+)
+
 package batect.telemetry
 
+import batect.logging.ZonedDateTimeSerializer
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.util.UUID
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.UseSerializers
 
+@Serializable
 data class TelemetrySession(
     val sessionId: UUID,
     val userId: UUID,

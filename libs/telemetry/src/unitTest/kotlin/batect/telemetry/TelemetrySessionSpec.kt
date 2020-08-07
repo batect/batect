@@ -25,6 +25,9 @@ import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.util.UUID
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonConfiguration
+import org.araqnid.hamkrest.json.equivalentTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -67,6 +70,30 @@ object TelemetrySessionSpec : Spek({
                 it("throws an appropriate exception") {
                     assertThat({ TelemetrySession(validSessionId, validUserId, validSessionStartTime, validSessionEndTime.withZoneSameInstant(ZoneId.of("Australia/Melbourne")), appName, appVersion) }, throws<InvalidTelemetrySessionException>(withMessage("Session end time must be in UTC.")))
                 }
+            }
+        }
+
+        describe("serializing a telemetry session to JSON") {
+            val session = TelemetrySession(
+                UUID.fromString("8a1058f8-e41e-4c78-aa42-663b78d15122"),
+                UUID.fromString("07ab839b-ac26-475a-966a-77d18d00ac61"),
+                ZonedDateTime.of(2020, 8, 7, 3, 49, 10, 678, ZoneOffset.UTC),
+                ZonedDateTime.of(2020, 8, 7, 3, 51, 11, 678, ZoneOffset.UTC),
+                "my-app",
+                "1.0.0"
+            )
+
+            it("serializes to the expected JSON") {
+                assertThat(Json(JsonConfiguration.Stable).stringify(TelemetrySession.serializer(), session), equivalentTo("""
+                    {
+                        "sessionId": "8a1058f8-e41e-4c78-aa42-663b78d15122",
+                        "userId": "07ab839b-ac26-475a-966a-77d18d00ac61",
+                        "sessionStartTime": "2020-08-07T03:49:10.000000678Z",
+                        "sessionEndTime": "2020-08-07T03:51:11.000000678Z",
+                        "applicationId": "my-app",
+                        "applicationVersion": "1.0.0"
+                    }
+                """.trimIndent()))
             }
         }
     }

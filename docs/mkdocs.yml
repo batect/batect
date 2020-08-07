@@ -94,6 +94,7 @@ nav:
   - Sample projects: "SampleProjects.md"
   - Release notes: "https://github.com/batect/batect/releases"
   - Roadmap: "https://github.com/batect/batect/blob/master/ROADMAP.md"
+  - Privacy: "Privacy.md"
 
 google_analytics:
   - 'UA-63947227-2'

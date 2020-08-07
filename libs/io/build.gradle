@@ -20,14 +20,5 @@ plugins {
 
 dependencies {
     implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
-    implementation "org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.20.0"
-
-    implementation project(':libs:io')
-    implementation project(':libs:logging')
-
-    testImplementation 'org.araqnid:hamkrest-json:1.1.2'
-    testImplementation 'com.google.jimfs:jimfs:1.1'
-
-    testImplementation project(':libs:logging-test-utils')
-    testImplementation project(':libs:test-utils')
+    implementation project(':libs:os')
 }

@@ -2,6 +2,18 @@
 
 This privacy policy details the data that is collected when you interact with batect and its related services.
 
+## General principles
+
+As an open source project, the batect project does not have the resources to run detailed user studies to understand best how to design features or
+prioritise work. We collect data only for the purpose of understanding how batect and its related services are used, maintaining batect and its related
+services, monitoring the security and performance of its related services, and improving batect and its related services.
+
+Data is not:
+
+* used for advertising purposes
+* sold
+* shared with others, except in aggregate, anonymous form (eg. the total number of users that used batect over a 7 day period)
+
 ## Documentation site statistical information
 
 This documentation site ([batect.dev](https://batect.dev)) collects anonymous statistical information using Google Analytics.
@@ -22,7 +34,7 @@ Google Analytics collects information such as the following:
 * performance information such as page load times
 
 Google Analytics expressly [forbids](https://support.google.com/analytics/answer/6366371?hl=en-GB&utm_id=ad) collecting
-personally identifiable information.
+personally identifiable information. Data is always collected over HTTPS.
 
 The following Google Analytics features are _not_ enabled:
 
@@ -69,6 +81,8 @@ Running `./batect --upgrade` uses the same API in the same way to deliver new ve
 
 No personally identifiable information or credentials are sent to GitHub as part of this process, and [GitHub's privacy policy](https://github.com/site/privacy)
 applies to any data it collects.
+
+The GitHub API requires encrypted HTTPS connections.
 
 ### How to opt-out
 

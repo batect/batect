@@ -14,23 +14,17 @@
    limitations under the License.
 */
 
-rootProject.name = 'batect'
+package batect.telemetry
 
-include ':app'
-include ':docs'
-include ':libs'
-include ':libs:docker-client'
-include ':libs:git-client'
-include ':libs:logging'
-include ':libs:logging-test-utils'
-include ':libs:os'
-include ':libs:primitives'
-include ':libs:sockets'
-include ':libs:telemetry'
-include ':libs:test-utils'
-include ':tools'
-include ':tools:schema'
-include ':wrapper'
-include ':wrapper:testapp'
-include ':wrapper:unix'
-include ':wrapper:windows'
+import java.util.UUID
+import kotlinx.serialization.Decoder
+import kotlinx.serialization.Encoder
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.PrimitiveKind
+import kotlinx.serialization.SerialDescriptor
+
+object UUIDSerializer : KSerializer<UUID> {
+    override val descriptor = SerialDescriptor(UUID::class.qualifiedName!!, PrimitiveKind.STRING)
+    override fun deserialize(decoder: Decoder): UUID = UUID.fromString(decoder.decodeString())
+    override fun serialize(encoder: Encoder, value: UUID) = encoder.encodeString(value.toString())
+}

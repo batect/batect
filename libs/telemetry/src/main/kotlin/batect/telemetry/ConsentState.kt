@@ -14,23 +14,27 @@
    limitations under the License.
 */
 
-rootProject.name = 'batect'
+@file:UseSerializers(
+    UUIDSerializer::class
+)
 
-include ':app'
-include ':docs'
-include ':libs'
-include ':libs:docker-client'
-include ':libs:git-client'
-include ':libs:logging'
-include ':libs:logging-test-utils'
-include ':libs:os'
-include ':libs:primitives'
-include ':libs:sockets'
-include ':libs:telemetry'
-include ':libs:test-utils'
-include ':tools'
-include ':tools:schema'
-include ':wrapper'
-include ':wrapper:testapp'
-include ':wrapper:unix'
-include ':wrapper:windows'
+package batect.telemetry
+
+import java.util.UUID
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.UseSerializers
+
+@Serializable
+sealed class ConsentState {
+    @Serializable
+    @SerialName("disabled")
+    object Disabled : ConsentState()
+
+    @Serializable
+    @SerialName("enabled")
+    data class Enabled(val userId: UUID) : ConsentState()
+
+    @Serializable
+    object None : ConsentState()
+}

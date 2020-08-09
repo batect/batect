@@ -19,8 +19,11 @@ plugins {
 }
 
 dependencies {
+    implementation platform("com.squareup.okhttp3:okhttp-bom:4.8.1")
+
     implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
-    implementation "org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.20.0"
+    implementation 'org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.20.0'
+    implementation 'com.squareup.okhttp3:okhttp'
 
     implementation project(':libs:io')
     implementation project(':libs:logging')

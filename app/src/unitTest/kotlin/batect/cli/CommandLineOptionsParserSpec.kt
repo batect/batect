@@ -212,7 +212,8 @@ object CommandLineOptionsParserSpec : Spek({
             listOf("--use-network=my-network", "some-task") to defaultCommandLineOptions.copy(existingNetworkToUse = "my-network", taskName = "some-task"),
             listOf("--skip-prerequisites", "some-task") to defaultCommandLineOptions.copy(skipPrerequisites = true, taskName = "some-task"),
             listOf("--permanently-disable-telemetry") to defaultCommandLineOptions.copy(permanentlyDisableTelemetry = true),
-            listOf("--permanently-enable-telemetry") to defaultCommandLineOptions.copy(permanentlyEnableTelemetry = true)
+            listOf("--permanently-enable-telemetry") to defaultCommandLineOptions.copy(permanentlyEnableTelemetry = true),
+            listOf("--disable-telemetry", "some-task") to defaultCommandLineOptions.copy(disableTelemetry = true, taskName = "some-task")
         ).forEach { (args, expectedResult) ->
             given("the arguments $args") {
                 on("parsing the command line") {

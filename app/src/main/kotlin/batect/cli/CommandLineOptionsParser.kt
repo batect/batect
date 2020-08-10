@@ -206,6 +206,13 @@ class CommandLineOptionsParser(
     private val permanentlyDisableTelemetry: Boolean by flagOption(telemetryOptionsGroup, "permanently-disable-telemetry", "Permanently disable telemetry collection and uploading, and remove any telemetry data queued for upload.")
     private val permanentlyEnableTelemetry: Boolean by flagOption(telemetryOptionsGroup, "permanently-enable-telemetry", "Permanently enable telemetry collection and uploading.")
 
+    private val disableTelemetry: Boolean? by tristateFlagOption(
+        telemetryOptionsGroup,
+        "disable-telemetry",
+        "Disable telemetry for this command line invocation.",
+        environmentVariableDefaultValueProviderFactory.create("BATECT_ENABLE_TELEMETRY", null, ValueConverters::invertingBoolean)
+    )
+
     fun parse(args: Iterable<String>): CommandLineOptionsParsingResult {
         when (val result = optionParser.parseOptions(args)) {
             is OptionsParsingResult.InvalidOptions -> return CommandLineOptionsParsingResult.Failed(result.message)
@@ -283,7 +290,8 @@ class CommandLineOptionsParser(
         cacheType = cacheType,
         linuxCacheInitImageName = linuxCacheInitImageName,
         existingNetworkToUse = existingNetworkToUse,
-        skipPrerequisites = skipPrerequisites
+        skipPrerequisites = skipPrerequisites,
+        disableTelemetry = disableTelemetry
     )
 }
 

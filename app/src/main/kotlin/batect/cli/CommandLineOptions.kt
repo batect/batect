@@ -62,7 +62,8 @@ data class CommandLineOptions(
     val cacheType: CacheType = CacheType.Volume,
     val linuxCacheInitImageName: String = CacheInitialisationImage.linuxDefault,
     val existingNetworkToUse: String? = null,
-    val skipPrerequisites: Boolean = false
+    val skipPrerequisites: Boolean = false,
+    val disableTelemetry: Boolean? = null
 ) {
     fun extend(originalKodein: DKodein): DKodein = Kodein.direct {
         extend(originalKodein, copy = Copy.All)

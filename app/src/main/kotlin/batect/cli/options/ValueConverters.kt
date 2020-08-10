@@ -38,6 +38,11 @@ object ValueConverters {
         return ValueConversionResult.ConversionFailed("Value is not a recognised boolean value.")
     }
 
+    fun invertingBoolean(value: String): ValueConversionResult<Boolean> = when (val booleanResult = boolean(value)) {
+        is ValueConversionResult.ConversionSucceeded -> ValueConversionResult.ConversionSucceeded(!booleanResult.value)
+        is ValueConversionResult.ConversionFailed -> booleanResult
+    }
+
     fun positiveInteger(value: String): ValueConversionResult<Int> {
         try {
             val parsedValue = Integer.parseInt(value)

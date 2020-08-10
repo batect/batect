@@ -76,6 +76,42 @@ object ValueConvertersSpec : Spek({
             }
         }
 
+        describe("inverting boolean value converter") {
+            listOf(
+                "1",
+                "yes",
+                "YES",
+                "true",
+                "TRUE"
+            ).forEach { value ->
+                given("the value '$value'") {
+                    it("returns the value 'false'") {
+                        assertThat(ValueConverters.invertingBoolean(value), equalTo(ValueConversionResult.ConversionSucceeded(false)))
+                    }
+                }
+            }
+
+            listOf(
+                "0",
+                "no",
+                "NO",
+                "false",
+                "FALSE"
+            ).forEach { value ->
+                given("the value '$value'") {
+                    it("returns the value 'true'") {
+                        assertThat(ValueConverters.invertingBoolean(value), equalTo(ValueConversionResult.ConversionSucceeded(true)))
+                    }
+                }
+            }
+
+            given("an invalid value") {
+                it("returns an appropriate error") {
+                    assertThat(ValueConverters.invertingBoolean("blah"), equalTo(ValueConversionResult.ConversionFailed("Value is not a recognised boolean value.")))
+                }
+            }
+        }
+
         describe("positive integer value converter") {
             given("a positive integer") {
                 it("returns the parsed representation of that integer") {

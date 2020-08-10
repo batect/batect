@@ -26,6 +26,7 @@ import batect.logging.ApplicationInfoLogger
 import batect.logging.logger
 import batect.os.ConsoleManager
 import batect.os.SystemInfo
+import batect.telemetry.TelemetryConsentPrompt
 import batect.ui.Console
 import batect.ui.text.Text
 import batect.wrapper.WrapperCache
@@ -74,6 +75,7 @@ class Application(override val dkodein: DKodein) : DKodeinAware {
         val consoleManager = extendedKodein.instance<ConsoleManager>()
         val errorConsole = extendedKodein.instance<Console>(StreamType.Error)
         val wrapperCache = extendedKodein.instance<WrapperCache>()
+        val telemetryConsentPrompt = extendedKodein.instance<TelemetryConsentPrompt>()
 
         try {
             val applicationInfoLogger = extendedKodein.instance<ApplicationInfoLogger>()
@@ -81,6 +83,7 @@ class Application(override val dkodein: DKodein) : DKodeinAware {
 
             consoleManager.enableConsoleEscapeSequences()
             wrapperCache.setLastUsedForCurrentVersion()
+            telemetryConsentPrompt.askForConsentIfRequired()
 
             val command = commandFactory.createCommand(options, extendedKodein)
             return command.run()

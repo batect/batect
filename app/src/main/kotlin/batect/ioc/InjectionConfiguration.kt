@@ -124,11 +124,13 @@ import batect.proxies.ProxyEnvironmentVariablePreprocessor
 import batect.proxies.ProxyEnvironmentVariablesProvider
 import batect.telemetry.AbacusClient
 import batect.telemetry.TelemetryConfigurationStore
+import batect.telemetry.TelemetryConsentPrompt
 import batect.telemetry.TelemetryUploadQueue
 import batect.ui.Console
 import batect.ui.EventLogger
 import batect.ui.EventLoggerProvider
 import batect.ui.FailureErrorMessageFormatter
+import batect.ui.Prompt
 import batect.ui.containerio.ContainerIOStreamingOptions
 import batect.ui.fancy.StartupProgressDisplayProvider
 import batect.updates.UpdateInfoDownloader
@@ -363,6 +365,7 @@ private val proxiesModule = Kodein.Module("proxies") {
 private val telemetryModule = Kodein.Module("telemetry") {
     bind<AbacusClient>() with singletonWithLogger { logger -> AbacusClient(instance(), logger) }
     bind<TelemetryConfigurationStore>() with singletonWithLogger { logger -> TelemetryConfigurationStore(instance(), logger) }
+    bind<TelemetryConsentPrompt>() with singleton { TelemetryConsentPrompt(instance(), commandLineOptions().disableTelemetry, commandLineOptions().requestedOutputStyle, instance(), instance(StreamType.Output), instance()) }
     bind<TelemetryUploadQueue>() with singletonWithLogger { logger -> TelemetryUploadQueue(instance(), logger) }
 }
 
@@ -399,6 +402,7 @@ private val uiModule = Kodein.Module("ui") {
     bind<ContainerIOStreamingOptions>() with scoped(TaskScope).singleton { instance<EventLogger>().ioStreamingOptions }
     bind<EventLogger>() with scoped(TaskScope).singleton { instance<EventLoggerProvider>().getEventLogger(context, instance()) }
     bind<FailureErrorMessageFormatter>() with scoped(TaskScope).singleton { FailureErrorMessageFormatter(instance(RunOptionsType.Task), instance()) }
+    bind<Prompt>() with singleton { Prompt(instance(StreamType.Output), instance(StreamType.Input)) }
     bind<StartupProgressDisplayProvider>() with singleton { StartupProgressDisplayProvider(instance()) }
 }
 

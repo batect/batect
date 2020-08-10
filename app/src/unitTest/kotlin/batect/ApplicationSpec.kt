@@ -28,6 +28,7 @@ import batect.logging.LoggerFactory
 import batect.logging.Severity
 import batect.os.ConsoleManager
 import batect.os.SystemInfo
+import batect.telemetry.TelemetryConsentPrompt
 import batect.testutils.createForEachTest
 import batect.testutils.given
 import batect.testutils.logging.InMemoryLogSink
@@ -92,6 +93,7 @@ object ApplicationSpec : Spek({
                 val consoleManager by createForEachTest { mock<ConsoleManager>() }
                 val errorConsole by createForEachTest { mock<Console>() }
                 val wrapperCache by createForEachTest { mock<WrapperCache>() }
+                val telemetryConsentPrompt by createForEachTest { mock<TelemetryConsentPrompt>() }
 
                 val extendedDependencies by createForEachTest {
                     Kodein.direct {
@@ -100,6 +102,7 @@ object ApplicationSpec : Spek({
                         bind<Console>(StreamType.Error) with instance(errorConsole)
                         bind<ConsoleManager>() with instance(consoleManager)
                         bind<WrapperCache>() with instance(wrapperCache)
+                        bind<TelemetryConsentPrompt>() with instance(telemetryConsentPrompt)
                     }
                 }
 
@@ -133,11 +136,12 @@ object ApplicationSpec : Spek({
                             assertThat(exitCode, equalTo(123))
                         }
 
-                        it("logs information about the application, enables console escape sequences and updates the last used time for the wrapper script before running the command") {
-                            inOrder(consoleManager, applicationInfoLogger, wrapperCache, command) {
+                        it("logs information about the application, enables console escape sequences, updates the last used time for the wrapper script and prompts for telemetry consent before running the command") {
+                            inOrder(consoleManager, applicationInfoLogger, wrapperCache, telemetryConsentPrompt, command) {
                                 verify(applicationInfoLogger).logApplicationInfo(args)
                                 verify(consoleManager).enableConsoleEscapeSequences()
                                 verify(wrapperCache).setLastUsedForCurrentVersion()
+                                verify(telemetryConsentPrompt).askForConsentIfRequired()
                                 verify(command).run()
                             }
                         }

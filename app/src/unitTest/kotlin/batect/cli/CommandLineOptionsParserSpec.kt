@@ -155,7 +155,7 @@ object CommandLineOptionsParserSpec : Spek({
                 val result = CommandLineOptionsParser(pathResolverFactory, environmentVariableDefaultValueProviderFactory, dockerHttpConfigDefaults, systemInfo).parse(listOf("--no-color", "--output=fancy", "some-task", "some-extra-arg"))
 
                 it("returns an error message") {
-                    assertThat(result, equalTo(CommandLineOptionsParsingResult.Failed("Fancy output mode cannot be used when colored output has been disabled.")))
+                    assertThat(result, equalTo(CommandLineOptionsParsingResult.Failed("Fancy output mode cannot be used when color output has been disabled.")))
                 }
             }
         }
@@ -210,7 +210,9 @@ object CommandLineOptionsParserSpec : Spek({
             listOf("--cache-type=directory", "some-task") to defaultCommandLineOptions.copy(cacheType = CacheType.Directory, taskName = "some-task"),
             listOf("--linux-cache-init-image=cache-init:123", "some-task") to defaultCommandLineOptions.copy(linuxCacheInitImageName = "cache-init:123", taskName = "some-task"),
             listOf("--use-network=my-network", "some-task") to defaultCommandLineOptions.copy(existingNetworkToUse = "my-network", taskName = "some-task"),
-            listOf("--skip-prerequisites", "some-task") to defaultCommandLineOptions.copy(skipPrerequisites = true, taskName = "some-task")
+            listOf("--skip-prerequisites", "some-task") to defaultCommandLineOptions.copy(skipPrerequisites = true, taskName = "some-task"),
+            listOf("--permanently-disable-telemetry") to defaultCommandLineOptions.copy(permanentlyDisableTelemetry = true),
+            listOf("--permanently-enable-telemetry") to defaultCommandLineOptions.copy(permanentlyEnableTelemetry = true)
         ).forEach { (args, expectedResult) ->
             given("the arguments $args") {
                 on("parsing the command line") {

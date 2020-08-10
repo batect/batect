@@ -37,6 +37,8 @@ data class CommandLineOptions(
     val runUpgrade: Boolean = false,
     val listTasks: Boolean = false,
     val runCleanup: Boolean = false,
+    val permanentlyDisableTelemetry: Boolean = false,
+    val permanentlyEnableTelemetry: Boolean = false,
     val configurationFileName: Path = Paths.get("batect.yml"),
     val configVariablesSourceFile: Path? = null,
     val logFileName: Path? = null,

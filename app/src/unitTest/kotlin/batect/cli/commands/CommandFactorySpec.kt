@@ -32,12 +32,14 @@ object CommandFactorySpec : Spek({
     describe("a command factory") {
         val factory = CommandFactory()
         val kodein = Kodein.direct {
-            bind<HelpCommand>() with instance(mock())
-            bind<VersionInfoCommand>() with instance(mock())
-            bind<ListTasksCommand>() with instance(mock())
-            bind<UpgradeCommand>() with instance(mock())
-            bind<RunTaskCommand>() with instance(mock())
             bind<CleanupCachesCommand>() with instance(mock())
+            bind<DisableTelemetryCommand>() with instance(mock())
+            bind<EnableTelemetryCommand>() with instance(mock())
+            bind<HelpCommand>() with instance(mock())
+            bind<ListTasksCommand>() with instance(mock())
+            bind<RunTaskCommand>() with instance(mock())
+            bind<UpgradeCommand>() with instance(mock())
+            bind<VersionInfoCommand>() with instance(mock())
         }
 
         given("a set of options with the 'show help' flag set") {
@@ -91,6 +93,28 @@ object CommandFactorySpec : Spek({
             on("creating the command") {
                 it("returns a cleanup command") {
                     assertThat(command, isA<CleanupCachesCommand>())
+                }
+            }
+        }
+
+        given("a set of options with the 'disable telemetry' flag set") {
+            val options = CommandLineOptions(permanentlyDisableTelemetry = true)
+            val command = factory.createCommand(options, kodein)
+
+            on("creating the command") {
+                it("returns a 'disable telemetry' command") {
+                    assertThat(command, isA<DisableTelemetryCommand>())
+                }
+            }
+        }
+
+        given("a set of options with the 'enable telemetry' flag set") {
+            val options = CommandLineOptions(permanentlyEnableTelemetry = true)
+            val command = factory.createCommand(options, kodein)
+
+            on("creating the command") {
+                it("returns a 'enable telemetry' command") {
+                    assertThat(command, isA<EnableTelemetryCommand>())
                 }
             }
         }

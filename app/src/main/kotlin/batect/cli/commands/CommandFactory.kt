@@ -28,6 +28,8 @@ class CommandFactory {
             options.listTasks -> kodein.instance<ListTasksCommand>()
             options.runUpgrade -> kodein.instance<UpgradeCommand>()
             options.runCleanup -> kodein.instance<CleanupCachesCommand>()
+            options.permanentlyDisableTelemetry -> kodein.instance<DisableTelemetryCommand>()
+            options.permanentlyEnableTelemetry -> kodein.instance<EnableTelemetryCommand>()
             else -> kodein.instance<RunTaskCommand>()
         }
     }

@@ -55,6 +55,7 @@ class CommandLineOptionsParser(
     private val executionOptionsGroup = OptionGroup("Execution options")
     private val outputOptionsGroup = OptionGroup("Output options")
     private val helpOptionsGroup = OptionGroup("Help options")
+    private val telemetryOptionsGroup = OptionGroup("Telemetry options")
 
     private val showHelp: Boolean by flagOption(helpOptionsGroup, "help", "Show this help information and exit.")
     private val showVersionInfo: Boolean by flagOption(helpOptionsGroup, "version", "Show batect version information and exit.")
@@ -202,6 +203,9 @@ class CommandLineOptionsParser(
 
     private val dockerTLSKeyPath: Path by dockerTLSKeyPathOption
 
+    private val permanentlyDisableTelemetry: Boolean by flagOption(telemetryOptionsGroup, "permanently-disable-telemetry", "Permanently disable telemetry collection and uploading, and remove any telemetry data queued for upload.")
+    private val permanentlyEnableTelemetry: Boolean by flagOption(telemetryOptionsGroup, "permanently-enable-telemetry", "Permanently enable telemetry collection and uploading.")
+
     fun parse(args: Iterable<String>): CommandLineOptionsParsingResult {
         when (val result = optionParser.parseOptions(args)) {
             is OptionsParsingResult.InvalidOptions -> return CommandLineOptionsParsingResult.Failed(result.message)
@@ -211,10 +215,10 @@ class CommandLineOptionsParser(
 
     private fun parseTaskName(remainingArgs: Iterable<String>): CommandLineOptionsParsingResult {
         if (requestedOutputStyle == OutputStyle.Fancy && disableColorOutput) {
-            return CommandLineOptionsParsingResult.Failed("Fancy output mode cannot be used when colored output has been disabled.")
+            return CommandLineOptionsParsingResult.Failed("Fancy output mode cannot be used when color output has been disabled.")
         }
 
-        if (showHelp || showVersionInfo || listTasks || runUpgrade || runCleanup) {
+        if (showHelp || showVersionInfo || listTasks || runUpgrade || runCleanup || permanentlyDisableTelemetry || permanentlyEnableTelemetry) {
             return CommandLineOptionsParsingResult.Succeeded(createOptionsObject(null, emptyList()))
         }
 
@@ -254,6 +258,8 @@ class CommandLineOptionsParser(
         runUpgrade = runUpgrade,
         runCleanup = runCleanup,
         listTasks = listTasks,
+        permanentlyDisableTelemetry = permanentlyDisableTelemetry,
+        permanentlyEnableTelemetry = permanentlyEnableTelemetry,
         configurationFileName = configurationFileName,
         configVariablesSourceFile = configVariablesSourceFileName,
         imageOverrides = imageOverrides,

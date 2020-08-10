@@ -21,7 +21,9 @@ import batect.cli.CommandLineOptions
 import batect.cli.CommandLineOptionsParser
 import batect.cli.commands.CleanupCachesCommand
 import batect.cli.commands.CommandFactory
+import batect.cli.commands.DisableTelemetryCommand
 import batect.cli.commands.DockerConnectivity
+import batect.cli.commands.EnableTelemetryCommand
 import batect.cli.commands.HelpCommand
 import batect.cli.commands.ListTasksCommand
 import batect.cli.commands.RunTaskCommand
@@ -120,6 +122,9 @@ import batect.os.windows.WindowsNativeMethods
 import batect.primitives.CancellationContext
 import batect.proxies.ProxyEnvironmentVariablePreprocessor
 import batect.proxies.ProxyEnvironmentVariablesProvider
+import batect.telemetry.AbacusClient
+import batect.telemetry.ConsentStateStore
+import batect.telemetry.TelemetryUploadQueue
 import batect.ui.Console
 import batect.ui.EventLogger
 import batect.ui.EventLoggerProvider
@@ -172,6 +177,7 @@ fun createKodeinConfiguration(outputStream: PrintStream, errorStream: PrintStrea
     import(loggingModule)
     import(osModule)
     import(proxiesModule)
+    import(telemetryModule)
     import(uiModule)
     import(updatesModule)
     import(wrapperModule)
@@ -208,8 +214,10 @@ private val cliModule = Kodein.Module("cli") {
         )
     }
 
-    bind<DockerConnectivity>() with singleton { DockerConnectivity(instance(), instance(), instance(StreamType.Error)) }
     bind<CleanupCachesCommand>() with singleton { CleanupCachesCommand(instance(), instance(), instance(), instance(StreamType.Output)) }
+    bind<DisableTelemetryCommand>() with singleton { DisableTelemetryCommand(instance(), instance(), instance(StreamType.Output)) }
+    bind<DockerConnectivity>() with singleton { DockerConnectivity(instance(), instance(), instance(StreamType.Error)) }
+    bind<EnableTelemetryCommand>() with singleton { EnableTelemetryCommand(instance(), instance(StreamType.Output)) }
     bind<HelpCommand>() with singleton { HelpCommand(instance(), instance(StreamType.Output), instance()) }
     bind<ListTasksCommand>() with singleton { ListTasksCommand(commandLineOptions().configurationFileName, instance(), instance(StreamType.Output)) }
     bind<VersionInfoCommand>() with singleton { VersionInfoCommand(instance(), instance(StreamType.Output), instance(), instance(), instance(), instance()) }
@@ -350,6 +358,12 @@ private val osModule = Kodein.Module("os") {
 private val proxiesModule = Kodein.Module("proxies") {
     bind<ProxyEnvironmentVariablePreprocessor>() with singletonWithLogger { logger -> ProxyEnvironmentVariablePreprocessor(instance(), logger) }
     bind<ProxyEnvironmentVariablesProvider>() with singleton { ProxyEnvironmentVariablesProvider(instance(), instance()) }
+}
+
+private val telemetryModule = Kodein.Module("telemetry") {
+    bind<AbacusClient>() with singletonWithLogger { logger -> AbacusClient(instance(), logger) }
+    bind<ConsentStateStore>() with singletonWithLogger { logger -> ConsentStateStore(instance(), logger) }
+    bind<TelemetryUploadQueue>() with singletonWithLogger { logger -> TelemetryUploadQueue(instance(), logger) }
 }
 
 private val unixModule = Kodein.Module("os.unix") {

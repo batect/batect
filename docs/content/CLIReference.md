@@ -329,6 +329,41 @@ Example:
 
 Passing `--output=quiet` implies [`--no-update-notification`](#disable-update-notification-no-update-notification).
 
+## Telemetry options
+
+batect can collect [telemetry information](Privacy.md#in-app-telemetry) to help inform the design and prioritisation of new features and bug fixes.
+
+When batect starts for the first time, it prompts for permission to collect this information and stores this permission.
+
+These options allow you to enable or disable telemetry permanently or for a single invocation:
+
+### Disable telemetry permanently <small>(`--permanently-disable-telemetry`)</small>
+
+If you would like to opt-out of telemetry, run `./batect --permanently-disable-telemetry` to disable collecting telemetry data and
+remove any data that has been collected but not yet uploaded.
+
+This also resets your telemetry user ID, ensuring that if you do ever re-enable telemetry, any previous data uploaded is not associated with any
+new data.
+
+### Enable telemetry permanently <small>(`--permanently-enable-telemetry`)</small>
+
+If you would like to opt-in to telemetry, run `./batect --permanently-enable-telemetry` to enable collecting telemetry data.
+
+### Disable telemetry for this invocation <small>(`--disable-telemetry`)</small>
+
+By default, batect uses the permission you granted it when it ran for the first time.
+
+If you would like to disable telemetry collection or uploading for a single invocation, pass the `--disable-telemetry` flag, for example:
+
+```shell
+./batect --disable-telemetry the-task
+```
+
+Note that this does not cause any data that has been collected from other invocations but not uploaded to be removed - it will be uploaded the next time
+batect runs without the `--disable-telemetry` flag.
+
+You can also set the `BATECT_ENABLE_TELEMETRY` environment variable to `false` to disable telemetry collection and uploading.
+
 ## General notes
 
 * All command line options that take a value can be provided in `--option=value` or `--option value` format.

@@ -53,7 +53,7 @@ import org.spekframework.spek2.style.specification.describe
 
 object TelemetryUploadWorkerTaskSpec : Spek({
     describe("a telemetry upload worker") {
-        val consentStateStore by createForEachTest { mock<TelemetryConfigurationStore>() }
+        val telemetryConsent by createForEachTest { mock<TelemetryConsent>() }
         val telemetryUploadQueue by createForEachTest { mock<TelemetryUploadQueue>() }
         val abacusClient by createForEachTest { mock<AbacusClient>() }
         val logSink by createForEachTest { InMemoryLogSink() }
@@ -70,7 +70,7 @@ object TelemetryUploadWorkerTaskSpec : Spek({
         }
 
         val fileSystem by createForEachTest { Jimfs.newFileSystem(Configuration.unix()) }
-        val uploadTask by createForEachTest { TelemetryUploadWorkerTask(consentStateStore, telemetryUploadQueue, abacusClient, logger, threadRunner, timeSource) }
+        val uploadTask by createForEachTest { TelemetryUploadWorkerTask(telemetryConsent, telemetryUploadQueue, abacusClient, logger, threadRunner, timeSource) }
 
         beforeEachTest { ranOnThread = false }
 
@@ -99,7 +99,7 @@ object TelemetryUploadWorkerTaskSpec : Spek({
 
         given("telemetry is not enabled") {
             beforeEachTest {
-                whenever(consentStateStore.currentConfiguration).thenReturn(TelemetryConfiguration(UUID.randomUUID(), ConsentState.None))
+                whenever(telemetryConsent.enableTelemetry).thenReturn(false)
 
                 runWithSessions(fileSystem.getPath("some-session.json"))
             }
@@ -123,7 +123,7 @@ object TelemetryUploadWorkerTaskSpec : Spek({
 
         given("telemetry is enabled") {
             beforeEachTest {
-                whenever(consentStateStore.currentConfiguration).thenReturn(TelemetryConfiguration(UUID.randomUUID(), ConsentState.TelemetryAllowed))
+                whenever(telemetryConsent.enableTelemetry).thenReturn(true)
             }
 
             given("there are no sessions in the queue") {
@@ -361,7 +361,5 @@ object TelemetryUploadWorkerTaskSpec : Spek({
                 }
             }
         }
-
-        // Randomises order
     }
 })

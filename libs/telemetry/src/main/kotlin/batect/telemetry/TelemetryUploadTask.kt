@@ -24,7 +24,7 @@ import kotlin.concurrent.thread
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonConfiguration
 
-class TelemetryUploadWorkerTask(
+class TelemetryUploadTask(
     private val telemetryConsent: TelemetryConsent,
     private val telemetryUploadQueue: TelemetryUploadQueue,
     private val abacusClient: AbacusClient,
@@ -125,7 +125,7 @@ class TelemetryUploadWorkerTask(
     }
 
     companion object {
-        private val defaultThreadRunner: ThreadRunner = { block -> thread(isDaemon = true, name = TelemetryUploadWorkerTask::class.qualifiedName, block = block) }
+        private val defaultThreadRunner: ThreadRunner = { block -> thread(isDaemon = true, name = TelemetryUploadTask::class.qualifiedName, block = block) }
     }
 }
 

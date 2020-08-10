@@ -19,6 +19,7 @@ package batect.ioc
 import batect.VersionInfo
 import batect.cli.CommandLineOptions
 import batect.cli.CommandLineOptionsParser
+import batect.cli.commands.BackgroundTaskManager
 import batect.cli.commands.CleanupCachesCommand
 import batect.cli.commands.CommandFactory
 import batect.cli.commands.DisableTelemetryCommand
@@ -124,8 +125,10 @@ import batect.proxies.ProxyEnvironmentVariablePreprocessor
 import batect.proxies.ProxyEnvironmentVariablesProvider
 import batect.telemetry.AbacusClient
 import batect.telemetry.TelemetryConfigurationStore
+import batect.telemetry.TelemetryConsent
 import batect.telemetry.TelemetryConsentPrompt
 import batect.telemetry.TelemetryUploadQueue
+import batect.telemetry.TelemetryUploadTask
 import batect.ui.Console
 import batect.ui.EventLogger
 import batect.ui.EventLoggerProvider
@@ -208,7 +211,6 @@ private val cliModule = Kodein.Module("cli") {
             instance(),
             instance(),
             instance(),
-            instance(),
             commandLineOptions().requestedOutputStyle,
             instance(StreamType.Output),
             instance(StreamType.Error),
@@ -216,6 +218,7 @@ private val cliModule = Kodein.Module("cli") {
         )
     }
 
+    bind<BackgroundTaskManager>() with singleton { BackgroundTaskManager(instance(), instance(), instance()) }
     bind<CleanupCachesCommand>() with singleton { CleanupCachesCommand(instance(), instance(), instance(), instance(StreamType.Output)) }
     bind<DisableTelemetryCommand>() with singleton { DisableTelemetryCommand(instance(), instance(), instance(StreamType.Output)) }
     bind<DockerConnectivity>() with singleton { DockerConnectivity(instance(), instance(), instance(StreamType.Error)) }
@@ -365,8 +368,10 @@ private val proxiesModule = Kodein.Module("proxies") {
 private val telemetryModule = Kodein.Module("telemetry") {
     bind<AbacusClient>() with singletonWithLogger { logger -> AbacusClient(instance(), logger) }
     bind<TelemetryConfigurationStore>() with singletonWithLogger { logger -> TelemetryConfigurationStore(instance(), logger) }
+    bind<TelemetryConsent>() with singleton { TelemetryConsent(commandLineOptions().disableTelemetry, instance()) }
     bind<TelemetryConsentPrompt>() with singleton { TelemetryConsentPrompt(instance(), commandLineOptions().disableTelemetry, commandLineOptions().requestedOutputStyle, instance(), instance(StreamType.Output), instance()) }
     bind<TelemetryUploadQueue>() with singletonWithLogger { logger -> TelemetryUploadQueue(instance(), logger) }
+    bind<TelemetryUploadTask>() with singletonWithLogger { logger -> TelemetryUploadTask(instance(), instance(), instance(), logger) }
 }
 
 private val unixModule = Kodein.Module("os.unix") {

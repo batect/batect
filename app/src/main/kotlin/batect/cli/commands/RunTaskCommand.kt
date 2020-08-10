@@ -19,7 +19,6 @@ package batect.cli.commands
 import batect.config.Configuration
 import batect.config.PullImage
 import batect.config.Task
-import batect.config.includes.GitRepositoryCacheCleanupTask
 import batect.config.io.ConfigurationLoader
 import batect.execution.CleanupOption
 import batect.execution.RunOptions
@@ -32,7 +31,6 @@ import batect.ui.Console
 import batect.ui.OutputStyle
 import batect.ui.text.Text
 import batect.updates.UpdateNotifier
-import batect.wrapper.WrapperCacheCleanupTask
 import java.nio.file.Path
 import org.kodein.di.DKodein
 import org.kodein.di.generic.instance
@@ -43,8 +41,7 @@ class RunTaskCommand(
     private val configLoader: ConfigurationLoader,
     private val taskExecutionOrderResolver: TaskExecutionOrderResolver,
     private val updateNotifier: UpdateNotifier,
-    private val wrapperCacheCleanupTask: WrapperCacheCleanupTask,
-    private val gitRepositoryCacheCleanupTask: GitRepositoryCacheCleanupTask,
+    private val backgroundTaskManager: BackgroundTaskManager,
     private val dockerConnectivity: DockerConnectivity,
     private val requestedOutputStyle: OutputStyle?,
     private val console: Console,
@@ -75,8 +72,7 @@ class RunTaskCommand(
                 updateNotifier.run()
             }
 
-            wrapperCacheCleanupTask.start()
-            gitRepositoryCacheCleanupTask.start()
+            backgroundTaskManager.startBackgroundTasks()
 
             return runTasks(kodein, config, tasks)
         } catch (e: TaskExecutionOrderResolutionException) {

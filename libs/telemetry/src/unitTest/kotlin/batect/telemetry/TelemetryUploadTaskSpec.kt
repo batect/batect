@@ -51,8 +51,8 @@ import kotlinx.serialization.json.JsonConfiguration
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
-object TelemetryUploadWorkerTaskSpec : Spek({
-    describe("a telemetry upload worker") {
+object TelemetryUploadTaskSpec : Spek({
+    describe("a telemetry upload task") {
         val telemetryConsent by createForEachTest { mock<TelemetryConsent>() }
         val telemetryUploadQueue by createForEachTest { mock<TelemetryUploadQueue>() }
         val abacusClient by createForEachTest { mock<AbacusClient>() }
@@ -70,7 +70,7 @@ object TelemetryUploadWorkerTaskSpec : Spek({
         }
 
         val fileSystem by createForEachTest { Jimfs.newFileSystem(Configuration.unix()) }
-        val uploadTask by createForEachTest { TelemetryUploadWorkerTask(telemetryConsent, telemetryUploadQueue, abacusClient, logger, threadRunner, timeSource) }
+        val uploadTask by createForEachTest { TelemetryUploadTask(telemetryConsent, telemetryUploadQueue, abacusClient, logger, threadRunner, timeSource) }
 
         beforeEachTest { ranOnThread = false }
 

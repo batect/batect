@@ -123,7 +123,7 @@ import batect.primitives.CancellationContext
 import batect.proxies.ProxyEnvironmentVariablePreprocessor
 import batect.proxies.ProxyEnvironmentVariablesProvider
 import batect.telemetry.AbacusClient
-import batect.telemetry.ConsentStateStore
+import batect.telemetry.TelemetryConfigurationStore
 import batect.telemetry.TelemetryUploadQueue
 import batect.ui.Console
 import batect.ui.EventLogger
@@ -362,7 +362,7 @@ private val proxiesModule = Kodein.Module("proxies") {
 
 private val telemetryModule = Kodein.Module("telemetry") {
     bind<AbacusClient>() with singletonWithLogger { logger -> AbacusClient(instance(), logger) }
-    bind<ConsentStateStore>() with singletonWithLogger { logger -> ConsentStateStore(instance(), logger) }
+    bind<TelemetryConfigurationStore>() with singletonWithLogger { logger -> TelemetryConfigurationStore(instance(), logger) }
     bind<TelemetryUploadQueue>() with singletonWithLogger { logger -> TelemetryUploadQueue(instance(), logger) }
 }
 

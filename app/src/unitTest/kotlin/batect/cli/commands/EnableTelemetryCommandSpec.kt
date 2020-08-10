@@ -17,7 +17,8 @@
 package batect.cli.commands
 
 import batect.telemetry.ConsentState
-import batect.telemetry.ConsentStateStore
+import batect.telemetry.TelemetryConfiguration
+import batect.telemetry.TelemetryConfigurationStore
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given
@@ -27,7 +28,6 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.inOrder
-import com.nhaarman.mockitokotlin2.isA
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.verify
@@ -38,14 +38,17 @@ import org.spekframework.spek2.style.specification.describe
 
 object EnableTelemetryCommandSpec : Spek({
     describe("an 'enable telemetry' command") {
-        val consentStateStore by createForEachTest { mock<ConsentStateStore>() }
+        val configurationStore by createForEachTest { mock<TelemetryConfigurationStore>() }
         val console by createForEachTest { mock<Console>() }
-        val command by createForEachTest { EnableTelemetryCommand(consentStateStore, console) }
+        val command by createForEachTest { EnableTelemetryCommand(configurationStore, console) }
 
         describe("running the command") {
             given("telemetry is not already enabled") {
+                val existingConfiguration = TelemetryConfiguration(UUID.randomUUID(), ConsentState.None)
+                val expectedConfiguration = TelemetryConfiguration(existingConfiguration.userId, ConsentState.TelemetryAllowed)
+
                 beforeEachTest {
-                    whenever(consentStateStore.consentState).doReturn(ConsentState.None)
+                    whenever(configurationStore.currentConfiguration).doReturn(existingConfiguration)
                 }
 
                 val exitCode by runForEachTest { command.run() }
@@ -55,8 +58,8 @@ object EnableTelemetryCommandSpec : Spek({
                 }
 
                 it("prints a success message to the console after enabling telemetry") {
-                    inOrder(consentStateStore, console) {
-                        verify(consentStateStore).saveConsentState(isA<ConsentState.Enabled>())
+                    inOrder(configurationStore, console) {
+                        verify(configurationStore).saveConfiguration(expectedConfiguration)
                         verify(console).println("Telemetry successfully enabled.")
                     }
                 }
@@ -64,7 +67,7 @@ object EnableTelemetryCommandSpec : Spek({
 
             given("telemetry is already enabled") {
                 beforeEachTest {
-                    whenever(consentStateStore.consentState).doReturn(ConsentState.Enabled(UUID.randomUUID()))
+                    whenever(configurationStore.currentConfiguration).doReturn(TelemetryConfiguration(UUID.randomUUID(), ConsentState.TelemetryAllowed))
                 }
 
                 val exitCode by runForEachTest { command.run() }
@@ -77,8 +80,8 @@ object EnableTelemetryCommandSpec : Spek({
                     verify(console).println("Telemetry already enabled.")
                 }
 
-                it("does not save a new consent state") {
-                    verify(consentStateStore, never()).saveConsentState(any())
+                it("does not save a new telemetry configuration") {
+                    verify(configurationStore, never()).saveConfiguration(any())
                 }
             }
         }

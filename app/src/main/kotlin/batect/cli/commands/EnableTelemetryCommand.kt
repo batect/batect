@@ -17,23 +17,22 @@
 package batect.cli.commands
 
 import batect.telemetry.ConsentState
-import batect.telemetry.ConsentStateStore
+import batect.telemetry.TelemetryConfigurationStore
 import batect.ui.Console
-import java.util.UUID
 
 class EnableTelemetryCommand(
-    private val consentStateStore: ConsentStateStore,
+    private val telemetryConfigurationStore: TelemetryConfigurationStore,
     private val console: Console
 ) : Command {
     override fun run(): Int {
-        if (consentStateStore.consentState is ConsentState.Enabled) {
+        if (telemetryConfigurationStore.currentConfiguration.state == ConsentState.TelemetryAllowed) {
             console.println("Telemetry already enabled.")
 
             return 0
         }
 
-        val userId = UUID.randomUUID()
-        consentStateStore.saveConsentState(ConsentState.Enabled(userId))
+        val newConfiguration = telemetryConfigurationStore.currentConfiguration.copy(state = ConsentState.TelemetryAllowed)
+        telemetryConfigurationStore.saveConfiguration(newConfiguration)
 
         console.println("Telemetry successfully enabled.")
 

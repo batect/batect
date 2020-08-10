@@ -25,7 +25,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonConfiguration
 
 class TelemetryUploadWorkerTask(
-    private val consentStateStore: ConsentStateStore,
+    private val telemetryConfigurationStore: TelemetryConfigurationStore,
     private val telemetryUploadQueue: TelemetryUploadQueue,
     private val abacusClient: AbacusClient,
     private val logger: Logger,
@@ -35,9 +35,9 @@ class TelemetryUploadWorkerTask(
     private val json = Json(JsonConfiguration.Stable)
 
     fun start() {
-        if (consentStateStore.consentState !is ConsentState.Enabled) {
+        if (telemetryConfigurationStore.currentConfiguration.state != ConsentState.TelemetryAllowed) {
             logger.info {
-                message("Telemetry not enabled, not starting telemetry upload task.")
+                message("Telemetry not allowed, not starting telemetry upload task.")
             }
 
             return

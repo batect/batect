@@ -17,7 +17,8 @@
 package batect.cli.commands
 
 import batect.telemetry.ConsentState
-import batect.telemetry.ConsentStateStore
+import batect.telemetry.TelemetryConfiguration
+import batect.telemetry.TelemetryConfigurationStore
 import batect.telemetry.TelemetryUploadQueue
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
@@ -26,17 +27,24 @@ import batect.testutils.runForEachTest
 import batect.ui.Console
 import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockitokotlin2.any
+import com.nhaarman.mockitokotlin2.argThat
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.inOrder
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.times
 import com.nhaarman.mockitokotlin2.verify
+import java.util.UUID
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
 object DisableTelemetryCommandSpec : Spek({
     describe("a 'disable telemetry' command") {
-        val consentStateStore by createForEachTest { mock<ConsentStateStore>() }
+        val existingConfiguration = TelemetryConfiguration(UUID.randomUUID(), ConsentState.TelemetryAllowed)
+        val configurationStore by createForEachTest {
+            mock<TelemetryConfigurationStore> {
+                on { currentConfiguration } doReturn existingConfiguration
+            }
+        }
 
         val queuedSession1 by createForEachTest { osIndependentPath("session-1.json") }
         val queuedSession2 by createForEachTest { osIndependentPath("session-2.json") }
@@ -47,7 +55,7 @@ object DisableTelemetryCommandSpec : Spek({
         }
 
         val console by createForEachTest { mock<Console>() }
-        val command by createForEachTest { DisableTelemetryCommand(consentStateStore, uploadQueue, console) }
+        val command by createForEachTest { DisableTelemetryCommand(configurationStore, uploadQueue, console) }
 
         describe("running the command") {
             val exitCode by runForEachTest { command.run() }
@@ -57,7 +65,11 @@ object DisableTelemetryCommandSpec : Spek({
             }
 
             it("disables telemetry") {
-                verify(consentStateStore).saveConsentState(ConsentState.Disabled)
+                verify(configurationStore).saveConfiguration(argThat { state == ConsentState.TelemetryDisabled })
+            }
+
+            it("generates a new user ID") {
+                verify(configurationStore).saveConfiguration(argThat { userId != existingConfiguration.userId })
             }
 
             it("removes all queued sessions") {
@@ -66,9 +78,9 @@ object DisableTelemetryCommandSpec : Spek({
             }
 
             it("prints messages to the console as it disables telemetry") {
-                inOrder(console, consentStateStore, uploadQueue) {
-                    verify(console).println("Disabling telemetry...")
-                    verify(consentStateStore).saveConsentState(ConsentState.Disabled)
+                inOrder(console, configurationStore, uploadQueue) {
+                    verify(console).println("Disabling telemetry and removing user ID...")
+                    verify(configurationStore).saveConfiguration(any())
 
                     verify(console).println("Removing any cached telemetry data not yet uploaded...")
                     verify(uploadQueue, times(2)).pop(any())

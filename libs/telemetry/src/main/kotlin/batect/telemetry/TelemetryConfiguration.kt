@@ -26,15 +26,16 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseSerializers
 
 @Serializable
-sealed class ConsentState {
-    @Serializable
+data class TelemetryConfiguration(val userId: UUID, val state: ConsentState)
+
+@Serializable
+enum class ConsentState {
+    @SerialName("none")
+    None,
+
     @SerialName("disabled")
-    object Disabled : ConsentState()
+    TelemetryDisabled,
 
-    @Serializable
-    @SerialName("enabled")
-    data class Enabled(val userId: UUID) : ConsentState()
-
-    @Serializable
-    object None : ConsentState()
+    @SerialName("allowed")
+    TelemetryAllowed
 }

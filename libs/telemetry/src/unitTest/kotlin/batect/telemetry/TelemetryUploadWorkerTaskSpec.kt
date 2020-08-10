@@ -53,7 +53,7 @@ import org.spekframework.spek2.style.specification.describe
 
 object TelemetryUploadWorkerTaskSpec : Spek({
     describe("a telemetry upload worker") {
-        val consentStateStore by createForEachTest { mock<ConsentStateStore>() }
+        val consentStateStore by createForEachTest { mock<TelemetryConfigurationStore>() }
         val telemetryUploadQueue by createForEachTest { mock<TelemetryUploadQueue>() }
         val abacusClient by createForEachTest { mock<AbacusClient>() }
         val logSink by createForEachTest { InMemoryLogSink() }
@@ -99,7 +99,7 @@ object TelemetryUploadWorkerTaskSpec : Spek({
 
         given("telemetry is not enabled") {
             beforeEachTest {
-                whenever(consentStateStore.consentState).thenReturn(ConsentState.Disabled)
+                whenever(consentStateStore.currentConfiguration).thenReturn(TelemetryConfiguration(UUID.randomUUID(), ConsentState.None))
 
                 runWithSessions(fileSystem.getPath("some-session.json"))
             }
@@ -116,14 +116,14 @@ object TelemetryUploadWorkerTaskSpec : Spek({
                 verifyZeroInteractions(abacusClient)
             }
 
-            it("logs a message explaining that telemetry is not enabled") {
-                assertThat(logSink, hasMessage(withLogMessage("Telemetry not enabled, not starting telemetry upload task.") and withSeverity(Severity.Info)))
+            it("logs a message explaining that telemetry is not allowed") {
+                assertThat(logSink, hasMessage(withLogMessage("Telemetry not allowed, not starting telemetry upload task.") and withSeverity(Severity.Info)))
             }
         }
 
         given("telemetry is enabled") {
             beforeEachTest {
-                whenever(consentStateStore.consentState).thenReturn(ConsentState.Enabled(UUID.randomUUID()))
+                whenever(consentStateStore.currentConfiguration).thenReturn(TelemetryConfiguration(UUID.randomUUID(), ConsentState.TelemetryAllowed))
             }
 
             given("there are no sessions in the queue") {

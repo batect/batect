@@ -17,18 +17,21 @@
 package batect.cli.commands
 
 import batect.telemetry.ConsentState
-import batect.telemetry.ConsentStateStore
+import batect.telemetry.TelemetryConfiguration
+import batect.telemetry.TelemetryConfigurationStore
 import batect.telemetry.TelemetryUploadQueue
 import batect.ui.Console
+import java.util.UUID
 
 class DisableTelemetryCommand(
-    private val consentStateStore: ConsentStateStore,
+    private val telemetryConfigurationStore: TelemetryConfigurationStore,
     private val telemetryUploadQueue: TelemetryUploadQueue,
     private val console: Console
 ) : Command {
     override fun run(): Int {
-        console.println("Disabling telemetry...")
-        consentStateStore.saveConsentState(ConsentState.Disabled)
+        console.println("Disabling telemetry and removing user ID...")
+        val newConfiguration = TelemetryConfiguration(UUID.randomUUID(), ConsentState.TelemetryDisabled)
+        telemetryConfigurationStore.saveConfiguration(newConfiguration)
 
         console.println("Removing any cached telemetry data not yet uploaded...")
         telemetryUploadQueue.getAll().forEach { telemetryUploadQueue.pop(it) }

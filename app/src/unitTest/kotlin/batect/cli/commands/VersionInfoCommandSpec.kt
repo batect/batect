@@ -56,7 +56,7 @@ object VersionInfoCommandSpec : Spek({
             }
 
             val gitClient = mock<GitClient> {
-                on { getVersion() } doReturn GitVersionRetrievalResult.Failed("GIT VERSION INFO")
+                on { version } doReturn GitVersionRetrievalResult.Failed("GIT VERSION INFO")
             }
 
             val outputStream = ByteArrayOutputStream()

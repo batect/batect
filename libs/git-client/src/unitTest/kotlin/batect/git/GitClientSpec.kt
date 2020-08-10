@@ -23,7 +23,6 @@ import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.osIndependentPath
-import batect.testutils.runForEachTest
 import batect.testutils.withMessage
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.throws
@@ -109,10 +108,8 @@ object GitClientSpec : Spek({
                         whenever(processRunner.runAndCaptureOutput(command)).doReturn(ProcessOutput(0, "git version 1.2.3\n"))
                     }
 
-                    val result by runForEachTest { client.getVersion() }
-
                     it("returns the version returned by Git") {
-                        assertThat(result, equalTo(GitVersionRetrievalResult.Succeeded("1.2.3")))
+                        assertThat(client.version, equalTo(GitVersionRetrievalResult.Succeeded("1.2.3")))
                     }
                 }
 
@@ -121,10 +118,8 @@ object GitClientSpec : Spek({
                         whenever(processRunner.runAndCaptureOutput(command)).doReturn(ProcessOutput(1, "I can't do that\n"))
                     }
 
-                    val result by runForEachTest { client.getVersion() }
-
                     it("returns the version returned by Git") {
-                        assertThat(result, equalTo(GitVersionRetrievalResult.Failed("'git --version' exited with code 1: I can't do that")))
+                        assertThat(client.version, equalTo(GitVersionRetrievalResult.Failed("'git --version' exited with code 1: I can't do that")))
                     }
                 }
             }
@@ -135,10 +130,8 @@ object GitClientSpec : Spek({
                         .doThrow(ExecutableDoesNotExistException("git", RuntimeException("Something went wrong")))
                 }
 
-                val result by runForEachTest { client.getVersion() }
-
                 it("returns an error message explaining the issue") {
-                    assertThat(result, equalTo(GitVersionRetrievalResult.Failed("The executable 'git' could not be found or is not executable.")))
+                    assertThat(client.version, equalTo(GitVersionRetrievalResult.Failed("The executable 'git' could not be found or is not executable.")))
                 }
             }
         }

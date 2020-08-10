@@ -41,17 +41,17 @@ class GitClient(
         }
     }
 
-    fun getVersion(): GitVersionRetrievalResult {
+    val version: GitVersionRetrievalResult by lazy {
         try {
             val command = listOf("git", "--version")
             val result = processRunner.runAndCaptureOutput(command)
 
-            return when (result.exitCode) {
+            when (result.exitCode) {
                 0 -> GitVersionRetrievalResult.Succeeded(result.output.trim().removePrefix("git version "))
                 else -> GitVersionRetrievalResult.Failed("'${command.joinToString(" ")}' exited with code ${result.exitCode}: ${result.output.trim()}")
             }
         } catch (e: ExecutableDoesNotExistException) {
-            return GitVersionRetrievalResult.Failed(e.message!!)
+            GitVersionRetrievalResult.Failed(e.message!!)
         }
     }
 }

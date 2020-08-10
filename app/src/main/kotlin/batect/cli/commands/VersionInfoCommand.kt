@@ -41,7 +41,7 @@ class VersionInfoCommand(
         outputStream.println("JVM version:       ${systemInfo.jvmVersion}")
         outputStream.println("OS version:        ${systemInfo.osVersion}")
         outputStream.println("Docker version:    ${dockerSystemInfoClient.getDockerVersionInfo()}")
-        outputStream.println("Git version:       ${gitClient.getVersion()}")
+        outputStream.println("Git version:       ${gitClient.version}")
         outputStream.println()
         outputStream.println(CommandLineOptionsParser.helpBlurb)
         outputStream.println()

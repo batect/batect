@@ -55,7 +55,7 @@ object ApplicationInfoLoggerSpec : Spek({
         }
 
         val gitClient = mock<GitClient> {
-            on { getVersion() } doReturn GitVersionRetrievalResult.Succeeded("1.2.3")
+            on { version } doReturn GitVersionRetrievalResult.Succeeded("1.2.3")
         }
 
         val infoLogger = ApplicationInfoLogger(logger, versionInfo, systemInfo, consoleInfo, dockerSystemInfoClient, gitClient, environmentVariables)

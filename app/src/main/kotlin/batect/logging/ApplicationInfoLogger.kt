@@ -42,7 +42,7 @@ class ApplicationInfoLogger(
             data("systemInfo", systemInfo)
             data("consoleInfo", consoleInfo)
             data("dockerVersionInfo", dockerSystemInfoClient.getDockerVersionInfo().toString())
-            data("gitVersion", gitClient.getVersion().toString())
+            data("gitVersion", gitClient.version.toString())
             data("environment", environmentVariables)
         }
     }

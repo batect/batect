@@ -63,7 +63,7 @@ object GitClientIntegrationTest : Spek({
         }
 
         describe("getting the Git client version") {
-            val result by runForEachTest { client.getVersion() }
+            val result by runForEachTest { client.version }
 
             it("returns a successful result in the expected format") {
                 assertThat((result as GitVersionRetrievalResult.Succeeded).version, matches("""^\d+\.\d+\.\d+.*$""".toRegex()))

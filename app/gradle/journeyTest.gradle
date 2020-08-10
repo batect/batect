@@ -41,6 +41,8 @@ tasks.withType(JourneyTest).configureEach {
     dependsOn installShadowDist
 
     inputs.files installShadowDist
+
+    environment 'BATECT_ENABLE_TELEMETRY', 'false'
 }
 
 def windowsTests = 'batect/journeytests/windowscontainers/**'

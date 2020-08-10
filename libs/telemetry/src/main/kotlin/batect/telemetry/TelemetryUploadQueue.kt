@@ -24,7 +24,7 @@ import kotlin.streams.asSequence
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonConfiguration
 
-class UploadQueue(
+class TelemetryUploadQueue(
     private val applicationPaths: ApplicationPaths,
     private val logger: Logger
 ) {

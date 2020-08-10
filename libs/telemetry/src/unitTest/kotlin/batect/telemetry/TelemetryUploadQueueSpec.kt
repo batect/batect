@@ -37,8 +37,8 @@ import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.Suite
 import org.spekframework.spek2.style.specification.describe
 
-object UploadQueueSpec : Spek({
-    describe("a session upload queue") {
+object TelemetryUploadQueueSpec : Spek({
+    describe("a telemetry upload queue") {
         val fileSystem by createForEachTest { Jimfs.newFileSystem(Configuration.unix()) }
 
         val applicationPaths by createForEachTest {
@@ -48,7 +48,7 @@ object UploadQueueSpec : Spek({
         }
 
         val logger by createLoggerForEachTestWithoutCustomSerializers()
-        val queue by createForEachTest { UploadQueue(applicationPaths, logger) }
+        val queue by createForEachTest { TelemetryUploadQueue(applicationPaths, logger) }
 
         val telemetryDirectory by createForEachTest { applicationPaths.rootLocalStorageDirectory.resolve("telemetry") }
 

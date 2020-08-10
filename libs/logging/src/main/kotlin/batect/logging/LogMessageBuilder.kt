@@ -33,7 +33,8 @@ class LogMessageBuilder(val severity: Severity, val loggerAdditionalData: Map<St
         return this
     }
 
-    fun exception(e: Throwable): LogMessageBuilder = data("exception", e.toDetailedString(), String.serializer())
+    fun exception(e: Throwable): LogMessageBuilder = exception("exception", e)
+    fun exception(key: String, e: Throwable): LogMessageBuilder = data(key, e.toDetailedString(), String.serializer())
 
     fun <T> data(key: String, value: T, serializer: SerializationStrategy<T>): LogMessageBuilder {
         require(!key.startsWith('@')) { "Cannot add additional data with the key '$key': keys may not start with '@'." }

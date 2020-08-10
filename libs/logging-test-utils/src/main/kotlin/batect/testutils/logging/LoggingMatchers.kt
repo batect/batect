@@ -48,7 +48,8 @@ fun hasMessage(messageCriteria: Matcher<LogMessage>): Matcher<InMemoryLogSink> {
 
 fun withLogMessage(message: String): Matcher<LogMessage> = has(LogMessage::message, equalTo(message))
 fun withSeverity(severity: Severity): Matcher<LogMessage> = has(LogMessage::severity, equalTo(severity))
-fun withException(exception: Throwable): Matcher<LogMessage> = withAdditionalData("exception", exception.toDetailedString())
+fun withException(exception: Throwable): Matcher<LogMessage> = withException("exception", exception)
+fun withException(key: String, exception: Throwable): Matcher<LogMessage> = withAdditionalData(key, exception.toDetailedString())
 
 fun withAdditionalData(key: String, value: Any?): Matcher<LogMessage> = object : Matcher.Primitive<LogMessage>() {
     override fun invoke(actual: LogMessage): MatchResult {
@@ -61,4 +62,17 @@ fun withAdditionalData(key: String, value: Any?): Matcher<LogMessage> = object :
 
     override val description: String get() = "contains additional data with key ${describe(key)} and value ${describe(value)}"
     override val negatedDescription: String get() = "does not contain additional data with key ${describe(key)} and value ${describe(value)}"
+}
+
+fun withAdditionalDataAndAnyValue(key: String): Matcher<LogMessage> = object : Matcher.Primitive<LogMessage>() {
+    override fun invoke(actual: LogMessage): MatchResult {
+        if (actual.additionalData.containsKey(key)) {
+            return MatchResult.Match
+        } else {
+            return MatchResult.Mismatch("was ${describe(actual)}")
+        }
+    }
+
+    override val description: String get() = "contains additional data with key ${describe(key)}"
+    override val negatedDescription: String get() = "does not contain additional data with key ${describe(key)}"
 }

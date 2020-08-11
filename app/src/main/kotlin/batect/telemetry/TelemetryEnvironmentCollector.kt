@@ -20,6 +20,11 @@ import batect.cli.commands.Command
 import batect.git.GitClient
 import batect.git.GitVersionRetrievalResult
 import batect.os.HostEnvironmentVariables
+import java.lang.management.ManagementFactory
+import java.lang.management.RuntimeMXBean
+import java.time.Instant
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
 import java.util.Properties
 import kotlin.reflect.KClass
 
@@ -27,6 +32,7 @@ class TelemetryEnvironmentCollector(
     private val telemetrySessionBuilder: TelemetrySessionBuilder,
     private val hostEnvironmentVariables: HostEnvironmentVariables,
     private val gitClient: GitClient,
+    private val runtimeMXBean: RuntimeMXBean = ManagementFactory.getRuntimeMXBean(),
     private val systemProperties: Properties = System.getProperties()
 ) {
     fun collect(commandType: KClass<out Command>) {
@@ -41,6 +47,7 @@ class TelemetryEnvironmentCollector(
         telemetrySessionBuilder.addAttribute("jvmVendor", systemProperties.getProperty("java.vendor"))
         telemetrySessionBuilder.addAttribute("jvmName", systemProperties.getProperty("java.vm.name"))
         telemetrySessionBuilder.addAttribute("jvmVersion", systemProperties.getProperty("java.version"))
+        telemetrySessionBuilder.addAttribute("jvmStartTime", jvmStartTime.toString())
 
         when (val result = gitClient.version) {
             is GitVersionRetrievalResult.Succeeded -> telemetrySessionBuilder.addAttribute("gitVersion", result.version)
@@ -53,4 +60,6 @@ class TelemetryEnvironmentCollector(
             else -> telemetrySessionBuilder.addNullAttribute("wrapperDidDownload")
         }
     }
+
+    private val jvmStartTime = ZonedDateTime.ofInstant(Instant.ofEpochMilli(runtimeMXBean.startTime), ZoneOffset.UTC)
 }

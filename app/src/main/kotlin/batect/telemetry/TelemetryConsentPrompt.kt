@@ -16,6 +16,7 @@
 
 package batect.telemetry
 
+import batect.cli.CommandLineOptionsParser
 import batect.os.ConsoleInfo
 import batect.ui.Console
 import batect.ui.OutputStyle
@@ -53,8 +54,8 @@ class TelemetryConsentPrompt(
             console.println()
         } else {
             console.println("It looks like batect is running in a non-interactive session, so it can't ask for permission to collect and report this information. To suppress this message:")
-            console.println("* To allow collection of data, set the BATECT_ENABLE_TELEMETRY environment variable to 'true', or run './batect --permanently-enable-telemetry'.")
-            console.println("* To prevent collection of data, set the BATECT_ENABLE_TELEMETRY environment variable to 'false', or run './batect --permanently-disable-telemetry'.")
+            console.println("* To allow collection of data, set the BATECT_ENABLE_TELEMETRY environment variable to 'true', or run './batect --${CommandLineOptionsParser.permanentlyEnableTelemetryFlagName}'.")
+            console.println("* To prevent collection of data, set the BATECT_ENABLE_TELEMETRY environment variable to 'false', or run './batect --${CommandLineOptionsParser.permanentlyDisableTelemetryFlagName}'.")
             console.println()
             console.println("No data will be collected for this session.")
             console.println()

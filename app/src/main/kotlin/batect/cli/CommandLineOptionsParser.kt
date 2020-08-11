@@ -47,6 +47,8 @@ class CommandLineOptionsParser(
         const val disableCleanupFlagName = "no-cleanup"
         const val upgradeFlagName = "upgrade"
         const val configVariableOptionName = "config-var"
+        const val permanentlyDisableTelemetryFlagName = "permanently-disable-telemetry"
+        const val permanentlyEnableTelemetryFlagName = "permanently-enable-telemetry"
         const val helpBlurb = "For documentation and further information on batect, visit https://github.com/batect/batect."
     }
 
@@ -203,8 +205,8 @@ class CommandLineOptionsParser(
 
     private val dockerTLSKeyPath: Path by dockerTLSKeyPathOption
 
-    private val permanentlyDisableTelemetry: Boolean by flagOption(telemetryOptionsGroup, "permanently-disable-telemetry", "Permanently disable telemetry collection and uploading, and remove any telemetry data queued for upload.")
-    private val permanentlyEnableTelemetry: Boolean by flagOption(telemetryOptionsGroup, "permanently-enable-telemetry", "Permanently enable telemetry collection and uploading.")
+    private val permanentlyDisableTelemetry: Boolean by flagOption(telemetryOptionsGroup, permanentlyDisableTelemetryFlagName, "Permanently disable telemetry collection and uploading, and remove any telemetry data queued for upload.")
+    private val permanentlyEnableTelemetry: Boolean by flagOption(telemetryOptionsGroup, permanentlyEnableTelemetryFlagName, "Permanently enable telemetry collection and uploading.")
 
     private val disableTelemetry: Boolean? by tristateFlagOption(
         telemetryOptionsGroup,

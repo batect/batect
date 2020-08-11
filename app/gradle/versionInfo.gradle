@@ -32,6 +32,7 @@ String versionInfoFileContents() {
     """ |package batect
         |
         |import batect.logging.LogMessageBuilder
+        |import batect.primitives.ApplicationVersionInfoProvider
         |import batect.primitives.Version
         |import kotlinx.serialization.Serializable
         |
@@ -39,10 +40,10 @@ String versionInfoFileContents() {
         |// Do not edit it (it will be overwritten on the next build anyway).
         |// Do not commit it.
         |@Serializable
-        |class VersionInfo {
+        |class VersionInfo : ApplicationVersionInfoProvider {
         |    val gitCommitHash = "${rootProject.gitCommitHash}"
         |    val gitCommitDate = "${rootProject.gitCommitHumanDate}"
-        |    val version = Version.parse("${rootProject.simpleVersion}")
+        |    override val version = Version.parse("${rootProject.simpleVersion}")
         |    val buildDate = "${getBuildDate()}"
         |}
         |

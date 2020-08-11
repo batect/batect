@@ -208,7 +208,7 @@ class CommandLineOptionsParser(
 
     private val disableTelemetry: Boolean? by tristateFlagOption(
         telemetryOptionsGroup,
-        "disable-telemetry",
+        "no-telemetry",
         "Disable telemetry for this command line invocation.",
         environmentVariableDefaultValueProviderFactory.create("BATECT_ENABLE_TELEMETRY", null, ValueConverters::invertingBoolean)
     )

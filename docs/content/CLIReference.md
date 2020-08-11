@@ -349,18 +349,18 @@ new data.
 
 If you would like to opt-in to telemetry, run `./batect --permanently-enable-telemetry` to enable collecting telemetry data.
 
-### Disable telemetry for this invocation <small>(`--disable-telemetry`)</small>
+### Disable telemetry for this invocation <small>(`--no-telemetry`)</small>
 
 By default, batect uses the permission you granted it when it ran for the first time.
 
-If you would like to disable telemetry collection or uploading for a single invocation, pass the `--disable-telemetry` flag, for example:
+If you would like to disable telemetry collection or uploading for a single invocation, pass the `--no-telemetry` flag, for example:
 
 ```shell
-./batect --disable-telemetry the-task
+./batect --no-telemetry the-task
 ```
 
 Note that this does not cause any data that has been collected from other invocations but not uploaded to be removed - it will be uploaded the next time
-batect runs without the `--disable-telemetry` flag.
+batect runs without the `--no-telemetry` flag.
 
 You can also set the `BATECT_ENABLE_TELEMETRY` environment variable to `false` to disable telemetry collection and uploading.
 

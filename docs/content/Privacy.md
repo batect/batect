@@ -185,7 +185,7 @@ To opt-out after this initial run, do any of the following:
 * Run [`./batect --permanently-disable-telemetry`](CLIReference.md#disable-telemetry-permanently-permanently-disable-telemetry) once, which disables telemetry
   and deletes any data that has been collected but not yet uploaded
 
-* Run each task with [`./batect --disable-telemetry <task>`](CLIReference.md#disable-telemetry-for-this-invocation-disable-telemetry) (eg. `./batect --disable-telemetry build`),
+* Run each task with [`./batect --no-telemetry <task>`](CLIReference.md#disable-telemetry-for-this-invocation-no-telemetry) (eg. `./batect --no-telemetry build`),
   which disables telemetry for that invocation of batect
 
 * Set the `BATECT_ENABLE_TELEMETRY` environment variable to `false`

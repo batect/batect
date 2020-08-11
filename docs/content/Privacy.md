@@ -116,6 +116,7 @@ This information does not include personal or sensitive information such as the 
 | **Usage information** |
 | Command | running a task, upgrading batect, displaying help | Helps segment data (eg. determining average command duration for `--upgrade`) and understand usage behaviour (eg. how often `--help` is used)
 | Total duration of the command | 3.2 seconds | Helps understand performance of batect under different circumstances
+| Exit code | `0` | Helps understand whether the invocation succeeded or not
 | Time the command started in UTC | `2020-08-10T16:54:00.123Z` | Provides an ordering of invocations and helps determine average time between invocations
 | Time the command finished in UTC | `2020-08-10T16:54:03.423Z` | Provides an ordering of invocations and helps determine average time between invocations
 | Output mode used | `simple`, `fancy`, `quiet` or `all` | Helps understand usage behaviour and helps plan and prioritise possible future features

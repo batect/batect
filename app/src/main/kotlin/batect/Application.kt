@@ -68,23 +68,32 @@ class Application(override val dkodein: DKodein) : DKodeinAware {
         }
 
         return when (val result = commandLineOptionsParser.parse(args)) {
-            is CommandLineOptionsParsingResult.Succeeded -> runCommand(result.options, args)
+            is CommandLineOptionsParsingResult.Succeeded -> run(result.options, args)
             is CommandLineOptionsParsingResult.Failed -> handleOptionsParsingFailed(result)
         }
     }
 
-    private fun runCommand(options: CommandLineOptions, args: Iterable<String>): Int {
+    private fun run(options: CommandLineOptions, args: Iterable<String>): Int {
         val extendedKodein = options.extend(dkodein)
+
+        // Why not do this in run() above? Because we have to wait until we know we've successfully parsed the command line arguments
+        // to ensure that we can respect any telemetry-related requests.
+        val telemetryManager = extendedKodein.instance<TelemetryManager>()
+        val exitCode = runCommand(options, args, extendedKodein)
+
+        telemetrySessionBuilder.addAttribute("exitCode", exitCode)
+        telemetryManager.finishSession(telemetrySessionBuilder)
+
+        return exitCode
+    }
+
+    private fun runCommand(options: CommandLineOptions, args: Iterable<String>, extendedKodein: DKodein): Int {
         val logger = extendedKodein.logger<Application>()
         val consoleManager = extendedKodein.instance<ConsoleManager>()
         val errorConsole = extendedKodein.instance<Console>(StreamType.Error)
         val wrapperCache = extendedKodein.instance<WrapperCache>()
         val telemetryConsentPrompt = extendedKodein.instance<TelemetryConsentPrompt>()
         val telemetryEnvironmentCollector = extendedKodein.instance<TelemetryEnvironmentCollector>()
-
-        // Why not do this in run() above? Because we have to wait until we know we've successfully parsed the command line arguments
-        // to ensure that we can respect any telemetry-related requests.
-        val telemetryManager = extendedKodein.instance<TelemetryManager>()
 
         try {
             val applicationInfoLogger = extendedKodein.instance<ApplicationInfoLogger>()
@@ -107,8 +116,6 @@ class Application(override val dkodein: DKodein) : DKodeinAware {
             }
 
             return -1
-        } finally {
-            telemetryManager.finishSession(telemetrySessionBuilder)
         }
     }
 

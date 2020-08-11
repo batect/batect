@@ -165,6 +165,10 @@ object ApplicationSpec : Spek({
                                 verify(telemetryManager).finishSession(telemetrySessionBuilder)
                             }
                         }
+
+                        it("reports the exit code as part of the telemetry session") {
+                            verify(telemetrySessionBuilder).addAttribute("exitCode", 123)
+                        }
                     }
                 }
 
@@ -193,6 +197,10 @@ object ApplicationSpec : Spek({
 
                         it("returns a non-zero exit code") {
                             assertThat(exitCode, !equalTo(0))
+                        }
+
+                        it("reports the exit code as part of the telemetry session") {
+                            verify(telemetrySessionBuilder).addAttribute("exitCode", exitCode)
                         }
 
                         it("finishes the telemetry session after printing the exception message") {

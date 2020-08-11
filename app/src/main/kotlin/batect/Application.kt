@@ -27,6 +27,8 @@ import batect.logging.logger
 import batect.os.ConsoleManager
 import batect.os.SystemInfo
 import batect.telemetry.TelemetryConsentPrompt
+import batect.telemetry.TelemetryManager
+import batect.telemetry.TelemetrySessionBuilder
 import batect.ui.Console
 import batect.ui.text.Text
 import batect.wrapper.WrapperCache
@@ -52,6 +54,7 @@ class Application(override val dkodein: DKodein) : DKodeinAware {
     constructor(outputStream: PrintStream, errorStream: PrintStream, inputStream: InputStream) :
         this(createKodeinConfiguration(outputStream, errorStream, inputStream))
 
+    private val telemetrySessionBuilder: TelemetrySessionBuilder = instance()
     private val errorStream: PrintStream = instance(StreamType.Error)
     private val commandLineOptionsParser: CommandLineOptionsParser = instance()
     private val commandFactory: CommandFactory = instance()
@@ -77,6 +80,10 @@ class Application(override val dkodein: DKodein) : DKodeinAware {
         val wrapperCache = extendedKodein.instance<WrapperCache>()
         val telemetryConsentPrompt = extendedKodein.instance<TelemetryConsentPrompt>()
 
+        // Why not do this in run() above? Because we have to wait until we know we've successfully parsed the command line arguments
+        // to ensure that we can respect any telemetry-related requests.
+        val telemetryManager = extendedKodein.instance<TelemetryManager>()
+
         try {
             val applicationInfoLogger = extendedKodein.instance<ApplicationInfoLogger>()
             applicationInfoLogger.logApplicationInfo(args)
@@ -96,6 +103,8 @@ class Application(override val dkodein: DKodein) : DKodeinAware {
             }
 
             return -1
+        } finally {
+            telemetryManager.finishSession(telemetrySessionBuilder)
         }
     }
 

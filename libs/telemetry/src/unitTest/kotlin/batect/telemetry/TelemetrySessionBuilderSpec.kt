@@ -53,11 +53,11 @@ object TelemetrySessionBuilderSpec : Spek({
         beforeEachTest { returnStartTime = true }
 
         describe("building a session with no attributes") {
-            val builder by createForEachTest { TelemetrySessionBuilder(telemetryConfigurationStore, versionInfo, timeSource) }
+            val builder by createForEachTest { TelemetrySessionBuilder(versionInfo, timeSource) }
 
             val session by runForEachTest {
                 returnStartTime = false
-                builder.build()
+                builder.build(telemetryConfigurationStore)
             }
 
             it("sets the session ID to a v4 random UUID") {

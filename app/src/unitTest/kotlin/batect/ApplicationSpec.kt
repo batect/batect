@@ -29,6 +29,8 @@ import batect.logging.Severity
 import batect.os.ConsoleManager
 import batect.os.SystemInfo
 import batect.telemetry.TelemetryConsentPrompt
+import batect.telemetry.TelemetryManager
+import batect.telemetry.TelemetrySessionBuilder
 import batect.testutils.createForEachTest
 import batect.testutils.given
 import batect.testutils.logging.InMemoryLogSink
@@ -44,6 +46,7 @@ import batect.wrapper.WrapperCache
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
+import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.doThrow
 import com.nhaarman.mockitokotlin2.inOrder
@@ -64,6 +67,7 @@ object ApplicationSpec : Spek({
         val commandLineOptionsParser by createForEachTest { mock<CommandLineOptionsParser>() }
         val commandFactory by createForEachTest { mock<CommandFactory>() }
         val systemInfo by createForEachTest { mock<SystemInfo>() }
+        val telemetrySessionBuilder by createForEachTest { mock<TelemetrySessionBuilder>() }
 
         val dependencies by createForEachTest {
             Kodein.direct {
@@ -71,6 +75,7 @@ object ApplicationSpec : Spek({
                 bind<CommandLineOptionsParser>() with instance(commandLineOptionsParser)
                 bind<CommandFactory>() with instance(commandFactory)
                 bind<SystemInfo>() with instance(systemInfo)
+                bind<TelemetrySessionBuilder>() with instance(telemetrySessionBuilder)
             }
         }
 
@@ -94,6 +99,7 @@ object ApplicationSpec : Spek({
                 val errorConsole by createForEachTest { mock<Console>() }
                 val wrapperCache by createForEachTest { mock<WrapperCache>() }
                 val telemetryConsentPrompt by createForEachTest { mock<TelemetryConsentPrompt>() }
+                val telemetryManager by createForEachTest { mock<TelemetryManager>() }
 
                 val extendedDependencies by createForEachTest {
                     Kodein.direct {
@@ -103,6 +109,7 @@ object ApplicationSpec : Spek({
                         bind<ConsoleManager>() with instance(consoleManager)
                         bind<WrapperCache>() with instance(wrapperCache)
                         bind<TelemetryConsentPrompt>() with instance(telemetryConsentPrompt)
+                        bind<TelemetryManager>() with instance(telemetryManager)
                     }
                 }
 
@@ -117,8 +124,10 @@ object ApplicationSpec : Spek({
                 }
 
                 given("the command executes normally") {
-                    val command = mock<Command> {
-                        on { run() } doReturn 123
+                    val command by createForEachTest {
+                        mock<Command> {
+                            on { run() } doReturn 123
+                        }
                     }
 
                     beforeEachTest {
@@ -145,13 +154,22 @@ object ApplicationSpec : Spek({
                                 verify(command).run()
                             }
                         }
+
+                        it("finishes the telemetry session after running the command") {
+                            inOrder(command, telemetryManager) {
+                                verify(command).run()
+                                verify(telemetryManager).finishSession(telemetrySessionBuilder)
+                            }
+                        }
                     }
                 }
 
                 given("the command throws an exception") {
                     val exception = RuntimeException("Everything is broken")
-                    val command = mock<Command> {
-                        on { run() } doThrow exception
+                    val command by createForEachTest {
+                        mock<Command> {
+                            on { run() } doThrow exception
+                        }
                     }
 
                     beforeEachTest {
@@ -171,6 +189,13 @@ object ApplicationSpec : Spek({
 
                         it("returns a non-zero exit code") {
                             assertThat(exitCode, !equalTo(0))
+                        }
+
+                        it("finishes the telemetry session after printing the exception message") {
+                            inOrder(errorConsole, telemetryManager) {
+                                verify(errorConsole).println(any<Text>())
+                                verify(telemetryManager).finishSession(telemetrySessionBuilder)
+                            }
                         }
                     }
                 }

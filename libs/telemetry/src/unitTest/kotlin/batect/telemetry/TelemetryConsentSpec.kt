@@ -68,7 +68,7 @@ object TelemetryConsentSpec : Spek({
                 }
 
                 it(expectedDescription) {
-                    assertThat(consent.enableTelemetry, equalTo(expected))
+                    assertThat(consent.telemetryAllowed, equalTo(expected))
                 }
             }
         }

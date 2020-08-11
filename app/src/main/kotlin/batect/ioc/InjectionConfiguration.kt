@@ -127,6 +127,8 @@ import batect.telemetry.AbacusClient
 import batect.telemetry.TelemetryConfigurationStore
 import batect.telemetry.TelemetryConsent
 import batect.telemetry.TelemetryConsentPrompt
+import batect.telemetry.TelemetryManager
+import batect.telemetry.TelemetrySessionBuilder
 import batect.telemetry.TelemetryUploadQueue
 import batect.telemetry.TelemetryUploadTask
 import batect.ui.Console
@@ -370,6 +372,8 @@ private val telemetryModule = Kodein.Module("telemetry") {
     bind<TelemetryConfigurationStore>() with singletonWithLogger { logger -> TelemetryConfigurationStore(instance(), logger) }
     bind<TelemetryConsent>() with singleton { TelemetryConsent(commandLineOptions().disableTelemetry, instance()) }
     bind<TelemetryConsentPrompt>() with singleton { TelemetryConsentPrompt(instance(), commandLineOptions().disableTelemetry, commandLineOptions().requestedOutputStyle, instance(), instance(StreamType.Output), instance()) }
+    bind<TelemetryManager>() with singleton { TelemetryManager(instance(), instance(), instance()) }
+    bind<TelemetrySessionBuilder>() with singleton { TelemetrySessionBuilder(instance()) }
     bind<TelemetryUploadQueue>() with singletonWithLogger { logger -> TelemetryUploadQueue(instance(), logger) }
     bind<TelemetryUploadTask>() with singletonWithLogger { logger -> TelemetryUploadTask(instance(), instance(), instance(), logger) }
 }

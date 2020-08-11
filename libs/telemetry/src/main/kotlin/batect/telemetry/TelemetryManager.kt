@@ -16,20 +16,17 @@
 
 package batect.telemetry
 
-class TelemetryConsent(
-    private val disabledOnCommandLine: Boolean?,
-    private val configurationStore: TelemetryConfigurationStore
+class TelemetryManager(
+    private val telemetryConsent: TelemetryConsent,
+    private val telemetryUploadQueue: TelemetryUploadQueue,
+    private val telemetryConfigurationStore: TelemetryConfigurationStore
 ) {
-    val telemetryAllowed: Boolean
-        get() {
-            return when (disabledOnCommandLine) {
-                true -> false
-                false -> true
-                null -> when (configurationStore.currentConfiguration.state) {
-                    ConsentState.TelemetryAllowed -> true
-                    ConsentState.TelemetryDisabled -> false
-                    ConsentState.None -> false
-                }
-            }
+    fun finishSession(sessionBuilder: TelemetrySessionBuilder) {
+        if (!telemetryConsent.telemetryAllowed) {
+            return
         }
+
+        val session = sessionBuilder.build(telemetryConfigurationStore)
+        telemetryUploadQueue.add(session)
+    }
 }

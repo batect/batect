@@ -35,7 +35,7 @@ class TelemetryUploadTask(
     private val json = Json(JsonConfiguration.Stable)
 
     fun start() {
-        if (!telemetryConsent.enableTelemetry) {
+        if (!telemetryConsent.telemetryAllowed) {
             logger.info {
                 message("Telemetry not allowed, not starting telemetry upload task.")
             }

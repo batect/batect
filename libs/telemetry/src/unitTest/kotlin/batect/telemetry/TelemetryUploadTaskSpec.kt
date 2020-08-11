@@ -99,7 +99,7 @@ object TelemetryUploadTaskSpec : Spek({
 
         given("telemetry is not enabled") {
             beforeEachTest {
-                whenever(telemetryConsent.enableTelemetry).thenReturn(false)
+                whenever(telemetryConsent.telemetryAllowed).thenReturn(false)
 
                 runWithSessions(fileSystem.getPath("some-session.json"))
             }
@@ -123,7 +123,7 @@ object TelemetryUploadTaskSpec : Spek({
 
         given("telemetry is enabled") {
             beforeEachTest {
-                whenever(telemetryConsent.enableTelemetry).thenReturn(true)
+                whenever(telemetryConsent.telemetryAllowed).thenReturn(true)
             }
 
             given("there are no sessions in the queue") {

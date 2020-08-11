@@ -22,7 +22,6 @@ import java.time.ZonedDateTime
 import java.util.UUID
 
 class TelemetrySessionBuilder(
-    private val telemetryConfigurationStore: TelemetryConfigurationStore,
     private val versionInfo: ApplicationVersionInfoProvider,
     private val timeSource: TimeSource = ZonedDateTime::now
 ) {
@@ -31,7 +30,10 @@ class TelemetrySessionBuilder(
     private val applicationId: String = "batect"
     private val applicationVersion: String = versionInfo.version.toString()
 
-    fun build(): TelemetrySession {
+    // Why is TelemetryConfigurationStore passed in here rather than passed in as a constructor parameter?
+    // We want to construct this class as early as possible in the application's lifetime - before we've parsed CLI options
+    // or anything like that. TelemetryConfigurationStore isn't available until much later, so we have to pass it in.
+    fun build(telemetryConfigurationStore: TelemetryConfigurationStore): TelemetrySession {
         val userId = telemetryConfigurationStore.currentConfiguration.userId
 
         return TelemetrySession(sessionId, userId, sessionStartTime, nowInUTC(), applicationId, applicationVersion)

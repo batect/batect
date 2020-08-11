@@ -27,6 +27,7 @@ dependencies {
 
     implementation project(':libs:io')
     implementation project(':libs:logging')
+    implementation project(':libs:primitives')
 
     testImplementation 'org.araqnid:hamkrest-json:1.1.2'
     testImplementation 'com.google.jimfs:jimfs:1.1'

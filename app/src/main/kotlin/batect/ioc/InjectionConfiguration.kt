@@ -127,6 +127,7 @@ import batect.telemetry.AbacusClient
 import batect.telemetry.TelemetryConfigurationStore
 import batect.telemetry.TelemetryConsent
 import batect.telemetry.TelemetryConsentPrompt
+import batect.telemetry.TelemetryEnvironmentCollector
 import batect.telemetry.TelemetryManager
 import batect.telemetry.TelemetrySessionBuilder
 import batect.telemetry.TelemetryUploadQueue
@@ -156,8 +157,13 @@ import jnr.posix.POSIXFactory
 import okhttp3.OkHttpClient
 import org.kodein.di.DKodein
 import org.kodein.di.Kodein
+import org.kodein.di.bindings.Scope
+import org.kodein.di.bindings.ScopeRegistry
+import org.kodein.di.bindings.StandardScopeRegistry
+import org.kodein.di.bindings.UnboundedScope
 import org.kodein.di.generic.bind
 import org.kodein.di.generic.instance
+import org.kodein.di.generic.on
 import org.kodein.di.generic.scoped
 import org.kodein.di.generic.singleton
 
@@ -372,8 +378,9 @@ private val telemetryModule = Kodein.Module("telemetry") {
     bind<TelemetryConfigurationStore>() with singletonWithLogger { logger -> TelemetryConfigurationStore(instance(), logger) }
     bind<TelemetryConsent>() with singleton { TelemetryConsent(commandLineOptions().disableTelemetry, instance()) }
     bind<TelemetryConsentPrompt>() with singleton { TelemetryConsentPrompt(instance(), commandLineOptions().disableTelemetry, commandLineOptions().requestedOutputStyle, instance(), instance(StreamType.Output), instance()) }
+    bind<TelemetryEnvironmentCollector>() with singleton { TelemetryEnvironmentCollector(instance(), instance(), instance()) }
     bind<TelemetryManager>() with singleton { TelemetryManager(instance(), instance(), instance()) }
-    bind<TelemetrySessionBuilder>() with singleton { TelemetrySessionBuilder(instance()) }
+    bind<TelemetrySessionBuilder>() with instance(TelemetrySessionBuilder(VersionInfo()))
     bind<TelemetryUploadQueue>() with singletonWithLogger { logger -> TelemetryUploadQueue(instance(), logger) }
     bind<TelemetryUploadTask>() with singletonWithLogger { logger -> TelemetryUploadTask(instance(), instance(), instance(), logger) }
 }

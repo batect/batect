@@ -27,6 +27,7 @@ import batect.logging.logger
 import batect.os.ConsoleManager
 import batect.os.SystemInfo
 import batect.telemetry.TelemetryConsentPrompt
+import batect.telemetry.TelemetryEnvironmentCollector
 import batect.telemetry.TelemetryManager
 import batect.telemetry.TelemetrySessionBuilder
 import batect.ui.Console
@@ -79,6 +80,7 @@ class Application(override val dkodein: DKodein) : DKodeinAware {
         val errorConsole = extendedKodein.instance<Console>(StreamType.Error)
         val wrapperCache = extendedKodein.instance<WrapperCache>()
         val telemetryConsentPrompt = extendedKodein.instance<TelemetryConsentPrompt>()
+        val telemetryEnvironmentCollector = extendedKodein.instance<TelemetryEnvironmentCollector>()
 
         // Why not do this in run() above? Because we have to wait until we know we've successfully parsed the command line arguments
         // to ensure that we can respect any telemetry-related requests.
@@ -91,6 +93,7 @@ class Application(override val dkodein: DKodein) : DKodeinAware {
             consoleManager.enableConsoleEscapeSequences()
             wrapperCache.setLastUsedForCurrentVersion()
             telemetryConsentPrompt.askForConsentIfRequired()
+            telemetryEnvironmentCollector.collect()
 
             val command = commandFactory.createCommand(options, extendedKodein)
             return command.run()

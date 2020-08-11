@@ -17,12 +17,14 @@
     BATECT_WRAPPER_CACHE_DIR=${BATECT_CACHE_DIR:-"$HOME/.batect/cache"}
     VERSION_CACHE_DIR="$BATECT_WRAPPER_CACHE_DIR/$VERSION"
     JAR_PATH="$VERSION_CACHE_DIR/batect-$VERSION.jar"
+    BATECT_WRAPPER_DID_DOWNLOAD=false
 
     SCRIPT_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
     function main() {
         if ! haveVersionCachedLocally; then
             download
+            BATECT_WRAPPER_DID_DOWNLOAD=true
         fi
 
         checkChecksum
@@ -80,6 +82,7 @@
 
         BATECT_WRAPPER_SCRIPT_DIR="$SCRIPT_PATH" \
         BATECT_WRAPPER_CACHE_DIR="$BATECT_WRAPPER_CACHE_DIR" \
+        BATECT_WRAPPER_DID_DOWNLOAD="$BATECT_WRAPPER_DID_DOWNLOAD" \
         HOSTNAME="$HOSTNAME" \
         exec \
             java \

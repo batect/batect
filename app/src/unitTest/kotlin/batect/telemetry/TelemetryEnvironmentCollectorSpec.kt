@@ -51,54 +51,94 @@ object TelemetryEnvironmentCollectorSpec : Spek({
 
             given("the TERM environment variable is set") {
                 val term = "xterm-9000color"
-                val hostEnvironmentVariables by createForEachTest { HostEnvironmentVariables("SHELL" to shell, "TERM" to term) }
-                val environmentCollector by createForEachTest { TelemetryEnvironmentCollector(telemetrySessionBuilder, hostEnvironmentVariables, gitClient, systemProperties) }
 
-                given("the Git version is available") {
-                    beforeEachTest {
-                        whenever(gitClient.version).doReturn(GitVersionRetrievalResult.Succeeded("1.2.3"))
+                given("the BATECT_WRAPPER_DID_DOWNLOAD environment variable is set to 'true'") {
+                    val didDownload = "true"
+                    val hostEnvironmentVariables by createForEachTest { HostEnvironmentVariables("SHELL" to shell, "TERM" to term, "BATECT_WRAPPER_DID_DOWNLOAD" to didDownload) }
+                    val environmentCollector by createForEachTest { TelemetryEnvironmentCollector(telemetrySessionBuilder, hostEnvironmentVariables, gitClient, systemProperties) }
 
-                        environmentCollector.collect(commandType)
+                    given("the Git version is available") {
+                        beforeEachTest {
+                            whenever(gitClient.version).doReturn(GitVersionRetrievalResult.Succeeded("1.2.3"))
+
+                            environmentCollector.collect(commandType)
+                        }
+
+                        it("reports the user's shell, taking only the last segment of the path") {
+                            verify(telemetrySessionBuilder).addAttribute("shell", "my-awesome-shell")
+                        }
+
+                        it("reports the user's terminal") {
+                            verify(telemetrySessionBuilder).addAttribute("terminal", "xterm-9000color")
+                        }
+
+                        it("reports the Git version") {
+                            verify(telemetrySessionBuilder).addAttribute("gitVersion", "1.2.3")
+                        }
+
+                        it("reports details of the operating system") {
+                            verify(telemetrySessionBuilder).addAttribute("osName", "My Cool OS")
+                            verify(telemetrySessionBuilder).addAttribute("osVersion", "2020.08")
+                            verify(telemetrySessionBuilder).addAttribute("osArchitecture", "x86_64")
+                        }
+
+                        it("reports details of the JVM") {
+                            verify(telemetrySessionBuilder).addAttribute("jvmVendor", "JVMs R Us")
+                            verify(telemetrySessionBuilder).addAttribute("jvmName", "64-Bit Server VM")
+                            verify(telemetrySessionBuilder).addAttribute("jvmVersion", "2020.1")
+                        }
+
+                        it("reports the type of command being run") {
+                            verify(telemetrySessionBuilder).addAttribute("commandType", "VersionInfoCommand")
+                        }
+
+                        it("reports that the wrapper downloaded the JAR for this invocation") {
+                            verify(telemetrySessionBuilder).addAttribute("wrapperDidDownload", true)
+                        }
                     }
 
-                    it("reports the user's shell, taking only the last segment of the path") {
-                        verify(telemetrySessionBuilder).addAttribute("shell", "my-awesome-shell")
-                    }
+                    given("the Git version is not available") {
+                        beforeEachTest {
+                            whenever(gitClient.version).doReturn(GitVersionRetrievalResult.Failed("Something went wrong."))
 
-                    it("reports the user's terminal") {
-                        verify(telemetrySessionBuilder).addAttribute("terminal", "xterm-9000color")
-                    }
+                            environmentCollector.collect(commandType)
+                        }
 
-                    it("reports the Git version") {
-                        verify(telemetrySessionBuilder).addAttribute("gitVersion", "1.2.3")
-                    }
-
-                    it("reports details of the operating system") {
-                        verify(telemetrySessionBuilder).addAttribute("osName", "My Cool OS")
-                        verify(telemetrySessionBuilder).addAttribute("osVersion", "2020.08")
-                        verify(telemetrySessionBuilder).addAttribute("osArchitecture", "x86_64")
-                    }
-
-                    it("reports details of the JVM") {
-                        verify(telemetrySessionBuilder).addAttribute("jvmVendor", "JVMs R Us")
-                        verify(telemetrySessionBuilder).addAttribute("jvmName", "64-Bit Server VM")
-                        verify(telemetrySessionBuilder).addAttribute("jvmVersion", "2020.1")
-                    }
-
-                    it("reports the type of command being run") {
-                        verify(telemetrySessionBuilder).addAttribute("commandType", "VersionInfoCommand")
+                        it("reports the Git version as unknown") {
+                            verify(telemetrySessionBuilder).addNullAttribute("gitVersion")
+                        }
                     }
                 }
 
-                given("the Git version is not available") {
-                    beforeEachTest {
-                        whenever(gitClient.version).doReturn(GitVersionRetrievalResult.Failed("Something went wrong."))
+                given("the BATECT_WRAPPER_DID_DOWNLOAD environment variable is set to 'false'") {
+                    val didDownload = "false"
+                    val hostEnvironmentVariables by createForEachTest { HostEnvironmentVariables("SHELL" to shell, "TERM" to term, "BATECT_WRAPPER_DID_DOWNLOAD" to didDownload) }
+                    val environmentCollector by createForEachTest { TelemetryEnvironmentCollector(telemetrySessionBuilder, hostEnvironmentVariables, gitClient, systemProperties) }
+                    beforeEachTest { environmentCollector.collect(commandType) }
 
-                        environmentCollector.collect(commandType)
+                    it("reports that the wrapper did not download the JAR for this invocation") {
+                        verify(telemetrySessionBuilder).addAttribute("wrapperDidDownload", false)
                     }
+                }
 
-                    it("reports the Git version as unknown") {
-                        verify(telemetrySessionBuilder).addNullAttribute("gitVersion")
+                given("the BATECT_WRAPPER_DID_DOWNLOAD environment variable is not set to 'true' or 'false'") {
+                    val didDownload = "blah"
+                    val hostEnvironmentVariables by createForEachTest { HostEnvironmentVariables("SHELL" to shell, "TERM" to term, "BATECT_WRAPPER_DID_DOWNLOAD" to didDownload) }
+                    val environmentCollector by createForEachTest { TelemetryEnvironmentCollector(telemetrySessionBuilder, hostEnvironmentVariables, gitClient, systemProperties) }
+                    beforeEachTest { environmentCollector.collect(commandType) }
+
+                    it("reports the download status as unknown") {
+                        verify(telemetrySessionBuilder).addNullAttribute("wrapperDidDownload")
+                    }
+                }
+
+                given("the BATECT_WRAPPER_DID_DOWNLOAD environment variable is not set") {
+                    val hostEnvironmentVariables by createForEachTest { HostEnvironmentVariables("SHELL" to shell, "TERM" to term) }
+                    val environmentCollector by createForEachTest { TelemetryEnvironmentCollector(telemetrySessionBuilder, hostEnvironmentVariables, gitClient, systemProperties) }
+                    beforeEachTest { environmentCollector.collect(commandType) }
+
+                    it("reports the download status as unknown") {
+                        verify(telemetrySessionBuilder).addNullAttribute("wrapperDidDownload")
                     }
                 }
             }

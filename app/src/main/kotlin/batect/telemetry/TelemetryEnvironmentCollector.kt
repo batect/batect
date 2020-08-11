@@ -46,5 +46,11 @@ class TelemetryEnvironmentCollector(
             is GitVersionRetrievalResult.Succeeded -> telemetrySessionBuilder.addAttribute("gitVersion", result.version)
             is GitVersionRetrievalResult.Failed -> telemetrySessionBuilder.addNullAttribute("gitVersion")
         }
+
+        when (hostEnvironmentVariables["BATECT_WRAPPER_DID_DOWNLOAD"]) {
+            "true" -> telemetrySessionBuilder.addAttribute("wrapperDidDownload", true)
+            "false" -> telemetrySessionBuilder.addAttribute("wrapperDidDownload", false)
+            else -> telemetrySessionBuilder.addNullAttribute("wrapperDidDownload")
+        }
     }
 }

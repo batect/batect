@@ -19,10 +19,12 @@ $ExpectedChecksum = getValueOrDefault $env:BATECT_DOWNLOAD_CHECKSUM 'CHECKSUM-GO
 $RootCacheDir = getValueOrDefault $env:BATECT_CACHE_DIR "$env:USERPROFILE\.batect\cache"
 $VersionCacheDir = "$RootCacheDir\$Version"
 $JarPath = "$VersionCacheDir\batect-$Version.jar"
+$DidDownload = 'false'
 
 function main() {
     if (-not (haveVersionCachedLocally)) {
         download
+        $DidDownload = 'true'
     }
 
     checkChecksum
@@ -85,6 +87,7 @@ function runApplication() {
     $combinedArgs = $javaArgs + @("-Djava.net.useSystemProxies=true", "-jar", $JarPath) + $args
     $env:HOSTNAME = $env:COMPUTERNAME
     $env:BATECT_WRAPPER_CACHE_DIR = $RootCacheDir
+    $env:BATECT_WRAPPER_DID_DOWNLOAD = $DidDownload
 
     $info = New-Object System.Diagnostics.ProcessStartInfo
     $info.FileName = $java.Source

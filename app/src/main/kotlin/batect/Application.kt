@@ -93,9 +93,10 @@ class Application(override val dkodein: DKodein) : DKodeinAware {
             consoleManager.enableConsoleEscapeSequences()
             wrapperCache.setLastUsedForCurrentVersion()
             telemetryConsentPrompt.askForConsentIfRequired()
-            telemetryEnvironmentCollector.collect()
 
             val command = commandFactory.createCommand(options, extendedKodein)
+            telemetryEnvironmentCollector.collect(command::class)
+
             return command.run()
         } catch (e: Throwable) {
             errorConsole.println(Text.red(e.toString()))

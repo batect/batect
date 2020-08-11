@@ -16,10 +16,12 @@
 
 package batect.telemetry
 
+import batect.cli.commands.Command
 import batect.git.GitClient
 import batect.git.GitVersionRetrievalResult
 import batect.os.HostEnvironmentVariables
 import java.util.Properties
+import kotlin.reflect.KClass
 
 class TelemetryEnvironmentCollector(
     private val telemetrySessionBuilder: TelemetrySessionBuilder,
@@ -27,9 +29,10 @@ class TelemetryEnvironmentCollector(
     private val gitClient: GitClient,
     private val systemProperties: Properties = System.getProperties()
 ) {
-    fun collect() {
+    fun collect(commandType: KClass<out Command>) {
         telemetrySessionBuilder.addAttribute("terminal", hostEnvironmentVariables["TERM"])
         telemetrySessionBuilder.addAttribute("shell", hostEnvironmentVariables["SHELL"]?.substringAfterLast('/'))
+        telemetrySessionBuilder.addAttribute("commandType", commandType.simpleName!!)
 
         telemetrySessionBuilder.addAttribute("osName", systemProperties.getProperty("os.name"))
         telemetrySessionBuilder.addAttribute("osArchitecture", systemProperties.getProperty("os.arch"))

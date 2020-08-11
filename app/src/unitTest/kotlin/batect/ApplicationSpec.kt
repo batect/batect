@@ -154,7 +154,7 @@ object ApplicationSpec : Spek({
                                 verify(consoleManager).enableConsoleEscapeSequences()
                                 verify(wrapperCache).setLastUsedForCurrentVersion()
                                 verify(telemetryConsentPrompt).askForConsentIfRequired()
-                                verify(telemetryEnvironmentCollector).collect()
+                                verify(telemetryEnvironmentCollector).collect(command::class)
                                 verify(command).run()
                             }
                         }

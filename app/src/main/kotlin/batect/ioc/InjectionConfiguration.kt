@@ -157,13 +157,8 @@ import jnr.posix.POSIXFactory
 import okhttp3.OkHttpClient
 import org.kodein.di.DKodein
 import org.kodein.di.Kodein
-import org.kodein.di.bindings.Scope
-import org.kodein.di.bindings.ScopeRegistry
-import org.kodein.di.bindings.StandardScopeRegistry
-import org.kodein.di.bindings.UnboundedScope
 import org.kodein.di.generic.bind
 import org.kodein.di.generic.instance
-import org.kodein.di.generic.on
 import org.kodein.di.generic.scoped
 import org.kodein.di.generic.singleton
 

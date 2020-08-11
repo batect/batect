@@ -16,6 +16,7 @@
 
 package batect.telemetry
 
+import batect.cli.commands.VersionInfoCommand
 import batect.git.GitClient
 import batect.git.GitVersionRetrievalResult
 import batect.os.HostEnvironmentVariables
@@ -34,6 +35,7 @@ object TelemetryEnvironmentCollectorSpec : Spek({
         val telemetrySessionBuilder by createForEachTest { mock<TelemetrySessionBuilder>() }
         val gitClient by createForEachTest { mock<GitClient>() }
         val systemProperties by createForEachTest { Properties() }
+        val commandType = VersionInfoCommand::class
 
         beforeEachTest {
             systemProperties.setProperty("os.arch", "x86_64")
@@ -56,7 +58,7 @@ object TelemetryEnvironmentCollectorSpec : Spek({
                     beforeEachTest {
                         whenever(gitClient.version).doReturn(GitVersionRetrievalResult.Succeeded("1.2.3"))
 
-                        environmentCollector.collect()
+                        environmentCollector.collect(commandType)
                     }
 
                     it("reports the user's shell, taking only the last segment of the path") {
@@ -82,13 +84,17 @@ object TelemetryEnvironmentCollectorSpec : Spek({
                         verify(telemetrySessionBuilder).addAttribute("jvmName", "64-Bit Server VM")
                         verify(telemetrySessionBuilder).addAttribute("jvmVersion", "2020.1")
                     }
+
+                    it("reports the type of command being run") {
+                        verify(telemetrySessionBuilder).addAttribute("commandType", "VersionInfoCommand")
+                    }
                 }
 
                 given("the Git version is not available") {
                     beforeEachTest {
                         whenever(gitClient.version).doReturn(GitVersionRetrievalResult.Failed("Something went wrong."))
 
-                        environmentCollector.collect()
+                        environmentCollector.collect(commandType)
                     }
 
                     it("reports the Git version as unknown") {
@@ -101,7 +107,7 @@ object TelemetryEnvironmentCollectorSpec : Spek({
                 val hostEnvironmentVariables by createForEachTest { HostEnvironmentVariables("SHELL" to shell) }
                 val environmentCollector by createForEachTest { TelemetryEnvironmentCollector(telemetrySessionBuilder, hostEnvironmentVariables, gitClient, systemProperties) }
 
-                beforeEachTest { environmentCollector.collect() }
+                beforeEachTest { environmentCollector.collect(commandType) }
 
                 it("reports the user's terminal as unknown") {
                     verify(telemetrySessionBuilder).addAttribute("terminal", null as String?)
@@ -113,7 +119,7 @@ object TelemetryEnvironmentCollectorSpec : Spek({
             val hostEnvironmentVariables by createForEachTest { HostEnvironmentVariables("TERM" to "something") }
             val environmentCollector by createForEachTest { TelemetryEnvironmentCollector(telemetrySessionBuilder, hostEnvironmentVariables, gitClient, systemProperties) }
 
-            beforeEachTest { environmentCollector.collect() }
+            beforeEachTest { environmentCollector.collect(commandType) }
 
             it("reports the user's shell as unknown") {
                 verify(telemetrySessionBuilder).addAttribute("shell", null as String?)

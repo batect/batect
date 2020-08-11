@@ -27,6 +27,7 @@ import java.time.ZonedDateTime
 import java.util.UUID
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseSerializers
+import kotlinx.serialization.json.JsonPrimitive
 
 @Serializable
 data class TelemetrySession(
@@ -35,7 +36,8 @@ data class TelemetrySession(
     val sessionStartTime: ZonedDateTime,
     val sessionEndTime: ZonedDateTime,
     val applicationId: String,
-    val applicationVersion: String
+    val applicationVersion: String,
+    val attributes: Map<String, JsonPrimitive>
 ) {
     init {
         if (sessionId.version() != 4) {

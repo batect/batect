@@ -32,6 +32,8 @@ import java.nio.file.Files
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.util.UUID
+import kotlinx.serialization.json.JsonLiteral
+import kotlinx.serialization.json.JsonNull
 import org.araqnid.hamkrest.json.equivalentTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.Suite
@@ -59,7 +61,13 @@ object TelemetryUploadQueueSpec : Spek({
                 ZonedDateTime.of(2020, 8, 7, 3, 49, 10, 678, ZoneOffset.UTC),
                 ZonedDateTime.of(2020, 8, 7, 3, 51, 11, 678, ZoneOffset.UTC),
                 "my-app",
-                "1.0.0"
+                "1.0.0",
+                mapOf(
+                    "someString" to JsonLiteral("string"),
+                    "someNumber" to JsonLiteral(123),
+                    "someBoolean" to JsonLiteral(false),
+                    "someNull" to JsonNull
+                )
             )
 
             fun Suite.itSavesTheSessionToDisk() {
@@ -73,7 +81,13 @@ object TelemetryUploadQueueSpec : Spek({
                             "sessionStartTime": "2020-08-07T03:49:10.000000678Z",
                             "sessionEndTime": "2020-08-07T03:51:11.000000678Z",
                             "applicationId": "my-app",
-                            "applicationVersion": "1.0.0"
+                            "applicationVersion": "1.0.0",
+                            "attributes": {
+                                "someString": "string",
+                                "someNumber": 123,
+                                "someBoolean": false,
+                                "someNull": null
+                            }
                         }
                     """.trimIndent()))
                 }

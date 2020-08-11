@@ -87,7 +87,8 @@ object TelemetryUploadTaskSpec : Spek({
                 startTime,
                 startTime.plusSeconds(25),
                 "my-app-$path",
-                "1.0.0"
+                "1.0.0",
+                emptyMap()
             )
 
             val bytes = Json(JsonConfiguration.Stable).stringify(TelemetrySession.serializer(), session).toByteArray(Charsets.UTF_8)

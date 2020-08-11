@@ -36,7 +36,7 @@ class TelemetrySessionBuilder(
     fun build(telemetryConfigurationStore: TelemetryConfigurationStore): TelemetrySession {
         val userId = telemetryConfigurationStore.currentConfiguration.userId
 
-        return TelemetrySession(sessionId, userId, sessionStartTime, nowInUTC(), applicationId, applicationVersion)
+        return TelemetrySession(sessionId, userId, sessionStartTime, nowInUTC(), applicationId, applicationVersion, emptyMap())
     }
 
     private fun nowInUTC(): ZonedDateTime = timeSource().withZoneSameInstant(ZoneOffset.UTC)

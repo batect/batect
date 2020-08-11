@@ -27,6 +27,8 @@ import java.time.ZonedDateTime
 import java.util.UUID
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonConfiguration
+import kotlinx.serialization.json.JsonLiteral
+import kotlinx.serialization.json.JsonNull
 import org.araqnid.hamkrest.json.equivalentTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
@@ -44,31 +46,31 @@ object TelemetrySessionSpec : Spek({
 
             given("the session is valid") {
                 it("does not throw an exception") {
-                    assertThat({ TelemetrySession(validSessionId, validUserId, validSessionStartTime, validSessionEndTime, appName, appVersion) }, doesNotThrow())
+                    assertThat({ TelemetrySession(validSessionId, validUserId, validSessionStartTime, validSessionEndTime, appName, appVersion, emptyMap()) }, doesNotThrow())
                 }
             }
 
             given("the session ID is not a v4 (random) UUID") {
                 it("throws an appropriate exception") {
-                    assertThat({ TelemetrySession(nonV4UUID, validUserId, validSessionStartTime, validSessionEndTime, appName, appVersion) }, throws<InvalidTelemetrySessionException>(withMessage("Session ID must be a v4 (random) UUID.")))
+                    assertThat({ TelemetrySession(nonV4UUID, validUserId, validSessionStartTime, validSessionEndTime, appName, appVersion, emptyMap()) }, throws<InvalidTelemetrySessionException>(withMessage("Session ID must be a v4 (random) UUID.")))
                 }
             }
 
             given("the user ID is not a v4 (random) UUID") {
                 it("throws an appropriate exception") {
-                    assertThat({ TelemetrySession(validSessionId, nonV4UUID, validSessionStartTime, validSessionEndTime, appName, appVersion) }, throws<InvalidTelemetrySessionException>(withMessage("User ID must be a v4 (random) UUID.")))
+                    assertThat({ TelemetrySession(validSessionId, nonV4UUID, validSessionStartTime, validSessionEndTime, appName, appVersion, emptyMap()) }, throws<InvalidTelemetrySessionException>(withMessage("User ID must be a v4 (random) UUID.")))
                 }
             }
 
             given("the start time is not in UTC") {
                 it("throws an appropriate exception") {
-                    assertThat({ TelemetrySession(validSessionId, validUserId, validSessionStartTime.withZoneSameInstant(ZoneId.of("Australia/Melbourne")), validSessionEndTime, appName, appVersion) }, throws<InvalidTelemetrySessionException>(withMessage("Session start time must be in UTC.")))
+                    assertThat({ TelemetrySession(validSessionId, validUserId, validSessionStartTime.withZoneSameInstant(ZoneId.of("Australia/Melbourne")), validSessionEndTime, appName, appVersion, emptyMap()) }, throws<InvalidTelemetrySessionException>(withMessage("Session start time must be in UTC.")))
                 }
             }
 
             given("the end time is not in UTC") {
                 it("throws an appropriate exception") {
-                    assertThat({ TelemetrySession(validSessionId, validUserId, validSessionStartTime, validSessionEndTime.withZoneSameInstant(ZoneId.of("Australia/Melbourne")), appName, appVersion) }, throws<InvalidTelemetrySessionException>(withMessage("Session end time must be in UTC.")))
+                    assertThat({ TelemetrySession(validSessionId, validUserId, validSessionStartTime, validSessionEndTime.withZoneSameInstant(ZoneId.of("Australia/Melbourne")), appName, appVersion, emptyMap()) }, throws<InvalidTelemetrySessionException>(withMessage("Session end time must be in UTC.")))
                 }
             }
         }
@@ -80,7 +82,13 @@ object TelemetrySessionSpec : Spek({
                 ZonedDateTime.of(2020, 8, 7, 3, 49, 10, 678, ZoneOffset.UTC),
                 ZonedDateTime.of(2020, 8, 7, 3, 51, 11, 678, ZoneOffset.UTC),
                 "my-app",
-                "1.0.0"
+                "1.0.0",
+                mapOf(
+                    "someString" to JsonLiteral("string"),
+                    "someNumber" to JsonLiteral(123),
+                    "someBoolean" to JsonLiteral(false),
+                    "someNull" to JsonNull
+                )
             )
 
             it("serializes to the expected JSON") {
@@ -91,7 +99,13 @@ object TelemetrySessionSpec : Spek({
                         "sessionStartTime": "2020-08-07T03:49:10.000000678Z",
                         "sessionEndTime": "2020-08-07T03:51:11.000000678Z",
                         "applicationId": "my-app",
-                        "applicationVersion": "1.0.0"
+                        "applicationVersion": "1.0.0",
+                        "attributes": {
+                            "someString": "string",
+                            "someNumber": 123,
+                            "someBoolean": false,
+                            "someNull": null
+                        }
                     }
                 """.trimIndent()))
             }

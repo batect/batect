@@ -30,7 +30,7 @@ import java.time.ZonedDateTime
 import java.util.Properties
 import kotlin.reflect.KClass
 
-class TelemetryEnvironmentCollector(
+class EnvironmentTelemetryCollector(
     private val telemetrySessionBuilder: TelemetrySessionBuilder,
     private val hostEnvironmentVariables: HostEnvironmentVariables,
     private val gitClient: GitClient,

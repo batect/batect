@@ -124,10 +124,10 @@ import batect.primitives.CancellationContext
 import batect.proxies.ProxyEnvironmentVariablePreprocessor
 import batect.proxies.ProxyEnvironmentVariablesProvider
 import batect.telemetry.AbacusClient
+import batect.telemetry.EnvironmentTelemetryCollector
 import batect.telemetry.TelemetryConfigurationStore
 import batect.telemetry.TelemetryConsent
 import batect.telemetry.TelemetryConsentPrompt
-import batect.telemetry.TelemetryEnvironmentCollector
 import batect.telemetry.TelemetryManager
 import batect.telemetry.TelemetrySessionBuilder
 import batect.telemetry.TelemetryUploadQueue
@@ -370,10 +370,10 @@ private val proxiesModule = Kodein.Module("proxies") {
 
 private val telemetryModule = Kodein.Module("telemetry") {
     bind<AbacusClient>() with singletonWithLogger { logger -> AbacusClient(instance(), logger) }
+    bind<EnvironmentTelemetryCollector>() with singleton { EnvironmentTelemetryCollector(instance(), instance(), instance(), instance(), instance()) }
     bind<TelemetryConfigurationStore>() with singletonWithLogger { logger -> TelemetryConfigurationStore(instance(), logger) }
     bind<TelemetryConsent>() with singleton { TelemetryConsent(commandLineOptions().disableTelemetry, instance()) }
     bind<TelemetryConsentPrompt>() with singleton { TelemetryConsentPrompt(instance(), commandLineOptions().disableTelemetry, commandLineOptions().requestedOutputStyle, instance(), instance(StreamType.Output), instance()) }
-    bind<TelemetryEnvironmentCollector>() with singleton { TelemetryEnvironmentCollector(instance(), instance(), instance(), instance(), instance()) }
     bind<TelemetryManager>() with singleton { TelemetryManager(instance(), instance(), instance()) }
     bind<TelemetrySessionBuilder>() with instance(TelemetrySessionBuilder(VersionInfo()))
     bind<TelemetryUploadQueue>() with singletonWithLogger { logger -> TelemetryUploadQueue(instance(), logger) }

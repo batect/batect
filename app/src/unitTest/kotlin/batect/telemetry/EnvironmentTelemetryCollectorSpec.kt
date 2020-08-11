@@ -36,8 +36,8 @@ import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.Suite
 import org.spekframework.spek2.style.specification.describe
 
-object TelemetryEnvironmentCollectorSpec : Spek({
-    describe("a telemetry environment collector") {
+object EnvironmentTelemetryCollectorSpec : Spek({
+    describe("an environment telemetry collector") {
         val telemetrySessionBuilder by createForEachTest { mock<TelemetrySessionBuilder>() }
         val gitClient by createForEachTest { mock<GitClient>() }
         val systemProperties by createForEachTest { Properties() }
@@ -68,7 +68,7 @@ object TelemetryEnvironmentCollectorSpec : Spek({
         }
 
         fun Suite.createEnvironmentCollector(hostEnvironmentVariables: HostEnvironmentVariables, commandLineOptions: CommandLineOptions = CommandLineOptions()) =
-            createForEachTest { TelemetryEnvironmentCollector(telemetrySessionBuilder, hostEnvironmentVariables, gitClient, consoleInfo, commandLineOptions, runtimeMXBean, systemProperties) }
+            createForEachTest { EnvironmentTelemetryCollector(telemetrySessionBuilder, hostEnvironmentVariables, gitClient, consoleInfo, commandLineOptions, runtimeMXBean, systemProperties) }
 
         given("the SHELL environment variable is set") {
             val shell = "/usr/local/bin/my-awesome-shell"

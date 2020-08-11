@@ -16,6 +16,7 @@
 
 package batect.telemetry
 
+import batect.cli.CommandLineOptions
 import batect.cli.commands.Command
 import batect.git.GitClient
 import batect.git.GitVersionRetrievalResult
@@ -34,11 +35,13 @@ class TelemetryEnvironmentCollector(
     private val hostEnvironmentVariables: HostEnvironmentVariables,
     private val gitClient: GitClient,
     private val consoleInfo: ConsoleInfo,
+    private val commandLineOptions: CommandLineOptions,
     private val runtimeMXBean: RuntimeMXBean = ManagementFactory.getRuntimeMXBean(),
     private val systemProperties: Properties = System.getProperties()
 ) {
     fun collect(commandType: KClass<out Command>) {
         addCommandAttributes(commandType)
+        addCommandLineOptionAttributes()
         addConsoleAttributes()
         addOSAttributes()
         addJVMAttributes()
@@ -48,6 +51,25 @@ class TelemetryEnvironmentCollector(
 
     private fun addCommandAttributes(commandType: KClass<out Command>) {
         telemetrySessionBuilder.addAttribute("commandType", commandType.simpleName!!)
+    }
+
+    private fun addCommandLineOptionAttributes() {
+        telemetrySessionBuilder.addAttribute("usingNonDefaultConfigurationFileName", commandLineOptions.configurationFileName.fileName.toString() != "batect.yml")
+        telemetrySessionBuilder.addAttribute("usingConfigVariablesFile", commandLineOptions.configVariablesSourceFile != null)
+        telemetrySessionBuilder.addAttribute("requestedOutputStyle", commandLineOptions.requestedOutputStyle?.toString()?.toLowerCase())
+        telemetrySessionBuilder.addAttribute("colorOutputDisabled", commandLineOptions.disableColorOutput)
+        telemetrySessionBuilder.addAttribute("updateNotificationsDisabled", commandLineOptions.disableUpdateNotification)
+        telemetrySessionBuilder.addAttribute("wrapperCacheCleanupDisabled", commandLineOptions.disableWrapperCacheCleanup)
+        telemetrySessionBuilder.addAttribute("cleanupAfterSuccessDisabled", commandLineOptions.disableCleanupAfterSuccess)
+        telemetrySessionBuilder.addAttribute("cleanupAfterFailureDisabled", commandLineOptions.disableCleanupAfterFailure)
+        telemetrySessionBuilder.addAttribute("proxyEnvironmentVariablePropagationDisabled", commandLineOptions.dontPropagateProxyEnvironmentVariables)
+        telemetrySessionBuilder.addAttribute("additionalTaskCommandArgumentCount", commandLineOptions.additionalTaskCommandArguments.count())
+        telemetrySessionBuilder.addAttribute("commandLineConfigVariableOverrideCount", commandLineOptions.configVariableOverrides.size)
+        telemetrySessionBuilder.addAttribute("commandLineImageOverrideCount", commandLineOptions.imageOverrides.size)
+        telemetrySessionBuilder.addAttribute("usingTLSForDockerConnection", commandLineOptions.dockerUseTLS)
+        telemetrySessionBuilder.addAttribute("verifyingTLSForDockerConnection", commandLineOptions.dockerVerifyTLS)
+        telemetrySessionBuilder.addAttribute("usingExistingDockerNetwork", commandLineOptions.existingNetworkToUse != null)
+        telemetrySessionBuilder.addAttribute("skippingPrerequisites", commandLineOptions.skipPrerequisites)
     }
 
     private fun addConsoleAttributes() {

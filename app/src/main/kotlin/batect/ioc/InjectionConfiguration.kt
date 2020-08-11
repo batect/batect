@@ -373,7 +373,7 @@ private val telemetryModule = Kodein.Module("telemetry") {
     bind<TelemetryConfigurationStore>() with singletonWithLogger { logger -> TelemetryConfigurationStore(instance(), logger) }
     bind<TelemetryConsent>() with singleton { TelemetryConsent(commandLineOptions().disableTelemetry, instance()) }
     bind<TelemetryConsentPrompt>() with singleton { TelemetryConsentPrompt(instance(), commandLineOptions().disableTelemetry, commandLineOptions().requestedOutputStyle, instance(), instance(StreamType.Output), instance()) }
-    bind<TelemetryEnvironmentCollector>() with singleton { TelemetryEnvironmentCollector(instance(), instance(), instance(), instance()) }
+    bind<TelemetryEnvironmentCollector>() with singleton { TelemetryEnvironmentCollector(instance(), instance(), instance(), instance(), instance()) }
     bind<TelemetryManager>() with singleton { TelemetryManager(instance(), instance(), instance()) }
     bind<TelemetrySessionBuilder>() with instance(TelemetrySessionBuilder(VersionInfo()))
     bind<TelemetryUploadQueue>() with singletonWithLogger { logger -> TelemetryUploadQueue(instance(), logger) }

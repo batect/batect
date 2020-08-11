@@ -125,6 +125,9 @@ This information does not include personal or sensitive information such as the 
 | Whether `--no-color` is enabled | | Helps understand usage behaviour and helps plan and prioritise possible future features
 | Docker connection type | Unix socket, Windows named pipe or TCP | Helps understand usage behaviour and helps plan and prioritise possible future features
 | Whether `--docker-tls` or `--docker-tls-verify` is set | | Helps understand usage behaviour and helps plan and prioritise possible future features
+| Whether a custom configuration file name (ie. not `batect.yml`) is being used | `false` | Helps understand usage behaviour and helps plan and prioritise possible future features
+| Whether a config variables file is being used | `true` | Helps understand usage behaviour and helps plan and prioritise possible future features
+| Whether the following features have been disabled: update notifications, wrapper cache cleanup, cleanup after success, cleanup after failure, proxy environment variable propagation | | Helps understand usage behaviour and helps plan and prioritise possible future features
 | **Task run information** |
 | Type of container being run | Windows or Linux | Helps understand usage behaviour and helps plan and prioritise possible future features
 | Type of cache being used | volume or directory | Helps understand usage behaviour and helps plan and prioritise possible future features
@@ -132,6 +135,11 @@ This information does not include personal or sensitive information such as the 
 | Total number of containers in the project | 4 | Helps understand usage behaviour and helps plan and prioritise possible future features (eg. performance improvements for very large projects)
 | Total number of configuration variables in the project | 6 | Helps understand usage behaviour and helps plan and prioritise possible future features (eg. performance improvements for very large projects)
 | Total number of prerequisite tasks required to execute before executing the main task | 2 | Helps understand usage behaviour and helps plan and prioritise possible future features (eg. performance improvements for very large projects)
+| Number of config variable overrides specified on the command line | 0 | Helps understand usage behaviour and helps plan and prioritise possible future features
+| Number of image overrides specified on the command line | 1 | Helps understand usage behaviour and helps plan and prioritise possible future features
+| Whether an existing Docker network was specified on the command line | `false` | Helps understand usage behaviour and helps plan and prioritise possible future features
+| Whether prerequisites were skipped on the command line | `false` | Helps understand usage behaviour and helps plan and prioritise possible future features
+| Number of additional arguments passed on the command line to the task | 2 | Helps understand usage behaviour and helps plan and prioritise possible future features
 | Number of containers started for each task | 3 | Helps understand usage behaviour and helps plan and prioritise possible future features (eg. performance improvements for very large projects)
 | Time taken to load the configuration for the project | 0.05 seconds | Helps understand usage and application behaviour and helps plan and prioritise possible future features (eg. performance improvements for very large projects)
 | Time taken to execute each task | 3.3 seconds | Helps understand usage and application behaviour and helps plan and prioritise possible future features (eg. performance improvements for very large projects)
@@ -147,8 +155,10 @@ As a rule, any personally-identifiable or potentially sensitive information is n
 * personally-identifiable information, such as user names or email addresses
 * IP addresses (IP addresses may be captured in request logs, but IP addresses are not associated with uploaded data)
 * names of projects, containers, tasks or config variables
+* environment variable names or values, with the exception of `TERM` and `SHELL`
 * names of Docker images used
 * names of files
+* any part of task command lines
 * exception messages, as these cannot be guaranteed to contain only non-sensitive information
 * timezone information (all timestamps collected are normalised to UTC before upload)
 

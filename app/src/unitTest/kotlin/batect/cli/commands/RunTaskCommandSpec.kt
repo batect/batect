@@ -58,9 +58,9 @@ import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.verifyZeroInteractions
 import com.nhaarman.mockitokotlin2.whenever
-import org.kodein.di.Kodein
-import org.kodein.di.generic.bind
-import org.kodein.di.generic.instance
+import org.kodein.di.DI
+import org.kodein.di.bind
+import org.kodein.di.instance
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -92,14 +92,14 @@ object RunTaskCommandSpec : Spek({
             val taskRunner by createForEachTest { mock<TaskRunner>() }
             val sessionKodeinFactory by createForEachTest {
                 mock<SessionKodeinFactory> {
-                    on { create(configWithImageOverrides) } doReturn Kodein.direct {
+                    on { create(configWithImageOverrides) } doReturn DI.direct {
                         bind<TaskRunner>() with instance(taskRunner)
                     }
                 }
             }
 
             val dockerConnectivity by createForEachTest {
-                fakeDockerConnectivity(Kodein.direct {
+                fakeDockerConnectivity(DI.direct {
                     bind<SessionKodeinFactory>() with instance(sessionKodeinFactory)
                 })
             }

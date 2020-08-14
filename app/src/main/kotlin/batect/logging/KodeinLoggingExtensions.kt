@@ -16,16 +16,16 @@
 
 package batect.logging
 
-import org.kodein.di.DKodein
-import org.kodein.di.Kodein
-import org.kodein.di.bindings.NoArgSimpleBindingKodein
-import org.kodein.di.generic.instance
-import org.kodein.di.generic.singleton
+import org.kodein.di.DI
+import org.kodein.di.DirectDI
+import org.kodein.di.bindings.NoArgSimpleBindingDI
+import org.kodein.di.instance
+import org.kodein.di.singleton
 
-inline fun <C, reified T : Any> Kodein.BindBuilder.WithScope<C>.singletonWithLogger(noinline creator: NoArgSimpleBindingKodein<C>.(Logger) -> T) = singleton {
+inline fun <C : Any, reified T : Any> DI.BindBuilder.WithScope<C>.singletonWithLogger(noinline creator: NoArgSimpleBindingDI<C>.(Logger) -> T) = singleton {
     creator(logger<T>())
 }
 
-inline fun <reified T : Any> DKodein.logger(): Logger {
+inline fun <reified T : Any> DirectDI.logger(): Logger {
     return this.instance<LoggerFactory>().createLoggerForClass(T::class)
 }

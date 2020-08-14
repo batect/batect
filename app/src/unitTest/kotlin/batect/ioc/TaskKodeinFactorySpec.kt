@@ -24,17 +24,17 @@ import batect.testutils.runForEachTest
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.nhaarman.mockitokotlin2.mock
-import org.kodein.di.Kodein
-import org.kodein.di.generic.bind
-import org.kodein.di.generic.instance
-import org.kodein.di.generic.scoped
-import org.kodein.di.generic.singleton
+import org.kodein.di.DI
+import org.kodein.di.bind
+import org.kodein.di.instance
+import org.kodein.di.scoped
+import org.kodein.di.singleton
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
 object TaskKodeinFactorySpec : Spek({
     describe("a task Kodein factory") {
-        val baseKodein = Kodein.direct {
+        val baseKodein = DI.direct {
             bind<String>("some string") with instance("The string value")
             bind<TaskReference>() with scoped(TaskScope).singleton { TaskReference(context) }
         }

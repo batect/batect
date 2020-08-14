@@ -21,15 +21,15 @@ import batect.testutils.createForEachTest
 import batect.testutils.on
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
-import org.kodein.di.Kodein
-import org.kodein.di.generic.bind
-import org.kodein.di.generic.instance
+import org.kodein.di.DI
+import org.kodein.di.bind
+import org.kodein.di.instance
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
 object DockerConfigurationKodeinFactorySpec : Spek({
     describe("a Docker configuration Kodein factory") {
-        val baseKodein = Kodein.direct {
+        val baseKodein = DI.direct {
             bind<String>("some string") with instance("The string value")
         }
 

@@ -29,15 +29,15 @@ import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
-import org.kodein.di.Kodein
-import org.kodein.di.generic.bind
-import org.kodein.di.generic.instance
+import org.kodein.di.DI
+import org.kodein.di.bind
+import org.kodein.di.instance
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
 object SessionKodeinFactorySpec : Spek({
     describe("a session Kodein factory") {
-        val baseKodein = Kodein.direct {
+        val baseKodein = DI.direct {
             bind<String>("some string") with instance("The string value")
         }
 

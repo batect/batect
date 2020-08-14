@@ -32,8 +32,8 @@ import batect.ui.OutputStyle
 import batect.ui.text.Text
 import batect.updates.UpdateNotifier
 import java.nio.file.Path
-import org.kodein.di.DKodein
-import org.kodein.di.generic.instance
+import org.kodein.di.DirectDI
+import org.kodein.di.instance
 
 class RunTaskCommand(
     private val configFile: Path,
@@ -64,7 +64,7 @@ class RunTaskCommand(
         return configFromFile.applyImageOverrides(overrides)
     }
 
-    private fun runFromConfig(kodein: DKodein, config: Configuration): Int {
+    private fun runFromConfig(kodein: DirectDI, config: Configuration): Int {
         try {
             val tasks = taskExecutionOrderResolver.resolveExecutionOrder(config, runOptions.taskName)
 
@@ -86,7 +86,7 @@ class RunTaskCommand(
         }
     }
 
-    private fun runTasks(kodein: DKodein, config: Configuration, tasks: List<Task>): Int {
+    private fun runTasks(kodein: DirectDI, config: Configuration, tasks: List<Task>): Int {
         val sessionKodeinFactory = kodein.instance<SessionKodeinFactory>()
         val sessionKodein = sessionKodeinFactory.create(config)
         val taskRunner = sessionKodein.instance<TaskRunner>()

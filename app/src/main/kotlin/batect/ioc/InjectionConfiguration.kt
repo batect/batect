@@ -155,14 +155,14 @@ import jnr.ffi.Platform
 import jnr.posix.POSIX
 import jnr.posix.POSIXFactory
 import okhttp3.OkHttpClient
-import org.kodein.di.DKodein
-import org.kodein.di.Kodein
-import org.kodein.di.generic.bind
-import org.kodein.di.generic.instance
-import org.kodein.di.generic.scoped
-import org.kodein.di.generic.singleton
+import org.kodein.di.DI
+import org.kodein.di.DirectDI
+import org.kodein.di.bind
+import org.kodein.di.instance
+import org.kodein.di.scoped
+import org.kodein.di.singleton
 
-fun createKodeinConfiguration(outputStream: PrintStream, errorStream: PrintStream, inputStream: InputStream): DKodein = Kodein.direct {
+fun createKodeinConfiguration(outputStream: PrintStream, errorStream: PrintStream, inputStream: InputStream): DirectDI = DI.direct {
     bind<FileSystem>() with singleton { FileSystems.getDefault() }
     bind<POSIX>() with singleton { POSIXFactory.getNativePOSIX() }
     bind<PrintStream>(StreamType.Error) with instance(errorStream)
@@ -200,7 +200,7 @@ fun createKodeinConfiguration(outputStream: PrintStream, errorStream: PrintStrea
     }
 }
 
-private val cliModule = Kodein.Module("cli") {
+private val cliModule = DI.Module("cli") {
     bind<CommandFactory>() with singleton { CommandFactory() }
     bind<CommandLineOptionsParser>() with singleton { CommandLineOptionsParser(instance(), instance(), instance(), instance()) }
     bind<EnvironmentVariableDefaultValueProviderFactory>() with singleton { EnvironmentVariableDefaultValueProviderFactory(instance()) }
@@ -232,7 +232,7 @@ private val cliModule = Kodein.Module("cli") {
     bind<UpgradeCommand>() with singletonWithLogger { logger -> UpgradeCommand(instance(), instance(), instance(), instance(), instance(StreamType.Output), instance(StreamType.Error), instance(), logger) }
 }
 
-private val configModule = Kodein.Module("config") {
+private val configModule = DI.Module("config") {
     bind<ConfigurationLoader>() with singletonWithLogger { logger -> ConfigurationLoader(instance(), instance(), logger) }
     bind<GitRepositoryCache>() with singleton { GitRepositoryCache(instance(), instance(), instance(), instance()) }
     bind<GitRepositoryCacheCleanupTask>() with singletonWithLogger { logger -> GitRepositoryCacheCleanupTask(instance(), logger) }
@@ -242,7 +242,7 @@ private val configModule = Kodein.Module("config") {
     bind<ProjectPaths>() with singleton { ProjectPaths(commandLineOptions().configurationFileName) }
 }
 
-private val dockerModule = Kodein.Module("docker") {
+private val dockerModule = DI.Module("docker") {
     import(dockerApiModule)
     import(dockerClientModule)
 
@@ -273,7 +273,7 @@ private val dockerModule = Kodein.Module("docker") {
     }
 }
 
-private val dockerApiModule = Kodein.Module("docker.api") {
+private val dockerApiModule = DI.Module("docker.api") {
     bind<ContainersAPI>() with singletonWithLogger { logger -> ContainersAPI(instance(), instance(), logger) }
     bind<ExecAPI>() with singletonWithLogger { logger -> ExecAPI(instance(), instance(), logger) }
     bind<ImagesAPI>() with singletonWithLogger { logger -> ImagesAPI(instance(), instance(), logger) }
@@ -282,7 +282,7 @@ private val dockerApiModule = Kodein.Module("docker.api") {
     bind<VolumesAPI>() with singletonWithLogger { logger -> VolumesAPI(instance(), instance(), logger) }
 }
 
-private val dockerClientModule = Kodein.Module("docker.client") {
+private val dockerClientModule = DI.Module("docker.client") {
     bind<DockerContainersClient>() with singletonWithLogger { logger -> DockerContainersClient(instance(), instance(), instance(), instance(), instance(), logger) }
     bind<DockerExecClient>() with singletonWithLogger { logger -> DockerExecClient(instance(), instance(), logger) }
     bind<DockerImagesClient>() with singletonWithLogger { logger -> DockerImagesClient(instance(), instance(), instance(), instance(), logger) }
@@ -292,21 +292,21 @@ private val dockerClientModule = Kodein.Module("docker.client") {
     bind<DockerClient>() with singleton { DockerClient(instance(), instance(), instance(), instance(), instance(), instance()) }
 }
 
-private val gitModule = Kodein.Module("git") {
+private val gitModule = DI.Module("git") {
     bind<GitClient>() with singleton { GitClient(instance()) }
 }
 
-private val ioModule = Kodein.Module("io") {
+private val ioModule = DI.Module("io") {
     bind<ApplicationPaths>() with singleton { ApplicationPaths(instance<SystemInfo>()) }
 }
 
-private val iocModule = Kodein.Module("ioc") {
-    bind<DockerConfigurationKodeinFactory>() with singleton { DockerConfigurationKodeinFactory(dkodein) }
-    bind<TaskKodeinFactory>() with singleton { TaskKodeinFactory(dkodein) }
-    bind<SessionKodeinFactory>() with singleton { SessionKodeinFactory(dkodein, instance(), instance()) }
+private val iocModule = DI.Module("ioc") {
+    bind<DockerConfigurationKodeinFactory>() with singleton { DockerConfigurationKodeinFactory(directDI) }
+    bind<TaskKodeinFactory>() with singleton { TaskKodeinFactory(directDI) }
+    bind<SessionKodeinFactory>() with singleton { SessionKodeinFactory(directDI, instance(), instance()) }
 }
 
-private val executionModule = Kodein.Module("execution") {
+private val executionModule = DI.Module("execution") {
     import(runnersModule)
 
     bind<CacheManager>() with singleton { CacheManager(instance(), instance(), instance()) }
@@ -325,12 +325,12 @@ private val executionModule = Kodein.Module("execution") {
     bind<TaskRunner>() with singletonWithLogger { logger -> TaskRunner(instance(), instance(), instance(StreamType.Output), logger) }
     bind<TaskExecutionOrderResolver>() with singletonWithLogger { logger -> TaskExecutionOrderResolver(instance(), instance(), logger) }
     bind<TaskStateMachine>() with scoped(TaskScope).singletonWithLogger { logger -> TaskStateMachine(instance(), instance(RunOptionsType.Task), instance(), instance(), instance(), instance(), logger) }
-    bind<TaskStepRunner>() with scoped(TaskScope).singleton { TaskStepRunner(dkodein) }
+    bind<TaskStepRunner>() with scoped(TaskScope).singleton { TaskStepRunner(directDI) }
     bind<TaskSuggester>() with singleton { TaskSuggester() }
     bind<VolumeMountResolver>() with scoped(TaskScope).singleton { VolumeMountResolver(instance(), instance(), instance(), instance()) }
 }
 
-private val runnersModule = Kodein.Module("execution.model.steps.runners") {
+private val runnersModule = DI.Module("execution.model.steps.runners") {
     bind<BuildImageStepRunner>() with scoped(TaskScope).singleton { BuildImageStepRunner(instance(), instance(), instance(), instance(), instance(), instance(), instance(), instance(RunOptionsType.Task), instance()) }
     bind<CreateContainerStepRunner>() with scoped(TaskScope).singleton { CreateContainerStepRunner(instance(), instance(), instance(), instance(), instance(RunOptionsType.Task), instance()) }
     bind<PrepareTaskNetworkStepRunner>() with scoped(TaskScope).singleton { PrepareTaskNetworkStepRunner(instance(), instance(), instance(), instance()) }
@@ -346,7 +346,7 @@ private val runnersModule = Kodein.Module("execution.model.steps.runners") {
     bind<WaitForContainerToBecomeHealthyStepRunner>() with scoped(TaskScope).singleton { WaitForContainerToBecomeHealthyStepRunner(instance(), instance(), instance()) }
 }
 
-private val loggingModule = Kodein.Module("logging") {
+private val loggingModule = DI.Module("logging") {
     bind<ApplicationInfoLogger>() with singletonWithLogger { logger -> ApplicationInfoLogger(logger, instance(), instance(), instance(), instance(), instance(), instance()) }
     bind<HttpLoggingInterceptor>() with singletonWithLogger { logger -> HttpLoggingInterceptor(logger) }
     bind<LoggerFactory>() with singleton { LoggerFactory(instance()) }
@@ -354,7 +354,7 @@ private val loggingModule = Kodein.Module("logging") {
     bind<StandardAdditionalDataSource>() with singleton { StandardAdditionalDataSource(instance()) }
 }
 
-private val osModule = Kodein.Module("os") {
+private val osModule = DI.Module("os") {
     bind<ConsoleDimensions>() with singletonWithLogger { logger -> ConsoleDimensions(instance(), instance(), logger) }
     bind<ConsoleInfo>() with singletonWithLogger { logger -> ConsoleInfo(instance(), instance(), instance(), logger) }
     bind<HostEnvironmentVariables>() with singleton { HostEnvironmentVariables.current }
@@ -363,12 +363,12 @@ private val osModule = Kodein.Module("os") {
     bind<SystemInfo>() with singleton { SystemInfo(instance(), instance()) }
 }
 
-private val proxiesModule = Kodein.Module("proxies") {
+private val proxiesModule = DI.Module("proxies") {
     bind<ProxyEnvironmentVariablePreprocessor>() with singletonWithLogger { logger -> ProxyEnvironmentVariablePreprocessor(instance(), logger) }
     bind<ProxyEnvironmentVariablesProvider>() with singleton { ProxyEnvironmentVariablesProvider(instance(), instance()) }
 }
 
-private val telemetryModule = Kodein.Module("telemetry") {
+private val telemetryModule = DI.Module("telemetry") {
     bind<AbacusClient>() with singletonWithLogger { logger -> AbacusClient(instance(), logger) }
     bind<EnvironmentTelemetryCollector>() with singleton { EnvironmentTelemetryCollector(instance(), instance(), instance(), instance(), instance()) }
     bind<TelemetryConfigurationStore>() with singletonWithLogger { logger -> TelemetryConfigurationStore(instance(), logger) }
@@ -380,19 +380,19 @@ private val telemetryModule = Kodein.Module("telemetry") {
     bind<TelemetryUploadTask>() with singletonWithLogger { logger -> TelemetryUploadTask(instance(), instance(), instance(), logger) }
 }
 
-private val unixModule = Kodein.Module("os.unix") {
+private val unixModule = DI.Module("os.unix") {
     bind<ApplicationResolver>() with singleton { ApplicationResolver(instance()) }
     bind<ConsoleManager>() with singletonWithLogger { logger -> UnixConsoleManager(instance(), instance(), instance(), logger) }
     bind<NativeMethods>() with singleton { UnixNativeMethods(instance()) }
 }
 
-private val windowsModule = Kodein.Module("os.windows") {
+private val windowsModule = DI.Module("os.windows") {
     bind<ConsoleManager>() with singletonWithLogger { logger -> WindowsConsoleManager(instance(), instance(), logger) }
     bind<WindowsNativeMethods>() with singleton { WindowsNativeMethods(instance()) }
     bind<NativeMethods>() with singleton { instance<WindowsNativeMethods>() }
 }
 
-private val uiModule = Kodein.Module("ui") {
+private val uiModule = DI.Module("ui") {
     bind<EventLoggerProvider>() with singleton {
         EventLoggerProvider(
             instance(),
@@ -417,21 +417,21 @@ private val uiModule = Kodein.Module("ui") {
     bind<StartupProgressDisplayProvider>() with singleton { StartupProgressDisplayProvider(instance()) }
 }
 
-private val updatesModule = Kodein.Module("updates") {
+private val updatesModule = DI.Module("updates") {
     bind<UpdateInfoDownloader>() with singletonWithLogger { logger -> UpdateInfoDownloader(instance(), logger) }
     bind<UpdateInfoStorage>() with singletonWithLogger { logger -> UpdateInfoStorage(instance(), logger) }
     bind<UpdateInfoUpdater>() with singletonWithLogger { logger -> UpdateInfoUpdater(instance(), instance(), logger) }
     bind<UpdateNotifier>() with singletonWithLogger { logger -> UpdateNotifier(commandLineOptions().disableUpdateNotification, instance(), instance(), instance(), instance(StreamType.Output), logger) }
 }
 
-private val wrapperModule = Kodein.Module("wrapper") {
+private val wrapperModule = DI.Module("wrapper") {
     bind<WrapperCache>() with singletonWithLogger { logger -> WrapperCache(instance(), instance(), logger) }
     bind<WrapperCacheCleanupTask>() with singletonWithLogger { logger -> WrapperCacheCleanupTask(!commandLineOptions().disableWrapperCacheCleanup, instance(), instance(), logger) }
 }
 
-private val coreModule = Kodein.Module("core") {
+private val coreModule = DI.Module("core") {
     bind<VersionInfo>() with singleton { VersionInfo() }
 }
 
-private fun DKodein.commandLineOptions(): CommandLineOptions = this.instance()
-private fun DKodein.nativeMethods(): NativeMethods = this.instance()
+private fun DirectDI.commandLineOptions(): CommandLineOptions = this.instance()
+private fun DirectDI.nativeMethods(): NativeMethods = this.instance()

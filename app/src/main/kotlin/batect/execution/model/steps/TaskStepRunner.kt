@@ -30,10 +30,10 @@ import batect.execution.model.steps.runners.RunContainerSetupCommandsStepRunner
 import batect.execution.model.steps.runners.RunContainerStepRunner
 import batect.execution.model.steps.runners.StopContainerStepRunner
 import batect.execution.model.steps.runners.WaitForContainerToBecomeHealthyStepRunner
-import org.kodein.di.DKodein
-import org.kodein.di.generic.instance
+import org.kodein.di.DirectDI
+import org.kodein.di.instance
 
-class TaskStepRunner(private val kodein: DKodein) {
+class TaskStepRunner(private val kodein: DirectDI) {
     fun run(step: TaskStep, eventSink: TaskEventSink) {
         when (step) {
             is BuildImageStep -> kodein.instance<BuildImageStepRunner>().run(step, eventSink)

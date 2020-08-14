@@ -19,9 +19,9 @@ package batect.cli.commands
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doAnswer
 import com.nhaarman.mockitokotlin2.mock
-import org.kodein.di.DKodein
+import org.kodein.di.DirectDI
 
-fun fakeDockerConnectivity(kodein: DKodein): DockerConnectivity = mock() {
+fun fakeDockerConnectivity(kodein: DirectDI): DockerConnectivity = mock() {
     on { checkAndRun(any()) } doAnswer { invocation ->
         val task = invocation.getArgument<TaskWithKodein>(0)
 

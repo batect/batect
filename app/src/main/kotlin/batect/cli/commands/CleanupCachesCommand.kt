@@ -24,7 +24,7 @@ import batect.os.deleteDirectory
 import batect.ui.Console
 import java.nio.file.Files
 import kotlin.streams.toList
-import org.kodein.di.generic.instance
+import org.kodein.di.instance
 
 class CleanupCachesCommand(
     private val dockerConnectivity: DockerConnectivity,

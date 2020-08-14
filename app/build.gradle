@@ -35,8 +35,7 @@ dependencies {
 
     implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
     implementation 'org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.20.0'
-    implementation 'org.kodein.di:kodein-di-core-jvm:6.5.5'
-    implementation 'org.kodein.di:kodein-di-generic-jvm:6.5.5'
+    implementation 'org.kodein.di:kodein-di:7.0.0'
     implementation 'com.squareup.okio:okio:2.7.0'
     implementation 'com.squareup.okhttp3:okhttp'
     implementation 'com.github.jnr:jnr-posix:3.0.57'

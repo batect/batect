@@ -30,9 +30,9 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.isA
 import com.nhaarman.mockitokotlin2.mock
 import java.nio.file.Paths
-import org.kodein.di.Kodein
-import org.kodein.di.generic.bind
-import org.kodein.di.generic.instance
+import org.kodein.di.DI
+import org.kodein.di.bind
+import org.kodein.di.instance
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -46,7 +46,7 @@ object CommandLineOptionsSpec : Spek({
             )
 
             on("extending an existing Kodein configuration") {
-                val originalKodein = Kodein.direct {
+                val originalKodein = DI.direct {
                     bind<String>("some string") with instance("The string value")
                 }
 
@@ -72,7 +72,7 @@ object CommandLineOptionsSpec : Spek({
             val options = CommandLineOptions(taskName = "some-task", logFileName = resolvedPath)
 
             on("extending an existing Kodein configuration") {
-                val originalKodein = Kodein.direct {
+                val originalKodein = DI.direct {
                     bind<String>("some string") with instance("The string value")
                     bind<LogMessageWriter>() with instance(mock())
                     bind<StandardAdditionalDataSource>() with instance(mock())

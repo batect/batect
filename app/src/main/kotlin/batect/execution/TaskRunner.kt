@@ -24,7 +24,7 @@ import batect.ui.EventLogger
 import batect.ui.text.Text
 import java.time.Duration
 import java.time.Instant
-import org.kodein.di.generic.instance
+import org.kodein.di.instance
 
 data class TaskRunner(
     private val taskKodeinFactory: TaskKodeinFactory,

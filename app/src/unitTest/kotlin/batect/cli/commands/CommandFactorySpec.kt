@@ -22,16 +22,16 @@ import batect.testutils.on
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.isA
 import com.nhaarman.mockitokotlin2.mock
-import org.kodein.di.Kodein
-import org.kodein.di.generic.bind
-import org.kodein.di.generic.instance
+import org.kodein.di.DI
+import org.kodein.di.bind
+import org.kodein.di.instance
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
 object CommandFactorySpec : Spek({
     describe("a command factory") {
         val factory = CommandFactory()
-        val kodein = Kodein.direct {
+        val kodein = DI.direct {
             bind<CleanupCachesCommand>() with instance(mock())
             bind<DisableTelemetryCommand>() with instance(mock())
             bind<EnableTelemetryCommand>() with instance(mock())

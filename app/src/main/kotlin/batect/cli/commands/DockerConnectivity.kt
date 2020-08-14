@@ -21,7 +21,7 @@ import batect.docker.client.DockerSystemInfoClient
 import batect.ioc.DockerConfigurationKodeinFactory
 import batect.ui.Console
 import batect.ui.text.Text
-import org.kodein.di.DKodein
+import org.kodein.di.DirectDI
 
 class DockerConnectivity(
     private val dockerConfigurationKodeinFactory: DockerConfigurationKodeinFactory,
@@ -43,4 +43,4 @@ class DockerConnectivity(
     }
 }
 
-typealias TaskWithKodein = (DKodein) -> Int
+typealias TaskWithKodein = (DirectDI) -> Int

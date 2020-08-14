@@ -36,9 +36,9 @@ import batect.wrapper.WrapperCache
 import java.io.InputStream
 import java.io.PrintStream
 import kotlin.system.exitProcess
-import org.kodein.di.DKodein
-import org.kodein.di.DKodeinAware
-import org.kodein.di.generic.instance
+import org.kodein.di.DirectDI
+import org.kodein.di.DirectDIAware
+import org.kodein.di.instance
 
 fun main(args: Array<String>) {
     try {
@@ -51,7 +51,7 @@ fun main(args: Array<String>) {
     }
 }
 
-class Application(override val dkodein: DKodein) : DKodeinAware {
+class Application(override val directDI: DirectDI) : DirectDIAware {
     constructor(outputStream: PrintStream, errorStream: PrintStream, inputStream: InputStream) :
         this(createKodeinConfiguration(outputStream, errorStream, inputStream))
 
@@ -74,7 +74,7 @@ class Application(override val dkodein: DKodein) : DKodeinAware {
     }
 
     private fun run(options: CommandLineOptions, args: Iterable<String>): Int {
-        val extendedKodein = options.extend(dkodein)
+        val extendedKodein = options.extend(directDI)
 
         // Why not do this in run() above? Because we have to wait until we know we've successfully parsed the command line arguments
         // to ensure that we can respect any telemetry-related requests.
@@ -87,7 +87,7 @@ class Application(override val dkodein: DKodein) : DKodeinAware {
         return exitCode
     }
 
-    private fun runCommand(options: CommandLineOptions, args: Iterable<String>, extendedKodein: DKodein): Int {
+    private fun runCommand(options: CommandLineOptions, args: Iterable<String>, extendedKodein: DirectDI): Int {
         val logger = extendedKodein.logger<Application>()
         val consoleManager = extendedKodein.instance<ConsoleManager>()
         val errorConsole = extendedKodein.instance<Console>(StreamType.Error)

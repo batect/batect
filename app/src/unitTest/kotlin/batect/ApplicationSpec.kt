@@ -56,9 +56,9 @@ import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
-import org.kodein.di.Kodein
-import org.kodein.di.generic.bind
-import org.kodein.di.generic.instance
+import org.kodein.di.DI
+import org.kodein.di.bind
+import org.kodein.di.instance
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -71,7 +71,7 @@ object ApplicationSpec : Spek({
         val telemetrySessionBuilder by createForEachTest { mock<TelemetrySessionBuilder>() }
 
         val dependencies by createForEachTest {
-            Kodein.direct {
+            DI.direct {
                 bind<PrintStream>(StreamType.Error) with instance(PrintStream(errorStream))
                 bind<CommandLineOptionsParser>() with instance(commandLineOptionsParser)
                 bind<CommandFactory>() with instance(commandFactory)
@@ -104,7 +104,7 @@ object ApplicationSpec : Spek({
                 val environmentTelemetryCollector by createForEachTest { mock<EnvironmentTelemetryCollector>() }
 
                 val extendedDependencies by createForEachTest {
-                    Kodein.direct {
+                    DI.direct {
                         bind<ApplicationInfoLogger>() with instance(applicationInfoLogger)
                         bind<LoggerFactory>() with instance(loggerFactory)
                         bind<Console>(StreamType.Error) with instance(errorConsole)

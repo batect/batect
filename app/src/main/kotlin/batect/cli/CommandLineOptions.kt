@@ -25,11 +25,11 @@ import batect.ui.OutputStyle
 import java.nio.file.Path
 import java.nio.file.Paths
 import org.kodein.di.Copy
-import org.kodein.di.DKodein
-import org.kodein.di.Kodein
-import org.kodein.di.generic.bind
-import org.kodein.di.generic.instance
-import org.kodein.di.generic.singleton
+import org.kodein.di.DI
+import org.kodein.di.DirectDI
+import org.kodein.di.bind
+import org.kodein.di.instance
+import org.kodein.di.singleton
 
 data class CommandLineOptions(
     val showHelp: Boolean = false,
@@ -65,7 +65,7 @@ data class CommandLineOptions(
     val skipPrerequisites: Boolean = false,
     val disableTelemetry: Boolean? = null
 ) {
-    fun extend(originalKodein: DKodein): DKodein = Kodein.direct {
+    fun extend(originalKodein: DirectDI): DirectDI = DI.direct {
         extend(originalKodein, copy = Copy.All)
         bind<CommandLineOptions>() with instance(this@CommandLineOptions)
 

@@ -38,9 +38,9 @@ import com.nhaarman.mockitokotlin2.times
 import com.nhaarman.mockitokotlin2.verify
 import java.nio.file.Files
 import kotlin.streams.toList
-import org.kodein.di.Kodein
-import org.kodein.di.generic.bind
-import org.kodein.di.generic.instance
+import org.kodein.di.DI
+import org.kodein.di.bind
+import org.kodein.di.instance
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -82,7 +82,7 @@ object CleanupCachesCommandSpec : Spek({
                 on { cacheType } doReturn cacheTypeToUse
             }
 
-            return fakeDockerConnectivity(Kodein.direct {
+            return fakeDockerConnectivity(DI.direct {
                 bind<CacheManager>() with instance(cacheManager)
             })
         }

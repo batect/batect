@@ -32,17 +32,17 @@ import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.verifyZeroInteractions
 import com.nhaarman.mockitokotlin2.whenever
-import org.kodein.di.DKodein
-import org.kodein.di.Kodein
-import org.kodein.di.generic.bind
-import org.kodein.di.generic.instance
+import org.kodein.di.DI
+import org.kodein.di.DirectDI
+import org.kodein.di.bind
+import org.kodein.di.instance
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
 object DockerConnectivitySpec : Spek({
     describe("a Docker connectivity check") {
         val containerType = DockerContainerType.Linux
-        val kodeinFromFactory = Kodein.direct {
+        val kodeinFromFactory = DI.direct {
             bind<String>() with instance("Something from the base Kodein")
         }
 
@@ -58,7 +58,7 @@ object DockerConnectivitySpec : Spek({
 
         given("the check succeeds") {
             var ranTask = false
-            var kodeinSeenInTask: DKodein? = null
+            var kodeinSeenInTask: DirectDI? = null
 
             beforeEachTest {
                 ranTask = false

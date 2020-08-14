@@ -17,6 +17,7 @@
 package batect.telemetry
 
 import batect.logging.Logger
+import java.time.Duration
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -30,7 +31,9 @@ class AbacusClient(
     private val url = "https://$host/v1/sessions"
     private val jsonMediaType = "application/json".toMediaType()
 
-    fun upload(sessionJson: ByteArray) {
+    fun upload(sessionJson: ByteArray, timeoutAfter: Duration? = null) {
+        val clientWithTimeout = if (timeoutAfter == null) client else client.newBuilder().callTimeout(timeoutAfter).build()
+
         val request = Request.Builder()
             .method("PUT", sessionJson.toRequestBody(jsonMediaType))
             .url(url)
@@ -42,7 +45,7 @@ class AbacusClient(
         }
 
         try {
-            client.newCall(request).execute().use { response ->
+            clientWithTimeout.newCall(request).execute().use { response ->
                 logger.info {
                     message("Finished uploading session.")
                     data("successful", response.isSuccessful)

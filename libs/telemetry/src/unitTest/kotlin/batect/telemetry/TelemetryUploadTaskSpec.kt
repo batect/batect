@@ -33,6 +33,7 @@ import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockitokotlin2.any
+import com.nhaarman.mockitokotlin2.anyOrNull
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.doThrow
 import com.nhaarman.mockitokotlin2.inOrder
@@ -155,7 +156,7 @@ object TelemetryUploadTaskSpec : Spek({
                         assertThat(ranOnThread, equalTo(true))
                     }
 
-                    it("uploads the session before deleting it") {
+                    it("uploads the session with the default timeout before deleting it") {
                         inOrder(abacusClient, telemetryUploadQueue) {
                             verify(abacusClient).upload(sessionBytes)
                             verify(telemetryUploadQueue).pop(sessionPath)
@@ -175,7 +176,7 @@ object TelemetryUploadTaskSpec : Spek({
                     val exception = AbacusClientException("Something went wrong.")
 
                     beforeEachTest {
-                        whenever(abacusClient.upload(any())).doThrow(exception)
+                        whenever(abacusClient.upload(any(), anyOrNull())).doThrow(exception)
                     }
 
                     given("the session is less than 30 days old") {
@@ -335,7 +336,7 @@ object TelemetryUploadTaskSpec : Spek({
 
                     val sessionUploadOrder = mutableListOf<Path>()
 
-                    whenever(abacusClient.upload(any())).then { invocation ->
+                    whenever(abacusClient.upload(any(), anyOrNull())).then { invocation ->
                         val bytes = invocation.arguments[0] as ByteArray
 
                         val session = when (bytes[0]) {

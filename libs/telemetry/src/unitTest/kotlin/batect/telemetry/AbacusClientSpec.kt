@@ -28,11 +28,13 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.throws
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.argThat
+import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.doThrow
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
 import java.io.IOException
+import java.time.Duration
 import okhttp3.Call
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -66,6 +68,35 @@ object AbacusClientSpec : Spek({
                     it("uploads the provided session in the request body") {
                         verify(httpClient).newCall(requestWithBody(session))
                     }
+                }
+            }
+
+            given("a timeout is provided") {
+                val httpClientWithTimeout by createForEachTest { mock<OkHttpClient>() }
+                val httpClientBuilder by createForEachTest {
+                    mock<OkHttpClient.Builder> {
+                        on { build() } doReturn httpClientWithTimeout
+                        on { callTimeout(any()) } doReturn mock
+                    }
+                }
+
+                beforeEachTest {
+                    whenever(httpClient.newBuilder()).doReturn(httpClientBuilder)
+                    httpClientWithTimeout.mock("PUT", uploadUrl, "", 200)
+
+                    client.upload(sessionBytes, Duration.ofSeconds(5))
+                }
+
+                it("sets the timeout to the provided value") {
+                    verify(httpClientBuilder).callTimeout(Duration.ofSeconds(5))
+                }
+
+                it("sets the content type to JSON") {
+                    verify(httpClientWithTimeout).newCall(argThat { body!!.contentType().toString() == "application/json" })
+                }
+
+                it("uploads the provided session in the request body") {
+                    verify(httpClientWithTimeout).newCall(requestWithBody(session))
                 }
             }
 

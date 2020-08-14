@@ -36,6 +36,7 @@ class EnvironmentTelemetryCollector(
     private val gitClient: GitClient,
     private val consoleInfo: ConsoleInfo,
     private val commandLineOptions: CommandLineOptions,
+    private val ciEnvironmentDetector: CIEnvironmentDetector,
     private val runtimeMXBean: RuntimeMXBean = ManagementFactory.getRuntimeMXBean(),
     private val systemProperties: Properties = System.getProperties()
 ) {
@@ -47,6 +48,7 @@ class EnvironmentTelemetryCollector(
         addJVMAttributes()
         addGitAttributes()
         addWrapperAttributes()
+        addCIAttributes()
     }
 
     private fun addCommandAttributes(commandType: KClass<out Command>) {
@@ -108,5 +110,12 @@ class EnvironmentTelemetryCollector(
             "false" -> telemetrySessionBuilder.addAttribute("wrapperDidDownload", false)
             else -> telemetrySessionBuilder.addNullAttribute("wrapperDidDownload")
         }
+    }
+
+    private fun addCIAttributes() {
+        val detectionResult = ciEnvironmentDetector.detect()
+
+        telemetrySessionBuilder.addAttribute("suspectRunningOnCI", detectionResult.suspectRunningOnCI)
+        telemetrySessionBuilder.addAttribute("suspectedCISystem", detectionResult.suspectedCISystem)
     }
 }

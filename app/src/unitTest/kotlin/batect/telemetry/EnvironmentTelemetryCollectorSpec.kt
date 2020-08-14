@@ -41,6 +41,9 @@ object EnvironmentTelemetryCollectorSpec : Spek({
         val telemetrySessionBuilder by createForEachTest { mock<TelemetrySessionBuilder>() }
         val gitClient by createForEachTest { mock<GitClient>() }
         val systemProperties by createForEachTest { Properties() }
+        val ciEnvironmentDetector by createForEachTest { mock<CIEnvironmentDetector> {
+            on { detect() } doReturn CIDetectionResult(false, null)
+        } }
 
         val consoleInfo by createForEachTest {
             mock<ConsoleInfo> {
@@ -68,7 +71,7 @@ object EnvironmentTelemetryCollectorSpec : Spek({
         }
 
         fun Suite.createEnvironmentCollector(hostEnvironmentVariables: HostEnvironmentVariables, commandLineOptions: CommandLineOptions = CommandLineOptions()) =
-            createForEachTest { EnvironmentTelemetryCollector(telemetrySessionBuilder, hostEnvironmentVariables, gitClient, consoleInfo, commandLineOptions, runtimeMXBean, systemProperties) }
+            createForEachTest { EnvironmentTelemetryCollector(telemetrySessionBuilder, hostEnvironmentVariables, gitClient, consoleInfo, commandLineOptions, ciEnvironmentDetector, runtimeMXBean, systemProperties) }
 
         given("the SHELL environment variable is set") {
             val shell = "/usr/local/bin/my-awesome-shell"
@@ -87,120 +90,145 @@ object EnvironmentTelemetryCollectorSpec : Spek({
                         given("the Git version is available") {
                             beforeEachTest {
                                 whenever(gitClient.version).doReturn(GitVersionRetrievalResult.Succeeded("1.2.3"))
-
-                                environmentCollector.collect(commandType)
                             }
 
-                            it("reports the user's shell, taking only the last segment of the path") {
-                                verify(telemetrySessionBuilder).addAttribute("shell", "my-awesome-shell")
+                            given("a CI system is not detected") {
+                                beforeEachTest {
+                                    environmentCollector.collect(commandType)
+                                }
+
+                                it("reports the user's shell, taking only the last segment of the path") {
+                                    verify(telemetrySessionBuilder).addAttribute("shell", "my-awesome-shell")
+                                }
+
+                                it("reports the user's terminal") {
+                                    verify(telemetrySessionBuilder).addAttribute("terminal", "xterm-9000color")
+                                }
+
+                                it("reports the Git version") {
+                                    verify(telemetrySessionBuilder).addAttribute("gitVersion", "1.2.3")
+                                }
+
+                                it("reports details of the operating system") {
+                                    verify(telemetrySessionBuilder).addAttribute("osName", "My Cool OS")
+                                    verify(telemetrySessionBuilder).addAttribute("osVersion", "2020.08")
+                                    verify(telemetrySessionBuilder).addAttribute("osArchitecture", "x86_64")
+                                }
+
+                                it("reports details of the JVM") {
+                                    verify(telemetrySessionBuilder).addAttribute("jvmVendor", "JVMs R Us")
+                                    verify(telemetrySessionBuilder).addAttribute("jvmName", "64-Bit Server VM")
+                                    verify(telemetrySessionBuilder).addAttribute("jvmVersion", "2020.1")
+                                }
+
+                                it("reports the type of command being run") {
+                                    verify(telemetrySessionBuilder).addAttribute("commandType", "VersionInfoCommand")
+                                }
+
+                                it("reports that the wrapper downloaded the JAR for this invocation") {
+                                    verify(telemetrySessionBuilder).addAttribute("wrapperDidDownload", true)
+                                }
+
+                                it("reports the time the JVM started, in UTC") {
+                                    verify(telemetrySessionBuilder).addAttribute("jvmStartTime", "2020-08-11T09:39:47.193Z")
+                                }
+
+                                it("reports whether stdin is a TTY") {
+                                    verify(telemetrySessionBuilder).addAttribute("stdinIsTTY", false)
+                                }
+
+                                it("reports whether stdout is a TTY") {
+                                    verify(telemetrySessionBuilder).addAttribute("stdoutIsTTY", true)
+                                }
+
+                                it("reports whether interactivity is supported") {
+                                    verify(telemetrySessionBuilder).addAttribute("consoleSupportsInteractivity", true)
+                                }
+
+                                it("reports that a custom configuration file name is not being used") {
+                                    verify(telemetrySessionBuilder).addAttribute("usingNonDefaultConfigurationFileName", false)
+                                }
+
+                                it("reports that a config variables file is not being used") {
+                                    verify(telemetrySessionBuilder).addAttribute("usingConfigVariablesFile", false)
+                                }
+
+                                it("reports the requested output style") {
+                                    verify(telemetrySessionBuilder).addAttribute("requestedOutputStyle", null as String?)
+                                }
+
+                                it("reports that color output has not been disabled") {
+                                    verify(telemetrySessionBuilder).addAttribute("colorOutputDisabled", false)
+                                }
+
+                                it("reports that update notifications have not been disabled") {
+                                    verify(telemetrySessionBuilder).addAttribute("updateNotificationsDisabled", false)
+                                }
+
+                                it("reports that wrapper cache cleanup has not been disabled") {
+                                    verify(telemetrySessionBuilder).addAttribute("wrapperCacheCleanupDisabled", false)
+                                }
+
+                                it("reports that cleanup after success has not been disabled") {
+                                    verify(telemetrySessionBuilder).addAttribute("cleanupAfterSuccessDisabled", false)
+                                }
+
+                                it("reports that cleanup after failure has not been disabled") {
+                                    verify(telemetrySessionBuilder).addAttribute("cleanupAfterFailureDisabled", false)
+                                }
+
+                                it("reports that proxy environment variable propagation has not been disabled") {
+                                    verify(telemetrySessionBuilder).addAttribute("proxyEnvironmentVariablePropagationDisabled", false)
+                                }
+
+                                it("reports the number of additional task command arguments") {
+                                    verify(telemetrySessionBuilder).addAttribute("additionalTaskCommandArgumentCount", 0)
+                                }
+
+                                it("reports the number of command line config variable overrides") {
+                                    verify(telemetrySessionBuilder).addAttribute("commandLineConfigVariableOverrideCount", 0)
+                                }
+
+                                it("reports the number of command line image overrides") {
+                                    verify(telemetrySessionBuilder).addAttribute("commandLineImageOverrideCount", 0)
+                                }
+
+                                it("reports that TLS is not being used for the connection to Docker") {
+                                    verify(telemetrySessionBuilder).addAttribute("usingTLSForDockerConnection", false)
+                                }
+
+                                it("reports that TLS is not being verified for the connection to Docker") {
+                                    verify(telemetrySessionBuilder).addAttribute("verifyingTLSForDockerConnection", false)
+                                }
+
+                                it("reports that an existing Docker network is not being used") {
+                                    verify(telemetrySessionBuilder).addAttribute("usingExistingDockerNetwork", false)
+                                }
+
+                                it("reports that prerequisites are not being skipped") {
+                                    verify(telemetrySessionBuilder).addAttribute("skippingPrerequisites", false)
+                                }
+
+                                it("reports that no CI system was detected") {
+                                    verify(telemetrySessionBuilder).addAttribute("suspectRunningOnCI", false)
+                                    verify(telemetrySessionBuilder).addAttribute("suspectedCISystem", null as String?)
+                                }
                             }
 
-                            it("reports the user's terminal") {
-                                verify(telemetrySessionBuilder).addAttribute("terminal", "xterm-9000color")
-                            }
+                            given("a CI system is detected") {
+                                beforeEachTest {
+                                    whenever(ciEnvironmentDetector.detect()).doReturn(CIDetectionResult(true, "My CI System"))
 
-                            it("reports the Git version") {
-                                verify(telemetrySessionBuilder).addAttribute("gitVersion", "1.2.3")
-                            }
+                                    environmentCollector.collect(commandType)
+                                }
 
-                            it("reports details of the operating system") {
-                                verify(telemetrySessionBuilder).addAttribute("osName", "My Cool OS")
-                                verify(telemetrySessionBuilder).addAttribute("osVersion", "2020.08")
-                                verify(telemetrySessionBuilder).addAttribute("osArchitecture", "x86_64")
-                            }
+                                it("reports that a CI system was detected") {
+                                    verify(telemetrySessionBuilder).addAttribute("suspectRunningOnCI", true)
+                                }
 
-                            it("reports details of the JVM") {
-                                verify(telemetrySessionBuilder).addAttribute("jvmVendor", "JVMs R Us")
-                                verify(telemetrySessionBuilder).addAttribute("jvmName", "64-Bit Server VM")
-                                verify(telemetrySessionBuilder).addAttribute("jvmVersion", "2020.1")
-                            }
-
-                            it("reports the type of command being run") {
-                                verify(telemetrySessionBuilder).addAttribute("commandType", "VersionInfoCommand")
-                            }
-
-                            it("reports that the wrapper downloaded the JAR for this invocation") {
-                                verify(telemetrySessionBuilder).addAttribute("wrapperDidDownload", true)
-                            }
-
-                            it("reports the time the JVM started, in UTC") {
-                                verify(telemetrySessionBuilder).addAttribute("jvmStartTime", "2020-08-11T09:39:47.193Z")
-                            }
-
-                            it("reports whether stdin is a TTY") {
-                                verify(telemetrySessionBuilder).addAttribute("stdinIsTTY", false)
-                            }
-
-                            it("reports whether stdout is a TTY") {
-                                verify(telemetrySessionBuilder).addAttribute("stdoutIsTTY", true)
-                            }
-
-                            it("reports whether interactivity is supported") {
-                                verify(telemetrySessionBuilder).addAttribute("consoleSupportsInteractivity", true)
-                            }
-
-                            it("reports that a custom configuration file name is not being used") {
-                                verify(telemetrySessionBuilder).addAttribute("usingNonDefaultConfigurationFileName", false)
-                            }
-
-                            it("reports that a config variables file is not being used") {
-                                verify(telemetrySessionBuilder).addAttribute("usingConfigVariablesFile", false)
-                            }
-
-                            it("reports the requested output style") {
-                                verify(telemetrySessionBuilder).addAttribute("requestedOutputStyle", null as String?)
-                            }
-
-                            it("reports that color output has not been disabled") {
-                                verify(telemetrySessionBuilder).addAttribute("colorOutputDisabled", false)
-                            }
-
-                            it("reports that update notifications have not been disabled") {
-                                verify(telemetrySessionBuilder).addAttribute("updateNotificationsDisabled", false)
-                            }
-
-                            it("reports that wrapper cache cleanup has not been disabled") {
-                                verify(telemetrySessionBuilder).addAttribute("wrapperCacheCleanupDisabled", false)
-                            }
-
-                            it("reports that cleanup after success has not been disabled") {
-                                verify(telemetrySessionBuilder).addAttribute("cleanupAfterSuccessDisabled", false)
-                            }
-
-                            it("reports that cleanup after failure has not been disabled") {
-                                verify(telemetrySessionBuilder).addAttribute("cleanupAfterFailureDisabled", false)
-                            }
-
-                            it("reports that proxy environment variable propagation has not been disabled") {
-                                verify(telemetrySessionBuilder).addAttribute("proxyEnvironmentVariablePropagationDisabled", false)
-                            }
-
-                            it("reports the number of additional task command arguments") {
-                                verify(telemetrySessionBuilder).addAttribute("additionalTaskCommandArgumentCount", 0)
-                            }
-
-                            it("reports the number of command line config variable overrides") {
-                                verify(telemetrySessionBuilder).addAttribute("commandLineConfigVariableOverrideCount", 0)
-                            }
-
-                            it("reports the number of command line image overrides") {
-                                verify(telemetrySessionBuilder).addAttribute("commandLineImageOverrideCount", 0)
-                            }
-
-                            it("reports that TLS is not being used for the connection to Docker") {
-                                verify(telemetrySessionBuilder).addAttribute("usingTLSForDockerConnection", false)
-                            }
-
-                            it("reports that TLS is not being verified for the connection to Docker") {
-                                verify(telemetrySessionBuilder).addAttribute("verifyingTLSForDockerConnection", false)
-                            }
-
-                            it("reports that an existing Docker network is not being used") {
-                                verify(telemetrySessionBuilder).addAttribute("usingExistingDockerNetwork", false)
-                            }
-
-                            it("reports that prerequisites are not being skipped") {
-                                verify(telemetrySessionBuilder).addAttribute("skippingPrerequisites", false)
+                                it("reports the CI system name") {
+                                    verify(telemetrySessionBuilder).addAttribute("suspectedCISystem", "My CI System")
+                                }
                             }
                         }
 

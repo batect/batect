@@ -124,6 +124,7 @@ import batect.primitives.CancellationContext
 import batect.proxies.ProxyEnvironmentVariablePreprocessor
 import batect.proxies.ProxyEnvironmentVariablesProvider
 import batect.telemetry.AbacusClient
+import batect.telemetry.CIEnvironmentDetector
 import batect.telemetry.EnvironmentTelemetryCollector
 import batect.telemetry.TelemetryConfigurationStore
 import batect.telemetry.TelemetryConsent
@@ -370,7 +371,8 @@ private val proxiesModule = DI.Module("proxies") {
 
 private val telemetryModule = DI.Module("telemetry") {
     bind<AbacusClient>() with singletonWithLogger { logger -> AbacusClient(instance(), logger) }
-    bind<EnvironmentTelemetryCollector>() with singleton { EnvironmentTelemetryCollector(instance(), instance(), instance(), instance(), instance()) }
+    bind<CIEnvironmentDetector>() with singleton { CIEnvironmentDetector(instance()) }
+    bind<EnvironmentTelemetryCollector>() with singleton { EnvironmentTelemetryCollector(instance(), instance(), instance(), instance(), instance(), instance()) }
     bind<TelemetryConfigurationStore>() with singletonWithLogger { logger -> TelemetryConfigurationStore(instance(), logger) }
     bind<TelemetryConsent>() with singleton { TelemetryConsent(commandLineOptions().disableTelemetry, instance()) }
     bind<TelemetryConsentPrompt>() with singleton { TelemetryConsentPrompt(instance(), commandLineOptions().disableTelemetry, commandLineOptions().requestedOutputStyle, instance(), instance(StreamType.Output), instance()) }

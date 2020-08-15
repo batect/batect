@@ -16,10 +16,18 @@
 
 package batect.telemetry
 
+import batect.logging.Logger
+import java.nio.file.Files
+import java.nio.file.Path
+import java.time.Duration
+
 class TelemetryManager(
     private val telemetryConsent: TelemetryConsent,
     private val telemetryUploadQueue: TelemetryUploadQueue,
-    private val telemetryConfigurationStore: TelemetryConfigurationStore
+    private val telemetryConfigurationStore: TelemetryConfigurationStore,
+    private val ciEnvironmentDetector: CIEnvironmentDetector,
+    private val abacusClient: AbacusClient,
+    private val logger: Logger
 ) {
     fun finishSession(sessionBuilder: TelemetrySessionBuilder) {
         if (!telemetryConsent.telemetryAllowed) {
@@ -27,6 +35,29 @@ class TelemetryManager(
         }
 
         val session = sessionBuilder.build(telemetryConfigurationStore)
-        telemetryUploadQueue.add(session)
+        val sessionPath = telemetryUploadQueue.add(session)
+
+        if (ciEnvironmentDetector.detect().suspectRunningOnCI) {
+            tryToUploadNow(sessionPath)
+        }
+    }
+
+    private fun tryToUploadNow(sessionPath: Path) {
+        logger.info {
+            message("Suspect application is running on CI, trying to quickly upload telemetry session now.")
+            data("sessionPath", sessionPath)
+        }
+
+        try {
+            val bytes = Files.readAllBytes(sessionPath)
+            abacusClient.upload(bytes, Duration.ofSeconds(2))
+            telemetryUploadQueue.pop(sessionPath)
+        } catch (e: Throwable) {
+            logger.error {
+                message("Immediate upload of telemetry session failed, will be queued to upload in the background next time.")
+                data("sessionPath", sessionPath)
+                exception(e)
+            }
+        }
     }
 }

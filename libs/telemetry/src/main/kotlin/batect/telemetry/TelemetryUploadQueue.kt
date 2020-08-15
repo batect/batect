@@ -31,7 +31,7 @@ class TelemetryUploadQueue(
     private val telemetryDirectory = applicationPaths.rootLocalStorageDirectory.resolve("telemetry")
     private val json = Json(JsonConfiguration.Stable)
 
-    fun add(session: TelemetrySession) {
+    fun add(session: TelemetrySession): Path {
         val path = telemetryDirectory.resolve("session-${session.sessionId}.json")
 
         logger.info {
@@ -46,6 +46,8 @@ class TelemetryUploadQueue(
         }
 
         Files.write(path, bytes)
+
+        return path
     }
 
     fun getAll(): Set<Path> {

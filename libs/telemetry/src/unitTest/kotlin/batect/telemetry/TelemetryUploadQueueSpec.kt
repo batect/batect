@@ -22,6 +22,7 @@ import batect.testutils.doesNotThrow
 import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.logging.createLoggerForEachTestWithoutCustomSerializers
+import batect.testutils.runForEachTest
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.assertion.assertThat
@@ -71,10 +72,11 @@ object TelemetryUploadQueueSpec : Spek({
             )
 
             fun Suite.itSavesTheSessionToDisk() {
-                beforeEachTest { queue.add(session) }
+                val expectedPath by createForEachTest { telemetryDirectory.resolve("session-8a1058f8-e41e-4c78-aa42-663b78d15122.json") }
+                val actualPath by runForEachTest { queue.add(session) }
 
                 it("saves the session to disk") {
-                    assertThat(Files.readAllBytes(telemetryDirectory.resolve("session-8a1058f8-e41e-4c78-aa42-663b78d15122.json")).toString(Charsets.UTF_8), equivalentTo("""
+                    assertThat(Files.readAllBytes(expectedPath).toString(Charsets.UTF_8), equivalentTo("""
                         {
                             "sessionId": "8a1058f8-e41e-4c78-aa42-663b78d15122",
                             "userId": "07ab839b-ac26-475a-966a-77d18d00ac61",
@@ -90,6 +92,10 @@ object TelemetryUploadQueueSpec : Spek({
                             }
                         }
                     """.trimIndent()))
+                }
+
+                it("returns the path the session was saved to on disk") {
+                    assertThat(actualPath, equalTo(expectedPath))
                 }
             }
 

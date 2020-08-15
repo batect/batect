@@ -37,7 +37,9 @@ data class TelemetrySession(
     val sessionEndTime: ZonedDateTime,
     val applicationId: String,
     val applicationVersion: String,
-    val attributes: Map<String, JsonPrimitive>
+    val attributes: Map<String, JsonPrimitive>,
+    val events: Set<TelemetryEvent>,
+    val spans: Set<TelemetrySpan>
 ) {
     init {
         if (sessionId.version() != 4) {

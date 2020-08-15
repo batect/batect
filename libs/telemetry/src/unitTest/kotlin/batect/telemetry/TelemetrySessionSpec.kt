@@ -46,31 +46,31 @@ object TelemetrySessionSpec : Spek({
 
             given("the session is valid") {
                 it("does not throw an exception") {
-                    assertThat({ TelemetrySession(validSessionId, validUserId, validSessionStartTime, validSessionEndTime, appName, appVersion, emptyMap()) }, doesNotThrow())
+                    assertThat({ TelemetrySession(validSessionId, validUserId, validSessionStartTime, validSessionEndTime, appName, appVersion, emptyMap(), emptySet(), emptySet()) }, doesNotThrow())
                 }
             }
 
             given("the session ID is not a v4 (random) UUID") {
                 it("throws an appropriate exception") {
-                    assertThat({ TelemetrySession(nonV4UUID, validUserId, validSessionStartTime, validSessionEndTime, appName, appVersion, emptyMap()) }, throws<InvalidTelemetrySessionException>(withMessage("Session ID must be a v4 (random) UUID.")))
+                    assertThat({ TelemetrySession(nonV4UUID, validUserId, validSessionStartTime, validSessionEndTime, appName, appVersion, emptyMap(), emptySet(), emptySet()) }, throws<InvalidTelemetrySessionException>(withMessage("Session ID must be a v4 (random) UUID.")))
                 }
             }
 
             given("the user ID is not a v4 (random) UUID") {
                 it("throws an appropriate exception") {
-                    assertThat({ TelemetrySession(validSessionId, nonV4UUID, validSessionStartTime, validSessionEndTime, appName, appVersion, emptyMap()) }, throws<InvalidTelemetrySessionException>(withMessage("User ID must be a v4 (random) UUID.")))
+                    assertThat({ TelemetrySession(validSessionId, nonV4UUID, validSessionStartTime, validSessionEndTime, appName, appVersion, emptyMap(), emptySet(), emptySet()) }, throws<InvalidTelemetrySessionException>(withMessage("User ID must be a v4 (random) UUID.")))
                 }
             }
 
             given("the start time is not in UTC") {
                 it("throws an appropriate exception") {
-                    assertThat({ TelemetrySession(validSessionId, validUserId, validSessionStartTime.withZoneSameInstant(ZoneId.of("Australia/Melbourne")), validSessionEndTime, appName, appVersion, emptyMap()) }, throws<InvalidTelemetrySessionException>(withMessage("Session start time must be in UTC.")))
+                    assertThat({ TelemetrySession(validSessionId, validUserId, validSessionStartTime.withZoneSameInstant(ZoneId.of("Australia/Melbourne")), validSessionEndTime, appName, appVersion, emptyMap(), emptySet(), emptySet()) }, throws<InvalidTelemetrySessionException>(withMessage("Session start time must be in UTC.")))
                 }
             }
 
             given("the end time is not in UTC") {
                 it("throws an appropriate exception") {
-                    assertThat({ TelemetrySession(validSessionId, validUserId, validSessionStartTime, validSessionEndTime.withZoneSameInstant(ZoneId.of("Australia/Melbourne")), appName, appVersion, emptyMap()) }, throws<InvalidTelemetrySessionException>(withMessage("Session end time must be in UTC.")))
+                    assertThat({ TelemetrySession(validSessionId, validUserId, validSessionStartTime, validSessionEndTime.withZoneSameInstant(ZoneId.of("Australia/Melbourne")), appName, appVersion, emptyMap(), emptySet(), emptySet()) }, throws<InvalidTelemetrySessionException>(withMessage("Session end time must be in UTC.")))
                 }
             }
         }
@@ -88,6 +88,31 @@ object TelemetrySessionSpec : Spek({
                     "someNumber" to JsonLiteral(123),
                     "someBoolean" to JsonLiteral(false),
                     "someNull" to JsonNull
+                ),
+                setOf(
+                    TelemetryEvent(
+                        "some-event",
+                        ZonedDateTime.of(2020, 8, 7, 3, 49, 20, 678, ZoneOffset.UTC),
+                        mapOf(
+                            "someString" to JsonLiteral("string"),
+                            "someNumber" to JsonLiteral(123),
+                            "someBoolean" to JsonLiteral(false),
+                            "someNull" to JsonNull
+                        )
+                    )
+                ),
+                setOf(
+                    TelemetrySpan(
+                        "some-span",
+                        ZonedDateTime.of(2020, 8, 7, 3, 49, 30, 678, ZoneOffset.UTC),
+                        ZonedDateTime.of(2020, 8, 7, 3, 49, 40, 678, ZoneOffset.UTC),
+                        mapOf(
+                            "someString" to JsonLiteral("string"),
+                            "someNumber" to JsonLiteral(123),
+                            "someBoolean" to JsonLiteral(false),
+                            "someNull" to JsonNull
+                        )
+                    )
                 )
             )
 
@@ -105,7 +130,32 @@ object TelemetrySessionSpec : Spek({
                             "someNumber": 123,
                             "someBoolean": false,
                             "someNull": null
-                        }
+                        },
+                        "events": [
+                            {
+                                "type": "some-event",
+                                "time": "2020-08-07T03:49:20.000000678Z",
+                                "attributes": {
+                                    "someString": "string",
+                                    "someNumber": 123,
+                                    "someBoolean": false,
+                                    "someNull": null
+                                }
+                            }
+                        ],
+                        "spans": [
+                            {
+                                "type": "some-span",
+                                "startTime": "2020-08-07T03:49:30.000000678Z",
+                                "endTime": "2020-08-07T03:49:40.000000678Z",
+                                "attributes": {
+                                    "someString": "string",
+                                    "someNumber": 123,
+                                    "someBoolean": false,
+                                    "someNull": null
+                                }
+                            }
+                        ]
                     }
                 """.trimIndent()))
             }

@@ -68,6 +68,31 @@ object TelemetryUploadQueueSpec : Spek({
                     "someNumber" to JsonLiteral(123),
                     "someBoolean" to JsonLiteral(false),
                     "someNull" to JsonNull
+                ),
+                setOf(
+                    TelemetryEvent(
+                        "some-event",
+                        ZonedDateTime.of(2020, 8, 7, 3, 49, 20, 678, ZoneOffset.UTC),
+                        mapOf(
+                            "someString" to JsonLiteral("string"),
+                            "someNumber" to JsonLiteral(123),
+                            "someBoolean" to JsonLiteral(false),
+                            "someNull" to JsonNull
+                        )
+                    )
+                ),
+                setOf(
+                    TelemetrySpan(
+                        "some-span",
+                        ZonedDateTime.of(2020, 8, 7, 3, 49, 30, 678, ZoneOffset.UTC),
+                        ZonedDateTime.of(2020, 8, 7, 3, 49, 40, 678, ZoneOffset.UTC),
+                        mapOf(
+                            "someString" to JsonLiteral("string"),
+                            "someNumber" to JsonLiteral(123),
+                            "someBoolean" to JsonLiteral(false),
+                            "someNull" to JsonNull
+                        )
+                    )
                 )
             )
 
@@ -89,7 +114,32 @@ object TelemetryUploadQueueSpec : Spek({
                                 "someNumber": 123,
                                 "someBoolean": false,
                                 "someNull": null
-                            }
+                            },
+                            "events": [
+                                {
+                                    "type": "some-event",
+                                    "time": "2020-08-07T03:49:20.000000678Z",
+                                    "attributes": {
+                                        "someString": "string",
+                                        "someNumber": 123,
+                                        "someBoolean": false,
+                                        "someNull": null
+                                    }
+                                }
+                            ],
+                            "spans": [
+                                {
+                                    "type": "some-span",
+                                    "startTime": "2020-08-07T03:49:30.000000678Z",
+                                    "endTime": "2020-08-07T03:49:40.000000678Z",
+                                    "attributes": {
+                                        "someString": "string",
+                                        "someNumber": 123,
+                                        "someBoolean": false,
+                                        "someNull": null
+                                    }
+                                }
+                            ]
                         }
                     """.trimIndent()))
                 }

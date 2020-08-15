@@ -52,16 +52,15 @@ object TelemetrySessionBuilderSpec : Spek({
 
         val startTime = ZonedDateTime.of(2020, 8, 11, 1, 3, 0, 0, ZoneOffset.UTC)
         val endTime = ZonedDateTime.of(2020, 8, 11, 1, 3, 30, 123456789, ZoneOffset.UTC)
-        var returnStartTime = true
-
-        val timeSource: TimeSource = { if (returnStartTime) startTime else endTime }
-        beforeEachTest { returnStartTime = true }
+        var timeNow = startTime
+        val timeSource: TimeSource = { timeNow }
+        beforeEachTest { timeNow = startTime }
 
         describe("building a session with no attributes") {
             val builder by createForEachTest { TelemetrySessionBuilder(versionInfo, timeSource) }
 
             val session by runForEachTest {
-                returnStartTime = false
+                timeNow = endTime
                 builder.build(telemetryConfigurationStore)
             }
 
@@ -285,6 +284,35 @@ object TelemetrySessionBuilderSpec : Spek({
                 it("does not allow adding a null attribute of the same name") {
                     assertThat({ builder.addNullAttribute("thing") }, throws<IllegalArgumentException>(withMessage("Attribute 'thing' already added.")))
                 }
+            }
+        }
+
+        describe("creating a session with an event") {
+            val builder by createForEachTest { TelemetrySessionBuilder(versionInfo, timeSource) }
+            val eventTime = ZonedDateTime.of(2020, 8, 11, 1, 3, 10, 0, ZoneOffset.UTC)
+
+            val session by createForEachTest {
+                timeNow = eventTime
+
+                builder
+                    .addEvent("MyEvent", mapOf(
+                        "thingType" to AttributeValue("stuff"),
+                        "thingCount" to AttributeValue(12),
+                        "thingEnabled" to AttributeValue(false)
+                    ))
+                    .build(telemetryConfigurationStore)
+            }
+
+            it("stores the session with the provided attributes and correct time") {
+                assertThat(session.events, equalTo(setOf(TelemetryEvent(
+                    "MyEvent",
+                    eventTime,
+                    mapOf(
+                        "thingType" to JsonLiteral("stuff"),
+                        "thingCount" to JsonLiteral(12),
+                        "thingEnabled" to JsonLiteral(false)
+                    )
+                ))))
             }
         }
     }

@@ -26,7 +26,10 @@ import batect.logging.ApplicationInfoLogger
 import batect.logging.logger
 import batect.os.ConsoleManager
 import batect.os.SystemInfo
+import batect.telemetry.AttributeValue
+import batect.telemetry.CommonAttributes
 import batect.telemetry.EnvironmentTelemetryCollector
+import batect.telemetry.EventTypes
 import batect.telemetry.TelemetryConsentPrompt
 import batect.telemetry.TelemetryManager
 import batect.telemetry.TelemetrySessionBuilder
@@ -114,6 +117,14 @@ class Application(override val directDI: DirectDI) : DirectDIAware {
                 message("Exception thrown during execution.")
                 exception(e)
             }
+
+            telemetrySessionBuilder.addEvent(
+                EventTypes.UnhandledException,
+                mapOf(
+                    CommonAttributes.Exception to AttributeValue(e),
+                    CommonAttributes.ExceptionCaughtAt to AttributeValue(Application::class.simpleName + "." + this::runCommand.name)
+                )
+            )
 
             return -1
         }

@@ -34,6 +34,7 @@ class TelemetrySessionBuilder(
     private val applicationId: String = "batect"
     private val applicationVersion: String = versionInfo.version.toString()
     private val attributes = ConcurrentHashMap<String, JsonPrimitive>()
+    private val events = ConcurrentHashMap.newKeySet<TelemetryEvent>()
 
     fun addAttribute(attributeName: String, value: String?): TelemetrySessionBuilder = addAttribute(attributeName, if (value == null) JsonNull else JsonLiteral(value))
     fun addAttribute(attributeName: String, value: Boolean?): TelemetrySessionBuilder = addAttribute(attributeName, if (value == null) JsonNull else JsonLiteral(value))
@@ -50,13 +51,21 @@ class TelemetrySessionBuilder(
         return this
     }
 
+    fun addEvent(type: String, attributes: Map<String, AttributeValue>): TelemetrySessionBuilder {
+        val event = TelemetryEvent(type, nowInUTC(), attributes.mapValues { it.value.json })
+
+        events.add(event)
+
+        return this
+    }
+
     // Why is TelemetryConfigurationStore passed in here rather than passed in as a constructor parameter?
     // We want to construct this class as early as possible in the application's lifetime - before we've parsed CLI options
     // or anything like that. TelemetryConfigurationStore isn't available until much later, so we have to pass it in.
     fun build(telemetryConfigurationStore: TelemetryConfigurationStore): TelemetrySession {
         val userId = telemetryConfigurationStore.currentConfiguration.userId
 
-        return TelemetrySession(sessionId, userId, sessionStartTime, nowInUTC(), applicationId, applicationVersion, attributes, emptySet(), emptySet())
+        return TelemetrySession(sessionId, userId, sessionStartTime, nowInUTC(), applicationId, applicationVersion, attributes, events, emptySet())
     }
 
     private fun nowInUTC(): ZonedDateTime = timeSource().withZoneSameInstant(ZoneOffset.UTC)

@@ -19,6 +19,7 @@ package batect.cli.commands
 import batect.docker.client.DockerConnectivityCheckResult
 import batect.docker.client.DockerSystemInfoClient
 import batect.ioc.DockerConfigurationKodeinFactory
+import batect.telemetry.TelemetrySessionBuilder
 import batect.ui.Console
 import batect.ui.text.Text
 import org.kodein.di.DirectDI
@@ -26,7 +27,8 @@ import org.kodein.di.DirectDI
 class DockerConnectivity(
     private val dockerConfigurationKodeinFactory: DockerConfigurationKodeinFactory,
     private val dockerSystemInfoClient: DockerSystemInfoClient,
-    private val errorConsole: Console
+    private val errorConsole: Console,
+    private val telemetrySessionBuilder: TelemetrySessionBuilder
 ) {
     fun checkAndRun(task: TaskWithKodein): Int {
         return when (val connectivityCheckResult = dockerSystemInfoClient.checkConnectivity()) {
@@ -35,11 +37,18 @@ class DockerConnectivity(
                 -1
             }
             is DockerConnectivityCheckResult.Succeeded -> {
+                reportTelemetry(connectivityCheckResult)
+
                 val kodein = dockerConfigurationKodeinFactory.create(connectivityCheckResult.containerType)
 
                 task(kodein)
             }
         }
+    }
+
+    private fun reportTelemetry(result: DockerConnectivityCheckResult.Succeeded) {
+        telemetrySessionBuilder.addAttribute("dockerContainerType", result.containerType.toString())
+        telemetrySessionBuilder.addAttribute("dockerVersion", result.dockerVersion.toString())
     }
 }
 

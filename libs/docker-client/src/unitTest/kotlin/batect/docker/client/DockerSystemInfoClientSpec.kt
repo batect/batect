@@ -73,7 +73,7 @@ object DockerSystemInfoClientSpec : Spek({
                             }
 
                             it("returns success") {
-                                assertThat(client.checkConnectivity(), equalTo(DockerConnectivityCheckResult.Succeeded(DockerContainerType.Linux)))
+                                assertThat(client.checkConnectivity(), equalTo(DockerConnectivityCheckResult.Succeeded(DockerContainerType.Linux, Version(1, 2, 3))))
                             }
                         }
 
@@ -83,7 +83,7 @@ object DockerSystemInfoClientSpec : Spek({
                             }
 
                             it("returns success") {
-                                assertThat(client.checkConnectivity(), equalTo(DockerConnectivityCheckResult.Succeeded(DockerContainerType.Linux)))
+                                assertThat(client.checkConnectivity(), equalTo(DockerConnectivityCheckResult.Succeeded(DockerContainerType.Linux, Version(1, 2, 3))))
                             }
                         }
 
@@ -105,7 +105,7 @@ object DockerSystemInfoClientSpec : Spek({
                             }
 
                             it("returns success") {
-                                assertThat(client.checkConnectivity(), equalTo(DockerConnectivityCheckResult.Succeeded(DockerContainerType.Windows)))
+                                assertThat(client.checkConnectivity(), equalTo(DockerConnectivityCheckResult.Succeeded(DockerContainerType.Windows, Version(1, 2, 3))))
                             }
                         }
                     }

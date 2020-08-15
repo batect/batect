@@ -20,6 +20,8 @@ import batect.docker.client.DockerConnectivityCheckResult
 import batect.docker.client.DockerContainerType
 import batect.docker.client.DockerSystemInfoClient
 import batect.ioc.DockerConfigurationKodeinFactory
+import batect.primitives.Version
+import batect.telemetry.TelemetrySessionBuilder
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given
@@ -54,7 +56,8 @@ object DockerConnectivitySpec : Spek({
 
         val systemInfoClient by createForEachTest { mock<DockerSystemInfoClient>() }
         val errorConsole by createForEachTest { mock<Console>() }
-        val connectivity by createForEachTest { DockerConnectivity(dockerConfigurationKodeinFactory, systemInfoClient, errorConsole) }
+        val telemetrySessionBuilder by createForEachTest { mock<TelemetrySessionBuilder>() }
+        val connectivity by createForEachTest { DockerConnectivity(dockerConfigurationKodeinFactory, systemInfoClient, errorConsole, telemetrySessionBuilder) }
 
         given("the check succeeds") {
             var ranTask = false
@@ -63,7 +66,7 @@ object DockerConnectivitySpec : Spek({
             beforeEachTest {
                 ranTask = false
 
-                whenever(systemInfoClient.checkConnectivity()).doReturn(DockerConnectivityCheckResult.Succeeded(containerType))
+                whenever(systemInfoClient.checkConnectivity()).doReturn(DockerConnectivityCheckResult.Succeeded(containerType, Version(19, 3, 1)))
             }
 
             val exitCode by runForEachTest {
@@ -88,6 +91,14 @@ object DockerConnectivitySpec : Spek({
 
             it("does not print anything to the console") {
                 verifyZeroInteractions(errorConsole)
+            }
+
+            it("adds the Docker version as an attribute on the telemetry session") {
+                verify(telemetrySessionBuilder).addAttribute("dockerVersion", "19.3.1")
+            }
+
+            it("adds the Docker container type as an attribute on the telemetry session") {
+                verify(telemetrySessionBuilder).addAttribute("dockerContainerType", "Linux")
             }
         }
 

@@ -26,13 +26,11 @@ import batect.logging.ApplicationInfoLogger
 import batect.logging.logger
 import batect.os.ConsoleManager
 import batect.os.SystemInfo
-import batect.telemetry.AttributeValue
-import batect.telemetry.CommonAttributes
 import batect.telemetry.EnvironmentTelemetryCollector
-import batect.telemetry.EventTypes
 import batect.telemetry.TelemetryConsentPrompt
 import batect.telemetry.TelemetryManager
 import batect.telemetry.TelemetrySessionBuilder
+import batect.telemetry.addUnhandledExceptionEvent
 import batect.ui.Console
 import batect.ui.text.Text
 import batect.wrapper.WrapperCache
@@ -118,13 +116,7 @@ class Application(override val directDI: DirectDI) : DirectDIAware {
                 exception(e)
             }
 
-            telemetrySessionBuilder.addEvent(
-                EventTypes.UnhandledException,
-                mapOf(
-                    CommonAttributes.Exception to AttributeValue(e),
-                    CommonAttributes.ExceptionCaughtAt to AttributeValue(Application::class.simpleName + "." + this::runCommand.name)
-                )
-            )
+            telemetrySessionBuilder.addUnhandledExceptionEvent(e, isUserFacing = true)
 
             return -1
         }

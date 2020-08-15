@@ -20,16 +20,22 @@ import batect.docker.DockerException
 import batect.docker.DockerVersionInfo
 import batect.docker.api.SystemInfoAPI
 import batect.primitives.Version
+import batect.telemetry.AttributeValue
+import batect.telemetry.CommonAttributes
+import batect.telemetry.CommonEvents
+import batect.telemetry.TelemetrySessionBuilder
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.logging.createLoggerForEachTestWithoutCustomSerializers
 import batect.testutils.on
+import batect.testutils.runForEachTest
 import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockitokotlin2.doAnswer
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.doThrow
 import com.nhaarman.mockitokotlin2.mock
+import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
 import java.io.IOException
 import org.spekframework.spek2.Spek
@@ -38,8 +44,9 @@ import org.spekframework.spek2.style.specification.describe
 object DockerSystemInfoClientSpec : Spek({
     describe("a Docker system info client") {
         val api by createForEachTest { mock<SystemInfoAPI>() }
+        val telemetrySessionBuilder by createForEachTest { mock<TelemetrySessionBuilder>() }
         val logger by createLoggerForEachTestWithoutCustomSerializers()
-        val client by createForEachTest { DockerSystemInfoClient(api, logger) }
+        val client by createForEachTest { DockerSystemInfoClient(api, telemetrySessionBuilder, logger) }
 
         describe("getting Docker version information") {
             on("the Docker version command invocation succeeding") {
@@ -92,8 +99,16 @@ object DockerSystemInfoClientSpec : Spek({
                                 whenever(api.getServerVersionInfo()).thenReturn(DockerVersionInfo(Version(1, 2, 3), "1.36", "xxx", "xxx", operatingSystem))
                             }
 
+                            val result by runForEachTest { client.checkConnectivity() }
+
                             it("returns failure") {
-                                assertThat(client.checkConnectivity(), equalTo(DockerConnectivityCheckResult.Failed("batect requires Docker 18.03.1 or later, but version 1.2.3 is installed.")))
+                                assertThat(result, equalTo(DockerConnectivityCheckResult.Failed("batect requires Docker 18.03.1 or later, but version 1.2.3 is installed.")))
+                            }
+
+                            it("reports the version incompatibility in telemetry") {
+                                verify(telemetrySessionBuilder).addEvent("IncompatibleDockerVersion", mapOf(
+                                    "dockerVersion" to AttributeValue("1.2.3")
+                                ))
                             }
                         }
                     }
@@ -133,22 +148,50 @@ object DockerSystemInfoClientSpec : Spek({
             }
 
             given("pinging the daemon fails with a general Docker exception") {
-                beforeEachTest {
-                    whenever(api.ping()).doThrow(DockerException("Something went wrong."))
-                }
+                val exception = DockerException("Something went wrong.")
+
+                beforeEachTest { whenever(api.ping()).doThrow(exception) }
+
+                val result by runForEachTest { client.checkConnectivity() }
 
                 it("returns failure") {
-                    assertThat(client.checkConnectivity(), equalTo(DockerConnectivityCheckResult.Failed("Something went wrong.")))
+                    assertThat(result, equalTo(DockerConnectivityCheckResult.Failed("Something went wrong.")))
+                }
+
+                it("reports the exception in telemetry") {
+                    verify(telemetrySessionBuilder).addEvent(
+                        CommonEvents.UnhandledException,
+                        mapOf(
+                            CommonAttributes.Exception to AttributeValue(exception),
+                            CommonAttributes.ExceptionCaughtAt to AttributeValue("batect.docker.client.DockerSystemInfoClient.checkConnectivity"),
+                            CommonAttributes.IsUserFacingException to AttributeValue(true)
+                        )
+                    )
                 }
             }
 
             given("pinging the daemon fails due to an I/O issue") {
+                val exception = IOException("Something went wrong.")
+
                 beforeEachTest {
-                    whenever(api.ping()).doAnswer { throw IOException("Something went wrong.") }
+                    whenever(api.ping()).doAnswer { throw exception }
                 }
 
+                val result by runForEachTest { client.checkConnectivity() }
+
                 it("returns failure") {
-                    assertThat(client.checkConnectivity(), equalTo(DockerConnectivityCheckResult.Failed("Something went wrong.")))
+                    assertThat(result, equalTo(DockerConnectivityCheckResult.Failed("Something went wrong.")))
+                }
+
+                it("reports the exception in telemetry") {
+                    verify(telemetrySessionBuilder).addEvent(
+                        CommonEvents.UnhandledException,
+                        mapOf(
+                            CommonAttributes.Exception to AttributeValue(exception),
+                            CommonAttributes.ExceptionCaughtAt to AttributeValue("batect.docker.client.DockerSystemInfoClient.checkConnectivity"),
+                            CommonAttributes.IsUserFacingException to AttributeValue(true)
+                        )
+                    )
                 }
             }
         }

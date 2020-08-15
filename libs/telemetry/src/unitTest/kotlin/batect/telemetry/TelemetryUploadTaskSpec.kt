@@ -57,6 +57,7 @@ object TelemetryUploadTaskSpec : Spek({
         val telemetryConsent by createForEachTest { mock<TelemetryConsent>() }
         val telemetryUploadQueue by createForEachTest { mock<TelemetryUploadQueue>() }
         val abacusClient by createForEachTest { mock<AbacusClient>() }
+        val telemetrySessionBuilder by createForEachTest { mock<TelemetrySessionBuilder>() }
         val logSink by createForEachTest { InMemoryLogSink() }
         val logger by createForEachTest { Logger("Test logger", logSink) }
         val now = ZonedDateTime.of(2020, 5, 13, 6, 30, 0, 0, ZoneOffset.UTC)
@@ -71,7 +72,7 @@ object TelemetryUploadTaskSpec : Spek({
         }
 
         val fileSystem by createForEachTest { Jimfs.newFileSystem(Configuration.unix()) }
-        val uploadTask by createForEachTest { TelemetryUploadTask(telemetryConsent, telemetryUploadQueue, abacusClient, logger, threadRunner, timeSource) }
+        val uploadTask by createForEachTest { TelemetryUploadTask(telemetryConsent, telemetryUploadQueue, abacusClient, telemetrySessionBuilder, logger, threadRunner, timeSource) }
 
         beforeEachTest { ranOnThread = false }
 
@@ -208,6 +209,17 @@ object TelemetryUploadTaskSpec : Spek({
                                     and withException(exception)
                             ))
                         }
+
+                        it("reports the exception in telemetry") {
+                            verify(telemetrySessionBuilder).addEvent(
+                                CommonEvents.UnhandledException,
+                                mapOf(
+                                    CommonAttributes.Exception to AttributeValue(exception),
+                                    CommonAttributes.ExceptionCaughtAt to AttributeValue("batect.telemetry.TelemetryUploadTask.upload"),
+                                    CommonAttributes.IsUserFacingException to AttributeValue(false)
+                                )
+                            )
+                        }
                     }
 
                     given("the session is more than 30 days old") {
@@ -236,6 +248,21 @@ object TelemetryUploadTaskSpec : Spek({
                                     and withAdditionalData("sessionPath", sessionPath.toString())
                                     and withException(exception)
                             ))
+                        }
+
+                        it("reports the exception in telemetry") {
+                            verify(telemetrySessionBuilder).addEvent(
+                                CommonEvents.UnhandledException,
+                                mapOf(
+                                    CommonAttributes.Exception to AttributeValue(exception),
+                                    CommonAttributes.ExceptionCaughtAt to AttributeValue("batect.telemetry.TelemetryUploadTask.upload"),
+                                    CommonAttributes.IsUserFacingException to AttributeValue(false)
+                                )
+                            )
+                        }
+
+                        it("reports the fact that it deleted the exception in telemetry") {
+                            verify(telemetrySessionBuilder).addEvent("DeletedOldTelemetrySessionThatFailedToUpload", emptyMap())
                         }
                     }
 
@@ -268,6 +295,17 @@ object TelemetryUploadTaskSpec : Spek({
                                     and withException("uploadException", exception)
                                     and withAdditionalDataAndAnyValue("parsingException")
                             ))
+                        }
+
+                        it("reports the exception in telemetry") {
+                            verify(telemetrySessionBuilder).addEvent(
+                                CommonEvents.UnhandledException,
+                                mapOf(
+                                    CommonAttributes.Exception to AttributeValue(exception),
+                                    CommonAttributes.ExceptionCaughtAt to AttributeValue("batect.telemetry.TelemetryUploadTask.upload"),
+                                    CommonAttributes.IsUserFacingException to AttributeValue(false)
+                                )
+                            )
                         }
                     }
                 }

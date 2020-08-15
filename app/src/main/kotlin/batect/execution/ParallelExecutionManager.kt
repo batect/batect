@@ -25,6 +25,8 @@ import batect.execution.model.steps.TaskStepRunner
 import batect.execution.model.steps.data
 import batect.logging.Logger
 import batect.primitives.CancellationException
+import batect.telemetry.TelemetrySessionBuilder
+import batect.telemetry.addUnhandledExceptionEvent
 import batect.ui.EventLogger
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ExecutionException
@@ -42,6 +44,7 @@ class ParallelExecutionManager(
     private val eventLogger: EventLogger,
     private val taskStepRunner: TaskStepRunner,
     private val stateMachine: TaskStateMachine,
+    private val telemetrySessionBuilder: TelemetrySessionBuilder,
     private val logger: Logger
 ) : TaskEventSink {
     private val threadPool = createThreadPool()
@@ -68,6 +71,7 @@ class ParallelExecutionManager(
                         exception(t)
                     }
 
+                    telemetrySessionBuilder.addUnhandledExceptionEvent(t, isUserFacing = true)
                     postEvent(ExecutionFailedEvent(t.toString()))
                 }
 
@@ -143,6 +147,7 @@ class ParallelExecutionManager(
                             data("step", step)
                         }
 
+                        telemetrySessionBuilder.addUnhandledExceptionEvent(t, isUserFacing = true)
                         postEvent(ExecutionFailedEvent("During execution of step of kind '${step::class.simpleName}': " + t.toString()))
                     }
                 }

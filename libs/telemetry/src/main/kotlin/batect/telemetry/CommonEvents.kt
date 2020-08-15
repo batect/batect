@@ -16,6 +16,6 @@
 
 package batect.telemetry
 
-object EventTypes {
+object CommonEvents {
     const val UnhandledException = "UnhandledException"
 }

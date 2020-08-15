@@ -20,6 +20,8 @@ import batect.VersionInfo
 import batect.cli.CommandLineOptionsParser
 import batect.logging.Logger
 import batect.logging.data
+import batect.telemetry.TelemetrySessionBuilder
+import batect.telemetry.addUnhandledExceptionEvent
 import batect.ui.Console
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
@@ -30,11 +32,12 @@ class UpdateNotifier(
     private val updateInfoUpdater: UpdateInfoUpdater,
     private val versionInfo: VersionInfo,
     private val console: Console,
+    private val telemetrySessionBuilder: TelemetrySessionBuilder,
     private val logger: Logger,
     private val timeSource: () -> ZonedDateTime
 ) {
-    constructor(disableUpdateNotification: Boolean, updateInfoStorage: UpdateInfoStorage, updateInfoUpdater: UpdateInfoUpdater, versionInfo: VersionInfo, console: Console, logger: Logger) :
-        this(disableUpdateNotification, updateInfoStorage, updateInfoUpdater, versionInfo, console, logger, { ZonedDateTime.now(ZoneOffset.UTC) })
+    constructor(disableUpdateNotification: Boolean, updateInfoStorage: UpdateInfoStorage, updateInfoUpdater: UpdateInfoUpdater, versionInfo: VersionInfo, console: Console, telemetrySessionBuilder: TelemetrySessionBuilder, logger: Logger) :
+        this(disableUpdateNotification, updateInfoStorage, updateInfoUpdater, versionInfo, console, telemetrySessionBuilder, logger, { ZonedDateTime.now(ZoneOffset.UTC) })
 
     fun run() {
         if (disableUpdateNotification) {
@@ -62,6 +65,8 @@ class UpdateNotifier(
                 message("Could not load cached update information.")
                 exception(e)
             }
+
+            telemetrySessionBuilder.addUnhandledExceptionEvent(e, isUserFacing = false)
 
             return null
         }

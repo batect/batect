@@ -18,6 +18,10 @@ package batect.config.includes
 
 import batect.logging.Logger
 import batect.logging.Severity
+import batect.telemetry.AttributeValue
+import batect.telemetry.CommonAttributes
+import batect.telemetry.CommonEvents
+import batect.telemetry.TelemetrySessionBuilder
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given
@@ -45,6 +49,7 @@ import org.spekframework.spek2.style.specification.describe
 object GitRepositoryCacheCleanupTaskSpec : Spek({
     describe("a Git repository cache cleanup task") {
         val cache by createForEachTest { mock<GitRepositoryCache>() }
+        val telemetrySessionBuilder by createForEachTest { mock<TelemetrySessionBuilder>() }
         val logSink by createForEachTest { InMemoryLogSink() }
         val logger by createForEachTest { Logger("Test logger", logSink) }
         val now = ZonedDateTime.of(2020, 5, 13, 6, 30, 0, 0, ZoneOffset.UTC)
@@ -58,7 +63,7 @@ object GitRepositoryCacheCleanupTaskSpec : Spek({
             }
         }
 
-        val cleanupTask by createForEachTest { GitRepositoryCacheCleanupTask(cache, logger, threadRunner, timeSource) }
+        val cleanupTask by createForEachTest { GitRepositoryCacheCleanupTask(cache, telemetrySessionBuilder, logger, threadRunner, timeSource) }
 
         beforeEachTest { ranOnThread = false }
 
@@ -143,6 +148,17 @@ object GitRepositoryCacheCleanupTaskSpec : Spek({
                             and withException(exception)
                     ))
                 }
+
+                it("reports the exception in telemetry") {
+                    verify(telemetrySessionBuilder).addEvent(
+                        CommonEvents.UnhandledException,
+                        mapOf(
+                            CommonAttributes.Exception to AttributeValue(exception),
+                            CommonAttributes.ExceptionCaughtAt to AttributeValue("batect.config.includes.GitRepositoryCacheCleanupTask.delete"),
+                            CommonAttributes.IsUserFacingException to AttributeValue(false)
+                        )
+                    )
+                }
             }
         }
 
@@ -195,6 +211,17 @@ object GitRepositoryCacheCleanupTaskSpec : Spek({
                             and withSeverity(Severity.Warning)
                             and withException(exception)
                     ))
+                }
+
+                it("reports the exception in telemetry") {
+                    verify(telemetrySessionBuilder).addEvent(
+                        CommonEvents.UnhandledException,
+                        mapOf(
+                            CommonAttributes.Exception to AttributeValue(exception),
+                            CommonAttributes.ExceptionCaughtAt to AttributeValue("batect.config.includes.GitRepositoryCacheCleanupTask.delete"),
+                            CommonAttributes.IsUserFacingException to AttributeValue(false)
+                        )
+                    )
                 }
             }
         }

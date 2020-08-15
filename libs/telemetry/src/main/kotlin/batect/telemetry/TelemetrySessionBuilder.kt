@@ -70,3 +70,17 @@ class TelemetrySessionBuilder(
 
     private fun nowInUTC(): ZonedDateTime = timeSource().withZoneSameInstant(ZoneOffset.UTC)
 }
+
+fun TelemetrySessionBuilder.addUnhandledExceptionEvent(e: Throwable, isUserFacing: Boolean): TelemetrySessionBuilder {
+    val stackTrace = Thread.currentThread().stackTrace
+    val stackFrame = stackTrace.drop(2).first()
+
+    return this.addEvent(
+        CommonEvents.UnhandledException,
+        mapOf(
+            CommonAttributes.Exception to AttributeValue(e),
+            CommonAttributes.ExceptionCaughtAt to AttributeValue("${stackFrame.className}.${stackFrame.methodName}"),
+            CommonAttributes.IsUserFacingException to AttributeValue(isUserFacing)
+        )
+    )
+}

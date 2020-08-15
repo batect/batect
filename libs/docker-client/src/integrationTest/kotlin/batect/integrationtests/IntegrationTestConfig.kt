@@ -97,7 +97,7 @@ fun createClient(posix: POSIX = POSIXFactory.getNativePOSIX(), nativeMethods: Na
     val execClient = DockerExecClient(execAPI, streamer, logger)
     val imagesClient = DockerImagesClient(imagesAPI, credentialsProvider, imageBuildContextFactory, dockerfileParser, logger)
     val networksClient = DockerNetworksClient(networksAPI)
-    val systemInfoClient = DockerSystemInfoClient(systemInfoAPI, logger)
+    val systemInfoClient = DockerSystemInfoClient(systemInfoAPI, mock(), logger)
     val volumesClient = DockerVolumesClient(volumesAPI)
 
     return DockerClient(containersClient, execClient, imagesClient, networksClient, systemInfoClient, volumesClient)

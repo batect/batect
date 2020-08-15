@@ -23,6 +23,10 @@ import batect.execution.model.events.TaskEventSink
 import batect.execution.model.events.TaskFailedEvent
 import batect.execution.model.steps.TaskStepRunner
 import batect.primitives.CancellationException
+import batect.telemetry.AttributeValue
+import batect.telemetry.CommonAttributes
+import batect.telemetry.CommonEvents
+import batect.telemetry.TelemetrySessionBuilder
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
 import batect.testutils.createMockTaskStep
@@ -58,8 +62,9 @@ object ParallelExecutionManagerSpec : Spek({
 
         val taskStepRunner by createForEachTest { mock<TaskStepRunner>() }
         val stateMachine by createForEachTest { mock<TaskStateMachine>() }
+        val telemetrySessionBuilder by createForEachTest { mock<TelemetrySessionBuilder>() }
         val logger by createLoggerForEachTest()
-        val executionManager by createForEachTest { ParallelExecutionManager(eventLogger, taskStepRunner, stateMachine, logger) }
+        val executionManager by createForEachTest { ParallelExecutionManager(eventLogger, taskStepRunner, stateMachine, telemetrySessionBuilder, logger) }
 
         given("a single step is provided by the state machine") {
             val step by createForEachTest { createMockTaskStep() }
@@ -179,8 +184,10 @@ object ParallelExecutionManagerSpec : Spek({
             }
 
             given("the exception is not because the step was cancelled") {
+                val exception = ExecutionException("Something went wrong.", null)
+
                 beforeEachTest {
-                    whenever(taskStepRunner.run(eq(step), eq(executionManager))).then { throw ExecutionException("Something went wrong.", null) }
+                    whenever(taskStepRunner.run(eq(step), eq(executionManager))).then { throw exception }
                 }
 
                 on("running the task") {
@@ -192,6 +199,17 @@ object ParallelExecutionManagerSpec : Spek({
 
                     it("logs a task failure event to the state machine") {
                         verify(stateMachine).postEvent(ExecutionFailedEvent("During execution of step of kind '${step::class.simpleName}': java.util.concurrent.ExecutionException: Something went wrong."))
+                    }
+
+                    it("reports the exception in telemetry") {
+                        verify(telemetrySessionBuilder).addEvent(
+                            CommonEvents.UnhandledException,
+                            mapOf(
+                                CommonAttributes.Exception to AttributeValue(exception),
+                                CommonAttributes.ExceptionCaughtAt to AttributeValue("batect.execution.ParallelExecutionManager\$runStep$1.run"),
+                                CommonAttributes.IsUserFacingException to AttributeValue(true)
+                            )
+                        )
                     }
                 }
             }

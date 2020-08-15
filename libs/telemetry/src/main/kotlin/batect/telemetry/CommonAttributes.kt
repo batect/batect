@@ -19,4 +19,7 @@ package batect.telemetry
 object CommonAttributes {
     const val Exception = "exception"
     const val ExceptionCaughtAt = "exceptionCaughtAt"
+
+    // Did the user see an error message because of this exception?
+    const val IsUserFacingException = "isUserFacingException"
 }

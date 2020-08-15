@@ -25,10 +25,14 @@ import batect.docker.minimumDockerVersion
 import batect.logging.Logger
 import batect.primitives.Version
 import batect.primitives.VersionComparisonMode
+import batect.telemetry.AttributeValue
+import batect.telemetry.TelemetrySessionBuilder
+import batect.telemetry.addUnhandledExceptionEvent
 import java.io.IOException
 
 class DockerSystemInfoClient(
     private val api: SystemInfoAPI,
+    private val telemetrySessionBuilder: TelemetrySessionBuilder,
     private val logger: Logger
 ) {
     // Why does this method not just throw exceptions when things fail, like the other methods in this class do?
@@ -69,6 +73,8 @@ class DockerSystemInfoClient(
             }
 
             if (Version.parse(versionInfo.apiVersion).compareTo(Version.parse(minimumDockerAPIVersion), VersionComparisonMode.DockerStyle) < 0) {
+                telemetrySessionBuilder.addEvent("IncompatibleDockerVersion", mapOf("dockerVersion" to AttributeValue(versionInfo.version.toString())))
+
                 return DockerConnectivityCheckResult.Failed("batect requires Docker $minimumDockerVersion or later, but version ${versionInfo.version} is installed.")
             }
 
@@ -85,12 +91,16 @@ class DockerSystemInfoClient(
                 exception(e)
             }
 
+            telemetrySessionBuilder.addUnhandledExceptionEvent(e, isUserFacing = true)
+
             return DockerConnectivityCheckResult.Failed(e.message!!)
         } catch (e: IOException) {
             logger.warn {
                 message("Connectivity check failed.")
                 exception(e)
             }
+
+            telemetrySessionBuilder.addUnhandledExceptionEvent(e, isUserFacing = true)
 
             return DockerConnectivityCheckResult.Failed(e.message!!)
         }

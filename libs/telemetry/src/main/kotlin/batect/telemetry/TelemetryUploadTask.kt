@@ -28,6 +28,7 @@ class TelemetryUploadTask(
     private val telemetryConsent: TelemetryConsent,
     private val telemetryUploadQueue: TelemetryUploadQueue,
     private val abacusClient: AbacusClient,
+    private val telemetrySessionBuilder: TelemetrySessionBuilder,
     private val logger: Logger,
     private val threadRunner: ThreadRunner = defaultThreadRunner,
     private val timeSource: TimeSource = ZonedDateTime::now
@@ -84,6 +85,8 @@ class TelemetryUploadTask(
                 data("sessionPath", sessionPath)
             }
         } catch (e: Throwable) {
+            telemetrySessionBuilder.addUnhandledExceptionEvent(e, isUserFacing = false)
+
             handleFailedUpload(sessionPath, bytes, e)
         }
     }
@@ -98,6 +101,8 @@ class TelemetryUploadTask(
                 exception("uploadException", uploadException)
                 exception("parsingException", parsingException)
             }
+
+            telemetrySessionBuilder.addUnhandledExceptionEvent(parsingException, isUserFacing = false)
 
             return
         }
@@ -122,6 +127,8 @@ class TelemetryUploadTask(
             data("sessionPath", sessionPath)
             exception(uploadException)
         }
+
+        telemetrySessionBuilder.addEvent("DeletedOldTelemetrySessionThatFailedToUpload", emptyMap())
     }
 
     companion object {

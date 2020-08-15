@@ -147,6 +147,7 @@ This information does not include personal or sensitive information such as the 
 | **Exception information** |
 | Type of exception | `IOException` or `ContainerCreationFailedException` | Helps understand possible bugs, helps understand the frequency with which users see certain classes of errors and hepls plan and prioritise possible future features (eg. recovering from errors automatically or suggesting recovery actions to the user)
 | Stack trace | | Helps understand possible bugs, helps understand the frequency with which users see certain classes of errors and hepls plan and prioritise possible future features (eg. recovering from errors automatically or suggesting recovery actions to the user)
+| Whether the exception was user-facing or not (eg. occurred in a cache cleanup background task) | `false` | Helps understand possible bugs, helps understand the frequency with which users see certain classes of errors and hepls plan and prioritise possible future features (eg. recovering from errors automatically or suggesting recovery actions to the user)
 
 ### What data is not collected
 

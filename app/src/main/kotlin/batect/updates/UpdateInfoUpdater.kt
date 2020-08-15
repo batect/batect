@@ -17,11 +17,14 @@
 package batect.updates
 
 import batect.logging.Logger
+import batect.telemetry.TelemetrySessionBuilder
+import batect.telemetry.addUnhandledExceptionEvent
 import kotlin.concurrent.thread
 
 class UpdateInfoUpdater(
     private val updateInfoDownloader: UpdateInfoDownloader,
     private val updateInfoStorage: UpdateInfoStorage,
+    private val telemetrySessionBuilder: TelemetrySessionBuilder,
     private val logger: Logger,
     private val threadRunner: ThreadRunner = defaultThreadRunner
 ) {
@@ -35,6 +38,8 @@ class UpdateInfoUpdater(
                     message("Could not update cached update information.")
                     exception(e)
                 }
+
+                telemetrySessionBuilder.addUnhandledExceptionEvent(e, isUserFacing = false)
             }
         }
     }

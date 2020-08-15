@@ -103,4 +103,6 @@ class TaskExecutionOrderResolver(
     }
 }
 
-class TaskExecutionOrderResolutionException(message: String) : RuntimeException(message)
+class TaskExecutionOrderResolutionException(override val message: String) : RuntimeException(message) {
+    override fun toString(): String = message
+}

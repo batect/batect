@@ -19,6 +19,10 @@ package batect.updates
 import batect.logging.Logger
 import batect.logging.Severity
 import batect.primitives.Version
+import batect.telemetry.AttributeValue
+import batect.telemetry.CommonAttributes
+import batect.telemetry.CommonEvents
+import batect.telemetry.TelemetrySessionBuilder
 import batect.testutils.createForEachTest
 import batect.testutils.logging.InMemoryLogSink
 import batect.testutils.logging.hasMessage
@@ -49,6 +53,7 @@ object UpdateInfoUpdaterSpec : Spek({
 
         val updateInfoDownloader by createForEachTest { mock<UpdateInfoDownloader>() }
         val updateInfoStorage by createForEachTest { mock<UpdateInfoStorage>() }
+        val telemetrySessionBuilder by createForEachTest { mock<TelemetrySessionBuilder>() }
         val logSink by createForEachTest { InMemoryLogSink() }
         val logger by createForEachTest { Logger("some.source", logSink) }
         var backgroundProcess: BackgroundProcess? = null
@@ -56,7 +61,7 @@ object UpdateInfoUpdaterSpec : Spek({
             backgroundProcess = code
         }
 
-        val updateInfoUpdater by createForEachTest { UpdateInfoUpdater(updateInfoDownloader, updateInfoStorage, logger, threadRunner) }
+        val updateInfoUpdater by createForEachTest { UpdateInfoUpdater(updateInfoDownloader, updateInfoStorage, telemetrySessionBuilder, logger, threadRunner) }
 
         beforeEachTest {
             backgroundProcess = null
@@ -104,6 +109,17 @@ object UpdateInfoUpdaterSpec : Spek({
                         and withException(exception)
                 ))
             }
+
+            it("reports the exception in telemetry") {
+                verify(telemetrySessionBuilder).addEvent(
+                    CommonEvents.UnhandledException,
+                    mapOf(
+                        CommonAttributes.Exception to AttributeValue(exception),
+                        CommonAttributes.ExceptionCaughtAt to AttributeValue("batect.updates.UpdateInfoUpdater\$updateCachedInfo\$1.invoke"),
+                        CommonAttributes.IsUserFacingException to AttributeValue(false)
+                    )
+                )
+            }
         }
 
         on("writing the updated release information to disk failing") {
@@ -123,6 +139,17 @@ object UpdateInfoUpdaterSpec : Spek({
                         and withSeverity(Severity.Warning)
                         and withException(exception)
                 ))
+            }
+
+            it("reports the exception in telemetry") {
+                verify(telemetrySessionBuilder).addEvent(
+                    CommonEvents.UnhandledException,
+                    mapOf(
+                        CommonAttributes.Exception to AttributeValue(exception),
+                        CommonAttributes.ExceptionCaughtAt to AttributeValue("batect.updates.UpdateInfoUpdater\$updateCachedInfo\$1.invoke"),
+                        CommonAttributes.IsUserFacingException to AttributeValue(false)
+                    )
+                )
             }
         }
     }

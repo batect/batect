@@ -31,6 +31,7 @@ dependencies {
     implementation project(':libs:logging')
     implementation project(':libs:os')
     implementation project(':libs:sockets')
+    implementation project(':libs:telemetry')
     implementation project(':libs:primitives')
 
     testImplementation 'com.google.jimfs:jimfs:1.1'

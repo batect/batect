@@ -206,7 +206,7 @@ private val cliModule = DI.Module("cli") {
     bind<CommandLineOptionsParser>() with singleton { CommandLineOptionsParser(instance(), instance(), instance(), instance()) }
     bind<EnvironmentVariableDefaultValueProviderFactory>() with singleton { EnvironmentVariableDefaultValueProviderFactory(instance()) }
 
-    bind<RunTaskCommand>() with singletonWithLogger { logger ->
+    bind<RunTaskCommand>() with singleton {
         RunTaskCommand(
             commandLineOptions().configurationFileName,
             instance(RunOptionsType.Overall),
@@ -216,9 +216,7 @@ private val cliModule = DI.Module("cli") {
             instance(),
             instance(),
             commandLineOptions().requestedOutputStyle,
-            instance(StreamType.Output),
-            instance(StreamType.Error),
-            logger
+            instance(StreamType.Output)
         )
     }
 
@@ -230,13 +228,13 @@ private val cliModule = DI.Module("cli") {
     bind<HelpCommand>() with singleton { HelpCommand(instance(), instance(StreamType.Output), instance()) }
     bind<ListTasksCommand>() with singleton { ListTasksCommand(commandLineOptions().configurationFileName, instance(), instance(StreamType.Output)) }
     bind<VersionInfoCommand>() with singleton { VersionInfoCommand(instance(), instance(StreamType.Output), instance(), instance(), instance(), instance()) }
-    bind<UpgradeCommand>() with singletonWithLogger { logger -> UpgradeCommand(instance(), instance(), instance(), instance(), instance(StreamType.Output), instance(StreamType.Error), instance(), logger) }
+    bind<UpgradeCommand>() with singletonWithLogger { logger -> UpgradeCommand(instance(), instance(), instance(), instance(), instance(StreamType.Output), instance(StreamType.Error), instance(), instance(), logger) }
 }
 
 private val configModule = DI.Module("config") {
     bind<ConfigurationLoader>() with singletonWithLogger { logger -> ConfigurationLoader(instance(), instance(), logger) }
     bind<GitRepositoryCache>() with singleton { GitRepositoryCache(instance(), instance(), instance(), instance()) }
-    bind<GitRepositoryCacheCleanupTask>() with singletonWithLogger { logger -> GitRepositoryCacheCleanupTask(instance(), logger) }
+    bind<GitRepositoryCacheCleanupTask>() with singletonWithLogger { logger -> GitRepositoryCacheCleanupTask(instance(), instance(), logger) }
     bind<GitRepositoryCacheNotificationListener>() with singleton { GitRepositoryCacheNotificationListener(instance(StreamType.Output), commandLineOptions().requestedOutputStyle) }
     bind<IncludeResolver>() with singleton { IncludeResolver(instance()) }
     bind<PathResolverFactory>() with singleton { PathResolverFactory(instance()) }
@@ -263,6 +261,7 @@ private val dockerModule = DI.Module("docker") {
     bind<DockerRegistryDomainResolver>() with singleton { DockerRegistryDomainResolver() }
     bind<DockerRegistryIndexResolver>() with singleton { DockerRegistryIndexResolver() }
     bind<DockerResourceNameGenerator>() with scoped(TaskScope).singleton { DockerResourceNameGenerator(instance()) }
+
     bind<DockerTLSConfig>() with singleton {
         val options = commandLineOptions()
 
@@ -288,7 +287,7 @@ private val dockerClientModule = DI.Module("docker.client") {
     bind<DockerExecClient>() with singletonWithLogger { logger -> DockerExecClient(instance(), instance(), logger) }
     bind<DockerImagesClient>() with singletonWithLogger { logger -> DockerImagesClient(instance(), instance(), instance(), instance(), logger) }
     bind<DockerNetworksClient>() with singleton { DockerNetworksClient(instance()) }
-    bind<DockerSystemInfoClient>() with singletonWithLogger { logger -> DockerSystemInfoClient(instance(), logger) }
+    bind<DockerSystemInfoClient>() with singletonWithLogger { logger -> DockerSystemInfoClient(instance(), instance(), logger) }
     bind<DockerVolumesClient>() with singleton { DockerVolumesClient(instance()) }
     bind<DockerClient>() with singleton { DockerClient(instance(), instance(), instance(), instance(), instance(), instance()) }
 }
@@ -319,7 +318,7 @@ private val executionModule = DI.Module("execution") {
     bind<ContainerDependencyGraphProvider>() with singletonWithLogger { logger -> ContainerDependencyGraphProvider(instance(), instance(), logger) }
     bind<ContainerEntrypointResolver>() with singleton { ContainerEntrypointResolver() }
     bind<InterruptionTrap>() with singleton { InterruptionTrap(instance()) }
-    bind<ParallelExecutionManager>() with scoped(TaskScope).singletonWithLogger { logger -> ParallelExecutionManager(instance(), instance(), instance(), logger) }
+    bind<ParallelExecutionManager>() with scoped(TaskScope).singletonWithLogger { logger -> ParallelExecutionManager(instance(), instance(), instance(), instance(), logger) }
     bind<RunAsCurrentUserConfigurationProvider>() with singleton { RunAsCurrentUserConfigurationProvider(instance(), instance(), instance(), instance()) }
     bind<RunOptions>(RunOptionsType.Overall) with singleton { RunOptions(commandLineOptions()) }
     bind<RunStagePlanner>() with scoped(TaskScope).singletonWithLogger { logger -> RunStagePlanner(instance(), logger) }
@@ -379,7 +378,7 @@ private val telemetryModule = DI.Module("telemetry") {
     bind<TelemetryManager>() with singletonWithLogger { logger -> TelemetryManager(instance(), instance(), instance(), instance(), instance(), logger) }
     bind<TelemetrySessionBuilder>() with instance(TelemetrySessionBuilder(VersionInfo()))
     bind<TelemetryUploadQueue>() with singletonWithLogger { logger -> TelemetryUploadQueue(instance(), logger) }
-    bind<TelemetryUploadTask>() with singletonWithLogger { logger -> TelemetryUploadTask(instance(), instance(), instance(), logger) }
+    bind<TelemetryUploadTask>() with singletonWithLogger { logger -> TelemetryUploadTask(instance(), instance(), instance(), instance(), logger) }
 }
 
 private val unixModule = DI.Module("os.unix") {
@@ -422,13 +421,13 @@ private val uiModule = DI.Module("ui") {
 private val updatesModule = DI.Module("updates") {
     bind<UpdateInfoDownloader>() with singletonWithLogger { logger -> UpdateInfoDownloader(instance(), logger) }
     bind<UpdateInfoStorage>() with singletonWithLogger { logger -> UpdateInfoStorage(instance(), logger) }
-    bind<UpdateInfoUpdater>() with singletonWithLogger { logger -> UpdateInfoUpdater(instance(), instance(), logger) }
-    bind<UpdateNotifier>() with singletonWithLogger { logger -> UpdateNotifier(commandLineOptions().disableUpdateNotification, instance(), instance(), instance(), instance(StreamType.Output), logger) }
+    bind<UpdateInfoUpdater>() with singletonWithLogger { logger -> UpdateInfoUpdater(instance(), instance(), instance(), logger) }
+    bind<UpdateNotifier>() with singletonWithLogger { logger -> UpdateNotifier(commandLineOptions().disableUpdateNotification, instance(), instance(), instance(), instance(StreamType.Output), instance(), logger) }
 }
 
 private val wrapperModule = DI.Module("wrapper") {
     bind<WrapperCache>() with singletonWithLogger { logger -> WrapperCache(instance(), instance(), logger) }
-    bind<WrapperCacheCleanupTask>() with singletonWithLogger { logger -> WrapperCacheCleanupTask(!commandLineOptions().disableWrapperCacheCleanup, instance(), instance(), logger) }
+    bind<WrapperCacheCleanupTask>() with singletonWithLogger { logger -> WrapperCacheCleanupTask(!commandLineOptions().disableWrapperCacheCleanup, instance(), instance(), instance(), logger) }
 }
 
 private val coreModule = DI.Module("core") {

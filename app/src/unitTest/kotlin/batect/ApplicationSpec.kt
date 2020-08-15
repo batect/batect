@@ -30,8 +30,8 @@ import batect.os.ConsoleManager
 import batect.os.SystemInfo
 import batect.telemetry.AttributeValue
 import batect.telemetry.CommonAttributes
+import batect.telemetry.CommonEvents
 import batect.telemetry.EnvironmentTelemetryCollector
-import batect.telemetry.EventTypes
 import batect.telemetry.TelemetryConsentPrompt
 import batect.telemetry.TelemetryManager
 import batect.telemetry.TelemetrySessionBuilder
@@ -206,10 +206,11 @@ object ApplicationSpec : Spek({
                             verify(telemetrySessionBuilder).addAttribute("exitCode", exitCode)
                         }
 
-                        it("adds an exception event to the telemetry session") {
-                            verify(telemetrySessionBuilder).addEvent(EventTypes.UnhandledException, mapOf(
+                        it("reports the exception in telemetry") {
+                            verify(telemetrySessionBuilder).addEvent(CommonEvents.UnhandledException, mapOf(
                                 CommonAttributes.Exception to AttributeValue(exception),
-                                CommonAttributes.ExceptionCaughtAt to AttributeValue("Application.runCommand")
+                                CommonAttributes.ExceptionCaughtAt to AttributeValue("batect.Application.runCommand"),
+                                CommonAttributes.IsUserFacingException to AttributeValue(true)
                             ))
                         }
 

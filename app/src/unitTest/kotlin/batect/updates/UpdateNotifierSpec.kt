@@ -18,6 +18,10 @@ package batect.updates
 
 import batect.VersionInfo
 import batect.primitives.Version
+import batect.telemetry.AttributeValue
+import batect.telemetry.CommonAttributes
+import batect.telemetry.CommonEvents
+import batect.telemetry.TelemetrySessionBuilder
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
 import batect.testutils.on
@@ -39,6 +43,7 @@ object UpdateNotifierSpec : Spek({
         val updateInfoUpdater by createForEachTest { mock<UpdateInfoUpdater>() }
         val versionInfo by createForEachTest { mock<VersionInfo>() }
         val console by createForEachTest { mock<Console>() }
+        val telemetrySessionBuilder by createForEachTest { mock<TelemetrySessionBuilder>() }
         val logger by createLoggerForEachTest()
         var currentTime = ZonedDateTime.of(0, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC)
 
@@ -48,7 +53,7 @@ object UpdateNotifierSpec : Spek({
 
         on("when the update notification is disabled") {
             beforeEachTest {
-                val updateNotifier = UpdateNotifier(true, updateInfoStorage, updateInfoUpdater, versionInfo, console, logger, { currentTime })
+                val updateNotifier = UpdateNotifier(true, updateInfoStorage, updateInfoUpdater, versionInfo, console, telemetrySessionBuilder, logger, { currentTime })
                 updateNotifier.run()
             }
 
@@ -66,7 +71,7 @@ object UpdateNotifierSpec : Spek({
         }
 
         describe("when the update notification is enabled") {
-            val updateNotifier by createForEachTest { UpdateNotifier(false, updateInfoStorage, updateInfoUpdater, versionInfo, console, logger, { currentTime }) }
+            val updateNotifier by createForEachTest { UpdateNotifier(false, updateInfoStorage, updateInfoUpdater, versionInfo, console, telemetrySessionBuilder, logger, { currentTime }) }
 
             on("when no cached update information is available") {
                 beforeEachTest {
@@ -84,8 +89,10 @@ object UpdateNotifierSpec : Spek({
             }
 
             on("when the cached update information can't be read") {
+                val exception = RuntimeException("Something went wrong")
+
                 beforeEachTest {
-                    whenever(updateInfoStorage.read()).thenThrow(RuntimeException("Something went wrong"))
+                    whenever(updateInfoStorage.read()).thenThrow(exception)
                     updateNotifier.run()
                 }
 
@@ -95,6 +102,17 @@ object UpdateNotifierSpec : Spek({
 
                 it("triggers an update of the cached update info") {
                     verify(updateInfoUpdater).updateCachedInfo()
+                }
+
+                it("reports the exception in telemetry") {
+                    verify(telemetrySessionBuilder).addEvent(
+                        CommonEvents.UnhandledException,
+                        mapOf(
+                            CommonAttributes.Exception to AttributeValue(exception),
+                            CommonAttributes.ExceptionCaughtAt to AttributeValue("batect.updates.UpdateNotifier.tryToLoadCachedInfo"),
+                            CommonAttributes.IsUserFacingException to AttributeValue(false)
+                        )
+                    )
                 }
             }
 

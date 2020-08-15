@@ -18,6 +18,10 @@ package batect.wrapper
 
 import batect.VersionInfo
 import batect.primitives.Version
+import batect.telemetry.AttributeValue
+import batect.telemetry.CommonAttributes
+import batect.telemetry.CommonEvents
+import batect.telemetry.TelemetrySessionBuilder
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
 import batect.testutils.equalTo
@@ -49,13 +53,14 @@ object WrapperCacheCleanupTaskSpec : Spek({
             }
         }
 
+        val telemetrySessionBuilder by createForEachTest { mock<TelemetrySessionBuilder>() }
         val logger by createLoggerForEachTest()
         val now = ZonedDateTime.of(2020, 5, 13, 6, 30, 0, 0, ZoneOffset.UTC)
         val timeSource: TimeSource = { now }
 
         given("cleaning up the wrapper cache is enabled") {
             val threadRunner: ThreadRunner = { block -> block() }
-            val cleanupTask by createForEachTest { WrapperCacheCleanupTask(true, wrapperCache, versionInfo, logger, threadRunner, timeSource) }
+            val cleanupTask by createForEachTest { WrapperCacheCleanupTask(true, wrapperCache, versionInfo, telemetrySessionBuilder, logger, threadRunner, timeSource) }
 
             fun runTaskWithCachedVersions(vararg versions: CachedWrapperVersion) {
                 whenever(wrapperCache.getCachedVersions()).doReturn(versions.toSet())
@@ -238,8 +243,10 @@ object WrapperCacheCleanupTaskSpec : Spek({
                         }
 
                         given("the first version fails to delete") {
+                            val exception = RuntimeException("Something went wrong.")
+
                             beforeEachTest {
-                                whenever(wrapperCache.delete(version1)).doThrow(RuntimeException("Something went wrong."))
+                                whenever(wrapperCache.delete(version1)).doThrow(exception)
 
                                 runTaskWithCachedVersions(version1, version2)
                             }
@@ -247,12 +254,25 @@ object WrapperCacheCleanupTaskSpec : Spek({
                             it("attempts to delete both versions") {
                                 verify(wrapperCache).delete(version1)
                                 verify(wrapperCache).delete(version2)
+                            }
+
+                            it("reports the exception in telemetry") {
+                                verify(telemetrySessionBuilder).addEvent(
+                                    CommonEvents.UnhandledException,
+                                    mapOf(
+                                        CommonAttributes.Exception to AttributeValue(exception),
+                                        CommonAttributes.ExceptionCaughtAt to AttributeValue("batect.wrapper.WrapperCacheCleanupTask.processCachedWrapper"),
+                                        CommonAttributes.IsUserFacingException to AttributeValue(false)
+                                    )
+                                )
                             }
                         }
 
                         given("the second version fails to delete") {
+                            val exception = RuntimeException("Something went wrong.")
+
                             beforeEachTest {
-                                whenever(wrapperCache.delete(version2)).doThrow(RuntimeException("Something went wrong."))
+                                whenever(wrapperCache.delete(version2)).doThrow(exception)
 
                                 runTaskWithCachedVersions(version1, version2)
                             }
@@ -260,6 +280,17 @@ object WrapperCacheCleanupTaskSpec : Spek({
                             it("attempts to delete both versions") {
                                 verify(wrapperCache).delete(version1)
                                 verify(wrapperCache).delete(version2)
+                            }
+
+                            it("reports the exception in telemetry") {
+                                verify(telemetrySessionBuilder).addEvent(
+                                    CommonEvents.UnhandledException,
+                                    mapOf(
+                                        CommonAttributes.Exception to AttributeValue(exception),
+                                        CommonAttributes.ExceptionCaughtAt to AttributeValue("batect.wrapper.WrapperCacheCleanupTask.processCachedWrapper"),
+                                        CommonAttributes.IsUserFacingException to AttributeValue(false)
+                                    )
+                                )
                             }
                         }
                     }
@@ -304,7 +335,7 @@ object WrapperCacheCleanupTaskSpec : Spek({
                 block()
             }
 
-            val cleanupTask by createForEachTest { WrapperCacheCleanupTask(false, wrapperCache, versionInfo, logger, threadRunner, timeSource) }
+            val cleanupTask by createForEachTest { WrapperCacheCleanupTask(false, wrapperCache, versionInfo, telemetrySessionBuilder, logger, threadRunner, timeSource) }
 
             beforeEachTest { threadStarted = false }
 

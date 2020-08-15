@@ -22,14 +22,11 @@ import batect.config.Task
 import batect.config.io.ConfigurationLoader
 import batect.execution.CleanupOption
 import batect.execution.RunOptions
-import batect.execution.TaskExecutionOrderResolutionException
 import batect.execution.TaskExecutionOrderResolver
 import batect.execution.TaskRunner
 import batect.ioc.SessionKodeinFactory
-import batect.logging.Logger
 import batect.ui.Console
 import batect.ui.OutputStyle
-import batect.ui.text.Text
 import batect.updates.UpdateNotifier
 import java.nio.file.Path
 import org.kodein.di.DirectDI
@@ -44,9 +41,7 @@ class RunTaskCommand(
     private val backgroundTaskManager: BackgroundTaskManager,
     private val dockerConnectivity: DockerConnectivity,
     private val requestedOutputStyle: OutputStyle?,
-    private val console: Console,
-    private val errorConsole: Console,
-    private val logger: Logger
+    private val console: Console
 ) : Command {
 
     override fun run(): Int {
@@ -65,25 +60,15 @@ class RunTaskCommand(
     }
 
     private fun runFromConfig(kodein: DirectDI, config: Configuration): Int {
-        try {
-            val tasks = taskExecutionOrderResolver.resolveExecutionOrder(config, runOptions.taskName)
+        val tasks = taskExecutionOrderResolver.resolveExecutionOrder(config, runOptions.taskName)
 
-            if (requestedOutputStyle != OutputStyle.Quiet) {
-                updateNotifier.run()
-            }
-
-            backgroundTaskManager.startBackgroundTasks()
-
-            return runTasks(kodein, config, tasks)
-        } catch (e: TaskExecutionOrderResolutionException) {
-            logger.error {
-                message("Could not resolve task execution order.")
-                exception(e)
-            }
-
-            errorConsole.println(Text.red(e.message ?: ""))
-            return -1
+        if (requestedOutputStyle != OutputStyle.Quiet) {
+            updateNotifier.run()
         }
+
+        backgroundTaskManager.startBackgroundTasks()
+
+        return runTasks(kodein, config, tasks)
     }
 
     private fun runTasks(kodein: DirectDI, config: Configuration, tasks: List<Task>): Int {

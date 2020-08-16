@@ -38,8 +38,8 @@ data class TelemetrySession(
     val applicationId: String,
     val applicationVersion: String,
     val attributes: Map<String, JsonPrimitive>,
-    val events: Set<TelemetryEvent>,
-    val spans: Set<TelemetrySpan>
+    val events: List<TelemetryEvent>,
+    val spans: List<TelemetrySpan>
 ) {
     init {
         if (sessionId.version() != 4) {

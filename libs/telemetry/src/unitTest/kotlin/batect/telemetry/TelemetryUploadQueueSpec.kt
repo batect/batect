@@ -69,7 +69,7 @@ object TelemetryUploadQueueSpec : Spek({
                     "someBoolean" to JsonLiteral(false),
                     "someNull" to JsonNull
                 ),
-                setOf(
+                listOf(
                     TelemetryEvent(
                         "some-event",
                         ZonedDateTime.of(2020, 8, 7, 3, 49, 20, 678, ZoneOffset.UTC),
@@ -81,7 +81,7 @@ object TelemetryUploadQueueSpec : Spek({
                         )
                     )
                 ),
-                setOf(
+                listOf(
                     TelemetrySpan(
                         "some-span",
                         ZonedDateTime.of(2020, 8, 7, 3, 49, 30, 678, ZoneOffset.UTC),

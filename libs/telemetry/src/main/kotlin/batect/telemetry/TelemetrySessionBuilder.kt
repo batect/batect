@@ -20,7 +20,7 @@ import batect.primitives.ApplicationVersionInfoProvider
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.util.UUID
-import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ConcurrentLinkedQueue
 
 class TelemetrySessionBuilder(
     private val versionInfo: ApplicationVersionInfoProvider,
@@ -31,19 +31,32 @@ class TelemetrySessionBuilder(
     private val applicationId: String = "batect"
     private val applicationVersion: String = versionInfo.version.toString()
     private val attributesBuilder = TelemetryAttributeSetBuilder()
-    private val events = ConcurrentHashMap.newKeySet<TelemetryEvent>()
+    private val events = ConcurrentLinkedQueue<TelemetryEvent>()
+    private val spans = ConcurrentLinkedQueue<TelemetrySpan>()
 
     fun addAttribute(attributeName: String, value: String?) = attributesBuilder.addAttribute(attributeName, value)
     fun addAttribute(attributeName: String, value: Boolean?) = attributesBuilder.addAttribute(attributeName, value)
     fun addAttribute(attributeName: String, value: Int?) = attributesBuilder.addAttribute(attributeName, value)
     fun addNullAttribute(attributeName: String) = attributesBuilder.addNullAttribute(attributeName)
 
-    fun addEvent(type: String, attributes: Map<String, AttributeValue>): TelemetrySessionBuilder {
+    fun addEvent(type: String, attributes: Map<String, AttributeValue>) {
         val event = TelemetryEvent(type, nowInUTC(), attributes.mapValues { it.value.json })
 
         events.add(event)
+    }
 
-        return this
+    fun <R> addSpan(type: String, process: (TelemetrySpanBuilder) -> R): R {
+        val startTime = nowInUTC()
+        val builder = TelemetrySpanBuilder()
+
+        try {
+            return process(builder)
+        } finally {
+            val endTime = nowInUTC()
+            val span = TelemetrySpan(type, startTime, endTime, builder.buildAttributes())
+
+            spans.add(span)
+        }
     }
 
     // Why is TelemetryConfigurationStore passed in here rather than passed in as a constructor parameter?
@@ -52,17 +65,17 @@ class TelemetrySessionBuilder(
     fun build(telemetryConfigurationStore: TelemetryConfigurationStore): TelemetrySession {
         val userId = telemetryConfigurationStore.currentConfiguration.userId
 
-        return TelemetrySession(sessionId, userId, sessionStartTime, nowInUTC(), applicationId, applicationVersion, attributesBuilder.build(), events, emptySet())
+        return TelemetrySession(sessionId, userId, sessionStartTime, nowInUTC(), applicationId, applicationVersion, attributesBuilder.build(), events.toList(), spans.toList())
     }
 
     private fun nowInUTC(): ZonedDateTime = timeSource().withZoneSameInstant(ZoneOffset.UTC)
 }
 
-fun TelemetrySessionBuilder.addUnhandledExceptionEvent(e: Throwable, isUserFacing: Boolean): TelemetrySessionBuilder {
+fun TelemetrySessionBuilder.addUnhandledExceptionEvent(e: Throwable, isUserFacing: Boolean) {
     val stackTrace = Thread.currentThread().stackTrace
     val stackFrame = stackTrace.drop(2).first()
 
-    return this.addEvent(
+    this.addEvent(
         CommonEvents.UnhandledException,
         mapOf(
             CommonAttributes.Exception to AttributeValue(e),

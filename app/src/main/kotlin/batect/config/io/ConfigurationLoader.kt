@@ -39,6 +39,7 @@ import batect.os.PathResolver
 import batect.os.PathResolverFactory
 import batect.primitives.flatMapToSet
 import batect.primitives.mapToSet
+import batect.telemetry.TelemetrySessionBuilder
 import batect.utils.asHumanReadableList
 import com.charleskorn.kaml.EmptyYamlDocumentException
 import com.charleskorn.kaml.PolymorphismStyle
@@ -53,51 +54,60 @@ import kotlinx.serialization.modules.serializersModuleOf
 class ConfigurationLoader(
     private val includeResolver: IncludeResolver,
     private val pathResolverFactory: PathResolverFactory,
+    private val telemetrySessionBuilder: TelemetrySessionBuilder,
     private val logger: Logger
 ) {
     fun loadConfig(rootConfigFilePath: Path): Configuration {
-        val absolutePathToRootConfigFile = rootConfigFilePath.toAbsolutePath()
+        return telemetrySessionBuilder.addSpan("LoadConfiguration") { span ->
+            val absolutePathToRootConfigFile = rootConfigFilePath.toAbsolutePath()
 
-        logger.info {
-            message("Loading configuration.")
-            data("rootConfigFilePath", absolutePathToRootConfigFile)
-        }
-
-        if (!Files.exists(absolutePathToRootConfigFile)) {
-            logger.error {
-                message("Root configuration file could not be found.")
+            logger.info {
+                message("Loading configuration.")
                 data("rootConfigFilePath", absolutePathToRootConfigFile)
             }
 
-            throw ConfigurationException("The file '$absolutePathToRootConfigFile' does not exist.")
+            if (!Files.exists(absolutePathToRootConfigFile)) {
+                logger.error {
+                    message("Root configuration file could not be found.")
+                    data("rootConfigFilePath", absolutePathToRootConfigFile)
+                }
+
+                throw ConfigurationException("The file '$absolutePathToRootConfigFile' does not exist.")
+            }
+
+            val rootConfigFile = loadConfigFile(absolutePathToRootConfigFile, null)
+            val filesLoaded = mutableMapOf<Include, ConfigurationFile>(FileInclude(absolutePathToRootConfigFile) to rootConfigFile)
+            val remainingIncludesToLoad = mutableSetOf<Include>()
+            remainingIncludesToLoad += rootConfigFile.includes
+
+            while (remainingIncludesToLoad.isNotEmpty()) {
+                val includeToLoad = remainingIncludesToLoad.first()
+                val pathToLoad = includeResolver.resolve(includeToLoad)
+                val file = loadConfigFile(pathToLoad, includeToLoad)
+                checkForProjectName(file, includeToLoad)
+
+                filesLoaded[includeToLoad] = file
+                remainingIncludesToLoad.remove(includeToLoad)
+                remainingIncludesToLoad += file.includes
+                remainingIncludesToLoad -= filesLoaded.keys
+            }
+
+            val projectName = rootConfigFile.projectName ?: inferProjectName(absolutePathToRootConfigFile)
+            val config = Configuration(projectName, mergeTasks(filesLoaded), mergeContainers(filesLoaded), mergeConfigVariables(filesLoaded))
+
+            logger.info {
+                message("Configuration loaded.")
+                data("config", config)
+            }
+
+            span.addAttribute("containerCount", config.containers.size)
+            span.addAttribute("taskCount", config.tasks.size)
+            span.addAttribute("configVariableCount", config.configVariables.size)
+            span.addAttribute("fileIncludeCount", filesLoaded.keys.count { it is FileInclude } - 1)
+            span.addAttribute("gitIncludeCount", filesLoaded.keys.count { it is GitInclude })
+
+            config
         }
-
-        val rootConfigFile = loadConfigFile(absolutePathToRootConfigFile, null)
-        val filesLoaded = mutableMapOf<Include, ConfigurationFile>(FileInclude(absolutePathToRootConfigFile) to rootConfigFile)
-        val remainingIncludesToLoad = mutableSetOf<Include>()
-        remainingIncludesToLoad += rootConfigFile.includes
-
-        while (remainingIncludesToLoad.isNotEmpty()) {
-            val includeToLoad = remainingIncludesToLoad.first()
-            val pathToLoad = includeResolver.resolve(includeToLoad)
-            val file = loadConfigFile(pathToLoad, includeToLoad)
-            checkForProjectName(file, includeToLoad)
-
-            filesLoaded[includeToLoad] = file
-            remainingIncludesToLoad.remove(includeToLoad)
-            remainingIncludesToLoad += file.includes
-            remainingIncludesToLoad -= filesLoaded.keys
-        }
-
-        val projectName = rootConfigFile.projectName ?: inferProjectName(absolutePathToRootConfigFile)
-        val config = Configuration(projectName, mergeTasks(filesLoaded), mergeContainers(filesLoaded), mergeConfigVariables(filesLoaded))
-
-        logger.info {
-            message("Configuration loaded.")
-            data("config", config)
-        }
-
-        return config
     }
 
     private fun loadConfigFile(path: Path, includedAs: Include?): ConfigurationFile {

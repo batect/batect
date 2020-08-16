@@ -40,6 +40,8 @@ import batect.git.GitException
 import batect.os.Command
 import batect.os.DefaultPathResolutionContext
 import batect.os.PathResolverFactory
+import batect.telemetry.TelemetrySessionBuilder
+import batect.telemetry.TelemetrySpanBuilder
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
 import batect.testutils.equalTo
@@ -60,11 +62,13 @@ import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doAnswer
 import com.nhaarman.mockitokotlin2.doThrow
 import com.nhaarman.mockitokotlin2.mock
+import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Duration
 import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.Suite
 import org.spekframework.spek2.style.specification.describe
 
 object ConfigurationLoaderSpec : Spek({
@@ -91,9 +95,21 @@ object ConfigurationLoaderSpec : Spek({
         }
 
         val pathResolverFactory by createForEachTest { PathResolverFactory(fileSystem) }
+        val telemetrySpanBuilder by createForEachTest { mock<TelemetrySpanBuilder>() }
+
+        @Suppress("UNCHECKED_CAST")
+        val telemetrySessionBuilder by createForEachTest {
+            mock<TelemetrySessionBuilder> {
+                on { addSpan<Configuration>(any(), any()) } doAnswer { invocation ->
+                    val process = invocation.arguments[1] as ((TelemetrySpanBuilder) -> Configuration)
+                    process(telemetrySpanBuilder)
+                }
+            }
+        }
+
         val logger by createLoggerForEachTest()
         val testFileName = "/theTestFile.yml"
-        val loader by createForEachTest { ConfigurationLoader(includeResolver, pathResolverFactory, logger) }
+        val loader by createForEachTest { ConfigurationLoader(includeResolver, pathResolverFactory, telemetrySessionBuilder, logger) }
 
         fun createFile(path: Path, contents: String) {
             val directory = path.parent
@@ -116,6 +132,28 @@ object ConfigurationLoaderSpec : Spek({
             files.forEach { (path, contents) -> createFile(path, contents) }
 
             return loader.loadConfig(rootConfig)
+        }
+
+        fun Suite.itReportsTelemetryAboutTheConfigurationFile(containerCount: Int = 0, taskCount: Int = 0, configVariableCount: Int = 0, fileIncludeCount: Int = 0, gitIncludeCount: Int = 0) {
+            it("reports the number of containers loaded") {
+                verify(telemetrySpanBuilder).addAttribute("containerCount", containerCount)
+            }
+
+            it("reports the number of task loaded") {
+                verify(telemetrySpanBuilder).addAttribute("taskCount", taskCount)
+            }
+
+            it("reports the number of config variables loaded") {
+                verify(telemetrySpanBuilder).addAttribute("configVariableCount", configVariableCount)
+            }
+
+            it("reports the number of file includes loaded") {
+                verify(telemetrySpanBuilder).addAttribute("fileIncludeCount", fileIncludeCount)
+            }
+
+            it("reports the number of Git includes loaded") {
+                verify(telemetrySpanBuilder).addAttribute("gitIncludeCount", gitIncludeCount)
+            }
         }
 
         on("loading an empty configuration file") {
@@ -147,6 +185,8 @@ object ConfigurationLoaderSpec : Spek({
                 it("should use the parent directory's name as the project name") {
                     assertThat(config.projectName, equalTo("project"))
                 }
+
+                itReportsTelemetryAboutTheConfigurationFile(taskCount = 1)
             }
 
             on("loading that file from a subdirectory") {
@@ -182,6 +222,8 @@ object ConfigurationLoaderSpec : Spek({
             it("should return a populated configuration object with the project name specified") {
                 assertThat(config.projectName, equalTo("the_cool_project"))
             }
+
+            itReportsTelemetryAboutTheConfigurationFile()
         }
 
         on("loading a valid configuration file with a task with no dependencies") {
@@ -236,6 +278,8 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat(task.prerequisiteTasks, isEmpty)
                 assertThat(task.description, isEmptyString)
             }
+
+            itReportsTelemetryAboutTheConfigurationFile(taskCount = 1)
         }
 
         on("loading a valid configuration file with a task with no command") {
@@ -269,6 +313,8 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat(task.prerequisiteTasks, isEmpty)
                 assertThat(task.description, isEmptyString)
             }
+
+            itReportsTelemetryAboutTheConfigurationFile(taskCount = 1)
         }
 
         on("loading a valid configuration file with a task with a description and a group") {
@@ -304,6 +350,8 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat(task.description, equalTo("The very first task."))
                 assertThat(task.group, equalTo("Build tasks"))
             }
+
+            itReportsTelemetryAboutTheConfigurationFile(taskCount = 1)
         }
 
         on("loading a valid configuration file with a task with some container dependencies") {
@@ -339,6 +387,8 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat(task.prerequisiteTasks, isEmpty)
                 assertThat(task.description, isEmptyString)
             }
+
+            itReportsTelemetryAboutTheConfigurationFile(taskCount = 1)
         }
 
         on("loading a configuration file with a task that has a container dependency defined twice") {
@@ -392,6 +442,8 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat(task.prerequisiteTasks, equalTo(listOf("other-task", "another-task")))
                 assertThat(task.description, isEmptyString)
             }
+
+            itReportsTelemetryAboutTheConfigurationFile(taskCount = 1)
         }
 
         on("loading a configuration file with a task that has a prerequisite task defined twice") {
@@ -436,6 +488,8 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat(container.name, equalTo("container-1"))
                 assertThat(container.imageSource, equalTo(BuildImage(LiteralValue("container-1-build-dir"), DefaultPathResolutionContext(fileSystem.getPath("/")))))
             }
+
+            itReportsTelemetryAboutTheConfigurationFile(containerCount = 1)
         }
 
         on("loading a valid configuration file with a container with just an image configured") {
@@ -462,6 +516,8 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat(container.name, equalTo("container-1"))
                 assertThat(container.imageSource, equalTo(PullImage("some-image:1.2.3")))
             }
+
+            itReportsTelemetryAboutTheConfigurationFile(containerCount = 1)
         }
 
         on("loading a configuration file with a container without a build directory or image") {
@@ -556,6 +612,8 @@ object ConfigurationLoaderSpec : Spek({
                     LocalMount(LiteralValue("/somewhere"), DefaultPathResolutionContext(fileSystem.getPath("/")), "/else", "ro")
                 )))
             }
+
+            itReportsTelemetryAboutTheConfigurationFile(containerCount = 1)
         }
 
         on("loading a valid configuration file with a container with a volume specified in expanded format") {
@@ -592,6 +650,8 @@ object ConfigurationLoaderSpec : Spek({
                     LocalMount(LiteralValue("/somewhere"), DefaultPathResolutionContext(fileSystem.getPath("/")), "/else", "ro")
                 )))
             }
+
+            itReportsTelemetryAboutTheConfigurationFile(containerCount = 1)
         }
 
         on("loading a valid configuration file with a container with a port mapping specified in expanded format") {
@@ -624,6 +684,8 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat(container.imageSource, equalTo(BuildImage(LiteralValue("container-1-build-dir"), DefaultPathResolutionContext(fileSystem.getPath("/")))))
                 assertThat(container.portMappings, equalTo(setOf(PortMapping(1234, 5678), PortMapping(9012, 3456))))
             }
+
+            itReportsTelemetryAboutTheConfigurationFile(containerCount = 1)
         }
 
         on("loading a valid configuration file with a container with a dependency") {
@@ -651,6 +713,8 @@ object ConfigurationLoaderSpec : Spek({
                 val container = config.containers["container-1"]!!
                 assertThat(container.dependencies, equalTo(setOf("container-2")))
             }
+
+            itReportsTelemetryAboutTheConfigurationFile(containerCount = 1)
         }
 
         on("loading a configuration file with a container that has a dependency defined twice") {
@@ -684,6 +748,8 @@ object ConfigurationLoaderSpec : Spek({
                 val configVariable = config.configVariables.getValue("my-config-var")
                 assertThat(configVariable, equalTo(ConfigVariableDefinition("my-config-var", null, null)))
             }
+
+            itReportsTelemetryAboutTheConfigurationFile(configVariableCount = 1)
         }
 
         on("loading a valid configuration file with a config variable with all optional fields specified") {
@@ -702,6 +768,8 @@ object ConfigurationLoaderSpec : Spek({
                 val configVariable = config.configVariables.getValue("my-config-var")
                 assertThat(configVariable, equalTo(ConfigVariableDefinition("my-config-var", "This is my config variable", "my-default-value")))
             }
+
+            itReportsTelemetryAboutTheConfigurationFile(configVariableCount = 1)
         }
 
         on("loading a configuration file where a config variable is defined twice") {
@@ -1284,6 +1352,8 @@ object ConfigurationLoaderSpec : Spek({
             it("should infer the project name based on the root configuration file's directory") {
                 assertThat(config.projectName, equalTo("project"))
             }
+
+            itReportsTelemetryAboutTheConfigurationFile(taskCount = 1, containerCount = 1, configVariableCount = 1, fileIncludeCount = 3)
         }
 
         on("loading a configuration file that references another configuration file in expanded format") {
@@ -1328,6 +1398,8 @@ object ConfigurationLoaderSpec : Spek({
             it("should infer the project name based on the root configuration file's directory") {
                 assertThat(config.projectName, equalTo("project"))
             }
+
+            itReportsTelemetryAboutTheConfigurationFile(taskCount = 1, containerCount = 1, configVariableCount = 1, fileIncludeCount = 1)
         }
 
         on("loading a configuration file that references another configuration file which itself references another configuration file") {
@@ -1368,6 +1440,8 @@ object ConfigurationLoaderSpec : Spek({
             it("should infer the project name based on the root configuration file's directory") {
                 assertThat(config.projectName, equalTo("project"))
             }
+
+            itReportsTelemetryAboutTheConfigurationFile(taskCount = 1, containerCount = 1, fileIncludeCount = 2)
         }
 
         on("loading a configuration file that contains configuration and a reference to another configuration file") {
@@ -1432,6 +1506,8 @@ object ConfigurationLoaderSpec : Spek({
             it("should infer the project name based on the root configuration file's directory") {
                 assertThat(config.projectName, equalTo("project"))
             }
+
+            itReportsTelemetryAboutTheConfigurationFile(taskCount = 2, containerCount = 2, configVariableCount = 2, fileIncludeCount = 1)
         }
 
         on("loading a configuration file that contains an explicit project name and references another configuration file") {
@@ -1504,6 +1580,8 @@ object ConfigurationLoaderSpec : Spek({
                     ConfigVariableDefinition("config-var-2")
                 )))
             }
+
+            itReportsTelemetryAboutTheConfigurationFile(configVariableCount = 2, fileIncludeCount = 1)
         }
 
         on("loading a configuration file that references another configuration file both of which contain a definition for the same container") {
@@ -1661,6 +1739,8 @@ object ConfigurationLoaderSpec : Spek({
             it("should infer the project name based on the root configuration file's directory") {
                 assertThat(config.projectName, equalTo("project"))
             }
+
+            itReportsTelemetryAboutTheConfigurationFile(taskCount = 1, containerCount = 1, configVariableCount = 1, gitIncludeCount = 1)
         }
 
         on("loading a configuration file that references another configuration file from a Git repository that also references another file from the same repository in the same directory") {
@@ -1712,6 +1792,8 @@ object ConfigurationLoaderSpec : Spek({
             it("should infer the project name based on the root configuration file's directory") {
                 assertThat(config.projectName, equalTo("project"))
             }
+
+            itReportsTelemetryAboutTheConfigurationFile(taskCount = 1, containerCount = 1, configVariableCount = 1, gitIncludeCount = 2)
         }
 
         on("loading a configuration file that references another configuration file from a Git repository that also references another file from a different repository") {
@@ -1766,6 +1848,8 @@ object ConfigurationLoaderSpec : Spek({
             it("should infer the project name based on the root configuration file's directory") {
                 assertThat(config.projectName, equalTo("project"))
             }
+
+            itReportsTelemetryAboutTheConfigurationFile(taskCount = 1, containerCount = 1, configVariableCount = 1, gitIncludeCount = 2)
         }
 
         on("loading a configuration file that references another configuration file from a Git repository that contains an error") {

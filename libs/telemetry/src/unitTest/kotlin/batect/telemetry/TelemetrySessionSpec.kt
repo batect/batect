@@ -46,31 +46,31 @@ object TelemetrySessionSpec : Spek({
 
             given("the session is valid") {
                 it("does not throw an exception") {
-                    assertThat({ TelemetrySession(validSessionId, validUserId, validSessionStartTime, validSessionEndTime, appName, appVersion, emptyMap(), emptySet(), emptySet()) }, doesNotThrow())
+                    assertThat({ TelemetrySession(validSessionId, validUserId, validSessionStartTime, validSessionEndTime, appName, appVersion, emptyMap(), emptyList(), emptyList()) }, doesNotThrow())
                 }
             }
 
             given("the session ID is not a v4 (random) UUID") {
                 it("throws an appropriate exception") {
-                    assertThat({ TelemetrySession(nonV4UUID, validUserId, validSessionStartTime, validSessionEndTime, appName, appVersion, emptyMap(), emptySet(), emptySet()) }, throws<InvalidTelemetrySessionException>(withMessage("Session ID must be a v4 (random) UUID.")))
+                    assertThat({ TelemetrySession(nonV4UUID, validUserId, validSessionStartTime, validSessionEndTime, appName, appVersion, emptyMap(), emptyList(), emptyList()) }, throws<InvalidTelemetrySessionException>(withMessage("Session ID must be a v4 (random) UUID.")))
                 }
             }
 
             given("the user ID is not a v4 (random) UUID") {
                 it("throws an appropriate exception") {
-                    assertThat({ TelemetrySession(validSessionId, nonV4UUID, validSessionStartTime, validSessionEndTime, appName, appVersion, emptyMap(), emptySet(), emptySet()) }, throws<InvalidTelemetrySessionException>(withMessage("User ID must be a v4 (random) UUID.")))
+                    assertThat({ TelemetrySession(validSessionId, nonV4UUID, validSessionStartTime, validSessionEndTime, appName, appVersion, emptyMap(), emptyList(), emptyList()) }, throws<InvalidTelemetrySessionException>(withMessage("User ID must be a v4 (random) UUID.")))
                 }
             }
 
             given("the start time is not in UTC") {
                 it("throws an appropriate exception") {
-                    assertThat({ TelemetrySession(validSessionId, validUserId, validSessionStartTime.withZoneSameInstant(ZoneId.of("Australia/Melbourne")), validSessionEndTime, appName, appVersion, emptyMap(), emptySet(), emptySet()) }, throws<InvalidTelemetrySessionException>(withMessage("Session start time must be in UTC.")))
+                    assertThat({ TelemetrySession(validSessionId, validUserId, validSessionStartTime.withZoneSameInstant(ZoneId.of("Australia/Melbourne")), validSessionEndTime, appName, appVersion, emptyMap(), emptyList(), emptyList()) }, throws<InvalidTelemetrySessionException>(withMessage("Session start time must be in UTC.")))
                 }
             }
 
             given("the end time is not in UTC") {
                 it("throws an appropriate exception") {
-                    assertThat({ TelemetrySession(validSessionId, validUserId, validSessionStartTime, validSessionEndTime.withZoneSameInstant(ZoneId.of("Australia/Melbourne")), appName, appVersion, emptyMap(), emptySet(), emptySet()) }, throws<InvalidTelemetrySessionException>(withMessage("Session end time must be in UTC.")))
+                    assertThat({ TelemetrySession(validSessionId, validUserId, validSessionStartTime, validSessionEndTime.withZoneSameInstant(ZoneId.of("Australia/Melbourne")), appName, appVersion, emptyMap(), emptyList(), emptyList()) }, throws<InvalidTelemetrySessionException>(withMessage("Session end time must be in UTC.")))
                 }
             }
         }
@@ -89,7 +89,7 @@ object TelemetrySessionSpec : Spek({
                     "someBoolean" to JsonLiteral(false),
                     "someNull" to JsonNull
                 ),
-                setOf(
+                listOf(
                     TelemetryEvent(
                         "some-event",
                         ZonedDateTime.of(2020, 8, 7, 3, 49, 20, 678, ZoneOffset.UTC),
@@ -101,7 +101,7 @@ object TelemetrySessionSpec : Spek({
                         )
                     )
                 ),
-                setOf(
+                listOf(
                     TelemetrySpan(
                         "some-span",
                         ZonedDateTime.of(2020, 8, 7, 3, 49, 30, 678, ZoneOffset.UTC),

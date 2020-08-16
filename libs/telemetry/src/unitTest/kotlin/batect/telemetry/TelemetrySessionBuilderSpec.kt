@@ -22,9 +22,7 @@ import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.runForEachTest
-import batect.testutils.withMessage
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.throws
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import java.time.ZoneOffset
@@ -205,96 +203,6 @@ object TelemetrySessionBuilderSpec : Spek({
             }
         }
 
-        describe("building a session with two attributes of the same name") {
-            given("the existing attribute is a string") {
-                val builder by createForEachTest { TelemetrySessionBuilder(versionInfo, timeSource) }
-
-                beforeEachTest { builder.addAttribute("thing", "stuff") }
-
-                it("does not allow adding a string attribute of the same name") {
-                    assertThat({ builder.addAttribute("thing", "other stuff") }, throws<IllegalArgumentException>(withMessage("Attribute 'thing' already added.")))
-                }
-
-                it("does not allow adding an integer attribute of the same name") {
-                    assertThat({ builder.addAttribute("thing", 123) }, throws<IllegalArgumentException>(withMessage("Attribute 'thing' already added.")))
-                }
-
-                it("does not allow adding a boolean attribute of the same name") {
-                    assertThat({ builder.addAttribute("thing", false) }, throws<IllegalArgumentException>(withMessage("Attribute 'thing' already added.")))
-                }
-
-                it("does not allow adding a null attribute of the same name") {
-                    assertThat({ builder.addNullAttribute("thing") }, throws<IllegalArgumentException>(withMessage("Attribute 'thing' already added.")))
-                }
-            }
-
-            given("the existing attribute is an integer") {
-                val builder by createForEachTest { TelemetrySessionBuilder(versionInfo, timeSource) }
-
-                beforeEachTest { builder.addAttribute("thing", 123) }
-
-                it("does not allow adding a string attribute of the same name") {
-                    assertThat({ builder.addAttribute("thing", "other stuff") }, throws<IllegalArgumentException>(withMessage("Attribute 'thing' already added.")))
-                }
-
-                it("does not allow adding an integer attribute of the same name") {
-                    assertThat({ builder.addAttribute("thing", 123) }, throws<IllegalArgumentException>(withMessage("Attribute 'thing' already added.")))
-                }
-
-                it("does not allow adding a boolean attribute of the same name") {
-                    assertThat({ builder.addAttribute("thing", false) }, throws<IllegalArgumentException>(withMessage("Attribute 'thing' already added.")))
-                }
-
-                it("does not allow adding a null attribute of the same name") {
-                    assertThat({ builder.addNullAttribute("thing") }, throws<IllegalArgumentException>(withMessage("Attribute 'thing' already added.")))
-                }
-            }
-
-            given("the existing attribute is a boolean") {
-                val builder by createForEachTest { TelemetrySessionBuilder(versionInfo, timeSource) }
-
-                beforeEachTest { builder.addAttribute("thing", false) }
-
-                it("does not allow adding a string attribute of the same name") {
-                    assertThat({ builder.addAttribute("thing", "other stuff") }, throws<IllegalArgumentException>(withMessage("Attribute 'thing' already added.")))
-                }
-
-                it("does not allow adding an integer attribute of the same name") {
-                    assertThat({ builder.addAttribute("thing", 123) }, throws<IllegalArgumentException>(withMessage("Attribute 'thing' already added.")))
-                }
-
-                it("does not allow adding a boolean attribute of the same name") {
-                    assertThat({ builder.addAttribute("thing", false) }, throws<IllegalArgumentException>(withMessage("Attribute 'thing' already added.")))
-                }
-
-                it("does not allow adding a null attribute of the same name") {
-                    assertThat({ builder.addNullAttribute("thing") }, throws<IllegalArgumentException>(withMessage("Attribute 'thing' already added.")))
-                }
-            }
-
-            given("the existing attribute is null") {
-                val builder by createForEachTest { TelemetrySessionBuilder(versionInfo, timeSource) }
-
-                beforeEachTest { builder.addNullAttribute("thing") }
-
-                it("does not allow adding a string attribute of the same name") {
-                    assertThat({ builder.addAttribute("thing", "other stuff") }, throws<IllegalArgumentException>(withMessage("Attribute 'thing' already added.")))
-                }
-
-                it("does not allow adding an integer attribute of the same name") {
-                    assertThat({ builder.addAttribute("thing", 123) }, throws<IllegalArgumentException>(withMessage("Attribute 'thing' already added.")))
-                }
-
-                it("does not allow adding a boolean attribute of the same name") {
-                    assertThat({ builder.addAttribute("thing", false) }, throws<IllegalArgumentException>(withMessage("Attribute 'thing' already added.")))
-                }
-
-                it("does not allow adding a null attribute of the same name") {
-                    assertThat({ builder.addNullAttribute("thing") }, throws<IllegalArgumentException>(withMessage("Attribute 'thing' already added.")))
-                }
-            }
-        }
-
         describe("creating a session with an event") {
             val builder by createForEachTest { TelemetrySessionBuilder(versionInfo, timeSource) }
             val eventTime = ZonedDateTime.of(2020, 8, 11, 1, 3, 10, 0, ZoneOffset.UTC)
@@ -302,21 +210,21 @@ object TelemetrySessionBuilderSpec : Spek({
             val session by createForEachTest {
                 timeNow = eventTime
 
-                builder
-                    .addEvent(
-                        "MyEvent", mapOf(
-                            "thingType" to AttributeValue("stuff"),
-                            "thingCount" to AttributeValue(12),
-                            "thingEnabled" to AttributeValue(false)
-                        )
+                builder.addEvent(
+                    "MyEvent", mapOf(
+                        "thingType" to AttributeValue("stuff"),
+                        "thingCount" to AttributeValue(12),
+                        "thingEnabled" to AttributeValue(false)
                     )
-                    .build(telemetryConfigurationStore)
+                )
+
+                builder.build(telemetryConfigurationStore)
             }
 
-            it("stores the session with the provided attributes and correct time") {
+            it("stores the event with the provided attributes and correct time") {
                 assertThat(
                     session.events, equalTo(
-                        setOf(
+                        listOf(
                             TelemetryEvent(
                                 "MyEvent",
                                 eventTime,
@@ -329,6 +237,74 @@ object TelemetrySessionBuilderSpec : Spek({
                         )
                     )
                 )
+            }
+        }
+
+        describe("creating a session with a span") {
+            val builder by createForEachTest { TelemetrySessionBuilder(versionInfo, timeSource) }
+            val spanStartTime = ZonedDateTime.of(2020, 8, 11, 1, 3, 10, 0, ZoneOffset.UTC)
+            val spanEndTime = ZonedDateTime.of(2020, 8, 11, 1, 3, 20, 0, ZoneOffset.UTC)
+            val expectedSpan = TelemetrySpan(
+                "MySpan",
+                spanStartTime,
+                spanEndTime,
+                mapOf(
+                    "thingType" to JsonLiteral("stuff"),
+                    "thingCount" to JsonLiteral(12),
+                    "thingEnabled" to JsonLiteral(false)
+                )
+            )
+
+            given("the span function does not throw") {
+                val session by createForEachTest {
+                    timeNow = spanStartTime
+
+                    builder.addSpan("MySpan") { span ->
+                        span.addAttribute("thingType", "stuff")
+                        span.addAttribute("thingCount", 12)
+                        span.addAttribute("thingEnabled", false)
+
+                        timeNow = spanEndTime
+                    }
+
+                    builder.build(telemetryConfigurationStore)
+                }
+
+                it("stores the span with the provided attributes and correct times") {
+                    assertThat(session.spans, equalTo(listOf(expectedSpan)))
+                }
+            }
+
+            given("the span function throws") {
+                val session by createForEachTest {
+                    timeNow = spanStartTime
+
+                    val exceptionToThrow = RuntimeException("Something went wrong.")
+
+                    try {
+                        builder.addSpan("MySpan") { span ->
+                            span.addAttribute("thingType", "stuff")
+                            span.addAttribute("thingCount", 12)
+                            span.addAttribute("thingEnabled", false)
+
+                            timeNow = spanEndTime
+
+                            throw exceptionToThrow
+                        }
+
+                        // Should never get to here.
+                    } catch (e: RuntimeException) {
+                        if (e != exceptionToThrow) {
+                            throw e
+                        }
+                    }
+
+                    builder.build(telemetryConfigurationStore)
+                }
+
+                it("still stores the span with the provided attributes and correct times") {
+                    assertThat(session.spans, equalTo(listOf(expectedSpan)))
+                }
             }
         }
     }

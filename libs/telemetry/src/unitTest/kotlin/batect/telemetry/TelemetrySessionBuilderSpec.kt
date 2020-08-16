@@ -90,10 +90,11 @@ object TelemetrySessionBuilderSpec : Spek({
         }
 
         describe("building a session with a string attribute") {
+            val builder by createForEachTest { TelemetrySessionBuilder(versionInfo, timeSource) }
+
             val session by createForEachTest {
-                TelemetrySessionBuilder(versionInfo, timeSource)
-                    .addAttribute("thingType", "stuff")
-                    .build(telemetryConfigurationStore)
+                builder.addAttribute("thingType", "stuff")
+                builder.build(telemetryConfigurationStore)
             }
 
             it("stores the attribute on the built session") {
@@ -102,10 +103,11 @@ object TelemetrySessionBuilderSpec : Spek({
         }
 
         describe("building a session with a null string attribute") {
+            val builder by createForEachTest { TelemetrySessionBuilder(versionInfo, timeSource) }
+
             val session by createForEachTest {
-                TelemetrySessionBuilder(versionInfo, timeSource)
-                    .addAttribute("thingType", null as String?)
-                    .build(telemetryConfigurationStore)
+                builder.addAttribute("thingType", null as String?)
+                builder.build(telemetryConfigurationStore)
             }
 
             it("stores the attribute on the built session") {
@@ -114,10 +116,11 @@ object TelemetrySessionBuilderSpec : Spek({
         }
 
         describe("building a session with an integer attribute") {
+            val builder by createForEachTest { TelemetrySessionBuilder(versionInfo, timeSource) }
+
             val session by createForEachTest {
-                TelemetrySessionBuilder(versionInfo, timeSource)
-                    .addAttribute("thingCount", 12)
-                    .build(telemetryConfigurationStore)
+                builder.addAttribute("thingCount", 12)
+                builder.build(telemetryConfigurationStore)
             }
 
             it("stores the attribute on the built session") {
@@ -126,10 +129,11 @@ object TelemetrySessionBuilderSpec : Spek({
         }
 
         describe("building a session with a null integer attribute") {
+            val builder by createForEachTest { TelemetrySessionBuilder(versionInfo, timeSource) }
+
             val session by createForEachTest {
-                TelemetrySessionBuilder(versionInfo, timeSource)
-                    .addAttribute("thingCount", null as Int?)
-                    .build(telemetryConfigurationStore)
+                builder.addAttribute("thingCount", null as Int?)
+                builder.build(telemetryConfigurationStore)
             }
 
             it("stores the attribute on the built session") {
@@ -138,10 +142,11 @@ object TelemetrySessionBuilderSpec : Spek({
         }
 
         describe("building a session with a boolean attribute") {
+            val builder by createForEachTest { TelemetrySessionBuilder(versionInfo, timeSource) }
+
             val session by createForEachTest {
-                TelemetrySessionBuilder(versionInfo, timeSource)
-                    .addAttribute("thingEnabled", false)
-                    .build(telemetryConfigurationStore)
+                builder.addAttribute("thingEnabled", false)
+                builder.build(telemetryConfigurationStore)
             }
 
             it("stores the attribute on the built session") {
@@ -150,10 +155,11 @@ object TelemetrySessionBuilderSpec : Spek({
         }
 
         describe("building a session with a null boolean attribute") {
+            val builder by createForEachTest { TelemetrySessionBuilder(versionInfo, timeSource) }
+
             val session by createForEachTest {
-                TelemetrySessionBuilder(versionInfo, timeSource)
-                    .addAttribute("thingEnabled", null as Boolean?)
-                    .build(telemetryConfigurationStore)
+                builder.addAttribute("thingEnabled", null as Boolean?)
+                builder.build(telemetryConfigurationStore)
             }
 
             it("stores the attribute on the built session") {
@@ -162,10 +168,11 @@ object TelemetrySessionBuilderSpec : Spek({
         }
 
         describe("building a session with a null attribute") {
+            val builder by createForEachTest { TelemetrySessionBuilder(versionInfo, timeSource) }
+
             val session by createForEachTest {
-                TelemetrySessionBuilder(versionInfo, timeSource)
-                    .addNullAttribute("thing")
-                    .build(telemetryConfigurationStore)
+                builder.addNullAttribute("thing")
+                builder.build(telemetryConfigurationStore)
             }
 
             it("stores the attribute on the built session") {
@@ -174,31 +181,35 @@ object TelemetrySessionBuilderSpec : Spek({
         }
 
         describe("building a session with multiple attributes") {
+            val builder by createForEachTest { TelemetrySessionBuilder(versionInfo, timeSource) }
+
             val session by createForEachTest {
-                TelemetrySessionBuilder(versionInfo, timeSource)
-                    .addAttribute("thingType", "stuff")
-                    .addAttribute("thingCount", 12)
-                    .addAttribute("thingEnabled", false)
-                    .addNullAttribute("thing")
-                    .build(telemetryConfigurationStore)
+                builder.addAttribute("thingType", "stuff")
+                builder.addAttribute("thingCount", 12)
+                builder.addAttribute("thingEnabled", false)
+                builder.addNullAttribute("thing")
+                builder.build(telemetryConfigurationStore)
             }
 
             it("stores all of the attributes on the built session") {
-                assertThat(session.attributes, equalTo(mapOf(
-                    "thingType" to JsonLiteral("stuff"),
-                    "thingCount" to JsonLiteral(12),
-                    "thingEnabled" to JsonLiteral(false),
-                    "thing" to JsonNull
-                )))
+                assertThat(
+                    session.attributes, equalTo(
+                        mapOf(
+                            "thingType" to JsonLiteral("stuff"),
+                            "thingCount" to JsonLiteral(12),
+                            "thingEnabled" to JsonLiteral(false),
+                            "thing" to JsonNull
+                        )
+                    )
+                )
             }
         }
 
         describe("building a session with two attributes of the same name") {
             given("the existing attribute is a string") {
-                val builder by createForEachTest {
-                    TelemetrySessionBuilder(versionInfo, timeSource)
-                        .addAttribute("thing", "stuff")
-                }
+                val builder by createForEachTest { TelemetrySessionBuilder(versionInfo, timeSource) }
+
+                beforeEachTest { builder.addAttribute("thing", "stuff") }
 
                 it("does not allow adding a string attribute of the same name") {
                     assertThat({ builder.addAttribute("thing", "other stuff") }, throws<IllegalArgumentException>(withMessage("Attribute 'thing' already added.")))
@@ -218,10 +229,9 @@ object TelemetrySessionBuilderSpec : Spek({
             }
 
             given("the existing attribute is an integer") {
-                val builder by createForEachTest {
-                    TelemetrySessionBuilder(versionInfo, timeSource)
-                        .addAttribute("thing", 123)
-                }
+                val builder by createForEachTest { TelemetrySessionBuilder(versionInfo, timeSource) }
+
+                beforeEachTest { builder.addAttribute("thing", 123) }
 
                 it("does not allow adding a string attribute of the same name") {
                     assertThat({ builder.addAttribute("thing", "other stuff") }, throws<IllegalArgumentException>(withMessage("Attribute 'thing' already added.")))
@@ -241,10 +251,9 @@ object TelemetrySessionBuilderSpec : Spek({
             }
 
             given("the existing attribute is a boolean") {
-                val builder by createForEachTest {
-                    TelemetrySessionBuilder(versionInfo, timeSource)
-                        .addAttribute("thing", false)
-                }
+                val builder by createForEachTest { TelemetrySessionBuilder(versionInfo, timeSource) }
+
+                beforeEachTest { builder.addAttribute("thing", false) }
 
                 it("does not allow adding a string attribute of the same name") {
                     assertThat({ builder.addAttribute("thing", "other stuff") }, throws<IllegalArgumentException>(withMessage("Attribute 'thing' already added.")))
@@ -264,10 +273,9 @@ object TelemetrySessionBuilderSpec : Spek({
             }
 
             given("the existing attribute is null") {
-                val builder by createForEachTest {
-                    TelemetrySessionBuilder(versionInfo, timeSource)
-                        .addNullAttribute("thing")
-                }
+                val builder by createForEachTest { TelemetrySessionBuilder(versionInfo, timeSource) }
+
+                beforeEachTest { builder.addNullAttribute("thing") }
 
                 it("does not allow adding a string attribute of the same name") {
                     assertThat({ builder.addAttribute("thing", "other stuff") }, throws<IllegalArgumentException>(withMessage("Attribute 'thing' already added.")))
@@ -295,24 +303,32 @@ object TelemetrySessionBuilderSpec : Spek({
                 timeNow = eventTime
 
                 builder
-                    .addEvent("MyEvent", mapOf(
-                        "thingType" to AttributeValue("stuff"),
-                        "thingCount" to AttributeValue(12),
-                        "thingEnabled" to AttributeValue(false)
-                    ))
+                    .addEvent(
+                        "MyEvent", mapOf(
+                            "thingType" to AttributeValue("stuff"),
+                            "thingCount" to AttributeValue(12),
+                            "thingEnabled" to AttributeValue(false)
+                        )
+                    )
                     .build(telemetryConfigurationStore)
             }
 
             it("stores the session with the provided attributes and correct time") {
-                assertThat(session.events, equalTo(setOf(TelemetryEvent(
-                    "MyEvent",
-                    eventTime,
-                    mapOf(
-                        "thingType" to JsonLiteral("stuff"),
-                        "thingCount" to JsonLiteral(12),
-                        "thingEnabled" to JsonLiteral(false)
+                assertThat(
+                    session.events, equalTo(
+                        setOf(
+                            TelemetryEvent(
+                                "MyEvent",
+                                eventTime,
+                                mapOf(
+                                    "thingType" to JsonLiteral("stuff"),
+                                    "thingCount" to JsonLiteral(12),
+                                    "thingEnabled" to JsonLiteral(false)
+                                )
+                            )
+                        )
                     )
-                ))))
+                )
             }
         }
     }

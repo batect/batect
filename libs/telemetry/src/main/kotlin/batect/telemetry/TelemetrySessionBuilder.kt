@@ -21,9 +21,6 @@ import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
-import kotlinx.serialization.json.JsonLiteral
-import kotlinx.serialization.json.JsonNull
-import kotlinx.serialization.json.JsonPrimitive
 
 class TelemetrySessionBuilder(
     private val versionInfo: ApplicationVersionInfoProvider,
@@ -33,23 +30,13 @@ class TelemetrySessionBuilder(
     private val sessionStartTime: ZonedDateTime = nowInUTC()
     private val applicationId: String = "batect"
     private val applicationVersion: String = versionInfo.version.toString()
-    private val attributes = ConcurrentHashMap<String, JsonPrimitive>()
+    private val attributesBuilder = TelemetryAttributeSetBuilder()
     private val events = ConcurrentHashMap.newKeySet<TelemetryEvent>()
 
-    fun addAttribute(attributeName: String, value: String?): TelemetrySessionBuilder = addAttribute(attributeName, if (value == null) JsonNull else JsonLiteral(value))
-    fun addAttribute(attributeName: String, value: Boolean?): TelemetrySessionBuilder = addAttribute(attributeName, if (value == null) JsonNull else JsonLiteral(value))
-    fun addAttribute(attributeName: String, value: Int?): TelemetrySessionBuilder = addAttribute(attributeName, if (value == null) JsonNull else JsonLiteral(value))
-    fun addNullAttribute(attributeName: String): TelemetrySessionBuilder = addAttribute(attributeName, JsonNull)
-
-    private fun addAttribute(attributeName: String, value: JsonPrimitive): TelemetrySessionBuilder {
-        val existingValue = attributes.putIfAbsent(attributeName, value)
-
-        if (existingValue != null) {
-            throw IllegalArgumentException("Attribute '$attributeName' already added.")
-        }
-
-        return this
-    }
+    fun addAttribute(attributeName: String, value: String?) = attributesBuilder.addAttribute(attributeName, value)
+    fun addAttribute(attributeName: String, value: Boolean?) = attributesBuilder.addAttribute(attributeName, value)
+    fun addAttribute(attributeName: String, value: Int?) = attributesBuilder.addAttribute(attributeName, value)
+    fun addNullAttribute(attributeName: String) = attributesBuilder.addNullAttribute(attributeName)
 
     fun addEvent(type: String, attributes: Map<String, AttributeValue>): TelemetrySessionBuilder {
         val event = TelemetryEvent(type, nowInUTC(), attributes.mapValues { it.value.json })
@@ -65,7 +52,7 @@ class TelemetrySessionBuilder(
     fun build(telemetryConfigurationStore: TelemetryConfigurationStore): TelemetrySession {
         val userId = telemetryConfigurationStore.currentConfiguration.userId
 
-        return TelemetrySession(sessionId, userId, sessionStartTime, nowInUTC(), applicationId, applicationVersion, attributes, events, emptySet())
+        return TelemetrySession(sessionId, userId, sessionStartTime, nowInUTC(), applicationId, applicationVersion, attributesBuilder.build(), events, emptySet())
     }
 
     private fun nowInUTC(): ZonedDateTime = timeSource().withZoneSameInstant(ZoneOffset.UTC)

@@ -40,6 +40,7 @@ object TelemetryConsentPromptSpec : Spek({
     describe("a telemetry consent prompt") {
         val configurationStore by createForEachTest { mock<TelemetryConfigurationStore>() }
         val consoleInfo by createForEachTest { mock<ConsoleInfo>() }
+        val ciEnvironmentDetector by createForEachTest { mock<CIEnvironmentDetector>() }
         val console by createForEachTest { mock<Console>() }
         val prompt by createForEachTest { mock<Prompt>() }
 
@@ -58,11 +59,36 @@ object TelemetryConsentPromptSpec : Spek({
                 }
             }
 
+            fun Suite.itShowsTheNonInteractiveConsentPrompt() {
+                it("does not prompt the user to enter a response") {
+                    verifyZeroInteractions(prompt)
+                }
+
+                it("does not change the stored telemetry configuration") {
+                    verify(configurationStore, never()).saveConfiguration(any())
+                }
+
+                it("prints a message asking the user to make a decision and configure batect appropriately") {
+                    inOrder(console) {
+                        verify(console).println("batect can collect anonymous environment, usage and performance information.")
+                        verify(console).println("This information does not include personal or sensitive information, and is used only to help improve batect.")
+                        verify(console).println("More information is available at https://batect.dev/Privacy.html, including details of what information is collected and a formal privacy policy.")
+                        verify(console).println()
+                        verify(console).println("It looks like batect is running in a non-interactive session, so it can't ask for permission to collect and report this information. To suppress this message:")
+                        verify(console).println("* To allow collection of data, set the BATECT_ENABLE_TELEMETRY environment variable to 'true', or run './batect --permanently-enable-telemetry'.")
+                        verify(console).println("* To prevent collection of data, set the BATECT_ENABLE_TELEMETRY environment variable to 'false', or run './batect --permanently-disable-telemetry'.")
+                        verify(console).println()
+                        verify(console).println("No data will be collected for this session.")
+                        verify(console).println()
+                    }
+                }
+            }
+
             given("the user has already consented to telemetry") {
                 beforeEachTest {
                     whenever(configurationStore.currentConfiguration).doReturn(TelemetryConfiguration(UUID.randomUUID(), ConsentState.TelemetryAllowed))
 
-                    TelemetryConsentPrompt(configurationStore, null, OutputStyle.Fancy, consoleInfo, console, prompt).askForConsentIfRequired()
+                    TelemetryConsentPrompt(configurationStore, null, OutputStyle.Fancy, consoleInfo, ciEnvironmentDetector, console, prompt).askForConsentIfRequired()
                 }
 
                 itDoesNotPromptForConsent()
@@ -72,7 +98,7 @@ object TelemetryConsentPromptSpec : Spek({
                 beforeEachTest {
                     whenever(configurationStore.currentConfiguration).doReturn(TelemetryConfiguration(UUID.randomUUID(), ConsentState.TelemetryDisabled))
 
-                    TelemetryConsentPrompt(configurationStore, null, OutputStyle.Fancy, consoleInfo, console, prompt).askForConsentIfRequired()
+                    TelemetryConsentPrompt(configurationStore, null, OutputStyle.Fancy, consoleInfo, ciEnvironmentDetector, console, prompt).askForConsentIfRequired()
                 }
 
                 itDoesNotPromptForConsent()
@@ -89,7 +115,7 @@ object TelemetryConsentPromptSpec : Spek({
                     val disabledOnCommandLine = true
 
                     beforeEachTest {
-                        TelemetryConsentPrompt(configurationStore, disabledOnCommandLine, OutputStyle.Fancy, consoleInfo, console, prompt).askForConsentIfRequired()
+                        TelemetryConsentPrompt(configurationStore, disabledOnCommandLine, OutputStyle.Fancy, consoleInfo, ciEnvironmentDetector, console, prompt).askForConsentIfRequired()
                     }
 
                     itDoesNotPromptForConsent()
@@ -99,7 +125,7 @@ object TelemetryConsentPromptSpec : Spek({
                     val disabledOnCommandLine = false
 
                     beforeEachTest {
-                        TelemetryConsentPrompt(configurationStore, disabledOnCommandLine, OutputStyle.Fancy, consoleInfo, console, prompt).askForConsentIfRequired()
+                        TelemetryConsentPrompt(configurationStore, disabledOnCommandLine, OutputStyle.Fancy, consoleInfo, ciEnvironmentDetector, console, prompt).askForConsentIfRequired()
                     }
 
                     itDoesNotPromptForConsent()
@@ -112,7 +138,7 @@ object TelemetryConsentPromptSpec : Spek({
                         val requestedOutputStyle = OutputStyle.Quiet
 
                         beforeEachTest {
-                            TelemetryConsentPrompt(configurationStore, disabledOnCommandLine, requestedOutputStyle, consoleInfo, console, prompt).askForConsentIfRequired()
+                            TelemetryConsentPrompt(configurationStore, disabledOnCommandLine, requestedOutputStyle, consoleInfo, ciEnvironmentDetector, console, prompt).askForConsentIfRequired()
                         }
 
                         itDoesNotPromptForConsent()
@@ -120,42 +146,58 @@ object TelemetryConsentPromptSpec : Spek({
 
                     given("the user has not requested the quiet output style") {
                         val requestedOutputStyle = OutputStyle.Fancy
-                        val consentPrompt by createForEachTest { TelemetryConsentPrompt(configurationStore, disabledOnCommandLine, requestedOutputStyle, consoleInfo, console, prompt) }
+                        val consentPrompt by createForEachTest { TelemetryConsentPrompt(configurationStore, disabledOnCommandLine, requestedOutputStyle, consoleInfo, ciEnvironmentDetector, console, prompt) }
 
                         given("stdin is a TTY") {
                             beforeEachTest {
                                 whenever(consoleInfo.stdinIsTTY).thenReturn(true)
                             }
 
-                            fun Suite.itPromptsTheUserForTheirChoiceAndStoresIt(expectedConsentState: ConsentState) {
-                                beforeEachTest { consentPrompt.askForConsentIfRequired() }
+                            given("the application is not running on CI") {
+                                beforeEachTest {
+                                    whenever(ciEnvironmentDetector.detect()).doReturn(CIDetectionResult(false, null))
+                                }
 
-                                it("prints a message asking the user to make a decision and prompts them for their answer") {
-                                    inOrder(console, prompt) {
-                                        verify(console).println("batect can collect anonymous environment, usage and performance information.")
-                                        verify(console).println("This information does not include personal or sensitive information, and is used only to help improve batect.")
-                                        verify(console).println("More information is available at https://batect.dev/Privacy.html, including details of what information is collected and a formal privacy policy.")
-                                        verify(console).println()
-                                        verify(prompt).askYesNoQuestion("Is it OK for batect to collect this information?")
-                                        verify(console).println()
+                                fun Suite.itPromptsTheUserForTheirChoiceAndStoresIt(expectedConsentState: ConsentState) {
+                                    beforeEachTest { consentPrompt.askForConsentIfRequired() }
+
+                                    it("prints a message asking the user to make a decision and prompts them for their answer") {
+                                        inOrder(console, prompt) {
+                                            verify(console).println("batect can collect anonymous environment, usage and performance information.")
+                                            verify(console).println("This information does not include personal or sensitive information, and is used only to help improve batect.")
+                                            verify(console).println("More information is available at https://batect.dev/Privacy.html, including details of what information is collected and a formal privacy policy.")
+                                            verify(console).println()
+                                            verify(prompt).askYesNoQuestion("Is it OK for batect to collect this information?")
+                                            verify(console).println()
+                                        }
+                                    }
+
+                                    it("stores the user's choice, preserving their existing user ID") {
+                                        verify(configurationStore).saveConfiguration(TelemetryConfiguration(userId, expectedConsentState))
                                     }
                                 }
 
-                                it("stores the user's choice, preserving their existing user ID") {
-                                    verify(configurationStore).saveConfiguration(TelemetryConfiguration(userId, expectedConsentState))
+                                given("the user answers 'yes' to the prompt") {
+                                    beforeEachTest { whenever(prompt.askYesNoQuestion(any())).thenReturn(YesNoAnswer.Yes) }
+
+                                    itPromptsTheUserForTheirChoiceAndStoresIt(ConsentState.TelemetryAllowed)
+                                }
+
+                                given("the user answers 'no' to the prompt") {
+                                    beforeEachTest { whenever(prompt.askYesNoQuestion(any())).thenReturn(YesNoAnswer.No) }
+
+                                    itPromptsTheUserForTheirChoiceAndStoresIt(ConsentState.TelemetryDisabled)
                                 }
                             }
 
-                            given("the user answers 'yes' to the prompt") {
-                                beforeEachTest { whenever(prompt.askYesNoQuestion(any())).thenReturn(YesNoAnswer.Yes) }
+                            given("the application is running on CI") {
+                                beforeEachTest {
+                                    whenever(ciEnvironmentDetector.detect()).doReturn(CIDetectionResult(true, null))
 
-                                itPromptsTheUserForTheirChoiceAndStoresIt(ConsentState.TelemetryAllowed)
-                            }
+                                    consentPrompt.askForConsentIfRequired()
+                                }
 
-                            given("the user answers 'no' to the prompt") {
-                                beforeEachTest { whenever(prompt.askYesNoQuestion(any())).thenReturn(YesNoAnswer.No) }
-
-                                itPromptsTheUserForTheirChoiceAndStoresIt(ConsentState.TelemetryDisabled)
+                                itShowsTheNonInteractiveConsentPrompt()
                             }
                         }
 
@@ -166,28 +208,7 @@ object TelemetryConsentPromptSpec : Spek({
                                 consentPrompt.askForConsentIfRequired()
                             }
 
-                            it("does not prompt the user to enter a response") {
-                                verifyZeroInteractions(prompt)
-                            }
-
-                            it("does not change the stored telemetry configuration") {
-                                verify(configurationStore, never()).saveConfiguration(any())
-                            }
-
-                            it("prints a message asking the user to make a decision and configure batect appropriately") {
-                                inOrder(console) {
-                                    verify(console).println("batect can collect anonymous environment, usage and performance information.")
-                                    verify(console).println("This information does not include personal or sensitive information, and is used only to help improve batect.")
-                                    verify(console).println("More information is available at https://batect.dev/Privacy.html, including details of what information is collected and a formal privacy policy.")
-                                    verify(console).println()
-                                    verify(console).println("It looks like batect is running in a non-interactive session, so it can't ask for permission to collect and report this information. To suppress this message:")
-                                    verify(console).println("* To allow collection of data, set the BATECT_ENABLE_TELEMETRY environment variable to 'true', or run './batect --permanently-enable-telemetry'.")
-                                    verify(console).println("* To prevent collection of data, set the BATECT_ENABLE_TELEMETRY environment variable to 'false', or run './batect --permanently-disable-telemetry'.")
-                                    verify(console).println()
-                                    verify(console).println("No data will be collected for this session.")
-                                    verify(console).println()
-                                }
-                            }
+                            itShowsTheNonInteractiveConsentPrompt()
                         }
                     }
                 }

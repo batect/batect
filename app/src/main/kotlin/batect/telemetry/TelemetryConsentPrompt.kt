@@ -28,6 +28,7 @@ class TelemetryConsentPrompt(
     private val disabledOnCommandLine: Boolean?,
     private val requestedOutputStyle: OutputStyle?,
     private val consoleInfo: ConsoleInfo,
+    private val ciEnvironmentDetector: CIEnvironmentDetector,
     private val console: Console,
     private val prompt: Prompt
 ) {
@@ -49,7 +50,7 @@ class TelemetryConsentPrompt(
         console.println("More information is available at https://batect.dev/Privacy.html, including details of what information is collected and a formal privacy policy.")
         console.println()
 
-        if (consoleInfo.stdinIsTTY) {
+        if (consoleInfo.stdinIsTTY && !ciEnvironmentDetector.detect().suspectRunningOnCI) {
             promptForResponse()
             console.println()
         } else {

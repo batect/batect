@@ -25,6 +25,7 @@ import batect.execution.RunOptions
 import batect.execution.TaskExecutionOrderResolver
 import batect.execution.TaskRunner
 import batect.ioc.SessionKodeinFactory
+import batect.telemetry.TelemetrySessionBuilder
 import batect.ui.Console
 import batect.ui.OutputStyle
 import batect.updates.UpdateNotifier
@@ -41,7 +42,8 @@ class RunTaskCommand(
     private val backgroundTaskManager: BackgroundTaskManager,
     private val dockerConnectivity: DockerConnectivity,
     private val requestedOutputStyle: OutputStyle?,
-    private val console: Console
+    private val console: Console,
+    private val telemetrySessionBuilder: TelemetrySessionBuilder
 ) : Command {
 
     override fun run(): Int {
@@ -61,6 +63,7 @@ class RunTaskCommand(
 
     private fun runFromConfig(kodein: DirectDI, config: Configuration): Int {
         val tasks = taskExecutionOrderResolver.resolveExecutionOrder(config, runOptions.taskName)
+        telemetrySessionBuilder.addAttribute("totalTasksToExecute", tasks.size)
 
         if (requestedOutputStyle != OutputStyle.Quiet) {
             updateNotifier.run()

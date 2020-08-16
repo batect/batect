@@ -159,7 +159,8 @@ private val cliModule = DI.Module("cli") {
             instance(),
             instance(),
             commandLineOptions().requestedOutputStyle,
-            instance(StreamType.Output)
+            instance(StreamType.Output),
+            instance()
         )
     }
 

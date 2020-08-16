@@ -29,6 +29,7 @@ import batect.execution.RunOptions
 import batect.execution.TaskExecutionOrderResolver
 import batect.execution.TaskRunner
 import batect.ioc.SessionKodeinFactory
+import batect.telemetry.TelemetrySessionBuilder
 import batect.testutils.createForEachTest
 import batect.testutils.given
 import batect.testutils.on
@@ -90,6 +91,8 @@ object RunTaskCommandSpec : Spek({
                 })
             }
 
+            val telemetrySessionBuilder by createForEachTest { mock<TelemetrySessionBuilder>() }
+
             given("the configuration file can be loaded") {
                 given("the task has no prerequisites") {
                     val taskExecutionOrderResolver = mock<TaskExecutionOrderResolver> {
@@ -103,7 +106,7 @@ object RunTaskCommandSpec : Spek({
 
                         given("quiet output mode is not being used") {
                             val outputMode = OutputStyle.Fancy
-                            val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, updateNotifier, backgroundTaskManager, dockerConnectivity, outputMode, console) }
+                            val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, updateNotifier, backgroundTaskManager, dockerConnectivity, outputMode, console, telemetrySessionBuilder) }
                             val exitCode by runForEachTest { command.run() }
 
                             it("runs the task") {
@@ -132,11 +135,15 @@ object RunTaskCommandSpec : Spek({
                                     verify(taskRunner).run(any(), any())
                                 }
                             }
+
+                            it("reports the total number of tasks required to execute the task") {
+                                verify(telemetrySessionBuilder).addAttribute("totalTasksToExecute", 1)
+                            }
                         }
 
                         given("quiet output mode is being used") {
                             val outputMode = OutputStyle.Quiet
-                            val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, updateNotifier, backgroundTaskManager, dockerConnectivity, outputMode, console) }
+                            val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, updateNotifier, backgroundTaskManager, dockerConnectivity, outputMode, console, telemetrySessionBuilder) }
                             beforeEachTest { command.run() }
 
                             it("does not display any update notifications") {
@@ -150,7 +157,7 @@ object RunTaskCommandSpec : Spek({
                             whenever(taskRunner.run(mainTask, runOptions)).thenReturn(expectedTaskExitCode)
                         }
 
-                        val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, updateNotifier, backgroundTaskManager, dockerConnectivity, null, console) }
+                        val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, updateNotifier, backgroundTaskManager, dockerConnectivity, null, console, telemetrySessionBuilder) }
                         val exitCode by runForEachTest { command.run() }
 
                         it("runs the task") {
@@ -198,7 +205,7 @@ object RunTaskCommandSpec : Spek({
 
                         given("quiet output mode is not being used") {
                             val outputStyle = OutputStyle.Fancy
-                            val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, updateNotifier, backgroundTaskManager, dockerConnectivity, outputStyle, console) }
+                            val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, updateNotifier, backgroundTaskManager, dockerConnectivity, outputStyle, console, telemetrySessionBuilder) }
                             val exitCode by runForEachTest { command.run() }
 
                             it("runs the dependency task with cleanup on success enabled") {
@@ -235,11 +242,15 @@ object RunTaskCommandSpec : Spek({
                                     verify(taskRunner, atLeastOnce()).run(any(), any())
                                 }
                             }
+
+                            it("reports the total number of tasks required to execute the task") {
+                                verify(telemetrySessionBuilder).addAttribute("totalTasksToExecute", 2)
+                            }
                         }
 
                         given("quiet output mode is being used") {
                             val outputStyle = OutputStyle.Quiet
-                            val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, updateNotifier, backgroundTaskManager, dockerConnectivity, outputStyle, console) }
+                            val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, updateNotifier, backgroundTaskManager, dockerConnectivity, outputStyle, console, telemetrySessionBuilder) }
                             beforeEachTest { command.run() }
 
                             it("runs the dependency before the main task, and does not print a blank line in between") {
@@ -257,7 +268,7 @@ object RunTaskCommandSpec : Spek({
                             whenever(taskRunner.run(otherTask, runOptionsForOtherTask)).thenReturn(1)
                         }
 
-                        val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, updateNotifier, backgroundTaskManager, dockerConnectivity, null, console) }
+                        val command by createForEachTest { RunTaskCommand(configFile, runOptions, configLoader, taskExecutionOrderResolver, updateNotifier, backgroundTaskManager, dockerConnectivity, null, console, telemetrySessionBuilder) }
                         val exitCode by runForEachTest { command.run() }
 
                         it("runs the dependency task") {

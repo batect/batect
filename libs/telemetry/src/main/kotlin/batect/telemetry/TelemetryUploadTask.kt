@@ -77,7 +77,10 @@ class TelemetryUploadTask(
         val bytes = Files.readAllBytes(sessionPath)
 
         try {
-            abacusClient.upload(bytes)
+            telemetrySessionBuilder.addSpan("UploadTelemetrySession") {
+                abacusClient.upload(bytes)
+            }
+
             telemetryUploadQueue.pop(sessionPath)
 
             logger.info {

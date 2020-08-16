@@ -34,6 +34,7 @@ import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.anyOrNull
+import com.nhaarman.mockitokotlin2.doAnswer
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.doThrow
 import com.nhaarman.mockitokotlin2.inOrder
@@ -57,7 +58,17 @@ object TelemetryUploadTaskSpec : Spek({
         val telemetryConsent by createForEachTest { mock<TelemetryConsent>() }
         val telemetryUploadQueue by createForEachTest { mock<TelemetryUploadQueue>() }
         val abacusClient by createForEachTest { mock<AbacusClient>() }
-        val telemetrySessionBuilder by createForEachTest { mock<TelemetrySessionBuilder>() }
+
+        @Suppress("UNCHECKED_CAST")
+        val telemetrySessionBuilder by createForEachTest {
+            mock<TelemetrySessionBuilder> {
+                on { addSpan<Unit>(any(), any()) } doAnswer { invocation ->
+                    val process = invocation.arguments[1] as ((TelemetrySpanBuilder) -> Unit)
+                    process(mock())
+                }
+            }
+        }
+
         val logSink by createForEachTest { InMemoryLogSink() }
         val logger by createForEachTest { Logger("Test logger", logSink) }
         val now = ZonedDateTime.of(2020, 5, 13, 6, 30, 0, 0, ZoneOffset.UTC)

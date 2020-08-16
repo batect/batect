@@ -25,5 +25,5 @@ import org.kodein.di.singleton
 
 val sessionScopeModule = DI.Module("Session scope: root") {
     bind<TaskKodeinFactory>() with singleton { TaskKodeinFactory(directDI) }
-    bind<TaskRunner>() with singletonWithLogger { logger -> TaskRunner(instance(), instance(), instance(StreamType.Output), logger) }
+    bind<TaskRunner>() with singletonWithLogger { logger -> TaskRunner(instance(), instance(), instance(StreamType.Output), instance(), logger) }
 }

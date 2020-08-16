@@ -21,6 +21,8 @@ import batect.config.Task
 import batect.config.TaskRunConfiguration
 import batect.ioc.TaskKodein
 import batect.ioc.TaskKodeinFactory
+import batect.telemetry.TelemetrySessionBuilder
+import batect.telemetry.TelemetrySpanBuilder
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
 import batect.testutils.given
@@ -35,6 +37,7 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.argThat
+import com.nhaarman.mockitokotlin2.doAnswer
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.inOrder
@@ -62,8 +65,20 @@ object TaskRunnerSpec : Spek({
         }
 
         val console by createForEachTest { mock<Console>() }
+        val telemetrySpanBuilder by createForEachTest { mock<TelemetrySpanBuilder>() }
+
+        @Suppress("UNCHECKED_CAST")
+        val telemetrySessionBuilder by createForEachTest {
+            mock<TelemetrySessionBuilder> {
+                onGeneric { addSpan<Int>(any(), any()) } doAnswer { invocation ->
+                    val process = invocation.arguments[1] as ((TelemetrySpanBuilder) -> Int)
+                    process(telemetrySpanBuilder)
+                }
+            }
+        }
+
         val logger by createLoggerForEachTest()
-        val taskRunner by createForEachTest { TaskRunner(taskKodeinFactory, interruptionTrap, console, logger) }
+        val taskRunner by createForEachTest { TaskRunner(taskKodeinFactory, interruptionTrap, console, telemetrySessionBuilder, logger) }
 
         describe("running a task") {
             given("the task has a container to run") {
@@ -74,12 +89,18 @@ object TaskRunnerSpec : Spek({
                 val eventLogger by createForEachTest { mock<EventLogger>() }
                 val stateMachine by createForEachTest { mock<TaskStateMachine>() }
                 val executionManager by createForEachTest { mock<ParallelExecutionManager>() }
+                val dependencyGraph by createForEachTest {
+                    mock<ContainerDependencyGraph> {
+                        on { allContainers } doReturn setOf(container, Container("some-other-container", imageSourceDoesNotMatter()), Container("some-third-container", imageSourceDoesNotMatter()))
+                    }
+                }
 
                 beforeEachTest {
                     whenever(taskKodeinFactory.create(any(), any())).thenReturn(TaskKodein(task, DI.direct {
                         bind<EventLogger>() with instance(eventLogger)
                         bind<TaskStateMachine>() with instance(stateMachine)
                         bind<ParallelExecutionManager>() with instance(executionManager)
+                        bind<ContainerDependencyGraph>() with instance(dependencyGraph)
                     }))
                 }
 
@@ -130,6 +151,18 @@ object TaskRunnerSpec : Spek({
 
                             it("does not write anything directly to the console") {
                                 verifyZeroInteractions(console)
+                            }
+
+                            it("starts a telemetry span for the task") {
+                                verify(telemetrySessionBuilder).addSpan(eq("RunTask"), any())
+                            }
+
+                            it("marks the span as not being for a task that only has prerequisites") {
+                                verify(telemetrySpanBuilder).addAttribute("taskOnlyHasPrerequisites", false)
+                            }
+
+                            it("reports the number of containers in the task in telemetry") {
+                                verify(telemetrySpanBuilder).addAttribute("containersInTask", 3)
                             }
                         }
                     }
@@ -215,6 +248,14 @@ object TaskRunnerSpec : Spek({
 
                     it("writes a message to the console indicating that the task only has prerequisite tasks") {
                         verify(console).println(Text.white(Text("The task ") + Text.bold("some-task") + Text(" only defines prerequisite tasks, nothing more to do.")))
+                    }
+
+                    it("starts a telemetry span for the task") {
+                        verify(telemetrySessionBuilder).addSpan(eq("RunTask"), any())
+                    }
+
+                    it("marks the span as being for a task that only has prerequisites") {
+                        verify(telemetrySpanBuilder).addAttribute("taskOnlyHasPrerequisites", true)
                     }
                 }
             }

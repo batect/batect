@@ -19,6 +19,8 @@ package batect.execution
 import batect.config.Task
 import batect.ioc.TaskKodeinFactory
 import batect.logging.Logger
+import batect.telemetry.TelemetrySessionBuilder
+import batect.telemetry.TelemetrySpanBuilder
 import batect.ui.Console
 import batect.ui.EventLogger
 import batect.ui.text.Text
@@ -30,9 +32,18 @@ data class TaskRunner(
     private val taskKodeinFactory: TaskKodeinFactory,
     private val interruptionTrap: InterruptionTrap,
     private val console: Console,
+    private val telemetrySessionBuilder: TelemetrySessionBuilder,
     private val logger: Logger
 ) {
     fun run(task: Task, runOptions: RunOptions): Int {
+        return telemetrySessionBuilder.addSpan("RunTask") { span ->
+            runWithTelemetry(task, runOptions, span)
+        }
+    }
+
+    private fun runWithTelemetry(task: Task, runOptions: RunOptions, telemetrySpanBuilder: TelemetrySpanBuilder): Int {
+        telemetrySpanBuilder.addAttribute("taskOnlyHasPrerequisites", task.runConfiguration == null)
+
         if (task.runConfiguration == null) {
             logger.info {
                 message("Task has no run configuration, skipping.")
@@ -54,6 +65,7 @@ data class TaskRunner(
         taskKodeinFactory.create(task, runOptions).use { kodein ->
             val eventLogger = kodein.instance<EventLogger>()
             eventLogger.onTaskStarting(task.name)
+            telemetrySpanBuilder.addAttribute("containersInTask", kodein.instance<ContainerDependencyGraph>().allContainers.size)
 
             val executionManager = kodein.instance<ParallelExecutionManager>()
 

@@ -118,6 +118,10 @@ object DockerHttpConfigSpec : Spek({
                         assertThat(config.baseUrl, equalTo("$tlsConfigScheme://$encodedPath".toHttpUrl()))
                     }
                 }
+
+                it("reports that it is using a Unix socket connection") {
+                    assertThat(config.connectionType, equalTo(ConnectionType.UnixSocket))
+                }
             }
 
             given("the application is running on an operating system that does not support Unix sockets") {
@@ -173,6 +177,10 @@ object DockerHttpConfigSpec : Spek({
                     it("returns a URL ready for use with the local Unix socket") {
                         assertThat(config.baseUrl, equalTo("$tlsConfigScheme://$encodedPath".toHttpUrl()))
                     }
+                }
+
+                it("reports that it is using a named pipe connection") {
+                    assertThat(config.connectionType, equalTo(ConnectionType.NamedPipe))
                 }
             }
 
@@ -235,6 +243,10 @@ object DockerHttpConfigSpec : Spek({
                     it("returns the expected base URL") {
                         assertThat(config.baseUrl, equalTo(expectedBaseUrl))
                     }
+                }
+
+                it("reports that it is using a TCP connection") {
+                    assertThat(config.connectionType, equalTo(ConnectionType.TCP))
                 }
             }
         }

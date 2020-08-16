@@ -113,4 +113,16 @@ class DockerHttpConfig(
 
         return "${tlsConfig.scheme}://$dockerHost"
     }
+
+    val connectionType: ConnectionType = when {
+        isUnixSocket -> ConnectionType.UnixSocket
+        isNamedPipe -> ConnectionType.NamedPipe
+        else -> ConnectionType.TCP
+    }
+}
+
+enum class ConnectionType {
+    UnixSocket,
+    NamedPipe,
+    TCP
 }

@@ -18,18 +18,19 @@ package batect.cli
 
 import batect.execution.CacheInitialisationImage
 import batect.execution.CacheType
+import batect.ioc.rootModule
 import batect.logging.FileLogSink
 import batect.logging.LogSink
 import batect.logging.NullLogSink
 import batect.ui.OutputStyle
 import java.nio.file.Path
 import java.nio.file.Paths
-import org.kodein.di.Copy
-import org.kodein.di.DI
 import org.kodein.di.DirectDI
 import org.kodein.di.bind
+import org.kodein.di.direct
 import org.kodein.di.instance
 import org.kodein.di.singleton
+import org.kodein.di.subDI
 
 data class CommandLineOptions(
     val showHelp: Boolean = false,
@@ -65,8 +66,7 @@ data class CommandLineOptions(
     val skipPrerequisites: Boolean = false,
     val disableTelemetry: Boolean? = null
 ) {
-    fun extend(originalKodein: DirectDI): DirectDI = DI.direct {
-        extend(originalKodein, copy = Copy.All)
+    fun extend(originalKodein: DirectDI): DirectDI = subDI(originalKodein.di) {
         bind<CommandLineOptions>() with instance(this@CommandLineOptions)
 
         bind<LogSink>() with singleton {
@@ -76,5 +76,7 @@ data class CommandLineOptions(
                 FileLogSink(logFileName, instance(), instance())
             }
         }
-    }
+
+        import(rootModule)
+    }.direct
 }

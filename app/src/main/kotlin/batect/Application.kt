@@ -59,7 +59,6 @@ class Application(override val directDI: DirectDI) : DirectDIAware {
     private val telemetrySessionBuilder: TelemetrySessionBuilder = instance()
     private val errorStream: PrintStream = instance(StreamType.Error)
     private val commandLineOptionsParser: CommandLineOptionsParser = instance()
-    private val commandFactory: CommandFactory = instance()
     private val systemInfo: SystemInfo = instance()
 
     fun run(args: Iterable<String>): Int {
@@ -94,6 +93,7 @@ class Application(override val directDI: DirectDI) : DirectDIAware {
         val errorConsole = extendedKodein.instance<Console>(StreamType.Error)
         val wrapperCache = extendedKodein.instance<WrapperCache>()
         val telemetryConsentPrompt = extendedKodein.instance<TelemetryConsentPrompt>()
+        val commandFactory = extendedKodein.instance<CommandFactory>()
         val environmentTelemetryCollector = extendedKodein.instance<EnvironmentTelemetryCollector>()
 
         try {

@@ -20,20 +20,21 @@ import batect.config.Configuration
 import batect.config.ExpressionEvaluationContext
 import batect.execution.ConfigVariablesProvider
 import batect.os.HostEnvironmentVariables
-import org.kodein.di.Copy
-import org.kodein.di.DI
 import org.kodein.di.DirectDI
 import org.kodein.di.bind
+import org.kodein.di.direct
 import org.kodein.di.instance
+import org.kodein.di.subDI
 
 class SessionKodeinFactory(
     private val baseKodein: DirectDI,
     private val hostEnvironmentVariables: HostEnvironmentVariables,
     private val configVariablesProvider: ConfigVariablesProvider
 ) {
-    fun create(config: Configuration): DirectDI = DI.direct {
-        extend(baseKodein, copy = Copy.All)
+    fun create(config: Configuration): DirectDI = subDI(baseKodein.di) {
         bind<Configuration>() with instance(config)
         bind<ExpressionEvaluationContext>() with instance(ExpressionEvaluationContext(hostEnvironmentVariables, configVariablesProvider.build(config)))
-    }
+
+        import(sessionScopeModule)
+    }.direct
 }

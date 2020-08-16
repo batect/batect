@@ -17,10 +17,8 @@
 package batect.cli
 
 import batect.logging.FileLogSink
-import batect.logging.LogMessageWriter
 import batect.logging.LogSink
 import batect.logging.NullLogSink
-import batect.logging.StandardAdditionalDataSource
 import batect.testutils.given
 import batect.testutils.on
 import com.google.common.jimfs.Configuration
@@ -30,6 +28,7 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.isA
 import com.nhaarman.mockitokotlin2.mock
 import java.nio.file.Paths
+import jnr.posix.POSIX
 import org.kodein.di.DI
 import org.kodein.di.bind
 import org.kodein.di.instance
@@ -74,8 +73,7 @@ object CommandLineOptionsSpec : Spek({
             on("extending an existing Kodein configuration") {
                 val originalKodein = DI.direct {
                     bind<String>("some string") with instance("The string value")
-                    bind<LogMessageWriter>() with instance(mock())
-                    bind<StandardAdditionalDataSource>() with instance(mock())
+                    bind<POSIX>() with instance(mock())
                 }
 
                 val extendedKodein = options.extend(originalKodein)

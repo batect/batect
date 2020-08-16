@@ -69,7 +69,6 @@ object ApplicationSpec : Spek({
     describe("an application") {
         val errorStream by createForEachTest { ByteArrayOutputStream() }
         val commandLineOptionsParser by createForEachTest { mock<CommandLineOptionsParser>() }
-        val commandFactory by createForEachTest { mock<CommandFactory>() }
         val systemInfo by createForEachTest { mock<SystemInfo>() }
         val telemetrySessionBuilder by createForEachTest { mock<TelemetrySessionBuilder>() }
 
@@ -77,7 +76,6 @@ object ApplicationSpec : Spek({
             DI.direct {
                 bind<PrintStream>(StreamType.Error) with instance(PrintStream(errorStream))
                 bind<CommandLineOptionsParser>() with instance(commandLineOptionsParser)
-                bind<CommandFactory>() with instance(commandFactory)
                 bind<SystemInfo>() with instance(systemInfo)
                 bind<TelemetrySessionBuilder>() with instance(telemetrySessionBuilder)
             }
@@ -99,6 +97,7 @@ object ApplicationSpec : Spek({
                     }
                 }
 
+                val commandFactory by createForEachTest { mock<CommandFactory>() }
                 val consoleManager by createForEachTest { mock<ConsoleManager>() }
                 val errorConsole by createForEachTest { mock<Console>() }
                 val wrapperCache by createForEachTest { mock<WrapperCache>() }
@@ -110,6 +109,7 @@ object ApplicationSpec : Spek({
                     DI.direct {
                         bind<ApplicationInfoLogger>() with instance(applicationInfoLogger)
                         bind<LoggerFactory>() with instance(loggerFactory)
+                        bind<CommandFactory>() with instance(commandFactory)
                         bind<Console>(StreamType.Error) with instance(errorConsole)
                         bind<ConsoleManager>() with instance(consoleManager)
                         bind<WrapperCache>() with instance(wrapperCache)

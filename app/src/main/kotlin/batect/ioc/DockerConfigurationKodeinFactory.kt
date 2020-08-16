@@ -17,17 +17,17 @@
 package batect.ioc
 
 import batect.docker.client.DockerContainerType
-import org.kodein.di.Copy
-import org.kodein.di.DI
 import org.kodein.di.DirectDI
 import org.kodein.di.bind
+import org.kodein.di.direct
 import org.kodein.di.instance
+import org.kodein.di.subDI
 
 class DockerConfigurationKodeinFactory(
     private val baseKodein: DirectDI
 ) {
-    fun create(containerType: DockerContainerType): DirectDI = DI.direct {
-        extend(baseKodein, copy = Copy.All)
+    fun create(containerType: DockerContainerType): DirectDI = subDI(baseKodein.di) {
         bind<DockerContainerType>() with instance(containerType)
-    }
+        import(dockerConfigurationModule)
+    }.direct
 }

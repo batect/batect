@@ -16,26 +16,14 @@
 
 package batect.ioc
 
-import batect.config.Task
-import batect.execution.RunOptions
-import org.kodein.di.DirectDI
+import batect.execution.TaskRunner
+import batect.logging.singletonWithLogger
+import org.kodein.di.DI
 import org.kodein.di.bind
-import org.kodein.di.direct
-import org.kodein.di.on
-import org.kodein.di.scoped
+import org.kodein.di.instance
 import org.kodein.di.singleton
-import org.kodein.di.subDI
 
-class TaskKodeinFactory(
-    private val baseKodein: DirectDI
-) {
-    fun create(task: Task, runOptions: RunOptions): TaskKodein = TaskKodein(task, subDI(baseKodein.di) {
-        bind<RunOptions>(RunOptionsType.Task) with scoped(TaskScope).singleton { runOptions }
-
-        import(taskScopeModule)
-    }.direct.on(task))
-}
-
-class TaskKodein(private val task: Task, kodein: DirectDI) : DirectDI by kodein, AutoCloseable {
-    override fun close() = TaskScope.close(task)
+val sessionScopeModule = DI.Module("Session scope: root") {
+    bind<TaskKodeinFactory>() with singleton { TaskKodeinFactory(directDI) }
+    bind<TaskRunner>() with singletonWithLogger { logger -> TaskRunner(instance(), instance(), instance(StreamType.Output), logger) }
 }

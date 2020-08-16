@@ -174,6 +174,13 @@ object UpdateNotifierSpec : Spek({
                             }
                         }
 
+                        it("reports an event in telemetry") {
+                            verify(telemetrySessionBuilder).addEvent("UpdateAvailableNotificationShown", mapOf(
+                                "currentVersion" to AttributeValue("0.2"),
+                                "newVersion" to AttributeValue("0.3")
+                            ))
+                        }
+
                         it("does not trigger an update of the cached update info") {
                             verify(updateInfoUpdater, never()).updateCachedInfo()
                         }
@@ -232,6 +239,13 @@ object UpdateNotifierSpec : Spek({
 
                         it("triggers an update of the cached update info") {
                             verify(updateInfoUpdater).updateCachedInfo()
+                        }
+
+                        it("reports an event in telemetry") {
+                            verify(telemetrySessionBuilder).addEvent("UpdateAvailableNotificationShown", mapOf(
+                                "currentVersion" to AttributeValue("0.2"),
+                                "newVersion" to AttributeValue("0.3")
+                            ))
                         }
                     }
                 }

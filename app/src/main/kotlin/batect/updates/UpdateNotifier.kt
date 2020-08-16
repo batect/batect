@@ -20,6 +20,7 @@ import batect.VersionInfo
 import batect.cli.CommandLineOptionsParser
 import batect.logging.Logger
 import batect.logging.data
+import batect.telemetry.AttributeValue
 import batect.telemetry.TelemetrySessionBuilder
 import batect.telemetry.addUnhandledExceptionEvent
 import batect.ui.Console
@@ -87,6 +88,14 @@ class UpdateNotifier(
                 data("currentVersion", versionInfo.version)
                 data("availableVersion", versionInfo.version)
             }
+
+            telemetrySessionBuilder.addEvent(
+                "UpdateAvailableNotificationShown",
+                mapOf(
+                    "currentVersion" to AttributeValue(versionInfo.version.toString()),
+                    "newVersion" to AttributeValue(updateInfo.version.toString())
+                )
+            )
 
             console.println("Version ${updateInfo.version} of batect is now available (you have ${versionInfo.version}).")
             console.println("To upgrade to the latest version, run './batect --${CommandLineOptionsParser.upgradeFlagName}'.")

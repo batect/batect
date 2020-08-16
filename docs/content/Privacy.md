@@ -129,6 +129,7 @@ This information does not include personal or sensitive information such as the 
 | Whether a custom configuration file name (ie. not `batect.yml`) is being used | `false` | Helps understand usage behaviour and helps plan and prioritise possible future features
 | Whether a config variables file is being used | `true` | Helps understand usage behaviour and helps plan and prioritise possible future features
 | Whether the following features have been disabled: update notifications, wrapper cache cleanup, cleanup after success, cleanup after failure, proxy environment variable propagation | | Helps understand usage behaviour and helps plan and prioritise possible future features
+| Whether a 'new batect version available' notification is shown | | Helps understand usage behaviour and helps plan and prioritise possible future features (eg. tools to help upgrade batect automatically)
 | **Task run information** |
 | Type of container being run | Windows or Linux | Helps understand usage behaviour and helps plan and prioritise possible future features
 | Type of cache being used | volume or directory | Helps understand usage behaviour and helps plan and prioritise possible future features

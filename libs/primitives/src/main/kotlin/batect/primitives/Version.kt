@@ -16,14 +16,15 @@
 
 package batect.primitives
 
-import kotlinx.serialization.Decoder
-import kotlinx.serialization.Encoder
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.PrimitiveDescriptor
-import kotlinx.serialization.PrimitiveKind
-import kotlinx.serialization.SerialDescriptor
-import kotlinx.serialization.Serializer
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 
+@Serializable(with = Version.Companion::class)
 data class Version(val major: Int, val minor: Int, val patch: Int, val suffix: String = "", val metadata: String = "") : Comparable<Version> {
     override fun compareTo(other: Version): Int = this.compareTo(other, VersionComparisonMode.Normal)
 
@@ -46,7 +47,6 @@ data class Version(val major: Int, val minor: Int, val patch: Int, val suffix: S
         else -> "$major.$minor"
     }
 
-    @Serializer(forClass = Version::class)
     companion object : KSerializer<Version> {
         private val regex = """^(?<major>\d+)(\.(?<minor>\d+)(\.(?<patch>\d+)(-(?<suffix>[a-zA-Z0-9-.]+))?(\+(?<metadata>[a-zA-Z0-9-.]+))?)?)?$""".toRegex()
 
@@ -82,7 +82,7 @@ data class Version(val major: Int, val minor: Int, val patch: Int, val suffix: S
             }
         }
 
-        override val descriptor: SerialDescriptor = PrimitiveDescriptor("version", PrimitiveKind.STRING)
+        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("version", PrimitiveKind.STRING)
         override fun deserialize(decoder: Decoder): Version = parse(decoder.decodeString())
         override fun serialize(encoder: Encoder, value: Version) = encoder.encodeString(value.toString())
     }

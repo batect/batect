@@ -46,7 +46,7 @@ class KotlinPlugin implements Plugin<Project> {
         project.tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
             kotlinOptions {
                 jvmTarget = "1.8"
-                freeCompilerArgs = ["-progressive"]
+                freeCompilerArgs = ["-progressive", "-Xopt-in=kotlin.RequiresOptIn"]
             }
         }
     }
@@ -93,7 +93,6 @@ class KotlinPlugin implements Plugin<Project> {
         }
 
         project.dependencies {
-            testCommonImplementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
             testCommonImplementation 'com.natpryce:hamkrest:1.7.0.3'
             testCommonImplementation "org.spekframework.spek2:spek-dsl-jvm:2.0.11"
             testCommonRuntimeOnly "org.spekframework.spek2:spek-runner-junit5:2.0.11"

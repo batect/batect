@@ -18,7 +18,8 @@ package batect.docker
 
 import batect.logging.LogMessageBuilder
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.json
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 
 @Serializable
 data class DockerExecCreationRequest(
@@ -32,18 +33,18 @@ data class DockerExecCreationRequest(
     val userAndGroup: UserAndGroup?,
     val workingDirectory: String?
 ) {
-    fun toJson(): String = json {
-        "AttachStdin" to attachStdin
-        "AttachStdout" to attachStdout
-        "AttachStderr" to attachStderr
-        "Tty" to attachTty
-        "Env" to environmentVariables.toDockerFormatJsonArray()
-        "Cmd" to command.toJsonArray()
-        "Privileged" to privileged
-        "WorkingDir" to workingDirectory
+    fun toJson(): String = buildJsonObject {
+        put("AttachStdin", attachStdin)
+        put("AttachStdout", attachStdout)
+        put("AttachStderr", attachStderr)
+        put("Tty", attachTty)
+        put("Env", environmentVariables.toDockerFormatJsonArray())
+        put("Cmd", command.toJsonArray())
+        put("Privileged", privileged)
+        put("WorkingDir", workingDirectory)
 
         if (userAndGroup != null) {
-            "User" to "${userAndGroup.userId}:${userAndGroup.groupId}"
+            put("User", "${userAndGroup.userId}:${userAndGroup.groupId}")
         }
     }.toString()
 }

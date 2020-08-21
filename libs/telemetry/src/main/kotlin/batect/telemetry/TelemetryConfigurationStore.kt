@@ -22,14 +22,13 @@ import batect.logging.Logger
 import java.nio.file.Files
 import java.util.UUID
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonConfiguration
 
 class TelemetryConfigurationStore(
     private val applicationPaths: ApplicationPaths,
     private val logger: Logger
 ) {
     private val configFilePath = applicationPaths.rootLocalStorageDirectory.resolve("telemetry").resolve("config.json")
-    private val json = Json(JsonConfiguration.Stable)
+    private val json = Json.Default
     private lateinit var cachedCurrentConfiguration: TelemetryConfiguration
 
     val currentConfiguration: TelemetryConfiguration
@@ -55,7 +54,7 @@ class TelemetryConfigurationStore(
         }
 
         val content = Files.readAllBytes(configFilePath).toString(Charsets.UTF_8)
-        val config = json.parse(TelemetryConfiguration.serializer(), content)
+        val config = json.decodeFromString(TelemetryConfiguration.serializer(), content)
 
         logger.info {
             message("Loaded telemetry configuration from disk.")
@@ -73,7 +72,7 @@ class TelemetryConfigurationStore(
             data("newConfiguration", newConfiguration)
         }
 
-        val bytes = json.stringify(TelemetryConfiguration.serializer(), newConfiguration).toByteArray(Charsets.UTF_8)
+        val bytes = json.encodeToString(TelemetryConfiguration.serializer(), newConfiguration).toByteArray(Charsets.UTF_8)
 
         Files.createDirectories(configFilePath.parent)
         Files.write(configFilePath, bytes)

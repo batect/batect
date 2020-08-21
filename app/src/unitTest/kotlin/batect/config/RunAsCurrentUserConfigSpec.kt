@@ -95,4 +95,4 @@ object RunAsCurrentUserConfigSpec : Spek({
     }
 })
 
-private fun fromYaml(yaml: String) = Yaml.default.parse(RunAsCurrentUserConfig.serializer(), yaml)
+private fun fromYaml(yaml: String) = Yaml.default.decodeFromString(RunAsCurrentUserConfig.serializer(), yaml)

@@ -23,7 +23,10 @@ import batect.docker.data
 import batect.logging.Logger
 import batect.os.SystemInfo
 import java.util.concurrent.TimeUnit
-import kotlinx.serialization.json.json
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
 import okhttp3.HttpUrl
 import okhttp3.Request
 import okhttp3.Response
@@ -47,10 +50,10 @@ class NetworksAPI(
             .addPathSegment("create")
             .build()
 
-        val body = json {
-            "Name" to name
-            "CheckDuplicate" to true
-            "Driver" to driver
+        val body = buildJsonObject {
+            put("Name", name)
+            put("CheckDuplicate", true)
+            put("Driver", driver)
         }
 
         val request = Request.Builder()
@@ -144,8 +147,8 @@ class NetworksAPI(
     }
 
     private fun networkFromResponse(response: Response): DockerNetwork {
-        val parsedResponse = Json.default.parseJson(response.body!!.string()).jsonObject
-        val networkId = parsedResponse.getValue("Id").primitive.content
+        val parsedResponse = Json.default.parseToJsonElement(response.body!!.string()).jsonObject
+        val networkId = parsedResponse.getValue("Id").jsonPrimitive.content
         return DockerNetwork(networkId)
     }
 

@@ -18,18 +18,19 @@ package batect.logging
 
 import java.io.OutputStream
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonConfiguration
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.json
+import kotlinx.serialization.json.put
 
-class LogMessageWriter(val json: Json = Json(JsonConfiguration.Stable)) {
+class LogMessageWriter(val json: Json = Json.Default) {
     fun writeTo(message: LogMessage, outputStream: OutputStream) {
-        val json = json {
-            "@timestamp" to json.toJson(ZonedDateTimeSerializer, message.timestamp)
-            "@message" to message.message
-            "@severity" to message.severity.toString().toLowerCase()
+        val json = buildJsonObject {
+            put("@timestamp", json.encodeToJsonElement(ZonedDateTimeSerializer, message.timestamp))
+            put("@message", message.message)
+            put("@severity", message.severity.toString().toLowerCase())
 
             message.additionalData.forEach { (key, value) ->
-                key to value.toJSON(json)
+                put(key, value.toJSON(json))
             }
         }
 

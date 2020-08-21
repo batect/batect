@@ -89,7 +89,7 @@ object PortRangeSpec : Spek({
                     }
 
                     it("deserializes to the expected value") {
-                        assertThat(Yaml.default.parse(PortRange.serializer(), input), equalTo(expectedValue))
+                        assertThat(Yaml.default.decodeFromString(PortRange.serializer(), input), equalTo(expectedValue))
                     }
                 }
             }
@@ -108,7 +108,7 @@ object PortRangeSpec : Spek({
                     }
 
                     it("deserializes to the expected value") {
-                        assertThat({ Yaml.default.parse(PortRange.serializer(), input) }, throws<ConfigurationException>(withMessage("Port range '$input' is invalid. It must be in the form 'port' or 'from-to' and each port must be a positive integer.") and withLineNumber(1) and withColumn(1)))
+                        assertThat({ Yaml.default.decodeFromString(PortRange.serializer(), input) }, throws<ConfigurationException>(withMessage("Port range '$input' is invalid. It must be in the form 'port' or 'from-to' and each port must be a positive integer.") and withLineNumber(1) and withColumn(1)))
                     }
                 }
             }
@@ -119,7 +119,7 @@ object PortRangeSpec : Spek({
                 }
 
                 it("deserializes to the expected value") {
-                    assertThat({ Yaml.default.parse(PortRange.serializer(), "''") }, throws<ConfigurationException>(withMessage("Port range '' is invalid. It must be in the form 'port' or 'from-to' and each port must be a positive integer.") and withLineNumber(1) and withColumn(1)))
+                    assertThat({ Yaml.default.decodeFromString(PortRange.serializer(), "''") }, throws<ConfigurationException>(withMessage("Port range '' is invalid. It must be in the form 'port' or 'from-to' and each port must be a positive integer.") and withLineNumber(1) and withColumn(1)))
                 }
             }
 
@@ -133,7 +133,7 @@ object PortRangeSpec : Spek({
                     }
 
                     it("deserializes to the expected value") {
-                        assertThat({ Yaml.default.parse(PortRange.serializer(), input) }, throws<ConfigurationException>(withMessage("Port range '$input' is invalid. Ports must be positive integers.") and withLineNumber(1) and withColumn(1)))
+                        assertThat({ Yaml.default.decodeFromString(PortRange.serializer(), input) }, throws<ConfigurationException>(withMessage("Port range '$input' is invalid. Ports must be positive integers.") and withLineNumber(1) and withColumn(1)))
                     }
                 }
             }
@@ -146,7 +146,7 @@ object PortRangeSpec : Spek({
                 }
 
                 it("deserializes to the expected value") {
-                    assertThat({ Yaml.default.parse(PortRange.serializer(), input) }, throws<ConfigurationException>(withMessage("Port range '$input' is invalid. Port range limits must be given in ascending order.") and withLineNumber(1) and withColumn(1)))
+                    assertThat({ Yaml.default.decodeFromString(PortRange.serializer(), input) }, throws<ConfigurationException>(withMessage("Port range '$input' is invalid. Port range limits must be given in ascending order.") and withLineNumber(1) and withColumn(1)))
                 }
             }
         }
@@ -160,7 +160,7 @@ object PortRangeSpec : Spek({
                 }
 
                 it("serializes to the expected JSON value") {
-                    assertThat(Json.forLogging.stringify(PortRange.serializer(), range), equalTo(""""123""""))
+                    assertThat(Json.forLogging.encodeToString(PortRange.serializer(), range), equalTo(""""123""""))
                 }
             }
 
@@ -172,7 +172,7 @@ object PortRangeSpec : Spek({
                 }
 
                 it("serializes to the expected JSON value") {
-                    assertThat(Json.forLogging.stringify(PortRange.serializer(), range), equalTo(""""123-456""""))
+                    assertThat(Json.forLogging.encodeToString(PortRange.serializer(), range), equalTo(""""123-456""""))
                 }
             }
         }

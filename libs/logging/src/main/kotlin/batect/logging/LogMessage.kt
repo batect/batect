@@ -35,5 +35,5 @@ interface Jsonable {
 }
 
 data class JsonableObject<T>(val value: T, val serializer: SerializationStrategy<T>) : Jsonable {
-    override fun toJSON(json: Json): JsonElement = json.toJson(serializer, value)
+    override fun toJSON(json: Json): JsonElement = json.encodeToJsonElement(serializer, value)
 }

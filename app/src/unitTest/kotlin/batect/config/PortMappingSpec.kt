@@ -304,4 +304,4 @@ object PortMappingSpec : Spek({
     }
 })
 
-private fun fromYaml(yaml: String): PortMapping = Yaml.default.parse(PortMappingConfigSerializer, yaml)
+private fun fromYaml(yaml: String): PortMapping = Yaml.default.decodeFromString(PortMappingConfigSerializer, yaml)

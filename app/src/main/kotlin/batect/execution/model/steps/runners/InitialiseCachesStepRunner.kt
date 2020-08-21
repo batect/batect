@@ -40,7 +40,7 @@ import batect.execution.model.events.TaskEventSink
 import batect.os.Dimensions
 import batect.primitives.CancellationContext
 import batect.utils.Json
-import kotlinx.io.ByteArrayOutputStream
+import java.io.ByteArrayOutputStream
 import kotlinx.serialization.Serializable
 import okio.sink
 
@@ -130,7 +130,7 @@ class InitialiseCachesStepRunner(
             configs.add(CacheConfig(path, userAndGroup?.userId, userAndGroup?.groupId))
         }
 
-        val input = Json.withoutDefaults.stringify(CacheInitConfig.serializer(), CacheInitConfig(configs))
+        val input = Json.withoutDefaults.encodeToString(CacheInitConfig.serializer(), CacheInitConfig(configs))
 
         return DockerContainerCreationRequest(
             containerName,

@@ -22,6 +22,8 @@ import batect.docker.minimumDockerAPIVersion
 import batect.logging.Logger
 import batect.os.SystemInfo
 import java.util.concurrent.TimeUnit
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Response
@@ -60,8 +62,8 @@ abstract class APIBase(
             return
         }
 
-        val parsedError = Json.default.parseJson(responseBody).jsonObject
-        val message = parsedError.getValue("message").primitive.content
+        val parsedError = Json.default.parseToJsonElement(responseBody).jsonObject
+        val message = parsedError.getValue("message").jsonPrimitive.content
             .correctLineEndings()
 
         errorHandler(DockerAPIError(response.code, message))

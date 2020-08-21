@@ -17,13 +17,16 @@
 package batect.docker.pull
 
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.long
 
 class DockerImageProgressReporter {
     private val layerStates = mutableMapOf<String, LayerStatus>()
     private var lastProgressUpdate: DockerImageProgress? = null
 
     fun processProgressUpdate(progressUpdate: JsonObject): DockerImageProgress? {
-        val status = progressUpdate.getPrimitiveOrNull("status")?.content
+        val status = progressUpdate["status"]?.jsonPrimitive?.content
         val currentOperation = DownloadOperation.knownOperations[status]
 
         if (currentOperation == null) {
@@ -34,7 +37,7 @@ class DockerImageProgressReporter {
             return extractNonLayerUpdate(currentOperation, progressUpdate)
         }
 
-        val layerId = progressUpdate.getPrimitive("id").content
+        val layerId = progressUpdate.getValue("id").jsonPrimitive.content
         val previousState = layerStates[layerId]
         layerStates[layerId] = computeNewStateForLayer(previousState, currentOperation, progressUpdate)
 
@@ -49,9 +52,9 @@ class DockerImageProgressReporter {
     }
 
     private fun extractNonLayerUpdate(currentOperation: DownloadOperation, progressUpdate: JsonObject): DockerImageProgress {
-        val progressDetail = progressUpdate.getObject("progressDetail")
-        val completedBytes = progressDetail.getPrimitiveOrNull("current")?.long ?: 0
-        var totalBytes = progressDetail.getPrimitiveOrNull("total")?.long ?: 0
+        val progressDetail = progressUpdate.getValue("progressDetail").jsonObject
+        val completedBytes = progressDetail["current"]?.jsonPrimitive?.long ?: 0
+        var totalBytes = progressDetail["total"]?.jsonPrimitive?.long ?: 0
 
         if (totalBytes == -1L) {
             totalBytes = 0
@@ -61,9 +64,9 @@ class DockerImageProgressReporter {
     }
 
     private fun computeNewStateForLayer(previousState: LayerStatus?, currentOperation: DownloadOperation, progressUpdate: JsonObject): LayerStatus {
-        val progressDetail = progressUpdate.getObject("progressDetail")
-        val completedBytes = progressDetail.getPrimitiveOrNull("current")?.long
-        val totalBytes = progressDetail.getPrimitiveOrNull("total")?.long
+        val progressDetail = progressUpdate.getValue("progressDetail").jsonObject
+        val completedBytes = progressDetail["current"]?.jsonPrimitive?.long
+        val totalBytes = progressDetail["total"]?.jsonPrimitive?.long
 
         val completedBytesToUse = if (completedBytes != null) {
             completedBytes
@@ -88,9 +91,9 @@ class DockerImageProgressReporter {
         val extractionPhase = anyLayerIsExtractingOrComplete && allLayersHaveFinishedDownloading
 
         val currentOperation = if (extractionPhase) {
-            layerStates.values.map { it.currentOperation }.filter { it >= DownloadOperation.Extracting }.min()!!
+            layerStates.values.map { it.currentOperation }.filter { it >= DownloadOperation.Extracting }.minOrNull()!!
         } else {
-            layerStates.values.map { it.currentOperation }.min()!!
+            layerStates.values.map { it.currentOperation }.minOrNull()!!
         }
 
         val layersInCurrentOperation = layerStates.values.filter { it.currentOperation == currentOperation }

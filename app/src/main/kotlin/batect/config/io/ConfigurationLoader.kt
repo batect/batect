@@ -125,10 +125,10 @@ class ConfigurationLoader(
         val pathDeserializer = PathDeserializer(pathResolver)
         val module = serializersModuleOf(PathResolutionResult::class, pathDeserializer)
         val config = YamlConfiguration(extensionDefinitionPrefix = ".", polymorphismStyle = PolymorphismStyle.Property)
-        val parser = Yaml(configuration = config, context = module)
+        val parser = Yaml(configuration = config, serializersModule = module)
 
         try {
-            val file = parser.parse(ConfigurationFile.serializer(), content)
+            val file = parser.decodeFromString(ConfigurationFile.serializer(), content)
             checkGitIncludesExist(file)
 
             logger.info {
@@ -246,8 +246,8 @@ class ConfigurationLoader(
         else -> e.message
     }
 
-    private fun pathResolverFor(file: Path, includedAs: Include?): PathResolver = when {
-        includedAs is GitInclude -> pathResolverFactory.createResolver(GitIncludePathResolutionContext(file.parent, includeResolver.rootPathFor(includedAs.repositoryReference), includedAs))
+    private fun pathResolverFor(file: Path, includedAs: Include?): PathResolver = when (includedAs) {
+        is GitInclude -> pathResolverFactory.createResolver(GitIncludePathResolutionContext(file.parent, includeResolver.rootPathFor(includedAs.repositoryReference), includedAs))
         else -> pathResolverFactory.createResolver(DefaultPathResolutionContext(file.parent))
     }
 

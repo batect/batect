@@ -31,7 +31,7 @@ import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
 import java.time.Duration
 import java.time.temporal.ChronoUnit
-import kotlinx.serialization.Encoder
+import kotlinx.serialization.encoding.Encoder
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 

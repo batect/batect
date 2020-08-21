@@ -19,16 +19,16 @@ package batect.config
 import batect.config.io.ConfigurationException
 import com.charleskorn.kaml.Location
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.SerialDescriptor
-import kotlinx.serialization.Serializer
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.MapSerializer
+import kotlinx.serialization.descriptors.SerialDescriptor
 
+@Serializable(with = ConfigVariableMap.Companion::class)
 class ConfigVariableMap(contents: Iterable<ConfigVariableDefinition>) : NamedObjectMap<ConfigVariableDefinition>("config variable", contents) {
     constructor(vararg contents: ConfigVariableDefinition) : this(contents.asIterable())
 
     override fun nameFor(value: ConfigVariableDefinition): String = value.name
 
-    @Serializer(forClass = ConfigVariableMap::class)
     companion object : NamedObjectMapSerializer<ConfigVariableMap, ConfigVariableDefinition>(ConfigVariableDefinition.serializer()), KSerializer<ConfigVariableMap> {
         override fun addName(name: String, element: ConfigVariableDefinition): ConfigVariableDefinition = element.copy(name = name)
         override fun getName(element: ConfigVariableDefinition): String = element.name

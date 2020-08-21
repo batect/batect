@@ -17,15 +17,15 @@
 package batect.logging
 
 import batect.config.Container
-import kotlinx.serialization.Decoder
-import kotlinx.serialization.Encoder
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.SerialDescriptor
-import kotlinx.serialization.builtins.list
+import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 
 object ContainerNameSetSerializer : KSerializer<Set<Container>> {
-    private val serializer = String.serializer().list
+    private val serializer = ListSerializer(String.serializer())
     override val descriptor: SerialDescriptor = serializer.descriptor
     override fun deserialize(decoder: Decoder): Set<Container> = throw UnsupportedOperationException()
     override fun serialize(encoder: Encoder, value: Set<Container>) = serializer.serialize(encoder, value.map { it.name })

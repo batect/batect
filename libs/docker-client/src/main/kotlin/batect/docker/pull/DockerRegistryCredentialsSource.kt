@@ -23,6 +23,8 @@ import batect.os.ProcessRunner
 import java.nio.charset.Charset
 import java.util.Base64
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 
 sealed class DockerRegistryCredentialsSource {
     abstract fun load(): DockerRegistryCredentials?
@@ -97,7 +99,7 @@ data class HelperBasedCredentialsSource(val helperName: String, val serverAddres
 
     private fun parseCredentials(credentials: String): JsonObject {
         try {
-            return Json.default.parseJson(credentials).jsonObject
+            return Json.default.parseToJsonElement(credentials).jsonObject
         } catch (e: Throwable) {
             throw DockerRegistryCredentialsException("The credentials returned for '$serverAddress' by the credential helper executable '$helperName' are invalid: ${e.message}", e)
         }
@@ -105,7 +107,7 @@ data class HelperBasedCredentialsSource(val helperName: String, val serverAddres
 
     private fun JsonObject.getStringMember(key: String): String {
         if (this.containsKey(key)) {
-            return this.getValue(key).primitive.content
+            return this.getValue(key).jsonPrimitive.content
         }
 
         throw DockerRegistryCredentialsException("The credentials returned for '$serverAddress' by the credential helper executable '$helperName' are invalid: there is no '$key' field.")

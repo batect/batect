@@ -26,21 +26,22 @@ import batect.os.Command
 import batect.os.PathResolutionResult
 import com.charleskorn.kaml.Location
 import com.charleskorn.kaml.YamlInput
-import kotlinx.serialization.CompositeDecoder
-import kotlinx.serialization.Decoder
-import kotlinx.serialization.Encoder
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.SerialDescriptor
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
-import kotlinx.serialization.Serializer
+import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.MapSerializer
-import kotlinx.serialization.builtins.list
+import kotlinx.serialization.builtins.SetSerializer
 import kotlinx.serialization.builtins.nullable
 import kotlinx.serialization.builtins.serializer
-import kotlinx.serialization.builtins.set
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.descriptors.buildClassSerialDescriptor
+import kotlinx.serialization.encoding.CompositeDecoder
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 
-@Serializable
+@Serializable(with = Container.Companion::class)
 data class Container(
     val name: String,
     val imageSource: ImageSource,
@@ -64,7 +65,7 @@ data class Container(
     val logDriver: String = defaultLogDriver,
     val logOptions: Map<String, String> = emptyMap()
 ) {
-    @Serializer(forClass = Container::class)
+    @OptIn(ExperimentalSerializationApi::class)
     companion object : KSerializer<Container> {
         const val defaultLogDriver = "json-file"
 
@@ -93,7 +94,7 @@ data class Container(
         private const val logOptionsFieldName = "log_options"
         private const val imagePullPolicyFieldName = "image_pull_policy"
 
-        override val descriptor: SerialDescriptor = SerialDescriptor("Container") {
+        override val descriptor: SerialDescriptor = buildClassSerialDescriptor("Container") {
             element(buildDirectoryFieldName, String.serializer().descriptor, isOptional = true)
             element(buildArgsFieldName, EnvironmentSerializer.descriptor, isOptional = true)
             element(dockerfileFieldName, String.serializer().descriptor, isOptional = true)
@@ -102,19 +103,19 @@ data class Container(
             element(entrypointFieldName, String.serializer().descriptor, isOptional = true)
             element(environmentFieldName, EnvironmentSerializer.descriptor, isOptional = true)
             element(workingDirectoryFieldName, String.serializer().descriptor, isOptional = true)
-            element(volumeMountsFieldName, VolumeMount.serializer().set.descriptor, isOptional = true)
-            element(deviceMountsFieldName, DeviceMount.serializer().set.descriptor, isOptional = true)
-            element(portMappingsFieldName, PortMapping.serializer().set.descriptor, isOptional = true)
-            element(dependenciesFieldName, String.serializer().set.descriptor, isOptional = true)
+            element(volumeMountsFieldName, SetSerializer(VolumeMount.serializer()).descriptor, isOptional = true)
+            element(deviceMountsFieldName, SetSerializer(DeviceMount.serializer()).descriptor, isOptional = true)
+            element(portMappingsFieldName, SetSerializer(PortMapping.serializer()).descriptor, isOptional = true)
+            element(dependenciesFieldName, SetSerializer(String.serializer()).descriptor, isOptional = true)
             element(healthCheckConfigFieldName, HealthCheckConfig.serializer().descriptor, isOptional = true)
             element(runAsCurrentUserConfigFieldName, RunAsCurrentUserConfig.serializer().descriptor, isOptional = true)
             element(privilegedFieldName, Boolean.serializer().descriptor, isOptional = true)
             element(enableInitProcessFieldName, Boolean.serializer().descriptor, isOptional = true)
-            element(capabilitiesToAddFieldName, Capability.serializer().set.descriptor, isOptional = true)
-            element(capabilitiesToDropFieldName, Capability.serializer().set.descriptor, isOptional = true)
-            element(additionalHostnamesFieldName, String.serializer().set.descriptor, isOptional = true)
+            element(capabilitiesToAddFieldName, SetSerializer(Capability.serializer()).descriptor, isOptional = true)
+            element(capabilitiesToDropFieldName, SetSerializer(Capability.serializer()).descriptor, isOptional = true)
+            element(additionalHostnamesFieldName, SetSerializer(String.serializer()).descriptor, isOptional = true)
             element(additionalHostsFieldName, MapSerializer(String.serializer(), String.serializer()).descriptor, isOptional = true)
-            element(setupCommandsFieldName, SetupCommand.serializer().list.descriptor, isOptional = true)
+            element(setupCommandsFieldName, ListSerializer(SetupCommand.serializer()).descriptor, isOptional = true)
             element(logDriverFieldName, String.serializer().descriptor, isOptional = true)
             element(logOptionsFieldName, MapSerializer(String.serializer(), String.serializer()).descriptor, isOptional = true)
             element(imagePullPolicyFieldName, ImagePullPolicy.serializer().descriptor, isOptional = true)
@@ -179,7 +180,7 @@ data class Container(
 
             loop@ while (true) {
                 when (val i = input.decodeElementIndex(descriptor)) {
-                    CompositeDecoder.READ_DONE -> break@loop
+                    CompositeDecoder.DECODE_DONE -> break@loop
                     buildDirectoryFieldIndex -> buildDirectory = input.decodeSerializableElement(descriptor, i, Expression.serializer())
                     buildArgsFieldIndex -> buildArgs = input.decodeSerializableElement(descriptor, i, EnvironmentSerializer)
                     dockerfileFieldIndex -> dockerfilePath = input.decodeStringElement(descriptor, i)
@@ -188,19 +189,19 @@ data class Container(
                     entrypointFieldIndex -> entrypoint = input.decodeSerializableElement(descriptor, i, CommandSerializer)
                     environmentFieldIndex -> environment = input.decodeSerializableElement(descriptor, i, EnvironmentSerializer)
                     workingDirectoryFieldIndex -> workingDirectory = input.decodeStringElement(descriptor, i)
-                    volumeMountsFieldIndex -> volumeMounts = input.decodeSerializableElement(descriptor, i, VolumeMount.serializer().set)
-                    deviceMountsFieldIndex -> deviceMounts = input.decodeSerializableElement(descriptor, i, DeviceMountConfigSerializer.set)
+                    volumeMountsFieldIndex -> volumeMounts = input.decodeSerializableElement(descriptor, i, SetSerializer(VolumeMount.serializer()))
+                    deviceMountsFieldIndex -> deviceMounts = input.decodeSerializableElement(descriptor, i, SetSerializer(DeviceMountConfigSerializer))
                     portMappingsFieldIndex -> portMappings = input.decodeSerializableElement(descriptor, i, PortMappingConfigSetSerializer)
                     dependenciesFieldIndex -> dependencies = input.decodeSerializableElement(descriptor, i, DependencySetSerializer)
                     healthCheckConfigFieldIndex -> healthCheckConfig = input.decodeSerializableElement(descriptor, i, HealthCheckConfig.serializer())
                     runAsCurrentUserConfigFieldIndex -> runAsCurrentUserConfig = input.decodeSerializableElement(descriptor, i, RunAsCurrentUserConfig.serializer())
                     privilegedFieldIndex -> privileged = input.decodeBooleanElement(descriptor, i)
                     enableInitProcessFieldIndex -> enableInitProcess = input.decodeBooleanElement(descriptor, i)
-                    capabilitiesToAddFieldIndex -> capabilitiesToAdd = input.decodeSerializableElement(descriptor, i, Capability.serializer().set)
-                    capabilitiesToDropFieldIndex -> capabilitiesToDrop = input.decodeSerializableElement(descriptor, i, Capability.serializer().set)
-                    additionalHostnamesFieldIndex -> additionalHostnames = input.decodeSerializableElement(descriptor, i, String.serializer().set)
+                    capabilitiesToAddFieldIndex -> capabilitiesToAdd = input.decodeSerializableElement(descriptor, i, SetSerializer(Capability.serializer()))
+                    capabilitiesToDropFieldIndex -> capabilitiesToDrop = input.decodeSerializableElement(descriptor, i, SetSerializer(Capability.serializer()))
+                    additionalHostnamesFieldIndex -> additionalHostnames = input.decodeSerializableElement(descriptor, i, SetSerializer(String.serializer()))
                     additionalHostsFieldIndex -> additionalHosts = input.decodeSerializableElement(descriptor, i, MapSerializer(String.serializer(), String.serializer()))
-                    setupCommandsFieldIndex -> setupCommands = input.decodeSerializableElement(descriptor, i, SetupCommand.serializer().list)
+                    setupCommandsFieldIndex -> setupCommands = input.decodeSerializableElement(descriptor, i, ListSerializer(SetupCommand.serializer()))
                     logDriverFieldIndex -> logDriver = input.decodeStringElement(descriptor, i)
                     logOptionsFieldIndex -> logOptions = input.decodeSerializableElement(descriptor, i, MapSerializer(String.serializer(), String.serializer()))
                     imagePullPolicyFieldIndex -> imagePullPolicy = input.decodeSerializableElement(descriptor, i, ImagePullPolicy.serializer())
@@ -260,7 +261,7 @@ data class Container(
             }
 
             return if (buildDirectory != null) {
-                val loader = input.context.getContextual(PathResolutionResult::class)!! as PathDeserializer
+                val loader = input.serializersModule.getContextual(PathResolutionResult::class)!! as PathDeserializer
                 val context = loader.pathResolver.context
 
                 BuildImage(buildDirectory, context, buildArgs ?: emptyMap(), dockerfilePath ?: "Dockerfile", imagePullPolicy)
@@ -287,19 +288,19 @@ data class Container(
             output.encodeSerializableElement(descriptor, entrypointFieldIndex, CommandSerializer.nullable, value.entrypoint)
             output.encodeSerializableElement(descriptor, environmentFieldIndex, EnvironmentSerializer, value.environment)
             output.encodeSerializableElement(descriptor, workingDirectoryFieldIndex, String.serializer().nullable, value.workingDirectory)
-            output.encodeSerializableElement(descriptor, volumeMountsFieldIndex, VolumeMount.serializer().set, value.volumeMounts)
-            output.encodeSerializableElement(descriptor, deviceMountsFieldIndex, DeviceMount.serializer().set, value.deviceMounts)
-            output.encodeSerializableElement(descriptor, portMappingsFieldIndex, PortMapping.serializer().set, value.portMappings)
+            output.encodeSerializableElement(descriptor, volumeMountsFieldIndex, SetSerializer(VolumeMount.serializer()), value.volumeMounts)
+            output.encodeSerializableElement(descriptor, deviceMountsFieldIndex, SetSerializer(DeviceMount.serializer()), value.deviceMounts)
+            output.encodeSerializableElement(descriptor, portMappingsFieldIndex, SetSerializer(PortMapping.serializer()), value.portMappings)
             output.encodeSerializableElement(descriptor, dependenciesFieldIndex, DependencySetSerializer, value.dependencies)
             output.encodeSerializableElement(descriptor, healthCheckConfigFieldIndex, HealthCheckConfig.serializer(), value.healthCheckConfig)
             output.encodeSerializableElement(descriptor, runAsCurrentUserConfigFieldIndex, RunAsCurrentUserConfig.serializer(), value.runAsCurrentUserConfig)
             output.encodeBooleanElement(descriptor, privilegedFieldIndex, value.privileged)
             output.encodeBooleanElement(descriptor, enableInitProcessFieldIndex, value.enableInitProcess)
-            output.encodeSerializableElement(descriptor, capabilitiesToAddFieldIndex, Capability.serializer().set, value.capabilitiesToAdd)
-            output.encodeSerializableElement(descriptor, capabilitiesToDropFieldIndex, Capability.serializer().set, value.capabilitiesToDrop)
-            output.encodeSerializableElement(descriptor, additionalHostnamesFieldIndex, String.serializer().set, value.additionalHostnames)
+            output.encodeSerializableElement(descriptor, capabilitiesToAddFieldIndex, SetSerializer(Capability.serializer()), value.capabilitiesToAdd)
+            output.encodeSerializableElement(descriptor, capabilitiesToDropFieldIndex, SetSerializer(Capability.serializer()), value.capabilitiesToDrop)
+            output.encodeSerializableElement(descriptor, additionalHostnamesFieldIndex, SetSerializer(String.serializer()), value.additionalHostnames)
             output.encodeSerializableElement(descriptor, additionalHostsFieldIndex, MapSerializer(String.serializer(), String.serializer()), value.additionalHosts)
-            output.encodeSerializableElement(descriptor, setupCommandsFieldIndex, SetupCommand.serializer().list, value.setupCommands)
+            output.encodeSerializableElement(descriptor, setupCommandsFieldIndex, ListSerializer(SetupCommand.serializer()), value.setupCommands)
             output.encodeStringElement(descriptor, logDriverFieldIndex, value.logDriver)
             output.encodeSerializableElement(descriptor, logOptionsFieldIndex, MapSerializer(String.serializer(), String.serializer()), value.logOptions)
 

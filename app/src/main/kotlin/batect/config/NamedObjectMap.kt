@@ -18,12 +18,12 @@ package batect.config
 
 import com.charleskorn.kaml.Location
 import com.charleskorn.kaml.YamlInput
-import kotlinx.serialization.CompositeDecoder
-import kotlinx.serialization.Decoder
-import kotlinx.serialization.Encoder
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.SerialDescriptor
 import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.CompositeDecoder
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 
 abstract class NamedObjectMap<E>(contentName: String, contents: Iterable<E>) : Map<String, E>, Set<E> {
     init {
@@ -85,7 +85,7 @@ abstract class NamedObjectMapSerializer<TCollection : Iterable<TElement>, TEleme
         while (true) {
             val currentIndex = input.decodeElementIndex(descriptor)
 
-            if (currentIndex == CompositeDecoder.READ_DONE) {
+            if (currentIndex == CompositeDecoder.DECODE_DONE) {
                 break
             }
 

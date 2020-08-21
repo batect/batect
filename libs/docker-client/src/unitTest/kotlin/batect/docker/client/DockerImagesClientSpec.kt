@@ -54,6 +54,7 @@ import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
 import java.nio.file.Files
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonObject
 import okio.Sink
 import org.mockito.invocation.InvocationOnMock
 import org.spekframework.spek2.Spek
@@ -284,8 +285,8 @@ object DockerImagesClientSpec : Spek({
                         }
 
                         on("pulling the image") {
-                            val firstProgressUpdate = Json.default.parseJson("""{"thing": "value"}""").jsonObject
-                            val secondProgressUpdate = Json.default.parseJson("""{"thing": "other value"}""").jsonObject
+                            val firstProgressUpdate = Json.default.parseToJsonElement("""{"thing": "value"}""").jsonObject
+                            val secondProgressUpdate = Json.default.parseToJsonElement("""{"thing": "other value"}""").jsonObject
 
                             beforeEachTest {
                                 whenever(imageProgressReporter.processProgressUpdate(firstProgressUpdate)).thenReturn(DockerImageProgress("Doing something", 10, 20))
@@ -383,7 +384,7 @@ object DockerImagesClientSpec : Spek({
 })
 
 private fun stubProgressUpdate(reporter: DockerImageProgressReporter, input: String, update: DockerImageProgress) {
-    val json = Json.default.parseJson(input).jsonObject
+    val json = Json.default.parseToJsonElement(input).jsonObject
     whenever(reporter.processProgressUpdate(eq(json))).thenReturn(update)
 }
 
@@ -392,7 +393,7 @@ private fun sendProgressAndReturnImage(progressUpdates: String, image: DockerIma
     val onProgressUpdate = invocation.arguments.last() as (JsonObject) -> Unit
 
     progressUpdates.lines().forEach { line ->
-        onProgressUpdate(Json.default.parseJson(line).jsonObject)
+        onProgressUpdate(Json.default.parseToJsonElement(line).jsonObject)
     }
 
     image

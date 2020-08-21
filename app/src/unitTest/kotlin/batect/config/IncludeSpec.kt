@@ -51,7 +51,7 @@ object IncludeSpec : Spek({
             val pathResolver by createForEachTest { mock<PathResolver>() }
             val pathDeserializer by createForEachTest { PathDeserializer(pathResolver) }
             val configuration = YamlConfiguration(polymorphismStyle = PolymorphismStyle.Property)
-            val parser by createForEachTest { Yaml(configuration = configuration, context = serializersModuleOf(PathResolutionResult::class, pathDeserializer)) }
+            val parser by createForEachTest { Yaml(configuration = configuration, serializersModule = serializersModuleOf(PathResolutionResult::class, pathDeserializer)) }
 
             fun LifecycleAware.givenPathResolvesTo(type: PathType) {
                 val absolutePath = osIndependentPath("/resolved/some/path.yml")
@@ -68,7 +68,7 @@ object IncludeSpec : Spek({
                     given("the path given resolves to a file") {
                         givenPathResolvesTo(PathType.File)
 
-                        val result by runForEachTest { parser.parse(IncludeConfigSerializer, yaml) }
+                        val result by runForEachTest { parser.decodeFromString(IncludeConfigSerializer, yaml) }
 
                         it("returns the resolved path") {
                             assertThat(result, equalTo(FileInclude(osIndependentPath("/resolved/some/path.yml"))))
@@ -79,7 +79,7 @@ object IncludeSpec : Spek({
                         givenPathResolvesTo(PathType.Directory)
 
                         it("throws an appropriate exception") {
-                            assertThat({ parser.parse(IncludeConfigSerializer, yaml) }, throws<ConfigurationException>(
+                            assertThat({ parser.decodeFromString(IncludeConfigSerializer, yaml) }, throws<ConfigurationException>(
                                 withMessage("'../some/path.yml' (described as '/resolved/some/path.yml') is not a file.") and
                                     withLineNumber(1) and
                                     withColumn(1)
@@ -91,7 +91,7 @@ object IncludeSpec : Spek({
                         givenPathResolvesTo(PathType.DoesNotExist)
 
                         it("throws an appropriate exception") {
-                            assertThat({ parser.parse(IncludeConfigSerializer, yaml) }, throws<ConfigurationException>(
+                            assertThat({ parser.decodeFromString(IncludeConfigSerializer, yaml) }, throws<ConfigurationException>(
                                 withMessage("Included file '../some/path.yml' (described as '/resolved/some/path.yml') does not exist.") and
                                     withLineNumber(1) and
                                     withColumn(1)
@@ -109,7 +109,7 @@ object IncludeSpec : Spek({
                     given("the path given resolves to a file") {
                         givenPathResolvesTo(PathType.File)
 
-                        val result by runForEachTest { parser.parse(IncludeConfigSerializer, yaml) }
+                        val result by runForEachTest { parser.decodeFromString(IncludeConfigSerializer, yaml) }
 
                         it("returns the resolved path") {
                             assertThat(result, equalTo(FileInclude(osIndependentPath("/resolved/some/path.yml"))))
@@ -120,7 +120,7 @@ object IncludeSpec : Spek({
                         givenPathResolvesTo(PathType.Directory)
 
                         it("throws an appropriate exception") {
-                            assertThat({ parser.parse(IncludeConfigSerializer, yaml) }, throws<ConfigurationException>(
+                            assertThat({ parser.decodeFromString(IncludeConfigSerializer, yaml) }, throws<ConfigurationException>(
                                 withMessage("'../some/path.yml' (described as '/resolved/some/path.yml') is not a file.") and
                                     withLineNumber(2) and
                                     withColumn(7)
@@ -132,7 +132,7 @@ object IncludeSpec : Spek({
                         givenPathResolvesTo(PathType.DoesNotExist)
 
                         it("throws an appropriate exception") {
-                            assertThat({ parser.parse(IncludeConfigSerializer, yaml) }, throws<ConfigurationException>(
+                            assertThat({ parser.decodeFromString(IncludeConfigSerializer, yaml) }, throws<ConfigurationException>(
                                 withMessage("Included file '../some/path.yml' (described as '/resolved/some/path.yml') does not exist.") and
                                     withLineNumber(2) and
                                     withColumn(7)
@@ -150,7 +150,7 @@ object IncludeSpec : Spek({
                         ref: v1.2.3
                     """.trimIndent()
 
-                    val result by runForEachTest { parser.parse(IncludeConfigSerializer, yaml) }
+                    val result by runForEachTest { parser.decodeFromString(IncludeConfigSerializer, yaml) }
 
                     it("returns an include with a default file name") {
                         assertThat(result, equalTo(GitInclude("https://github.com/my-org/my-repo.git", "v1.2.3", "batect-bundle.yml")))
@@ -165,7 +165,7 @@ object IncludeSpec : Spek({
                         path: my-batect-bundle.yml
                     """.trimIndent()
 
-                    val result by runForEachTest { parser.parse(IncludeConfigSerializer, yaml) }
+                    val result by runForEachTest { parser.decodeFromString(IncludeConfigSerializer, yaml) }
 
                     it("returns an include with that file name") {
                         assertThat(result, equalTo(GitInclude("https://github.com/my-org/my-repo.git", "v1.2.3", "my-batect-bundle.yml")))
@@ -177,7 +177,7 @@ object IncludeSpec : Spek({
         describe("writing to JSON for logging") {
             given("a file include") {
                 val include by createForEachTest { FileInclude(osIndependentPath("/some/path")) }
-                val json by createForEachTest { Json.forLogging.stringify(IncludeConfigSerializer, include) }
+                val json by createForEachTest { Json.forLogging.encodeToString(IncludeConfigSerializer, include) }
 
                 it("serializes to the expected JSON") {
                     assertThat(json, equivalentTo("""
@@ -188,7 +188,7 @@ object IncludeSpec : Spek({
 
             given("a Git include") {
                 val include by createForEachTest { GitInclude("https://github.com/my-org/my-repo.git", "v1.2.3", "some-file.yml") }
-                val json by createForEachTest { Json.forLogging.stringify(IncludeConfigSerializer, include) }
+                val json by createForEachTest { Json.forLogging.encodeToString(IncludeConfigSerializer, include) }
 
                 it("serializes to the expected JSON") {
                     assertThat(json, equivalentTo("""

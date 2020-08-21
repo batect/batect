@@ -21,22 +21,27 @@ import com.charleskorn.kaml.Location
 import com.charleskorn.kaml.YamlInput
 import com.charleskorn.kaml.YamlMap
 import com.charleskorn.kaml.YamlScalar
-import kotlinx.serialization.Decoder
-import kotlinx.serialization.Encoder
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.PrimitiveKind
-import kotlinx.serialization.SerialDescriptor
-import kotlinx.serialization.UnionKind
-import kotlinx.serialization.decode
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.descriptors.SerialKind
+import kotlinx.serialization.descriptors.buildSerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 
+@OptIn(ExperimentalSerializationApi::class)
 abstract class StringOrObjectSerializer<T> : KSerializer<T> {
     abstract val serialName: String
-    protected val stringDescriptor = SerialDescriptor("value", PrimitiveKind.STRING)
+    protected val stringDescriptor = PrimitiveSerialDescriptor("value", PrimitiveKind.STRING)
     abstract val objectDescriptor: SerialDescriptor
     abstract val neitherStringNorObjectErrorMessage: String
 
+    @OptIn(InternalSerializationApi::class)
     final override val descriptor: SerialDescriptor by lazy {
-        SerialDescriptor(serialName, UnionKind.CONTEXTUAL) {
+        buildSerialDescriptor(serialName, SerialKind.CONTEXTUAL) {
             element("object", objectDescriptor)
             element("string", stringDescriptor)
         }
@@ -82,9 +87,10 @@ abstract class StringOrObjectSerializer<T> : KSerializer<T> {
     protected open fun validateDeserializedObject(value: T, location: Location) {}
 }
 
+@OptIn(ExperimentalSerializationApi::class)
 abstract class SimpleStringOrObjectSerializer<T>(val objectSerializer: KSerializer<T>) : StringOrObjectSerializer<T>() {
     override val serialName: String = objectSerializer.descriptor.serialName
     override val objectDescriptor = objectSerializer.descriptor
-    override fun deserializeFromObject(input: YamlInput): T = input.decode(objectSerializer)
+    override fun deserializeFromObject(input: YamlInput): T = input.decodeSerializableValue(objectSerializer)
     override fun serialize(encoder: Encoder, value: T) = encoder.encodeSerializableValue(objectSerializer, value)
 }

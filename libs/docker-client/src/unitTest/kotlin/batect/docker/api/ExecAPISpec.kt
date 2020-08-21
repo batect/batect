@@ -47,7 +47,8 @@ import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
 import java.util.concurrent.TimeUnit
-import kotlinx.serialization.json.json
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import okhttp3.Headers
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
@@ -110,7 +111,7 @@ object ExecAPISpec : Spek({
 
                     it("creates the container with the expected settings") {
                         verify(clientWithLongTimeout).newCall(requestWithJsonBody { body ->
-                            assertThat(body, equalTo(Json.default.parseJson(request.toJson())))
+                            assertThat(body, equalTo(Json.default.parseToJsonElement(request.toJson())))
                         })
                     }
 
@@ -179,9 +180,9 @@ object ExecAPISpec : Spek({
 
                     it("starts the instance with the expected settings") {
                         verify(hijackableHttpClient).newCall(requestWithJsonBody { body ->
-                            assertThat(body, equalTo(json {
-                                "Detach" to false
-                                "Tty" to attachTty
+                            assertThat(body, equalTo(buildJsonObject {
+                                put("Detach", false)
+                                put("Tty", attachTty)
                             }))
                         })
                     }

@@ -20,17 +20,17 @@ import batect.config.io.ConfigurationException
 import batect.os.Command
 import batect.os.InvalidCommandLineException
 import com.charleskorn.kaml.YamlInput
-import kotlinx.serialization.Decoder
-import kotlinx.serialization.Encoder
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.PrimitiveDescriptor
-import kotlinx.serialization.PrimitiveKind
-import kotlinx.serialization.SerialDescriptor
-import kotlinx.serialization.builtins.list
+import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 
 object CommandSerializer : KSerializer<Command> {
-    override val descriptor: SerialDescriptor = PrimitiveDescriptor("command", PrimitiveKind.STRING)
+    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("command", PrimitiveKind.STRING)
 
     override fun deserialize(decoder: Decoder): Command = try {
         Command.parse(decoder.decodeString())
@@ -44,5 +44,5 @@ object CommandSerializer : KSerializer<Command> {
         }
     }
 
-    override fun serialize(encoder: Encoder, value: Command) = String.serializer().list.serialize(encoder, value.parsedCommand)
+    override fun serialize(encoder: Encoder, value: Command) = ListSerializer(String.serializer()).serialize(encoder, value.parsedCommand)
 }

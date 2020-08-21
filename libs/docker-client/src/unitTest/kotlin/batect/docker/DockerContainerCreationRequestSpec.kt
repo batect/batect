@@ -20,6 +20,7 @@ import batect.testutils.given
 import batect.testutils.on
 import com.natpryce.hamkrest.assertion.assertThat
 import java.time.Duration
+import kotlinx.serialization.json.Json
 import org.araqnid.hamkrest.json.equivalentTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
@@ -142,7 +143,7 @@ object DockerContainerCreationRequestSpec : Spek({
             }
 
             on("converting it to JSON for logging") {
-                val json = Json.default.stringify(DockerContainerCreationRequest.serializer(), request)
+                val json = Json.Default.encodeToString(DockerContainerCreationRequest.serializer(), request)
 
                 it("returns a JSON representation of the Kotlin object") {
                     assertThat(json, equivalentTo("""

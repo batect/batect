@@ -19,8 +19,7 @@ plugins {
 }
 
 dependencies {
-    implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
-    implementation "org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.20.0"
+    implementation 'org.jetbrains.kotlinx:kotlinx-serialization-core:1.0.0-RC'
     implementation 'com.github.jnr:jnr-posix:3.0.57'
 
     testImplementation 'com.google.jimfs:jimfs:1.1'

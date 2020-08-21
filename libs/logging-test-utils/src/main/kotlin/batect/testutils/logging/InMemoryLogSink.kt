@@ -31,11 +31,10 @@ import java.io.ByteArrayOutputStream
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonConfiguration
 import org.spekframework.spek2.dsl.LifecycleAware
 
 class InMemoryLogSink(private val json: Json) : LogSink {
-    constructor() : this(Json(JsonConfiguration.Stable))
+    constructor() : this(Json.Default)
 
     val loggedMessages = mutableListOf<LogMessage>()
     val output = ByteArrayOutputStream()

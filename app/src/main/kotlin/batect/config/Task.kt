@@ -20,15 +20,17 @@ import batect.config.io.ConfigurationException
 import batect.config.io.deserializers.DependencySetSerializer
 import batect.config.io.deserializers.PrerequisiteListSerializer
 import com.charleskorn.kaml.YamlInput
-import kotlinx.serialization.CompositeDecoder
-import kotlinx.serialization.Decoder
-import kotlinx.serialization.Encoder
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.SerialDescriptor
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.builtins.nullable
 import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.descriptors.buildClassSerialDescriptor
+import kotlinx.serialization.encoding.CompositeDecoder
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 
 @Serializable(with = Task.Companion::class)
 data class Task(
@@ -39,6 +41,7 @@ data class Task(
     val dependsOnContainers: Set<String> = emptySet(),
     val prerequisiteTasks: List<String> = emptyList()
 ) {
+    @OptIn(ExperimentalSerializationApi::class)
     companion object : KSerializer<Task> {
         private const val runConfigurationFieldName = "run"
         private const val descriptionFieldName = "description"
@@ -46,7 +49,7 @@ data class Task(
         private const val dependsOnContainersFieldName = "dependencies"
         private const val prerequisiteTasksFieldName = "prerequisites"
 
-        override val descriptor: SerialDescriptor = SerialDescriptor("Task") {
+        override val descriptor: SerialDescriptor = buildClassSerialDescriptor("Task") {
             element(runConfigurationFieldName, TaskRunConfiguration.serializer().descriptor, isOptional = true)
             element(descriptionFieldName, String.serializer().descriptor, isOptional = true)
             element(groupFieldName, String.serializer().descriptor, isOptional = true)
@@ -83,7 +86,7 @@ data class Task(
                     dependsOnContainersFieldIndex -> dependsOnContainers = input.decodeSerializableValue(DependencySetSerializer)
                     prerequisiteTasksFieldIndex -> prerequisiteTasks = input.decodeSerializableValue(PrerequisiteListSerializer)
 
-                    CompositeDecoder.READ_DONE -> break@loop
+                    CompositeDecoder.DECODE_DONE -> break@loop
                     else -> throw SerializationException("Unknown index $i")
                 }
             }

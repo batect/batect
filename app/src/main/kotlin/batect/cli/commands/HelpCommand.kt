@@ -63,7 +63,7 @@ class HelpCommand(
         }
     }
 
-    private fun determineColumnSize(optionNames: Iterable<String>): Int = optionNames.map { it.length }.max() ?: 0
+    private fun determineColumnSize(optionNames: Iterable<String>): Int = optionNames.map { it.length }.maxOrNull() ?: 0
 
     private fun formatInColumn(first: String, second: String, alignToColumn: Int): String {
         val firstLineIndentationCount = 4 + alignToColumn - first.length

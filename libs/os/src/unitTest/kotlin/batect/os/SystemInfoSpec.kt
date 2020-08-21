@@ -27,8 +27,8 @@ import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import java.util.Properties
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonConfiguration
-import kotlinx.serialization.json.JsonLiteral
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonObject
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -176,38 +176,38 @@ object SystemInfoSpec : Spek({
         }
 
         on("serializing system info") {
-            val json by runForEachTest { Json(JsonConfiguration.Stable).toJson(SystemInfo.serializer(), SystemInfo(nativeMethods, fileSystem, systemProperties)).jsonObject }
+            val json by runForEachTest { Json.Default.encodeToJsonElement(SystemInfo.serializer(), SystemInfo(nativeMethods, fileSystem, systemProperties)).jsonObject }
 
             it("only includes the expected fields") {
                 assertThat(json.keys, equalTo(setOf("operatingSystem", "jvmVersion", "osVersion", "homeDirectory", "lineSeparator", "tempDirectory", "userName")))
             }
 
             it("includes the operating system") {
-                assertThat(json["operatingSystem"], equalTo(JsonLiteral("Other")))
+                assertThat(json["operatingSystem"], equalTo(JsonPrimitive("Other")))
             }
 
             it("includes the JVM version") {
-                assertThat(json["jvmVersion"], equalTo(JsonLiteral("Awesome JVMs, Inc. Best JVM Ever 1.2.3")))
+                assertThat(json["jvmVersion"], equalTo(JsonPrimitive("Awesome JVMs, Inc. Best JVM Ever 1.2.3")))
             }
 
             it("includes the operating system version") {
-                assertThat(json["osVersion"], equalTo(JsonLiteral("Best OS Ever 4.5.6 (x86)")))
+                assertThat(json["osVersion"], equalTo(JsonPrimitive("Best OS Ever 4.5.6 (x86)")))
             }
 
             it("includes the home directory") {
-                assertThat(json["homeDirectory"], equalTo(JsonLiteral("/some/home/dir")))
+                assertThat(json["homeDirectory"], equalTo(JsonPrimitive("/some/home/dir")))
             }
 
             it("includes the line separator") {
-                assertThat(json["lineSeparator"], equalTo(JsonLiteral("some-long-line-separator")))
+                assertThat(json["lineSeparator"], equalTo(JsonPrimitive("some-long-line-separator")))
             }
 
             it("includes the temp directory") {
-                assertThat(json["tempDirectory"], equalTo(JsonLiteral("/some/temp/dir")))
+                assertThat(json["tempDirectory"], equalTo(JsonPrimitive("/some/temp/dir")))
             }
 
             it("includes the user's user name") {
-                assertThat(json["userName"], equalTo(JsonLiteral("awesome-user")))
+                assertThat(json["userName"], equalTo(JsonPrimitive("awesome-user")))
             }
         }
     }

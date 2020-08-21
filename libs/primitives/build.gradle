@@ -21,8 +21,7 @@ plugins {
 dependencies {
     implementation platform("com.squareup.okhttp3:okhttp-bom:4.8.1")
 
-    implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
-    implementation 'org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.20.0'
+    implementation 'org.jetbrains.kotlinx:kotlinx-serialization-core:1.0.0-RC'
     implementation 'com.squareup.okhttp3:okhttp'
     testImplementation 'com.squareup.okhttp3:mockwebserver'
 

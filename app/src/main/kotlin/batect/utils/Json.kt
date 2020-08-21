@@ -20,23 +20,18 @@ import batect.config.includes.GitIncludePathResolutionContext
 import batect.os.DefaultPathResolutionContext
 import batect.os.PathResolutionContext
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonConfiguration
 import kotlinx.serialization.modules.SerializersModule
 
 object Json {
     private val loggingModule = SerializersModule {
         include(batect.execution.model.rules.serializersModule)
 
-        polymorphic(PathResolutionContext::class) {
-            DefaultPathResolutionContext::class with DefaultPathResolutionContext.serializer()
-            GitIncludePathResolutionContext::class with GitIncludePathResolutionContext.serializer()
-        }
+        polymorphic(PathResolutionContext::class, DefaultPathResolutionContext::class, DefaultPathResolutionContext.serializer())
+        polymorphic(PathResolutionContext::class, GitIncludePathResolutionContext::class, GitIncludePathResolutionContext.serializer())
     }
 
-    private val defaultConfiguration = JsonConfiguration.Stable
-
-    val default = Json(defaultConfiguration)
-    val ignoringUnknownKeys = Json(defaultConfiguration.copy(ignoreUnknownKeys = true))
-    val withoutDefaults = Json(defaultConfiguration.copy(encodeDefaults = false))
-    val forLogging = Json(defaultConfiguration, loggingModule)
+    val default = Json.Default
+    val ignoringUnknownKeys = Json { ignoreUnknownKeys = true }
+    val withoutDefaults = Json { encodeDefaults = false }
+    val forLogging = Json { serializersModule = loggingModule }
 }

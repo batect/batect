@@ -23,6 +23,8 @@ import batect.docker.Json
 import batect.logging.Logger
 import batect.os.SystemInfo
 import batect.primitives.Version
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import okhttp3.Request
 
 class SystemInfoAPI(
@@ -54,12 +56,12 @@ class SystemInfoAPI(
                 throw DockerVersionInfoRetrievalException("The request failed: ${error.message}")
             }
 
-            val parsedResponse = Json.default.parseJson(response.body!!.string()).jsonObject
-            val version = parsedResponse.getValue("Version").primitive.content
-            val apiVersion = parsedResponse.getValue("ApiVersion").primitive.content
-            val minAPIVersion = parsedResponse.getValue("MinAPIVersion").primitive.content
-            val gitCommit = parsedResponse.getValue("GitCommit").primitive.content
-            val operatingSystem = parsedResponse.getValue("Os").primitive.content
+            val parsedResponse = Json.default.parseToJsonElement(response.body!!.string()).jsonObject
+            val version = parsedResponse.getValue("Version").jsonPrimitive.content
+            val apiVersion = parsedResponse.getValue("ApiVersion").jsonPrimitive.content
+            val minAPIVersion = parsedResponse.getValue("MinAPIVersion").jsonPrimitive.content
+            val gitCommit = parsedResponse.getValue("GitCommit").jsonPrimitive.content
+            val operatingSystem = parsedResponse.getValue("Os").jsonPrimitive.content
 
             return DockerVersionInfo(
                 Version.parse(version),

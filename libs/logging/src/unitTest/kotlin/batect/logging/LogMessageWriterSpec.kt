@@ -23,7 +23,9 @@ import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonConfiguration
+import kotlinx.serialization.json.int
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -37,18 +39,18 @@ object LogMessageWriterSpec : Spek({
             val output = CloseableByteArrayOutputStream()
             writer.writeTo(message, output)
 
-            val parsed = Json(JsonConfiguration.Stable).parseJson(output.toString()).jsonObject
+            val parsed = Json.Default.parseToJsonElement(output.toString()).jsonObject
 
             it("includes the timestamp") {
-                assertThat(parsed.getPrimitive("@timestamp").content, equalTo("2017-09-25T11:55:13.001234Z"))
+                assertThat(parsed.getValue("@timestamp").jsonPrimitive.content, equalTo("2017-09-25T11:55:13.001234Z"))
             }
 
             it("includes the message") {
-                assertThat(parsed.getPrimitive("@message").content, equalTo("This is the message"))
+                assertThat(parsed.getValue("@message").jsonPrimitive.content, equalTo("This is the message"))
             }
 
             it("includes the severity") {
-                assertThat(parsed.getPrimitive("@severity").content, equalTo("info"))
+                assertThat(parsed.getValue("@severity").jsonPrimitive.content, equalTo("info"))
             }
 
             it("does not include any other fields") {
@@ -82,23 +84,23 @@ object LogMessageWriterSpec : Spek({
             val output = CloseableByteArrayOutputStream()
             writer.writeTo(message, output)
 
-            val parsed = Json(JsonConfiguration.Stable).parseJson(output.toString()).jsonObject
+            val parsed = Json.Default.parseToJsonElement(output.toString()).jsonObject
 
             it("includes the timestamp") {
-                assertThat(parsed.getPrimitive("@timestamp").content, equalTo("2017-09-25T11:55:13.001234Z"))
+                assertThat(parsed.getValue("@timestamp").jsonPrimitive.content, equalTo("2017-09-25T11:55:13.001234Z"))
             }
 
             it("includes the message") {
-                assertThat(parsed.getPrimitive("@message").content, equalTo("This is the message"))
+                assertThat(parsed.getValue("@message").jsonPrimitive.content, equalTo("This is the message"))
             }
 
             it("includes the severity") {
-                assertThat(parsed.getPrimitive("@severity").content, equalTo("info"))
+                assertThat(parsed.getValue("@severity").jsonPrimitive.content, equalTo("info"))
             }
 
             it("includes the user-provided fields") {
-                assertThat(parsed.getPrimitive("some-text").content, equalTo("This is some text"))
-                assertThat(parsed.getPrimitive("some-int").int, equalTo(123))
+                assertThat(parsed.getValue("some-text").jsonPrimitive.content, equalTo("This is some text"))
+                assertThat(parsed.getValue("some-int").jsonPrimitive.int, equalTo(123))
             }
 
             it("does not include any other fields") {

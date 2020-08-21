@@ -39,7 +39,7 @@ object DeviceMountSpec : Spek({
 
             describe("deserializing from compact form") {
                 on("parsing a valid device mount definition without options") {
-                    val deviceMount by runForEachTest { parser.parse(DeviceMountConfigSerializer, "'/local:/container'") }
+                    val deviceMount by runForEachTest { parser.decodeFromString(DeviceMountConfigSerializer, "'/local:/container'") }
 
                     it("returns the correct local path") {
                         assertThat(deviceMount.localPath, equalTo("/local"))
@@ -59,7 +59,7 @@ object DeviceMountSpec : Spek({
                 }
 
                 on("parsing a valid device mount definition with options") {
-                    val deviceMount by runForEachTest { parser.parse(DeviceMountConfigSerializer, "'/local:/container:some_options'") }
+                    val deviceMount by runForEachTest { parser.decodeFromString(DeviceMountConfigSerializer, "'/local:/container:some_options'") }
 
                     it("returns the correct local path") {
                         assertThat(deviceMount.localPath, equalTo("/local"))
@@ -80,7 +80,7 @@ object DeviceMountSpec : Spek({
 
                 on("parsing an empty device mount definition") {
                     it("fails with an appropriate error message") {
-                        assertThat({ parser.parse(DeviceMountConfigSerializer, "''") }, throws(withMessage("Device mount definition cannot be empty.") and withLineNumber(1) and withColumn(1)))
+                        assertThat({ parser.decodeFromString(DeviceMountConfigSerializer, "''") }, throws(withMessage("Device mount definition cannot be empty.") and withLineNumber(1) and withColumn(1)))
                     }
                 }
 
@@ -96,7 +96,7 @@ object DeviceMountSpec : Spek({
                     on("parsing the invalid device mount definition '$it'") {
                         it("fails with an appropriate error message") {
                             assertThat(
-                                { parser.parse(DeviceMountConfigSerializer, "'$it'") }, throws(
+                                { parser.decodeFromString(DeviceMountConfigSerializer, "'$it'") }, throws(
                                     withMessage("Device mount definition '$it' is invalid. It must be in the form 'local_path:container_path' or 'local_path:container_path:options'.")
                                         and withLineNumber(1)
                                         and withColumn(1)
@@ -114,7 +114,7 @@ object DeviceMountSpec : Spek({
                             container: /container
                         """.trimIndent()
 
-                    val deviceMount by runForEachTest { parser.parse(DeviceMountConfigSerializer, yaml) }
+                    val deviceMount by runForEachTest { parser.decodeFromString(DeviceMountConfigSerializer, yaml) }
 
                     it("returns the correct local path") {
                         assertThat(deviceMount.localPath, equalTo("/local"))
@@ -140,7 +140,7 @@ object DeviceMountSpec : Spek({
                             options: some_options
                         """.trimIndent()
 
-                    val deviceMount by runForEachTest { parser.parse(DeviceMountConfigSerializer, yaml) }
+                    val deviceMount by runForEachTest { parser.decodeFromString(DeviceMountConfigSerializer, yaml) }
 
                     it("returns the correct local path") {
                         assertThat(deviceMount.localPath, equalTo("/local"))
@@ -163,7 +163,7 @@ object DeviceMountSpec : Spek({
                     val yaml = "container: /container"
 
                     it("fails with an appropriate error message") {
-                        assertThat({ parser.parse(DeviceMountConfigSerializer, yaml) }, throws<MissingRequiredPropertyException>(withPropertyName("local")))
+                        assertThat({ parser.decodeFromString(DeviceMountConfigSerializer, yaml) }, throws<MissingRequiredPropertyException>(withPropertyName("local")))
                     }
                 }
 
@@ -171,7 +171,7 @@ object DeviceMountSpec : Spek({
                     val yaml = "local: /local"
 
                     it("fails with an appropriate error message") {
-                        assertThat({ parser.parse(DeviceMountConfigSerializer, yaml) }, throws<MissingRequiredPropertyException>(withPropertyName("container")))
+                        assertThat({ parser.decodeFromString(DeviceMountConfigSerializer, yaml) }, throws<MissingRequiredPropertyException>(withPropertyName("container")))
                     }
                 }
             }
@@ -183,7 +183,7 @@ object DeviceMountSpec : Spek({
 
                 it("fails with an appropriate error message") {
                     assertThat(
-                        { parser.parse(DeviceMountConfigSerializer, yaml) }, throws(
+                        { parser.decodeFromString(DeviceMountConfigSerializer, yaml) }, throws(
                             withMessage("Device mount definition is invalid. It must either be an object or a literal in the form 'local_path:container_path' or 'local_path:container_path:options'.")
                         )
                     )

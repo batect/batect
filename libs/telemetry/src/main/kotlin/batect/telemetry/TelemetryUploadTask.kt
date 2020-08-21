@@ -22,7 +22,6 @@ import java.nio.file.Path
 import java.time.ZonedDateTime
 import kotlin.concurrent.thread
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonConfiguration
 
 class TelemetryUploadTask(
     private val telemetryConsent: TelemetryConsent,
@@ -33,7 +32,7 @@ class TelemetryUploadTask(
     private val threadRunner: ThreadRunner = defaultThreadRunner,
     private val timeSource: TimeSource = ZonedDateTime::now
 ) {
-    private val json = Json(JsonConfiguration.Stable)
+    private val json = Json.Default
 
     fun start() {
         if (!telemetryConsent.telemetryAllowed) {
@@ -96,7 +95,7 @@ class TelemetryUploadTask(
 
     private fun handleFailedUpload(sessionPath: Path, bytes: ByteArray, uploadException: Throwable) {
         val session = try {
-            json.parse(TelemetrySession.serializer(), bytes.toString(Charsets.UTF_8))
+            json.decodeFromString(TelemetrySession.serializer(), bytes.toString(Charsets.UTF_8))
         } catch (parsingException: Throwable) {
             logger.error {
                 message("Session upload failed, and parsing session to determine age failed.")

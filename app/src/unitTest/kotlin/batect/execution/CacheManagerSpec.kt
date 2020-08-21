@@ -31,7 +31,6 @@ import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
 import java.nio.file.Files
-import kotlinx.serialization.toUtf8Bytes
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -77,7 +76,7 @@ object CacheManagerSpec : Spek({
 
                 given("the cache key file already exists") {
                     beforeEachTest {
-                        Files.write(cacheKeyPath, "# A comment\nthe-cache-key-on-disk\n".toUtf8Bytes())
+                        Files.write(cacheKeyPath, "# A comment\nthe-cache-key-on-disk\n".toByteArray(Charsets.UTF_8))
                     }
 
                     it("returns the cache key from the cache key file") {

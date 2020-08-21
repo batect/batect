@@ -40,7 +40,7 @@ class UpdateInfoStorage(private val applicationPaths: ApplicationPaths, private 
         }
 
         val data = Files.readAllLines(updateInfoPath).joinToString("\n")
-        val updateInfo = Json.ignoringUnknownKeys.parse(UpdateInfo.serializer(), data)
+        val updateInfo = Json.ignoringUnknownKeys.decodeFromString(UpdateInfo.serializer(), data)
 
         logger.info {
             message("Loaded cached update information from disk.")
@@ -60,7 +60,7 @@ class UpdateInfoStorage(private val applicationPaths: ApplicationPaths, private 
 
         ensureUpdateInfoDirectoryExists()
 
-        val json = Json.ignoringUnknownKeys.stringify(UpdateInfo.serializer(), updateInfo)
+        val json = Json.ignoringUnknownKeys.encodeToString(UpdateInfo.serializer(), updateInfo)
         Files.write(updateInfoPath, json.toByteArray())
 
         logger.info {

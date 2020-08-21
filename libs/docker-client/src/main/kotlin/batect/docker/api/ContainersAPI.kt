@@ -40,9 +40,13 @@ import java.lang.Exception
 import java.time.Duration
 import java.util.concurrent.TimeUnit
 import jnr.constants.platform.Signal
-import kotlinx.serialization.json.JsonDecodingException
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.json
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.long
 import okhttp3.ConnectionPool
 import okhttp3.HttpUrl
 import okhttp3.Request
@@ -82,8 +86,8 @@ class ContainersAPI(
                 throw ContainerCreationFailedException("Output from Docker was: ${error.message}")
             }
 
-            val parsedResponse = Json.default.parseJson(response.body!!.string()).jsonObject
-            val containerId = parsedResponse.getValue("Id").primitive.content
+            val parsedResponse = Json.default.parseToJsonElement(response.body!!.string()).jsonObject
+            val containerId = parsedResponse.getValue("Id").jsonPrimitive.content
 
             logger.info {
                 message("Container created.")
@@ -149,7 +153,7 @@ class ContainersAPI(
                 throw ContainerInspectionFailedException("Could not inspect container '${container.id}': ${error.message}")
             }
 
-            return Json.ignoringUnknownKeys.parse(DockerContainerInfo.serializer(), response.body!!.string())
+            return Json.ignoringUnknownKeys.decodeFromString(DockerContainerInfo.serializer(), response.body!!.string())
         }
     }
 
@@ -233,9 +237,9 @@ class ContainersAPI(
             data("eventTypes", eventTypes)
         }
 
-        val filters = json {
-            "event" to eventTypes.toJsonArray()
-            "container" to listOf(container.id).toJsonArray()
+        val filters = buildJsonObject {
+            put("event", eventTypes.toJsonArray())
+            put("container", listOf(container.id).toJsonArray())
         }
 
         val url = baseUrl.newBuilder()
@@ -268,7 +272,7 @@ class ContainersAPI(
                     data("event", parsedEvent.toString())
                 }
 
-                return DockerEvent(parsedEvent.getValue("status").primitive.content)
+                return DockerEvent(parsedEvent.getValue("status").jsonPrimitive.content)
             }
     }
 
@@ -301,20 +305,20 @@ class ContainersAPI(
                 }
 
                 val responseBody = response.body!!.string()
-                val parsedResponse = Json.default.parseJson(responseBody).jsonObject
+                val parsedResponse = Json.default.parseToJsonElement(responseBody).jsonObject
 
                 logger.info {
                     message("Container exited.")
                     data("result", responseBody)
                 }
 
-                if (parsedResponse.containsKey("Error") && !parsedResponse.getValue("Error").isNull) {
-                    val message = parsedResponse.getObject("Error").getPrimitive("Message").content
+                if (parsedResponse.containsKey("Error") && parsedResponse.getValue("Error") !is JsonNull) {
+                    val message = parsedResponse.getValue("Error").jsonObject.getValue("Message").jsonPrimitive.content
 
                     throw DockerException("Waiting for container '${container.id}' to exit succeeded but returned an error: $message")
                 }
 
-                return parsedResponse.getValue("StatusCode").primitive.long
+                return parsedResponse.getValue("StatusCode").jsonPrimitive.long
             }
     }
 
@@ -519,10 +523,10 @@ class ContainersAPI(
             buffer.append(this.readUtf8CodePoint().toChar())
 
             try {
-                return Json.default.parseJson(buffer.toString()).jsonObject
+                return Json.default.parseToJsonElement(buffer.toString()).jsonObject
             } catch (e: Exception) {
                 when (e) {
-                    is JsonDecodingException, is StringIndexOutOfBoundsException -> {} // Haven't read a full JSON object yet, keep reading.
+                    is SerializationException, is StringIndexOutOfBoundsException -> {} // Haven't read a full JSON object yet, keep reading.
                     else -> throw e
                 }
             }

@@ -42,7 +42,7 @@ object PathDeserializerSpec : Spek({
 
         on("parsing some input directly from YAML") {
             val input = "the-path"
-            val result by runForEachTest { Yaml.default.parse(deserializer, input) }
+            val result by runForEachTest { Yaml.default.decodeFromString(deserializer, input) }
 
             it("returns the result of resolving that input as a path") {
                 assertThat(result, equalTo(expectedResult))

@@ -24,7 +24,7 @@ import com.charleskorn.kaml.Location
 import com.charleskorn.kaml.YamlInput
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.builtins.set
+import kotlinx.serialization.builtins.SetSerializer
 
 @Serializable
 data class PortMapping(
@@ -112,4 +112,4 @@ object PortMappingConfigSerializer : SimpleStringOrObjectSerializer<PortMapping>
     }
 }
 
-object PortMappingConfigSetSerializer : KSerializer<Set<PortMapping>> by PortMappingConfigSerializer.set
+object PortMappingConfigSetSerializer : KSerializer<Set<PortMapping>> by SetSerializer(PortMappingConfigSerializer)

@@ -37,7 +37,7 @@ import java.nio.file.Path
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import kotlinx.serialization.UseSerializers
-import kotlinx.serialization.builtins.set
+import kotlinx.serialization.builtins.SetSerializer
 
 @Serializable
 sealed class TaskEvent(
@@ -169,4 +169,4 @@ data class SetupCommandFailedEvent(val container: Container, val command: SetupC
 data class CacheInitialisationFailedEvent(val message: String) : TaskFailedEvent()
 
 fun LogMessageBuilder.data(key: String, value: TaskEvent) = this.data(key, value, TaskEvent.serializer())
-fun LogMessageBuilder.data(key: String, value: Set<TaskEvent>) = this.data(key, value, TaskEvent.serializer().set)
+fun LogMessageBuilder.data(key: String, value: Set<TaskEvent>) = this.data(key, value, SetSerializer(TaskEvent.serializer()))

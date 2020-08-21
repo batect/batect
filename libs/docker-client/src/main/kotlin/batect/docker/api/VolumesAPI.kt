@@ -25,7 +25,7 @@ import batect.logging.Logger
 import batect.os.SystemInfo
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.builtins.set
+import kotlinx.serialization.builtins.SetSerializer
 import okhttp3.HttpUrl
 import okhttp3.Request
 
@@ -55,7 +55,7 @@ class VolumesAPI(
             }
 
             val body = response.body!!.string()
-            val parsedBody = Json.ignoringUnknownKeys.parse(VolumesList.serializer(), body)
+            val parsedBody = Json.ignoringUnknownKeys.decodeFromString(VolumesList.serializer(), body)
 
             logger.info {
                 message("Retrieved all volumes.")
@@ -106,5 +106,5 @@ class VolumesAPI(
         @SerialName("Volumes") val volumes: Set<DockerVolume>
     )
 
-    fun LogMessageBuilder.data(key: String, value: Set<DockerVolume>) = this.data(key, value, DockerVolume.serializer().set)
+    fun LogMessageBuilder.data(key: String, value: Set<DockerVolume>) = this.data(key, value, SetSerializer(DockerVolume.serializer()))
 }

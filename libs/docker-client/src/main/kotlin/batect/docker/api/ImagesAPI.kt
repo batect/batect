@@ -34,7 +34,9 @@ import batect.primitives.executeInCancellationContext
 import java.io.ByteArrayOutputStream
 import java.util.Base64
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.json
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import okhttp3.HttpUrl
 import okhttp3.Request
 import okhttp3.Response
@@ -116,8 +118,8 @@ class ImagesAPI(
 
     private fun Request.Builder.addRegistryCredentialsForBuild(registryCredentials: Set<DockerRegistryCredentials>): Request.Builder {
         if (registryCredentials.isNotEmpty()) {
-            val jsonCredentials = json {
-                registryCredentials.forEach { it.serverAddress to it.toJSON() }
+            val jsonCredentials = buildJsonObject {
+                registryCredentials.forEach { put(it.serverAddress, it.toJSON()) }
             }
 
             val credentialBytes = jsonCredentials.toString().toByteArray()
@@ -136,9 +138,9 @@ class ImagesAPI(
 
         sink.use {
             response.body!!.charStream().forEachLine { line ->
-                val parsedLine = Json.default.parseJson(line).jsonObject
-                val output = parsedLine.getPrimitiveOrNull("stream")?.content
-                val error = parsedLine.getPrimitiveOrNull("error")?.content
+                val parsedLine = Json.default.parseToJsonElement(line).jsonObject
+                val output = parsedLine["stream"]?.jsonPrimitive?.content
+                val error = parsedLine["error"]?.jsonPrimitive?.content
 
                 if (output != null) {
                     sink.append(output)
@@ -153,7 +155,7 @@ class ImagesAPI(
                     )
                 }
 
-                val imageId = parsedLine.getObjectOrNull("aux")?.getPrimitiveOrNull("ID")?.content
+                val imageId = parsedLine["aux"]?.jsonObject?.get("ID")?.jsonPrimitive?.content
 
                 if (imageId != null) {
                     builtImageId = imageId
@@ -212,10 +214,10 @@ class ImagesAPI(
                 }
 
                 response.body!!.charStream().forEachLine { line ->
-                    val parsedLine = Json.default.parseJson(line).jsonObject
+                    val parsedLine = Json.default.parseToJsonElement(line).jsonObject
 
                     if (parsedLine.containsKey("error")) {
-                        val message = parsedLine.getValue("error").primitive.content
+                        val message = parsedLine.getValue("error").jsonPrimitive.content
                             .correctLineEndings()
 
                         throw ImagePullFailedException("Pulling image '$imageName' failed: $message")

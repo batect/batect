@@ -62,11 +62,35 @@ class WrapperScriptTests(unittest.TestCase):
         self.assertIn("I received 2 arguments.\narg 3\narg 4\n", second_output)
         self.assertEqual(first_result.returncode, 0)
 
+    def test_running_in_cmd(self):
+        result = self.run_script([], start_with=["cmd", "/c"])
+        output = result.stdout
+
+        self.assertIn("The Java application has started.", output)
+        self.assertNotIn("WARNING: you should never see this", output)
+        self.assertEqual(result.returncode, 0)
+
+    def test_running_in_powershell(self):
+        result = self.run_script([], start_with=["powershell", "-ExecutionPolicy", "Bypass", "-NoLogo", "-NoProfile", "-Command"])
+        output = result.stdout
+
+        self.assertIn("The Java application has started.", output)
+        self.assertNotIn("WARNING: you should never see this", output)
+        self.assertEqual(result.returncode, 0)
+
+    def test_running_in_pwsh(self):
+        result = self.run_script([], start_with=["pwsh", "-ExecutionPolicy", "Bypass", "-NoLogo", "-NoProfile", "-Command"])
+        output = result.stdout
+
+        self.assertIn("The Java application has started.", output)
+        self.assertNotIn("WARNING: you should never see this", output)
+        self.assertEqual(result.returncode, 0)
+
     def test_download_fails(self):
         result = self.run_script(["arg 1", "arg 2"], download_url=self.download_url("does-not-exist"))
 
         self.assertIn("Downloading batect", result.stdout)
-        self.assertIn("(404) Not Found", result.stdout)
+        self.assertRegex(result.stdout, "(\(404\) Not Found|404 \(File not found\))")
         self.assertNotIn("WARNING: you should never see this", result.stdout)
         self.assertNotEqual(result.returncode, 0)
 
@@ -198,7 +222,7 @@ class WrapperScriptTests(unittest.TestCase):
             javaDir
         ])
 
-    def run_script(self, args, download_url=None, path=os.environ["PATH"], with_java_tool_options=None):
+    def run_script(self, args, download_url=None, path=os.environ["PATH"], with_java_tool_options=None, start_with=None):
         if download_url is None:
             download_url = self.default_download_url()
 
@@ -213,10 +237,13 @@ class WrapperScriptTests(unittest.TestCase):
         if with_java_tool_options is not None:
             env["JAVA_TOOL_OPTIONS"] = "-XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap"
 
-        path = self.get_script_path()
-        command = [path] + args
+        script_path = self.get_script_path()
+        command = [script_path] + args
 
-        return subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=env, text=True, encoding='utf-8') # utf-16le
+        if start_with is not None:
+            command = start_with + [' '.join(command)]
+
+        return subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=env, text=True, encoding='utf-8')
 
     def get_checksum_of_test_app(self):
         with open("test/testapp.jar", "rb") as f:

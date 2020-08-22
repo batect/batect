@@ -2,6 +2,16 @@ name: CI
 on: [push, pull_request]
 
 jobs:
+  validate-gradle-wrapper:
+    name: "Validate Gradle wrapper"
+    runs-on: ubuntu-18.04
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2.3.2
+      - name: Validate Gradle wrapper
+        uses: gradle/wrapper-validation-action@v1.0.3
+
   build-windows:
     name: "Build (Windows)"
     runs-on: windows-2019

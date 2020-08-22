@@ -40,10 +40,11 @@ object ProcessRunnerSpec : Spek({
         val logSink by createForEachTest { InMemoryLogSink() }
         val logger by createForEachTest { Logger("some.source", logSink) }
         val runner by createForEachTest { ProcessRunner(logger) }
+        val bashPath = System.getenv().getOrDefault("BASH_PATH", "bash")
 
         on("running a process with stdin attached") {
             given("the executable exists") {
-                val command = listOf("bash", "-c", "echo hello world && sleep 0.1 && echo hello error world 1>&2 && sleep 0.1 && echo more non-error output && exit 201")
+                val command = listOf(bashPath, "-c", "echo hello world && sleep 0.1 && echo hello error world 1>&2 && sleep 0.1 && echo more non-error output && exit 201")
                 val result by runForEachTest { runner.runWithStdinAttached(command) }
 
                 it("returns the exit code of the command") {
@@ -87,7 +88,7 @@ object ProcessRunnerSpec : Spek({
 
         on("running a process with the console attached") {
             given("the executable exists") {
-                val command = listOf("bash", "-c", "exit 201")
+                val command = listOf(bashPath, "-c", "exit 201")
                 val exitCode by runForEachTest { runner.runWithConsoleAttached(command) }
 
                 it("returns the exit code of the command") {
@@ -129,7 +130,7 @@ object ProcessRunnerSpec : Spek({
             given("the executable exists") {
                 given("there is no input to pipe to stdin") {
                     on("running it") {
-                        val command = listOf("bash", "-c", "echo hello world && sleep 0.1 && echo hello error world 1>&2 && sleep 0.1 && echo more non-error output && exit 201")
+                        val command = listOf(bashPath, "-c", "echo hello world && sleep 0.1 && echo hello error world 1>&2 && sleep 0.1 && echo more non-error output && exit 201")
                         val result by runForEachTest { runner.runAndCaptureOutput(command) }
 
                         it("returns the exit code of the command") {
@@ -160,7 +161,7 @@ object ProcessRunnerSpec : Spek({
 
                 given("there is some input to pipe to stdin") {
                     on("running it") {
-                        val command = listOf("bash", "-c", "tee")
+                        val command = listOf(bashPath, "-c", "tee")
                         val stdin = "This is some input to stdin that will be returned by tee as output"
                         val result by runForEachTest { runner.runAndCaptureOutput(command, stdin) }
 

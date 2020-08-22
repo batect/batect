@@ -18,7 +18,6 @@ package batect.cli.commands
 
 import batect.cli.CommandLineOptionsParser
 import batect.cli.options.OptionDefinition
-import batect.cli.options.OptionGroup
 import batect.os.ConsoleDimensions
 import batect.utils.breakAt
 import java.io.PrintStream
@@ -36,15 +35,15 @@ class HelpCommand(
 
         val options = optionsParser.optionParser.getOptions().associateWith { nameFor(it) }
         val alignToColumn = determineColumnSize(options.values)
-        val lines = options.map { (option, name) -> OptionLine(option.group, option.longName, formatInColumn(name, option.descriptionForHelp, alignToColumn)) }
+        val lines = options.map { (option, name) -> OptionLine(option, name) }
 
         lines
-            .sortedBy { it.group.name }
-            .groupBy { it.group }
+            .sortedBy { it.option.group.name }
+            .groupBy { it.option.group }
             .forEach { (group, options) ->
                 outputStream.println(group.name + ":")
 
-                options.sortedBy { it.longName }.forEach { outputStream.print(it.text) }
+                options.sortedBy { it.option.longName }.forEach { print(it, alignToColumn) }
                 outputStream.println()
             }
 
@@ -65,7 +64,11 @@ class HelpCommand(
 
     private fun determineColumnSize(optionNames: Iterable<String>): Int = optionNames.map { it.length }.maxOrNull() ?: 0
 
-    private fun formatInColumn(first: String, second: String, alignToColumn: Int): String {
+    private fun print(line: OptionLine, alignToColumn: Int) {
+        printInColumn(line.name, line.option.descriptionForHelp, alignToColumn)
+    }
+
+    private fun printInColumn(first: String, second: String, alignToColumn: Int) {
         val firstLineIndentationCount = 4 + alignToColumn - first.length
         val firstLineIndentation = " ".repeat(firstLineIndentationCount)
 
@@ -73,24 +76,18 @@ class HelpCommand(
         val secondLineIndentation = " ".repeat(secondLineIndentationCount)
 
         val secondColumnWidth = consoleWidth - secondLineIndentationCount
-        val secondColumnLines = second.breakAt(secondColumnWidth).lines()
-        val secondColumn = alternate(secondColumnLines, secondLineIndentation)
+        val secondColumnLines = second.breakAt(secondColumnWidth)
 
-        return " $first$firstLineIndentation$secondColumn"
-    }
+        outputStream.print(" ")
+        outputStream.print(first)
+        outputStream.print(firstLineIndentation)
+        outputStream.println(secondColumnLines.first())
 
-    private fun alternate(lines: List<String>, separator: String): String {
-        val builder = StringBuilder()
-
-        builder.appendln(lines.first())
-
-        lines.drop(1).forEach {
-            builder.append(separator)
-            builder.appendln(it)
+        secondColumnLines.drop(1).forEach { line ->
+            outputStream.print(secondLineIndentation)
+            outputStream.println(line)
         }
-
-        return builder.toString()
     }
 
-    data class OptionLine(val group: OptionGroup, val longName: String, val text: String)
+    data class OptionLine(val option: OptionDefinition, val name: String)
 }

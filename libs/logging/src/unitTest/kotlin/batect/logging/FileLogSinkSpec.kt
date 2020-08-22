@@ -43,8 +43,6 @@ object FileLogSinkSpec : Spek({
             on { writeTo(any(), any()) } doAnswer { invocation ->
                 val outputStream = invocation.arguments[1] as OutputStream
                 PrintStream(outputStream).print("The value written by the writer")
-
-                null
             }
         }
 

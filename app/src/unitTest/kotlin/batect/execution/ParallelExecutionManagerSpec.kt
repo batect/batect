@@ -273,13 +273,11 @@ object ParallelExecutionManagerSpec : Spek({
                 whenever(taskStepRunner.run(eq(step1), eq(executionManager))).doAnswer {
                     waitForStep1.release()
                     step1SawStep2 = waitForStep2.tryAcquire(100, TimeUnit.MILLISECONDS)
-                    null
                 }
 
                 whenever(taskStepRunner.run(eq(step2), eq(executionManager))).doAnswer {
                     waitForStep2.release()
                     step2SawStep1 = waitForStep1.tryAcquire(100, TimeUnit.MILLISECONDS)
-                    null
                 }
 
                 executionManager.run()
@@ -327,17 +325,14 @@ object ParallelExecutionManagerSpec : Spek({
                     eventSink.postEvent(step2TriggerEvent)
 
                     step2StartedBeforeStep1Ended = waitForStep2.tryAcquire(100, TimeUnit.MILLISECONDS)
-                    null
                 }
 
                 whenever(stateMachine.postEvent(step2TriggerEvent)).doAnswer {
                     whenever(stateMachine.popNextStep(true)).doReturn(step2, null)
-                    null
                 }
 
                 whenever(taskStepRunner.run(eq(step2), eq(executionManager))).doAnswer {
                     waitForStep2.release()
-                    null
                 }
 
                 executionManager.run()

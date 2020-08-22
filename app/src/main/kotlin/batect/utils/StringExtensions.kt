@@ -16,24 +16,25 @@
 
 package batect.utils
 
-fun String.breakAt(width: Int): String {
-    val builder = StringBuilder(this.length)
-    var currentLineLength = 0
+fun String.breakAt(width: Int): List<String> {
+    val lines = mutableListOf<String>()
+    val currentLine = StringBuilder()
 
     this.split(' ').forEach { word ->
-        if (currentLineLength + word.length > width && builder.isNotEmpty()) {
-            builder.appendln()
-            currentLineLength = 0
-        } else if (currentLineLength > 0) {
-            builder.append(' ')
+        if (currentLine.length + word.length + 1 > width && currentLine.isNotEmpty()) {
+            lines.add(currentLine.toString())
+            currentLine.clear()
+        } else if (currentLine.isNotEmpty()) {
+            currentLine.append(' ')
         }
 
-        builder.append(word)
-
-        currentLineLength += word.length + 1
+        currentLine.append(word)
     }
 
-    return builder.trimEnd().toString()
+    currentLine.trimEnd()
+    lines.add(currentLine.toString())
+
+    return lines
 }
 
 fun pluralize(count: Int, singular: String, plural: String = singular + "s"): String =

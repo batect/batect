@@ -21,18 +21,19 @@ jobs:
         with:
           java-version: 1.8
 
-      - name: Print PowerShell version information
-        run: powershell -noprofile -command '$PSVersionTable'
-
-      - name: Print PowerShell Core version information
-        run: pwsh -noprofile -command '$PSVersionTable'
+      - name: Cache Gradle wrapper
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/wrapper
+          key: gradle-wrapper-${{ runner.os }}-${{ hashFiles('gradle/wrapper/**/*') }}
+          restore-keys: gradle-wrapper-${{ runner.os }}
 
       - name: Cache packages
         uses: actions/cache@v2
         with:
           path: ~/.gradle/caches
-          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle') }}
-          restore-keys: gradle-${{ runner.os }}
+          key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle') }}
+          restore-keys: gradle-packages-${{ runner.os }}
 
       - name: Build and test
         run: ./gradlew --parallel app:check jacocoTestReport
@@ -42,3 +43,21 @@ jobs:
 
       - name: Run wrapper tests
         run: ./gradlew wrapper:windows:check
+
+      - name: Stop Gradle daemon
+        run: ./gradlew --stop
+
+      - name: Cleanup dependencies before caching
+        run: |
+          Remove-Item -ErrorAction SilentlyContinue          ~/.gradle/caches/modules-2/modules-2.lock
+          Remove-Item -ErrorAction SilentlyContinue -Recurse ~/.gradle/caches/*/plugin-resolution/
+          Remove-Item -ErrorAction SilentlyContinue -Recurse ~/.gradle/caches/*/scripts/
+          Remove-Item -ErrorAction SilentlyContinue -Recurse ~/.gradle/caches/*/scripts-remapped/
+          Remove-Item -ErrorAction SilentlyContinue -Recurse ~/.gradle/caches/*/fileHashes/
+          Remove-Item -ErrorAction SilentlyContinue          ~/.gradle/caches/*/fileContent/*.lock
+          Remove-Item -ErrorAction SilentlyContinue          ~/.gradle/caches/*/javaCompile/*.lock
+          Remove-Item -ErrorAction SilentlyContinue          ~/.gradle/caches/*/executionHistory/*.lock
+          Remove-Item -ErrorAction SilentlyContinue          ~/.gradle/caches/*/generated-gradle-jars/*.lock
+          Remove-Item -ErrorAction SilentlyContinue          ~/.gradle/caches/jars-*/*.lock
+          Remove-Item -ErrorAction SilentlyContinue          ~/.gradle/caches/journal-1/file-access.bin
+          Remove-Item -ErrorAction SilentlyContinue          ~/.gradle/caches/journal-1/*.lock

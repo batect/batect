@@ -21,6 +21,12 @@ jobs:
         with:
           java-version: 1.8
 
+      - name: Print PowerShell version information
+        run: powershell -noprofile -command '$PSVersionTable'
+
+      - name: Print PowerShell Core version information
+        run: pwsh -noprofile -command '$PSVersionTable'
+
       - name: Cache packages
         uses: actions/cache@v2
         with:

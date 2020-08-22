@@ -29,6 +29,7 @@ jobs:
           restore-keys: gradle-wrapper-${{ runner.os }}
 
       - name: Cache packages
+        id: cache-packages
         uses: actions/cache@v2
         with:
           path: ~/.gradle/caches
@@ -48,6 +49,7 @@ jobs:
         run: ./gradlew --stop
 
       - name: Cleanup dependencies before caching
+        if: steps.cache-packages.outputs.cache-hit != 'true'
         run: |
           Remove-Item -ErrorAction SilentlyContinue          ~/.gradle/caches/modules-2/modules-2.lock
           Remove-Item -ErrorAction SilentlyContinue -Recurse ~/.gradle/caches/*/plugin-resolution/

@@ -1,10 +1,10 @@
 version: "{build}"
-image: "Windows Server 2019 on Azure for batect"
+image: Visual Studio 2019
 skip_tags: true
 clone_folder: D:\projects\batect
 
 environment:
-  GRADLE_OPTS: "-Dorg.gradle.internal.launcher.welcomeMessageEnabled=false -DgenerateCoverage=true"
+  GRADLE_OPTS: "-Dorg.gradle.internal.launcher.welcomeMessageEnabled=false"
   GRADLE_USER_HOME: "D:\\gradle"
 
 install:

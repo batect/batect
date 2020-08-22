@@ -199,6 +199,13 @@ updates:
       - is:dependency-update
     directory: wrapper/unix/test/test-env
     open-pull-requests-limit: 10
+  - package-ecosystem: github-actions
+    schedule:
+      interval: daily
+    labels:
+      - is:dependency-update
+    directory: /
+    open-pull-requests-limit: 10
   - package-ecosystem: gradle
     schedule:
       interval: daily

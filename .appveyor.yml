@@ -12,6 +12,10 @@ install:
   - python --version
   - bash --version
 
+  # Symlinks aren't created correctly by default on Windows - see https://github.com/appveyor/ci/issues/650#issuecomment-186592582.
+  - git config core.symlinks true
+  - git reset --hard
+
 build_script:
   - ps: ./appveyor/Enable-LinuxContainers.ps1
   - docker version

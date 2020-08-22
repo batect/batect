@@ -4,7 +4,7 @@ skip_tags: true
 
 environment:
   GRADLE_OPTS: "-Dorg.gradle.internal.launcher.welcomeMessageEnabled=false"
-  GRADLE_USER_HOME: "D:\\gradle"
+  GRADLE_USER_HOME: "C:\\gradle"
 
 install:
   - ver

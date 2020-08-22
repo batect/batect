@@ -14,17 +14,10 @@ install:
   - bash --version
 
 build_script:
-  - ./gradlew --parallel app:check libs:git-client:integrationTest wrapper:windows:check jacocoTestReport
-  - ps: |
-      $env:Path = "C:\Program Files\Git\usr\bin;" + $env:Path
-      bash -c 'export CI=true && export APPVEYOR=true && curl -s --show-error --fail --retry-connrefused --retry 10 https://codecov.io/bash | bash -s -- -F windows'
   - ps: ./appveyor/Enable-LinuxContainers.ps1
   - docker version
   - ./gradlew :libs:docker-client:integrationTest
   - ./gradlew journeyTest
-  - ps: ./appveyor/Enable-WindowsContainers.ps1
-  - docker version
-  - ./gradlew journeyTest -PwindowsContainers
 
 after_test:
   - ./gradlew --stop

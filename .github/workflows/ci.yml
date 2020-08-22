@@ -37,13 +37,21 @@ jobs:
           restore-keys: gradle-packages-${{ runner.os }}
 
       - name: Build and test
-        run: ./gradlew --parallel app:check jacocoTestReport
+        run: ./gradlew --parallel app:check libs:git-client:integrationTest jacocoTestReport
 
-      - name: Run integration tests (Git client)
-        run: ./gradlew libs:git-client:integrationTest
+      - name: Upload coverage to codecov.io
+        uses: codecov/codecov-action@v1.0.13
+        with:
+          flags: windows
 
       - name: Run wrapper tests
         run: ./gradlew wrapper:windows:check
+
+      - name: Print Docker version information
+        run: docker version
+
+      - name: Run journey tests (Windows containers)
+        run: ./gradlew journeyTest -PwindowsContainers
 
       - name: Stop Gradle daemon
         run: ./gradlew --stop

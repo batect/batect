@@ -1,7 +1,6 @@
 version: "{build}"
 image: Visual Studio 2019
 skip_tags: true
-clone_folder: D:\projects\batect
 
 environment:
   GRADLE_OPTS: "-Dorg.gradle.internal.launcher.welcomeMessageEnabled=false"

@@ -70,3 +70,67 @@ jobs:
           Remove-Item -ErrorAction SilentlyContinue          ~/.gradle/caches/jars-*/*.lock
           Remove-Item -ErrorAction SilentlyContinue          ~/.gradle/caches/journal-1/file-access.bin
           Remove-Item -ErrorAction SilentlyContinue          ~/.gradle/caches/journal-1/*.lock
+
+  build-linux:
+    name: "Build (Linux)"
+    runs-on: ubuntu-18.04
+    env:
+      GRADLE_OPTS: "-Dorg.gradle.internal.launcher.welcomeMessageEnabled=false -DgenerateCoverage=true"
+
+    steps:
+      - uses: actions/checkout@v2.3.2
+
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+
+      - name: Cache Gradle wrapper
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/wrapper
+          key: gradle-wrapper-${{ runner.os }}-${{ hashFiles('gradle/wrapper/**/*') }}
+          restore-keys: gradle-wrapper-${{ runner.os }}
+
+      - name: Cache packages
+        id: cache-packages
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/caches
+          key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle') }}
+          restore-keys: gradle-packages-${{ runner.os }}
+
+      - name: Build and test
+        run: ./gradlew --parallel app:check libs:git-client:integrationTest jacocoTestReport
+
+      - name: Upload coverage to codecov.io
+        uses: codecov/codecov-action@v1.0.13
+        with:
+          flags: linux
+
+      - name: Build integration and journey tests
+        run: ./gradlew integrationTestClasses journeyTestClasses
+
+      - name: Assemble release
+        run: ./gradlew --parallel assembleRelease
+
+      - name: Stop Gradle daemon
+        run: ./gradlew --stop
+
+      - name: Cleanup dependencies before caching
+        if: steps.cache-packages.outputs.cache-hit != 'true'
+        run: |
+          rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+          rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+          rm -fr $HOME/.gradle/caches/*/scripts/
+          rm -fr $HOME/.gradle/caches/*/scripts-remapped/
+          rm -fr $HOME/.gradle/caches/*/fileHashes/
+          rm -f  $HOME/.gradle/caches/*/fileContent/*.lock
+          rm -f  $HOME/.gradle/caches/*/javaCompile/*.lock
+          rm -f  $HOME/.gradle/caches/*/executionHistory/*.lock
+          rm -f  $HOME/.gradle/caches/*/generated-gradle-jars/*.lock
+          rm -f  $HOME/.gradle/caches/jars-3/*.lock
+          rm -f  $HOME/.gradle/caches/jars-8/*.lock
+          rm -f  $HOME/.gradle/caches/transforms-1/transforms-1.lock
+          rm -f  $HOME/.gradle/caches/journal-1/file-access.bin
+          rm -f  $HOME/.gradle/caches/journal-1/*.lock

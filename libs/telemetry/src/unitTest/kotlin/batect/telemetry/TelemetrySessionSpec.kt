@@ -26,9 +26,8 @@ import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.util.UUID
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonConfiguration
-import kotlinx.serialization.json.JsonLiteral
 import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonPrimitive
 import org.araqnid.hamkrest.json.equivalentTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
@@ -84,9 +83,9 @@ object TelemetrySessionSpec : Spek({
                 "my-app",
                 "1.0.0",
                 mapOf(
-                    "someString" to JsonLiteral("string"),
-                    "someNumber" to JsonLiteral(123),
-                    "someBoolean" to JsonLiteral(false),
+                    "someString" to JsonPrimitive("string"),
+                    "someNumber" to JsonPrimitive(123),
+                    "someBoolean" to JsonPrimitive(false),
                     "someNull" to JsonNull
                 ),
                 listOf(
@@ -94,9 +93,9 @@ object TelemetrySessionSpec : Spek({
                         "some-event",
                         ZonedDateTime.of(2020, 8, 7, 3, 49, 20, 678, ZoneOffset.UTC),
                         mapOf(
-                            "someString" to JsonLiteral("string"),
-                            "someNumber" to JsonLiteral(123),
-                            "someBoolean" to JsonLiteral(false),
+                            "someString" to JsonPrimitive("string"),
+                            "someNumber" to JsonPrimitive(123),
+                            "someBoolean" to JsonPrimitive(false),
                             "someNull" to JsonNull
                         )
                     )
@@ -107,9 +106,9 @@ object TelemetrySessionSpec : Spek({
                         ZonedDateTime.of(2020, 8, 7, 3, 49, 30, 678, ZoneOffset.UTC),
                         ZonedDateTime.of(2020, 8, 7, 3, 49, 40, 678, ZoneOffset.UTC),
                         mapOf(
-                            "someString" to JsonLiteral("string"),
-                            "someNumber" to JsonLiteral(123),
-                            "someBoolean" to JsonLiteral(false),
+                            "someString" to JsonPrimitive("string"),
+                            "someNumber" to JsonPrimitive(123),
+                            "someBoolean" to JsonPrimitive(false),
                             "someNull" to JsonNull
                         )
                     )
@@ -117,7 +116,7 @@ object TelemetrySessionSpec : Spek({
             )
 
             it("serializes to the expected JSON") {
-                assertThat(Json(JsonConfiguration.Stable).stringify(TelemetrySession.serializer(), session), equivalentTo("""
+                assertThat(Json.Default.encodeToString(TelemetrySession.serializer(), session), equivalentTo("""
                     {
                         "sessionId": "8a1058f8-e41e-4c78-aa42-663b78d15122",
                         "userId": "07ab839b-ac26-475a-966a-77d18d00ac61",

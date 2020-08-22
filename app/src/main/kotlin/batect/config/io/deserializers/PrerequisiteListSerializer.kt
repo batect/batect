@@ -18,23 +18,22 @@ package batect.config.io.deserializers
 
 import batect.config.io.ConfigurationException
 import com.charleskorn.kaml.YamlInput
-import kotlinx.serialization.CompositeDecoder
-import kotlinx.serialization.Decoder
-import kotlinx.serialization.Encoder
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.SerialDescriptor
-import kotlinx.serialization.Serializer
-import kotlinx.serialization.builtins.list
+import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.CompositeDecoder
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 
-@Serializer(forClass = List::class)
 internal object PrerequisiteListSerializer : KSerializer<List<String>> {
     private val elementSerializer = String.serializer()
 
-    override val descriptor: SerialDescriptor = elementSerializer.list.descriptor
+    override val descriptor: SerialDescriptor = ListSerializer(elementSerializer).descriptor
 
     override fun deserialize(decoder: Decoder): List<String> {
-        val input = decoder.beginStructure(descriptor, elementSerializer)
+        arrayOf<KSerializer<*>>(elementSerializer)
+        val input = decoder.beginStructure(descriptor)
         val result = read(input)
 
         input.endStructure(descriptor)
@@ -48,7 +47,7 @@ internal object PrerequisiteListSerializer : KSerializer<List<String>> {
         while (true) {
             val currentIndex = input.decodeElementIndex(descriptor)
 
-            if (currentIndex == CompositeDecoder.READ_DONE) {
+            if (currentIndex == CompositeDecoder.DECODE_DONE) {
                 break
             }
 
@@ -72,5 +71,5 @@ internal object PrerequisiteListSerializer : KSerializer<List<String>> {
 
     private fun getDuplicateValueMessage(value: String) = "The prerequisite '$value' is given more than once"
 
-    override fun serialize(encoder: Encoder, value: List<String>) = String.serializer().list.serialize(encoder, value)
+    override fun serialize(encoder: Encoder, value: List<String>) = ListSerializer(String.serializer()).serialize(encoder, value)
 }

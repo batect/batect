@@ -17,14 +17,14 @@
 package batect.telemetry
 
 import java.util.UUID
-import kotlinx.serialization.Decoder
-import kotlinx.serialization.Encoder
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.PrimitiveKind
-import kotlinx.serialization.SerialDescriptor
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 
 object UUIDSerializer : KSerializer<UUID> {
-    override val descriptor = SerialDescriptor(UUID::class.qualifiedName!!, PrimitiveKind.STRING)
+    override val descriptor = PrimitiveSerialDescriptor(UUID::class.qualifiedName!!, PrimitiveKind.STRING)
     override fun deserialize(decoder: Decoder): UUID = UUID.fromString(decoder.decodeString())
     override fun serialize(encoder: Encoder, value: UUID) = encoder.encodeString(value.toString())
 }

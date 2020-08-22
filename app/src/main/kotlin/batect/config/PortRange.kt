@@ -19,13 +19,13 @@ package batect.config
 import batect.config.io.ConfigurationException
 import batect.docker.DockerPortRange
 import com.charleskorn.kaml.YamlInput
-import kotlinx.serialization.Decoder
-import kotlinx.serialization.Encoder
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.PrimitiveDescriptor
-import kotlinx.serialization.PrimitiveKind
-import kotlinx.serialization.SerialDescriptor
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 
 @Serializable(with = PortRange.Companion::class)
 data class PortRange(val from: Int, val to: Int) {
@@ -71,7 +71,7 @@ data class PortRange(val from: Int, val to: Int) {
             }
         }
 
-        override val descriptor: SerialDescriptor = PrimitiveDescriptor(PortRange::class.simpleName!!, PrimitiveKind.STRING)
+        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor(PortRange::class.simpleName!!, PrimitiveKind.STRING)
 
         override fun deserialize(decoder: Decoder): PortRange {
             val location = (decoder as YamlInput).getCurrentLocation()

@@ -19,24 +19,27 @@ package batect.config
 import batect.config.io.ConfigurationException
 import com.charleskorn.kaml.YamlInput
 import kotlin.math.min
-import kotlinx.serialization.CompositeEncoder
-import kotlinx.serialization.Decoder
-import kotlinx.serialization.Encoder
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.PrimitiveKind
-import kotlinx.serialization.SerialDescriptor
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.Serializer
-import kotlinx.serialization.UnionKind
-import kotlinx.serialization.builtins.list
+import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.descriptors.SerialKind
+import kotlinx.serialization.descriptors.buildClassSerialDescriptor
+import kotlinx.serialization.descriptors.buildSerialDescriptor
+import kotlinx.serialization.encoding.CompositeEncoder
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 
 @Serializable(with = Expression.Companion::class)
 sealed class Expression(open val originalExpression: String) {
     abstract fun evaluate(context: ExpressionEvaluationContext): String
     abstract fun serialize(encoder: CompositeEncoder)
 
-    @Serializer(forClass = Expression::class)
     companion object : KSerializer<Expression> {
         fun parse(source: String): Expression {
             val expressions = mutableListOf<Expression>()
@@ -194,13 +197,14 @@ sealed class Expression(open val originalExpression: String) {
 
         private data class ParseResult(val expression: Expression, val readUntil: Int)
 
-        private val deserializationDescriptor = SerialDescriptor(Expression::class.qualifiedName!!, PrimitiveKind.STRING)
+        private val deserializationDescriptor = PrimitiveSerialDescriptor(Expression::class.qualifiedName!!, PrimitiveKind.STRING)
 
-        private val serializationDescriptor = SerialDescriptor(Expression::class.qualifiedName!!) {
+        private val serializationDescriptor = buildClassSerialDescriptor(Expression::class.qualifiedName!!) {
             element("type", String.serializer().descriptor)
         }
 
-        override val descriptor: SerialDescriptor = SerialDescriptor(Expression::class.qualifiedName!!, UnionKind.CONTEXTUAL) {
+        @OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)
+        override val descriptor: SerialDescriptor = buildSerialDescriptor(Expression::class.qualifiedName!!, SerialKind.CONTEXTUAL) {
             element("string", deserializationDescriptor)
             element("object", serializationDescriptor)
         }
@@ -236,7 +240,7 @@ data class LiteralValue(val value: String, override val originalExpression: Stri
     override fun evaluate(context: ExpressionEvaluationContext) = value
     override fun toString() = "${this::class.simpleName}(value: '$value', original expression: '$originalExpression')"
 
-    private val descriptor: SerialDescriptor = SerialDescriptor("LiteralValue") {
+    private val descriptor: SerialDescriptor = buildClassSerialDescriptor("LiteralValue") {
         element("value", String.serializer().descriptor)
     }
 
@@ -256,7 +260,7 @@ data class EnvironmentVariableReference(val referenceTo: String, val default: St
         }
     }
 
-    private val descriptor: SerialDescriptor = SerialDescriptor("EnvironmentVariableReference") {
+    private val descriptor: SerialDescriptor = buildClassSerialDescriptor("EnvironmentVariableReference") {
         element("referenceTo", String.serializer().descriptor)
         element("default", String.serializer().descriptor, isOptional = true)
     }
@@ -297,7 +301,7 @@ data class ConfigVariableReference(val referenceTo: String, override val origina
 
     override fun toString() = "${this::class.simpleName}(reference to: '$referenceTo', original expression: '$originalExpression')"
 
-    private val descriptor: SerialDescriptor = SerialDescriptor("ConfigVariableReference") {
+    private val descriptor: SerialDescriptor = buildClassSerialDescriptor("ConfigVariableReference") {
         element("referenceTo", String.serializer().descriptor)
     }
 
@@ -313,11 +317,11 @@ data class ConcatenatedExpression(val expressions: Iterable<Expression>, overrid
     override fun evaluate(context: ExpressionEvaluationContext): String =
         expressions.joinToString("") { it.evaluate(context) }
 
-    private val descriptor: SerialDescriptor = SerialDescriptor("ConcatenatedExpression") {
-        element("expressions", Expression.serializer().list.descriptor)
+    private val descriptor: SerialDescriptor = buildClassSerialDescriptor("ConcatenatedExpression") {
+        element("expressions", ListSerializer(Expression.serializer()).descriptor)
     }
 
-    override fun serialize(encoder: CompositeEncoder) = encoder.encodeSerializableElement(descriptor, 0, list, expressions.toList())
+    override fun serialize(encoder: CompositeEncoder) = encoder.encodeSerializableElement(descriptor, 0, ListSerializer(Companion), expressions.toList())
 
     override fun toString(): String {
         return "${this::class.simpleName}(expressions: ${expressions.joinToString()}, original expression: '$originalExpression')"

@@ -16,14 +16,13 @@
 
 package batect.telemetry
 
-import kotlinx.serialization.json.JsonLiteral
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonPrimitive
 
 data class AttributeValue(val json: JsonPrimitive) {
-    constructor(value: String?) : this(if (value == null) JsonNull else JsonLiteral(value))
-    constructor(value: Boolean?) : this(if (value == null) JsonNull else JsonLiteral(value))
-    constructor(value: Int?) : this(if (value == null) JsonNull else JsonLiteral(value))
+    constructor(value: String?) : this(JsonPrimitive(value))
+    constructor(value: Boolean?) : this(JsonPrimitive(value))
+    constructor(value: Int?) : this(JsonPrimitive(value))
     constructor(value: Throwable) : this(describe(value))
 
     companion object {

@@ -18,13 +18,12 @@ package batect.docker
 
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonConfiguration
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
 internal object Json {
-    val ignoringUnknownKeys = Json(JsonConfiguration.Stable.copy(ignoreUnknownKeys = true))
-    val default = Json(JsonConfiguration.Stable)
+    val ignoringUnknownKeys = Json { ignoreUnknownKeys = true }
+    val default = Json.Default
 }
 
 internal fun Iterable<String>.toJsonArray() = JsonArray(this.map { JsonPrimitive(it) })

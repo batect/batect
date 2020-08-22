@@ -49,7 +49,6 @@ import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.util.UUID
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonConfiguration
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -106,7 +105,7 @@ object TelemetryUploadTaskSpec : Spek({
                 emptyList()
             )
 
-            val bytes = Json(JsonConfiguration.Stable).stringify(TelemetrySession.serializer(), session).toByteArray(Charsets.UTF_8)
+            val bytes = Json.Default.encodeToString(TelemetrySession.serializer(), session).toByteArray(Charsets.UTF_8)
 
             Files.write(path, bytes)
 

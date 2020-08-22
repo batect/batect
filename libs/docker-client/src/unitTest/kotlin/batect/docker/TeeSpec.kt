@@ -19,7 +19,7 @@ package batect.docker
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import com.natpryce.hamkrest.assertion.assertThat
-import kotlinx.io.ByteArrayOutputStream
+import java.io.ByteArrayOutputStream
 import okio.Buffer
 import okio.sink
 import org.spekframework.spek2.Spek

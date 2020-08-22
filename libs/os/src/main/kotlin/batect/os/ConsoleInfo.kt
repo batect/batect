@@ -18,12 +18,14 @@ package batect.os
 
 import batect.logging.LogMessageBuilder
 import batect.logging.Logger
-import kotlinx.serialization.Decoder
-import kotlinx.serialization.Encoder
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.SerialDescriptor
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.descriptors.buildClassSerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 
 @Serializable(with = ConsoleInfo.Companion::class)
 class ConsoleInfo(
@@ -69,13 +71,14 @@ class ConsoleInfo(
     val terminalType: String? = environment["TERM"]
     private val isTravis: Boolean = environment["TRAVIS"] == "true"
 
+    @OptIn(ExperimentalSerializationApi::class)
     companion object : KSerializer<ConsoleInfo> {
         private const val stdinIsTTYFieldName = "stdinIsTTY"
         private const val stdoutIsTTYFieldName = "stdoutIsTTY"
         private const val supportsInteractivityFieldName = "supportsInteractivity"
         private const val terminalTypeFieldName = "terminalType"
 
-        override val descriptor: SerialDescriptor = SerialDescriptor("Configuration") {
+        override val descriptor: SerialDescriptor = buildClassSerialDescriptor("Configuration") {
             element(stdinIsTTYFieldName, Boolean.serializer().descriptor)
             element(stdoutIsTTYFieldName, Boolean.serializer().descriptor)
             element(supportsInteractivityFieldName, Boolean.serializer().descriptor)

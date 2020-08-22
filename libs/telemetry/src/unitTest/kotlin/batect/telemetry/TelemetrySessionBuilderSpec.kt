@@ -28,8 +28,8 @@ import com.nhaarman.mockitokotlin2.mock
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.util.UUID
-import kotlinx.serialization.json.JsonLiteral
 import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonPrimitive
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -96,7 +96,7 @@ object TelemetrySessionBuilderSpec : Spek({
             }
 
             it("stores the attribute on the built session") {
-                assertThat(session.attributes, equalTo(mapOf("thingType" to JsonLiteral("stuff"))))
+                assertThat(session.attributes, equalTo(mapOf("thingType" to JsonPrimitive("stuff"))))
             }
         }
 
@@ -122,7 +122,7 @@ object TelemetrySessionBuilderSpec : Spek({
             }
 
             it("stores the attribute on the built session") {
-                assertThat(session.attributes, equalTo(mapOf("thingCount" to JsonLiteral(12))))
+                assertThat(session.attributes, equalTo(mapOf("thingCount" to JsonPrimitive(12))))
             }
         }
 
@@ -148,7 +148,7 @@ object TelemetrySessionBuilderSpec : Spek({
             }
 
             it("stores the attribute on the built session") {
-                assertThat(session.attributes, equalTo(mapOf("thingEnabled" to JsonLiteral(false))))
+                assertThat(session.attributes, equalTo(mapOf("thingEnabled" to JsonPrimitive(false))))
             }
         }
 
@@ -193,9 +193,9 @@ object TelemetrySessionBuilderSpec : Spek({
                 assertThat(
                     session.attributes, equalTo(
                         mapOf(
-                            "thingType" to JsonLiteral("stuff"),
-                            "thingCount" to JsonLiteral(12),
-                            "thingEnabled" to JsonLiteral(false),
+                            "thingType" to JsonPrimitive("stuff"),
+                            "thingCount" to JsonPrimitive(12),
+                            "thingEnabled" to JsonPrimitive(false),
                             "thing" to JsonNull
                         )
                     )
@@ -229,9 +229,9 @@ object TelemetrySessionBuilderSpec : Spek({
                                 "MyEvent",
                                 eventTime,
                                 mapOf(
-                                    "thingType" to JsonLiteral("stuff"),
-                                    "thingCount" to JsonLiteral(12),
-                                    "thingEnabled" to JsonLiteral(false)
+                                    "thingType" to JsonPrimitive("stuff"),
+                                    "thingCount" to JsonPrimitive(12),
+                                    "thingEnabled" to JsonPrimitive(false)
                                 )
                             )
                         )
@@ -249,9 +249,9 @@ object TelemetrySessionBuilderSpec : Spek({
                 spanStartTime,
                 spanEndTime,
                 mapOf(
-                    "thingType" to JsonLiteral("stuff"),
-                    "thingCount" to JsonLiteral(12),
-                    "thingEnabled" to JsonLiteral(false)
+                    "thingType" to JsonPrimitive("stuff"),
+                    "thingCount" to JsonPrimitive(12),
+                    "thingEnabled" to JsonPrimitive(false)
                 )
             )
 

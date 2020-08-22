@@ -196,7 +196,7 @@ class RunAsCurrentUserConfigurationProvider(
             .filterValues { it.size < thisPath.size }
             .filterValues { it == thisPath.subList(0, it.lastIndex + 1) }
             .entries
-            .maxBy { it.value.size }
+            .maxByOrNull { it.value.size }
             ?.key
     }
 

@@ -27,12 +27,12 @@ import com.charleskorn.kaml.YamlInput
 import java.nio.charset.Charset
 import java.nio.file.Files
 import java.nio.file.Path
-import kotlinx.serialization.Decoder
-import kotlinx.serialization.Encoder
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.SerialDescriptor
 import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 
 class ConfigVariablesProvider(
     private val commandLineOverrides: Map<String, String>,
@@ -66,7 +66,7 @@ class ConfigVariablesProvider(
         try {
             val nameSerializer = ConfigVariableNameSerializer(config, sourceFile)
 
-            return Yaml().parse(MapSerializer(nameSerializer, String.serializer()), configFileContent)
+            return Yaml().decodeFromString(MapSerializer(nameSerializer, String.serializer()), configFileContent)
         } catch (e: YamlException) {
             throw ConfigurationFileException(e.message, absolutePath.toString(), e.line, e.column, e)
         }

@@ -23,16 +23,17 @@ import batect.os.PathResolutionResult
 import batect.os.PathType
 import com.charleskorn.kaml.YamlInput
 import java.nio.file.Path
-import kotlinx.serialization.Decoder
-import kotlinx.serialization.Encoder
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.PrimitiveKind
-import kotlinx.serialization.SerialDescriptor
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
-import kotlinx.serialization.builtins.set
-import kotlinx.serialization.decode
+import kotlinx.serialization.builtins.SetSerializer
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 
 @Serializable
 sealed class Include
@@ -59,11 +60,12 @@ data class GitInclude(
 }
 
 object FileIncludePathSerializer : KSerializer<Path> {
-    override val descriptor: SerialDescriptor = SerialDescriptor("Path", PrimitiveKind.STRING)
+    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("Path", PrimitiveKind.STRING)
 
+    @OptIn(ExperimentalSerializationApi::class)
     override fun deserialize(decoder: Decoder): Path {
-        val elementDeserializer = decoder.context.getContextual(PathResolutionResult::class)!!
-        val resolutionResult = decoder.decode(elementDeserializer)
+        val elementDeserializer = decoder.serializersModule.getContextual(PathResolutionResult::class)!!
+        val resolutionResult = decoder.decodeSerializableValue(elementDeserializer)
         val location = (decoder as YamlInput).getCurrentLocation()
 
         when (resolutionResult) {
@@ -89,4 +91,4 @@ object IncludeConfigSerializer : SimpleStringOrObjectSerializer<Include>(Include
     }
 }
 
-object IncludeSetConfigSerializer : KSerializer<Set<Include>> by IncludeConfigSerializer.set
+object IncludeSetConfigSerializer : KSerializer<Set<Include>> by SetSerializer(IncludeConfigSerializer)

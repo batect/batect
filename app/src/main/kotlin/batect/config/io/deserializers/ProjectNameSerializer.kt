@@ -19,15 +19,15 @@ package batect.config.io.deserializers
 import batect.config.io.ConfigurationException
 import batect.docker.DockerImageNameValidator
 import com.charleskorn.kaml.YamlInput
-import kotlinx.serialization.Decoder
-import kotlinx.serialization.Encoder
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.PrimitiveDescriptor
-import kotlinx.serialization.PrimitiveKind
-import kotlinx.serialization.SerialDescriptor
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 
 object ProjectNameSerializer : KSerializer<String> {
-    override val descriptor: SerialDescriptor = PrimitiveDescriptor("project_name", PrimitiveKind.STRING)
+    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("project_name", PrimitiveKind.STRING)
 
     override fun deserialize(decoder: Decoder): String {
         val projectName = decoder.decodeString()

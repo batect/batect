@@ -22,14 +22,13 @@ import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.streams.asSequence
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonConfiguration
 
 class TelemetryUploadQueue(
     private val applicationPaths: ApplicationPaths,
     private val logger: Logger
 ) {
     private val telemetryDirectory = applicationPaths.rootLocalStorageDirectory.resolve("telemetry")
-    private val json = Json(JsonConfiguration.Stable)
+    private val json = Json.Default
 
     fun add(session: TelemetrySession): Path {
         val path = telemetryDirectory.resolve("session-${session.sessionId}.json")
@@ -39,7 +38,7 @@ class TelemetryUploadQueue(
             data("path", path)
         }
 
-        val bytes = json.stringify(TelemetrySession.serializer(), session).toByteArray(Charsets.UTF_8)
+        val bytes = json.encodeToString(TelemetrySession.serializer(), session).toByteArray(Charsets.UTF_8)
 
         if (!Files.exists(path.parent)) {
             Files.createDirectories(path.parent)

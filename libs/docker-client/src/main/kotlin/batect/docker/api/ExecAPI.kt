@@ -29,7 +29,8 @@ import batect.docker.run.ContainerOutputStream
 import batect.logging.Logger
 import batect.os.SystemInfo
 import java.util.concurrent.TimeUnit
-import kotlinx.serialization.json.json
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import okhttp3.ConnectionPool
 import okhttp3.HttpUrl
 import okhttp3.Request
@@ -74,7 +75,7 @@ class ExecAPI(
                 throw ExecFailedException("Output from Docker was: ${error.message}")
             }
 
-            val instance = Json.ignoringUnknownKeys.parse(DockerExecInstance.serializer(), response.body!!.string())
+            val instance = Json.ignoringUnknownKeys.decodeFromString(DockerExecInstance.serializer(), response.body!!.string())
 
             logger.info {
                 message("Exec instance created.")
@@ -96,9 +97,9 @@ class ExecAPI(
             .addPathSegment("start")
             .build()
 
-        val body = json {
-            "Detach" to false
-            "Tty" to creationRequest.attachTty
+        val body = buildJsonObject {
+            put("Detach", false)
+            put("Tty", creationRequest.attachTty)
         }.toString()
 
         val request = Request.Builder()
@@ -157,7 +158,7 @@ class ExecAPI(
                 throw ExecInstanceInspectionFailedException("Could not inspect exec instance '${instance.id}': ${error.message}")
             }
 
-            return Json.ignoringUnknownKeys.parse(DockerExecInstanceInfo.serializer(), response.body!!.string())
+            return Json.ignoringUnknownKeys.decodeFromString(DockerExecInstanceInfo.serializer(), response.body!!.string())
         }
     }
 

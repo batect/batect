@@ -41,7 +41,7 @@ object TaskSpec : Spek({
                         container: the-container
                 """.trimIndent()
 
-                val task by createForEachTest { Yaml.default.parse(Task.serializer(), yaml) }
+                val task by createForEachTest { Yaml.default.decodeFromString(Task.serializer(), yaml) }
 
                 it("successfully reads the task") {
                     assertThat(task, equalTo(Task(
@@ -62,7 +62,7 @@ object TaskSpec : Spek({
                         container: the-container
                 """.trimIndent()
 
-                val task by createForEachTest { Yaml.default.parse(Task.serializer(), yaml) }
+                val task by createForEachTest { Yaml.default.decodeFromString(Task.serializer(), yaml) }
 
                 it("successfully reads the task") {
                     assertThat(task, equalTo(Task(
@@ -81,7 +81,7 @@ object TaskSpec : Spek({
                 """.trimIndent()
 
                 it("throws an appropriate exception") {
-                    assertThat({ Yaml.default.parse(Task.serializer(), yaml) }, throws<ConfigurationException>(withMessage("At least one of 'run' or 'prerequisites' is required.") and withLineNumber(1) and withColumn(1)))
+                    assertThat({ Yaml.default.decodeFromString(Task.serializer(), yaml) }, throws<ConfigurationException>(withMessage("At least one of 'run' or 'prerequisites' is required.") and withLineNumber(1) and withColumn(1)))
                 }
             }
 
@@ -95,7 +95,7 @@ object TaskSpec : Spek({
                 """.trimIndent()
 
                 it("throws an appropriate exception") {
-                    assertThat({ Yaml.default.parse(Task.serializer(), yaml) }, throws<ConfigurationException>(withMessage("'run' is required if 'dependencies' is provided.") and withLineNumber(1) and withColumn(1)))
+                    assertThat({ Yaml.default.decodeFromString(Task.serializer(), yaml) }, throws<ConfigurationException>(withMessage("'run' is required if 'dependencies' is provided.") and withLineNumber(1) and withColumn(1)))
                 }
             }
         }
@@ -111,7 +111,7 @@ object TaskSpec : Spek({
             )
 
             it("serializes to the expected JSON") {
-                assertThat(Json.forLogging.stringify(Task.serializer(), task), equivalentTo("""
+                assertThat(Json.forLogging.encodeToString(Task.serializer(), task), equivalentTo("""
                     {
                         "description": "Does the thing.",
                         "group": "Things",

@@ -19,7 +19,9 @@ package batect.docker
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.json
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
+import kotlinx.serialization.json.putJsonObject
 
 @Serializable
 data class DockerContainerCreationRequest(
@@ -48,66 +50,66 @@ data class DockerContainerCreationRequest(
     val logOptions: Map<String, String>
 ) {
     fun toJson(): String {
-        return json {
-            "AttachStdin" to attachStdin
-            "AttachStdout" to true
-            "AttachStderr" to true
-            "Tty" to useTTY
-            "OpenStdin" to attachStdin
-            "StdinOnce" to attachStdin
-            "Image" to image.id
-            "Hostname" to hostname
-            "Env" to environmentVariables.toDockerFormatJsonArray()
-            "ExposedPorts" to formatExposedPorts()
+        return buildJsonObject {
+            put("AttachStdin", attachStdin)
+            put("AttachStdout", true)
+            put("AttachStderr", true)
+            put("Tty", useTTY)
+            put("OpenStdin", attachStdin)
+            put("StdinOnce", attachStdin)
+            put("Image", image.id)
+            put("Hostname", hostname)
+            put("Env", environmentVariables.toDockerFormatJsonArray())
+            put("ExposedPorts", formatExposedPorts())
 
             if (command.count() > 0) {
-                "Cmd" to command.toJsonArray()
+                put("Cmd", command.toJsonArray())
             }
 
             if (entrypoint.count() > 0) {
-                "Entrypoint" to entrypoint.toJsonArray()
+                put("Entrypoint", entrypoint.toJsonArray())
             }
 
             if (workingDirectory != null) {
-                "WorkingDir" to workingDirectory
+                put("WorkingDir", workingDirectory)
             }
 
             if (userAndGroup != null) {
-                "User" to "${userAndGroup.userId}:${userAndGroup.groupId}"
+                put("User", "${userAndGroup.userId}:${userAndGroup.groupId}")
             }
 
-            "HostConfig" to json {
-                "NetworkMode" to network.id
-                "Binds" to formatVolumeMounts()
-                "Devices" to formatDeviceMounts()
-                "PortBindings" to formatPortMappings()
-                "Privileged" to privileged
-                "Init" to init
-                "CapAdd" to formatCapabilitySet(capabilitiesToAdd)
-                "CapDrop" to formatCapabilitySet(capabilitiesToDrop)
-                "LogConfig" to json {
-                    "Type" to logDriver
-                    "Config" to logOptions.toJsonObject()
+            putJsonObject("HostConfig") {
+                put("NetworkMode", network.id)
+                put("Binds", formatVolumeMounts())
+                put("Devices", formatDeviceMounts())
+                put("PortBindings", formatPortMappings())
+                put("Privileged", privileged)
+                put("Init", init)
+                put("CapAdd", formatCapabilitySet(capabilitiesToAdd))
+                put("CapDrop", formatCapabilitySet(capabilitiesToDrop))
+                putJsonObject("LogConfig") {
+                    put("Type", logDriver)
+                    put("Config", logOptions.toJsonObject())
                 }
-                "ExtraHosts" to formatExtraHosts()
+                put("ExtraHosts", formatExtraHosts())
             }
 
-            "Healthcheck" to json {
+            putJsonObject("Healthcheck") {
                 if (healthCheckConfig.command == null) {
-                    "Test" to emptyList<String>().toJsonArray()
+                    put("Test", emptyList<String>().toJsonArray())
                 } else {
-                    "Test" to listOf("CMD-SHELL", healthCheckConfig.command).toJsonArray()
+                    put("Test", listOf("CMD-SHELL", healthCheckConfig.command).toJsonArray())
                 }
 
-                "Interval" to (healthCheckConfig.interval?.toNanos() ?: 0)
-                "Retries" to (healthCheckConfig.retries ?: 0)
-                "StartPeriod" to (healthCheckConfig.startPeriod?.toNanos() ?: 0)
+                put("Interval", (healthCheckConfig.interval?.toNanos() ?: 0))
+                put("Retries", (healthCheckConfig.retries ?: 0))
+                put("StartPeriod", (healthCheckConfig.startPeriod?.toNanos() ?: 0))
             }
 
-            "NetworkingConfig" to json {
-                "EndpointsConfig" to json {
-                    network.id to json {
-                        "Aliases" to networkAliases.toJsonArray()
+            putJsonObject("NetworkingConfig") {
+                putJsonObject("EndpointsConfig") {
+                    putJsonObject(network.id) {
+                        put("Aliases", networkAliases.toJsonArray())
                     }
                 }
             }
@@ -119,32 +121,32 @@ data class DockerContainerCreationRequest(
         .toJsonArray()
 
     private fun formatDeviceMounts(): JsonArray = JsonArray(deviceMounts
-        .map { json {
-            "PathOnHost" to it.localPath
-            "PathInContainer" to it.containerPath
-            "CgroupPermissions" to it.options
+        .map { buildJsonObject {
+            put("PathOnHost", it.localPath)
+            put("PathInContainer", it.containerPath)
+            put("CgroupPermissions", it.options)
         } })
 
-    private fun formatPortMappings(): JsonObject = json {
+    private fun formatPortMappings(): JsonObject = buildJsonObject {
         portMappings.forEach { mapping ->
             val localPorts = mapping.local.ports
             val containerPorts = mapping.container.ports
 
             localPorts.zip(containerPorts).forEach { (local, container) ->
-                "$container/${mapping.protocol}" to JsonArray(listOf(
-                    json {
-                        "HostIp" to ""
-                        "HostPort" to local.toString()
+                put("$container/${mapping.protocol}", JsonArray(listOf(
+                    buildJsonObject {
+                        put("HostIp", "")
+                        put("HostPort", local.toString())
                     }
-                ))
+                )))
             }
         }
     }
 
-    private fun formatExposedPorts(): JsonObject = json {
+    private fun formatExposedPorts(): JsonObject = buildJsonObject {
         portMappings.forEach { mapping ->
             mapping.container.ports.forEach { port ->
-                "$port/${mapping.protocol}" to json {}
+                putJsonObject("$port/${mapping.protocol}") {}
             }
         }
     }

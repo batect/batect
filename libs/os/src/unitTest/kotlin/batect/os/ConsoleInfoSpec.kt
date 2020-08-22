@@ -26,7 +26,6 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonConfiguration
 import org.araqnid.hamkrest.json.equivalentTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
@@ -188,7 +187,7 @@ object ConsoleInfoSpec : Spek({
 
             val consoleInfo by createForEachTest { ConsoleInfo(nativeMethods, genericSystemInfo, HostEnvironmentVariables(), logger) }
 
-            val json by runForEachTest { Json(JsonConfiguration.Stable).stringify(ConsoleInfo.serializer(), consoleInfo) }
+            val json by runForEachTest { Json.Default.encodeToString(ConsoleInfo.serializer(), consoleInfo) }
 
             it("includes all details") {
                 assertThat(json, equivalentTo("""{

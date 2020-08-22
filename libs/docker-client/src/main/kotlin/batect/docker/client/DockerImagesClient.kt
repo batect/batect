@@ -35,6 +35,7 @@ import java.nio.file.LinkOption
 import java.nio.file.Path
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import okio.Sink
 
 class DockerImagesClient(
@@ -148,7 +149,7 @@ data class DockerImageBuildProgress(val currentStep: Int, val totalSteps: Int, v
         private val buildStepLineRegex = """^Step (\d+)/(\d+) : (.*)$""".toRegex()
 
         fun fromBuildOutput(line: JsonObject): DockerImageBuildProgress? {
-            val output = line.getPrimitiveOrNull("stream")?.content ?: return null
+            val output = line["stream"]?.jsonPrimitive?.content ?: return null
             val stepLineMatch = buildStepLineRegex.matchEntire(output) ?: return null
 
             return DockerImageBuildProgress(stepLineMatch.groupValues[1].toInt(), stepLineMatch.groupValues[2].toInt(), stepLineMatch.groupValues[3], null)

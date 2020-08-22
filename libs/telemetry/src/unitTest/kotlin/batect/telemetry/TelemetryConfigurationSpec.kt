@@ -20,14 +20,13 @@ import batect.testutils.equalTo
 import com.natpryce.hamkrest.assertion.assertThat
 import java.util.UUID
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonConfiguration
 import org.araqnid.hamkrest.json.equivalentTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
 object TelemetryConfigurationSpec : Spek({
     describe("telemetry configuration") {
-        val parser = Json(JsonConfiguration.Stable)
+        val parser = Json.Default
         val userId = UUID.fromString("00001111-2222-3333-4444-555566667777")
         val config = TelemetryConfiguration(userId, ConsentState.TelemetryAllowed)
 
@@ -37,13 +36,13 @@ object TelemetryConfigurationSpec : Spek({
 
         describe("serializing to JSON") {
             it("serializes to the expected JSON") {
-                assertThat(parser.stringify(TelemetryConfiguration.serializer(), config), equivalentTo(json))
+                assertThat(parser.encodeToString(TelemetryConfiguration.serializer(), config), equivalentTo(json))
             }
         }
 
         describe("deserializing from JSON") {
             it("deserializes to the expected object") {
-                assertThat(parser.parse(TelemetryConfiguration.serializer(), json), equalTo(config))
+                assertThat(parser.decodeFromString(TelemetryConfiguration.serializer(), json), equalTo(config))
             }
         }
     }

@@ -23,15 +23,17 @@ import batect.os.PathResolutionContext
 import batect.os.PathResolutionContextSerializer
 import batect.os.PathResolutionResult
 import com.charleskorn.kaml.YamlInput
-import kotlinx.serialization.CompositeDecoder
-import kotlinx.serialization.CompositeEncoder
-import kotlinx.serialization.Encoder
-import kotlinx.serialization.SerialDescriptor
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.builtins.nullable
 import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.descriptors.buildClassSerialDescriptor
+import kotlinx.serialization.encoding.CompositeDecoder
+import kotlinx.serialization.encoding.CompositeEncoder
+import kotlinx.serialization.encoding.Encoder
 
 @Serializable(with = VolumeMount.Companion::class)
 sealed class VolumeMount(
@@ -40,11 +42,12 @@ sealed class VolumeMount(
 ) {
     protected abstract fun serialize(output: CompositeEncoder)
 
+    @OptIn(ExperimentalSerializationApi::class)
     companion object : StringOrObjectSerializer<VolumeMount>() {
         override val serialName: String = VolumeMount::class.qualifiedName!!
         override val neitherStringNorObjectErrorMessage: String = "Volume mount definition is invalid. It must either be an object or a literal in the form 'local_path:container_path' or 'local_path:container_path:options'."
 
-        override val objectDescriptor = SerialDescriptor(serialName) {
+        override val objectDescriptor = buildClassSerialDescriptor(serialName) {
             element("local", Expression.serializer().descriptor, isOptional = true)
             element("container", String.serializer().descriptor)
             element("options", String.serializer().descriptor, isOptional = true)
@@ -95,7 +98,7 @@ sealed class VolumeMount(
 
             loop@ while (true) {
                 when (val i = input.decodeElementIndex(objectDescriptor)) {
-                    CompositeDecoder.READ_DONE -> break@loop
+                    CompositeDecoder.DECODE_DONE -> break@loop
                     localPathFieldIndex -> localPath = input.decodeSerializableElement(objectDescriptor, i, Expression.serializer())
                     containerPathFieldIndex -> containerPath = input.decodeStringElement(objectDescriptor, i)
                     optionsFieldIndex -> options = input.decodeStringElement(objectDescriptor, i)
@@ -155,7 +158,7 @@ sealed class VolumeMount(
 
         private val YamlInput.pathResolutionContext: PathResolutionContext
             get() {
-                val deserializer = this.context.getContextual(PathResolutionResult::class)!! as PathDeserializer
+                val deserializer = this.serializersModule.getContextual(PathResolutionResult::class)!! as PathDeserializer
                 val resolver = deserializer.pathResolver
 
                 return resolver.context
@@ -175,11 +178,12 @@ data class LocalMount(
     override val containerPath: String,
     override val options: String? = null
 ) : VolumeMount(containerPath, options) {
-    private val descriptor: SerialDescriptor = SerialDescriptor("VolumeMount") {
+    private val descriptor: SerialDescriptor = buildClassSerialDescriptor("VolumeMount") {
         element("local", Expression.serializer().descriptor)
         element("pathResolutionContext", PathResolutionContextSerializer.descriptor)
     }
 
+    @OptIn(ExperimentalSerializationApi::class)
     override fun serialize(output: CompositeEncoder) {
         output.encodeSerializableElement(descriptor, descriptor.getElementIndex("local"), Expression.serializer(), localPath)
         output.encodeSerializableElement(descriptor, descriptor.getElementIndex("pathResolutionContext"), PathResolutionContextSerializer, pathResolutionContext)
@@ -191,10 +195,11 @@ data class CacheMount(
     override val containerPath: String,
     override val options: String? = null
 ) : VolumeMount(containerPath, options) {
-    private val descriptor: SerialDescriptor = SerialDescriptor("VolumeMount") {
+    private val descriptor: SerialDescriptor = buildClassSerialDescriptor("VolumeMount") {
         element("name", Expression.serializer().descriptor)
     }
 
+    @OptIn(ExperimentalSerializationApi::class)
     override fun serialize(output: CompositeEncoder) {
         output.encodeStringElement(descriptor, descriptor.getElementIndex("name"), name)
     }

@@ -57,13 +57,13 @@ object ContainerSpec : Spek({
             }
         }
 
-        val parser by createForEachTest { Yaml(context = serializersModuleOf(PathResolutionResult::class, pathDeserializer)) }
+        val parser by createForEachTest { Yaml(serializersModule = serializersModuleOf(PathResolutionResult::class, pathDeserializer)) }
 
         given("the config file has just a build directory") {
             val yaml = "build_directory: /some_build_dir"
 
             on("loading the configuration from the config file") {
-                val result by runForEachTest { parser.parse(Container.Companion, yaml) }
+                val result by runForEachTest { parser.decodeFromString(Container.Companion, yaml) }
 
                 it("returns the expected container configuration") {
                     assertThat(result, equalTo(Container("UNNAMED-FROM-CONFIG-FILE", BuildImage(LiteralValue("/some_build_dir"), pathResolverContext, emptyMap(), "Dockerfile"))))
@@ -75,7 +75,7 @@ object ContainerSpec : Spek({
             val yaml = "image: some_image"
 
             on("loading the configuration from the config file") {
-                val result by runForEachTest { parser.parse(Container.Companion, yaml) }
+                val result by runForEachTest { parser.decodeFromString(Container.Companion, yaml) }
 
                 it("returns the expected container configuration") {
                     assertThat(result, equalTo(Container("UNNAMED-FROM-CONFIG-FILE", PullImage("some_image"))))
@@ -92,7 +92,7 @@ object ContainerSpec : Spek({
             on("loading the configuration from the config file") {
                 it("throws an appropriate exception") {
                     assertThat(
-                        { parser.parse(Container.Companion, yaml) },
+                        { parser.decodeFromString(Container.Companion, yaml) },
                         throws(withMessage("Only one of build_directory or image can be specified for a container, but both have been provided for this container.") and withLineNumber(1) and withColumn(1))
                     )
                 }
@@ -109,7 +109,7 @@ object ContainerSpec : Spek({
             on("loading the configuration from the config file") {
                 it("throws an appropriate exception") {
                     assertThat(
-                        { parser.parse(Container.Companion, yaml) },
+                        { parser.decodeFromString(Container.Companion, yaml) },
                         throws(withMessage("build_args cannot be used with image, but both have been provided.") and withLineNumber(1) and withColumn(1))
                     )
                 }
@@ -125,7 +125,7 @@ object ContainerSpec : Spek({
             on("loading the configuration from the config file") {
                 it("throws an appropriate exception") {
                     assertThat(
-                        { parser.parse(Container.Companion, yaml) },
+                        { parser.decodeFromString(Container.Companion, yaml) },
                         throws(withMessage("dockerfile cannot be used with image, but both have been provided.") and withLineNumber(1) and withColumn(1))
                     )
                 }
@@ -140,7 +140,7 @@ object ContainerSpec : Spek({
             on("loading the configuration from the config file") {
                 it("throws an appropriate exception") {
                     assertThat(
-                        { parser.parse(Container.Companion, yaml) },
+                        { parser.decodeFromString(Container.Companion, yaml) },
                         throws(withMessage("One of either build_directory or image must be specified for each container, but neither have been provided for this container.") and withLineNumber(1) and withColumn(1))
                     )
                 }
@@ -201,7 +201,7 @@ object ContainerSpec : Spek({
             """.trimIndent()
 
             on("loading the configuration from the config file") {
-                val result by runForEachTest { parser.parse(Container.Companion, yaml) }
+                val result by runForEachTest { parser.decodeFromString(Container.Companion, yaml) }
 
                 it("returns the expected container configuration") {
                     assertThat(result.imageSource, equalTo(BuildImage(

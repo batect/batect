@@ -20,16 +20,16 @@ import batect.config.io.ConfigurationException
 import batect.docker.DockerImageNameValidator
 import com.charleskorn.kaml.Location
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.SerialDescriptor
-import kotlinx.serialization.Serializer
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.MapSerializer
+import kotlinx.serialization.descriptors.SerialDescriptor
 
+@Serializable(with = ContainerMap.Companion::class)
 class ContainerMap(contents: Iterable<Container>) : NamedObjectMap<Container>("container", contents) {
     constructor(vararg contents: Container) : this(contents.asIterable())
 
     override fun nameFor(value: Container): String = value.name
 
-    @Serializer(forClass = ContainerMap::class)
     companion object : NamedObjectMapSerializer<ContainerMap, Container>(Container.serializer()), KSerializer<ContainerMap> {
         override fun addName(name: String, element: Container): Container = element.copy(name = name)
         override fun getName(element: Container): String = element.name

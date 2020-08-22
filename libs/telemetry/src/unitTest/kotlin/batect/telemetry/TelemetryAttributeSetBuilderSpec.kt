@@ -22,8 +22,8 @@ import batect.testutils.given
 import batect.testutils.withMessage
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.throws
-import kotlinx.serialization.json.JsonLiteral
 import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonPrimitive
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -46,7 +46,7 @@ object TelemetryAttributeSetBuilderSpec : Spek({
             }
 
             it("stores the attribute on the built session") {
-                assertThat(attributes, equalTo(mapOf("thingType" to JsonLiteral("stuff"))))
+                assertThat(attributes, equalTo(mapOf("thingType" to JsonPrimitive("stuff"))))
             }
         }
 
@@ -68,7 +68,7 @@ object TelemetryAttributeSetBuilderSpec : Spek({
             }
 
             it("stores the attribute on the built session") {
-                assertThat(attributes, equalTo(mapOf("thingCount" to JsonLiteral(12))))
+                assertThat(attributes, equalTo(mapOf("thingCount" to JsonPrimitive(12))))
             }
         }
 
@@ -90,7 +90,7 @@ object TelemetryAttributeSetBuilderSpec : Spek({
             }
 
             it("stores the attribute on the built session") {
-                assertThat(attributes, equalTo(mapOf("thingEnabled" to JsonLiteral(false))))
+                assertThat(attributes, equalTo(mapOf("thingEnabled" to JsonPrimitive(false))))
             }
         }
 
@@ -129,9 +129,9 @@ object TelemetryAttributeSetBuilderSpec : Spek({
                 assertThat(
                     attributes, equalTo(
                         mapOf(
-                            "thingType" to JsonLiteral("stuff"),
-                            "thingCount" to JsonLiteral(12),
-                            "thingEnabled" to JsonLiteral(false),
+                            "thingType" to JsonPrimitive("stuff"),
+                            "thingCount" to JsonPrimitive(12),
+                            "thingEnabled" to JsonPrimitive(false),
                             "thing" to JsonNull
                         )
                     )

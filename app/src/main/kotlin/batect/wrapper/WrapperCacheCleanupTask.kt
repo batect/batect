@@ -121,7 +121,7 @@ class WrapperCacheCleanupTask(
 
     private fun Set<CachedWrapperVersion>.nextClosestVersionLastUseDate(version: Version): ZonedDateTime? = this
         .filter { it.version > version && it.lastUsed != null }
-        .minBy { it.version }
+        .minByOrNull { it.version }
         ?.lastUsed
 
     companion object {

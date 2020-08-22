@@ -17,16 +17,16 @@
 package batect.config
 
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.SerialDescriptor
-import kotlinx.serialization.Serializer
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.MapSerializer
+import kotlinx.serialization.descriptors.SerialDescriptor
 
+@Serializable(with = TaskMap.Companion::class)
 class TaskMap(contents: Iterable<Task>) : NamedObjectMap<Task>("task", contents) {
     constructor(vararg contents: Task) : this(contents.asIterable())
 
     override fun nameFor(value: Task): String = value.name
 
-    @Serializer(forClass = TaskMap::class)
     companion object : NamedObjectMapSerializer<TaskMap, Task>(Task.serializer()), KSerializer<TaskMap> {
         override fun addName(name: String, element: Task): Task = element.copy(name = name)
         override fun getName(element: Task): String = element.name

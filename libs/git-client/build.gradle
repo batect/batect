@@ -21,7 +21,6 @@ plugins {
 apply from: 'gradle/integrationTest.gradle'
 
 dependencies {
-    implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
     implementation project(':libs:logging')
     implementation project(':libs:os')
 

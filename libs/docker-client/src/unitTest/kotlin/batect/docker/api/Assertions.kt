@@ -24,6 +24,7 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import com.nhaarman.mockitokotlin2.argThat
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonObject
 import okhttp3.ConnectionPool
 import okhttp3.HttpUrl
 import okhttp3.MediaType.Companion.toMediaType
@@ -67,7 +68,7 @@ internal fun requestWithJsonBody(predicate: (JsonObject) -> Unit) = com.nhaarman
 
     val buffer = Buffer()
     request.body!!.writeTo(buffer)
-    val parsedBody = Json.default.parseJson(buffer.readUtf8()).jsonObject
+    val parsedBody = Json.default.parseToJsonElement(buffer.readUtf8()).jsonObject
     predicate(parsedBody)
 }
 

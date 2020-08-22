@@ -52,6 +52,7 @@ import java.io.ByteArrayOutputStream
 import java.nio.file.Paths
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonObject
 import okhttp3.Headers
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
@@ -468,7 +469,7 @@ private class ProgressReceiver {
 private fun receivedAllUpdatesFrom(response: String): Matcher<ProgressReceiver> = receivedAllUpdatesFrom(response.lines())
 
 private fun receivedAllUpdatesFrom(lines: Iterable<String>): Matcher<ProgressReceiver> {
-    val expectedUpdates = lines.map { Json.default.parseJson(it).jsonObject }
+    val expectedUpdates = lines.map { Json.default.parseToJsonElement(it).jsonObject }
 
     return has(ProgressReceiver::updatesReceived, equalTo(expectedUpdates))
 }

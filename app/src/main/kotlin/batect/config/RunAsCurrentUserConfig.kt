@@ -18,21 +18,22 @@ package batect.config
 
 import batect.config.io.ConfigurationException
 import com.charleskorn.kaml.YamlInput
-import kotlinx.serialization.CompositeDecoder
-import kotlinx.serialization.Decoder
-import kotlinx.serialization.Encoder
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.SerialDescriptor
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
-import kotlinx.serialization.Serializer
 import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.descriptors.buildClassSerialDescriptor
+import kotlinx.serialization.encoding.CompositeDecoder
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 
-@Serializable
+@Serializable(with = RunAsCurrentUserConfig.Companion::class)
 sealed class RunAsCurrentUserConfig {
-    @Serializer(forClass = RunAsCurrentUserConfig::class)
+    @OptIn(ExperimentalSerializationApi::class)
     companion object : KSerializer<RunAsCurrentUserConfig> {
-        override val descriptor: SerialDescriptor = SerialDescriptor("RunAsCurrentUserConfig") {
+        override val descriptor: SerialDescriptor = buildClassSerialDescriptor("RunAsCurrentUserConfig") {
             element("enabled", Boolean.serializer().descriptor, isOptional = true)
             element("home_directory", String.serializer().descriptor, isOptional = true)
         }
@@ -57,7 +58,7 @@ sealed class RunAsCurrentUserConfig {
 
             loop@ while (true) {
                 when (val i = input.decodeElementIndex(descriptor)) {
-                    CompositeDecoder.READ_DONE -> break@loop
+                    CompositeDecoder.DECODE_DONE -> break@loop
                     enabledFieldIndex -> enabled = input.decodeBooleanElement(descriptor, i)
                     homeDirectoryFieldIndex -> homeDirectory = input.decodeStringElement(descriptor, i)
                     else -> throw SerializationException("Unknown index $i")

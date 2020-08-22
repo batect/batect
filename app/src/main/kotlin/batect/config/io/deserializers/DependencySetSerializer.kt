@@ -18,23 +18,21 @@ package batect.config.io.deserializers
 
 import batect.config.io.ConfigurationException
 import com.charleskorn.kaml.YamlInput
-import kotlinx.serialization.CompositeDecoder
-import kotlinx.serialization.Decoder
-import kotlinx.serialization.Encoder
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.SerialDescriptor
-import kotlinx.serialization.Serializer
+import kotlinx.serialization.builtins.SetSerializer
 import kotlinx.serialization.builtins.serializer
-import kotlinx.serialization.builtins.set
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.CompositeDecoder
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 
-@Serializer(forClass = Set::class)
 internal object DependencySetSerializer : KSerializer<Set<String>> {
     private val elementSerializer = String.serializer()
 
-    override val descriptor: SerialDescriptor = elementSerializer.set.descriptor
+    override val descriptor: SerialDescriptor = SetSerializer(elementSerializer).descriptor
 
     override fun deserialize(decoder: Decoder): Set<String> {
-        val input = decoder.beginStructure(descriptor, elementSerializer)
+        val input = decoder.beginStructure(descriptor)
         val result = read(input)
 
         input.endStructure(descriptor)
@@ -48,7 +46,7 @@ internal object DependencySetSerializer : KSerializer<Set<String>> {
         while (true) {
             val currentIndex = input.decodeElementIndex(descriptor)
 
-            if (currentIndex == CompositeDecoder.READ_DONE) {
+            if (currentIndex == CompositeDecoder.DECODE_DONE) {
                 break
             }
 
@@ -72,5 +70,5 @@ internal object DependencySetSerializer : KSerializer<Set<String>> {
 
     private fun getDuplicateValueMessage(value: String) = "The dependency '$value' is given more than once"
 
-    override fun serialize(encoder: Encoder, value: Set<String>) = String.serializer().set.serialize(encoder, value)
+    override fun serialize(encoder: Encoder, value: Set<String>) = SetSerializer(String.serializer()).serialize(encoder, value)
 }

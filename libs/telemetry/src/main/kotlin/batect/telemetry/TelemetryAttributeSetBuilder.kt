@@ -17,16 +17,15 @@
 package batect.telemetry
 
 import java.util.concurrent.ConcurrentHashMap
-import kotlinx.serialization.json.JsonLiteral
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonPrimitive
 
 class TelemetryAttributeSetBuilder {
     private val attributes = ConcurrentHashMap<String, JsonPrimitive>()
 
-    fun addAttribute(attributeName: String, value: String?) = addAttribute(attributeName, if (value == null) JsonNull else JsonLiteral(value))
-    fun addAttribute(attributeName: String, value: Boolean?) = addAttribute(attributeName, if (value == null) JsonNull else JsonLiteral(value))
-    fun addAttribute(attributeName: String, value: Int?) = addAttribute(attributeName, if (value == null) JsonNull else JsonLiteral(value))
+    fun addAttribute(attributeName: String, value: String?) = addAttribute(attributeName, JsonPrimitive(value))
+    fun addAttribute(attributeName: String, value: Boolean?) = addAttribute(attributeName, JsonPrimitive(value))
+    fun addAttribute(attributeName: String, value: Int?) = addAttribute(attributeName, JsonPrimitive(value))
     fun addNullAttribute(attributeName: String) = addAttribute(attributeName, JsonNull)
 
     private fun addAttribute(attributeName: String, value: JsonPrimitive) {

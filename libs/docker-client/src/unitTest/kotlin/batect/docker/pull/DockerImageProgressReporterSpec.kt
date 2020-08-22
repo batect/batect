@@ -24,6 +24,7 @@ import batect.testutils.on
 import batect.testutils.runNullableForEachTest
 import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.assertion.assertThat
+import kotlinx.serialization.json.jsonObject
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -395,7 +396,7 @@ object DockerImageProgressReporterSpec : Spek({
 })
 
 private fun DockerImageProgressReporter.processRawProgressUpdate(json: String): DockerImageProgress? {
-    val parsedJson = Json.default.parseJson(json).jsonObject
+    val parsedJson = Json.default.parseToJsonElement(json).jsonObject
 
     return this.processProgressUpdate(parsedJson)
 }

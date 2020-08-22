@@ -29,8 +29,7 @@ jobs:
           restore-keys: gradle-${{ runner.os }}
 
       - name: Build and test
-#        run: ./gradlew --parallel app:check jacocoTestReport
-        run: ./gradlew libs:os:test
+        run: ./gradlew --parallel app:check jacocoTestReport
 
       - name: Run integration tests (Git client)
         run: ./gradlew libs:git-client:integrationTest

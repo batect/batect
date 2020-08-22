@@ -20,6 +20,12 @@ jobs:
       - name: Add bash to PATH
         run: echo "##[add-path]C:\Program Files\Git\bin"
 
+      - name: Print PATH
+        run: echo "$env:PATH"
+
+      - name: Print bash version
+        run: bash --version
+
       - name: Cache packages
         uses: actions/cache@v2
         with:

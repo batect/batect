@@ -359,7 +359,7 @@ jobs:
           path: docs/build/docs
 
       - name: Download Bintray CLI
-        run: curl --location --fail "https://api.bintray.com/content/jfrog/jfrog-cli-go/1.39.0/jfrog-cli-linux-amd64/jfrog?bt_package=jfrog-cli-linux-amd64" | sudo tee /usr/local/bin/jfrog > /dev/null && chmod +x /usr/local/bin/jfrog
+        run: curl --location --fail "https://api.bintray.com/content/jfrog/jfrog-cli-go/1.39.0/jfrog-cli-linux-amd64/jfrog?bt_package=jfrog-cli-linux-amd64" | sudo tee /usr/local/bin/jfrog > /dev/null && sudo chmod +x /usr/local/bin/jfrog
 
       - name: Deploy documentation
         uses: peaceiris/actions-gh-pages@v3

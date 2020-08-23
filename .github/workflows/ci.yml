@@ -333,3 +333,38 @@ jobs:
 
       - name: Run integration tests
         run: unset JAVA_TOOL_OPTIONS && ./gradlew --parallel :libs:docker-client:integrationTest
+
+  publish-release:
+    name: "Publish release"
+    needs:
+      - validate-gradle-wrapper
+      - build-windows
+      - build-linux
+      - wrapper-test-linux
+      - build-docs
+      - journey-test-linux
+      - integration-test-linux
+#    if: github.event_name == 'push' && contains(github.ref, 'refs/tags/') && github.repository == 'batect/batect'
+    runs-on: ubuntu-18.04
+
+    steps:
+      - name: Download binaries
+        uses: actions/download-artifact@v2
+        with:
+          name: Binaries
+          path: build/release
+
+      - name: Download Bintray descriptor
+        uses: actions/download-artifact@v2
+        with:
+          name: Bintray descriptor
+          path: build/bintray
+
+      - name: Download docs
+        uses: actions/download-artifact@v2
+        with:
+          name: Docs
+          path: docs/build/docs
+
+      - name: Print directory structure
+        run: tree .

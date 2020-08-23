@@ -153,3 +153,71 @@ jobs:
           name: Artifact
           path: build/release
           if-no-files-found: error
+
+      - name: Upload workspace
+        uses: actions/upload-artifact@v2
+        with:
+          name: Linux workspace
+          path: |
+            .gradle/
+            build/
+            app/build/
+            app/src/main/kotlin/batect/VersionInfo.kt
+            buildSrc/.gradle/
+            buildSrc/build/
+            docs/build/
+            libs/*/build/
+            wrapper/build/
+            wrapper/testapp/build/
+            wrapper/unix/build/
+            wrapper/windows/build/
+          if-no-files-found: error
+
+  journey-test-linux:
+    name: "Run journey tests (Linux / Docker ${{ matrix.docker_version }})"
+    needs:
+      - build-linux
+    runs-on: ubuntu-18.04
+    env:
+      GRADLE_OPTS: "-Dorg.gradle.internal.launcher.welcomeMessageEnabled=false"
+
+    strategy:
+      matrix:
+        docker_version:
+          - 18.03.1~ce-0~ubuntu
+          - latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2.3.2
+
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+
+      - name: Cache Gradle wrapper
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/wrapper
+          key: gradle-wrapper-${{ runner.os }}-${{ hashFiles('gradle/wrapper/**/*') }}
+          restore-keys: gradle-wrapper-${{ runner.os }}
+
+      - name: Cache packages
+        id: cache-packages
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/caches
+          key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle') }}
+          restore-keys: gradle-packages-${{ runner.os }}
+
+      - name: Download workspace
+        uses: actions/download-artifact@v2
+        with:
+          name: Linux workspace
+
+      - name: Install Docker
+        run: ./travis/install_docker.sh ${{ matrix.docker_version }}
+
+      - name: Run journey tests
+        run: ./gradlew journeyTest

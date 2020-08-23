@@ -47,7 +47,7 @@ jobs:
 
     - stage: Integration and journey test
       name: Journey test against latest Docker
-      before_install: ./travis/install_docker.sh
+      before_install: ./travis/install_docker.sh latest
       script: ./gradlew journeyTest
       workspaces:
         use:
@@ -55,7 +55,7 @@ jobs:
 
     - stage: Integration and journey test
       name: Journey test against Docker 18.03.1
-      before_install: ./travis/install_docker.sh docker-ce=18.03.1~ce-0~ubuntu
+      before_install: ./travis/install_docker.sh 18.03.1~ce-0~ubuntu
       script: ./gradlew journeyTest
       workspaces:
         use:
@@ -63,7 +63,7 @@ jobs:
 
     - stage: Integration and journey test
       name: Integration test against latest Docker
-      before_install: ./travis/install_docker.sh
+      before_install: ./travis/install_docker.sh latest
       script: ./gradlew :libs:docker-client:integrationTest
       workspaces:
         use:
@@ -72,7 +72,7 @@ jobs:
     - stage: Integration and journey test
       name: Integration test against latest Docker (TLS over TCP)
       before_install:
-        - ./travis/install_docker.sh
+        - ./travis/install_docker.sh latest
         - ./travis/configure_docker_tls.sh
       script: DOCKER_CERT_PATH=$HOME/.docker/certs DOCKER_TLS_VERIFY=1 DOCKER_HOST=tcp://localhost:2376 ./gradlew :libs:docker-client:integrationTest
       workspaces:
@@ -81,7 +81,7 @@ jobs:
 
     - stage: Integration and journey test
       name: Integration test against Docker 18.03.1
-      before_install: ./travis/install_docker.sh docker-ce=18.03.1~ce-0~ubuntu
+      before_install: ./travis/install_docker.sh 18.03.1~ce-0~ubuntu
       script: ./gradlew :libs:docker-client:integrationTest
       workspaces:
         use:

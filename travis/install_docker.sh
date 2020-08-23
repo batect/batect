@@ -2,7 +2,13 @@
 
 set -euo pipefail
 
-PACKAGE=${1:-docker-ce}
+VERSION=$1
+
+if [ "$VERSION" = "latest" ]; then
+    PACKAGE="docker-ce"
+else
+    PACKAGE="docker-ce=$VERSION"
+fi
 
 # This works around 'hash sum mismatch' issues.
 # See https://blog.packagecloud.io/eng/2016/03/21/apt-hash-sum-mismatch/ for more details.

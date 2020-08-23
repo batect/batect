@@ -215,7 +215,7 @@ jobs:
           key: gradle-docs-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle') }}
           restore-keys: gradle-docs-packages-${{ runner.os }}
 
-      - name: Run tests
+      - name: Build docs
         run: unset JAVA_TOOL_OPTIONS && ./gradlew --parallel docs:build
 
       - name: Upload docs

@@ -1,5 +1,8 @@
 name: CI
 on: [push, pull_request]
+env:
+  GRADLE_OPTS: "-Dorg.gradle.internal.launcher.welcomeMessageEnabled=false"
+  JAVA_TOOL_OPTIONS: ""
 
 jobs:
   validate-gradle-wrapper:
@@ -16,8 +19,6 @@ jobs:
     name: "Build (Windows)"
     runs-on: windows-2019
     env:
-      GRADLE_OPTS: "-Dorg.gradle.internal.launcher.welcomeMessageEnabled=false -DgenerateCoverage=true"
-
       # This is required because WSL installs a 'bash.exe' in C:\Windows\System32 that always takes precedence over anything in PATH
       # See https://github.com/actions/virtual-environments/pull/1081#issuecomment-661220718.
       BASH_PATH: C:\Program Files\Git\bin\bash.exe
@@ -47,7 +48,7 @@ jobs:
           restore-keys: gradle-packages-${{ runner.os }}
 
       - name: Build and test
-        run: ./gradlew --parallel app:check libs:git-client:integrationTest jacocoTestReport
+        run: ./gradlew --parallel -DgenerateCoverage=true app:check libs:git-client:integrationTest jacocoTestReport
 
       - name: Upload coverage to codecov.io
         uses: codecov/codecov-action@v1.0.13
@@ -85,8 +86,6 @@ jobs:
   build-linux:
     name: "Build (Linux)"
     runs-on: ubuntu-18.04
-    env:
-      GRADLE_OPTS: "-Dorg.gradle.internal.launcher.welcomeMessageEnabled=false -DgenerateCoverage=true"
 
     steps:
       - name: Check out code
@@ -113,7 +112,7 @@ jobs:
           restore-keys: gradle-packages-${{ runner.os }}
 
       - name: Build and test
-        run: ./gradlew --parallel app:check libs:git-client:integrationTest jacocoTestReport
+        run: ./gradlew --parallel -DgenerateCoverage=true app:check libs:git-client:integrationTest jacocoTestReport
 
       - name: Upload coverage to codecov.io
         uses: codecov/codecov-action@v1.0.13
@@ -159,8 +158,6 @@ jobs:
     needs:
       - build-linux
     runs-on: ubuntu-18.04
-    env:
-      GRADLE_OPTS: "-Dorg.gradle.internal.launcher.welcomeMessageEnabled=false"
 
     strategy:
       matrix:

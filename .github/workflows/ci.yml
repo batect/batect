@@ -165,8 +165,9 @@ jobs:
     strategy:
       matrix:
         docker_version:
-          - 18.03.1~ce-0~ubuntu
+          - 18.03.1~ce~3-0~ubuntu
           - latest
+      fail-fast: false
 
     steps:
       - name: Check out code

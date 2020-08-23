@@ -2,7 +2,6 @@ name: CI
 on: [push, pull_request]
 env:
   GRADLE_OPTS: "-Dorg.gradle.internal.launcher.welcomeMessageEnabled=false"
-  JAVA_TOOL_OPTIONS: ""
 
 jobs:
   validate-gradle-wrapper:
@@ -194,4 +193,56 @@ jobs:
         run: ./travis/install_docker.sh ${{ matrix.docker_version }}
 
       - name: Run journey tests
-        run: ./gradlew journeyTest
+        run: unset JAVA_TOOL_OPTIONS && ./gradlew --parallel journeyTest
+
+  integration-test-linux:
+    name: "Run integration tests (Linux / Docker ${{ matrix.docker_version }} using ${{ matrix.connection_type }})"
+    needs:
+      - build-linux
+    runs-on: ubuntu-18.04
+
+    strategy:
+      matrix:
+        include:
+          - docker_version: latest
+            connection_type: Unix socket
+          - docker_version: 18.03.1~ce~3-0~ubuntu
+            connection_type: Unix socket
+          - docker_version: latest
+            connection_type: TLS over TCP
+
+      fail-fast: false
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2.3.2
+
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+
+      - name: Cache Gradle wrapper
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/wrapper
+          key: gradle-wrapper-${{ runner.os }}-${{ hashFiles('gradle/wrapper/**/*') }}
+          restore-keys: gradle-wrapper-${{ runner.os }}
+
+      - name: Cache packages
+        id: cache-packages
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/caches
+          key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle') }}
+          restore-keys: gradle-packages-${{ runner.os }}
+
+      - name: Install Docker
+        run: ./travis/install_docker.sh ${{ matrix.docker_version }}
+
+      - name: Configure TLS connection
+        run: ./travis/configure_docker_tls.sh
+        if: matrix.connection_type == 'TLS over TCP'
+
+      - name: Run integration tests
+        run: ./gradlew --parallel :libs:docker-client:integrationTest

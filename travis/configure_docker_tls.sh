@@ -61,4 +61,9 @@ echo "Restarting daemon..."
 sudo systemctl daemon-reload
 sudo service docker restart
 
+echo "Setting environment variables for GitHub Actions..."
+echo "::set-env name=DOCKER_CERT_PATH::$CLIENT_CERTS_DIR"
+echo "::set-env name=DOCKER_TLS_VERIFY::1"
+echo "::set-env name=DOCKER_HOST::tcp://localhost:2376"
+
 echo "Done."

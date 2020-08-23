@@ -154,25 +154,6 @@ jobs:
           path: build/release
           if-no-files-found: error
 
-      - name: Upload workspace
-        uses: actions/upload-artifact@v2
-        with:
-          name: Linux workspace
-          path: |
-            .gradle/
-            build/
-            app/build/
-            app/src/main/kotlin/batect/VersionInfo.kt
-            buildSrc/.gradle/
-            buildSrc/build/
-            docs/build/
-            libs/*/build/
-            wrapper/build/
-            wrapper/testapp/build/
-            wrapper/unix/build/
-            wrapper/windows/build/
-          if-no-files-found: error
-
   journey-test-linux:
     name: "Run journey tests (Linux / Docker ${{ matrix.docker_version }})"
     needs:
@@ -210,11 +191,6 @@ jobs:
           path: ~/.gradle/caches
           key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle') }}
           restore-keys: gradle-packages-${{ runner.os }}
-
-      - name: Download workspace
-        uses: actions/download-artifact@v2
-        with:
-          name: Linux workspace
 
       - name: Install Docker
         run: ./travis/install_docker.sh ${{ matrix.docker_version }}

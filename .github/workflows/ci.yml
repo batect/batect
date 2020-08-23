@@ -367,4 +367,4 @@ jobs:
           path: docs/build/docs
 
       - name: Print directory structure
-        run: tree .
+        run: ls -laR

@@ -115,7 +115,6 @@ tasks.register("test", Exec) {
     def upToDateFile = getTemporaryDir().toPath().resolve("lastRun")
 
     inputs.files fileTree(dir: 'test', include: '**/*')
-    inputs.files build
     inputs.files copyTestJar
     outputs.file upToDateFile
 
@@ -138,5 +137,4 @@ tasks.register("check") {
 
     dependsOn shellcheck
     dependsOn test
-    dependsOn build
 }

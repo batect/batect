@@ -22,7 +22,6 @@ plugins {
     id 'org.jetbrains.kotlin.plugin.serialization' apply false
 }
 
-apply from: "$rootDir/gradle/bintray.gradle"
 apply from: "$rootDir/gradle/spotless.gradle"
 apply from: "$rootDir/gradle/utilities.gradle"
 apply from: "$rootDir/gradle/versioning.gradle"
@@ -30,8 +29,6 @@ apply from: "$rootDir/gradle/versioning.gradle"
 tasks.register("assembleRelease", Copy) {
     description 'Prepares files for release.'
     group 'Distribution'
-
-    dependsOn 'generateBintrayDescriptor'
 
     from project("app").getTasksByName("shadowJar", false)
     from project("wrapper").getTasksByName("build", false)

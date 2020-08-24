@@ -2,14 +2,9 @@
 
 set -euo pipefail
 
-REPO_SLUG=${TRAVIS_PULL_REQUEST_SLUG:-$TRAVIS_REPO_SLUG}
-GIT_COMMIT=${TRAVIS_PULL_REQUEST_SHA:-$TRAVIS_COMMIT}
-
-if [ -z "${TRAVIS_TAG:-}" ]; then
-    GIT_BRANCH=${TRAVIS_PULL_REQUEST_BRANCH:-$TRAVIS_BRANCH}
-else
-    GIT_BRANCH=master
-fi
+REPO_SLUG=${GITHUB_REPOSITORY}
+GIT_COMMIT=${GITHUB_SHA}
+GIT_BRANCH=master
 
 function main() {
     URL="https://ci.appveyor.com/api/projects/$REPO_SLUG/history?recordsNumber=200&branch=$GIT_BRANCH"

@@ -330,14 +330,14 @@ jobs:
   publish-release:
     name: "Publish release"
     needs:
-#      - validate-gradle-wrapper
-#      - build-windows
+      - validate-gradle-wrapper
+      - build-windows
       - build-linux
-#      - wrapper-test-linux
+      - wrapper-test-linux
       - build-docs
-#      - journey-test-linux
-#      - integration-test-linux
-#    if: github.event_name == 'push' && contains(github.ref, 'refs/tags/') && github.repository == 'batect/batect'
+      - journey-test-linux
+      - integration-test-linux
+    if: github.event_name == 'push' && contains(github.ref, 'refs/tags/') && github.repository == 'batect/batect'
     runs-on: ubuntu-18.04
 
     steps:
@@ -345,6 +345,26 @@ jobs:
         uses: actions/checkout@v2.3.2
         with:
           fetch-depth: 0
+
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+
+      - name: Cache Gradle wrapper
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/wrapper
+          key: gradle-wrapper-${{ runner.os }}-${{ hashFiles('gradle/wrapper/**/*') }}
+          restore-keys: gradle-wrapper-${{ runner.os }}
+
+      - name: Cache packages
+        id: cache-packages
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/caches
+          key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle') }}
+          restore-keys: gradle-packages-${{ runner.os }}
 
       - name: Download binaries
         uses: actions/download-artifact@v2
@@ -358,8 +378,20 @@ jobs:
           name: Docs
           path: docs/build/docs
 
+      - name: Wait for AppVeyor build to complete
+        run: ./travis/wait_for_appveyor.sh
+
+      - name: Validate release
+        run: ./gradlew --parallel validateRelease
+
       - name: Download Bintray CLI
         run: curl --location --fail "https://api.bintray.com/content/jfrog/jfrog-cli-go/1.39.0/jfrog-cli-linux-amd64/jfrog?bt_package=jfrog-cli-linux-amd64" | sudo tee /usr/local/bin/jfrog > /dev/null && sudo chmod +x /usr/local/bin/jfrog
+
+      - name: Upload release to Bintray
+        run: ./travis/create_bintray_release.sh
+        env:
+          BINTRAY_USER: ${{ secrets.BINTRAY_USER }}
+          BINTRAY_KEY: ${{ secrets.BINTRAY_KEY }}
 
       - name: Deploy documentation
         uses: peaceiris/actions-gh-pages@v3
@@ -368,3 +400,11 @@ jobs:
           publish_dir: docs/build/docs
           user_name: 'github-actions[bot]'
           user_email: 'github-actions[bot]@users.noreply.github.com'
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v0.1.5
+        with:
+          files: build/release/*
+          fail_on_unmatched_files: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

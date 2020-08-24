@@ -268,7 +268,7 @@ jobs:
           restore-keys: gradle-packages-${{ runner.os }}
 
       - name: Install Docker
-        run: ./travis/install_docker.sh ${{ matrix.docker_version }}
+        run: ./ci/install_docker.sh ${{ matrix.docker_version }}
 
       - name: Run journey tests
         run: unset JAVA_TOOL_OPTIONS && ./gradlew --parallel journeyTest
@@ -318,10 +318,10 @@ jobs:
           restore-keys: gradle-packages-${{ runner.os }}
 
       - name: Install Docker
-        run: ./travis/install_docker.sh ${{ matrix.docker_version }}
+        run: ./ci/install_docker.sh ${{ matrix.docker_version }}
 
       - name: Configure TLS connection
-        run: ./travis/configure_docker_tls.sh
+        run: ./ci/configure_docker_tls.sh
         if: matrix.connection_type == 'TLS over TCP'
 
       - name: Run integration tests
@@ -379,7 +379,7 @@ jobs:
           path: docs/build/docs
 
       - name: Wait for AppVeyor build to complete
-        run: ./travis/wait_for_appveyor.sh
+        run: ./ci/wait_for_appveyor.sh
 
       - name: Validate release
         run: ./gradlew --parallel validateRelease
@@ -388,7 +388,7 @@ jobs:
         run: curl --location --fail "https://api.bintray.com/content/jfrog/jfrog-cli-go/1.39.0/jfrog-cli-linux-amd64/jfrog?bt_package=jfrog-cli-linux-amd64" | sudo tee /usr/local/bin/jfrog > /dev/null && sudo chmod +x /usr/local/bin/jfrog
 
       - name: Upload release to Bintray
-        run: ./travis/create_bintray_release.sh
+        run: ./ci/create_bintray_release.sh
         env:
           BINTRAY_USER: ${{ secrets.BINTRAY_USER }}
           BINTRAY_KEY: ${{ secrets.BINTRAY_KEY }}

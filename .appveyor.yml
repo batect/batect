@@ -17,7 +17,7 @@ install:
   - git reset --hard
 
 build_script:
-  - ps: ./appveyor/Enable-LinuxContainers.ps1
+  - ps: ./ci/Enable-LinuxContainers.ps1
   - docker version
   - ./gradlew :libs:docker-client:integrationTest
   - ./gradlew journeyTest

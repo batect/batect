@@ -16,6 +16,7 @@
 
 package batect.telemetry
 
+import batect.cli.CommandLineOptions
 import batect.cli.CommandLineOptionsParser
 import batect.os.ConsoleInfo
 import batect.ui.Console
@@ -25,8 +26,7 @@ import batect.ui.YesNoAnswer
 
 class TelemetryConsentPrompt(
     private val configurationStore: TelemetryConfigurationStore,
-    private val disabledOnCommandLine: Boolean?,
-    private val requestedOutputStyle: OutputStyle?,
+    private val commandLineOptions: CommandLineOptions,
     private val consoleInfo: ConsoleInfo,
     private val ciEnvironmentDetector: CIEnvironmentDetector,
     private val console: Console,
@@ -37,11 +37,11 @@ class TelemetryConsentPrompt(
             return
         }
 
-        if (disabledOnCommandLine != null) {
+        if (commandLineOptions.disableTelemetry != null || commandLineOptions.permanentlyEnableTelemetry || commandLineOptions.permanentlyDisableTelemetry) {
             return
         }
 
-        if (requestedOutputStyle == OutputStyle.Quiet) {
+        if (commandLineOptions.requestedOutputStyle == OutputStyle.Quiet) {
             return
         }
 

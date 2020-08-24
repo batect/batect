@@ -24,6 +24,7 @@ build_script:
 
 after_test:
   - ./gradlew --stop
+  - ./gradlew --status
   - ps: Remove-Item -ErrorAction SilentlyContinue          ${env:GRADLE_USER_HOME}\caches\modules-2\modules-2.lock
   - ps: Remove-Item -ErrorAction SilentlyContinue -Recurse ${env:GRADLE_USER_HOME}\caches\*\plugin-resolution\
   - ps: Remove-Item -ErrorAction SilentlyContinue -Recurse ${env:GRADLE_USER_HOME}\caches\*\scripts\

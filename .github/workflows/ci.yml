@@ -402,7 +402,7 @@ jobs:
           user_email: 'github-actions[bot]@users.noreply.github.com'
 
       - name: Create GitHub release
-        uses: softprops/action-gh-release@v0.1.5
+        uses: softprops/action-gh-release@v1
         with:
           files: build/release/*
           fail_on_unmatched_files: true

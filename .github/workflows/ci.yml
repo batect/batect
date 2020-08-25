@@ -346,6 +346,9 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Fix tag reference (workaround for https://github.com/actions/checkout/issues/290)
+        run: git fetch -f origin ${{ github.ref }}:${{ github.ref }}
+
       - name: Set up JDK 1.8
         uses: actions/setup-java@v1
         with:

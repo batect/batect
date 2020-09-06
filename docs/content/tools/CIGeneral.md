@@ -8,7 +8,7 @@ CI agents must meet batect's normal [requirements](../index.md#what-are-batects-
 
 ## Long-lived agents
 
-!!! tip "tl;dr"
+!!! tip #1 "tl;dr"
     Set up a Cron job to run `docker image prune -f` regularly on long-lived CI agents
 
 If you are using Dockerfiles to define your containers (as opposed to using a pre-existing image), this can generate a
@@ -22,3 +22,7 @@ This is especially a problem on CI agents, where a human might not notice this i
 Therefore, it's recommended that CI agents running batect-based builds have a regular task that removes orphaned images.
 Docker has a built-in command to do this: `docker image prune -f` (the `-f` disables the confirmation prompt). The exact
 frequency will depend on your usage pattern, but once a day is usually more than sufficient.
+
+!!! tip #2
+    If you're running multiple builds on the same CI agent, and you bind ports, it will result in conflicts.
+    Disable binding of ports on the host system using the `./batect --disable-ports` flag

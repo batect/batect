@@ -16,6 +16,7 @@
 
 package batect.docker
 
+import batect.cli.CommandLineOptions
 import batect.config.Container
 import batect.config.DeviceMount
 import batect.config.HealthCheckConfig
@@ -57,7 +58,11 @@ object DockerContainerCreationRequestFactorySpec : Spek({
             on { generateNameFor(any<Container>()) } doReturn "the-container-name"
         }
 
-        val factory = DockerContainerCreationRequestFactory(environmentVariablesProvider, nameGenerator)
+        val commandLineOptions = mock<CommandLineOptions> {
+            on { disablePortMappings } doReturn false
+        }
+
+        val factory = DockerContainerCreationRequestFactory(environmentVariablesProvider, nameGenerator, commandLineOptions)
 
         given("there are no additional port mappings") {
             val additionalPortMappings = emptySet<PortMapping>()
@@ -204,7 +209,18 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                 )
 
                 val config = ContainerRuntimeConfiguration(command, entrypoint, workingDirectory, additionalEnvironmentVariables, additionalPortMappings)
-                val request = factory.create(container, image, network, config, volumeMounts, propagateProxyEnvironmentVariables, null, terminalType, false, false)
+                val request = factory.create(
+                    container,
+                    image,
+                    network,
+                    config,
+                    volumeMounts,
+                    propagateProxyEnvironmentVariables,
+                    null,
+                    terminalType,
+                    useTTY = false,
+                    attachStdin = false
+                )
 
                 it("populates the port mappings on the request with the combined set of port mappings from the container and the additional port mappings") {
                     assertThat(
@@ -219,12 +235,61 @@ object DockerContainerCreationRequestFactorySpec : Spek({
             }
         }
 
+        given("global port mappings are disabled") {
+            val commandLineOptionsWithDisabledPorts = mock<CommandLineOptions> {
+                on { disablePortMappings } doReturn true
+            }
+
+            val newFactory = DockerContainerCreationRequestFactory(environmentVariablesProvider, nameGenerator, commandLineOptionsWithDisabledPorts)
+
+            val additionalPortMappings = setOf(
+                PortMapping(1000, 2000)
+            )
+
+            on("creating the request") {
+                val container = Container(
+                    "some-container",
+                    imageSourceDoesNotMatter(),
+                    portMappings = setOf(PortMapping(123, 456))
+                )
+
+                val config = ContainerRuntimeConfiguration(command, entrypoint, workingDirectory, additionalEnvironmentVariables, additionalPortMappings)
+                val request = newFactory.create(
+                    container,
+                    image,
+                    network,
+                    config,
+                    volumeMounts,
+                    propagateProxyEnvironmentVariables,
+                    null,
+                    terminalType,
+                    useTTY = false,
+                    attachStdin = false
+                )
+
+                it("yields an empty port mapping") {
+                    assertThat(request.portMappings, equalTo(emptySet()))
+                }
+            }
+        }
+
         given("there is no explicit command to run") {
             val container = Container("some-container", imageSourceDoesNotMatter(), command = null)
 
             on("creating the request") {
                 val config = ContainerRuntimeConfiguration(null, entrypoint, workingDirectory, emptyMap(), emptySet())
-                val request = factory.create(container, image, network, config, emptySet(), propagateProxyEnvironmentVariables, null, terminalType, false, false)
+                val request = factory.create(
+                    container,
+                    image,
+                    network,
+                    config,
+                    emptySet(),
+                    propagateProxyEnvironmentVariables,
+                    null,
+                    terminalType,
+                    useTTY = false,
+                    attachStdin = false
+                )
 
                 it("does not populate the command on the request") {
                     assertThat(request.command, equalTo(emptyList()))
@@ -237,7 +302,18 @@ object DockerContainerCreationRequestFactorySpec : Spek({
 
             on("creating the request") {
                 val config = ContainerRuntimeConfiguration(command, null, workingDirectory, emptyMap(), emptySet())
-                val request = factory.create(container, image, network, config, emptySet(), propagateProxyEnvironmentVariables, null, terminalType, false, false)
+                val request = factory.create(
+                    container,
+                    image,
+                    network,
+                    config,
+                    emptySet(),
+                    propagateProxyEnvironmentVariables,
+                    null,
+                    terminalType,
+                    useTTY = false,
+                    attachStdin = false
+                )
 
                 it("does not populate the entrypoint on the request") {
                     assertThat(request.entrypoint, equalTo(emptyList()))

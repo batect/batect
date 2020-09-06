@@ -19,6 +19,12 @@ package batect.docker
 // Important: this class is security sensitive - the values returned by this class are used to determine which set of credentials to send to the registry.
 // If we get this wrong, we could send the credentials for a different registry when pushing or pulling an image.
 data class DockerImageReference(val originalReference: String) {
+    init {
+        if (originalReference == "") {
+            throw DockerException("Image reference cannot be an empty string.")
+        }
+    }
+
     val registryDomain: String
         get() {
             val possibleRegistryName = originalReference.substringBefore("/", defaultRegistryName)
@@ -41,6 +47,17 @@ data class DockerImageReference(val originalReference: String) {
             }
 
             return registryDomain
+        }
+
+    val normalizedReference: String
+        get() {
+            val imageName = originalReference.substringAfterLast('/')
+
+            if (imageName.contains(':')) {
+                return originalReference
+            }
+
+            return "$originalReference:latest"
         }
 
     companion object {

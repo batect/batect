@@ -18,25 +18,22 @@ package batect.docker
 
 import batect.testutils.equalTo
 import batect.testutils.given
+import batect.testutils.withMessage
 import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.throws
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
+// https://github.com/docker/distribution/blob/0ac367fd6bee057d404c405a298b4b7aedf301ec/reference/normalize_test.go is the basis of these tests.
 object DockerImageReferenceSpec : Spek({
     describe("a Docker image reference") {
         given("an empty image name") {
-            val ref = DockerImageReference("")
-
-            it("has the default registry domain name") {
-                assertThat(ref.registryDomain, equalTo("docker.io"))
-            }
-
-            it("has the default registry index") {
-                assertThat(ref.registryIndex, equalTo("https://index.docker.io/v1/"))
+            it("throws an exception") {
+                assertThat({ DockerImageReference("") }, throws<DockerException>(withMessage("Image reference cannot be an empty string.")))
             }
         }
 
-        given("an image name without a registry or repository name") {
+        given("an image name without a tag, registry or repository name") {
             val ref = DockerImageReference("ubuntu")
 
             it("has the default registry domain name") {
@@ -45,6 +42,58 @@ object DockerImageReferenceSpec : Spek({
 
             it("has the default registry index") {
                 assertThat(ref.registryIndex, equalTo("https://index.docker.io/v1/"))
+            }
+
+            it("has the 'latest' tag when normalized") {
+                assertThat(ref.normalizedReference, equalTo("ubuntu:latest"))
+            }
+        }
+
+        given("an image name with a tag but without a registry or repository name") {
+            val ref = DockerImageReference("ubuntu:latest")
+
+            it("has the default registry domain name") {
+                assertThat(ref.registryDomain, equalTo("docker.io"))
+            }
+
+            it("has the default registry index") {
+                assertThat(ref.registryIndex, equalTo("https://index.docker.io/v1/"))
+            }
+
+            it("has the provided tag when normalized") {
+                assertThat(ref.normalizedReference, equalTo("ubuntu:latest"))
+            }
+        }
+
+        given("an image name with a digest but without a registry or repository name") {
+            val ref = DockerImageReference("ubuntu@sha256:e6693c20186f837fc393390135d8a598a96a833917917789d63766cab6c59582")
+
+            it("has the default registry domain name") {
+                assertThat(ref.registryDomain, equalTo("docker.io"))
+            }
+
+            it("has the default registry index") {
+                assertThat(ref.registryIndex, equalTo("https://index.docker.io/v1/"))
+            }
+
+            it("has the provided digest when normalized") {
+                assertThat(ref.normalizedReference, equalTo("ubuntu@sha256:e6693c20186f837fc393390135d8a598a96a833917917789d63766cab6c59582"))
+            }
+        }
+
+        given("an image name with a tag and a digest but without a registry or repository name") {
+            val ref = DockerImageReference("ubuntu:latest@sha256:e6693c20186f837fc393390135d8a598a96a833917917789d63766cab6c59582")
+
+            it("has the default registry domain name") {
+                assertThat(ref.registryDomain, equalTo("docker.io"))
+            }
+
+            it("has the default registry index") {
+                assertThat(ref.registryIndex, equalTo("https://index.docker.io/v1/"))
+            }
+
+            it("has the provided digest when normalized") {
+                assertThat(ref.normalizedReference, equalTo("ubuntu:latest@sha256:e6693c20186f837fc393390135d8a598a96a833917917789d63766cab6c59582"))
             }
         }
 
@@ -58,6 +107,10 @@ object DockerImageReferenceSpec : Spek({
             it("has the default registry index") {
                 assertThat(ref.registryIndex, equalTo("https://index.docker.io/v1/"))
             }
+
+            it("has the 'latest' tag when normalized") {
+                assertThat(ref.normalizedReference, equalTo("library/ubuntu:latest"))
+            }
         }
 
         given("an image name with a repository and the default registry name") {
@@ -65,6 +118,14 @@ object DockerImageReferenceSpec : Spek({
 
             it("has the default registry domain name") {
                 assertThat(ref.registryDomain, equalTo("docker.io"))
+            }
+
+            it("has the default registry index") {
+                assertThat(ref.registryIndex, equalTo("https://index.docker.io/v1/"))
+            }
+
+            it("has the 'latest' tag when normalized") {
+                assertThat(ref.normalizedReference, equalTo("docker.io/library/ubuntu:latest"))
             }
         }
 
@@ -78,6 +139,10 @@ object DockerImageReferenceSpec : Spek({
             it("has the default registry index") {
                 assertThat(ref.registryIndex, equalTo("https://index.docker.io/v1/"))
             }
+
+            it("has the 'latest' tag when normalized") {
+                assertThat(ref.normalizedReference, equalTo("index.docker.io/library/ubuntu:latest"))
+            }
         }
 
         given("an image name with a local registry and no repository") {
@@ -89,6 +154,10 @@ object DockerImageReferenceSpec : Spek({
 
             it("uses the registry domain name as the registry index") {
                 assertThat(ref.registryIndex, equalTo("localhost"))
+            }
+
+            it("has the 'latest' tag when normalized") {
+                assertThat(ref.normalizedReference, equalTo("localhost/ubuntu:latest"))
             }
         }
 
@@ -102,6 +171,10 @@ object DockerImageReferenceSpec : Spek({
             it("uses the registry domain name as the registry index") {
                 assertThat(ref.registryIndex, equalTo("some-docker-registry.com"))
             }
+
+            it("has the 'latest' tag when normalized") {
+                assertThat(ref.normalizedReference, equalTo("some-docker-registry.com/ubuntu:latest"))
+            }
         }
 
         given("an image name with a non-default registry name that does not contain a dot but does contain a port and no repository") {
@@ -113,6 +186,10 @@ object DockerImageReferenceSpec : Spek({
 
             it("uses the registry domain name as the registry index") {
                 assertThat(ref.registryIndex, equalTo("some-docker-registry:8080"))
+            }
+
+            it("has the 'latest' tag when normalized") {
+                assertThat(ref.normalizedReference, equalTo("some-docker-registry:8080/ubuntu:latest"))
             }
         }
 
@@ -126,6 +203,10 @@ object DockerImageReferenceSpec : Spek({
             it("uses the registry domain name as the registry index") {
                 assertThat(ref.registryIndex, equalTo("some-docker-registry.com"))
             }
+
+            it("has the 'latest' tag when normalized") {
+                assertThat(ref.normalizedReference, equalTo("some-docker-registry.com/library/ubuntu:latest"))
+            }
         }
 
         given("an image name with a nested repository and a non-default registry name") {
@@ -137,6 +218,10 @@ object DockerImageReferenceSpec : Spek({
 
             it("uses the registry domain name as the registry index") {
                 assertThat(ref.registryIndex, equalTo("some-docker-registry.com"))
+            }
+
+            it("has the 'latest' tag when normalized") {
+                assertThat(ref.normalizedReference, equalTo("some-docker-registry.com/library/linux/ubuntu:latest"))
             }
         }
     }

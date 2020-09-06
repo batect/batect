@@ -18,6 +18,7 @@ package batect.docker.api
 
 import batect.docker.DockerHttpConfig
 import batect.docker.DockerImage
+import batect.docker.DockerImageReference
 import batect.docker.ImageBuildFailedException
 import batect.docker.ImagePullFailedException
 import batect.docker.Json
@@ -180,19 +181,20 @@ class ImagesAPI(
     }
 
     fun pull(
-        imageName: String,
+        imageReference: DockerImageReference,
         registryCredentials: DockerRegistryCredentials?,
         cancellationContext: CancellationContext,
         onProgressUpdate: (JsonObject) -> Unit
     ) {
         logger.info {
             message("Pulling image.")
-            data("imageName", imageName)
+            data("originalImageReference", imageReference.originalReference)
+            data("normalizedImageReference", imageReference.normalizedReference)
         }
 
         val url = urlForImages.newBuilder()
             .addPathSegment("create")
-            .addQueryParameter("fromImage", imageName)
+            .addQueryParameter("fromImage", imageReference.normalizedReference)
             .build()
 
         val request = Request.Builder()
@@ -210,7 +212,7 @@ class ImagesAPI(
                         data("error", error)
                     }
 
-                    throw ImagePullFailedException("Pulling image '$imageName' failed: ${error.message}")
+                    throw ImagePullFailedException("Pulling image '${imageReference.normalizedReference}' failed: ${error.message}")
                 }
 
                 response.body!!.charStream().forEachLine { line ->
@@ -220,7 +222,7 @@ class ImagesAPI(
                         val message = parsedLine.getValue("error").jsonPrimitive.content
                             .correctLineEndings()
 
-                        throw ImagePullFailedException("Pulling image '$imageName' failed: $message")
+                        throw ImagePullFailedException("Pulling image '${imageReference.normalizedReference}' failed: $message")
                     }
 
                     onProgressUpdate(parsedLine)
@@ -243,14 +245,15 @@ class ImagesAPI(
         return this
     }
 
-    fun hasImage(imageName: String): Boolean {
+    fun hasImage(imageReference: DockerImageReference): Boolean {
         logger.info {
             message("Checking if image has already been pulled.")
-            data("imageName", imageName)
+            data("originalImageReference", imageReference.originalReference)
+            data("normalizedImageReference", imageReference.normalizedReference)
         }
 
         val url = urlForImages.newBuilder()
-            .addPathSegment(imageName)
+            .addPathSegment(imageReference.normalizedReference)
             .addPathSegment("json")
             .build()
 
@@ -269,7 +272,7 @@ class ImagesAPI(
                     data("error", error)
                 }
 
-                throw ImagePullFailedException("Checking if image '$imageName' has already been pulled failed: ${error.message}")
+                throw ImagePullFailedException("Checking if image '${imageReference.normalizedReference}' has already been pulled failed: ${error.message}")
             }
 
             return true

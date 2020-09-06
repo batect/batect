@@ -275,7 +275,7 @@ object DockerImagesClientSpec : Spek({
 
                 given("the image does not exist locally") {
                     beforeEachTest {
-                        whenever(api.hasImage("some-image")).thenReturn(false)
+                        whenever(api.hasImage(DockerImageReference("some-image"))).thenReturn(false)
                     }
 
                     given("getting credentials for the image succeeds") {
@@ -307,7 +307,7 @@ object DockerImagesClientSpec : Spek({
                             val image by runForEachTest { client.pull("some-image", forcePull, cancellationContext) { progressUpdatesReceived.add(it) } }
 
                             it("calls the Docker API to pull the image") {
-                                verify(api).pull(eq("some-image"), eq(credentials), eq(cancellationContext), any())
+                                verify(api).pull(eq(DockerImageReference("some-image")), eq(credentials), eq(cancellationContext), any())
                             }
 
                             it("sends notifications for all relevant progress updates") {
@@ -339,7 +339,7 @@ object DockerImagesClientSpec : Spek({
                 }
 
                 on("when the image already exists locally") {
-                    beforeEachTest { whenever(api.hasImage("some-image")).thenReturn(true) }
+                    beforeEachTest { whenever(api.hasImage(DockerImageReference("some-image"))).thenReturn(true) }
 
                     val image by runForEachTest { client.pull("some-image", forcePull, cancellationContext, {}) }
 
@@ -367,7 +367,7 @@ object DockerImagesClientSpec : Spek({
                         val image by runForEachTest { client.pull("some-image", forcePull, cancellationContext, {}) }
 
                         it("calls the Docker API to pull the image") {
-                            verify(api).pull(eq("some-image"), eq(credentials), eq(cancellationContext), any())
+                            verify(api).pull(eq(DockerImageReference("some-image")), eq(credentials), eq(cancellationContext), any())
                         }
 
                         it("returns the Docker image") {

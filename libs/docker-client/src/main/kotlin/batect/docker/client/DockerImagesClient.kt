@@ -126,11 +126,11 @@ class DockerImagesClient(
         try {
             val imageReference = DockerImageReference(imageName)
 
-            if (forcePull || !api.hasImage(imageName)) {
+            if (forcePull || !api.hasImage(imageReference)) {
                 val credentials = credentialsProvider.getCredentials(imageReference)
                 val reporter = imageProgressReporterFactory()
 
-                api.pull(imageName, credentials, cancellationContext) { progress ->
+                api.pull(imageReference, credentials, cancellationContext) { progress ->
                     val progressUpdate = reporter.processProgressUpdate(progress)
 
                     if (progressUpdate != null) {

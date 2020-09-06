@@ -18,6 +18,7 @@ package batect.docker.api
 
 import batect.docker.DockerHttpConfig
 import batect.docker.DockerImage
+import batect.docker.DockerImageReference
 import batect.docker.ImageBuildFailedException
 import batect.docker.ImagePullFailedException
 import batect.docker.Json
@@ -299,8 +300,8 @@ object ImagesAPISpec : Spek({
         }
 
         describe("pulling an image") {
-            val imageName = "some-image"
-            val expectedUrl = "$dockerBaseUrl/v1.37/images/create?fromImage=some-image"
+            val imageReference = DockerImageReference("some-image")
+            val expectedUrl = "$dockerBaseUrl/v1.37/images/create?fromImage=some-image%3Alatest"
             val clientWithLongTimeout by createForEachTest { mock<OkHttpClient>() }
             val longTimeoutClientBuilder by createForEachTest {
                 mock<OkHttpClient.Builder> { mock ->
@@ -329,7 +330,7 @@ object ImagesAPISpec : Spek({
 
                 val call by createForEachTest { clientWithLongTimeout.mockPost(expectedUrl, response, 200, expectedHeadersForAuthentication) }
                 val progressReceiver by createForEachTest { ProgressReceiver() }
-                beforeEachTest { api.pull(imageName, registryCredentials, cancellationContext, progressReceiver::onProgressUpdate) }
+                beforeEachTest { api.pull(imageReference, registryCredentials, cancellationContext, progressReceiver::onProgressUpdate) }
 
                 it("sends a request to the Docker daemon to pull the image") {
                     verify(call).execute()
@@ -360,7 +361,7 @@ object ImagesAPISpec : Spek({
 
                 val call by createForEachTest { clientWithLongTimeout.mockPost(expectedUrl, response, 200, expectedHeadersForAuthentication) }
                 val progressReceiver by createForEachTest { ProgressReceiver() }
-                beforeEachTest { api.pull(imageName, registryCredentials, cancellationContext, progressReceiver::onProgressUpdate) }
+                beforeEachTest { api.pull(imageReference, registryCredentials, cancellationContext, progressReceiver::onProgressUpdate) }
 
                 it("sends a request to the Docker daemon to pull the image") {
                     verify(call).execute()
@@ -382,7 +383,7 @@ object ImagesAPISpec : Spek({
             on("the pull request having no registry credentials") {
                 val expectedHeadersForNoAuthentication = Headers.Builder().build()
                 val call by createForEachTest { clientWithLongTimeout.mockPost(expectedUrl, "", 200, expectedHeadersForNoAuthentication) }
-                beforeEachTest { api.pull(imageName, null, cancellationContext, {}) }
+                beforeEachTest { api.pull(imageReference, null, cancellationContext, {}) }
 
                 it("sends a request to the Docker daemon to pull the image with no authentication header") {
                     verify(call).execute()
@@ -393,8 +394,8 @@ object ImagesAPISpec : Spek({
                 beforeEachTest { clientWithLongTimeout.mockPost(expectedUrl, errorResponse, 418, expectedHeadersForAuthentication) }
 
                 it("throws an appropriate exception") {
-                    assertThat({ api.pull(imageName, registryCredentials, cancellationContext, {}) }, throws<ImagePullFailedException>(
-                        withMessage("Pulling image 'some-image' failed: $errorMessageWithCorrectLineEndings")
+                    assertThat({ api.pull(imageReference, registryCredentials, cancellationContext, {}) }, throws<ImagePullFailedException>(
+                        withMessage("Pulling image 'some-image:latest' failed: $errorMessageWithCorrectLineEndings")
                     )
                     )
                 }
@@ -414,8 +415,8 @@ object ImagesAPISpec : Spek({
                 val progressReceiver = ProgressReceiver()
 
                 it("throws an appropriate exception with all line endings corrected for the host system") {
-                    assertThat({ api.pull(imageName, registryCredentials, cancellationContext, progressReceiver::onProgressUpdate) }, throws<ImagePullFailedException>(
-                        withMessage("Pulling image 'some-image' failed: Server error: 404 trying to fetch remote history for some-image.SYSTEM_LINE_SEPARATORMore details on following line.")
+                    assertThat({ api.pull(imageReference, registryCredentials, cancellationContext, progressReceiver::onProgressUpdate) }, throws<ImagePullFailedException>(
+                        withMessage("Pulling image 'some-image:latest' failed: Server error: 404 trying to fetch remote history for some-image.SYSTEM_LINE_SEPARATORMore details on following line.")
                     ))
                 }
 
@@ -426,12 +427,12 @@ object ImagesAPISpec : Spek({
         }
 
         describe("checking if an image has been pulled") {
-            val imageName = "some:image"
-            val expectedUrl = "$dockerBaseUrl/v1.37/images/some:image/json"
+            val imageReference = DockerImageReference("some-image")
+            val expectedUrl = "$dockerBaseUrl/v1.37/images/some-image:latest/json"
 
             given("the image has already been pulled") {
                 beforeEachTest { httpClient.mock("GET", expectedUrl, """{"Id": "abc123"}""") }
-                val hasImage by runForEachTest { api.hasImage(imageName) }
+                val hasImage by runForEachTest { api.hasImage(imageReference) }
 
                 it("returns true") {
                     assertThat(hasImage, equalTo(true))
@@ -440,7 +441,7 @@ object ImagesAPISpec : Spek({
 
             given("the image has not already been pulled") {
                 beforeEachTest { httpClient.mock("GET", expectedUrl, errorResponse, 404) }
-                val hasImage by runForEachTest { api.hasImage(imageName) }
+                val hasImage by runForEachTest { api.hasImage(imageReference) }
 
                 it("returns false") {
                     assertThat(hasImage, equalTo(false))
@@ -451,7 +452,7 @@ object ImagesAPISpec : Spek({
                 beforeEachTest { httpClient.mock("GET", expectedUrl, errorResponse, 418) }
 
                 it("throws an appropriate exception") {
-                    assertThat({ api.hasImage(imageName) }, throws<ImagePullFailedException>(withMessage("Checking if image 'some:image' has already been pulled failed: $errorMessageWithCorrectLineEndings")))
+                    assertThat({ api.hasImage(imageReference) }, throws<ImagePullFailedException>(withMessage("Checking if image 'some-image:latest' has already been pulled failed: $errorMessageWithCorrectLineEndings")))
                 }
             }
         }

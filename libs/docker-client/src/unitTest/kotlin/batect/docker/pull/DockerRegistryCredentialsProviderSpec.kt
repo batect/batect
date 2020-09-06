@@ -16,6 +16,7 @@
 
 package batect.docker.pull
 
+import batect.docker.DockerImageReference
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given
@@ -31,16 +32,14 @@ import org.spekframework.spek2.style.specification.describe
 
 object DockerRegistryCredentialsProviderSpec : Spek({
     describe("a Docker registry credentials provider") {
-        val domainResolver = mock<DockerRegistryDomainResolver> {
-            on { resolveDomainForImage("some-image") } doReturn "somedomain.com"
-        }
-
-        val indexResolver = mock<DockerRegistryIndexResolver> {
-            on { resolveRegistryIndex("somedomain.com") } doReturn "https://somedomain.com/index"
+        // Why are we mocking this type instead of just constructing one? It's critical that we use the registryIndex value,
+        // not registryDomain, but these are usually the same, so mocking helps make sure that we're using the right value.
+        val imageRef = mock<DockerImageReference> {
+            on { registryIndex } doReturn "https://somedomain.com/index"
         }
 
         val configurationFile by createForEachTest { mock<DockerRegistryCredentialsConfigurationFile>() }
-        val provider by createForEachTest { DockerRegistryCredentialsProvider(domainResolver, indexResolver, configurationFile) }
+        val provider by createForEachTest { DockerRegistryCredentialsProvider(configurationFile) }
 
         describe("getting credentials for pulling an image") {
             given("the configuration file has a credentials source for the registry") {
@@ -58,7 +57,7 @@ object DockerRegistryCredentialsProviderSpec : Spek({
                     }
 
                     on("getting the credentials") {
-                        val credentials by runNullableForEachTest { provider.getCredentials("some-image") }
+                        val credentials by runNullableForEachTest { provider.getCredentials(imageRef) }
 
                         it("returns the credentials from the source") {
                             assertThat(credentials, equalTo(credentialsFromSource))
@@ -72,7 +71,7 @@ object DockerRegistryCredentialsProviderSpec : Spek({
                     }
 
                     on("getting the credentials") {
-                        val credentials by runNullableForEachTest { provider.getCredentials("some-image") }
+                        val credentials by runNullableForEachTest { provider.getCredentials(imageRef) }
 
                         it("returns no credentials") {
                             assertThat(credentials, absent())
@@ -87,7 +86,7 @@ object DockerRegistryCredentialsProviderSpec : Spek({
                 }
 
                 on("getting the credentials") {
-                    val credentials by runNullableForEachTest { provider.getCredentials("some-image") }
+                    val credentials by runNullableForEachTest { provider.getCredentials(imageRef) }
 
                     it("returns no credentials") {
                         assertThat(credentials, absent())

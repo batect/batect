@@ -16,6 +16,7 @@
 
 package batect.docker.build
 
+import batect.docker.DockerImageReference
 import batect.docker.ImageBuildFailedException
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
@@ -75,7 +76,21 @@ object DockerfileParserSpec : Spek({
                 val baseImage by runForEachTest { parser.extractBaseImageNames(path) }
 
                 it("returns the base image name") {
-                    assertThat(baseImage, equalTo(setOf("the-image")))
+                    assertThat(baseImage, equalTo(setOf(DockerImageReference("the-image"))))
+                }
+            }
+        }
+
+        given("a Dockerfile with a FROM instruction with multiple spaces between the FROM and the image name") {
+            beforeEachTest {
+                Files.write(path, listOf("FROM    the-image"))
+            }
+
+            on("getting the base image names") {
+                val baseImage by runForEachTest { parser.extractBaseImageNames(path) }
+
+                it("returns the base image name with no leading spaces") {
+                    assertThat(baseImage, equalTo(setOf(DockerImageReference("the-image"))))
                 }
             }
         }
@@ -93,7 +108,7 @@ object DockerfileParserSpec : Spek({
                 val baseImage by runForEachTest { parser.extractBaseImageNames(path) }
 
                 it("returns the base image name") {
-                    assertThat(baseImage, equalTo(setOf("some-image")))
+                    assertThat(baseImage, equalTo(setOf(DockerImageReference("some-image"))))
                 }
             }
         }
@@ -107,7 +122,7 @@ object DockerfileParserSpec : Spek({
                 val baseImage by runForEachTest { parser.extractBaseImageNames(path) }
 
                 it("returns the base image name") {
-                    assertThat(baseImage, equalTo(setOf("the-image")))
+                    assertThat(baseImage, equalTo(setOf(DockerImageReference("the-image"))))
                 }
             }
         }
@@ -124,7 +139,7 @@ object DockerfileParserSpec : Spek({
                 val baseImage by runForEachTest { parser.extractBaseImageNames(path) }
 
                 it("returns both image names") {
-                    assertThat(baseImage, equalTo(setOf("the-image", "the-other-image")))
+                    assertThat(baseImage, equalTo(setOf(DockerImageReference("the-image"), DockerImageReference("the-other-image"))))
                 }
             }
         }
@@ -133,7 +148,9 @@ object DockerfileParserSpec : Spek({
             beforeEachTest {
                 Files.write(path, listOf(
                     "FROM the-image AS stage1",
-                    "FROM the-other-image AS stage2"
+                    "FROM the-other-image AS stage2",
+                    "FROM  the-third-image AS stage3",
+                    "FROM the-fourth-image   AS stage 4"
                 ))
             }
 
@@ -141,7 +158,12 @@ object DockerfileParserSpec : Spek({
                 val baseImage by runForEachTest { parser.extractBaseImageNames(path) }
 
                 it("returns both image names") {
-                    assertThat(baseImage, equalTo(setOf("the-image", "the-other-image")))
+                    assertThat(baseImage, equalTo(setOf(
+                        DockerImageReference("the-image"),
+                        DockerImageReference("the-other-image"),
+                        DockerImageReference("the-third-image"),
+                        DockerImageReference("the-fourth-image")
+                    )))
                 }
             }
         }

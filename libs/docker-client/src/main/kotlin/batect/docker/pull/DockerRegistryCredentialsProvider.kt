@@ -16,15 +16,13 @@
 
 package batect.docker.pull
 
+import batect.docker.DockerImageReference
+
 class DockerRegistryCredentialsProvider(
-    private val domainResolver: DockerRegistryDomainResolver,
-    private val indexResolver: DockerRegistryIndexResolver,
     private val configurationFile: DockerRegistryCredentialsConfigurationFile
 ) {
-    fun getCredentials(imageName: String): DockerRegistryCredentials? {
-        val domain = domainResolver.resolveDomainForImage(imageName)
-        val index = indexResolver.resolveRegistryIndex(domain)
-        val source = configurationFile.getCredentialsForRegistry(index)
+    fun getCredentials(imageReference: DockerImageReference): DockerRegistryCredentials? {
+        val source = configurationFile.getCredentialsForRegistry(imageReference.registryIndex)
 
         if (source == null) {
             return null

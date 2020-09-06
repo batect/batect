@@ -56,8 +56,6 @@ import batect.docker.client.DockerSystemInfoClient
 import batect.docker.client.DockerVolumesClient
 import batect.docker.pull.DockerRegistryCredentialsConfigurationFile
 import batect.docker.pull.DockerRegistryCredentialsProvider
-import batect.docker.pull.DockerRegistryDomainResolver
-import batect.docker.pull.DockerRegistryIndexResolver
 import batect.docker.run.ContainerIOStreamer
 import batect.docker.run.ContainerTTYManager
 import batect.docker.run.ContainerWaiter
@@ -197,9 +195,7 @@ private val dockerModule = DI.Module("docker") {
     bind<DockerHostNameResolver>() with singleton { DockerHostNameResolver(instance(), instance()) }
     bind<DockerHttpConfig>() with singleton { DockerHttpConfig(instance(), commandLineOptions().dockerHost, instance(), instance()) }
     bind<DockerRegistryCredentialsConfigurationFile>() with singletonWithLogger { logger -> DockerRegistryCredentialsConfigurationFile(instance(), instance(), logger) }
-    bind<DockerRegistryCredentialsProvider>() with singleton { DockerRegistryCredentialsProvider(instance(), instance(), instance()) }
-    bind<DockerRegistryDomainResolver>() with singleton { DockerRegistryDomainResolver() }
-    bind<DockerRegistryIndexResolver>() with singleton { DockerRegistryIndexResolver() }
+    bind<DockerRegistryCredentialsProvider>() with singleton { DockerRegistryCredentialsProvider(instance()) }
 
     bind<DockerTLSConfig>() with singleton {
         val options = commandLineOptions()

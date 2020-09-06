@@ -17,6 +17,7 @@
 package batect.docker.client
 
 import batect.docker.DockerImage
+import batect.docker.DockerImageReference
 import batect.docker.DockerRegistryCredentialsException
 import batect.docker.ImageBuildFailedException
 import batect.docker.ImagePullFailedException
@@ -101,7 +102,7 @@ object DockerImagesClientSpec : Spek({
                     Files.createFile(resolvedDockerfilePath)
 
                     whenever(imageBuildContextFactory.createFromDirectory(buildDirectory, dockerfilePath)).doReturn(context)
-                    whenever(dockerfileParser.extractBaseImageNames(resolvedDockerfilePath)).doReturn(setOf("nginx:1.13.0", "some-other-image:2.3.4"))
+                    whenever(dockerfileParser.extractBaseImageNames(resolvedDockerfilePath)).doReturn(setOf(DockerImageReference("nginx:1.13.0"), DockerImageReference("some-other-image:2.3.4")))
                 }
 
                 given("getting the credentials for the base image succeeds") {
@@ -109,8 +110,8 @@ object DockerImagesClientSpec : Spek({
                     val image2Credentials = mock<DockerRegistryCredentials>()
 
                     beforeEachTest {
-                        whenever(credentialsProvider.getCredentials("nginx:1.13.0")).doReturn(image1Credentials)
-                        whenever(credentialsProvider.getCredentials("some-other-image:2.3.4")).doReturn(image2Credentials)
+                        whenever(credentialsProvider.getCredentials(DockerImageReference("nginx:1.13.0"))).doReturn(image1Credentials)
+                        whenever(credentialsProvider.getCredentials(DockerImageReference("some-other-image:2.3.4"))).doReturn(image2Credentials)
                     }
 
                     on("a successful build") {
@@ -219,7 +220,7 @@ object DockerImagesClientSpec : Spek({
                     val exception = DockerRegistryCredentialsException("Could not load credentials: something went wrong.")
 
                     beforeEachTest {
-                        whenever(credentialsProvider.getCredentials("nginx:1.13.0")).thenThrow(exception)
+                        whenever(credentialsProvider.getCredentials(DockerImageReference("nginx:1.13.0"))).thenThrow(exception)
                     }
 
                     on("building the image") {
@@ -281,7 +282,7 @@ object DockerImagesClientSpec : Spek({
                         val credentials = mock<DockerRegistryCredentials>()
 
                         beforeEachTest {
-                            whenever(credentialsProvider.getCredentials("some-image")).thenReturn(credentials)
+                            whenever(credentialsProvider.getCredentials(DockerImageReference("some-image"))).thenReturn(credentials)
                         }
 
                         on("pulling the image") {
@@ -323,7 +324,7 @@ object DockerImagesClientSpec : Spek({
                         val exception = DockerRegistryCredentialsException("Could not load credentials: something went wrong.")
 
                         beforeEachTest {
-                            whenever(credentialsProvider.getCredentials("some-image")).thenThrow(exception)
+                            whenever(credentialsProvider.getCredentials(DockerImageReference("some-image"))).thenThrow(exception)
                         }
 
                         on("pulling the image") {
@@ -359,7 +360,7 @@ object DockerImagesClientSpec : Spek({
                     val credentials = mock<DockerRegistryCredentials>()
 
                     beforeEachTest {
-                        whenever(credentialsProvider.getCredentials("some-image")).thenReturn(credentials)
+                        whenever(credentialsProvider.getCredentials(DockerImageReference("some-image"))).thenReturn(credentials)
                     }
 
                     on("pulling the image") {

@@ -17,6 +17,7 @@
 package batect.docker.client
 
 import batect.docker.DockerImage
+import batect.docker.DockerImageReference
 import batect.docker.DockerRegistryCredentialsException
 import batect.docker.ImageBuildFailedException
 import batect.docker.ImagePullFailedException
@@ -123,8 +124,10 @@ class DockerImagesClient(
         onProgressUpdate: (DockerImageProgress) -> Unit
     ): DockerImage {
         try {
+            val imageReference = DockerImageReference(imageName)
+
             if (forcePull || !api.hasImage(imageName)) {
-                val credentials = credentialsProvider.getCredentials(imageName)
+                val credentials = credentialsProvider.getCredentials(imageReference)
                 val reporter = imageProgressReporterFactory()
 
                 api.pull(imageName, credentials, cancellationContext) { progress ->

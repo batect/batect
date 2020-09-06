@@ -165,4 +165,6 @@ data class ContainerDependencyGraph(
     }
 }
 
-class DependencyResolutionFailedException(message: String) : Exception(message)
+class DependencyResolutionFailedException(message: String) : Exception(message) {
+    override fun toString(): String = message!!
+}

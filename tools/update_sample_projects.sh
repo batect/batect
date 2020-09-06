@@ -11,6 +11,7 @@ PROJECTS=(
     batect-sample-ruby
     batect-sample-seq
     batect-sample-typescript
+    bundle-dev-bundle
     golang-bundle
     hadolint-bundle
     hello-world-bundle

@@ -88,7 +88,7 @@ object TaskExecutionOrderResolverSpec : Spek({
                     it("throws an appropriate exception without any correction suggestions") {
                         assertThat(
                             { resolver.resolveExecutionOrder(config, "some-task") },
-                            throws<TaskExecutionOrderResolutionException>(withMessage("The task 'some-task' does not exist. (Run './batect --list-tasks' for a list of all tasks in this project, or './batect --help' for help.)"))
+                            throws<TaskDoesNotExistException>(withMessage("The task 'some-task' does not exist. (Run './batect --list-tasks' for a list of all tasks in this project, or './batect --help' for help.)"))
                         )
                     }
                 }
@@ -99,7 +99,7 @@ object TaskExecutionOrderResolverSpec : Spek({
                     it("throws an appropriate exception without any correction suggestions") {
                         assertThat(
                             { resolver.resolveExecutionOrder(config, "some-task") },
-                            throws<TaskExecutionOrderResolutionException>(withMessage("The task 'some-task' does not exist. Did you mean 'some-other-task'? (Run './batect --list-tasks' for a list of all tasks in this project, or './batect --help' for help.)"))
+                            throws<TaskDoesNotExistException>(withMessage("The task 'some-task' does not exist. Did you mean 'some-other-task'? (Run './batect --list-tasks' for a list of all tasks in this project, or './batect --help' for help.)"))
                         )
                     }
                 }
@@ -110,7 +110,7 @@ object TaskExecutionOrderResolverSpec : Spek({
                     it("throws an appropriate exception without any correction suggestions") {
                         assertThat(
                             { resolver.resolveExecutionOrder(config, "some-task") },
-                            throws<TaskExecutionOrderResolutionException>(withMessage("The task 'some-task' does not exist. Did you mean 'some-other-task' or 'some-other-task-2'? (Run './batect --list-tasks' for a list of all tasks in this project, or './batect --help' for help.)"))
+                            throws<TaskDoesNotExistException>(withMessage("The task 'some-task' does not exist. Did you mean 'some-other-task' or 'some-other-task-2'? (Run './batect --list-tasks' for a list of all tasks in this project, or './batect --help' for help.)"))
                         )
                     }
                 }
@@ -121,7 +121,7 @@ object TaskExecutionOrderResolverSpec : Spek({
                     it("throws an appropriate exception without any correction suggestions") {
                         assertThat(
                             { resolver.resolveExecutionOrder(config, "some-task") },
-                            throws<TaskExecutionOrderResolutionException>(withMessage("The task 'some-task' does not exist. Did you mean 'some-other-task', 'some-other-task-2' or 'some-other-task-3'? (Run './batect --list-tasks' for a list of all tasks in this project, or './batect --help' for help.)"))
+                            throws<TaskDoesNotExistException>(withMessage("The task 'some-task' does not exist. Did you mean 'some-other-task', 'some-other-task-2' or 'some-other-task-3'? (Run './batect --list-tasks' for a list of all tasks in this project, or './batect --help' for help.)"))
                         )
                     }
                 }
@@ -160,7 +160,7 @@ object TaskExecutionOrderResolverSpec : Spek({
                     it("throws an appropriate exception without any correction suggestions") {
                         assertThat(
                             { resolver.resolveExecutionOrder(config, mainTask.name) },
-                            throws<TaskExecutionOrderResolutionException>(withMessage("The task 'dependency-task' given as a prerequisite of 'main-task' does not exist."))
+                            throws<PrerequisiteTaskDoesNotExistException>(withMessage("The task 'dependency-task' given as a prerequisite of 'main-task' does not exist."))
                         )
                     }
                 }
@@ -171,7 +171,7 @@ object TaskExecutionOrderResolverSpec : Spek({
                     it("throws an appropriate exception without any correction suggestions") {
                         assertThat(
                             { resolver.resolveExecutionOrder(config, mainTask.name) },
-                            throws<TaskExecutionOrderResolutionException>(withMessage("The task 'dependency-task' given as a prerequisite of 'main-task' does not exist. Did you mean 'some-other-task'?"))
+                            throws<PrerequisiteTaskDoesNotExistException>(withMessage("The task 'dependency-task' given as a prerequisite of 'main-task' does not exist. Did you mean 'some-other-task'?"))
                         )
                     }
                 }
@@ -182,7 +182,7 @@ object TaskExecutionOrderResolverSpec : Spek({
                     it("throws an appropriate exception without any correction suggestions") {
                         assertThat(
                             { resolver.resolveExecutionOrder(config, mainTask.name) },
-                            throws<TaskExecutionOrderResolutionException>(withMessage("The task 'dependency-task' given as a prerequisite of 'main-task' does not exist. Did you mean 'some-other-task' or 'some-other-task-2'?"))
+                            throws<PrerequisiteTaskDoesNotExistException>(withMessage("The task 'dependency-task' given as a prerequisite of 'main-task' does not exist. Did you mean 'some-other-task' or 'some-other-task-2'?"))
                         )
                     }
                 }
@@ -193,7 +193,7 @@ object TaskExecutionOrderResolverSpec : Spek({
                     it("throws an appropriate exception without any correction suggestions") {
                         assertThat(
                             { resolver.resolveExecutionOrder(config, mainTask.name) },
-                            throws<TaskExecutionOrderResolutionException>(withMessage("The task 'dependency-task' given as a prerequisite of 'main-task' does not exist. Did you mean 'some-other-task', 'some-other-task-2' or 'some-other-task-3'?"))
+                            throws<PrerequisiteTaskDoesNotExistException>(withMessage("The task 'dependency-task' given as a prerequisite of 'main-task' does not exist. Did you mean 'some-other-task', 'some-other-task-2' or 'some-other-task-3'?"))
                         )
                     }
                 }
@@ -224,7 +224,7 @@ object TaskExecutionOrderResolverSpec : Spek({
                 it("throws an appropriate exception") {
                     assertThat(
                         { resolver.resolveExecutionOrder(config, mainTask.name) },
-                        throws<TaskExecutionOrderResolutionException>(withMessage("There is a dependency cycle between tasks: task 'main-task' has 'main-task' as a prerequisite."))
+                        throws<DependencyCycleException>(withMessage("There is a dependency cycle between tasks: task 'main-task' has 'main-task' as a prerequisite."))
                     )
                 }
             }
@@ -310,7 +310,7 @@ object TaskExecutionOrderResolverSpec : Spek({
                 it("throws an appropriate exception") {
                     assertThat(
                         { resolver.resolveExecutionOrder(config, mainTask.name) },
-                        throws<TaskExecutionOrderResolutionException>(withMessage("There is a dependency cycle between tasks: task 'main-task' has 'other-task' as a prerequisite, which has 'main-task' as a prerequisite."))
+                        throws<DependencyCycleException>(withMessage("There is a dependency cycle between tasks: task 'main-task' has 'other-task' as a prerequisite, which has 'main-task' as a prerequisite."))
                     )
                 }
             }
@@ -324,7 +324,7 @@ object TaskExecutionOrderResolverSpec : Spek({
                 it("throws an appropriate exception") {
                     assertThat(
                         { resolver.resolveExecutionOrder(config, mainTask.name) },
-                        throws<TaskExecutionOrderResolutionException>(withMessage("There is a dependency cycle between tasks: task 'main-task' has 'task-A' as a prerequisite, which has 'task-B' as a prerequisite, which has 'main-task' as a prerequisite."))
+                        throws<DependencyCycleException>(withMessage("There is a dependency cycle between tasks: task 'main-task' has 'task-A' as a prerequisite, which has 'task-B' as a prerequisite, which has 'main-task' as a prerequisite."))
                     )
                 }
             }
@@ -338,7 +338,7 @@ object TaskExecutionOrderResolverSpec : Spek({
                 it("throws an appropriate exception") {
                     assertThat(
                         { resolver.resolveExecutionOrder(config, mainTask.name) },
-                        throws<TaskExecutionOrderResolutionException>(withMessage("There is a dependency cycle between tasks: task 'main-task' has 'task-A' as a prerequisite, which has 'task-B' as a prerequisite, which has 'task-A' as a prerequisite."))
+                        throws<DependencyCycleException>(withMessage("There is a dependency cycle between tasks: task 'main-task' has 'task-A' as a prerequisite, which has 'task-B' as a prerequisite, which has 'task-A' as a prerequisite."))
                     )
                 }
             }

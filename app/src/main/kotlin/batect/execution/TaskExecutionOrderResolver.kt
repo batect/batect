@@ -31,7 +31,7 @@ class TaskExecutionOrderResolver(
         val task = config.tasks[taskName]
 
         if (task == null) {
-            throw TaskExecutionOrderResolutionException("The task '$taskName' does not exist." + formatTaskSuggestions(config, taskName) + " (Run './batect --list-tasks' for a list of all tasks in this project, or './batect --help' for help.)")
+            throw TaskDoesNotExistException("The task '$taskName' does not exist." + formatTaskSuggestions(config, taskName) + " (Run './batect --list-tasks' for a list of all tasks in this project, or './batect --help' for help.)")
         }
 
         val executionOrder = if (commandLineOptions.skipPrerequisites) {
@@ -69,12 +69,12 @@ class TaskExecutionOrderResolver(
 
         if (prerequisite == null) {
             val message = "The task '$prerequisiteTaskName' given as a prerequisite of '${parentTask.name}' does not exist." + formatTaskSuggestions(config, prerequisiteTaskName)
-            throw TaskExecutionOrderResolutionException(message)
+            throw PrerequisiteTaskDoesNotExistException(message)
         }
 
         if (path.contains(prerequisite)) {
             val description = cycleDescription(path + prerequisite)
-            throw TaskExecutionOrderResolutionException("There is a dependency cycle between tasks: $description.")
+            throw DependencyCycleException("There is a dependency cycle between tasks: $description.")
         }
 
         return prerequisite
@@ -103,6 +103,10 @@ class TaskExecutionOrderResolver(
     }
 }
 
-class TaskExecutionOrderResolutionException(override val message: String) : RuntimeException(message) {
+sealed class TaskExecutionOrderResolutionException(override val message: String) : RuntimeException(message) {
     override fun toString(): String = message
 }
+
+class TaskDoesNotExistException(message: String) : TaskExecutionOrderResolutionException(message)
+class PrerequisiteTaskDoesNotExistException(message: String) : TaskExecutionOrderResolutionException(message)
+class DependencyCycleException(message: String) : TaskExecutionOrderResolutionException(message)

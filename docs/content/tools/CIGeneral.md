@@ -8,7 +8,7 @@ CI agents must meet batect's normal [requirements](../index.md#what-are-batects-
 
 ## Long-lived agents
 
-!!! tip #1 "tl;dr"
+!!! tip "tl;dr"
     Set up a Cron job to run `docker image prune -f` regularly on long-lived CI agents
 
 If you are using Dockerfiles to define your containers (as opposed to using a pre-existing image), this can generate a
@@ -23,6 +23,16 @@ Therefore, it's recommended that CI agents running batect-based builds have a re
 Docker has a built-in command to do this: `docker image prune -f` (the `-f` disables the confirmation prompt). The exact
 frequency will depend on your usage pattern, but once a day is usually more than sufficient.
 
-!!! tip #2
-    If you're running multiple builds on the same CI agent, and you bind ports, it will result in conflicts.
-    Disable binding of ports on the host system using the `./batect --disable-ports` flag
+## Port conflicts
+
+!!! tip "tl;dr"
+    Disable binding of ports on the host system by running tasks with the 
+    [`--disable-ports`](../CLIReference.md#disable-port-binding-on-the-host-machine-disable-ports) flag
+
+If a single host machine can run multiple build jobs at the same time, this can result in port conflicts if multiple jobs
+run tasks that attempt to bind to the same port.
+
+Normally, on CI, bound ports aren't used, so disabling them has no effect and prevents any issues caused by port
+conflicts.
+
+To disable port bindings, run the task with `--disable-ports`. For example, run `the-task` with `./batect --disable-ports the-task`.

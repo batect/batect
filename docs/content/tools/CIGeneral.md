@@ -26,7 +26,7 @@ frequency will depend on your usage pattern, but once a day is usually more than
 ## Port conflicts
 
 !!! tip "tl;dr"
-    Disable binding of ports on the host system by running tasks with the 
+    Disable binding of ports on the host system by running tasks with the
     [`--disable-ports`](../CLIReference.md#disable-port-binding-on-the-host-machine-disable-ports) flag
 
 If a single host machine can run multiple build jobs at the same time, this can result in port conflicts if multiple jobs

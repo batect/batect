@@ -29,20 +29,23 @@ import com.natpryce.hamkrest.throws
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
-object ConfigVariableMapSpec : Spek({
-    describe("a config variable map") {
-        describe("validating config variable names") {
+object TaskMapSpec : Spek({
+    describe("a task map") {
+        describe("validating task names") {
             setOf(
                 "a",
                 "A",
+                "1",
                 "a.a",
                 "a-a",
                 "a1",
-                "a_a"
+                "1a",
+                "a_a",
+                "a:a"
             ).forEach { name ->
                 given("the valid name '$name'") {
                     it("does not throw an exception") {
-                        assertThat({ ConfigVariableMap.validateName(name, Location(2, 3)) }, doesNotThrow())
+                        assertThat({ TaskMap.validateName(name, Location(2, 3)) }, doesNotThrow())
                     }
                 }
             }
@@ -51,25 +54,24 @@ object ConfigVariableMapSpec : Spek({
                 "",
                 ".",
                 "-",
-                "1",
                 "_",
-                "batect",
-                "batecta",
-                "batect.blah",
-                "BATECT",
-                "BATECTa",
-                "BATECT.blah",
+                ":",
                 ".a",
                 "-a",
-                "1a",
                 "_a",
+                ":a",
+                "a.",
+                "a-",
+                "a_",
+                "a:",
+                "a!a",
                 "a\\a"
             ).forEach { name ->
                 given("the invalid name '$name'") {
                     it("throws an appropriate exception") {
                         assertThat(
-                            { ConfigVariableMap.validateName(name, Location(2, 3)) },
-                            throws<ConfigurationException>(withMessage("Invalid config variable name '$name'. Config variable names must start with a letter, contain only letters, digits, dashes, periods and underscores, and must not start with 'batect'.") and withLineNumber(2) and withColumn(3))
+                            { TaskMap.validateName(name, Location(2, 3)) },
+                            throws<ConfigurationException>(withMessage("Invalid task name '$name'. Task names must contain only letters, digits, colons, dashes, periods and underscores, and must start and end with a letter or digit.") and withLineNumber(2) and withColumn(3))
                         )
                     }
                 }

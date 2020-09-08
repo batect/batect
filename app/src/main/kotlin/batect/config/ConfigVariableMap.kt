@@ -36,7 +36,7 @@ class ConfigVariableMap(contents: Iterable<ConfigVariableDefinition>) : NamedObj
 
         override val descriptor: SerialDescriptor = MapSerializer(keySerializer, elementSerializer).descriptor
 
-        private val validNameRegex = """^[a-zA-Z][a-zA-Z0-9._\\-]*$""".toRegex()
+        private val validNameRegex = """^[a-zA-Z][a-zA-Z0-9._-]*$""".toRegex()
 
         override fun validateName(name: String, location: Location) {
             if (name.startsWith("batect", ignoreCase = true) || !validNameRegex.matches(name)) {

@@ -100,6 +100,18 @@ This is useful for breaking up a large project into smaller files, or for sharin
 
 Definitions for each of your tasks, the actions you launch through batect, in `name: options` format.
 
+Task names must meet the following requirements:
+
+* they must contain only:
+    * uppercase or lowercase letters
+    * digits
+    * dashes (`-`)
+    * periods (`.`)
+    * underscores (`_`)
+    * colons (`:`)
+* they must start with a letter or digit
+* they must end with a letter or digit
+
 [Detailed reference for `tasks`](Tasks.md)
 
 ## Expressions

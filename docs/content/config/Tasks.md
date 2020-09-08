@@ -78,6 +78,20 @@ this task's prerequisites.
 
 Passing the [`--skip-prerequisites`](../CLIReference.md#skip-prerequisites-skip-prerequisites) command line flag skips all defined prerequisites and runs only the task specified on the command line.
 
+## Names
+
+Task names must meet the following requirements:
+
+* they must contain only:
+    * uppercase or lowercase letters
+    * digits
+    * dashes (`-`)
+    * periods (`.`)
+    * underscores (`_`)
+    * colons (`:`)
+* they must start with a letter or digit
+* they must end with a letter or digit
+
 ## Examples
 
 For more examples and real-world scenarios, take a look at the [sample projects](../SampleProjects.md).

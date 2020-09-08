@@ -16,6 +16,8 @@
 
 package batect.config
 
+import batect.config.io.ConfigurationException
+import com.charleskorn.kaml.Location
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.MapSerializer
@@ -33,5 +35,14 @@ class TaskMap(contents: Iterable<Task>) : NamedObjectMap<Task>("task", contents)
         override fun createCollection(elements: Set<Task>): TaskMap = TaskMap(elements)
 
         override val descriptor: SerialDescriptor = MapSerializer(keySerializer, elementSerializer).descriptor
+
+        private const val letterOrDigit = "a-zA-Z0-9"
+        private val validNameRegex = """^[$letterOrDigit]([$letterOrDigit._:-]*[$letterOrDigit])*$""".toRegex()
+
+        override fun validateName(name: String, location: Location) {
+            if (!validNameRegex.matches(name)) {
+                throw ConfigurationException("Invalid task name '$name'. Task names must contain only letters, digits, colons, dashes, periods and underscores, and must start and end with a letter or digit.", location.line, location.column)
+            }
+        }
     }
 }

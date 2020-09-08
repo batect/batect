@@ -91,18 +91,7 @@ object CreateContainerStepRunnerSpec : Spek({
 
         val creationRequestFactory by createForEachTest {
             mock<DockerContainerCreationRequestFactory> {
-                on { create(
-                    container,
-                    image,
-                    network,
-                    config,
-                    combinedMounts,
-                    runOptions.propagateProxyEnvironmentVariables,
-                    runAsCurrentUserConfiguration.userAndGroup,
-                    "some-terminal",
-                    true,
-                    false
-                ) } doReturn request
+                on { create(container, image, network, config, combinedMounts, runOptions.propagateProxyEnvironmentVariables, runAsCurrentUserConfiguration.userAndGroup, "some-terminal", true, false) } doReturn request
             }
         }
 

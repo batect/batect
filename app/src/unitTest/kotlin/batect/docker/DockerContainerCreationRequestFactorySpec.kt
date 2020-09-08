@@ -278,18 +278,7 @@ object DockerContainerCreationRequestFactorySpec : Spek({
 
             on("creating the request") {
                 val config = ContainerRuntimeConfiguration(null, entrypoint, workingDirectory, emptyMap(), emptySet())
-                val request = factory.create(
-                    container,
-                    image,
-                    network,
-                    config,
-                    emptySet(),
-                    propagateProxyEnvironmentVariables,
-                    null,
-                    terminalType,
-                    useTTY = false,
-                    attachStdin = false
-                )
+                val request = factory.create(container, image, network, config, emptySet(), propagateProxyEnvironmentVariables, null, terminalType, false, false)
 
                 it("does not populate the command on the request") {
                     assertThat(request.command, equalTo(emptyList()))
@@ -302,18 +291,7 @@ object DockerContainerCreationRequestFactorySpec : Spek({
 
             on("creating the request") {
                 val config = ContainerRuntimeConfiguration(command, null, workingDirectory, emptyMap(), emptySet())
-                val request = factory.create(
-                    container,
-                    image,
-                    network,
-                    config,
-                    emptySet(),
-                    propagateProxyEnvironmentVariables,
-                    null,
-                    terminalType,
-                    useTTY = false,
-                    attachStdin = false
-                )
+                val request = factory.create(container, image, network, config, emptySet(), propagateProxyEnvironmentVariables, null, terminalType, false, false)
 
                 it("does not populate the entrypoint on the request") {
                     assertThat(request.entrypoint, equalTo(emptyList()))

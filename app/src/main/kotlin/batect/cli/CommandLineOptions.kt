@@ -49,6 +49,7 @@ data class CommandLineOptions(
     val disableWrapperCacheCleanup: Boolean = false,
     val disableCleanupAfterFailure: Boolean = false,
     val disableCleanupAfterSuccess: Boolean = false,
+    val disablePortMappings: Boolean = false,
     val dontPropagateProxyEnvironmentVariables: Boolean = false,
     val taskName: String? = null,
     val additionalTaskCommandArguments: Iterable<String> = emptyList(),

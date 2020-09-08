@@ -22,3 +22,17 @@ This is especially a problem on CI agents, where a human might not notice this i
 Therefore, it's recommended that CI agents running batect-based builds have a regular task that removes orphaned images.
 Docker has a built-in command to do this: `docker image prune -f` (the `-f` disables the confirmation prompt). The exact
 frequency will depend on your usage pattern, but once a day is usually more than sufficient.
+
+## Port conflicts
+
+!!! tip "tl;dr"
+    Disable binding of ports on the host system by running tasks with the
+    [`--disable-ports`](../CLIReference.md#disable-port-binding-on-the-host-machine-disable-ports) flag
+
+If a single host machine can run multiple build jobs at the same time, this can result in port conflicts if multiple jobs
+run tasks that attempt to bind to the same port.
+
+Normally, on CI, bound ports aren't used, so disabling them has no effect and prevents any issues caused by port
+conflicts.
+
+To disable port bindings, run the task with `--disable-ports`. For example, run `the-task` with `./batect --disable-ports the-task`.

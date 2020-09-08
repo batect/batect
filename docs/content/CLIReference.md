@@ -104,6 +104,20 @@ Example:
 ./batect --skip-prerequisites the-task
 ```
 
+### Disable port binding on the host machine <small>(`--disable-ports`)</small>
+
+By default, batect binds ports from containers to the host machine running batect. These are defined with [`ports`](config/Containers.md#ports) on the container or [`ports`](config/Tasks.md#ports) on the task.
+
+However, in some situations, it can be useful to disable these bindings. In particular, when running multiple tasks in parallel, such as on CI systems, host port bindings can result in conflicts.
+
+Passing `--disable-ports` disables all port bindings for all containers. This includes port bindings defined at the task level.
+
+Example:
+
+```shell
+./batect --disable-ports the-task
+```
+
 ### Use an existing network for tasks <small>(`--use-network`)</small>
 
 By default, batect will create a new Docker network for each task, as described in [the task lifecycle](TaskLifecycle.md).

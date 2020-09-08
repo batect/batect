@@ -16,13 +16,15 @@
 
 package batect.docker
 
+import batect.cli.CommandLineOptions
 import batect.config.Container
 import batect.execution.ContainerRuntimeConfiguration
 import batect.primitives.mapToSet
 
 class DockerContainerCreationRequestFactory(
     private val environmentVariableProvider: DockerContainerEnvironmentVariableProvider,
-    private val resourceNameGenerator: DockerResourceNameGenerator
+    private val resourceNameGenerator: DockerResourceNameGenerator,
+    private val commandLineOptions: CommandLineOptions
 ) {
     fun create(
         container: Container,
@@ -36,6 +38,11 @@ class DockerContainerCreationRequestFactory(
         useTTY: Boolean,
         attachStdin: Boolean
     ): DockerContainerCreationRequest {
+        val portMappings = if (commandLineOptions.disablePortMappings)
+            emptySet()
+        else
+            (container.portMappings + config.additionalPortMappings).mapToSet { it.toDockerPortMapping() }
+
         return DockerContainerCreationRequest(
             resourceNameGenerator.generateNameFor(container),
             image,
@@ -49,7 +56,7 @@ class DockerContainerCreationRequestFactory(
             config.workingDirectory,
             volumeMounts,
             container.deviceMounts.mapToSet { it.toDockerMount() },
-            (container.portMappings + config.additionalPortMappings).mapToSet { it.toDockerPortMapping() },
+            portMappings,
             container.healthCheckConfig.toDockerHealthCheckConfig(),
             userAndGroup,
             container.privileged,

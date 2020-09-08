@@ -63,9 +63,10 @@ All pull requests are welcome and warmly encouraged. Some things to keep in mind
 
 * all code changes should have accompanying unit tests (or, if it is not possible or reasonable to unit test the functionality or bugfix in question,
   one or more journey tests)
-* the Travis build should pass - this will be triggered automatically when you submit your PR
+* the build should pass - this will be triggered automatically when you submit your PR
 * if you've added a new feature or changed the behaviour of an existing feature, please update the documentation to reflect this
 * please keep PRs limited to a single bugfix or feature - if you would like to fix multiple issues or add multiple features, please submit a separate PR for each
+* please remove unrelated formatting changes to keep the diff small and focused
 * submitting work-in-progress PRs for feedback is welcome and encouraged
 * [GPG signed commits](https://docs.github.com/en/github/authenticating-to-github/about-commit-signature-verification) are required
 

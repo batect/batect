@@ -28,7 +28,7 @@ dependencies {
     implementation gradleApi()
     implementation 'com.github.oshi:oshi-core:4.0.0'
     implementation 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.4.0'
-    implementation 'org.jetbrains.kotlin:kotlin-serialization:1.4.0'
+    implementation 'org.jetbrains.kotlin:kotlin-serialization:1.4.10'
     implementation 'com.diffplug.spotless:spotless-plugin-gradle:5.4.0'
 }
 

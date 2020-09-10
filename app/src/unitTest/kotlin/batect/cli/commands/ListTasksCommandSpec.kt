@@ -16,6 +16,7 @@
 
 package batect.cli.commands
 
+import batect.cli.CommandLineOptions
 import batect.config.Configuration
 import batect.config.ContainerMap
 import batect.config.Task
@@ -26,21 +27,61 @@ import batect.os.Command
 import batect.testutils.createForEachTest
 import batect.testutils.runForEachTest
 import batect.testutils.withPlatformSpecificLineSeparator
+import batect.ui.OutputStyle
 import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
+import com.nhaarman.mockitokotlin2.whenever
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
 import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.Suite
 import org.spekframework.spek2.style.specification.describe
 
 object ListTasksCommandSpec : Spek({
     describe("a 'list tasks' command") {
-        val fileSystem = Jimfs.newFileSystem(com.google.common.jimfs.Configuration.unix())
-        val configFile = fileSystem.getPath("config.yml")
         val taskRunConfig = TaskRunConfiguration("some-container", Command.parse("dont-care"))
+
+        val fileSystem = Jimfs.newFileSystem(com.google.common.jimfs.Configuration.unix())
+        val configFilePath = fileSystem.getPath("config.yml")
+        val configLoader by createForEachTest { mock<ConfigurationLoader>() }
+        val commandLineOptions by createForEachTest { mock<CommandLineOptions>() }
+        val output by createForEachTest { ByteArrayOutputStream() }
+        val command by createForEachTest { ListTasksCommand(configFilePath, configLoader, commandLineOptions, PrintStream(output)) }
+
+        fun Suite.whenNotRunningWithQuietOutputModeItProducesOutput(expectedOutput: String) {
+            describe("when not running in quiet output mode") {
+                beforeEachTest { whenever(commandLineOptions.requestedOutputStyle).doReturn(OutputStyle.Fancy) }
+
+                val exitCode by runForEachTest { command.run() }
+
+                it("prints the tasks in the expected order and format") {
+                    assertThat(output.toString(), equalTo(expectedOutput.withPlatformSpecificLineSeparator()))
+                }
+
+                it("returns a zero exit code") {
+                    assertThat(exitCode, equalTo(0))
+                }
+            }
+        }
+
+        fun Suite.whenRunningWithQuietOutputModeItProducesOutput(expectedOutput: String) {
+            describe("when running in quiet output mode") {
+                beforeEachTest { whenever(commandLineOptions.requestedOutputStyle).doReturn(OutputStyle.Quiet) }
+
+                val exitCode by runForEachTest { command.run() }
+
+                it("prints the tasks ungrouped, sorted alphabetically and with their descriptions, if any") {
+                    assertThat(output.toString(), equalTo(expectedOutput.withPlatformSpecificLineSeparator()))
+                }
+
+                it("returns a zero exit code") {
+                    assertThat(exitCode, equalTo(0))
+                }
+            }
+        }
 
         describe("when invoked with a configuration file with no groups defined") {
             val task1 = Task("first-task", taskRunConfig)
@@ -48,35 +89,23 @@ object ListTasksCommandSpec : Spek({
             val task3 = Task("another-task-with-a-description", taskRunConfig, "do the thing")
             val config = Configuration("the_project", TaskMap(task1, task2, task3), ContainerMap())
 
-            val configLoader by createForEachTest {
-                mock<ConfigurationLoader> {
-                    on { loadConfig(configFile) } doReturn config
-                }
-            }
-
-            val output by createForEachTest { ByteArrayOutputStream() }
-            val command by createForEachTest { ListTasksCommand(configFile, configLoader, PrintStream(output)) }
+            beforeEachTest { whenever(configLoader.loadConfig(configFilePath)).doReturn(config) }
 
             describe("when the configuration file can be loaded") {
-                val exitCode by runForEachTest { command.run() }
+                whenNotRunningWithQuietOutputModeItProducesOutput("""
+                    |Available tasks:
+                    |- another-task-with-a-description: do the thing
+                    |- first-task
+                    |- other-task
+                    |
+                """.trimMargin())
 
-                it("prints the names of the available tasks in alphabetical order") {
-                    assertThat(
-                        output.toString(), equalTo(
-                            """
-                                |Available tasks:
-                                |- another-task-with-a-description: do the thing
-                                |- first-task
-                                |- other-task
-                                |
-                            """.trimMargin().withPlatformSpecificLineSeparator()
-                        )
-                    )
-                }
-
-                it("returns a zero exit code") {
-                    assertThat(exitCode, equalTo(0))
-                }
+                whenRunningWithQuietOutputModeItProducesOutput("""
+                    |another-task-with-a-description${'\t'}do the thing
+                    |first-task
+                    |other-task
+                    |
+                """.trimMargin())
             }
         }
 
@@ -86,35 +115,23 @@ object ListTasksCommandSpec : Spek({
             val task3 = Task("another-task-with-a-description", taskRunConfig, "do the thing", group = "Build tasks")
             val config = Configuration("the_project", TaskMap(task1, task2, task3), ContainerMap())
 
-            val configLoader by createForEachTest {
-                mock<ConfigurationLoader> {
-                    on { loadConfig(configFile) } doReturn config
-                }
-            }
-
-            val output by createForEachTest { ByteArrayOutputStream() }
-            val command by createForEachTest { ListTasksCommand(configFile, configLoader, PrintStream(output)) }
+            beforeEachTest { whenever(configLoader.loadConfig(configFilePath)).doReturn(config) }
 
             describe("when the configuration file can be loaded") {
-                val exitCode by runForEachTest { command.run() }
+                whenNotRunningWithQuietOutputModeItProducesOutput("""
+                    |Build tasks:
+                    |- another-task-with-a-description: do the thing
+                    |- first-task
+                    |- other-task
+                    |
+                """.trimMargin())
 
-                it("prints the names of the available tasks in alphabetical order with the group name shown") {
-                    assertThat(
-                        output.toString(), equalTo(
-                            """
-                                |Build tasks:
-                                |- another-task-with-a-description: do the thing
-                                |- first-task
-                                |- other-task
-                                |
-                            """.trimMargin().withPlatformSpecificLineSeparator()
-                        )
-                    )
-                }
-
-                it("returns a zero exit code") {
-                    assertThat(exitCode, equalTo(0))
-                }
+                whenRunningWithQuietOutputModeItProducesOutput("""
+                    |another-task-with-a-description${'\t'}do the thing
+                    |first-task
+                    |other-task
+                    |
+                """.trimMargin())
             }
         }
 
@@ -124,37 +141,25 @@ object ListTasksCommandSpec : Spek({
             val task3 = Task("another-task-with-a-description", taskRunConfig, "do the thing", group = "Build tasks")
             val config = Configuration("the_project", TaskMap(task1, task2, task3), ContainerMap())
 
-            val configLoader by createForEachTest {
-                mock<ConfigurationLoader> {
-                    on { loadConfig(configFile) } doReturn config
-                }
-            }
-
-            val output by createForEachTest { ByteArrayOutputStream() }
-            val command by createForEachTest { ListTasksCommand(configFile, configLoader, PrintStream(output)) }
+            beforeEachTest { whenever(configLoader.loadConfig(configFilePath)).doReturn(config) }
 
             describe("when the configuration file can be loaded") {
-                val exitCode by runForEachTest { command.run() }
+                whenNotRunningWithQuietOutputModeItProducesOutput("""
+                    |Build tasks:
+                    |- another-task-with-a-description: do the thing
+                    |- other-task
+                    |
+                    |Test tasks:
+                    |- first-task
+                    |
+                """.trimMargin().withPlatformSpecificLineSeparator())
 
-                it("prints tasks grouped by group name, with groups ordered alphabetically") {
-                    assertThat(
-                        output.toString(), equalTo(
-                            """
-                                |Build tasks:
-                                |- another-task-with-a-description: do the thing
-                                |- other-task
-                                |
-                                |Test tasks:
-                                |- first-task
-                                |
-                            """.trimMargin().withPlatformSpecificLineSeparator()
-                        )
-                    )
-                }
-
-                it("returns a zero exit code") {
-                    assertThat(exitCode, equalTo(0))
-                }
+                whenRunningWithQuietOutputModeItProducesOutput("""
+                    |another-task-with-a-description${'\t'}do the thing
+                    |first-task
+                    |other-task
+                    |
+                """.trimMargin())
             }
         }
 
@@ -164,37 +169,25 @@ object ListTasksCommandSpec : Spek({
             val task3 = Task("another-task-with-a-description", taskRunConfig, "do the thing", group = "Build tasks")
             val config = Configuration("the_project", TaskMap(task1, task2, task3), ContainerMap())
 
-            val configLoader by createForEachTest {
-                mock<ConfigurationLoader> {
-                    on { loadConfig(configFile) } doReturn config
-                }
-            }
-
-            val output by createForEachTest { ByteArrayOutputStream() }
-            val command by createForEachTest { ListTasksCommand(configFile, configLoader, PrintStream(output)) }
+            beforeEachTest { whenever(configLoader.loadConfig(configFilePath)).doReturn(config) }
 
             describe("when the configuration file can be loaded") {
-                val exitCode by runForEachTest { command.run() }
+                whenNotRunningWithQuietOutputModeItProducesOutput("""
+                    |Build tasks:
+                    |- another-task-with-a-description: do the thing
+                    |- other-task
+                    |
+                    |Ungrouped tasks:
+                    |- first-task
+                    |
+                """.trimMargin().withPlatformSpecificLineSeparator())
 
-                it("prints tasks grouped by group name, with the ungrouped tasks appearing last") {
-                    assertThat(
-                        output.toString(), equalTo(
-                            """
-                                |Build tasks:
-                                |- another-task-with-a-description: do the thing
-                                |- other-task
-                                |
-                                |Ungrouped tasks:
-                                |- first-task
-                                |
-                            """.trimMargin().withPlatformSpecificLineSeparator()
-                        )
-                    )
-                }
-
-                it("returns a zero exit code") {
-                    assertThat(exitCode, equalTo(0))
-                }
+                whenRunningWithQuietOutputModeItProducesOutput("""
+                    |another-task-with-a-description${'\t'}do the thing
+                    |first-task
+                    |other-task
+                    |
+                """.trimMargin())
             }
         }
     }

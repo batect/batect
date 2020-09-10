@@ -16,14 +16,47 @@
 
 package batect.cli.commands
 
+import batect.cli.CommandLineOptions
+import batect.config.Configuration
 import batect.config.Task
 import batect.config.io.ConfigurationLoader
+import batect.ui.OutputStyle
 import java.io.PrintStream
 import java.nio.file.Path
 
-class ListTasksCommand(val configFile: Path, val configLoader: ConfigurationLoader, val outputStream: PrintStream) : Command {
+class ListTasksCommand(
+    val configFile: Path,
+    val configLoader: ConfigurationLoader,
+    val commandLineOptions: CommandLineOptions,
+    val outputStream: PrintStream
+) : Command {
     override fun run(): Int {
         val config = configLoader.loadConfig(configFile)
+
+        when (commandLineOptions.requestedOutputStyle) {
+            OutputStyle.Quiet -> printMachineReadableFormat(config)
+            else -> printHumanReadableFormat(config)
+        }
+
+        return 0
+    }
+
+    private fun printMachineReadableFormat(config: Configuration) {
+        config.tasks
+            .sortedBy { it.name }
+            .forEach {
+                outputStream.print(it.name)
+
+                if (it.description.isNotBlank()) {
+                    outputStream.print('\t')
+                    outputStream.println(it.description)
+                } else {
+                    outputStream.println()
+                }
+            }
+    }
+
+    private fun printHumanReadableFormat(config: Configuration) {
         val groups = config.tasks.groupBy { it.group }
         val allTasksHaveNoGroup = config.tasks.all { it: Task -> it.group == "" }
 
@@ -42,8 +75,6 @@ class ListTasksCommand(val configFile: Path, val configLoader: ConfigurationLoad
                     outputStream.println()
                 }
             }
-
-        return 0
     }
 
     private val groupComparator = Comparator<Map.Entry<String, List<Task>>> { (a, _), (b, _) ->

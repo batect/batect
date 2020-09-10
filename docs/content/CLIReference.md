@@ -149,6 +149,20 @@ Utility tasks:
 - shell: Start a shell in the development environment.
 ```
 
+When combined with [`--output=quiet`](#force-a-particular-output-style-output-or-o), batect produces output suitable for parsing by other applications.
+Tasks are listed in alphabetical order, with one task per line. Each task is followed by a tab character, then
+its description.
+
+For example, `./batect --list-tasks --output=quiet` produces output like this:
+
+```
+build    Build the application.
+continuousUnitTest    Run the unit tests in watch mode.
+unitTest    Run the unit tests once.
+outdated    Check for outdated dependencies.
+shell    Start a shell in the development environment.
+```
+
 ## Cleanup all caches for this project <small>(`--clean`)</small>
 
 Running `./batect --clean` will remove all caches created for this project.
@@ -341,7 +355,10 @@ Example:
 ./batect --output simple the-task
 ```
 
-Passing `--output=quiet` implies [`--no-update-notification`](#disable-update-notification-no-update-notification).
+Passing `--output=quiet` implies [`--no-update-notification`](#disable-update-notification-no-update-notification). 
+
+Passing `--output=quiet` also modifies the output of [`--list-tasks`](#see-a-list-of-available-tasks-list-tasks-or-t)
+to make it easier to parse with other applications.
 
 ## Telemetry options
 

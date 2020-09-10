@@ -65,7 +65,7 @@ object RunTaskCommandSpec : Spek({
             val configWithImageOverrides = Configuration("the_project", TaskMap(), ContainerMap(Container("the-container", PullImage("the-new-image"))))
             val expectedTaskExitCode = 123
             val imageOverrides = mapOf("the-container" to "the-new-image")
-            val runOptions = RunOptions(taskName, emptyList(), CleanupOption.DontCleanup, CleanupOption.Cleanup, true, imageOverrides)
+            val runOptions = RunOptions(taskName, emptyList(), CleanupOption.DontCleanup, CleanupOption.Cleanup, imageOverrides)
 
             val configLoader by createForEachTest {
                 mock<ConfigurationLoader> {

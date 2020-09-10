@@ -28,12 +28,10 @@ import batect.docker.DockerVolumeMount
 import batect.docker.DockerVolumeMountSource
 import batect.docker.UserAndGroup
 import batect.docker.client.DockerContainersClient
-import batect.execution.CleanupOption
 import batect.execution.ContainerRuntimeConfiguration
 import batect.execution.RunAsCurrentUserConfiguration
 import batect.execution.RunAsCurrentUserConfigurationException
 import batect.execution.RunAsCurrentUserConfigurationProvider
-import batect.execution.RunOptions
 import batect.execution.VolumeMountResolutionException
 import batect.execution.VolumeMountResolver
 import batect.execution.model.events.ContainerCreatedEvent
@@ -83,7 +81,6 @@ object CreateContainerStepRunnerSpec : Spek({
             on { determineUserAndGroup(any()) } doReturn userAndGroup
         }
 
-        val runOptions = RunOptions("some-task", emptyList(), CleanupOption.Cleanup, CleanupOption.Cleanup, true, emptyMap())
         val combinedMounts = setOf(
             DockerVolumeMount(DockerVolumeMountSource.LocalPath("/local-container"), "/remote-container", "some-options-from-container"),
             DockerVolumeMount(DockerVolumeMountSource.LocalPath("/local-user"), "/remote-user", "some-options-from-run-as-current-user")
@@ -91,7 +88,7 @@ object CreateContainerStepRunnerSpec : Spek({
 
         val creationRequestFactory by createForEachTest {
             mock<DockerContainerCreationRequestFactory> {
-                on { create(container, image, network, config, combinedMounts, runOptions.propagateProxyEnvironmentVariables, runAsCurrentUserConfiguration.userAndGroup, "some-terminal", true, false) } doReturn request
+                on { create(container, image, network, config, combinedMounts, runAsCurrentUserConfiguration.userAndGroup, "some-terminal", true, false) } doReturn request
             }
         }
 
@@ -104,7 +101,7 @@ object CreateContainerStepRunnerSpec : Spek({
         }
 
         val eventSink by createForEachTest { mock<TaskEventSink>() }
-        val runner by createForEachTest { CreateContainerStepRunner(containersClient, volumeMountResolver, runAsCurrentUserConfigurationProvider, creationRequestFactory, runOptions, ioStreamingOptions) }
+        val runner by createForEachTest { CreateContainerStepRunner(containersClient, volumeMountResolver, runAsCurrentUserConfigurationProvider, creationRequestFactory, ioStreamingOptions) }
 
         on("when creating the container succeeds") {
             val dockerContainer = DockerContainer("some-id")

@@ -32,7 +32,6 @@ object RunOptionsSpec : Spek({
                 additionalTaskCommandArguments = listOf("extra-arg-1", "extra-arg-2"),
                 disableCleanupAfterSuccess = true,
                 disableCleanupAfterFailure = false,
-                dontPropagateProxyEnvironmentVariables = true,
                 imageOverrides = mapOf("container-1" to "image-1")
             )
 
@@ -55,10 +54,6 @@ object RunOptionsSpec : Spek({
                     assertThat(runOptions.behaviourAfterSuccess, equalTo(CleanupOption.DontCleanup))
                 }
 
-                it("takes the proxy environment variable behaviour from the command line options") {
-                    assertThat(runOptions.propagateProxyEnvironmentVariables, equalTo(false))
-                }
-
                 it("takes the image overrides from the command line options") {
                     assertThat(runOptions.imageOverrides, equalTo(mapOf("container-1" to "image-1")))
                 }
@@ -71,7 +66,6 @@ object RunOptionsSpec : Spek({
                 additionalTaskCommandArguments = listOf("extra-arg-1", "extra-arg-2"),
                 disableCleanupAfterSuccess = false,
                 disableCleanupAfterFailure = true,
-                dontPropagateProxyEnvironmentVariables = false,
                 imageOverrides = mapOf("container-1" to "image-1")
             )
 
@@ -92,10 +86,6 @@ object RunOptionsSpec : Spek({
 
                 it("enables cleanup after success") {
                     assertThat(runOptions.behaviourAfterSuccess, equalTo(CleanupOption.Cleanup))
-                }
-
-                it("takes the proxy environment variable behaviour from the command line options") {
-                    assertThat(runOptions.propagateProxyEnvironmentVariables, equalTo(true))
                 }
 
                 it("takes the image overrides from the command line options") {

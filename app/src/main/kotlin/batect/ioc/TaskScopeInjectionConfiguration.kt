@@ -61,7 +61,7 @@ val taskScopeModule = DI.Module("Task scope: root") {
 
 private val dockerModule = DI.Module("Task scope: docker") {
     bind<DockerContainerCreationRequestFactory>() with scoped(TaskScope).singleton { DockerContainerCreationRequestFactory(instance(), instance(), instance()) }
-    bind<DockerContainerEnvironmentVariableProvider>() with scoped(TaskScope).singleton { DockerContainerEnvironmentVariableProvider(instance(), instance(), instance()) }
+    bind<DockerContainerEnvironmentVariableProvider>() with scoped(TaskScope).singleton { DockerContainerEnvironmentVariableProvider(instance(), instance(), instance(), instance()) }
     bind<DockerResourceNameGenerator>() with scoped(TaskScope).singleton { DockerResourceNameGenerator(instance()) }
 }
 
@@ -81,8 +81,8 @@ private val executionModule = DI.Module("Task scope: execution") {
 }
 
 private val runnersModule = DI.Module("Task scope: execution.model.steps.runners") {
-    bind<BuildImageStepRunner>() with scoped(TaskScope).singleton { BuildImageStepRunner(instance(), instance(), instance(), instance(), instance(), instance(), instance(), instance(RunOptionsType.Task), instance()) }
-    bind<CreateContainerStepRunner>() with scoped(TaskScope).singleton { CreateContainerStepRunner(instance(), instance(), instance(), instance(), instance(RunOptionsType.Task), instance()) }
+    bind<BuildImageStepRunner>() with scoped(TaskScope).singleton { BuildImageStepRunner(instance(), instance(), instance(), instance(), instance(), instance(), instance(), instance(), instance()) }
+    bind<CreateContainerStepRunner>() with scoped(TaskScope).singleton { CreateContainerStepRunner(instance(), instance(), instance(), instance(), instance()) }
     bind<PrepareTaskNetworkStepRunner>() with scoped(TaskScope).singleton { PrepareTaskNetworkStepRunner(instance(), instance(), instance(), instance()) }
     bind<DeleteTaskNetworkStepRunner>() with scoped(TaskScope).singleton { DeleteTaskNetworkStepRunner(instance()) }
     bind<DeleteTemporaryDirectoryStepRunner>() with scoped(TaskScope).singleton { DeleteTemporaryDirectoryStepRunner() }
@@ -90,7 +90,7 @@ private val runnersModule = DI.Module("Task scope: execution.model.steps.runners
     bind<InitialiseCachesStepRunner>() with scoped(TaskScope).singleton { InitialiseCachesStepRunner(instance(), commandLineOptions().linuxCacheInitImageName, instance(), instance(), instance(), instance(), instance(), instance(), instance()) }
     bind<PullImageStepRunner>() with scoped(TaskScope).singleton { PullImageStepRunner(instance(), instance()) }
     bind<RemoveContainerStepRunner>() with scoped(TaskScope).singleton { RemoveContainerStepRunner(instance()) }
-    bind<RunContainerSetupCommandsStepRunner>() with scoped(TaskScope).singleton { RunContainerSetupCommandsStepRunner(instance(), instance(), instance(), instance(RunOptionsType.Task), instance(), instance()) }
+    bind<RunContainerSetupCommandsStepRunner>() with scoped(TaskScope).singleton { RunContainerSetupCommandsStepRunner(instance(), instance(), instance(), instance(), instance()) }
     bind<RunContainerStepRunner>() with scoped(TaskScope).singleton { RunContainerStepRunner(instance(), instance(), instance()) }
     bind<StopContainerStepRunner>() with scoped(TaskScope).singleton { StopContainerStepRunner(instance()) }
     bind<WaitForContainerToBecomeHealthyStepRunner>() with scoped(TaskScope).singleton { WaitForContainerToBecomeHealthyStepRunner(instance(), instance(), instance()) }

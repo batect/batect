@@ -46,12 +46,11 @@ object DockerContainerCreationRequestFactorySpec : Spek({
         val workingDirectory = "some-specific-working-directory"
         val terminalType = "some-term"
         val volumeMounts = setOf(DockerVolumeMount(DockerVolumeMountSource.LocalPath("local"), "remote", "mode"))
-        val propagateProxyEnvironmentVariables = true
         val additionalEnvironmentVariables = mapOf("SOME_VAR" to LiteralValue("some value"))
         val expectedEnvironmentVariables = mapOf("SOME_VAR" to "some resolved value")
 
         val environmentVariablesProvider = mock<DockerContainerEnvironmentVariableProvider> {
-            on { environmentVariablesFor(any(), any(), eq(propagateProxyEnvironmentVariables), eq(terminalType)) } doReturn expectedEnvironmentVariables
+            on { environmentVariablesFor(any(), any(), eq(terminalType)) } doReturn expectedEnvironmentVariables
         }
 
         val nameGenerator = mock<DockerResourceNameGenerator> {
@@ -95,7 +94,6 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                     network,
                     config,
                     volumeMounts,
-                    propagateProxyEnvironmentVariables,
                     userAndGroup,
                     terminalType,
                     useTTY = false,
@@ -215,7 +213,6 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                     network,
                     config,
                     volumeMounts,
-                    propagateProxyEnvironmentVariables,
                     null,
                     terminalType,
                     useTTY = false,
@@ -254,18 +251,7 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                 )
 
                 val config = ContainerRuntimeConfiguration(command, entrypoint, workingDirectory, additionalEnvironmentVariables, additionalPortMappings)
-                val request = newFactory.create(
-                    container,
-                    image,
-                    network,
-                    config,
-                    volumeMounts,
-                    propagateProxyEnvironmentVariables,
-                    null,
-                    terminalType,
-                    useTTY = false,
-                    attachStdin = false
-                )
+                val request = newFactory.create(container, image, network, config, volumeMounts, null, terminalType, useTTY = false, attachStdin = false)
 
                 it("yields an empty port mapping") {
                     assertThat(request.portMappings, equalTo(emptySet()))
@@ -278,7 +264,7 @@ object DockerContainerCreationRequestFactorySpec : Spek({
 
             on("creating the request") {
                 val config = ContainerRuntimeConfiguration(null, entrypoint, workingDirectory, emptyMap(), emptySet())
-                val request = factory.create(container, image, network, config, emptySet(), propagateProxyEnvironmentVariables, null, terminalType, false, false)
+                val request = factory.create(container, image, network, config, emptySet(), null, terminalType, false, false)
 
                 it("does not populate the command on the request") {
                     assertThat(request.command, equalTo(emptyList()))
@@ -291,7 +277,7 @@ object DockerContainerCreationRequestFactorySpec : Spek({
 
             on("creating the request") {
                 val config = ContainerRuntimeConfiguration(command, null, workingDirectory, emptyMap(), emptySet())
-                val request = factory.create(container, image, network, config, emptySet(), propagateProxyEnvironmentVariables, null, terminalType, false, false)
+                val request = factory.create(container, image, network, config, emptySet(), null, terminalType, false, false)
 
                 it("does not populate the entrypoint on the request") {
                     assertThat(request.entrypoint, equalTo(emptyList()))

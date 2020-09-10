@@ -16,6 +16,7 @@
 
 package batect.docker
 
+import batect.cli.CommandLineOptions
 import batect.config.Container
 import batect.config.Expression
 import batect.config.ExpressionEvaluationContext
@@ -28,18 +29,18 @@ import batect.proxies.ProxyEnvironmentVariablesProvider
 class DockerContainerEnvironmentVariableProvider(
     private val proxyEnvironmentVariablesProvider: ProxyEnvironmentVariablesProvider,
     private val expressionEvaluationContext: ExpressionEvaluationContext,
-    private val containerDependencyGraph: ContainerDependencyGraph
+    private val containerDependencyGraph: ContainerDependencyGraph,
+    private val commandLineOptions: CommandLineOptions
 ) {
     private val allContainersInNetwork = containerDependencyGraph.allContainers
 
     fun environmentVariablesFor(
         container: Container,
         config: ContainerRuntimeConfiguration,
-        propagateProxyEnvironmentVariables: Boolean,
         terminalType: String?
     ): Map<String, String> =
         terminalEnvironmentVariablesFor(terminalType) +
-            proxyEnvironmentVariables(propagateProxyEnvironmentVariables) +
+            proxyEnvironmentVariables() +
             substituteEnvironmentVariables(container.environment + config.additionalEnvironmentVariables)
 
     private fun terminalEnvironmentVariablesFor(terminalType: String?): Map<String, String> = if (terminalType == null) {
@@ -48,10 +49,10 @@ class DockerContainerEnvironmentVariableProvider(
         mapOf("TERM" to terminalType)
     }
 
-    private fun proxyEnvironmentVariables(propagateProxyEnvironmentVariables: Boolean): Map<String, String> = if (propagateProxyEnvironmentVariables) {
-        proxyEnvironmentVariablesProvider.getProxyEnvironmentVariables(allContainersInNetwork.mapToSet { it.name })
-    } else {
+    private fun proxyEnvironmentVariables(): Map<String, String> = if (commandLineOptions.dontPropagateProxyEnvironmentVariables) {
         emptyMap()
+    } else {
+        proxyEnvironmentVariablesProvider.getProxyEnvironmentVariables(allContainersInNetwork.mapToSet { it.name })
     }
 
     private fun substituteEnvironmentVariables(original: Map<String, Expression>): Map<String, String> =

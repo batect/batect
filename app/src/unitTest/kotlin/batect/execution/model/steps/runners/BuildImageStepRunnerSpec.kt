@@ -16,6 +16,7 @@
 
 package batect.execution.model.steps.runners
 
+import batect.cli.CommandLineOptions
 import batect.config.BuildImage
 import batect.config.Configuration
 import batect.config.Container
@@ -29,8 +30,6 @@ import batect.docker.DockerImage
 import batect.docker.ImageBuildFailedException
 import batect.docker.client.DockerImageBuildProgress
 import batect.docker.client.DockerImagesClient
-import batect.execution.CleanupOption
-import batect.execution.RunOptions
 import batect.execution.model.events.ImageBuildFailedEvent
 import batect.execution.model.events.ImageBuildProgressEvent
 import batect.execution.model.events.ImageBuiltEvent
@@ -100,7 +99,6 @@ object BuildImageStepRunnerSpec : Spek({
             }
         }
 
-        val runOptions = RunOptions("some-task", emptyList(), CleanupOption.Cleanup, CleanupOption.Cleanup, true, emptyMap())
         val systemInfo = mock<SystemInfo> {
             on { lineSeparator } doReturn "SYSTEM_LINE_SEPARATOR"
         }
@@ -117,7 +115,7 @@ object BuildImageStepRunnerSpec : Spek({
                 expressionEvaluationContext,
                 cancellationContext,
                 ioStreamingOptions,
-                runOptions,
+                CommandLineOptions(dontPropagateProxyEnvironmentVariables = false),
                 systemInfo
             )
         }
@@ -198,7 +196,7 @@ object BuildImageStepRunnerSpec : Spek({
 
             on("and propagating proxy-related environment variables is disabled") {
                 val image = DockerImage("some-image")
-                val runOptionsWithProxyEnvironmentVariablePropagationDisabled = runOptions.copy(propagateProxyEnvironmentVariables = false)
+                val commandLineOptionsWithProxyEnvironmentVariablePropagationDisabled = CommandLineOptions(dontPropagateProxyEnvironmentVariables = true)
                 val runnerWithProxyEnvironmentVariablePropagationDisabled by createForEachTest {
                     BuildImageStepRunner(
                         config,
@@ -208,7 +206,7 @@ object BuildImageStepRunnerSpec : Spek({
                         expressionEvaluationContext,
                         cancellationContext,
                         ioStreamingOptions,
-                        runOptionsWithProxyEnvironmentVariablePropagationDisabled,
+                        commandLineOptionsWithProxyEnvironmentVariablePropagationDisabled,
                         systemInfo
                     )
                 }

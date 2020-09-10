@@ -20,7 +20,6 @@ import batect.docker.DockerContainerEnvironmentVariableProvider
 import batect.docker.DockerException
 import batect.docker.client.DockerExecClient
 import batect.execution.RunAsCurrentUserConfigurationProvider
-import batect.execution.RunOptions
 import batect.execution.model.events.ContainerBecameReadyEvent
 import batect.execution.model.events.RunningSetupCommandEvent
 import batect.execution.model.events.SetupCommandExecutionErrorEvent
@@ -35,7 +34,6 @@ class RunContainerSetupCommandsStepRunner(
     private val execClient: DockerExecClient,
     private val environmentVariableProvider: DockerContainerEnvironmentVariableProvider,
     private val runAsCurrentUserConfigurationProvider: RunAsCurrentUserConfigurationProvider,
-    private val runOptions: RunOptions,
     private val cancellationContext: CancellationContext,
     private val ioStreamingOptions: ContainerIOStreamingOptions
 ) {
@@ -48,7 +46,6 @@ class RunContainerSetupCommandsStepRunner(
         val environmentVariables = environmentVariableProvider.environmentVariablesFor(
             step.container,
             step.config,
-            runOptions.propagateProxyEnvironmentVariables,
             null
         )
 

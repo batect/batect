@@ -24,10 +24,8 @@ import batect.docker.DockerException
 import batect.docker.DockerExecResult
 import batect.docker.UserAndGroup
 import batect.docker.client.DockerExecClient
-import batect.execution.CleanupOption
 import batect.execution.ContainerRuntimeConfiguration
 import batect.execution.RunAsCurrentUserConfigurationProvider
-import batect.execution.RunOptions
 import batect.execution.model.events.ContainerBecameReadyEvent
 import batect.execution.model.events.RunningSetupCommandEvent
 import batect.execution.model.events.SetupCommandExecutionErrorEvent
@@ -66,12 +64,11 @@ object RunContainerSetupCommandsStepRunnerSpec : Spek({
             on { determineUserAndGroup(any()) } doReturn userAndGroup
         }
 
-        val runOptions = RunOptions("some-task", emptyList(), CleanupOption.Cleanup, CleanupOption.Cleanup, true, emptyMap())
         val cancellationContext by createForEachTest { mock<CancellationContext>() }
         val ioStreamingOptions by createForEachTest { mock<ContainerIOStreamingOptions>() }
         val eventSink by createForEachTest { mock<TaskEventSink>() }
 
-        val runner by createForEachTest { RunContainerSetupCommandsStepRunner(execClient, environmentVariableProvider, runAsCurrentUserConfigurationProvider, runOptions, cancellationContext, ioStreamingOptions) }
+        val runner by createForEachTest { RunContainerSetupCommandsStepRunner(execClient, environmentVariableProvider, runAsCurrentUserConfigurationProvider, cancellationContext, ioStreamingOptions) }
 
         given("the container has no setup commands") {
             val container = Container("the-container", imageSourceDoesNotMatter(), setupCommands = emptyList())
@@ -102,7 +99,7 @@ object RunContainerSetupCommandsStepRunnerSpec : Spek({
             val outputSink by createForEachTest { mock<Sink>() }
 
             beforeEachTest {
-                whenever(environmentVariableProvider.environmentVariablesFor(container, config, runOptions.propagateProxyEnvironmentVariables, null)).doReturn(environmentVariablesToUse)
+                whenever(environmentVariableProvider.environmentVariablesFor(container, config, null)).doReturn(environmentVariablesToUse)
                 whenever(ioStreamingOptions.stdoutForContainerSetupCommand(container, setupCommand, 0)).thenReturn(outputSink)
             }
 
@@ -214,7 +211,7 @@ object RunContainerSetupCommandsStepRunnerSpec : Spek({
             val outputSink by createForEachTest { mock<Sink>() }
 
             beforeEachTest {
-                whenever(environmentVariableProvider.environmentVariablesFor(container, config, runOptions.propagateProxyEnvironmentVariables, null)).doReturn(environmentVariablesToUse)
+                whenever(environmentVariableProvider.environmentVariablesFor(container, config, null)).doReturn(environmentVariablesToUse)
                 whenever(ioStreamingOptions.stdoutForContainerSetupCommand(container, setupCommand, 0)).thenReturn(outputSink)
             }
 
@@ -258,7 +255,7 @@ object RunContainerSetupCommandsStepRunnerSpec : Spek({
             val outputSink3 by createForEachTest { mock<Sink>() }
 
             beforeEachTest {
-                whenever(environmentVariableProvider.environmentVariablesFor(container, config, runOptions.propagateProxyEnvironmentVariables, null)).doReturn(environmentVariablesToUse)
+                whenever(environmentVariableProvider.environmentVariablesFor(container, config, null)).doReturn(environmentVariablesToUse)
                 whenever(ioStreamingOptions.stdoutForContainerSetupCommand(container, setupCommand1, 0)).doReturn(outputSink1)
                 whenever(ioStreamingOptions.stdoutForContainerSetupCommand(container, setupCommand2, 1)).doReturn(outputSink2)
                 whenever(ioStreamingOptions.stdoutForContainerSetupCommand(container, setupCommand3, 2)).doReturn(outputSink3)

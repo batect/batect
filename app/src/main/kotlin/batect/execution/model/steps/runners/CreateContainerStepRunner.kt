@@ -21,7 +21,6 @@ import batect.docker.DockerContainerCreationRequestFactory
 import batect.docker.client.DockerContainersClient
 import batect.execution.RunAsCurrentUserConfigurationException
 import batect.execution.RunAsCurrentUserConfigurationProvider
-import batect.execution.RunOptions
 import batect.execution.VolumeMountResolutionException
 import batect.execution.VolumeMountResolver
 import batect.execution.model.events.ContainerCreatedEvent
@@ -35,7 +34,6 @@ class CreateContainerStepRunner(
     private val volumeMountResolver: VolumeMountResolver,
     private val runAsCurrentUserConfigurationProvider: RunAsCurrentUserConfigurationProvider,
     private val creationRequestFactory: DockerContainerCreationRequestFactory,
-    private val runOptions: RunOptions,
     private val ioStreamingOptions: ContainerIOStreamingOptions
 ) {
     fun run(step: CreateContainerStep, eventSink: TaskEventSink) {
@@ -52,7 +50,6 @@ class CreateContainerStepRunner(
                 step.network,
                 step.config,
                 volumeMounts,
-                runOptions.propagateProxyEnvironmentVariables,
                 runAsCurrentUserConfiguration.userAndGroup,
                 ioStreamingOptions.terminalTypeForContainer(step.container),
                 ioStreamingOptions.useTTYForContainer(step.container),

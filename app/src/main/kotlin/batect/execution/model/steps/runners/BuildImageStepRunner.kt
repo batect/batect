@@ -16,6 +16,7 @@
 
 package batect.execution.model.steps.runners
 
+import batect.cli.CommandLineOptions
 import batect.config.BuildImage
 import batect.config.Configuration
 import batect.config.Expression
@@ -24,7 +25,6 @@ import batect.config.ExpressionEvaluationException
 import batect.docker.ImageBuildFailedException
 import batect.docker.client.DockerImageBuildProgress
 import batect.docker.client.DockerImagesClient
-import batect.execution.RunOptions
 import batect.execution.model.events.ImageBuildFailedEvent
 import batect.execution.model.events.ImageBuildProgressEvent
 import batect.execution.model.events.ImageBuiltEvent
@@ -47,7 +47,7 @@ class BuildImageStepRunner(
     private val expressionEvaluationContext: ExpressionEvaluationContext,
     private val cancellationContext: CancellationContext,
     private val ioStreamingOptions: ContainerIOStreamingOptions,
-    private val runOptions: RunOptions,
+    private val commandLineOptions: CommandLineOptions,
     private val systemInfo: SystemInfo
 ) {
     fun run(step: BuildImageStep, eventSink: TaskEventSink) {
@@ -57,7 +57,7 @@ class BuildImageStepRunner(
             }
 
             val buildConfig = step.container.imageSource as BuildImage
-            val buildArgs = buildTimeProxyEnvironmentVariablesForOptions(runOptions) +
+            val buildArgs = buildTimeProxyEnvironmentVariablesForOptions() +
                 substituteBuildArgs(buildConfig.buildArgs)
 
             val image = imagesClient.build(
@@ -113,10 +113,10 @@ class BuildImageStepRunner(
         }
     }
 
-    private fun buildTimeProxyEnvironmentVariablesForOptions(runOptions: RunOptions): Map<String, String> = if (runOptions.propagateProxyEnvironmentVariables) {
-        proxyEnvironmentVariablesProvider.getProxyEnvironmentVariables(emptySet())
-    } else {
+    private fun buildTimeProxyEnvironmentVariablesForOptions(): Map<String, String> = if (commandLineOptions.dontPropagateProxyEnvironmentVariables) {
         emptyMap()
+    } else {
+        proxyEnvironmentVariablesProvider.getProxyEnvironmentVariables(emptySet())
     }
 
     private fun imageTagFor(step: BuildImageStep): String = "${config.projectName}-${step.container.name}"

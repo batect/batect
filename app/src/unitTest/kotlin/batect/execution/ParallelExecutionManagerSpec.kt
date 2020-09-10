@@ -329,6 +329,8 @@ object ParallelExecutionManagerSpec : Spek({
 
                 whenever(stateMachine.postEvent(step2TriggerEvent)).doAnswer {
                     whenever(stateMachine.popNextStep(true)).doReturn(step2, null)
+
+                    Unit
                 }
 
                 whenever(taskStepRunner.run(eq(step2), eq(executionManager))).doAnswer {

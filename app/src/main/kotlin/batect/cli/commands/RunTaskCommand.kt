@@ -16,6 +16,7 @@
 
 package batect.cli.commands
 
+import batect.cli.CommandLineOptions
 import batect.config.Configuration
 import batect.config.PullImage
 import batect.config.Task
@@ -35,6 +36,7 @@ import org.kodein.di.instance
 
 class RunTaskCommand(
     private val configFile: Path,
+    private val commandLineOptions: CommandLineOptions,
     private val runOptions: RunOptions,
     private val configLoader: ConfigurationLoader,
     private val taskExecutionOrderResolver: TaskExecutionOrderResolver,
@@ -56,7 +58,7 @@ class RunTaskCommand(
 
     private fun loadConfig(): Configuration {
         val configFromFile = configLoader.loadConfig(configFile)
-        val overrides = runOptions.imageOverrides.mapValues { PullImage(it.value) }
+        val overrides = commandLineOptions.imageOverrides.mapValues { PullImage(it.value) }
 
         return configFromFile.applyImageOverrides(overrides)
     }

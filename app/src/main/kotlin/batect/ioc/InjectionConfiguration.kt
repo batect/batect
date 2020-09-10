@@ -150,6 +150,7 @@ private val cliModule = DI.Module("cli") {
     bind<RunTaskCommand>() with singleton {
         RunTaskCommand(
             commandLineOptions().configurationFileName,
+            instance(),
             instance(RunOptionsType.Overall),
             instance(),
             instance(),

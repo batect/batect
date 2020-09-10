@@ -22,14 +22,12 @@ data class RunOptions(
     val taskName: String,
     val additionalTaskCommandArguments: Iterable<String>,
     val behaviourAfterSuccess: CleanupOption,
-    val behaviourAfterFailure: CleanupOption,
-    val imageOverrides: Map<String, String>
+    val behaviourAfterFailure: CleanupOption
 ) {
     constructor(options: CommandLineOptions) : this(
         options.taskName!!,
         options.additionalTaskCommandArguments,
         if (options.disableCleanupAfterSuccess) CleanupOption.DontCleanup else CleanupOption.Cleanup,
-        if (options.disableCleanupAfterFailure) CleanupOption.DontCleanup else CleanupOption.Cleanup,
-        options.imageOverrides
+        if (options.disableCleanupAfterFailure) CleanupOption.DontCleanup else CleanupOption.Cleanup
     )
 }

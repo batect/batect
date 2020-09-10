@@ -31,8 +31,7 @@ object RunOptionsSpec : Spek({
                 taskName = "some-task",
                 additionalTaskCommandArguments = listOf("extra-arg-1", "extra-arg-2"),
                 disableCleanupAfterSuccess = true,
-                disableCleanupAfterFailure = false,
-                imageOverrides = mapOf("container-1" to "image-1")
+                disableCleanupAfterFailure = false
             )
 
             on("creating a set of run options") {
@@ -53,10 +52,6 @@ object RunOptionsSpec : Spek({
                 it("disables cleanup after success") {
                     assertThat(runOptions.behaviourAfterSuccess, equalTo(CleanupOption.DontCleanup))
                 }
-
-                it("takes the image overrides from the command line options") {
-                    assertThat(runOptions.imageOverrides, equalTo(mapOf("container-1" to "image-1")))
-                }
             }
         }
 
@@ -65,8 +60,7 @@ object RunOptionsSpec : Spek({
                 taskName = "some-task",
                 additionalTaskCommandArguments = listOf("extra-arg-1", "extra-arg-2"),
                 disableCleanupAfterSuccess = false,
-                disableCleanupAfterFailure = true,
-                imageOverrides = mapOf("container-1" to "image-1")
+                disableCleanupAfterFailure = true
             )
 
             on("creating a set of run options") {
@@ -86,10 +80,6 @@ object RunOptionsSpec : Spek({
 
                 it("enables cleanup after success") {
                     assertThat(runOptions.behaviourAfterSuccess, equalTo(CleanupOption.Cleanup))
-                }
-
-                it("takes the image overrides from the command line options") {
-                    assertThat(runOptions.imageOverrides, equalTo(mapOf("container-1" to "image-1")))
                 }
             }
         }

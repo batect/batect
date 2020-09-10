@@ -355,7 +355,7 @@ Example:
 ./batect --output simple the-task
 ```
 
-Passing `--output=quiet` implies [`--no-update-notification`](#disable-update-notification-no-update-notification). 
+Passing `--output=quiet` implies [`--no-update-notification`](#disable-update-notification-no-update-notification).
 
 Passing `--output=quiet` also modifies the output of [`--list-tasks`](#see-a-list-of-available-tasks-list-tasks-or-t)
 to make it easier to parse with other applications.

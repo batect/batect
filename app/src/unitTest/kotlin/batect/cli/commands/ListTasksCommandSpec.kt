@@ -152,7 +152,7 @@ object ListTasksCommandSpec : Spek({
                     |Test tasks:
                     |- first-task
                     |
-                """.trimMargin().withPlatformSpecificLineSeparator())
+                """.trimMargin())
 
                 whenRunningWithQuietOutputModeItProducesOutput("""
                     |another-task-with-a-description${'\t'}do the thing
@@ -180,7 +180,7 @@ object ListTasksCommandSpec : Spek({
                     |Ungrouped tasks:
                     |- first-task
                     |
-                """.trimMargin().withPlatformSpecificLineSeparator())
+                """.trimMargin())
 
                 whenRunningWithQuietOutputModeItProducesOutput("""
                     |another-task-with-a-description${'\t'}do the thing

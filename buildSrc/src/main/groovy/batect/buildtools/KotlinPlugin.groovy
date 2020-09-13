@@ -150,11 +150,6 @@ class KotlinPlugin implements Plugin<Project> {
             testImplementation 'org.mockito:mockito-core:3.3.3'
             testImplementation 'com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0'
         }
-
-        project.tasks.named('test') {
-            systemProperty 'spek2.discovery.parallel.enabled', 'true'
-            systemProperty 'spek2.execution.parallel.enabled', 'true'
-        }
     }
 
     private void configureUnitTestLayoutCheck(Project project) {

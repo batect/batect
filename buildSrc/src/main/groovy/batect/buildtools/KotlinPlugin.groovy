@@ -94,8 +94,8 @@ class KotlinPlugin implements Plugin<Project> {
 
         project.dependencies {
             testCommonImplementation 'com.natpryce:hamkrest:1.7.0.3'
-            testCommonImplementation "org.spekframework.spek2:spek-dsl-jvm:2.0.11"
-            testCommonRuntimeOnly "org.spekframework.spek2:spek-runner-junit5:2.0.11"
+            testCommonImplementation "org.spekframework.spek2:spek-dsl-jvm:2.0.13"
+            testCommonRuntimeOnly "org.spekframework.spek2:spek-runner-junit5:2.0.13"
             testCommonRuntimeOnly 'org.junit.platform:junit-platform-engine:1.6.2'
         }
 

@@ -17,6 +17,7 @@
 package batect.ioc
 
 import batect.execution.SessionRunner
+import batect.execution.TaskExecutionOrderResolver
 import batect.execution.TaskRunner
 import batect.logging.singletonWithLogger
 import org.kodein.di.DI
@@ -25,7 +26,8 @@ import org.kodein.di.instance
 import org.kodein.di.singleton
 
 val sessionScopeModule = DI.Module("Session scope: root") {
-    bind<SessionRunner>() with singleton { SessionRunner(instance(), instance(), instance(), instance(), instance(StreamType.Output), instance()) }
+    bind<SessionRunner>() with singleton { SessionRunner(instance(), instance(), instance(), instance(StreamType.Output), instance()) }
+    bind<TaskExecutionOrderResolver>() with singletonWithLogger { logger -> TaskExecutionOrderResolver(instance(), instance(), instance(), logger) }
     bind<TaskKodeinFactory>() with singleton { TaskKodeinFactory(directDI) }
     bind<TaskRunner>() with singletonWithLogger { logger -> TaskRunner(instance(), instance(), instance(StreamType.Output), instance(), logger) }
 }

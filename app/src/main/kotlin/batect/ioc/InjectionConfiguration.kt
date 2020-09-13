@@ -62,7 +62,6 @@ import batect.docker.run.ContainerWaiter
 import batect.execution.ConfigVariablesProvider
 import batect.execution.ContainerEntrypointResolver
 import batect.execution.InterruptionTrap
-import batect.execution.TaskExecutionOrderResolver
 import batect.execution.TaskSuggester
 import batect.git.GitClient
 import batect.io.ApplicationPaths
@@ -231,7 +230,6 @@ private val executionModule = DI.Module("execution") {
     bind<ConfigVariablesProvider>() with singleton { ConfigVariablesProvider(commandLineOptions().configVariableOverrides, commandLineOptions().configVariablesSourceFile, instance()) }
     bind<ContainerEntrypointResolver>() with singleton { ContainerEntrypointResolver() }
     bind<InterruptionTrap>() with singleton { InterruptionTrap(instance()) }
-    bind<TaskExecutionOrderResolver>() with singletonWithLogger { logger -> TaskExecutionOrderResolver(instance(), instance(), logger) }
     bind<TaskSuggester>() with singleton { TaskSuggester() }
 }
 

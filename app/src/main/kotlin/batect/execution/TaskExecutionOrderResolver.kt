@@ -23,21 +23,22 @@ import batect.logging.Logger
 import batect.utils.asHumanReadableList
 
 class TaskExecutionOrderResolver(
+    private val config: Configuration,
     private val commandLineOptions: CommandLineOptions,
     private val suggester: TaskSuggester,
     private val logger: Logger
 ) {
-    fun resolveExecutionOrder(config: Configuration, taskName: String): List<Task> {
+    fun resolveExecutionOrder(taskName: String): List<Task> {
         val task = config.tasks[taskName]
 
         if (task == null) {
-            throw TaskDoesNotExistException("The task '$taskName' does not exist." + formatTaskSuggestions(config, taskName) + " (Run './batect --list-tasks' for a list of all tasks in this project, or './batect --help' for help.)")
+            throw TaskDoesNotExistException("The task '$taskName' does not exist." + formatTaskSuggestions(taskName) + " (Run './batect --list-tasks' for a list of all tasks in this project, or './batect --help' for help.)")
         }
 
         val executionOrder = if (commandLineOptions.skipPrerequisites) {
             listOf(task)
         } else {
-            resolvePrerequisitesForTask(config, task, listOf(task), emptyList())
+            resolvePrerequisitesForTask(task, listOf(task), emptyList())
         }
 
         logger.info {
@@ -49,26 +50,26 @@ class TaskExecutionOrderResolver(
         return executionOrder
     }
 
-    private fun resolvePrerequisitesForTask(config: Configuration, task: Task, path: List<Task>, executionOrderSoFar: List<Task>): List<Task> {
+    private fun resolvePrerequisitesForTask(task: Task, path: List<Task>, executionOrderSoFar: List<Task>): List<Task> {
         val prerequisites = task.prerequisiteTasks
-            .map { prerequisiteTaskName -> resolvePrerequisiteForTask(config, task, prerequisiteTaskName, path) }
+            .map { prerequisiteTaskName -> resolvePrerequisiteForTask(task, prerequisiteTaskName, path) }
 
         var executionOrder = executionOrderSoFar
 
         prerequisites.forEach { prerequisite ->
             if (prerequisite !in executionOrder) {
-                executionOrder = resolvePrerequisitesForTask(config, prerequisite, path + prerequisite, executionOrder)
+                executionOrder = resolvePrerequisitesForTask(prerequisite, path + prerequisite, executionOrder)
             }
         }
 
         return executionOrder + task
     }
 
-    private fun resolvePrerequisiteForTask(config: Configuration, parentTask: Task, prerequisiteTaskName: String, path: List<Task>): Task {
+    private fun resolvePrerequisiteForTask(parentTask: Task, prerequisiteTaskName: String, path: List<Task>): Task {
         val prerequisite = config.tasks[prerequisiteTaskName]
 
         if (prerequisite == null) {
-            val message = "The task '$prerequisiteTaskName' given as a prerequisite of '${parentTask.name}' does not exist." + formatTaskSuggestions(config, prerequisiteTaskName)
+            val message = "The task '$prerequisiteTaskName' given as a prerequisite of '${parentTask.name}' does not exist." + formatTaskSuggestions(prerequisiteTaskName)
             throw PrerequisiteTaskDoesNotExistException(message)
         }
 
@@ -85,12 +86,12 @@ class TaskExecutionOrderResolver(
         val firstPart = "task ${taskNames[0]} has ${taskNames[1]} as a prerequisite"
 
         val remainingNames = taskNames.drop(2)
-        val remainingPart = remainingNames.map { ", which has $it as a prerequisite" }.joinToString("")
+        val remainingPart = remainingNames.joinToString("") { ", which has $it as a prerequisite" }
 
         return firstPart + remainingPart
     }
 
-    private fun formatTaskSuggestions(config: Configuration, originalTaskName: String): String {
+    private fun formatTaskSuggestions(originalTaskName: String): String {
         val suggestions = suggester
             .suggestCorrections(config, originalTaskName)
             .map { "'$it'" }

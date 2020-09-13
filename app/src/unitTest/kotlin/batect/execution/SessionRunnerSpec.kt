@@ -17,10 +17,7 @@
 package batect.execution
 
 import batect.cli.CommandLineOptions
-import batect.config.Configuration
-import batect.config.ContainerMap
 import batect.config.Task
-import batect.config.TaskMap
 import batect.config.TaskRunConfiguration
 import batect.telemetry.TelemetrySessionBuilder
 import batect.testutils.createForEachTest
@@ -45,7 +42,6 @@ object SessionRunnerSpec : Spek({
         val taskName = "the-task"
         val mainTask = Task(taskName, TaskRunConfiguration("the-container"))
         val otherTask = Task("other-task", TaskRunConfiguration("the-other-container"))
-        val config = Configuration("the_project", TaskMap(mainTask, otherTask), ContainerMap())
 
         val baseCommandLineOptions = CommandLineOptions(disableCleanupAfterSuccess = true, disableCleanupAfterFailure = true)
         val runOptionsForMainTask = RunOptions(true, baseCommandLineOptions)
@@ -58,7 +54,7 @@ object SessionRunnerSpec : Spek({
         given("the task has no prerequisites") {
             val commandLineOptions = baseCommandLineOptions.copy(requestedOutputStyle = OutputStyle.Fancy)
             val taskExecutionOrderResolver = mock<TaskExecutionOrderResolver> {
-                on { resolveExecutionOrder(config, taskName) } doReturn listOf(mainTask)
+                on { resolveExecutionOrder(taskName) } doReturn listOf(mainTask)
             }
 
             given("that task returns a zero exit code") {
@@ -66,7 +62,7 @@ object SessionRunnerSpec : Spek({
                     whenever(taskRunner.run(mainTask, runOptionsForMainTask)).thenReturn(0)
                 }
 
-                val runner by createForEachTest { SessionRunner(config, taskExecutionOrderResolver, commandLineOptions, taskRunner, console, telemetrySessionBuilder) }
+                val runner by createForEachTest { SessionRunner(taskExecutionOrderResolver, commandLineOptions, taskRunner, console, telemetrySessionBuilder) }
                 val exitCode by runForEachTest { runner.runTaskAndPrerequisites(taskName) }
 
                 it("runs the task") {
@@ -93,7 +89,7 @@ object SessionRunnerSpec : Spek({
                     whenever(taskRunner.run(mainTask, runOptionsForMainTask)).thenReturn(expectedTaskExitCode)
                 }
 
-                val runner by createForEachTest { SessionRunner(config, taskExecutionOrderResolver, commandLineOptions, taskRunner, console, telemetrySessionBuilder) }
+                val runner by createForEachTest { SessionRunner(taskExecutionOrderResolver, commandLineOptions, taskRunner, console, telemetrySessionBuilder) }
                 val exitCode by runForEachTest { runner.runTaskAndPrerequisites(taskName) }
 
                 it("runs the task") {
@@ -112,7 +108,7 @@ object SessionRunnerSpec : Spek({
 
         given("the task has a prerequisite") {
             val taskExecutionOrderResolver = mock<TaskExecutionOrderResolver> {
-                on { resolveExecutionOrder(config, taskName) } doReturn listOf(otherTask, mainTask)
+                on { resolveExecutionOrder(taskName) } doReturn listOf(otherTask, mainTask)
             }
 
             given("the dependency finishes with an exit code of 0") {
@@ -125,7 +121,7 @@ object SessionRunnerSpec : Spek({
 
                 given("quiet output mode is not being used") {
                     val commandLineOptions = baseCommandLineOptions.copy(requestedOutputStyle = OutputStyle.Fancy)
-                    val runner by createForEachTest { SessionRunner(config, taskExecutionOrderResolver, commandLineOptions, taskRunner, console, telemetrySessionBuilder) }
+                    val runner by createForEachTest { SessionRunner(taskExecutionOrderResolver, commandLineOptions, taskRunner, console, telemetrySessionBuilder) }
 
                     val exitCode by runForEachTest { runner.runTaskAndPrerequisites(taskName) }
 
@@ -156,7 +152,7 @@ object SessionRunnerSpec : Spek({
 
                 given("quiet output mode is being used") {
                     val commandLineOptions = baseCommandLineOptions.copy(requestedOutputStyle = OutputStyle.Quiet)
-                    val runner by createForEachTest { SessionRunner(config, taskExecutionOrderResolver, commandLineOptions, taskRunner, console, telemetrySessionBuilder) }
+                    val runner by createForEachTest { SessionRunner(taskExecutionOrderResolver, commandLineOptions, taskRunner, console, telemetrySessionBuilder) }
 
                     beforeEachTest { runner.runTaskAndPrerequisites(taskName) }
 
@@ -176,7 +172,7 @@ object SessionRunnerSpec : Spek({
                 }
 
                 val commandLineOptions = baseCommandLineOptions.copy(requestedOutputStyle = OutputStyle.Fancy)
-                val runner by createForEachTest { SessionRunner(config, taskExecutionOrderResolver, commandLineOptions, taskRunner, console, telemetrySessionBuilder) }
+                val runner by createForEachTest { SessionRunner(taskExecutionOrderResolver, commandLineOptions, taskRunner, console, telemetrySessionBuilder) }
                 val exitCode by runForEachTest { runner.runTaskAndPrerequisites(taskName) }
 
                 it("runs the dependency task") {

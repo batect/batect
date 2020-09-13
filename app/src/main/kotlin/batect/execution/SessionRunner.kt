@@ -17,14 +17,12 @@
 package batect.execution
 
 import batect.cli.CommandLineOptions
-import batect.config.Configuration
 import batect.config.Task
 import batect.telemetry.TelemetrySessionBuilder
 import batect.ui.Console
 import batect.ui.OutputStyle
 
 class SessionRunner(
-    private val config: Configuration,
     private val taskExecutionOrderResolver: TaskExecutionOrderResolver,
     private val commandLineOptions: CommandLineOptions,
     private val taskRunner: TaskRunner,
@@ -32,7 +30,7 @@ class SessionRunner(
     private val telemetrySessionBuilder: TelemetrySessionBuilder
 ) {
     fun runTaskAndPrerequisites(taskName: String): Int {
-        val tasks = taskExecutionOrderResolver.resolveExecutionOrder(config, taskName)
+        val tasks = taskExecutionOrderResolver.resolveExecutionOrder(taskName)
         telemetrySessionBuilder.addAttribute("totalTasksToExecute", tasks.size)
 
         return runTasks(tasks)

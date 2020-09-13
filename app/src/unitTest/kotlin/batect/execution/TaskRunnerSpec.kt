@@ -54,7 +54,7 @@ import org.spekframework.spek2.style.specification.describe
 
 object TaskRunnerSpec : Spek({
     describe("a task runner") {
-        val runOptions = RunOptions("some-task", emptyList(), CleanupOption.Cleanup, CleanupOption.Cleanup)
+        val runOptions = RunOptions(false, CleanupOption.Cleanup, CleanupOption.Cleanup)
 
         val taskKodeinFactory by createForEachTest { mock<TaskKodeinFactory>() }
         val interruptionTrapCleanup by createForEachTest { mock<AutoCloseable>() }

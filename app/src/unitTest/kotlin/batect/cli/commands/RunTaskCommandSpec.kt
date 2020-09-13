@@ -23,8 +23,6 @@ import batect.config.ContainerMap
 import batect.config.PullImage
 import batect.config.TaskMap
 import batect.config.io.ConfigurationLoader
-import batect.execution.CleanupOption
-import batect.execution.RunOptions
 import batect.execution.SessionRunner
 import batect.ioc.SessionKodeinFactory
 import batect.testutils.createForEachTest
@@ -55,9 +53,11 @@ object RunTaskCommandSpec : Spek({
             val taskName = "the-task"
             val config = Configuration("the_project", TaskMap(), ContainerMap(Container("the-container", PullImage("the-image"))))
             val configWithImageOverrides = Configuration("the_project", TaskMap(), ContainerMap(Container("the-container", PullImage("the-new-image"))))
-            val imageOverrides = mapOf("the-container" to "the-new-image")
-            val commandLineOptions = CommandLineOptions(imageOverrides = imageOverrides)
-            val runOptions = RunOptions(taskName, emptyList(), CleanupOption.DontCleanup, CleanupOption.Cleanup)
+
+            val baseCommandLineOptions = CommandLineOptions(
+                imageOverrides = mapOf("the-container" to "the-new-image"),
+                taskName = taskName
+            )
 
             val configLoader by createForEachTest {
                 mock<ConfigurationLoader> {
@@ -75,7 +75,7 @@ object RunTaskCommandSpec : Spek({
 
             val sessionKodeinFactory by createForEachTest {
                 mock<SessionKodeinFactory> {
-                    on { create(configWithImageOverrides) } doReturn DI.direct {
+                    on { create(any()) } doReturn DI.direct {
                         bind<SessionRunner>() with instance(sessionRunner)
                     }
                 }
@@ -88,8 +88,8 @@ object RunTaskCommandSpec : Spek({
             }
 
             given("quiet output mode is not being used") {
-                val outputMode = OutputStyle.Fancy
-                val command by createForEachTest { RunTaskCommand(configFile, commandLineOptions, runOptions, configLoader, updateNotifier, backgroundTaskManager, dockerConnectivity, outputMode) }
+                val commandLineOptions = baseCommandLineOptions.copy(requestedOutputStyle = OutputStyle.Fancy)
+                val command by createForEachTest { RunTaskCommand(configFile, commandLineOptions, configLoader, updateNotifier, backgroundTaskManager, dockerConnectivity) }
                 val exitCode by runForEachTest { command.run() }
 
                 it("runs the task") {
@@ -114,11 +114,15 @@ object RunTaskCommandSpec : Spek({
                         verify(sessionRunner).runTaskAndPrerequisites(any())
                     }
                 }
+
+                it("creates the session Kodein context with the configuration with image overrides applied") {
+                    verify(sessionKodeinFactory).create(configWithImageOverrides)
+                }
             }
 
             given("quiet output mode is being used") {
-                val outputMode = OutputStyle.Quiet
-                val command by createForEachTest { RunTaskCommand(configFile, commandLineOptions, runOptions, configLoader, updateNotifier, backgroundTaskManager, dockerConnectivity, outputMode) }
+                val commandLineOptions = baseCommandLineOptions.copy(requestedOutputStyle = OutputStyle.Quiet)
+                val command by createForEachTest { RunTaskCommand(configFile, commandLineOptions, configLoader, updateNotifier, backgroundTaskManager, dockerConnectivity) }
                 beforeEachTest { command.run() }
 
                 it("does not display any update notifications") {

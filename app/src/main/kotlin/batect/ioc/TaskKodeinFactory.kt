@@ -30,7 +30,7 @@ class TaskKodeinFactory(
     private val baseKodein: DirectDI
 ) {
     fun create(task: Task, runOptions: RunOptions): TaskKodein = TaskKodein(task, subDI(baseKodein.di) {
-        bind<RunOptions>(RunOptionsType.Task) with scoped(TaskScope).singleton { runOptions }
+        bind<RunOptions>() with scoped(TaskScope).singleton { runOptions }
 
         import(taskScopeModule)
     }.direct.on(task))

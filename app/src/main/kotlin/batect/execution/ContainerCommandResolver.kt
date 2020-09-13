@@ -16,28 +16,28 @@
 
 package batect.execution
 
+import batect.cli.CommandLineOptions
 import batect.config.Container
 import batect.config.Task
 import batect.os.Command
 
-class ContainerCommandResolver(private val runOptions: RunOptions) {
+class ContainerCommandResolver(private val runOptions: RunOptions, private val commandLineOptions: CommandLineOptions) {
     fun resolveCommand(container: Container, task: Task): Command? {
         val baseCommand = resolveBaseCommand(container, task)
 
-        if (extraArgsApply(container, task)) {
+        if (extraArgsApply(container, task) && commandLineOptions.additionalTaskCommandArguments.any()) {
             if (baseCommand == null) {
                 throw ContainerCommandResolutionException("Additional command line arguments for the task have been provided, but neither the task (${task.name}) nor the main task container (${container.name}) have an explicit command in the configuration file.")
             }
 
-            return baseCommand + runOptions.additionalTaskCommandArguments
+            return baseCommand + commandLineOptions.additionalTaskCommandArguments
         }
 
         return baseCommand
     }
 
     private fun isTaskContainer(container: Container, task: Task): Boolean = container.name == task.runConfiguration?.container
-    private fun isMainTask(task: Task): Boolean = task.name == runOptions.taskName
-    private fun extraArgsApply(container: Container, task: Task): Boolean = isTaskContainer(container, task) && isMainTask(task) && runOptions.additionalTaskCommandArguments.any()
+    private fun extraArgsApply(container: Container, task: Task): Boolean = isTaskContainer(container, task) && runOptions.isMainTask
 
     private fun resolveBaseCommand(container: Container, task: Task): Command? {
         if (task.runConfiguration != null && isTaskContainer(container, task) && task.runConfiguration.command != null) {

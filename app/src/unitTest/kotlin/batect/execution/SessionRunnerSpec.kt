@@ -16,6 +16,7 @@
 
 package batect.execution
 
+import batect.cli.CommandLineOptions
 import batect.config.Configuration
 import batect.config.ContainerMap
 import batect.config.Task
@@ -46,26 +47,30 @@ object SessionRunnerSpec : Spek({
         val otherTask = Task("other-task", TaskRunConfiguration("the-other-container"))
         val config = Configuration("the_project", TaskMap(mainTask, otherTask), ContainerMap())
 
-        val runOptions = RunOptions(taskName, emptyList(), CleanupOption.DontCleanup, CleanupOption.Cleanup)
+        val baseCommandLineOptions = CommandLineOptions(disableCleanupAfterSuccess = true, disableCleanupAfterFailure = true)
+        val runOptionsForMainTask = RunOptions(true, baseCommandLineOptions)
+        val runOptionsForOtherTask = RunOptions(false, baseCommandLineOptions)
+
         val taskRunner by createForEachTest { mock<TaskRunner>() }
         val console by createForEachTest { mock<Console>() }
         val telemetrySessionBuilder by createForEachTest { mock<TelemetrySessionBuilder>() }
 
         given("the task has no prerequisites") {
+            val commandLineOptions = baseCommandLineOptions.copy(requestedOutputStyle = OutputStyle.Fancy)
             val taskExecutionOrderResolver = mock<TaskExecutionOrderResolver> {
                 on { resolveExecutionOrder(config, taskName) } doReturn listOf(mainTask)
             }
 
             given("that task returns a zero exit code") {
                 beforeEachTest {
-                    whenever(taskRunner.run(mainTask, runOptions)).thenReturn(0)
+                    whenever(taskRunner.run(mainTask, runOptionsForMainTask)).thenReturn(0)
                 }
 
-                val runner by createForEachTest { SessionRunner(config, taskExecutionOrderResolver, runOptions, taskRunner, OutputStyle.Fancy, console, telemetrySessionBuilder) }
+                val runner by createForEachTest { SessionRunner(config, taskExecutionOrderResolver, commandLineOptions, taskRunner, console, telemetrySessionBuilder) }
                 val exitCode by runForEachTest { runner.runTaskAndPrerequisites(taskName) }
 
                 it("runs the task") {
-                    verify(taskRunner).run(mainTask, runOptions)
+                    verify(taskRunner).run(mainTask, runOptionsForMainTask)
                 }
 
                 it("returns the exit code of the task") {
@@ -85,14 +90,14 @@ object SessionRunnerSpec : Spek({
                 val expectedTaskExitCode = 123
 
                 beforeEachTest {
-                    whenever(taskRunner.run(mainTask, runOptions)).thenReturn(expectedTaskExitCode)
+                    whenever(taskRunner.run(mainTask, runOptionsForMainTask)).thenReturn(expectedTaskExitCode)
                 }
 
-                val runner by createForEachTest { SessionRunner(config, taskExecutionOrderResolver, runOptions, taskRunner, OutputStyle.Fancy, console, telemetrySessionBuilder) }
+                val runner by createForEachTest { SessionRunner(config, taskExecutionOrderResolver, commandLineOptions, taskRunner, console, telemetrySessionBuilder) }
                 val exitCode by runForEachTest { runner.runTaskAndPrerequisites(taskName) }
 
                 it("runs the task") {
-                    verify(taskRunner).run(mainTask, runOptions)
+                    verify(taskRunner).run(mainTask, runOptionsForMainTask)
                 }
 
                 it("returns the exit code of the task") {
@@ -106,8 +111,6 @@ object SessionRunnerSpec : Spek({
         }
 
         given("the task has a prerequisite") {
-            val runOptionsForOtherTask = runOptions.copy(behaviourAfterSuccess = CleanupOption.Cleanup)
-
             val taskExecutionOrderResolver = mock<TaskExecutionOrderResolver> {
                 on { resolveExecutionOrder(config, taskName) } doReturn listOf(otherTask, mainTask)
             }
@@ -117,12 +120,12 @@ object SessionRunnerSpec : Spek({
 
                 beforeEachTest {
                     whenever(taskRunner.run(otherTask, runOptionsForOtherTask)).thenReturn(0)
-                    whenever(taskRunner.run(mainTask, runOptions)).thenReturn(expectedTaskExitCode)
+                    whenever(taskRunner.run(mainTask, runOptionsForMainTask)).thenReturn(expectedTaskExitCode)
                 }
 
                 given("quiet output mode is not being used") {
-                    val outputStyle = OutputStyle.Fancy
-                    val runner by createForEachTest { SessionRunner(config, taskExecutionOrderResolver, runOptions, taskRunner, outputStyle, console, telemetrySessionBuilder) }
+                    val commandLineOptions = baseCommandLineOptions.copy(requestedOutputStyle = OutputStyle.Fancy)
+                    val runner by createForEachTest { SessionRunner(config, taskExecutionOrderResolver, commandLineOptions, taskRunner, console, telemetrySessionBuilder) }
 
                     val exitCode by runForEachTest { runner.runTaskAndPrerequisites(taskName) }
 
@@ -131,14 +134,14 @@ object SessionRunnerSpec : Spek({
                     }
 
                     it("runs the main task with cleanup on success matching the preference provided by the user") {
-                        verify(taskRunner).run(mainTask, runOptions)
+                        verify(taskRunner).run(mainTask, runOptionsForMainTask)
                     }
 
                     it("runs the dependency before the main task, and prints a blank line in between") {
                         inOrder(taskRunner, console) {
                             verify(taskRunner).run(otherTask, runOptionsForOtherTask)
                             verify(console).println()
-                            verify(taskRunner).run(mainTask, runOptions)
+                            verify(taskRunner).run(mainTask, runOptionsForMainTask)
                         }
                     }
 
@@ -152,8 +155,8 @@ object SessionRunnerSpec : Spek({
                 }
 
                 given("quiet output mode is being used") {
-                    val outputStyle = OutputStyle.Quiet
-                    val runner by createForEachTest { SessionRunner(config, taskExecutionOrderResolver, runOptions, taskRunner, outputStyle, console, telemetrySessionBuilder) }
+                    val commandLineOptions = baseCommandLineOptions.copy(requestedOutputStyle = OutputStyle.Quiet)
+                    val runner by createForEachTest { SessionRunner(config, taskExecutionOrderResolver, commandLineOptions, taskRunner, console, telemetrySessionBuilder) }
 
                     beforeEachTest { runner.runTaskAndPrerequisites(taskName) }
 
@@ -161,7 +164,7 @@ object SessionRunnerSpec : Spek({
                         inOrder(taskRunner, console) {
                             verify(taskRunner).run(otherTask, runOptionsForOtherTask)
                             verify(console, never()).println()
-                            verify(taskRunner).run(mainTask, runOptions)
+                            verify(taskRunner).run(mainTask, runOptionsForMainTask)
                         }
                     }
                 }
@@ -172,7 +175,8 @@ object SessionRunnerSpec : Spek({
                     whenever(taskRunner.run(otherTask, runOptionsForOtherTask)).thenReturn(1)
                 }
 
-                val runner by createForEachTest { SessionRunner(config, taskExecutionOrderResolver, runOptions, taskRunner, OutputStyle.Fancy, console, telemetrySessionBuilder) }
+                val commandLineOptions = baseCommandLineOptions.copy(requestedOutputStyle = OutputStyle.Fancy)
+                val runner by createForEachTest { SessionRunner(config, taskExecutionOrderResolver, commandLineOptions, taskRunner, console, telemetrySessionBuilder) }
                 val exitCode by runForEachTest { runner.runTaskAndPrerequisites(taskName) }
 
                 it("runs the dependency task") {
@@ -180,7 +184,7 @@ object SessionRunnerSpec : Spek({
                 }
 
                 it("does not run the main task") {
-                    verify(taskRunner, never()).run(mainTask, runOptions)
+                    verify(taskRunner, never()).run(mainTask, runOptionsForMainTask)
                 }
 
                 it("returns the exit code of the dependency task") {

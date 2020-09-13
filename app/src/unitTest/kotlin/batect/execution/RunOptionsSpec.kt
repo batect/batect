@@ -17,69 +17,93 @@
 package batect.execution
 
 import batect.cli.CommandLineOptions
+import batect.testutils.equalTo
 import batect.testutils.given
-import batect.testutils.on
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.equalTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
 object RunOptionsSpec : Spek({
     describe("a set of run options") {
-        given("a set of command line options with cleanup after failure enabled and cleanup after success disabled") {
-            val commandLineOptions = CommandLineOptions(
-                taskName = "some-task",
-                additionalTaskCommandArguments = listOf("extra-arg-1", "extra-arg-2"),
-                disableCleanupAfterSuccess = true,
-                disableCleanupAfterFailure = false
-            )
-
-            on("creating a set of run options") {
-                val runOptions = RunOptions(commandLineOptions)
-
-                it("takes the task name from the command line options") {
-                    assertThat(runOptions.taskName, equalTo(commandLineOptions.taskName))
-                }
-
-                it("takes the additional task command arguments from the command line options") {
-                    assertThat(runOptions.additionalTaskCommandArguments, equalTo(commandLineOptions.additionalTaskCommandArguments))
-                }
-
-                it("enables cleanup after failure") {
-                    assertThat(runOptions.behaviourAfterFailure, equalTo(CleanupOption.Cleanup))
-                }
-
-                it("disables cleanup after success") {
-                    assertThat(runOptions.behaviourAfterSuccess, equalTo(CleanupOption.DontCleanup))
-                }
-            }
+        data class TestCase(
+            val isMainTask: Boolean,
+            val disableCleanupAfterSuccessOnCommandLine: Boolean,
+            val disableCleanupAfterFailureOnCommandLine: Boolean,
+            val expectedBehaviourAfterSuccess: CleanupOption,
+            val expectedBehaviourAfterFailure: CleanupOption
+        ) {
+            val description =
+                "the task ${if (isMainTask) "is" else "isn't"} the main task, cleanup after success ${if (disableCleanupAfterSuccessOnCommandLine) "is" else "isn't"} disabled and cleanup after failure ${if (disableCleanupAfterFailureOnCommandLine) "is" else "isn't"} disabled"
         }
 
-        given("a set of command line options with cleanup after failure disabled and cleanup after success enabled") {
-            val commandLineOptions = CommandLineOptions(
-                taskName = "some-task",
-                additionalTaskCommandArguments = listOf("extra-arg-1", "extra-arg-2"),
-                disableCleanupAfterSuccess = false,
-                disableCleanupAfterFailure = true
+        setOf(
+            TestCase(
+                isMainTask = false,
+                disableCleanupAfterSuccessOnCommandLine = false,
+                disableCleanupAfterFailureOnCommandLine = false,
+                expectedBehaviourAfterSuccess = CleanupOption.Cleanup,
+                expectedBehaviourAfterFailure = CleanupOption.Cleanup
+            ),
+            TestCase(
+                isMainTask = false,
+                disableCleanupAfterSuccessOnCommandLine = false,
+                disableCleanupAfterFailureOnCommandLine = true,
+                expectedBehaviourAfterSuccess = CleanupOption.Cleanup,
+                expectedBehaviourAfterFailure = CleanupOption.DontCleanup
+            ),
+            TestCase(
+                isMainTask = false,
+                disableCleanupAfterSuccessOnCommandLine = true,
+                disableCleanupAfterFailureOnCommandLine = false,
+                expectedBehaviourAfterSuccess = CleanupOption.Cleanup,
+                expectedBehaviourAfterFailure = CleanupOption.Cleanup
+            ),
+            TestCase(
+                isMainTask = false,
+                disableCleanupAfterSuccessOnCommandLine = true,
+                disableCleanupAfterFailureOnCommandLine = true,
+                expectedBehaviourAfterSuccess = CleanupOption.Cleanup,
+                expectedBehaviourAfterFailure = CleanupOption.DontCleanup
+            ),
+            TestCase(
+                isMainTask = true,
+                disableCleanupAfterSuccessOnCommandLine = false,
+                disableCleanupAfterFailureOnCommandLine = false,
+                expectedBehaviourAfterSuccess = CleanupOption.Cleanup,
+                expectedBehaviourAfterFailure = CleanupOption.Cleanup
+            ),
+            TestCase(
+                isMainTask = true,
+                disableCleanupAfterSuccessOnCommandLine = false,
+                disableCleanupAfterFailureOnCommandLine = true,
+                expectedBehaviourAfterSuccess = CleanupOption.Cleanup,
+                expectedBehaviourAfterFailure = CleanupOption.DontCleanup
+            ),
+            TestCase(
+                isMainTask = true,
+                disableCleanupAfterSuccessOnCommandLine = true,
+                disableCleanupAfterFailureOnCommandLine = false,
+                expectedBehaviourAfterSuccess = CleanupOption.DontCleanup,
+                expectedBehaviourAfterFailure = CleanupOption.Cleanup
+            ),
+            TestCase(
+                isMainTask = true,
+                disableCleanupAfterSuccessOnCommandLine = true,
+                disableCleanupAfterFailureOnCommandLine = true,
+                expectedBehaviourAfterSuccess = CleanupOption.DontCleanup,
+                expectedBehaviourAfterFailure = CleanupOption.DontCleanup
             )
+        ).forEach { testCase ->
+            given(testCase.description) {
+                val commandLineOptions = CommandLineOptions(disableCleanupAfterSuccess = testCase.disableCleanupAfterSuccessOnCommandLine, disableCleanupAfterFailure = testCase.disableCleanupAfterFailureOnCommandLine)
+                val runOptions = RunOptions(testCase.isMainTask, commandLineOptions)
 
-            on("creating a set of run options") {
-                val runOptions = RunOptions(commandLineOptions)
-
-                it("takes the task name from the command line options") {
-                    assertThat(runOptions.taskName, equalTo(commandLineOptions.taskName))
+                it("reports the expected behaviour after success") {
+                    assertThat(runOptions.behaviourAfterSuccess, equalTo(testCase.expectedBehaviourAfterSuccess))
                 }
 
-                it("takes the additional task command arguments from the command line options") {
-                    assertThat(runOptions.additionalTaskCommandArguments, equalTo(commandLineOptions.additionalTaskCommandArguments))
-                }
-
-                it("disables cleanup after failure") {
-                    assertThat(runOptions.behaviourAfterFailure, equalTo(CleanupOption.DontCleanup))
-                }
-
-                it("enables cleanup after success") {
-                    assertThat(runOptions.behaviourAfterSuccess, equalTo(CleanupOption.Cleanup))
+                it("reports the expected behaviour after failure") {
+                    assertThat(runOptions.behaviourAfterFailure, equalTo(testCase.expectedBehaviourAfterFailure))
                 }
             }
         }

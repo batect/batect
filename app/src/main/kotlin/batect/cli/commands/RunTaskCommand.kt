@@ -20,7 +20,6 @@ import batect.cli.CommandLineOptions
 import batect.config.Configuration
 import batect.config.PullImage
 import batect.config.io.ConfigurationLoader
-import batect.execution.RunOptions
 import batect.execution.SessionRunner
 import batect.ioc.SessionKodeinFactory
 import batect.ui.OutputStyle
@@ -32,12 +31,10 @@ import org.kodein.di.instance
 class RunTaskCommand(
     private val configFile: Path,
     private val commandLineOptions: CommandLineOptions,
-    private val runOptions: RunOptions,
     private val configLoader: ConfigurationLoader,
     private val updateNotifier: UpdateNotifier,
     private val backgroundTaskManager: BackgroundTaskManager,
-    private val dockerConnectivity: DockerConnectivity,
-    private val requestedOutputStyle: OutputStyle?
+    private val dockerConnectivity: DockerConnectivity
 ) : Command {
 
     override fun run(): Int {
@@ -57,7 +54,7 @@ class RunTaskCommand(
     }
 
     private fun runPreExecutionOperations() {
-        if (requestedOutputStyle != OutputStyle.Quiet) {
+        if (commandLineOptions.requestedOutputStyle != OutputStyle.Quiet) {
             updateNotifier.run()
         }
 
@@ -69,6 +66,6 @@ class RunTaskCommand(
         val sessionKodein = sessionKodeinFactory.create(config)
         val sessionRunner = sessionKodein.instance<SessionRunner>()
 
-        return sessionRunner.runTaskAndPrerequisites(runOptions.taskName)
+        return sessionRunner.runTaskAndPrerequisites(commandLineOptions.taskName!!)
     }
 }

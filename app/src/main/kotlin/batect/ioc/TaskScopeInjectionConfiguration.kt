@@ -70,12 +70,12 @@ private val executionModule = DI.Module("Task scope: execution") {
 
     bind<CancellationContext>() with scoped(TaskScope).singleton { CancellationContext() }
     bind<CleanupStagePlanner>() with scoped(TaskScope).singletonWithLogger { logger -> CleanupStagePlanner(instance(), instance(), logger) }
-    bind<ContainerCommandResolver>() with scoped(TaskScope).singleton { ContainerCommandResolver(instance(RunOptionsType.Task)) }
+    bind<ContainerCommandResolver>() with scoped(TaskScope).singleton { ContainerCommandResolver(instance(), instance()) }
     bind<ContainerDependencyGraph>() with scoped(TaskScope).singleton { instance<ContainerDependencyGraphProvider>().createGraph(instance(), context) }
     bind<ContainerDependencyGraphProvider>() with singletonWithLogger { logger -> ContainerDependencyGraphProvider(instance(), instance(), logger) }
     bind<ParallelExecutionManager>() with scoped(TaskScope).singletonWithLogger { logger -> ParallelExecutionManager(instance(), instance(), instance(), instance(), logger) }
     bind<RunStagePlanner>() with scoped(TaskScope).singletonWithLogger { logger -> RunStagePlanner(instance(), logger) }
-    bind<TaskStateMachine>() with scoped(TaskScope).singletonWithLogger { logger -> TaskStateMachine(instance(), instance(RunOptionsType.Task), instance(), instance(), instance(), instance(), logger) }
+    bind<TaskStateMachine>() with scoped(TaskScope).singletonWithLogger { logger -> TaskStateMachine(instance(), instance(), instance(), instance(), instance(), instance(), logger) }
     bind<TaskStepRunner>() with scoped(TaskScope).singleton { TaskStepRunner(directDI) }
     bind<VolumeMountResolver>() with scoped(TaskScope).singleton { VolumeMountResolver(instance(), instance(), instance(), instance()) }
 }
@@ -99,7 +99,7 @@ private val runnersModule = DI.Module("Task scope: execution.model.steps.runners
 private val uiModule = DI.Module("Task scope: ui") {
     bind<ContainerIOStreamingOptions>() with scoped(TaskScope).singleton { instance<EventLogger>().ioStreamingOptions }
     bind<EventLogger>() with scoped(TaskScope).singleton { instance<EventLoggerProvider>().getEventLogger(context, instance()) }
-    bind<FailureErrorMessageFormatter>() with scoped(TaskScope).singleton { FailureErrorMessageFormatter(instance(RunOptionsType.Task), instance()) }
+    bind<FailureErrorMessageFormatter>() with scoped(TaskScope).singleton { FailureErrorMessageFormatter(instance(), instance()) }
 
     bind<EventLoggerProvider>() with scoped(TaskScope).singleton {
         EventLoggerProvider(

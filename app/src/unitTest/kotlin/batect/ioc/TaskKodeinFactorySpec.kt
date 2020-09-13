@@ -51,7 +51,7 @@ object TaskKodeinFactorySpec : Spek({
             }
 
             it("includes the run options") {
-                assertThat(extendedKodein.instance<RunOptions>(RunOptionsType.Task), equalTo(runOptions))
+                assertThat(extendedKodein.instance<RunOptions>(), equalTo(runOptions))
             }
 
             it("sets the context correctly") {

@@ -16,6 +16,7 @@
 
 package batect.execution
 
+import batect.cli.CommandLineOptions
 import batect.config.Container
 import batect.config.Task
 import batect.config.TaskRunConfiguration
@@ -35,10 +36,12 @@ object ContainerCommandResolverSpec : Spek({
         given("the container is the task container") {
             given("the task is the main task") {
                 val taskName = "main-task"
+                val isMainTask = true
 
                 given("additional command line arguments for the task container have been provided") {
-                    val runOptions = runOptionsForTask(taskName, listOf("extra-arg-1", "extra-arg-2"))
-                    val resolver = ContainerCommandResolver(runOptions)
+                    val runOptions = runOptionsForTask(isMainTask)
+                    val commandLineOptions = CommandLineOptions(additionalTaskCommandArguments = listOf("extra-arg-1", "extra-arg-2"))
+                    val resolver = ContainerCommandResolver(runOptions, commandLineOptions)
 
                     given("the task defines a command for the container to run") {
                         val container = Container("some-container", imageSourceDoesNotMatter(), Command.parse("some-container-command"))
@@ -83,8 +86,9 @@ object ContainerCommandResolverSpec : Spek({
                 }
 
                 given("additional command line arguments for the task container have not been provided") {
-                    val runOptions = runOptionsForTask(taskName, emptyList())
-                    val resolver = ContainerCommandResolver(runOptions)
+                    val runOptions = runOptionsForTask(isMainTask)
+                    val commandLineOptions = CommandLineOptions(additionalTaskCommandArguments = emptyList())
+                    val resolver = ContainerCommandResolver(runOptions, commandLineOptions)
 
                     given("the task defines a command for the container to run") {
                         val container = Container("the-container", imageSourceDoesNotMatter(), Command.parse("the-container-command"))
@@ -116,8 +120,10 @@ object ContainerCommandResolverSpec : Spek({
 
             given("the task is not the main task") {
                 val taskName = "other-task"
-                val runOptions = runOptionsForTask("main-task", listOf("extra-arg-1", "extra-arg-2"))
-                val resolver = ContainerCommandResolver(runOptions)
+                val isMainTask = false
+                val runOptions = runOptionsForTask(isMainTask)
+                val commandLineOptions = CommandLineOptions(additionalTaskCommandArguments = listOf("extra-arg-1", "extra-arg-2"))
+                val resolver = ContainerCommandResolver(runOptions, commandLineOptions)
 
                 given("the task defines a command for the container to run") {
                     val container = Container("the-container", imageSourceDoesNotMatter(), Command.parse("the-container-command"))
@@ -150,8 +156,10 @@ object ContainerCommandResolverSpec : Spek({
         given("the container is not the task container") {
             val container = Container("the-container", imageSourceDoesNotMatter(), Command.parse("the-container-command"))
             val task = Task("main-task", TaskRunConfiguration("main-container", Command.parse("the-task-command")))
-            val runOptions = runOptionsForTask(task.name, listOf("extra-arg-1", "extra-arg-2"))
-            val resolver = ContainerCommandResolver(runOptions)
+            val isMainTask = true
+            val runOptions = runOptionsForTask(isMainTask)
+            val commandLineOptions = CommandLineOptions(additionalTaskCommandArguments = listOf("extra-arg-1", "extra-arg-2"))
+            val resolver = ContainerCommandResolver(runOptions, commandLineOptions)
 
             on("resolving the command for the container") {
                 val command = resolver.resolveCommand(container, task)
@@ -164,5 +172,5 @@ object ContainerCommandResolverSpec : Spek({
     }
 })
 
-private fun runOptionsForTask(taskName: String, additionalCommandLineArguments: Iterable<String>) =
-    RunOptions(taskName, additionalCommandLineArguments, CleanupOption.Cleanup, CleanupOption.Cleanup)
+private fun runOptionsForTask(isMainTask: Boolean) =
+    RunOptions(isMainTask, CleanupOption.Cleanup, CleanupOption.Cleanup)

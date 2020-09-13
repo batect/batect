@@ -16,6 +16,7 @@
 
 package batect.execution
 
+import batect.cli.CommandLineOptions
 import batect.config.Configuration
 import batect.config.Task
 import batect.telemetry.TelemetrySessionBuilder
@@ -25,9 +26,8 @@ import batect.ui.OutputStyle
 class SessionRunner(
     private val config: Configuration,
     private val taskExecutionOrderResolver: TaskExecutionOrderResolver,
-    private val runOptions: RunOptions,
+    private val commandLineOptions: CommandLineOptions,
     private val taskRunner: TaskRunner,
-    private val requestedOutputStyle: OutputStyle?,
     private val console: Console,
     private val telemetrySessionBuilder: TelemetrySessionBuilder
 ) {
@@ -47,7 +47,7 @@ class SessionRunner(
                 return exitCode
             }
 
-            if (!isMainTask && requestedOutputStyle != OutputStyle.Quiet) {
+            if (!isMainTask && commandLineOptions.requestedOutputStyle != OutputStyle.Quiet) {
                 console.println()
             }
         }
@@ -56,9 +56,8 @@ class SessionRunner(
     }
 
     private fun runTask(task: Task, isMainTask: Boolean): Int {
-        val behaviourAfterSuccess = if (isMainTask) runOptions.behaviourAfterSuccess else CleanupOption.Cleanup
-        val runOptionsForThisTask = runOptions.copy(behaviourAfterSuccess = behaviourAfterSuccess)
+        val runOptions = RunOptions(isMainTask, commandLineOptions)
 
-        return taskRunner.run(task, runOptionsForThisTask)
+        return taskRunner.run(task, runOptions)
     }
 }

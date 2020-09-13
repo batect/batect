@@ -62,7 +62,6 @@ import batect.docker.run.ContainerWaiter
 import batect.execution.ConfigVariablesProvider
 import batect.execution.ContainerEntrypointResolver
 import batect.execution.InterruptionTrap
-import batect.execution.RunOptions
 import batect.execution.TaskExecutionOrderResolver
 import batect.execution.TaskSuggester
 import batect.git.GitClient
@@ -148,16 +147,7 @@ private val cliModule = DI.Module("cli") {
     bind<CommandFactory>() with singleton { CommandFactory() }
 
     bind<RunTaskCommand>() with singleton {
-        RunTaskCommand(
-            commandLineOptions().configurationFileName,
-            instance(),
-            instance(RunOptionsType.Overall),
-            instance(),
-            instance(),
-            instance(),
-            instance(),
-            commandLineOptions().requestedOutputStyle
-        )
+        RunTaskCommand(commandLineOptions().configurationFileName, instance(), instance(), instance(), instance(), instance())
     }
 
     bind<BackgroundTaskManager>() with singleton { BackgroundTaskManager(instance(), instance(), instance()) }
@@ -241,7 +231,6 @@ private val executionModule = DI.Module("execution") {
     bind<ConfigVariablesProvider>() with singleton { ConfigVariablesProvider(commandLineOptions().configVariableOverrides, commandLineOptions().configVariablesSourceFile, instance()) }
     bind<ContainerEntrypointResolver>() with singleton { ContainerEntrypointResolver() }
     bind<InterruptionTrap>() with singleton { InterruptionTrap(instance()) }
-    bind<RunOptions>(RunOptionsType.Overall) with singleton { RunOptions(commandLineOptions()) }
     bind<TaskExecutionOrderResolver>() with singletonWithLogger { logger -> TaskExecutionOrderResolver(instance(), instance(), logger) }
     bind<TaskSuggester>() with singleton { TaskSuggester() }
 }

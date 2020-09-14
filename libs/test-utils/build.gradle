@@ -19,7 +19,7 @@ plugins {
 }
 
 dependencies {
-    implementation platform("com.squareup.okhttp3:okhttp-bom:4.8.1")
+    implementation platform("com.squareup.okhttp3:okhttp-bom:4.9.0")
 
     implementation 'org.spekframework.spek2:spek-dsl-jvm:2.0.11'
     implementation 'com.natpryce:hamkrest:1.7.0.3'

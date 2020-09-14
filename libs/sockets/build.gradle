@@ -19,7 +19,7 @@ plugins {
 }
 
 dependencies {
-    implementation platform("com.squareup.okhttp3:okhttp-bom:4.8.1")
+    implementation platform("com.squareup.okhttp3:okhttp-bom:4.9.0")
 
     implementation 'com.github.jnr:jnr-unixsocket:0.32'
     implementation 'com.squareup.okhttp3:okhttp'

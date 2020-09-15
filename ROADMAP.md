@@ -24,6 +24,7 @@ If there's something you're really keen to see, pull requests are always welcome
   * send updated console dimensions to daemon if console is resized while container is running
   * fix issue where app appears to hang when running on a 32-bit JVM (field size / alignment issue in named pipes calls?)
   * show more detailed Windows version information by reading it from `kernel32.dll`: https://stackoverflow.com/a/27323983/1668119
+  * add option for isolation mode - apply to both builds and running containers
 * fix #10 (proxies that refer to localhost)
   * Linux:
     * Can get IP of host from `[0].IPAM.Config.Gateway` value from running `docker network inspect <network ID>`
@@ -115,3 +116,4 @@ If there's something you're really keen to see, pull requests are always welcome
 * better integration with GitHub actions using [workflow commands](https://docs.github.com/en/actions/reference/workflow-commands-for-github-actions)
   * configuration errors
   * errors from tasks ![good first issue](https://img.shields.io/badge/-good%20first%20issue-green)
+* wrap text in interpolated output mode ![good first issue](https://img.shields.io/badge/-good%20first%20issue-green)

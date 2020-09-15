@@ -21,12 +21,12 @@ import batect.docker.Json
 import batect.docker.minimumDockerAPIVersion
 import batect.logging.Logger
 import batect.os.SystemInfo
-import java.util.concurrent.TimeUnit
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Response
+import java.util.concurrent.TimeUnit
 
 abstract class APIBase(
     protected val httpConfig: DockerHttpConfig,

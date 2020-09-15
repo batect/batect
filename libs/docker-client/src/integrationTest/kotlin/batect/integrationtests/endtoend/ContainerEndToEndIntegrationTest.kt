@@ -28,10 +28,10 @@ import batect.testutils.createForGroup
 import batect.testutils.runBeforeGroup
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
-import java.io.ByteArrayOutputStream
 import okio.sink
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.io.ByteArrayOutputStream
 
 object ContainerEndToEndIntegrationTest : Spek({
     describe("running containers") {

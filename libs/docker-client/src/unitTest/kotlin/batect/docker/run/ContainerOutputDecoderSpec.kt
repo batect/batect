@@ -21,12 +21,12 @@ import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.on
 import com.natpryce.hamkrest.assertion.assertThat
-import java.io.ByteArrayInputStream
 import okio.Buffer
 import okio.buffer
 import okio.source
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.io.ByteArrayInputStream
 
 object ContainerOutputDecoderSpec : Spek({
     describe("a container output decoder") {
@@ -132,10 +132,12 @@ object ContainerOutputDecoderSpec : Spek({
             val helloBytes = "hello".toByteArray(Charsets.UTF_8)
             val worldBytes = " world".toByteArray(Charsets.UTF_8)
             val source by createForEachTest {
-                ByteArrayInputStream(byteArrayOf(
-                    1, 0, 0, 0, 0, 0, 0, helloBytes.size.toByte(), *helloBytes,
-                    1, 0, 0, 0, 0, 0, 0, worldBytes.size.toByte(), *worldBytes
-                ))
+                ByteArrayInputStream(
+                    byteArrayOf(
+                        1, 0, 0, 0, 0, 0, 0, helloBytes.size.toByte(), *helloBytes,
+                        1, 0, 0, 0, 0, 0, 0, worldBytes.size.toByte(), *worldBytes
+                    )
+                )
             }
 
             on("reading the entire stream") {
@@ -158,10 +160,12 @@ object ContainerOutputDecoderSpec : Spek({
             val frame2Content = "b".repeat(9000).toByteArray(Charsets.UTF_8)
 
             val source by createForEachTest {
-                ByteArrayInputStream(byteArrayOf(
-                    1, 0, 0, 0, 0, 0, 0b0010_0011, 0b0010_1000, *frame1Content,
-                    1, 0, 0, 0, 0, 0, 0b0010_0011, 0b0010_1000, *frame2Content
-                ))
+                ByteArrayInputStream(
+                    byteArrayOf(
+                        1, 0, 0, 0, 0, 0, 0b0010_0011, 0b0010_1000, *frame1Content,
+                        1, 0, 0, 0, 0, 0, 0b0010_0011, 0b0010_1000, *frame2Content
+                    )
+                )
             }
 
             on("reading the entire stream") {

@@ -18,10 +18,10 @@ package batect.telemetry
 
 import batect.io.ApplicationPaths
 import batect.logging.Logger
+import kotlinx.serialization.json.Json
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.streams.asSequence
-import kotlinx.serialization.json.Json
 
 class TelemetryUploadQueue(
     private val applicationPaths: ApplicationPaths,

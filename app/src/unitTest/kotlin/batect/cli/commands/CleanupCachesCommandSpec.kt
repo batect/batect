@@ -36,13 +36,13 @@ import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.times
 import com.nhaarman.mockitokotlin2.verify
-import java.nio.file.Files
-import kotlin.streams.toList
 import org.kodein.di.DI
 import org.kodein.di.bind
 import org.kodein.di.instance
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.nio.file.Files
+import kotlin.streams.toList
 
 object CleanupCachesCommandSpec : Spek({
     describe("a cleanup caches command") {
@@ -82,9 +82,11 @@ object CleanupCachesCommandSpec : Spek({
                 on { cacheType } doReturn cacheTypeToUse
             }
 
-            return fakeDockerConnectivity(DI.direct {
-                bind<CacheManager>() with instance(cacheManager)
-            })
+            return fakeDockerConnectivity(
+                DI.direct {
+                    bind<CacheManager>() with instance(cacheManager)
+                }
+            )
         }
 
         given("volumes are being used for caches") {
@@ -120,7 +122,8 @@ object CleanupCachesCommandSpec : Spek({
 
             it("does not delete anything from the cache directory") {
                 assertThat(
-                    Files.list(projectPaths.cacheDirectory).toList().toSet(), equalTo(
+                    Files.list(projectPaths.cacheDirectory).toList().toSet(),
+                    equalTo(
                         setOf(
                             fileSystem.getPath("/caches", "empty-cache"),
                             fileSystem.getPath("/caches", "cache-with-file"),

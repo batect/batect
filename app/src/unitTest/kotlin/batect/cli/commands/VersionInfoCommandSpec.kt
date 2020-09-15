@@ -31,10 +31,10 @@ import com.natpryce.hamkrest.equalTo
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
-import java.io.ByteArrayOutputStream
-import java.io.PrintStream
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.io.ByteArrayOutputStream
+import java.io.PrintStream
 
 object VersionInfoCommandSpec : Spek({
     describe("a 'version info' command") {
@@ -66,18 +66,24 @@ object VersionInfoCommandSpec : Spek({
             val output = outputStream.toString()
 
             it("prints version information") {
-                assertThat(output, equalTo("""
-                    |batect version:    1.2.3
-                    |Built:             THE BUILD DATE
-                    |Built from commit: THE BUILD COMMIT (commit date: COMMIT DATE)
-                    |JVM version:       THE JVM VERSION
-                    |OS version:        THE OS VERSION
-                    |Docker version:    (DOCKER VERSION INFO)
-                    |Git version:       (GIT VERSION INFO)
-                    |
-                    |For documentation and further information on batect, visit https://github.com/batect/batect.
-                    |
-                    |""".trimMargin().withPlatformSpecificLineSeparator()))
+                assertThat(
+                    output,
+                    equalTo(
+                        """
+                        |batect version:    1.2.3
+                        |Built:             THE BUILD DATE
+                        |Built from commit: THE BUILD COMMIT (commit date: COMMIT DATE)
+                        |JVM version:       THE JVM VERSION
+                        |OS version:        THE OS VERSION
+                        |Docker version:    (DOCKER VERSION INFO)
+                        |Git version:       (GIT VERSION INFO)
+                        |
+                        |For documentation and further information on batect, visit https://github.com/batect/batect.
+                        |
+                        |
+                        """.trimMargin().withPlatformSpecificLineSeparator()
+                    )
+                )
             }
 
             it("returns a zero exit code") {

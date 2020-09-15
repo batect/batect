@@ -51,13 +51,13 @@ import com.nhaarman.mockitokotlin2.doThrow
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.verify
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 import java.nio.file.FileSystem
 import java.nio.file.Files
 import java.nio.file.LinkOption
 import java.nio.file.Path
 import java.nio.file.attribute.PosixFileAttributes
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
 
 object RunAsCurrentUserConfigurationProviderSpec : Spek({
     describe("a 'run as current user' configuration provider") {
@@ -189,7 +189,8 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
 
                         it("returns a set of volume mounts for the passwd and group file and home directory") {
                             assertThat(
-                                configuration.volumeMounts.mapToSet { it.containerPath }, equalTo(
+                                configuration.volumeMounts.mapToSet { it.containerPath },
+                                equalTo(
                                     setOf(
                                         "/etc/passwd",
                                         "/etc/group",
@@ -215,7 +216,8 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                             val passwdFilePath = localPathToPasswdFile(configuration.volumeMounts, fileSystem)
                             val content = Files.readAllLines(passwdFilePath).joinToString("\n")
                             assertThat(
-                                content, equalTo(
+                                content,
+                                equalTo(
                                     """
                                     |root:x:0:0:root:/home/some-user:/bin/sh
                                 """.trimMargin()
@@ -227,7 +229,8 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                             val groupFilePath = localPathToGroupFile(configuration.volumeMounts, fileSystem)
                             val content = Files.readAllLines(groupFilePath).joinToString("\n")
                             assertThat(
-                                content, equalTo(
+                                content,
+                                equalTo(
                                     """
                                     |root:x:0:root
                                 """.trimMargin()
@@ -309,7 +312,8 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
 
                         it("returns a set of volume mounts for the passwd and group file and home directory") {
                             assertThat(
-                                configuration.volumeMounts.mapToSet { it.containerPath }, equalTo(
+                                configuration.volumeMounts.mapToSet { it.containerPath },
+                                equalTo(
                                     setOf(
                                         "/etc/passwd",
                                         "/etc/group",
@@ -335,7 +339,8 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                             val passwdFilePath = localPathToPasswdFile(configuration.volumeMounts, fileSystem)
                             val content = Files.readAllLines(passwdFilePath).joinToString("\n")
                             assertThat(
-                                content, equalTo(
+                                content,
+                                equalTo(
                                     """
                                         |root:x:0:0:root:/root:/bin/sh
                                         |the-user:x:123:456:the-user:/home/some-user:/bin/sh
@@ -348,7 +353,8 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                             val groupFilePath = localPathToGroupFile(configuration.volumeMounts, fileSystem)
                             val content = Files.readAllLines(groupFilePath).joinToString("\n")
                             assertThat(
-                                content, equalTo(
+                                content,
+                                equalTo(
                                     """
                                         |root:x:0:root
                                         |the-user's-group:x:456:the-user
@@ -418,7 +424,8 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
 
                         it("returns a set of volume mounts for the passwd and group file") {
                             assertThat(
-                                configuration.volumeMounts.mapToSet { it.containerPath }, equalTo(
+                                configuration.volumeMounts.mapToSet { it.containerPath },
+                                equalTo(
                                     setOf(
                                         "/etc/passwd",
                                         "/etc/group",
@@ -444,7 +451,8 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                             val passwdFilePath = localPathToPasswdFile(configuration.volumeMounts, fileSystem)
                             val content = Files.readAllLines(passwdFilePath).joinToString("\n")
                             assertThat(
-                                content, equalTo(
+                                content,
+                                equalTo(
                                     """
                                         |root:x:0:0:root:/home/some-user:/bin/sh
                                     """.trimMargin()
@@ -456,7 +464,8 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                             val groupFilePath = localPathToGroupFile(configuration.volumeMounts, fileSystem)
                             val content = Files.readAllLines(groupFilePath).joinToString("\n")
                             assertThat(
-                                content, equalTo(
+                                content,
+                                equalTo(
                                     """
                                         |root:x:0:root
                                     """.trimMargin()

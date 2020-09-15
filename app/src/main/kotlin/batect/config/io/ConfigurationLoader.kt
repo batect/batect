@@ -46,10 +46,10 @@ import com.charleskorn.kaml.PolymorphismStyle
 import com.charleskorn.kaml.Yaml
 import com.charleskorn.kaml.YamlConfiguration
 import com.charleskorn.kaml.YamlException
+import kotlinx.serialization.modules.serializersModuleOf
 import java.nio.charset.Charset
 import java.nio.file.Files
 import java.nio.file.Path
-import kotlinx.serialization.modules.serializersModuleOf
 
 class ConfigurationLoader(
     private val includeResolver: IncludeResolver,
@@ -252,23 +252,25 @@ class ConfigurationLoader(
     }
 
     private fun ConfigurationFile.replaceFileIncludesWithGitIncludes(sourceInclude: GitInclude): ConfigurationFile =
-        this.copy(includes = this.includes.mapToSet { include ->
-            if (include is FileInclude) {
-                val rootPath = includeResolver.rootPathFor(sourceInclude.repositoryReference)
-                val newInclude = sourceInclude.copy(path = rootPath.relativize(include.path).toString())
+        this.copy(
+            includes = this.includes.mapToSet { include ->
+                if (include is FileInclude) {
+                    val rootPath = includeResolver.rootPathFor(sourceInclude.repositoryReference)
+                    val newInclude = sourceInclude.copy(path = rootPath.relativize(include.path).toString())
 
-                logger.info {
-                    message("Rewrote file include in file included from Git.")
-                    data("sourceInclude", sourceInclude)
-                    data("oldInclude", include)
-                    data("newInclude", newInclude)
+                    logger.info {
+                        message("Rewrote file include in file included from Git.")
+                        data("sourceInclude", sourceInclude)
+                        data("oldInclude", include)
+                        data("newInclude", newInclude)
+                    }
+
+                    newInclude
+                } else {
+                    include
                 }
-
-                newInclude
-            } else {
-                include
             }
-        })
+        )
 }
 
 private fun LogMessageBuilder.data(key: String, value: Configuration) = this.data(key, value, Configuration.serializer())

@@ -29,9 +29,6 @@ import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
-import java.io.IOException
-import java.util.logging.Level
-import java.util.logging.Logger
 import okhttp3.Call
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -39,6 +36,9 @@ import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.io.IOException
+import java.util.logging.Level
+import java.util.logging.Logger
 
 object CancellationExtensionsSpec : Spek({
     describe("executing a OkHttp call in a cancellation context") {
@@ -117,9 +117,12 @@ object CancellationExtensionsSpec : Spek({
                 }
 
                 it("throws an exception that indicates that the call failed") {
-                    assertThat({
-                        call.executeInCancellationContext(cancellationContext) { throw RuntimeException("This should not be reached") }
-                    }, throws<CancellationException>())
+                    assertThat(
+                        {
+                            call.executeInCancellationContext(cancellationContext) { throw RuntimeException("This should not be reached") }
+                        },
+                        throws<CancellationException>()
+                    )
                 }
             }
 
@@ -135,14 +138,17 @@ object CancellationExtensionsSpec : Spek({
                 val call by createForEachTest { createTestCall(testServer) }
 
                 it("throws an exception that indicates that the call failed") {
-                    assertThat({
-                        call.executeInCancellationContext(cancellationContext) { response ->
-                            call.cancel()
-                            response.body!!.bytes()
+                    assertThat(
+                        {
+                            call.executeInCancellationContext(cancellationContext) { response ->
+                                call.cancel()
+                                response.body!!.bytes()
 
-                            throw RuntimeException("This should not be reached, reading the body above should trigger an exception from OkHttp because the call is cancelled")
-                        }
-                    }, throws<CancellationException>())
+                                throw RuntimeException("This should not be reached, reading the body above should trigger an exception from OkHttp because the call is cancelled")
+                            }
+                        },
+                        throws<CancellationException>()
+                    )
                 }
             }
         }

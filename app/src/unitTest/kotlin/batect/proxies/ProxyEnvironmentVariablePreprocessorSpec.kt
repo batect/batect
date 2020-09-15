@@ -56,11 +56,14 @@ object ProxyEnvironmentVariablePreprocessorSpec : Spek({
                 }
 
                 it("logs that the variable was not processed") {
-                    assertThat(logSink, hasMessage(
-                        withSeverity(Severity.Info) and
-                            withLogMessage("Not attempting to preprocess proxy environment variable value because getting the local Docker hostname is not supported.") and
-                            withAdditionalData("value", "http://proxy.mycompany.com")
-                    ))
+                    assertThat(
+                        logSink,
+                        hasMessage(
+                            withSeverity(Severity.Info) and
+                                withLogMessage("Not attempting to preprocess proxy environment variable value because getting the local Docker hostname is not supported.") and
+                                withAdditionalData("value", "http://proxy.mycompany.com")
+                        )
+                    )
                 }
             }
 
@@ -72,11 +75,14 @@ object ProxyEnvironmentVariablePreprocessorSpec : Spek({
                 }
 
                 it("logs that the variable was not processed") {
-                    assertThat(logSink, hasMessage(
-                        withSeverity(Severity.Info) and
-                            withLogMessage("Not attempting to preprocess proxy environment variable value because getting the local Docker hostname is not supported.") and
-                            withAdditionalData("value", "http://localhost")
-                    ))
+                    assertThat(
+                        logSink,
+                        hasMessage(
+                            withSeverity(Severity.Info) and
+                                withLogMessage("Not attempting to preprocess proxy environment variable value because getting the local Docker hostname is not supported.") and
+                                withAdditionalData("value", "http://localhost")
+                        )
+                    )
                 }
             }
         }
@@ -92,11 +98,14 @@ object ProxyEnvironmentVariablePreprocessorSpec : Spek({
                 }
 
                 it("logs that the variable was not processed") {
-                    assertThat(logSink, hasMessage(
-                        withSeverity(Severity.Info) and
-                            withLogMessage("Not preprocessing proxy environment variable value because it does not refer to the local machine.") and
-                            withAdditionalData("value", "http://proxy.mycompany.com")
-                    ))
+                    assertThat(
+                        logSink,
+                        hasMessage(
+                            withSeverity(Severity.Info) and
+                                withLogMessage("Not preprocessing proxy environment variable value because it does not refer to the local machine.") and
+                                withAdditionalData("value", "http://proxy.mycompany.com")
+                        )
+                    )
                 }
             }
 
@@ -122,12 +131,15 @@ object ProxyEnvironmentVariablePreprocessorSpec : Spek({
                         }
 
                         it("logs that the variable was processed") {
-                            assertThat(logSink, hasMessage(
-                                withSeverity(Severity.Info) and
-                                    withLogMessage("Modified proxy environment variable that referred to the local machine.") and
-                                    withAdditionalData("originalValue", originalValue) and
-                                    withAdditionalData("newValue", expectedValue)
-                            ))
+                            assertThat(
+                                logSink,
+                                hasMessage(
+                                    withSeverity(Severity.Info) and
+                                        withLogMessage("Modified proxy environment variable that referred to the local machine.") and
+                                        withAdditionalData("originalValue", originalValue) and
+                                        withAdditionalData("newValue", expectedValue)
+                                )
+                            )
                         }
                     }
                 }
@@ -149,11 +161,14 @@ object ProxyEnvironmentVariablePreprocessorSpec : Spek({
                     }
 
                     it("logs that the variable was not processed") {
-                        assertThat(logSink, hasMessage(
-                            withSeverity(Severity.Warning) and
-                                withLogMessage("Not attempting to preprocess proxy environment variable value because it is not a valid URL.") and
-                                withAdditionalData("value", address)
-                        ))
+                        assertThat(
+                            logSink,
+                            hasMessage(
+                                withSeverity(Severity.Warning) and
+                                    withLogMessage("Not attempting to preprocess proxy environment variable value because it is not a valid URL.") and
+                                    withAdditionalData("value", address)
+                            )
+                        )
                     }
                 }
             }

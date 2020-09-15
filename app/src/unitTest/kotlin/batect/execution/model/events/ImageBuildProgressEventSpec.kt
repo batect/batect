@@ -34,22 +34,27 @@ object ImageBuildProgressEventSpec : Spek({
 
         on("attaching it to a log message") {
             it("returns a machine-readable representation of itself") {
-                assertThat(logRepresentationOf(event), equivalentTo("""
-                    |{
-                    |   "type": "${event::class.qualifiedName}",
-                    |   "container": "the-container",
-                    |   "buildProgress": {
-                    |       "currentStep": 1,
-                    |       "totalSteps": 10,
-                    |       "message": "Something is happening",
-                    |       "progress": {
-                    |           "currentOperation": "downloading",
-                    |           "completedBytes": 12,
-                    |           "totalBytes": 20
-                    |       }
-                    |   }
-                    |}
-                """.trimMargin()))
+                assertThat(
+                    logRepresentationOf(event),
+                    equivalentTo(
+                        """
+                        |{
+                        |   "type": "${event::class.qualifiedName}",
+                        |   "container": "the-container",
+                        |   "buildProgress": {
+                        |       "currentStep": 1,
+                        |       "totalSteps": 10,
+                        |       "message": "Something is happening",
+                        |       "progress": {
+                        |           "currentOperation": "downloading",
+                        |           "completedBytes": 12,
+                        |           "totalBytes": 20
+                        |       }
+                        |   }
+                        |}
+                        """.trimMargin()
+                    )
+                )
             }
         }
     }

@@ -19,9 +19,9 @@ package batect.telemetry
 import batect.io.ApplicationPaths
 import batect.logging.LogMessageBuilder
 import batect.logging.Logger
+import kotlinx.serialization.json.Json
 import java.nio.file.Files
 import java.util.UUID
-import kotlinx.serialization.json.Json
 
 class TelemetryConfigurationStore(
     private val applicationPaths: ApplicationPaths,

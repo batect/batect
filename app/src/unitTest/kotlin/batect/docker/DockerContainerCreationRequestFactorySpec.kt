@@ -33,9 +33,9 @@ import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.mock
-import java.time.Duration
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.time.Duration
 
 object DockerContainerCreationRequestFactorySpec : Spek({
     describe("a Docker container creation request factory") {
@@ -221,7 +221,8 @@ object DockerContainerCreationRequestFactorySpec : Spek({
 
                 it("populates the port mappings on the request with the combined set of port mappings from the container and the additional port mappings") {
                     assertThat(
-                        request.portMappings, equalTo(
+                        request.portMappings,
+                        equalTo(
                             setOf(
                                 DockerPortMapping(123, 456),
                                 DockerPortMapping(1000, 2000)

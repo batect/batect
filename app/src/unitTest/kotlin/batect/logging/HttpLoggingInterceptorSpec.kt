@@ -75,27 +75,33 @@ object HttpLoggingInterceptorSpec : Spek({
             }
 
             it("logs details of the request before it starts") {
-                assertThat(logSink, hasMessage(
-                    withLogMessage("HTTP request starting.") and
-                        withSeverity(Severity.Debug) and
-                        withAdditionalData("url", "http://www.awesomestuff.com/thing") and
-                        withAdditionalData("method", "GET") and
-                        withAdditionalData("contentLength", 0L) and
-                        withAdditionalData("contentType", null)
-                ))
+                assertThat(
+                    logSink,
+                    hasMessage(
+                        withLogMessage("HTTP request starting.") and
+                            withSeverity(Severity.Debug) and
+                            withAdditionalData("url", "http://www.awesomestuff.com/thing") and
+                            withAdditionalData("method", "GET") and
+                            withAdditionalData("contentLength", 0L) and
+                            withAdditionalData("contentType", null)
+                    )
+                )
             }
 
             it("logs details of the response after the request finishes") {
-                assertThat(logSink, hasMessage(
-                    withLogMessage("HTTP response received.") and
-                        withSeverity(Severity.Debug) and
-                        withAdditionalData("url", "http://www.awesomestuff.com/thing") and
-                        withAdditionalData("method", "GET") and
-                        withAdditionalData("code", 418) and
-                        withAdditionalData("message", "I'm a teapot") and
-                        withAdditionalData("contentLength", 0L) and
-                        withAdditionalData("contentType", null)
-                ))
+                assertThat(
+                    logSink,
+                    hasMessage(
+                        withLogMessage("HTTP response received.") and
+                            withSeverity(Severity.Debug) and
+                            withAdditionalData("url", "http://www.awesomestuff.com/thing") and
+                            withAdditionalData("method", "GET") and
+                            withAdditionalData("code", 418) and
+                            withAdditionalData("message", "I'm a teapot") and
+                            withAdditionalData("contentLength", 0L) and
+                            withAdditionalData("contentType", null)
+                    )
+                )
             }
         }
 
@@ -122,11 +128,14 @@ object HttpLoggingInterceptorSpec : Spek({
             }
 
             it("logs details of the request body before it starts") {
-                assertThat(logSink, hasMessage(
-                    withLogMessage("HTTP request starting.") and
-                        withAdditionalData("contentLength", "Some body content".length.toLong()) and
-                        withAdditionalData("contentType", "text/plain; charset=utf-8")
-                ))
+                assertThat(
+                    logSink,
+                    hasMessage(
+                        withLogMessage("HTTP request starting.") and
+                            withAdditionalData("contentLength", "Some body content".length.toLong()) and
+                            withAdditionalData("contentType", "text/plain; charset=utf-8")
+                    )
+                )
             }
         }
 
@@ -153,11 +162,14 @@ object HttpLoggingInterceptorSpec : Spek({
             }
 
             it("logs details of the response body") {
-                assertThat(logSink, hasMessage(
-                    withLogMessage("HTTP response received.") and
-                        withAdditionalData("contentLength", "Some body content".length.toLong()) and
-                        withAdditionalData("contentType", "text/plain; charset=utf-8")
-                ))
+                assertThat(
+                    logSink,
+                    hasMessage(
+                        withLogMessage("HTTP response received.") and
+                            withAdditionalData("contentLength", "Some body content".length.toLong()) and
+                            withAdditionalData("contentType", "text/plain; charset=utf-8")
+                    )
+                )
             }
         }
     }

@@ -109,23 +109,31 @@ object DockerRegistryCredentialsSourceSpec : Spek({
 
             on("loading the credentials") {
                 it("throws an appropriate exception") {
-                    assertThat({ credentialsSource.load() }, throws<DockerRegistryCredentialsException>(
-                        withMessage("Could not load credentials for 'someserver.com' because the credential helper executable 'docker-credentials-secretstore' does not exist.") and
-                            withCause(executableDoesNotExistException)
-                    ))
+                    assertThat(
+                        { credentialsSource.load() },
+                        throws<DockerRegistryCredentialsException>(
+                            withMessage("Could not load credentials for 'someserver.com' because the credential helper executable 'docker-credentials-secretstore' does not exist.") and
+                                withCause(executableDoesNotExistException)
+                        )
+                    )
                 }
             }
         }
 
         given("the credential helper returns a username and password") {
             beforeEachTest {
-                wheneverTheCredentialHelperIsInvoked().thenReturn(ProcessOutput(0, """
-                    |{
-                    |   "ServerURL": "someotherserver.com",
-                    |   "Username": "someuser",
-                    |   "Secret": "somepass"
-                    |}
-                """.trimMargin()))
+                wheneverTheCredentialHelperIsInvoked().thenReturn(
+                    ProcessOutput(
+                        0,
+                        """
+                            |{
+                            |   "ServerURL": "someotherserver.com",
+                            |   "Username": "someuser",
+                            |   "Secret": "somepass"
+                            |}
+                        """.trimMargin()
+                    )
+                )
             }
 
             on("loading the credentials") {
@@ -139,13 +147,18 @@ object DockerRegistryCredentialsSourceSpec : Spek({
 
         given("the credential helper returns a token") {
             beforeEachTest {
-                wheneverTheCredentialHelperIsInvoked().thenReturn(ProcessOutput(0, """
-                    |{
-                    |   "ServerURL": "someotherserver.com",
-                    |   "Username": "<token>",
-                    |   "Secret": "sometoken"
-                    |}
-                """.trimMargin()))
+                wheneverTheCredentialHelperIsInvoked().thenReturn(
+                    ProcessOutput(
+                        0,
+                        """
+                            |{
+                            |   "ServerURL": "someotherserver.com",
+                            |   "Username": "<token>",
+                            |   "Secret": "sometoken"
+                            |}
+                        """.trimMargin()
+                    )
+                )
             }
 
             on("loading the credentials") {
@@ -159,12 +172,17 @@ object DockerRegistryCredentialsSourceSpec : Spek({
 
         given("the credential helper returns a GCP-style token") {
             beforeEachTest {
-                wheneverTheCredentialHelperIsInvoked().thenReturn(ProcessOutput(0, """
-                    |{
-                    |   "Username": "_dcgcloud_token",
-                    |   "Secret": "sometoken"
-                    |}
-                """.trimMargin()))
+                wheneverTheCredentialHelperIsInvoked().thenReturn(
+                    ProcessOutput(
+                        0,
+                        """
+                            |{
+                            |   "Username": "_dcgcloud_token",
+                            |   "Secret": "sometoken"
+                            |}
+                        """.trimMargin()
+                    )
+                )
             }
 
             on("loading the credentials") {
@@ -178,73 +196,98 @@ object DockerRegistryCredentialsSourceSpec : Spek({
 
         given("the credential helper returns a response without a server address") {
             beforeEachTest {
-                wheneverTheCredentialHelperIsInvoked().thenReturn(ProcessOutput(0, """
-                    |{
-                    |   "Username": "someuser",
-                    |   "Secret": "somepass"
-                    |}
-                """.trimMargin()))
+                wheneverTheCredentialHelperIsInvoked().thenReturn(
+                    ProcessOutput(
+                        0,
+                        """
+                            |{
+                            |   "Username": "someuser",
+                            |   "Secret": "somepass"
+                            |}
+                        """.trimMargin()
+                    )
+                )
             }
 
             on("loading the credentials") {
                 it("throws an appropriate exception") {
-                    assertThat({ credentialsSource.load() }, throws<DockerRegistryCredentialsException>(
-                        withMessage("The credentials returned for 'someserver.com' by the credential helper executable 'docker-credentials-secretstore' are invalid: there is no 'ServerURL' field.")
-                    ))
+                    assertThat(
+                        { credentialsSource.load() },
+                        throws<DockerRegistryCredentialsException>(
+                            withMessage("The credentials returned for 'someserver.com' by the credential helper executable 'docker-credentials-secretstore' are invalid: there is no 'ServerURL' field.")
+                        )
+                    )
                 }
             }
         }
 
         given("the credential helper returns a response without a username") {
             beforeEachTest {
-                wheneverTheCredentialHelperIsInvoked().thenReturn(ProcessOutput(0, """
-                    |{
-                    |   "ServerURL": "someotherserver.com",
-                    |   "Secret": "somepass"
-                    |}
-                """.trimMargin()))
+                wheneverTheCredentialHelperIsInvoked().thenReturn(
+                    ProcessOutput(
+                        0,
+                        """
+                            |{
+                            |   "ServerURL": "someotherserver.com",
+                            |   "Secret": "somepass"
+                            |}
+                        """.trimMargin()
+                    )
+                )
             }
 
             on("loading the credentials") {
                 it("throws an appropriate exception") {
-                    assertThat({ credentialsSource.load() }, throws<DockerRegistryCredentialsException>(
-                        withMessage("The credentials returned for 'someserver.com' by the credential helper executable 'docker-credentials-secretstore' are invalid: there is no 'Username' field.")
-                    ))
+                    assertThat(
+                        { credentialsSource.load() },
+                        throws<DockerRegistryCredentialsException>(
+                            withMessage("The credentials returned for 'someserver.com' by the credential helper executable 'docker-credentials-secretstore' are invalid: there is no 'Username' field.")
+                        )
+                    )
                 }
             }
         }
 
         given("the credential helper returns a response without a secret") {
             beforeEachTest {
-                wheneverTheCredentialHelperIsInvoked().thenReturn(ProcessOutput(0, """
-                    |{
-                    |   "ServerURL": "someotherserver.com",
-                    |   "Username": "someuser"
-                    |}
-                """.trimMargin()))
+                wheneverTheCredentialHelperIsInvoked().thenReturn(
+                    ProcessOutput(
+                        0,
+                        """
+                            |{
+                            |   "ServerURL": "someotherserver.com",
+                            |   "Username": "someuser"
+                            |}
+                        """.trimMargin()
+                    )
+                )
             }
 
             on("loading the credentials") {
                 it("throws an appropriate exception") {
-                    assertThat({ credentialsSource.load() }, throws<DockerRegistryCredentialsException>(
-                        withMessage("The credentials returned for 'someserver.com' by the credential helper executable 'docker-credentials-secretstore' are invalid: there is no 'Secret' field.")
-                    ))
+                    assertThat(
+                        { credentialsSource.load() },
+                        throws<DockerRegistryCredentialsException>(
+                            withMessage("The credentials returned for 'someserver.com' by the credential helper executable 'docker-credentials-secretstore' are invalid: there is no 'Secret' field.")
+                        )
+                    )
                 }
             }
         }
 
         given("the credential helper returns a response that is not valid JSON") {
             beforeEachTest {
-                wheneverTheCredentialHelperIsInvoked().thenReturn(ProcessOutput(0, """
-                    |{]
-                """.trimMargin()))
+                wheneverTheCredentialHelperIsInvoked().thenReturn(ProcessOutput(0, "{]"))
             }
 
             on("loading the credentials") {
                 it("throws an appropriate exception") {
-                    assertThat({ credentialsSource.load() }, throws<DockerRegistryCredentialsException>(
-                        withMessage("The credentials returned for 'someserver.com' by the credential helper executable 'docker-credentials-secretstore' are invalid: Unexpected JSON token at offset 2: Expected end of the object\nJSON input: {]")
-                    ))
+                    assertThat(
+                        { credentialsSource.load() },
+                        throws<DockerRegistryCredentialsException>(
+                            withMessage("The credentials returned for 'someserver.com' by the credential helper executable 'docker-credentials-secretstore' are invalid: Unexpected JSON token at offset 2: Expected end of the object\nJSON input: {]")
+                        )
+                    )
                 }
             }
         }
@@ -273,9 +316,12 @@ object DockerRegistryCredentialsSourceSpec : Spek({
 
             on("loading the credentials") {
                 it("throws an appropriate exception") {
-                    assertThat({ credentialsSource.load() }, throws<DockerRegistryCredentialsException>(
-                        withMessage("Could not load credentials for 'someserver.com' because the credential helper executable 'docker-credentials-secretstore' exited with code 1 and output: Something went wrong.")
-                    ))
+                    assertThat(
+                        { credentialsSource.load() },
+                        throws<DockerRegistryCredentialsException>(
+                            withMessage("Could not load credentials for 'someserver.com' because the credential helper executable 'docker-credentials-secretstore' exited with code 1 and output: Something went wrong.")
+                        )
+                    )
                 }
             }
         }

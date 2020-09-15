@@ -27,12 +27,12 @@ import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
-import java.nio.file.Files
-import java.util.UUID
 import org.araqnid.hamkrest.json.equivalentTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.Suite
 import org.spekframework.spek2.style.specification.describe
+import java.nio.file.Files
+import java.util.UUID
 
 object TelemetryConfigurationStoreSpec : Spek({
     describe("a telemetry configuration store") {
@@ -59,9 +59,14 @@ object TelemetryConfigurationStoreSpec : Spek({
                 }
 
                 it("saves the generated user ID to disk") {
-                    assertThat(Files.readAllBytes(configFilePath).toString(Charsets.UTF_8), equivalentTo("""
-                        { "state": "none", "userId": "${config.userId}" }
-                    """.trimIndent()))
+                    assertThat(
+                        Files.readAllBytes(configFilePath).toString(Charsets.UTF_8),
+                        equivalentTo(
+                            """
+                                { "state": "none", "userId": "${config.userId}" }
+                            """.trimIndent()
+                        )
+                    )
                 }
             }
 
@@ -78,8 +83,8 @@ object TelemetryConfigurationStoreSpec : Spek({
 
                 given("the configuration file exists") {
                     val configFileContents = """
-                            { "state": "disabled", "userId": "00001111-2222-3333-4444-555566667777" }
-                        """.trimIndent()
+                        { "state": "disabled", "userId": "00001111-2222-3333-4444-555566667777" }
+                    """.trimIndent()
 
                     beforeEachTest {
                         Files.write(configFilePath, configFileContents.toByteArray(Charsets.UTF_8))
@@ -106,9 +111,14 @@ object TelemetryConfigurationStoreSpec : Spek({
                 beforeEachTest { store.saveConfiguration(newState) }
 
                 it("saves the configuration to disk") {
-                    assertThat(Files.readAllBytes(configFilePath).toString(Charsets.UTF_8), equivalentTo("""
-                        { "state": "allowed", "userId": "00001111-2222-3333-4444-555566667777" }
-                    """.trimIndent()))
+                    assertThat(
+                        Files.readAllBytes(configFilePath).toString(Charsets.UTF_8),
+                        equivalentTo(
+                            """
+                                { "state": "allowed", "userId": "00001111-2222-3333-4444-555566667777" }
+                            """.trimIndent()
+                        )
+                    )
                 }
 
                 it("returns the updated configuration when requested") {
@@ -129,9 +139,14 @@ object TelemetryConfigurationStoreSpec : Spek({
 
                 given("there is an existing configuration file") {
                     beforeEachTest {
-                        Files.write(configFilePath, listOf("""
-                            { "state": "disabled", "userId": "aaaabbbb-cccc-dddd-4444-555566667777" }
-                        """.trimIndent()))
+                        Files.write(
+                            configFilePath,
+                            listOf(
+                                """
+                                    { "state": "disabled", "userId": "aaaabbbb-cccc-dddd-4444-555566667777" }
+                                """.trimIndent()
+                            )
+                        )
                     }
 
                     itSavesTheConsentStateToDisk()

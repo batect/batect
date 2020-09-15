@@ -120,12 +120,16 @@ data class DockerContainerCreationRequest(
         .map { it.toString() }
         .toJsonArray()
 
-    private fun formatDeviceMounts(): JsonArray = JsonArray(deviceMounts
-        .map { buildJsonObject {
-            put("PathOnHost", it.localPath)
-            put("PathInContainer", it.containerPath)
-            put("CgroupPermissions", it.options)
-        } })
+    private fun formatDeviceMounts(): JsonArray = JsonArray(
+        deviceMounts
+            .map {
+                buildJsonObject {
+                    put("PathOnHost", it.localPath)
+                    put("PathInContainer", it.containerPath)
+                    put("CgroupPermissions", it.options)
+                }
+            }
+    )
 
     private fun formatPortMappings(): JsonObject = buildJsonObject {
         portMappings.forEach { mapping ->
@@ -133,12 +137,17 @@ data class DockerContainerCreationRequest(
             val containerPorts = mapping.container.ports
 
             localPorts.zip(containerPorts).forEach { (local, container) ->
-                put("$container/${mapping.protocol}", JsonArray(listOf(
-                    buildJsonObject {
-                        put("HostIp", "")
-                        put("HostPort", local.toString())
-                    }
-                )))
+                put(
+                    "$container/${mapping.protocol}",
+                    JsonArray(
+                        listOf(
+                            buildJsonObject {
+                                put("HostIp", "")
+                                put("HostPort", local.toString())
+                            }
+                        )
+                    )
+                )
             }
         }
     }

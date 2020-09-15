@@ -40,11 +40,16 @@ object InitialiseCachesStepRuleSpec : Spek({
 
         on("attaching it to a log message") {
             it("returns a machine-readable representation of itself") {
-                assertThat(logRepresentationOf(rule), equivalentTo("""
-                    |{
-                    |   "type": "${rule::class.qualifiedName}"
-                    |}
-                """.trimMargin()))
+                assertThat(
+                    logRepresentationOf(rule),
+                    equivalentTo(
+                        """
+                        |{
+                        |   "type": "${rule::class.qualifiedName}"
+                        |}
+                        """.trimMargin()
+                    )
+                )
             }
         }
     }

@@ -25,9 +25,9 @@ import batect.testutils.equalTo
 import batect.testutils.runForEachTest
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.matches
-import java.nio.file.Files
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.nio.file.Files
 
 object GitClientIntegrationTest : Spek({
     describe("a Git client") {

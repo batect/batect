@@ -22,12 +22,12 @@
 package batect.telemetry
 
 import batect.logging.ZonedDateTimeSerializer
-import java.time.ZoneOffset
-import java.time.ZonedDateTime
-import java.util.UUID
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseSerializers
 import kotlinx.serialization.json.JsonPrimitive
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
+import java.util.UUID
 
 @Serializable
 data class TelemetrySession(

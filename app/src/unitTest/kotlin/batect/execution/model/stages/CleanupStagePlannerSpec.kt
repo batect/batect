@@ -59,10 +59,10 @@ import com.natpryce.hamkrest.isEmpty
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
-import java.nio.file.Paths
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.Suite
 import org.spekframework.spek2.style.specification.describe
+import java.nio.file.Paths
 
 object CleanupStagePlannerSpec : Spek({
     describe("a cleanup stage planner") {

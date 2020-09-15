@@ -17,8 +17,8 @@
 package batect.os
 
 import batect.logging.Logger
-import java.util.concurrent.atomic.AtomicReference
 import jnr.constants.platform.Signal
+import java.util.concurrent.atomic.AtomicReference
 
 class ConsoleDimensions(
     private val nativeMethods: NativeMethods,

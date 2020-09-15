@@ -19,9 +19,9 @@ package batect.ui
 import batect.testutils.given
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
-import java.time.Duration
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.time.Duration
 
 object FormattingSpec : Spek({
     describe("formatting durations") {

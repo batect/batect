@@ -42,23 +42,27 @@ object CreateContainerStepSpec : Spek({
 
         on("attaching it to a log message") {
             it("returns a machine-readable representation of itself") {
-                assertThat(logRepresentationOf(step), equivalentTo("""
-                    |{
-                    |   "type": "${step::class.qualifiedName}",
-                    |   "container": "the-container",
-                    |   "config": {
-                    |       "command": ["blah"],
-                    |       "entrypoint": ["entrypoint"],
-                    |       "workingDirectory": "/some/work/dir",
-                    |       "additionalEnvironmentVariables": {
-                    |           "VAR": {"type":"LiteralValue", "value":"value"}
-                    |       },
-                    |       "additionalPortMappings": [{"local": "123", "container": "456", "protocol": "tcp"}]
-                    |   },
-                    |   "image": {"id": "the-image"},
-                    |   "network": {"id": "the-network"}
-                    |}
-                """.trimMargin())
+                assertThat(
+                    logRepresentationOf(step),
+                    equivalentTo(
+                        """
+                        |{
+                        |   "type": "${step::class.qualifiedName}",
+                        |   "container": "the-container",
+                        |   "config": {
+                        |       "command": ["blah"],
+                        |       "entrypoint": ["entrypoint"],
+                        |       "workingDirectory": "/some/work/dir",
+                        |       "additionalEnvironmentVariables": {
+                        |           "VAR": {"type":"LiteralValue", "value":"value"}
+                        |       },
+                        |       "additionalPortMappings": [{"local": "123", "container": "456", "protocol": "tcp"}]
+                        |   },
+                        |   "image": {"id": "the-image"},
+                        |   "network": {"id": "the-network"}
+                        |}
+                        """.trimMargin()
+                    )
                 )
             }
         }

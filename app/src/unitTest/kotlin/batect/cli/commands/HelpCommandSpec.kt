@@ -31,10 +31,10 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
-import java.io.ByteArrayOutputStream
-import java.io.PrintStream
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.io.ByteArrayOutputStream
+import java.io.PrintStream
 
 object HelpCommandSpec : Spek({
     describe("a help command") {
@@ -76,7 +76,10 @@ object HelpCommandSpec : Spek({
             val exitCode = command.run()
 
             it("prints help information, grouping the options and limiting the width of the output to the width of the console") {
-                assertThat(output.toString(), equalTo("""
+                assertThat(
+                    output.toString(),
+                    equalTo(
+                        """
                         |Usage: batect [options] task [-- additional arguments to pass to task]
                         |
                         |Group 1 options:
@@ -92,7 +95,9 @@ object HelpCommandSpec : Spek({
                         |
                         |For documentation and further information on batect, visit https://github.com/batect/batect.
                         |
-                        |""".trimMargin().withPlatformSpecificLineSeparator()))
+                        |""".trimMargin().withPlatformSpecificLineSeparator()
+                    )
+                )
             }
 
             it("returns a non-zero exit code") {

@@ -44,9 +44,14 @@ object TaskSpec : Spek({
                 val task by createForEachTest { Yaml.default.decodeFromString(Task.serializer(), yaml) }
 
                 it("successfully reads the task") {
-                    assertThat(task, equalTo(Task(
-                        runConfiguration = TaskRunConfiguration("the-container")
-                    )))
+                    assertThat(
+                        task,
+                        equalTo(
+                            Task(
+                                runConfiguration = TaskRunConfiguration("the-container")
+                            )
+                        )
+                    )
                 }
             }
 
@@ -65,13 +70,18 @@ object TaskSpec : Spek({
                 val task by createForEachTest { Yaml.default.decodeFromString(Task.serializer(), yaml) }
 
                 it("successfully reads the task") {
-                    assertThat(task, equalTo(Task(
-                        description = "Does the thing.",
-                        group = "Things",
-                        prerequisiteTasks = listOf("the-other-task"),
-                        dependsOnContainers = setOf("the-other-container"),
-                        runConfiguration = TaskRunConfiguration("the-container")
-                    )))
+                    assertThat(
+                        task,
+                        equalTo(
+                            Task(
+                                description = "Does the thing.",
+                                group = "Things",
+                                prerequisiteTasks = listOf("the-other-task"),
+                                dependsOnContainers = setOf("the-other-container"),
+                                runConfiguration = TaskRunConfiguration("the-container")
+                            )
+                        )
+                    )
                 }
             }
 
@@ -111,22 +121,27 @@ object TaskSpec : Spek({
             )
 
             it("serializes to the expected JSON") {
-                assertThat(Json.forLogging.encodeToString(Task.serializer(), task), equivalentTo("""
-                    {
-                        "description": "Does the thing.",
-                        "group": "Things",
-                        "prerequisites": ["the-other-task"],
-                        "dependencies": ["the-other-container"],
-                        "run": {
-                            "container": "the-container",
-                            "command": null,
-                            "entrypoint": null,
-                            "environment": {},
-                            "ports": [],
-                            "working_directory": null
+                assertThat(
+                    Json.forLogging.encodeToString(Task.serializer(), task),
+                    equivalentTo(
+                        """
+                        {
+                            "description": "Does the thing.",
+                            "group": "Things",
+                            "prerequisites": ["the-other-task"],
+                            "dependencies": ["the-other-container"],
+                            "run": {
+                                "container": "the-container",
+                                "command": null,
+                                "entrypoint": null,
+                                "environment": {},
+                                "ports": [],
+                                "working_directory": null
+                            }
                         }
-                    }
-                """.trimIndent()))
+                        """.trimIndent()
+                    )
+                )
             }
         }
     }

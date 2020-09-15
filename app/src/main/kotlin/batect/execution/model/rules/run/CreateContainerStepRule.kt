@@ -55,12 +55,14 @@ data class CreateContainerStepRule(
             return TaskStepRuleEvaluationResult.NotReady
         }
 
-        return TaskStepRuleEvaluationResult.Ready(CreateContainerStep(
-            container,
-            config,
-            image,
-            network
-        ))
+        return TaskStepRuleEvaluationResult.Ready(
+            CreateContainerStep(
+                container,
+                config,
+                image,
+                network
+            )
+        )
     }
 
     private fun findNetwork(pastEvents: Set<TaskEvent>): DockerNetwork? =
@@ -69,12 +71,14 @@ data class CreateContainerStepRule(
 
     private fun findImage(pastEvents: Set<TaskEvent>): DockerImage? {
         return when (container.imageSource) {
-            is PullImage -> pastEvents
-                .singleInstanceOrNull<ImagePulledEvent> { it.source == container.imageSource }
-                ?.image
-            is BuildImage -> pastEvents
-                .singleInstanceOrNull<ImageBuiltEvent> { it.container == container }
-                ?.image
+            is PullImage ->
+                pastEvents
+                    .singleInstanceOrNull<ImagePulledEvent> { it.source == container.imageSource }
+                    ?.image
+            is BuildImage ->
+                pastEvents
+                    .singleInstanceOrNull<ImageBuiltEvent> { it.container == container }
+                    ?.image
         }
     }
 

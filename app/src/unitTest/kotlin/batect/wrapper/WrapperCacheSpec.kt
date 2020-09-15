@@ -34,12 +34,12 @@ import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.isEmpty
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
 
 object WrapperCacheSpec : Spek({
     describe("a wrapper cache") {
@@ -69,7 +69,8 @@ object WrapperCacheSpec : Spek({
                         }
 
                         it("logs a warning") {
-                            assertThat(logSink,
+                            assertThat(
+                                logSink,
                                 hasMessage(
                                     withLogMessage("Cache directory for version does not exist, not storing last used time.") and
                                         withAdditionalData("version", version) and
@@ -118,7 +119,8 @@ object WrapperCacheSpec : Spek({
                             }
 
                             it("logs a warning") {
-                                assertThat(logSink,
+                                assertThat(
+                                    logSink,
                                     hasMessage(
                                         withLogMessage("Version cache directory does not contain a last used time file.") and
                                             withAdditionalData("version", version) and
@@ -156,7 +158,8 @@ object WrapperCacheSpec : Spek({
                                 }
 
                                 it("logs a warning") {
-                                    assertThat(logSink,
+                                    assertThat(
+                                        logSink,
                                         hasMessage(
                                             withLogMessage("Last used time file does not contain a valid time, ignoring.") and
                                                 withAdditionalData("version", version) and
@@ -178,7 +181,8 @@ object WrapperCacheSpec : Spek({
                                 }
 
                                 it("logs a warning") {
-                                    assertThat(logSink,
+                                    assertThat(
+                                        logSink,
                                         hasMessage(
                                             withLogMessage("Last used time file does not contain a valid time, ignoring.") and
                                                 withAdditionalData("version", version) and
@@ -210,10 +214,15 @@ object WrapperCacheSpec : Spek({
                         val result by runForEachTest { wrapperCache.getCachedVersions() }
 
                         it("returns both versions") {
-                            assertThat(result, equalTo(setOf(
-                                CachedWrapperVersion(version1, ZonedDateTime.of(2020, 5, 10, 11, 12, 13, 123456789, ZoneOffset.UTC), version1Directory),
-                                CachedWrapperVersion(version2, ZonedDateTime.of(2021, 6, 10, 11, 12, 13, 123456789, ZoneOffset.UTC), version2Directory)
-                            )))
+                            assertThat(
+                                result,
+                                equalTo(
+                                    setOf(
+                                        CachedWrapperVersion(version1, ZonedDateTime.of(2020, 5, 10, 11, 12, 13, 123456789, ZoneOffset.UTC), version1Directory),
+                                        CachedWrapperVersion(version2, ZonedDateTime.of(2021, 6, 10, 11, 12, 13, 123456789, ZoneOffset.UTC), version2Directory)
+                                    )
+                                )
+                            )
                         }
                     }
 
@@ -236,7 +245,8 @@ object WrapperCacheSpec : Spek({
                         }
 
                         it("logs a warning") {
-                            assertThat(logSink,
+                            assertThat(
+                                logSink,
                                 hasMessage(
                                     withLogMessage("Directory name cannot be parsed as a version, ignoring directory.") and
                                         withAdditionalData("directory", nonVersionDirectory.toString()) and
@@ -261,7 +271,8 @@ object WrapperCacheSpec : Spek({
                     }
 
                     it("logs a warning") {
-                        assertThat(logSink,
+                        assertThat(
+                            logSink,
                             hasMessage(
                                 withLogMessage("Cache directory for version does not exist, not storing last used time.") and
                                     withAdditionalData("version", version) and
@@ -280,11 +291,14 @@ object WrapperCacheSpec : Spek({
                     }
 
                     it("logs a warning") {
-                        assertThat(logSink, hasMessage(
-                            withLogMessage("Cache directory does not exist, returning empty list of versions.") and
-                                withAdditionalData("cacheDirectory", cacheDirectory.toString()) and
-                                withSeverity(Severity.Warning)
-                        ))
+                        assertThat(
+                            logSink,
+                            hasMessage(
+                                withLogMessage("Cache directory does not exist, returning empty list of versions.") and
+                                    withAdditionalData("cacheDirectory", cacheDirectory.toString()) and
+                                    withSeverity(Severity.Warning)
+                            )
+                        )
                     }
                 }
             }

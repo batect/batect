@@ -94,13 +94,18 @@ object DeleteTaskNetworkStepRuleSpec : Spek({
             val rule = DeleteTaskNetworkStepRule(network, setOf(container1, container2))
 
             it("returns a machine-readable representation of itself") {
-                assertThat(logRepresentationOf(rule), equivalentTo("""
-                    |{
-                    |   "type": "${rule::class.qualifiedName}",
-                    |   "network": {"id": "the-network"},
-                    |   "containersThatMustBeRemovedFirst": ["container-1", "container-2"]
-                    |}
-                """.trimMargin()))
+                assertThat(
+                    logRepresentationOf(rule),
+                    equivalentTo(
+                        """
+                        |{
+                        |   "type": "${rule::class.qualifiedName}",
+                        |   "network": {"id": "the-network"},
+                        |   "containersThatMustBeRemovedFirst": ["container-1", "container-2"]
+                        |}
+                        """.trimMargin()
+                    )
+                )
             }
         }
     }

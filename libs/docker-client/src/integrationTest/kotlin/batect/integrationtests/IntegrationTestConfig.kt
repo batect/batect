@@ -55,13 +55,13 @@ import batect.os.unix.UnixNativeMethods
 import batect.os.windows.WindowsConsoleManager
 import batect.os.windows.WindowsNativeMethods
 import com.nhaarman.mockitokotlin2.mock
-import java.nio.file.FileSystems
-import java.nio.file.Path
-import java.nio.file.Paths
 import jnr.ffi.Platform
 import jnr.posix.POSIX
 import jnr.posix.POSIXFactory
 import okhttp3.OkHttpClient
+import java.nio.file.FileSystems
+import java.nio.file.Path
+import java.nio.file.Paths
 
 val testImagesDirectory: Path = Paths.get("src", "integrationTest", "resources", "test-images").toAbsolutePath()
 

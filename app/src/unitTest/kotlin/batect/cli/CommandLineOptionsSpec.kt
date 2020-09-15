@@ -27,13 +27,13 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.isA
 import com.nhaarman.mockitokotlin2.mock
-import java.nio.file.Paths
 import jnr.posix.POSIX
 import org.kodein.di.DI
 import org.kodein.di.bind
 import org.kodein.di.instance
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.nio.file.Paths
 
 object CommandLineOptionsSpec : Spek({
     describe("a set of command line options") {

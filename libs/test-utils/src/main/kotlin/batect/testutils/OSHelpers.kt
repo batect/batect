@@ -18,10 +18,10 @@ package batect.testutils
 
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
-import java.nio.file.Path
 import jnr.ffi.Platform
 import org.spekframework.spek2.dsl.GroupBody
 import org.spekframework.spek2.style.specification.Suite
+import java.nio.file.Path
 
 fun GroupBody.onlyOn(operatingSystems: Set<Platform.OS>, action: GroupBody.() -> Unit) {
     if (Platform.getNativePlatform().os in operatingSystems) {

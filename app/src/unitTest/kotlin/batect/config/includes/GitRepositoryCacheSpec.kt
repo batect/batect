@@ -38,14 +38,14 @@ import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.verifyZeroInteractions
-import java.nio.file.Files
-import java.nio.file.Path
-import java.time.ZoneOffset
-import java.time.ZonedDateTime
 import org.araqnid.hamkrest.json.equivalentTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.Suite
 import org.spekframework.spek2.style.specification.describe
+import java.nio.file.Files
+import java.nio.file.Path
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
 
 object GitRepositoryCacheSpec : Spek({
     describe("a cache of Git repositories") {
@@ -75,7 +75,10 @@ object GitRepositoryCacheSpec : Spek({
             fun createExistingInfoFile() {
                 Files.createDirectories(expectedInfoFile.parent)
 
-                Files.write(expectedInfoFile, """{
+                Files.write(
+                    expectedInfoFile,
+                    """
+                    |{
                     |    "type": "git",
                     |    "repo": {
                     |        "remote": "https://github.com/me/my-bundle.git",
@@ -85,7 +88,9 @@ object GitRepositoryCacheSpec : Spek({
                     |    "lastUsed": "2001-01-01T01:02:03.456789012Z",
                     |    "otherInfo": "some value",
                     |    "clonedWithVersion": "4.5.6"
-                    |}""".trimMargin().toByteArray(Charsets.UTF_8))
+                    |}
+                    """.trimMargin().toByteArray(Charsets.UTF_8)
+                )
             }
 
             fun Suite.itClonesTheRepository() {
@@ -120,35 +125,45 @@ object GitRepositoryCacheSpec : Spek({
 
             fun Suite.itCreatesTheInfoFile() {
                 it("creates the info file with details of the repository and the current time") {
-                    assertThat(Files.readAllBytes(expectedInfoFile).toString(Charsets.UTF_8), equivalentTo("""
-                        |{
-                        |    "type": "git",
-                        |    "repo": {
-                        |        "remote": "https://github.com/me/my-bundle.git",
-                        |        "ref": "my-tag"
-                        |    },
-                        |    "lastUsed": "2020-07-05T01:02:03.456789012Z",
-                        |    "clonedWithVersion": "1.2.3"
-                        |}
-                        """.trimMargin()))
+                    assertThat(
+                        Files.readAllBytes(expectedInfoFile).toString(Charsets.UTF_8),
+                        equivalentTo(
+                            """
+                            |{
+                            |    "type": "git",
+                            |    "repo": {
+                            |        "remote": "https://github.com/me/my-bundle.git",
+                            |        "ref": "my-tag"
+                            |    },
+                            |    "lastUsed": "2020-07-05T01:02:03.456789012Z",
+                            |    "clonedWithVersion": "1.2.3"
+                            |}
+                            """.trimMargin()
+                        )
+                    )
                 }
             }
 
             fun Suite.itUpdatesTheInfoFile() {
                 it("updates the info file with details of the repository and the current time, preserving any other information in the file") {
-                    assertThat(Files.readAllBytes(expectedInfoFile).toString(Charsets.UTF_8), equivalentTo("""
-                        |{
-                        |    "type": "git",
-                        |    "repo": {
-                        |        "remote": "https://github.com/me/my-bundle.git",
-                        |        "ref": "my-tag",
-                        |        "someOtherInfo": "some other value"
-                        |    },
-                        |    "lastUsed": "2020-07-05T01:02:03.456789012Z",
-                        |    "otherInfo": "some value",
-                        |    "clonedWithVersion": "4.5.6"
-                        |}
-                        """.trimMargin()))
+                    assertThat(
+                        Files.readAllBytes(expectedInfoFile).toString(Charsets.UTF_8),
+                        equivalentTo(
+                            """
+                            |{
+                            |    "type": "git",
+                            |    "repo": {
+                            |        "remote": "https://github.com/me/my-bundle.git",
+                            |        "ref": "my-tag",
+                            |        "someOtherInfo": "some other value"
+                            |    },
+                            |    "lastUsed": "2020-07-05T01:02:03.456789012Z",
+                            |    "otherInfo": "some value",
+                            |    "clonedWithVersion": "4.5.6"
+                            |}
+                            """.trimMargin()
+                        )
+                    )
                 }
             }
 
@@ -219,7 +234,9 @@ object GitRepositoryCacheSpec : Spek({
 
                     given("the info file is well-formed") {
                         beforeEachTest {
-                            Files.write(infoPath, """
+                            Files.write(
+                                infoPath,
+                                """
                                     |{
                                     |    "repo": {
                                     |        "remote": "https://github.com/me/my-bundle.git",
@@ -236,9 +253,14 @@ object GitRepositoryCacheSpec : Spek({
                             val cachedRepos by runForEachTest { cache.listAll() }
 
                             it("returns the details from that file") {
-                                assertThat(cachedRepos, equalTo(setOf(
-                                    CachedGitRepository(GitRepositoryReference("https://github.com/me/my-bundle.git", "my-tag"), ZonedDateTime.of(2020, 7, 5, 1, 2, 3, 456789012, ZoneOffset.UTC), null, infoPath)
-                                )))
+                                assertThat(
+                                    cachedRepos,
+                                    equalTo(
+                                        setOf(
+                                            CachedGitRepository(GitRepositoryReference("https://github.com/me/my-bundle.git", "my-tag"), ZonedDateTime.of(2020, 7, 5, 1, 2, 3, 456789012, ZoneOffset.UTC), null, infoPath)
+                                        )
+                                    )
+                                )
                             }
                         }
 
@@ -249,9 +271,14 @@ object GitRepositoryCacheSpec : Spek({
                             val cachedRepos by runForEachTest { cache.listAll() }
 
                             it("returns the details from the info file and the directory") {
-                                assertThat(cachedRepos, equalTo(setOf(
-                                    CachedGitRepository(GitRepositoryReference("https://github.com/me/my-bundle.git", "my-tag"), ZonedDateTime.of(2020, 7, 5, 1, 2, 3, 456789012, ZoneOffset.UTC), workingCopyPath, infoPath)
-                                )))
+                                assertThat(
+                                    cachedRepos,
+                                    equalTo(
+                                        setOf(
+                                            CachedGitRepository(GitRepositoryReference("https://github.com/me/my-bundle.git", "my-tag"), ZonedDateTime.of(2020, 7, 5, 1, 2, 3, 456789012, ZoneOffset.UTC), workingCopyPath, infoPath)
+                                        )
+                                    )
+                                )
                             }
                         }
 
@@ -263,9 +290,14 @@ object GitRepositoryCacheSpec : Spek({
                             val cachedRepos by runForEachTest { cache.listAll() }
 
                             it("returns the details from just the info file") {
-                                assertThat(cachedRepos, equalTo(setOf(
-                                    CachedGitRepository(GitRepositoryReference("https://github.com/me/my-bundle.git", "my-tag"), ZonedDateTime.of(2020, 7, 5, 1, 2, 3, 456789012, ZoneOffset.UTC), null, infoPath)
-                                )))
+                                assertThat(
+                                    cachedRepos,
+                                    equalTo(
+                                        setOf(
+                                            CachedGitRepository(GitRepositoryReference("https://github.com/me/my-bundle.git", "my-tag"), ZonedDateTime.of(2020, 7, 5, 1, 2, 3, 456789012, ZoneOffset.UTC), null, infoPath)
+                                        )
+                                    )
+                                )
                             }
                         }
                     }
@@ -282,7 +314,9 @@ object GitRepositoryCacheSpec : Spek({
 
                     given("the info file is missing an attribute") {
                         beforeEachTest {
-                            Files.write(infoPath, """
+                            Files.write(
+                                infoPath,
+                                """
                                     |{
                                     |    "repo": {
                                     |        "ref": "my-tag"
@@ -304,7 +338,9 @@ object GitRepositoryCacheSpec : Spek({
                     val infoPath2 by createForEachTest { fileSystem.getPath("/some/.batect/dir/incl/some-key-2.json") }
 
                     beforeEachTest {
-                        Files.write(infoPath1, """
+                        Files.write(
+                            infoPath1,
+                            """
                                 |{
                                 |    "repo": {
                                 |        "remote": "https://github.com/me/my-bundle-1.git",
@@ -315,7 +351,9 @@ object GitRepositoryCacheSpec : Spek({
                             """.trimMargin().toByteArray(Charsets.UTF_8)
                         )
 
-                        Files.write(infoPath2, """
+                        Files.write(
+                            infoPath2,
+                            """
                                 |{
                                 |    "repo": {
                                 |        "remote": "https://github.com/me/my-bundle-2.git",
@@ -331,10 +369,15 @@ object GitRepositoryCacheSpec : Spek({
                         val cachedRepos by runForEachTest { cache.listAll() }
 
                         it("returns the details from both info files") {
-                            assertThat(cachedRepos, equalTo(setOf(
-                                CachedGitRepository(GitRepositoryReference("https://github.com/me/my-bundle-1.git", "my-tag"), ZonedDateTime.of(2020, 7, 5, 1, 2, 3, 456789012, ZoneOffset.UTC), null, infoPath1),
-                                CachedGitRepository(GitRepositoryReference("https://github.com/me/my-bundle-2.git", "my-tag"), ZonedDateTime.of(2020, 7, 5, 1, 2, 3, 456789012, ZoneOffset.UTC), null, infoPath2)
-                            )))
+                            assertThat(
+                                cachedRepos,
+                                equalTo(
+                                    setOf(
+                                        CachedGitRepository(GitRepositoryReference("https://github.com/me/my-bundle-1.git", "my-tag"), ZonedDateTime.of(2020, 7, 5, 1, 2, 3, 456789012, ZoneOffset.UTC), null, infoPath1),
+                                        CachedGitRepository(GitRepositoryReference("https://github.com/me/my-bundle-2.git", "my-tag"), ZonedDateTime.of(2020, 7, 5, 1, 2, 3, 456789012, ZoneOffset.UTC), null, infoPath2)
+                                    )
+                                )
+                            )
                         }
                     }
 
@@ -350,10 +393,15 @@ object GitRepositoryCacheSpec : Spek({
                         val cachedRepos by runForEachTest { cache.listAll() }
 
                         it("returns the details from both info files with the corresponding working copy directories") {
-                            assertThat(cachedRepos, equalTo(setOf(
-                                CachedGitRepository(GitRepositoryReference("https://github.com/me/my-bundle-1.git", "my-tag"), ZonedDateTime.of(2020, 7, 5, 1, 2, 3, 456789012, ZoneOffset.UTC), workingCopyPath1, infoPath1),
-                                CachedGitRepository(GitRepositoryReference("https://github.com/me/my-bundle-2.git", "my-tag"), ZonedDateTime.of(2020, 7, 5, 1, 2, 3, 456789012, ZoneOffset.UTC), workingCopyPath2, infoPath2)
-                            )))
+                            assertThat(
+                                cachedRepos,
+                                equalTo(
+                                    setOf(
+                                        CachedGitRepository(GitRepositoryReference("https://github.com/me/my-bundle-1.git", "my-tag"), ZonedDateTime.of(2020, 7, 5, 1, 2, 3, 456789012, ZoneOffset.UTC), workingCopyPath1, infoPath1),
+                                        CachedGitRepository(GitRepositoryReference("https://github.com/me/my-bundle-2.git", "my-tag"), ZonedDateTime.of(2020, 7, 5, 1, 2, 3, 456789012, ZoneOffset.UTC), workingCopyPath2, infoPath2)
+                                    )
+                                )
+                            )
                         }
                     }
                 }

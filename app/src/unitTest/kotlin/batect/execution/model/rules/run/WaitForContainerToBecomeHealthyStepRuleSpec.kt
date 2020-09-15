@@ -48,10 +48,17 @@ object WaitForContainerToBecomeHealthyStepRuleSpec : Spek({
                 val result = rule.evaluate(events)
 
                 it("returns a 'wait for container to become healthy' step") {
-                    assertThat(result, equalTo(TaskStepRuleEvaluationResult.Ready(WaitForContainerToBecomeHealthyStep(
-                        container,
-                        dockerContainer
-                    ))))
+                    assertThat(
+                        result,
+                        equalTo(
+                            TaskStepRuleEvaluationResult.Ready(
+                                WaitForContainerToBecomeHealthyStep(
+                                    container,
+                                    dockerContainer
+                                )
+                            )
+                        )
+                    )
                 }
             }
         }
@@ -81,12 +88,16 @@ object WaitForContainerToBecomeHealthyStepRuleSpec : Spek({
 
         on("attaching it to a log message") {
             it("returns a machine-readable representation of itself") {
-                assertThat(logRepresentationOf(rule), equivalentTo("""
-                    |{
-                    |   "type": "${rule::class.qualifiedName}",
-                    |   "container": "the-container"
-                    |}
-                """.trimMargin())
+                assertThat(
+                    logRepresentationOf(rule),
+                    equivalentTo(
+                        """
+                        |{
+                        |   "type": "${rule::class.qualifiedName}",
+                        |   "container": "the-container"
+                        |}
+                        """.trimMargin()
+                    )
                 )
             }
         }

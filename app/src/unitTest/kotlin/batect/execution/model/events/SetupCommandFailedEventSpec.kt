@@ -35,15 +35,20 @@ object SetupCommandFailedEventSpec : Spek({
 
         on("attaching it to a log message") {
             it("returns a machine-readable representation of itself") {
-                assertThat(logRepresentationOf(event), equivalentTo("""
-                    |{
-                    |   "type": "${event::class.qualifiedName}",
-                    |   "container": "the-container",
-                    |   "command": {"command": ["./do", "the-thing"], "working_directory": null},
-                    |   "exitCode": 123,
-                    |   "output": "Something went wrong"
-                    |}
-                """.trimMargin()))
+                assertThat(
+                    logRepresentationOf(event),
+                    equivalentTo(
+                        """
+                        |{
+                        |   "type": "${event::class.qualifiedName}",
+                        |   "container": "the-container",
+                        |   "command": {"command": ["./do", "the-thing"], "working_directory": null},
+                        |   "exitCode": 123,
+                        |   "output": "Something went wrong"
+                        |}
+                        """.trimMargin()
+                    )
+                )
             }
         }
     }

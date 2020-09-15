@@ -26,17 +26,17 @@ import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.withMessage
-import com.google.common.jimfs.Configuration as JimfsConfiguration
 import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.throws
-import java.nio.file.Files
-import java.nio.file.Path
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.nio.file.Files
+import java.nio.file.Path
+import com.google.common.jimfs.Configuration as JimfsConfiguration
 
 object ConfigVariablesProviderSpec : Spek({
     describe("a config variables provider") {
@@ -91,7 +91,8 @@ object ConfigVariablesProviderSpec : Spek({
 
                         it("throws an appropriate exception") {
                             assertThat(
-                                { provider.build(config) }, throws<ConfigurationFileException>(
+                                { provider.build(config) },
+                                throws<ConfigurationFileException>(
                                     withMessage("The config variable 'some_var' has not been defined.")
                                         and withLineNumber(1) and withFileName(sourceFile.toString())
                                 )
@@ -124,10 +125,13 @@ object ConfigVariablesProviderSpec : Spek({
                     beforeEachTest { Files.write(sourceFile, listOf("blah")) }
 
                     it("throws an appropriate exception") {
-                        assertThat({ provider.build(config) }, throws<ConfigurationFileException>(
-                            withMessage("Expected a map, but got a scalar value")
-                                and withLineNumber(1) and withFileName(sourceFile.toString())
-                        ))
+                        assertThat(
+                            { provider.build(config) },
+                            throws<ConfigurationFileException>(
+                                withMessage("Expected a map, but got a scalar value")
+                                    and withLineNumber(1) and withFileName(sourceFile.toString())
+                            )
+                        )
                     }
                 }
             }

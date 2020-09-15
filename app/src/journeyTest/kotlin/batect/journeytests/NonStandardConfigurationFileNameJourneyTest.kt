@@ -36,11 +36,13 @@ object NonStandardConfigurationFileNameJourneyTest : Spek({
             val result by runBeforeGroup { runner.runApplication(listOf("-f", "another-name.yml", "--list-tasks")) }
 
             it("prints a list of all available tasks") {
-                assert(result).output().contains("""
+                assert(result).output().contains(
+                    """
                     |- task-1
                     |- task-2
                     |- task-3
-                    """.trimMargin().withPlatformSpecificLineSeparator())
+                    """.trimMargin().withPlatformSpecificLineSeparator()
+                )
             }
 
             it("returns a zero exit code") {

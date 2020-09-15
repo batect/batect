@@ -61,10 +61,12 @@ object DockerImageBuildIgnoreListSpec : Spek({
             }
 
             given("a list of patterns that ignores a custom Dockerfile and the standard Dockerfile file") {
-                val ignoreList = DockerImageBuildIgnoreList(listOf(
-                    DockerImageBuildIgnoreEntry("CustomDockerfile", false),
-                    DockerImageBuildIgnoreEntry("Dockerfile", false)
-                ))
+                val ignoreList = DockerImageBuildIgnoreList(
+                    listOf(
+                        DockerImageBuildIgnoreEntry("CustomDockerfile", false),
+                        DockerImageBuildIgnoreEntry("Dockerfile", false)
+                    )
+                )
 
                 it("still includes the custom Dockerfile file") {
                     assertThat(ignoreList.shouldIncludeInContext(unixFileSystem.getPath("CustomDockerfile"), "CustomDockerfile"), equalTo(true))
@@ -76,9 +78,11 @@ object DockerImageBuildIgnoreListSpec : Spek({
             }
 
             given("a list of patterns that ignores a custom Dockerfile in a subdirectory") {
-                val ignoreList = DockerImageBuildIgnoreList(listOf(
-                    DockerImageBuildIgnoreEntry("Dockerfiles/CustomDockerfile", false)
-                ))
+                val ignoreList = DockerImageBuildIgnoreList(
+                    listOf(
+                        DockerImageBuildIgnoreEntry("Dockerfiles/CustomDockerfile", false)
+                    )
+                )
 
                 it("still includes the custom Dockerfile file when given as a Unix-style path") {
                     assertThat(ignoreList.shouldIncludeInContext(unixFileSystem.getPath("Dockerfiles/CustomDockerfile"), "Dockerfiles/CustomDockerfile"), equalTo(true))
@@ -114,10 +118,12 @@ object DockerImageBuildIgnoreListSpec : Spek({
             }
 
             given("a list of patterns that excludes some files and has an exception for other files") {
-                val ignoreList = DockerImageBuildIgnoreList(listOf(
-                    DockerImageBuildIgnoreEntry("docs", false),
-                    DockerImageBuildIgnoreEntry("docs/README.md", true)
-                ))
+                val ignoreList = DockerImageBuildIgnoreList(
+                    listOf(
+                        DockerImageBuildIgnoreEntry("docs", false),
+                        DockerImageBuildIgnoreEntry("docs/README.md", true)
+                    )
+                )
 
                 it("includes files with Unix-style paths that match the exception") {
                     assertThat(ignoreList.shouldIncludeInContext(unixFileSystem.getPath("docs/README.md"), "Dockerfile"), equalTo(true))

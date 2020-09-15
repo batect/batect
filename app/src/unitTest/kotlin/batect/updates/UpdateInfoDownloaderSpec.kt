@@ -33,13 +33,13 @@ import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doThrow
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
-import java.io.IOException
-import java.time.ZoneOffset
-import java.time.ZonedDateTime
 import okhttp3.Call
 import okhttp3.OkHttpClient
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.io.IOException
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
 
 object UpdateInfoDownloaderSpec : Spek({
     describe("an update information downloader") {
@@ -68,7 +68,8 @@ object UpdateInfoDownloaderSpec : Spek({
                           "browser_download_url": "https://github.com/batect/batect/releases/download/0.3/batect.cmd"
                         }
                       ]
-                  }""".trimIndent()
+                  }
+                """.trimIndent()
 
                 client.mockGet(downloadUrl, responseBody)
             }
@@ -88,10 +89,15 @@ object UpdateInfoDownloaderSpec : Spek({
             }
 
             it("returns the script information") {
-                assertThat(updateInfo.scripts, equalTo(listOf(
-                    ScriptInfo("batect", "https://github.com/batect/batect/releases/download/0.3/batect"),
-                    ScriptInfo("batect.cmd", "https://github.com/batect/batect/releases/download/0.3/batect.cmd")
-                )))
+                assertThat(
+                    updateInfo.scripts,
+                    equalTo(
+                        listOf(
+                            ScriptInfo("batect", "https://github.com/batect/batect/releases/download/0.3/batect"),
+                            ScriptInfo("batect.cmd", "https://github.com/batect/batect/releases/download/0.3/batect.cmd")
+                        )
+                    )
+                )
             }
         }
 
@@ -103,7 +109,8 @@ object UpdateInfoDownloaderSpec : Spek({
                       "id": 7936494,
                       "tag_name": "0.3",
                       "assets": []
-                  }""".trimIndent()
+                  }
+                """.trimIndent()
 
                 client.mockGet(downloadUrl, responseBody)
             }
@@ -128,7 +135,8 @@ object UpdateInfoDownloaderSpec : Spek({
                           "browser_download_url": "https://github.com/batect/batect/releases/download/0.3/batect.jar"
                         }
                       ]
-                  }""".trimIndent()
+                  }
+                """.trimIndent()
 
                 client.mockGet(downloadUrl, responseBody)
             }
@@ -144,8 +152,10 @@ object UpdateInfoDownloaderSpec : Spek({
             beforeEachTest { client.mockGet(downloadUrl, "", 404) }
 
             it("throws an appropriate exception") {
-                assertThat({ downloader.getLatestVersionInfo() },
-                    throws(withMessage("Could not download latest release information from https://api.github.com/repos/batect/batect/releases/latest: The server returned HTTP 404.")))
+                assertThat(
+                    { downloader.getLatestVersionInfo() },
+                    throws(withMessage("Could not download latest release information from https://api.github.com/repos/batect/batect/releases/latest: The server returned HTTP 404."))
+                )
             }
         }
 
@@ -161,9 +171,13 @@ object UpdateInfoDownloaderSpec : Spek({
             }
 
             it("throws an appropriate exception") {
-                assertThat({ downloader.getLatestVersionInfo() },
-                    throws(withMessage("Could not download latest release information from https://api.github.com/repos/batect/batect/releases/latest: Could not do what you asked because stuff happened.")
-                        and withCause(exception)))
+                assertThat(
+                    { downloader.getLatestVersionInfo() },
+                    throws(
+                        withMessage("Could not download latest release information from https://api.github.com/repos/batect/batect/releases/latest: Could not do what you asked because stuff happened.")
+                            and withCause(exception)
+                    )
+                )
             }
         }
     }

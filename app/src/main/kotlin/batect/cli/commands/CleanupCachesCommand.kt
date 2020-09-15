@@ -22,9 +22,9 @@ import batect.execution.CacheManager
 import batect.execution.CacheType
 import batect.os.deleteDirectory
 import batect.ui.Console
+import org.kodein.di.instance
 import java.nio.file.Files
 import kotlin.streams.toList
-import org.kodein.di.instance
 
 class CleanupCachesCommand(
     private val dockerConnectivity: DockerConnectivity,

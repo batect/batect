@@ -34,11 +34,11 @@ import com.natpryce.hamkrest.equalTo
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
-import java.io.ByteArrayOutputStream
-import java.io.PrintStream
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.Suite
 import org.spekframework.spek2.style.specification.describe
+import java.io.ByteArrayOutputStream
+import java.io.PrintStream
 
 object ListTasksCommandSpec : Spek({
     describe("a 'list tasks' command") {
@@ -92,20 +92,24 @@ object ListTasksCommandSpec : Spek({
             beforeEachTest { whenever(configLoader.loadConfig(configFilePath)).doReturn(config) }
 
             describe("when the configuration file can be loaded") {
-                whenNotRunningWithQuietOutputModeItProducesOutput("""
+                whenNotRunningWithQuietOutputModeItProducesOutput(
+                    """
                     |Available tasks:
                     |- another-task-with-a-description: do the thing
                     |- first-task
                     |- other-task
                     |
-                """.trimMargin())
+                    """.trimMargin()
+                )
 
-                whenRunningWithQuietOutputModeItProducesOutput("""
+                whenRunningWithQuietOutputModeItProducesOutput(
+                    """
                     |another-task-with-a-description${'\t'}do the thing
                     |first-task
                     |other-task
                     |
-                """.trimMargin())
+                    """.trimMargin()
+                )
             }
         }
 
@@ -118,20 +122,24 @@ object ListTasksCommandSpec : Spek({
             beforeEachTest { whenever(configLoader.loadConfig(configFilePath)).doReturn(config) }
 
             describe("when the configuration file can be loaded") {
-                whenNotRunningWithQuietOutputModeItProducesOutput("""
+                whenNotRunningWithQuietOutputModeItProducesOutput(
+                    """
                     |Build tasks:
                     |- another-task-with-a-description: do the thing
                     |- first-task
                     |- other-task
                     |
-                """.trimMargin())
+                    """.trimMargin()
+                )
 
-                whenRunningWithQuietOutputModeItProducesOutput("""
+                whenRunningWithQuietOutputModeItProducesOutput(
+                    """
                     |another-task-with-a-description${'\t'}do the thing
                     |first-task
                     |other-task
                     |
-                """.trimMargin())
+                    """.trimMargin()
+                )
             }
         }
 
@@ -144,7 +152,8 @@ object ListTasksCommandSpec : Spek({
             beforeEachTest { whenever(configLoader.loadConfig(configFilePath)).doReturn(config) }
 
             describe("when the configuration file can be loaded") {
-                whenNotRunningWithQuietOutputModeItProducesOutput("""
+                whenNotRunningWithQuietOutputModeItProducesOutput(
+                    """
                     |Build tasks:
                     |- another-task-with-a-description: do the thing
                     |- other-task
@@ -152,14 +161,17 @@ object ListTasksCommandSpec : Spek({
                     |Test tasks:
                     |- first-task
                     |
-                """.trimMargin())
+                    """.trimMargin()
+                )
 
-                whenRunningWithQuietOutputModeItProducesOutput("""
+                whenRunningWithQuietOutputModeItProducesOutput(
+                    """
                     |another-task-with-a-description${'\t'}do the thing
                     |first-task
                     |other-task
                     |
-                """.trimMargin())
+                    """.trimMargin()
+                )
             }
         }
 
@@ -172,7 +184,8 @@ object ListTasksCommandSpec : Spek({
             beforeEachTest { whenever(configLoader.loadConfig(configFilePath)).doReturn(config) }
 
             describe("when the configuration file can be loaded") {
-                whenNotRunningWithQuietOutputModeItProducesOutput("""
+                whenNotRunningWithQuietOutputModeItProducesOutput(
+                    """
                     |Build tasks:
                     |- another-task-with-a-description: do the thing
                     |- other-task
@@ -180,14 +193,17 @@ object ListTasksCommandSpec : Spek({
                     |Ungrouped tasks:
                     |- first-task
                     |
-                """.trimMargin())
+                    """.trimMargin()
+                )
 
-                whenRunningWithQuietOutputModeItProducesOutput("""
+                whenRunningWithQuietOutputModeItProducesOutput(
+                    """
                     |another-task-with-a-description${'\t'}do the thing
                     |first-task
                     |other-task
                     |
-                """.trimMargin())
+                    """.trimMargin()
+                )
             }
         }
     }

@@ -25,13 +25,13 @@ import batect.testutils.runForEachTest
 import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
-import java.time.ZoneOffset
-import java.time.ZonedDateTime
-import java.util.UUID
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonPrimitive
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
+import java.util.UUID
 
 object TelemetrySessionBuilderSpec : Spek({
     describe("a telemetry session builder") {
@@ -191,7 +191,8 @@ object TelemetrySessionBuilderSpec : Spek({
 
             it("stores all of the attributes on the built session") {
                 assertThat(
-                    session.attributes, equalTo(
+                    session.attributes,
+                    equalTo(
                         mapOf(
                             "thingType" to JsonPrimitive("stuff"),
                             "thingCount" to JsonPrimitive(12),
@@ -211,7 +212,8 @@ object TelemetrySessionBuilderSpec : Spek({
                 timeNow = eventTime
 
                 builder.addEvent(
-                    "MyEvent", mapOf(
+                    "MyEvent",
+                    mapOf(
                         "thingType" to AttributeValue("stuff"),
                         "thingCount" to AttributeValue(12),
                         "thingEnabled" to AttributeValue(false)
@@ -223,7 +225,8 @@ object TelemetrySessionBuilderSpec : Spek({
 
             it("stores the event with the provided attributes and correct time") {
                 assertThat(
-                    session.events, equalTo(
+                    session.events,
+                    equalTo(
                         listOf(
                             TelemetryEvent(
                                 "MyEvent",

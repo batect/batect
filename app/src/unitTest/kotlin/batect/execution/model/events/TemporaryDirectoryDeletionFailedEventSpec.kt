@@ -32,13 +32,18 @@ object TemporaryDirectoryDeletionFailedEventSpec : Spek({
 
         on("attaching it to a log message") {
             it("returns a machine-readable representation of itself") {
-                assertThat(logRepresentationOf(event), equivalentTo("""
-                    |{
-                    |   "type": "${event::class.qualifiedName}",
-                    |   "directoryPath": "/some-path",
-                    |   "message": "Something went wrong"
-                    |}
-                """.trimMargin()))
+                assertThat(
+                    logRepresentationOf(event),
+                    equivalentTo(
+                        """
+                        |{
+                        |   "type": "${event::class.qualifiedName}",
+                        |   "directoryPath": "/some-path",
+                        |   "message": "Something went wrong"
+                        |}
+                        """.trimMargin()
+                    )
+                )
             }
         }
     }

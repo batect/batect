@@ -18,11 +18,11 @@ package batect.os
 
 import batect.logging.LogMessageBuilder
 import batect.logging.PathSerializer
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import java.nio.file.FileSystem
 import java.nio.file.Path
 import java.util.Properties
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.Transient
 
 @Serializable()
 class SystemInfo(

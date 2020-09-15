@@ -57,7 +57,8 @@ object ProcessRunnerSpec : Spek({
 
                 it("logs before running the command") {
                     assertThat(
-                        logSink, hasMessage(
+                        logSink,
+                        hasMessage(
                             withSeverity(Severity.Debug) and
                                 withLogMessage("Starting process.") and
                                 withAdditionalData("command", command)
@@ -67,7 +68,8 @@ object ProcessRunnerSpec : Spek({
 
                 it("logs the result of running the command") {
                     assertThat(
-                        logSink, hasMessage(
+                        logSink,
+                        hasMessage(
                             withSeverity(Severity.Debug) and
                                 withLogMessage("Process exited.") and
                                 withAdditionalData("command", command) and
@@ -97,7 +99,8 @@ object ProcessRunnerSpec : Spek({
 
                 it("logs before running the command") {
                     assertThat(
-                        logSink, hasMessage(
+                        logSink,
+                        hasMessage(
                             withSeverity(Severity.Debug) and
                                 withLogMessage("Starting process.") and
                                 withAdditionalData("command", command)
@@ -107,7 +110,8 @@ object ProcessRunnerSpec : Spek({
 
                 it("logs the result of running the command") {
                     assertThat(
-                        logSink, hasMessage(
+                        logSink,
+                        hasMessage(
                             withSeverity(Severity.Debug) and
                                 withLogMessage("Process exited.") and
                                 withAdditionalData("command", command) and
@@ -142,19 +146,26 @@ object ProcessRunnerSpec : Spek({
                         }
 
                         it("logs before running the command") {
-                            assertThat(logSink, hasMessage(
-                                withSeverity(Severity.Debug) and
-                                    withLogMessage("Starting process.") and
-                                    withAdditionalData("command", command)))
+                            assertThat(
+                                logSink,
+                                hasMessage(
+                                    withSeverity(Severity.Debug) and
+                                        withLogMessage("Starting process.") and
+                                        withAdditionalData("command", command)
+                                )
+                            )
                         }
 
                         it("logs the result of running the command") {
-                            assertThat(logSink, hasMessage(
-                                withSeverity(Severity.Debug) and
-                                    withLogMessage("Process exited.") and
-                                    withAdditionalData("command", command) and
-                                    withAdditionalData("exitCode", 201)
-                            ))
+                            assertThat(
+                                logSink,
+                                hasMessage(
+                                    withSeverity(Severity.Debug) and
+                                        withLogMessage("Process exited.") and
+                                        withAdditionalData("command", command) and
+                                        withAdditionalData("exitCode", 201)
+                                )
+                            )
                         }
                     }
                 }

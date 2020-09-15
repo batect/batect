@@ -17,9 +17,9 @@
 package batect.docker
 
 import batect.logging.LogMessageBuilder
-import java.time.Duration
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import java.time.Duration
 
 @Serializable
 data class DockerImage(val id: String)

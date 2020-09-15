@@ -16,9 +16,9 @@
 
 package batect.telemetry
 
-import java.util.concurrent.ConcurrentHashMap
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonPrimitive
+import java.util.concurrent.ConcurrentHashMap
 
 class TelemetryAttributeSetBuilder {
     private val attributes = ConcurrentHashMap<String, JsonPrimitive>()

@@ -37,11 +37,13 @@ object ListTasksJourneyTest : Spek({
             val result by runBeforeGroup { runner.runApplication(listOf("--list-tasks")) }
 
             it("prints a list of all available tasks") {
-                assert(result).output().contains("""
+                assert(result).output().contains(
+                    """
                     |- task-1: do the first thing
                     |- task-2: do the second thing
                     |- task-3: do the third thing
-                    """.trimMargin().withPlatformSpecificLineSeparator())
+                    """.trimMargin().withPlatformSpecificLineSeparator()
+                )
             }
 
             it("returns a zero exit code") {

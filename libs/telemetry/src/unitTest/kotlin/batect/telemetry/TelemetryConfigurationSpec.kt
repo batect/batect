@@ -18,11 +18,11 @@ package batect.telemetry
 
 import batect.testutils.equalTo
 import com.natpryce.hamkrest.assertion.assertThat
-import java.util.UUID
 import kotlinx.serialization.json.Json
 import org.araqnid.hamkrest.json.equivalentTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.util.UUID
 
 object TelemetryConfigurationSpec : Spek({
     describe("telemetry configuration") {

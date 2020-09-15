@@ -37,9 +37,9 @@ import com.nhaarman.mockitokotlin2.doThrow
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
-import java.io.IOException
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.io.IOException
 
 object DockerSystemInfoClientSpec : Spek({
     describe("a Docker system info client") {
@@ -106,9 +106,12 @@ object DockerSystemInfoClientSpec : Spek({
                             }
 
                             it("reports the version incompatibility in telemetry") {
-                                verify(telemetrySessionBuilder).addEvent("IncompatibleDockerVersion", mapOf(
-                                    "dockerVersion" to AttributeValue("1.2.3")
-                                ))
+                                verify(telemetrySessionBuilder).addEvent(
+                                    "IncompatibleDockerVersion",
+                                    mapOf(
+                                        "dockerVersion" to AttributeValue("1.2.3")
+                                    )
+                                )
                             }
                         }
                     }

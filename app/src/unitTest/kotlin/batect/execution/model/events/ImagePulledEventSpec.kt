@@ -33,13 +33,18 @@ object ImagePulledEventSpec : Spek({
 
         on("attaching it to a log message") {
             it("returns a machine-readable representation of itself") {
-                assertThat(logRepresentationOf(event), equivalentTo("""
-                    |{
-                    |   "type": "${event::class.qualifiedName}",
-                    |   "source": {"imageName": "image-1", "imagePullPolicy": "IfNotPresent"},
-                    |   "image": {"id": "image-1-id"}
-                    |}
-                """.trimMargin()))
+                assertThat(
+                    logRepresentationOf(event),
+                    equivalentTo(
+                        """
+                        |{
+                        |   "type": "${event::class.qualifiedName}",
+                        |   "source": {"imageName": "image-1", "imagePullPolicy": "IfNotPresent"},
+                        |   "image": {"id": "image-1-id"}
+                        |}
+                        """.trimMargin()
+                    )
+                )
             }
         }
     }

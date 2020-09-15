@@ -35,13 +35,13 @@ import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
-import java.util.concurrent.TimeUnit
 import kotlinx.serialization.json.boolean
 import kotlinx.serialization.json.jsonPrimitive
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.util.concurrent.TimeUnit
 
 object NetworksAPISpec : Spek({
     describe("a Docker networks API client") {
@@ -93,11 +93,13 @@ object NetworksAPISpec : Spek({
                 }
 
                 it("creates the network with the expected settings") {
-                    verify(clientWithLongTimeout).newCall(requestWithJsonBody { body ->
-                        assertThat(body.getValue("Name").jsonPrimitive.content, equalTo("the-network-name"))
-                        assertThat(body.getValue("CheckDuplicate").jsonPrimitive.boolean, equalTo(true))
-                        assertThat(body.getValue("Driver").jsonPrimitive.content, equalTo("the-driver"))
-                    })
+                    verify(clientWithLongTimeout).newCall(
+                        requestWithJsonBody { body ->
+                            assertThat(body.getValue("Name").jsonPrimitive.content, equalTo("the-network-name"))
+                            assertThat(body.getValue("CheckDuplicate").jsonPrimitive.boolean, equalTo(true))
+                            assertThat(body.getValue("Driver").jsonPrimitive.content, equalTo("the-driver"))
+                        }
+                    )
                 }
 
                 it("returns the ID of the created network") {

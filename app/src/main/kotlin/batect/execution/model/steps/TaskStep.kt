@@ -30,9 +30,9 @@ import batect.execution.ContainerRuntimeConfiguration
 import batect.logging.ContainerNameOnlySerializer
 import batect.logging.LogMessageBuilder
 import batect.logging.PathSerializer
-import java.nio.file.Path
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseSerializers
+import java.nio.file.Path
 
 @Serializable
 sealed class TaskStep

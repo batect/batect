@@ -33,11 +33,16 @@ object AttributeValueSpec : Spek({
                 val attribute = AttributeValue(exception)
 
                 it("includes the type of exception and stack trace, but not the exception message") {
-                    assertThat(attribute.json.content, startsWith("""
-                        |java.lang.RuntimeException
-                        |${tab}at batect.telemetry.AttributeValueSpec${'$'}1${'$'}1${'$'}1${'$'}1.invoke(AttributeValueSpec.kt:32)
-                        |${tab}at batect.telemetry.AttributeValueSpec${'$'}1${'$'}1${'$'}1${'$'}1.invoke(AttributeValueSpec.kt:26)
-                    """.trimMargin()))
+                    assertThat(
+                        attribute.json.content,
+                        startsWith(
+                            """
+                                |java.lang.RuntimeException
+                                |${tab}at batect.telemetry.AttributeValueSpec${'$'}1${'$'}1${'$'}1${'$'}1.invoke(AttributeValueSpec.kt:32)
+                                |${tab}at batect.telemetry.AttributeValueSpec${'$'}1${'$'}1${'$'}1${'$'}1.invoke(AttributeValueSpec.kt:26)
+                            """.trimMargin()
+                        )
+                    )
                 }
             }
 
@@ -47,18 +52,23 @@ object AttributeValueSpec : Spek({
                 val attribute = AttributeValue(exception)
 
                 it("includes the type of outer exception and its stack trace, but not the message") {
-                    assertThat(attribute.json.content, startsWith("""
-                        |java.lang.RuntimeException
-                        |${tab}at batect.telemetry.AttributeValueSpec${'$'}1${'$'}1${'$'}1${'$'}2.invoke(AttributeValueSpec.kt:46)
-                        |${tab}at batect.telemetry.AttributeValueSpec${'$'}1${'$'}1${'$'}1${'$'}2.invoke(AttributeValueSpec.kt:26)
-                    """.trimMargin()))
+                    assertThat(
+                        attribute.json.content,
+                        startsWith(
+                            """
+                                |java.lang.RuntimeException
+                                |${tab}at batect.telemetry.AttributeValueSpec${'$'}1${'$'}1${'$'}1${'$'}2.invoke(AttributeValueSpec.kt:51)
+                                |${tab}at batect.telemetry.AttributeValueSpec${'$'}1${'$'}1${'$'}1${'$'}2.invoke(AttributeValueSpec.kt:26)
+                            """.trimMargin()
+                        )
+                    )
                 }
 
                 it("includes the type of the cause and its stack trace, but not the message or the repeated stack frames") {
                     val lines = attribute.json.content.trim().lines().takeLast(3)
 
                     assertThat(lines[0], equalTo("Caused by: java.lang.IllegalArgumentException"))
-                    assertThat(lines[1], equalTo("${tab}at batect.telemetry.AttributeValueSpec${'$'}1${'$'}1${'$'}1${'$'}2.invoke(AttributeValueSpec.kt:45)"))
+                    assertThat(lines[1], equalTo("${tab}at batect.telemetry.AttributeValueSpec${'$'}1${'$'}1${'$'}1${'$'}2.invoke(AttributeValueSpec.kt:50)"))
                     assertThat(lines[2], matches("""^$tab\.\.\. \d+ more$""".toRegex()))
                 }
             }
@@ -70,21 +80,26 @@ object AttributeValueSpec : Spek({
                 val attribute = AttributeValue(exception)
 
                 it("includes the type of outer exception and its stack trace, but not the message") {
-                    assertThat(attribute.json.content, startsWith("""
-                        |java.lang.RuntimeException
-                        |${tab}at batect.telemetry.AttributeValueSpec${'$'}1${'$'}1${'$'}1${'$'}3.invoke(AttributeValueSpec.kt:69)
-                        |${tab}at batect.telemetry.AttributeValueSpec${'$'}1${'$'}1${'$'}1${'$'}3.invoke(AttributeValueSpec.kt:26)
-                    """.trimMargin()))
+                    assertThat(
+                        attribute.json.content,
+                        startsWith(
+                            """
+                                |java.lang.RuntimeException
+                                |${tab}at batect.telemetry.AttributeValueSpec${'$'}1${'$'}1${'$'}1${'$'}3.invoke(AttributeValueSpec.kt:79)
+                                |${tab}at batect.telemetry.AttributeValueSpec${'$'}1${'$'}1${'$'}1${'$'}3.invoke(AttributeValueSpec.kt:26)
+                            """.trimMargin()
+                        )
+                    )
                 }
 
                 it("includes the type of both causes and their stack traces, but not the message or the repeated stack frames") {
                     val lines = attribute.json.content.trim().lines().takeLast(6)
 
                     assertThat(lines[0], equalTo("Caused by: java.lang.IllegalArgumentException"))
-                    assertThat(lines[1], equalTo("${tab}at batect.telemetry.AttributeValueSpec${'$'}1${'$'}1${'$'}1${'$'}3.invoke(AttributeValueSpec.kt:68)"))
+                    assertThat(lines[1], equalTo("${tab}at batect.telemetry.AttributeValueSpec${'$'}1${'$'}1${'$'}1${'$'}3.invoke(AttributeValueSpec.kt:78)"))
                     assertThat(lines[2], matches("""^$tab\.\.\. \d+ more$""".toRegex()))
                     assertThat(lines[3], equalTo("Caused by: java.lang.UnsupportedOperationException"))
-                    assertThat(lines[4], equalTo("${tab}at batect.telemetry.AttributeValueSpec${'$'}1${'$'}1${'$'}1${'$'}3.invoke(AttributeValueSpec.kt:67)"))
+                    assertThat(lines[4], equalTo("${tab}at batect.telemetry.AttributeValueSpec${'$'}1${'$'}1${'$'}1${'$'}3.invoke(AttributeValueSpec.kt:77)"))
                     assertThat(lines[5], matches("""^$tab\.\.\. \d+ more$""".toRegex()))
                 }
             }

@@ -56,7 +56,8 @@ object RunContainerSetupCommandsStepRuleSpec : Spek({
 
                 it("returns a 'run container setup commands' step") {
                     assertThat(
-                        result, equalTo(
+                        result,
+                        equalTo(
                             TaskStepRuleEvaluationResult.Ready(
                                 RunContainerSetupCommandsStep(
                                     container,
@@ -95,21 +96,26 @@ object RunContainerSetupCommandsStepRuleSpec : Spek({
 
         on("attaching it to a log message") {
             it("returns a machine-readable representation of itself") {
-                assertThat(logRepresentationOf(rule), equivalentTo("""
-                    |{
-                    |   "type": "${rule::class.qualifiedName}",
-                    |   "container": "the-container",
-                    |   "config": {
-                    |       "command": ["blah"],
-                    |       "entrypoint": ["entrypoint"],
-                    |       "workingDirectory": "/some/work/dir",
-                    |       "additionalEnvironmentVariables": {
-                    |           "VAR": {"type":"LiteralValue", "value":"value"}
-                    |       },
-                    |       "additionalPortMappings": [{"local": "123", "container": "456", "protocol": "tcp"}]
-                    |   }
-                    |}
-                """.trimMargin()))
+                assertThat(
+                    logRepresentationOf(rule),
+                    equivalentTo(
+                        """
+                        |{
+                        |   "type": "${rule::class.qualifiedName}",
+                        |   "container": "the-container",
+                        |   "config": {
+                        |       "command": ["blah"],
+                        |       "entrypoint": ["entrypoint"],
+                        |       "workingDirectory": "/some/work/dir",
+                        |       "additionalEnvironmentVariables": {
+                        |           "VAR": {"type":"LiteralValue", "value":"value"}
+                        |       },
+                        |       "additionalPortMappings": [{"local": "123", "container": "456", "protocol": "tcp"}]
+                        |   }
+                        |}
+                        """.trimMargin()
+                    )
+                )
             }
         }
     }

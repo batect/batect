@@ -38,10 +38,10 @@ import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.verifyZeroInteractions
 import com.nhaarman.mockitokotlin2.whenever
-import java.nio.file.Files
-import java.time.Duration
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.nio.file.Files
+import java.time.Duration
 
 object TelemetryManagerSpec : Spek({
     describe("a telemetry manager") {
@@ -129,12 +129,15 @@ object TelemetryManagerSpec : Spek({
                     }
 
                     it("logs a warning that uploading the session failed") {
-                        assertThat(logSink, hasMessage(
-                            withLogMessage("Immediate upload of telemetry session failed, will be queued to upload in the background next time.")
-                                and withSeverity(Severity.Error)
-                                and withAdditionalData("sessionPath", sessionPath.toString())
-                                and withException(exception)
-                        ))
+                        assertThat(
+                            logSink,
+                            hasMessage(
+                                withLogMessage("Immediate upload of telemetry session failed, will be queued to upload in the background next time.")
+                                    and withSeverity(Severity.Error)
+                                    and withAdditionalData("sessionPath", sessionPath.toString())
+                                    and withException(exception)
+                            )
+                        )
                     }
                 }
             }

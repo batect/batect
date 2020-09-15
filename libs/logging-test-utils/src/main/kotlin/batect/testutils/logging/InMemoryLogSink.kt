@@ -27,11 +27,11 @@ import batect.logging.StandardAdditionalDataSource
 import batect.testutils.createForEachTest
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
+import kotlinx.serialization.json.Json
+import org.spekframework.spek2.dsl.LifecycleAware
 import java.io.ByteArrayOutputStream
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
-import kotlinx.serialization.json.Json
-import org.spekframework.spek2.dsl.LifecycleAware
 
 class InMemoryLogSink(private val json: Json) : LogSink {
     constructor() : this(Json.Default)

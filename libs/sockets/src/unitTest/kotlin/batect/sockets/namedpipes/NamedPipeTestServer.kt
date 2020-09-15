@@ -17,8 +17,6 @@
 package batect.sockets.namedpipes
 
 import batect.os.WindowsNativeMethodException
-import java.util.concurrent.Semaphore
-import java.util.concurrent.TimeUnit
 import jnr.constants.platform.windows.LastError
 import jnr.ffi.LibraryLoader
 import jnr.ffi.LibraryOption
@@ -33,6 +31,8 @@ import jnr.posix.HANDLE
 import jnr.posix.POSIX
 import jnr.posix.POSIXFactory
 import jnr.posix.WindowsLibC
+import java.util.concurrent.Semaphore
+import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
 import kotlin.reflect.KFunction
 

@@ -24,9 +24,9 @@ import batect.execution.model.steps.DeleteTemporaryDirectoryStep
 import batect.logging.ContainerNameOnlySerializer
 import batect.logging.PathSerializer
 import batect.os.OperatingSystem
-import java.nio.file.Path
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
+import java.nio.file.Path
 
 @Serializable
 data class DeleteTemporaryDirectoryStepRule(

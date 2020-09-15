@@ -41,19 +41,24 @@ object DockerExecCreationRequestSpec : Spek({
                 val json by runForEachTest { request.toJson() }
 
                 it("returns the request in the expected format") {
-                    assertThat(json, equivalentTo("""
-                        {
-                            "AttachStdin": false,
-                            "AttachStdout": true,
-                            "AttachStderr": false,
-                            "Tty": true,
-                            "Env": ["BLAH=blah-value"],
-                            "Cmd": ["some-thing", "some-arg"],
-                            "Privileged": false,
-                            "User": "123:456",
-                            "WorkingDir": "/some/work/dir"
-                        }
-                    """.trimIndent()))
+                    assertThat(
+                        json,
+                        equivalentTo(
+                            """
+                                {
+                                    "AttachStdin": false,
+                                    "AttachStdout": true,
+                                    "AttachStderr": false,
+                                    "Tty": true,
+                                    "Env": ["BLAH=blah-value"],
+                                    "Cmd": ["some-thing", "some-arg"],
+                                    "Privileged": false,
+                                    "User": "123:456",
+                                    "WorkingDir": "/some/work/dir"
+                                }
+                            """.trimIndent()
+                        )
+                    )
                 }
             }
 
@@ -73,18 +78,23 @@ object DockerExecCreationRequestSpec : Spek({
                 val json by runForEachTest { request.toJson() }
 
                 it("does not include an entry for the user and group") {
-                    assertThat(json, equivalentTo("""
-                        {
-                            "AttachStdin": false,
-                            "AttachStdout": true,
-                            "AttachStderr": false,
-                            "Tty": true,
-                            "Env": ["BLAH=blah-value"],
-                            "Cmd": ["some-thing", "some-arg"],
-                            "Privileged": false,
-                            "WorkingDir": "/some/work/dir"
-                        }
-                    """.trimIndent()))
+                    assertThat(
+                        json,
+                        equivalentTo(
+                            """
+                                {
+                                    "AttachStdin": false,
+                                    "AttachStdout": true,
+                                    "AttachStderr": false,
+                                    "Tty": true,
+                                    "Env": ["BLAH=blah-value"],
+                                    "Cmd": ["some-thing", "some-arg"],
+                                    "Privileged": false,
+                                    "WorkingDir": "/some/work/dir"
+                                }
+                            """.trimIndent()
+                        )
+                    )
                 }
             }
         }

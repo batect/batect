@@ -40,22 +40,25 @@ object RunContainerSetupCommandsStepSpec : Spek({
         on("attaching it to a log message") {
             it("returns a machine-readable representation of itself") {
                 assertThat(
-                    logRepresentationOf(step), equivalentTo("""
-                    |{
-                    |   "type": "${step::class.qualifiedName}",
-                    |   "container": "the-container",
-                    |   "config": {
-                    |       "command": ["blah"],
-                    |       "entrypoint": ["entrypoint"],
-                    |       "workingDirectory": "/some/work/dir",
-                    |       "additionalEnvironmentVariables": {
-                    |           "VAR": {"type":"LiteralValue", "value":"value"}
-                    |       },
-                    |       "additionalPortMappings": [{"local": "123", "container": "456", "protocol": "tcp"}]
-                    |   },
-                    |   "dockerContainer": {"id": "the-container-id", "name": null}
-                    |}
-                """.trimMargin())
+                    logRepresentationOf(step),
+                    equivalentTo(
+                        """
+                        |{
+                        |   "type": "${step::class.qualifiedName}",
+                        |   "container": "the-container",
+                        |   "config": {
+                        |       "command": ["blah"],
+                        |       "entrypoint": ["entrypoint"],
+                        |       "workingDirectory": "/some/work/dir",
+                        |       "additionalEnvironmentVariables": {
+                        |           "VAR": {"type":"LiteralValue", "value":"value"}
+                        |       },
+                        |       "additionalPortMappings": [{"local": "123", "container": "456", "protocol": "tcp"}]
+                        |   },
+                        |   "dockerContainer": {"id": "the-container-id", "name": null}
+                        |}
+                        """.trimMargin()
+                    )
                 )
             }
         }

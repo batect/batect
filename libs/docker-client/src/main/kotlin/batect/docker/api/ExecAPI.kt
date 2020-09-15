@@ -28,12 +28,12 @@ import batect.docker.run.ConnectionHijacker
 import batect.docker.run.ContainerOutputStream
 import batect.logging.Logger
 import batect.os.SystemInfo
-import java.util.concurrent.TimeUnit
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import okhttp3.ConnectionPool
 import okhttp3.HttpUrl
 import okhttp3.Request
+import java.util.concurrent.TimeUnit
 
 // Flow is:
 // - Create exec instance

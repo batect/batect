@@ -16,11 +16,11 @@
 
 package batect.logging
 
-import java.io.OutputStream
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.json
 import kotlinx.serialization.json.put
+import java.io.OutputStream
 
 class LogMessageWriter(val json: Json = Json.Default) {
     fun writeTo(message: LogMessage, outputStream: OutputStream) {

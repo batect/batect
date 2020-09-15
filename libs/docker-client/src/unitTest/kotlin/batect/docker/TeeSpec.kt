@@ -19,11 +19,11 @@ package batect.docker
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import com.natpryce.hamkrest.assertion.assertThat
-import java.io.ByteArrayOutputStream
 import okio.Buffer
 import okio.sink
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.io.ByteArrayOutputStream
 
 object TeeSpec : Spek({
     describe("a tee sink") {

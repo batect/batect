@@ -20,10 +20,10 @@
 
 package batect.telemetry
 
-import java.util.UUID
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseSerializers
+import java.util.UUID
 
 @Serializable
 data class TelemetryConfiguration(val userId: UUID, val state: ConsentState)

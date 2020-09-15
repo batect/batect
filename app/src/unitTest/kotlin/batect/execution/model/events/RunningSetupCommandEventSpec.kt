@@ -35,14 +35,19 @@ object RunningSetupCommandEventSpec : Spek({
 
         on("attaching it to a log message") {
             it("returns a machine-readable representation of itself") {
-                assertThat(logRepresentationOf(event), equivalentTo("""
-                    |{
-                    |   "type": "${event::class.qualifiedName}",
-                    |   "container": "container-1",
-                    |   "command": {"command": ["./do", "the-thing"], "working_directory": null},
-                    |   "commandIndex": 2
-                    |}
-                """.trimMargin()))
+                assertThat(
+                    logRepresentationOf(event),
+                    equivalentTo(
+                        """
+                        |{
+                        |   "type": "${event::class.qualifiedName}",
+                        |   "container": "container-1",
+                        |   "command": {"command": ["./do", "the-thing"], "working_directory": null},
+                        |   "commandIndex": 2
+                        |}
+                        """.trimMargin()
+                    )
+                )
             }
         }
     }

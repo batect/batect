@@ -43,14 +43,14 @@ import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.verifyZeroInteractions
 import com.nhaarman.mockitokotlin2.whenever
+import kotlinx.serialization.json.Json
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.util.UUID
-import kotlinx.serialization.json.Json
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
 
 object TelemetryUploadTaskSpec : Spek({
     describe("a telemetry upload task") {
@@ -177,11 +177,14 @@ object TelemetryUploadTaskSpec : Spek({
                     }
 
                     it("logs a message confirming that the session has been uploaded successfully") {
-                        assertThat(logSink, hasMessage(
-                            withLogMessage("Session uploaded successfully.")
-                                and withSeverity(Severity.Info)
-                                and withAdditionalData("sessionPath", sessionPath.toString())
-                        ))
+                        assertThat(
+                            logSink,
+                            hasMessage(
+                                withLogMessage("Session uploaded successfully.")
+                                    and withSeverity(Severity.Info)
+                                    and withAdditionalData("sessionPath", sessionPath.toString())
+                            )
+                        )
                     }
                 }
 
@@ -212,12 +215,15 @@ object TelemetryUploadTaskSpec : Spek({
                         }
 
                         it("logs a warning that the upload failed") {
-                            assertThat(logSink, hasMessage(
-                                withLogMessage("Session upload failed. Session is less than 30 days old and so won't be deleted.")
-                                    and withSeverity(Severity.Warning)
-                                    and withAdditionalData("sessionPath", sessionPath.toString())
-                                    and withException(exception)
-                            ))
+                            assertThat(
+                                logSink,
+                                hasMessage(
+                                    withLogMessage("Session upload failed. Session is less than 30 days old and so won't be deleted.")
+                                        and withSeverity(Severity.Warning)
+                                        and withAdditionalData("sessionPath", sessionPath.toString())
+                                        and withException(exception)
+                                )
+                            )
                         }
 
                         it("reports the exception in telemetry") {
@@ -252,12 +258,15 @@ object TelemetryUploadTaskSpec : Spek({
                         }
 
                         it("logs a warning that the upload failed") {
-                            assertThat(logSink, hasMessage(
-                                withLogMessage("Session upload failed. Session is more than 30 days old and so has been deleted.")
-                                    and withSeverity(Severity.Warning)
-                                    and withAdditionalData("sessionPath", sessionPath.toString())
-                                    and withException(exception)
-                            ))
+                            assertThat(
+                                logSink,
+                                hasMessage(
+                                    withLogMessage("Session upload failed. Session is more than 30 days old and so has been deleted.")
+                                        and withSeverity(Severity.Warning)
+                                        and withAdditionalData("sessionPath", sessionPath.toString())
+                                        and withException(exception)
+                                )
+                            )
                         }
 
                         it("reports the exception in telemetry") {
@@ -298,13 +307,16 @@ object TelemetryUploadTaskSpec : Spek({
                         }
 
                         it("logs a warning that both uploading the session and parsing it failed") {
-                            assertThat(logSink, hasMessage(
-                                withLogMessage("Session upload failed, and parsing session to determine age failed.")
-                                    and withSeverity(Severity.Error)
-                                    and withAdditionalData("sessionPath", sessionPath.toString())
-                                    and withException("uploadException", exception)
-                                    and withAdditionalDataAndAnyValue("parsingException")
-                            ))
+                            assertThat(
+                                logSink,
+                                hasMessage(
+                                    withLogMessage("Session upload failed, and parsing session to determine age failed.")
+                                        and withSeverity(Severity.Error)
+                                        and withAdditionalData("sessionPath", sessionPath.toString())
+                                        and withException("uploadException", exception)
+                                        and withAdditionalDataAndAnyValue("parsingException")
+                                )
+                            )
                         }
 
                         it("reports the exception in telemetry") {

@@ -16,11 +16,11 @@
 
 package batect.os
 
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.ConcurrentLinkedDeque
 import jnr.constants.platform.Signal
 import jnr.posix.LibC
 import jnr.posix.POSIX
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ConcurrentLinkedDeque
 
 class SignalListener(private val posix: POSIX) {
     fun start(signal: Signal, handler: SignalHandler): AutoCloseable {

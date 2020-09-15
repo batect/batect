@@ -31,13 +31,13 @@ import batect.docker.pull.DockerRegistryCredentialsProvider
 import batect.logging.Logger
 import batect.os.PathResolutionContext
 import batect.primitives.CancellationContext
-import java.nio.file.Files
-import java.nio.file.LinkOption
-import java.nio.file.Path
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import okio.Sink
+import java.nio.file.Files
+import java.nio.file.LinkOption
+import java.nio.file.Path
 
 class DockerImagesClient(
     private val api: ImagesAPI,

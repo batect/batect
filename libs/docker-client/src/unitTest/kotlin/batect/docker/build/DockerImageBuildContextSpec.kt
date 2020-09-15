@@ -30,9 +30,9 @@ import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
-import java.nio.file.Files
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.nio.file.Files
 
 object DockerImageBuildContextSpec : Spek({
     describe("a Docker image build context factory") {
@@ -79,9 +79,16 @@ object DockerImageBuildContextSpec : Spek({
                     val context by runForEachTest { factory.createFromDirectory(contextDirectory, "Dockerfile") }
 
                     it("returns a list of entries containing that Dockerfile") {
-                        assertThat(context, equalTo(DockerImageBuildContext(setOf(
-                            DockerImageBuildContextEntry(dockerfilePath, "Dockerfile")
-                        ))))
+                        assertThat(
+                            context,
+                            equalTo(
+                                DockerImageBuildContext(
+                                    setOf(
+                                        DockerImageBuildContextEntry(dockerfilePath, "Dockerfile")
+                                    )
+                                )
+                            )
+                        )
                     }
 
                     it("uses the relative path of the Dockerfile when checking if it should be included") {
@@ -103,10 +110,17 @@ object DockerImageBuildContextSpec : Spek({
                     val context by runForEachTest { factory.createFromDirectory(contextDirectory, "Dockerfile") }
 
                     it("returns a list of entries containing both entries") {
-                        assertThat(context, equalTo(DockerImageBuildContext(setOf(
-                            DockerImageBuildContextEntry(file1, "file1"),
-                            DockerImageBuildContextEntry(file2, "file2")
-                        ))))
+                        assertThat(
+                            context,
+                            equalTo(
+                                DockerImageBuildContext(
+                                    setOf(
+                                        DockerImageBuildContextEntry(file1, "file1"),
+                                        DockerImageBuildContextEntry(file2, "file2")
+                                    )
+                                )
+                            )
+                        )
                     }
 
                     it("uses the relative paths of the files when checking if they should be included") {
@@ -131,11 +145,18 @@ object DockerImageBuildContextSpec : Spek({
                     val context by runForEachTest { factory.createFromDirectory(contextDirectory, "Dockerfile") }
 
                     it("returns a list of entries containing both entries and the directory") {
-                        assertThat(context, equalTo(DockerImageBuildContext(setOf(
-                            DockerImageBuildContextEntry(file1, "file1"),
-                            DockerImageBuildContextEntry(subdirectory, "subdir"),
-                            DockerImageBuildContextEntry(file2, "subdir/file2")
-                        ))))
+                        assertThat(
+                            context,
+                            equalTo(
+                                DockerImageBuildContext(
+                                    setOf(
+                                        DockerImageBuildContextEntry(file1, "file1"),
+                                        DockerImageBuildContextEntry(subdirectory, "subdir"),
+                                        DockerImageBuildContextEntry(file2, "subdir/file2")
+                                    )
+                                )
+                            )
+                        )
                     }
 
                     it("uses the relative paths of the files when checking if they should be included") {
@@ -159,10 +180,17 @@ object DockerImageBuildContextSpec : Spek({
                     val context by runForEachTest { factory.createFromDirectory(contextDirectory, "Dockerfile") }
 
                     it("returns a list of entries containing both entries") {
-                        assertThat(context, equalTo(DockerImageBuildContext(setOf(
-                            DockerImageBuildContextEntry(file1, "file1"),
-                            DockerImageBuildContextEntry(file2, "file2")
-                        ))))
+                        assertThat(
+                            context,
+                            equalTo(
+                                DockerImageBuildContext(
+                                    setOf(
+                                        DockerImageBuildContextEntry(file1, "file1"),
+                                        DockerImageBuildContextEntry(file2, "file2")
+                                    )
+                                )
+                            )
+                        )
                     }
 
                     it("uses the relative paths of the files when checking if they should be included") {
@@ -185,10 +213,17 @@ object DockerImageBuildContextSpec : Spek({
                     val context by runForEachTest { factory.createFromDirectory(contextDirectory, "Dockerfile") }
 
                     it("returns a list of entries containing both directories") {
-                        assertThat(context, equalTo(DockerImageBuildContext(setOf(
-                            DockerImageBuildContextEntry(directory1, "directory1"),
-                            DockerImageBuildContextEntry(directory2, "directory2")
-                        ))))
+                        assertThat(
+                            context,
+                            equalTo(
+                                DockerImageBuildContext(
+                                    setOf(
+                                        DockerImageBuildContextEntry(directory1, "directory1"),
+                                        DockerImageBuildContextEntry(directory2, "directory2")
+                                    )
+                                )
+                            )
+                        )
                     }
 
                     it("uses the relative paths of the files when checking if they should be included") {
@@ -215,10 +250,17 @@ object DockerImageBuildContextSpec : Spek({
                     val context by runForEachTest { factory.createFromDirectory(contextDirectory, "Dockerfile") }
 
                     it("returns a list of entries containing only the entries permitted by the .dockerignore file") {
-                        assertThat(context, equalTo(DockerImageBuildContext(setOf(
-                            DockerImageBuildContextEntry(fileToInclude, "fileToInclude"),
-                            DockerImageBuildContextEntry(dockerignoreFile, ".dockerignore")
-                        ))))
+                        assertThat(
+                            context,
+                            equalTo(
+                                DockerImageBuildContext(
+                                    setOf(
+                                        DockerImageBuildContextEntry(fileToInclude, "fileToInclude"),
+                                        DockerImageBuildContextEntry(dockerignoreFile, ".dockerignore")
+                                    )
+                                )
+                            )
+                        )
                     }
 
                     it("uses the relative paths of the files when checking if they should be included") {
@@ -267,11 +309,18 @@ object DockerImageBuildContextSpec : Spek({
                     val context by runForEachTest { factory.createFromDirectory(contextDirectory, "Dockerfile") }
 
                     it("returns a list of entries containing both entries and the directory with Unix-style path separators") {
-                        assertThat(context, equalTo(DockerImageBuildContext(setOf(
-                            DockerImageBuildContextEntry(file1, "file1"),
-                            DockerImageBuildContextEntry(subdirectory, "subdir"),
-                            DockerImageBuildContextEntry(file2, "subdir/file2")
-                        ))))
+                        assertThat(
+                            context,
+                            equalTo(
+                                DockerImageBuildContext(
+                                    setOf(
+                                        DockerImageBuildContextEntry(file1, "file1"),
+                                        DockerImageBuildContextEntry(subdirectory, "subdir"),
+                                        DockerImageBuildContextEntry(file2, "subdir/file2")
+                                    )
+                                )
+                            )
+                        )
                     }
 
                     it("uses the relative paths of the files when checking if they should be included") {

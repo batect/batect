@@ -46,7 +46,6 @@ import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
-import java.util.concurrent.TimeUnit
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import okhttp3.Headers
@@ -57,6 +56,7 @@ import okio.BufferedSink
 import okio.BufferedSource
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.util.concurrent.TimeUnit
 
 object ExecAPISpec : Spek({
     describe("a Docker container exec API") {
@@ -110,9 +110,11 @@ object ExecAPISpec : Spek({
                     }
 
                     it("creates the container with the expected settings") {
-                        verify(clientWithLongTimeout).newCall(requestWithJsonBody { body ->
-                            assertThat(body, equalTo(Json.default.parseToJsonElement(request.toJson())))
-                        })
+                        verify(clientWithLongTimeout).newCall(
+                            requestWithJsonBody { body ->
+                                assertThat(body, equalTo(Json.default.parseToJsonElement(request.toJson())))
+                            }
+                        )
                     }
 
                     it("returns the ID of the created exec instance") {
@@ -179,12 +181,19 @@ object ExecAPISpec : Spek({
                     val stream by runForEachTest { api.start(request, instance) }
 
                     it("starts the instance with the expected settings") {
-                        verify(hijackableHttpClient).newCall(requestWithJsonBody { body ->
-                            assertThat(body, equalTo(buildJsonObject {
-                                put("Detach", false)
-                                put("Tty", attachTty)
-                            }))
-                        })
+                        verify(hijackableHttpClient).newCall(
+                            requestWithJsonBody { body ->
+                                assertThat(
+                                    body,
+                                    equalTo(
+                                        buildJsonObject {
+                                            put("Detach", false)
+                                            put("Tty", attachTty)
+                                        }
+                                    )
+                                )
+                            }
+                        )
                     }
 
                     it("returns the stream from the underlying connection") {
@@ -239,7 +248,8 @@ object ExecAPISpec : Spek({
                         },
                         "Running": false,
                         "Pid": 42000
-                    }""".trimIndent()
+                    }
+                    """.trimIndent()
 
                     beforeEachTest { httpClient.mockGet(expectedUrl, response, 200) }
 

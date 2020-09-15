@@ -50,14 +50,19 @@ object StopContainerStepRuleSpec : Spek({
 
             on("attaching it to a log message") {
                 it("returns a machine-readable representation of itself") {
-                    assertThat(logRepresentationOf(rule), equivalentTo("""
-                        |{
-                        |   "type": "${rule::class.qualifiedName}",
-                        |   "container": "the-container",
-                        |   "dockerContainer": {"id": "some-container-id", "name": null},
-                        |   "containersThatMustBeStoppedFirst": []
-                        |}
-                    """.trimMargin()))
+                    assertThat(
+                        logRepresentationOf(rule),
+                        equivalentTo(
+                            """
+                            |{
+                            |   "type": "${rule::class.qualifiedName}",
+                            |   "container": "the-container",
+                            |   "dockerContainer": {"id": "some-container-id", "name": null},
+                            |   "containersThatMustBeStoppedFirst": []
+                            |}
+                            """.trimMargin()
+                        )
+                    )
                 }
             }
         }
@@ -94,14 +99,19 @@ object StopContainerStepRuleSpec : Spek({
 
             on("attaching it to a log message") {
                 it("returns a machine-readable representation of itself") {
-                    assertThat(logRepresentationOf(rule), equivalentTo("""
-                        |{
-                        |   "type": "${rule::class.qualifiedName}",
-                        |   "container": "the-container",
-                        |   "dockerContainer": {"id": "some-container-id", "name": null},
-                        |   "containersThatMustBeStoppedFirst": ["container-1", "container-2"]
-                        |}
-                    """.trimMargin()))
+                    assertThat(
+                        logRepresentationOf(rule),
+                        equivalentTo(
+                            """
+                            |{
+                            |   "type": "${rule::class.qualifiedName}",
+                            |   "container": "the-container",
+                            |   "dockerContainer": {"id": "some-container-id", "name": null},
+                            |   "containersThatMustBeStoppedFirst": ["container-1", "container-2"]
+                            |}
+                            """.trimMargin()
+                        )
+                    )
                 }
             }
         }

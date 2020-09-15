@@ -209,15 +209,19 @@ object OptionParserSpec : Spek({
 
                 on("attempting to add another option with the same name") {
                     it("throws an exception") {
-                        assertThat({ parser.addOption(ValueOption(group, "value", "The other value", defaultValueProvider, ValueConverters::string)) },
-                            throws<IllegalArgumentException>(withMessage("An option with the name 'value' has already been added.")))
+                        assertThat(
+                            { parser.addOption(ValueOption(group, "value", "The other value", defaultValueProvider, ValueConverters::string)) },
+                            throws<IllegalArgumentException>(withMessage("An option with the name 'value' has already been added."))
+                        )
                     }
                 }
 
                 on("attempting to add another option with the same short name") {
                     it("throws an exception") {
-                        assertThat({ parser.addOption(ValueOption(group, "other-value", "The other value", defaultValueProvider, ValueConverters::string, 'v')) },
-                            throws<IllegalArgumentException>(withMessage("An option with the name 'v' has already been added.")))
+                        assertThat(
+                            { parser.addOption(ValueOption(group, "other-value", "The other value", defaultValueProvider, ValueConverters::string, 'v')) },
+                            throws<IllegalArgumentException>(withMessage("An option with the name 'v' has already been added."))
+                        )
                     }
                 }
             }

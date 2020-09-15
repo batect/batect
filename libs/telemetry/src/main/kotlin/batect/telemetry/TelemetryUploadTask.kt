@@ -17,11 +17,11 @@
 package batect.telemetry
 
 import batect.logging.Logger
+import kotlinx.serialization.json.Json
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.ZonedDateTime
 import kotlin.concurrent.thread
-import kotlinx.serialization.json.Json
 
 class TelemetryUploadTask(
     private val telemetryConsent: TelemetryConsent,

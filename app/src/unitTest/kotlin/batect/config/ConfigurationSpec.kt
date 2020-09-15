@@ -29,10 +29,10 @@ import batect.testutils.withMessage
 import batect.utils.Json
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.throws
-import java.time.Duration
 import org.araqnid.hamkrest.json.equivalentTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.time.Duration
 
 object ConfigurationSpec : Spek({
     describe("a set of configuration") {
@@ -64,36 +64,41 @@ object ConfigurationSpec : Spek({
                 val json by createForEachTest { Json.forLogging.encodeToString(Configuration.serializer(), configuration) }
 
                 it("serializes the configuration to the expected value") {
-                    assertThat(json, equivalentTo("""
-                        {
-                            "project_name": "the-project",
-                            "tasks": {
-                                "the-task": {
-                                    "run": {
-                                        "container": "the-container",
-                                        "command": ["the-command"],
-                                        "entrypoint": ["the-entrypoint"],
-                                        "environment": {
-                                            "SOME_VAR": {"type":"LiteralValue", "value":"blah"},
-                                            "SOME_REFERENCE": {"type":"EnvironmentVariableReference", "referenceTo":"REFERENCE_TO"},
-                                            "SOME_REFERENCE_WITH_DEFAULT": {"type":"EnvironmentVariableReference", "referenceTo":"REF_2", "default":"the-default"},
-                                            "SOME_CONFIG_VAR": {"type":"ConfigVariableReference", "referenceTo":"REF_3"}
+                    assertThat(
+                        json,
+                        equivalentTo(
+                            """
+                            {
+                                "project_name": "the-project",
+                                "tasks": {
+                                    "the-task": {
+                                        "run": {
+                                            "container": "the-container",
+                                            "command": ["the-command"],
+                                            "entrypoint": ["the-entrypoint"],
+                                            "environment": {
+                                                "SOME_VAR": {"type":"LiteralValue", "value":"blah"},
+                                                "SOME_REFERENCE": {"type":"EnvironmentVariableReference", "referenceTo":"REFERENCE_TO"},
+                                                "SOME_REFERENCE_WITH_DEFAULT": {"type":"EnvironmentVariableReference", "referenceTo":"REF_2", "default":"the-default"},
+                                                "SOME_CONFIG_VAR": {"type":"ConfigVariableReference", "referenceTo":"REF_3"}
+                                            },
+                                            "ports": [
+                                                { "local": "123", "container": "456", "protocol": "tcp" }
+                                            ],
+                                            "working_directory": "/some/work/dir"
                                         },
-                                        "ports": [
-                                            { "local": "123", "container": "456", "protocol": "tcp" }
-                                        ],
-                                        "working_directory": "/some/work/dir"
-                                    },
-                                    "description": "Does the thing",
-                                    "group": "Group 1",
-                                    "dependencies": ["container-1"],
-                                    "prerequisites": ["task-1"]
-                                }
-                            },
-                            "containers": {},
-                            "config_variables": {}
-                        }
-                    """.trimIndent()))
+                                        "description": "Does the thing",
+                                        "group": "Group 1",
+                                        "dependencies": ["container-1"],
+                                        "prerequisites": ["task-1"]
+                                    }
+                                },
+                                "containers": {},
+                                "config_variables": {}
+                            }
+                            """.trimIndent()
+                        )
+                    )
                 }
             }
 
@@ -129,69 +134,74 @@ object ConfigurationSpec : Spek({
                 val json by createForEachTest { Json.forLogging.encodeToString(Configuration.serializer(), configuration) }
 
                 it("serializes the configuration to the expected value") {
-                    assertThat(json, equivalentTo("""
-                        {
-                            "project_name": "the-project",
-                            "tasks": {},
-                            "containers": {
-                                "the-container": {
-                                    "image": "the-image",
-                                    "command": ["the-command"],
-                                    "entrypoint": ["sh"],
-                                    "environment": {
-                                        "SOME_VAR": {"type":"LiteralValue", "value":"some-value"}
-                                    },
-                                    "working_directory": "/some/working/dir",
-                                    "volumes": [
-                                        {
-                                            "type": "local",
-                                            "local": {"type":"LiteralValue", "value":"/local/path"},
-                                            "pathResolutionContext": {
-                                                "type": "default",
-                                                "relativeTo": "/some/project/path"
-                                            },
-                                            "container": "/container/path",
-                                            "options": "some-options"
-                                        }
-                                    ],
-                                    "devices": [
-                                        {
-                                            "local": "/dev/local",
-                                            "container": "/dev/container",
-                                            "options": "device-options"
-                                        }
-                                    ],
-                                    "ports": [
-                                        { "local": "123", "container": "456", "protocol": "tcp" }
-                                    ],
-                                    "dependencies": ["other-container"],
-                                    "health_check": {
-                                        "interval": "1s",
-                                        "retries": 23,
-                                        "start_period": "4s",
-                                        "command": "exit 0"
-                                    },
-                                    "run_as_current_user": {
-                                        "enabled": true,
-                                        "home_directory": "/some/home/dir"
-                                    },
-                                    "privileged": true,
-                                    "enable_init_process": true,
-                                    "capabilities_to_add": ["AUDIT_CONTROL"],
-                                    "capabilities_to_drop": ["BLOCK_SUSPEND"],
-                                    "additional_hostnames": ["other-name"],
-                                    "additional_hosts": { "some-host": "1.2.3.4" },
-                                    "setup_commands": [
-                                        { "command": ["some-command"], "working_directory": "/some/dir" }
-                                    ],
-                                    "log_driver": "the-log-driver",
-                                    "log_options": { "option-1": "value-1" },
-                                    "image_pull_policy": "Always"
-                                }
-                            },
-                            "config_variables": {}
-                        }
-                    """.trimIndent()))
+                    assertThat(
+                        json,
+                        equivalentTo(
+                            """
+                            {
+                                "project_name": "the-project",
+                                "tasks": {},
+                                "containers": {
+                                    "the-container": {
+                                        "image": "the-image",
+                                        "command": ["the-command"],
+                                        "entrypoint": ["sh"],
+                                        "environment": {
+                                            "SOME_VAR": {"type":"LiteralValue", "value":"some-value"}
+                                        },
+                                        "working_directory": "/some/working/dir",
+                                        "volumes": [
+                                            {
+                                                "type": "local",
+                                                "local": {"type":"LiteralValue", "value":"/local/path"},
+                                                "pathResolutionContext": {
+                                                    "type": "default",
+                                                    "relativeTo": "/some/project/path"
+                                                },
+                                                "container": "/container/path",
+                                                "options": "some-options"
+                                            }
+                                        ],
+                                        "devices": [
+                                            {
+                                                "local": "/dev/local",
+                                                "container": "/dev/container",
+                                                "options": "device-options"
+                                            }
+                                        ],
+                                        "ports": [
+                                            { "local": "123", "container": "456", "protocol": "tcp" }
+                                        ],
+                                        "dependencies": ["other-container"],
+                                        "health_check": {
+                                            "interval": "1s",
+                                            "retries": 23,
+                                            "start_period": "4s",
+                                            "command": "exit 0"
+                                        },
+                                        "run_as_current_user": {
+                                            "enabled": true,
+                                            "home_directory": "/some/home/dir"
+                                        },
+                                        "privileged": true,
+                                        "enable_init_process": true,
+                                        "capabilities_to_add": ["AUDIT_CONTROL"],
+                                        "capabilities_to_drop": ["BLOCK_SUSPEND"],
+                                        "additional_hostnames": ["other-name"],
+                                        "additional_hosts": { "some-host": "1.2.3.4" },
+                                        "setup_commands": [
+                                            { "command": ["some-command"], "working_directory": "/some/dir" }
+                                        ],
+                                        "log_driver": "the-log-driver",
+                                        "log_options": { "option-1": "value-1" },
+                                        "image_pull_policy": "Always"
+                                    }
+                                },
+                                "config_variables": {}
+                            }
+                            """.trimIndent()
+                        )
+                    )
                 }
             }
 
@@ -214,49 +224,54 @@ object ConfigurationSpec : Spek({
                 val json by createForEachTest { Json.forLogging.encodeToString(Configuration.serializer(), configuration) }
 
                 it("serializes the configuration to the expected value") {
-                    assertThat(json, equivalentTo("""
-                        {
-                            "project_name": "the-project",
-                            "tasks": {},
-                            "containers": {
-                                "the-container": {
-                                    "build_directory": {"type":"LiteralValue", "value":"/some/build/dir"},
-                                    "build_args": {
-                                        "SOME_VAR": {"type":"LiteralValue", "value":"blah"}
-                                    },
-                                    "dockerfile": "some-dockerfile",
-                                    "command": null,
-                                    "entrypoint": null,
-                                    "environment": {},
-                                    "working_directory": null,
-                                    "volumes": [],
-                                    "devices": [],
-                                    "ports": [],
-                                    "dependencies": [],
-                                    "health_check": {
-                                        "interval": null,
-                                        "retries": null,
-                                        "start_period": null,
-                                        "command": null
-                                    },
-                                    "run_as_current_user": {
-                                        "enabled": false
-                                    },
-                                    "privileged": false,
-                                    "enable_init_process": false,
-                                    "capabilities_to_add": [],
-                                    "capabilities_to_drop": [],
-                                    "additional_hostnames": [],
-                                    "additional_hosts": {},
-                                    "setup_commands": [],
-                                    "log_driver": "json-file",
-                                    "log_options": {},
-                                    "image_pull_policy": "IfNotPresent"
-                                }
-                            },
-                            "config_variables": {}
-                        }
-                    """.trimIndent()))
+                    assertThat(
+                        json,
+                        equivalentTo(
+                            """
+                            {
+                                "project_name": "the-project",
+                                "tasks": {},
+                                "containers": {
+                                    "the-container": {
+                                        "build_directory": {"type":"LiteralValue", "value":"/some/build/dir"},
+                                        "build_args": {
+                                            "SOME_VAR": {"type":"LiteralValue", "value":"blah"}
+                                        },
+                                        "dockerfile": "some-dockerfile",
+                                        "command": null,
+                                        "entrypoint": null,
+                                        "environment": {},
+                                        "working_directory": null,
+                                        "volumes": [],
+                                        "devices": [],
+                                        "ports": [],
+                                        "dependencies": [],
+                                        "health_check": {
+                                            "interval": null,
+                                            "retries": null,
+                                            "start_period": null,
+                                            "command": null
+                                        },
+                                        "run_as_current_user": {
+                                            "enabled": false
+                                        },
+                                        "privileged": false,
+                                        "enable_init_process": false,
+                                        "capabilities_to_add": [],
+                                        "capabilities_to_drop": [],
+                                        "additional_hostnames": [],
+                                        "additional_hosts": {},
+                                        "setup_commands": [],
+                                        "log_driver": "json-file",
+                                        "log_options": {},
+                                        "image_pull_policy": "IfNotPresent"
+                                    }
+                                },
+                                "config_variables": {}
+                            }
+                            """.trimIndent()
+                        )
+                    )
                 }
             }
 
@@ -266,19 +281,24 @@ object ConfigurationSpec : Spek({
                 val json by createForEachTest { Json.forLogging.encodeToString(Configuration.serializer(), configuration) }
 
                 it("serializes the configuration to the expected value") {
-                    assertThat(json, equivalentTo("""
-                        {
-                            "project_name": "the-project",
-                            "tasks": {},
-                            "containers": {},
-                            "config_variables": {
-                                "some-variable": {
-                                    "description": "Some description",
-                                    "default": "Some default"
+                    assertThat(
+                        json,
+                        equivalentTo(
+                            """
+                            {
+                                "project_name": "the-project",
+                                "tasks": {},
+                                "containers": {},
+                                "config_variables": {
+                                    "some-variable": {
+                                        "description": "Some description",
+                                        "default": "Some default"
+                                    }
                                 }
                             }
-                        }
-                    """.trimIndent()))
+                            """.trimIndent()
+                        )
+                    )
                 }
             }
         }

@@ -22,9 +22,9 @@ import batect.testutils.given
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.assertion.assertThat
-import java.nio.file.Files
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.nio.file.Files
 
 object ApplicationResolverSpec : Spek({
     describe("an application resolver") {

@@ -17,8 +17,8 @@
 package batect.sockets.namedpipes
 
 import batect.sockets.DnsToPathResolver
-import java.net.InetAddress
 import okhttp3.Dns
+import java.net.InetAddress
 
 class NamedPipeDns : Dns {
     override fun lookup(hostname: String): MutableList<InetAddress> {

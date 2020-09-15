@@ -190,12 +190,19 @@ object ConsoleInfoSpec : Spek({
             val json by runForEachTest { Json.Default.encodeToString(ConsoleInfo.serializer(), consoleInfo) }
 
             it("includes all details") {
-                assertThat(json, equivalentTo("""{
-                        "stdinIsTTY": true,
-                        "stdoutIsTTY": false,
-                        "supportsInteractivity": false,
-                        "terminalType": null
-                    }""".trimIndent()))
+                assertThat(
+                    json,
+                    equivalentTo(
+                        """
+                        {
+                            "stdinIsTTY": true,
+                            "stdoutIsTTY": false,
+                            "supportsInteractivity": false,
+                            "terminalType": null
+                        }
+                        """.trimIndent()
+                    )
+                )
             }
         }
     }

@@ -24,9 +24,9 @@ import batect.telemetry.TelemetrySpanBuilder
 import batect.ui.Console
 import batect.ui.EventLogger
 import batect.ui.text.Text
+import org.kodein.di.instance
 import java.time.Duration
 import java.time.Instant
-import org.kodein.di.instance
 
 data class TaskRunner(
     private val taskKodeinFactory: TaskKodeinFactory,

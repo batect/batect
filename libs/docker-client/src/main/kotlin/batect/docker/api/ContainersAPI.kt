@@ -36,9 +36,6 @@ import batect.os.Dimensions
 import batect.os.SystemInfo
 import batect.primitives.CancellationContext
 import batect.primitives.executeInCancellationContext
-import java.lang.Exception
-import java.time.Duration
-import java.util.concurrent.TimeUnit
 import jnr.constants.platform.Signal
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.JsonNull
@@ -51,6 +48,9 @@ import okhttp3.ConnectionPool
 import okhttp3.HttpUrl
 import okhttp3.Request
 import okio.BufferedSource
+import java.lang.Exception
+import java.time.Duration
+import java.util.concurrent.TimeUnit
 
 class ContainersAPI(
     httpConfig: DockerHttpConfig,

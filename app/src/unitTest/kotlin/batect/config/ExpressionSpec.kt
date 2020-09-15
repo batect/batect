@@ -150,8 +150,10 @@ object ExpressionSpec : Spek({
 
                 on("evaluating the expression") {
                     it("throws an appropriate exception") {
-                        assertThat({ expression.evaluate(ExpressionEvaluationContext(hostEnvironmentVariables, emptyMap())) },
-                            throws<ExpressionEvaluationException>(withMessage("The host environment variable 'THE_VAR' is not set, and no default value has been provided.")))
+                        assertThat(
+                            { expression.evaluate(ExpressionEvaluationContext(hostEnvironmentVariables, emptyMap())) },
+                            throws<ExpressionEvaluationException>(withMessage("The host environment variable 'THE_VAR' is not set, and no default value has been provided."))
+                        )
                     }
                 }
             }
@@ -210,8 +212,10 @@ object ExpressionSpec : Spek({
 
             on("evaluating the expression") {
                 it("throws an appropriate exception") {
-                    assertThat({ expression.evaluate(ExpressionEvaluationContext(HostEnvironmentVariables(), configVariables)) },
-                        throws<ExpressionEvaluationException>(withMessage("The config variable 'THE_VAR' has not been defined.")))
+                    assertThat(
+                        { expression.evaluate(ExpressionEvaluationContext(HostEnvironmentVariables(), configVariables)) },
+                        throws<ExpressionEvaluationException>(withMessage("The config variable 'THE_VAR' has not been defined."))
+                    )
                 }
             }
         }
@@ -221,8 +225,10 @@ object ExpressionSpec : Spek({
 
             on("evaluating the expression") {
                 it("throws an appropriate exception") {
-                    assertThat({ expression.evaluate(ExpressionEvaluationContext(HostEnvironmentVariables(), configVariables)) },
-                        throws<ExpressionEvaluationException>(withMessage("The config variable 'THE_VAR' is not set and has no default value.")))
+                    assertThat(
+                        { expression.evaluate(ExpressionEvaluationContext(HostEnvironmentVariables(), configVariables)) },
+                        throws<ExpressionEvaluationException>(withMessage("The config variable 'THE_VAR' is not set and has no default value."))
+                    )
                 }
             }
         }
@@ -308,14 +314,21 @@ object ExpressionSpec : Spek({
                 val json = Json.forLogging.encodeToString(Expression.Companion, expression)
 
                 it("returns an array of expressions") {
-                    assertThat(json, equivalentTo("""{
-                        |"type":"ConcatenatedExpression",
-                        |"expressions":[
-                        |   {"type":"LiteralValue","value":"some"},
-                        |   {"type":"LiteralValue","value":" other"},
-                        |   {"type":"LiteralValue","value":" value"}
-                        |]
-                        |}""".trimMargin()))
+                    assertThat(
+                        json,
+                        equivalentTo(
+                            """
+                            |{
+                            |  "type":"ConcatenatedExpression",
+                            |  "expressions":[
+                            |    {"type":"LiteralValue","value":"some"},
+                            |    {"type":"LiteralValue","value":" other"},
+                            |    {"type":"LiteralValue","value":" value"}
+                            |  ]
+                            |}
+                            """.trimMargin()
+                        )
+                    )
                 }
             }
         }

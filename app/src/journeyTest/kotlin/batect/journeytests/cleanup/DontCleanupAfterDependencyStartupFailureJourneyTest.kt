@@ -32,9 +32,9 @@ import ch.tutteli.atrium.api.fluent.en_GB.notToBe
 import ch.tutteli.atrium.api.fluent.en_GB.notToBeNull
 import ch.tutteli.atrium.api.fluent.en_GB.toBe
 import ch.tutteli.atrium.api.verbs.assert
-import java.io.InputStreamReader
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.io.InputStreamReader
 
 object DontCleanupAfterDependencyStartupFailureJourneyTest : Spek({
     describe("a task with an unhealthy dependency") {

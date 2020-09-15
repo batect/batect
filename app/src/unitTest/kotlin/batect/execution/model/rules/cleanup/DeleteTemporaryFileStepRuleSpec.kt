@@ -80,13 +80,18 @@ object DeleteTemporaryFileStepRuleSpec : Spek({
 
             on("attaching it to a log message") {
                 it("returns a machine-readable representation of itself") {
-                    assertThat(logRepresentationOf(rule), equivalentTo("""
+                    assertThat(
+                        logRepresentationOf(rule),
+                        equivalentTo(
+                            """
                             |{
                             |   "type": "${rule::class.qualifiedName}",
                             |   "path": "/some-file",
                             |   "containerThatMustBeRemovedFirst": "the-container"
                             |}
-                        """.trimMargin()))
+                            """.trimMargin()
+                        )
+                    )
                 }
             }
         }
@@ -105,13 +110,16 @@ object DeleteTemporaryFileStepRuleSpec : Spek({
             on("attaching it to a log message") {
                 it("returns a machine-readable representation of itself") {
                     assertThat(
-                        logRepresentationOf(rule), equivalentTo("""
+                        logRepresentationOf(rule),
+                        equivalentTo(
+                            """
                             |{
                             |   "type": "${rule::class.qualifiedName}",
                             |   "path": "/some-file",
                             |   "containerThatMustBeRemovedFirst": null
                             |}
-                        """.trimMargin())
+                            """.trimMargin()
+                        )
                     )
                 }
             }

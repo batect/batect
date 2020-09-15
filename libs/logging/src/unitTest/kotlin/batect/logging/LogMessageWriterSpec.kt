@@ -19,8 +19,6 @@ package batect.logging
 import batect.testutils.CloseableByteArrayOutputStream
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
-import java.time.ZoneOffset
-import java.time.ZonedDateTime
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.int
@@ -28,6 +26,8 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
 
 object LogMessageWriterSpec : Spek({
     describe("a log message writer") {

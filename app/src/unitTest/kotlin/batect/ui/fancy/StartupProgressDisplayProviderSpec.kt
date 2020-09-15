@@ -59,10 +59,15 @@ object StartupProgressDisplayProviderSpec : Spek({
             val display = provider.createForDependencyGraph(graph)
 
             it("returns progress lines for each node in the graph with their dependencies") {
-                assertThat(display.containerLines.toSet(), equalTo(setOf(
-                    ContainerStartupProgressLine(container1, container1Dependencies, true),
-                    ContainerStartupProgressLine(container2, container2Dependencies, false)
-                )))
+                assertThat(
+                    display.containerLines.toSet(),
+                    equalTo(
+                        setOf(
+                            ContainerStartupProgressLine(container1, container1Dependencies, true),
+                            ContainerStartupProgressLine(container2, container2Dependencies, false)
+                        )
+                    )
+                )
             }
         }
     }

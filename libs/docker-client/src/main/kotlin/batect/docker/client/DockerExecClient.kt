@@ -30,9 +30,9 @@ import batect.docker.run.OutputConnection
 import batect.logging.Logger
 import batect.os.Command
 import batect.primitives.CancellationContext
-import java.io.ByteArrayOutputStream
 import okio.Sink
 import okio.sink
+import java.io.ByteArrayOutputStream
 
 class DockerExecClient(
     private val api: ExecAPI,

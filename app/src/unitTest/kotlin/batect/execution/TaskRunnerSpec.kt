@@ -45,12 +45,12 @@ import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.verifyZeroInteractions
 import com.nhaarman.mockitokotlin2.whenever
-import java.time.Duration
 import org.kodein.di.DI
 import org.kodein.di.bind
 import org.kodein.di.instance
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.time.Duration
 
 object TaskRunnerSpec : Spek({
     describe("a task runner") {
@@ -96,12 +96,17 @@ object TaskRunnerSpec : Spek({
                 }
 
                 beforeEachTest {
-                    whenever(taskKodeinFactory.create(any(), any())).thenReturn(TaskKodein(task, DI.direct {
-                        bind<EventLogger>() with instance(eventLogger)
-                        bind<TaskStateMachine>() with instance(stateMachine)
-                        bind<ParallelExecutionManager>() with instance(executionManager)
-                        bind<ContainerDependencyGraph>() with instance(dependencyGraph)
-                    }))
+                    whenever(taskKodeinFactory.create(any(), any())).thenReturn(
+                        TaskKodein(
+                            task,
+                            DI.direct {
+                                bind<EventLogger>() with instance(eventLogger)
+                                bind<TaskStateMachine>() with instance(stateMachine)
+                                bind<ParallelExecutionManager>() with instance(executionManager)
+                                bind<ContainerDependencyGraph>() with instance(dependencyGraph)
+                            }
+                        )
+                    )
                 }
 
                 given("the task succeeds") {

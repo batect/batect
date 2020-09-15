@@ -23,10 +23,10 @@ package batect.config.includes
 import batect.config.GitInclude
 import batect.logging.PathSerializer
 import batect.os.PathResolutionContext
-import java.nio.file.Path
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseSerializers
+import java.nio.file.Path
 
 @Serializable
 @SerialName("git")

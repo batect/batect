@@ -22,7 +22,6 @@ import batect.config.io.deserializers.SimpleStringOrObjectSerializer
 import batect.os.PathResolutionResult
 import batect.os.PathType
 import com.charleskorn.kaml.YamlInput
-import java.nio.file.Path
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
@@ -34,6 +33,7 @@ import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
+import java.nio.file.Path
 
 @Serializable
 sealed class Include

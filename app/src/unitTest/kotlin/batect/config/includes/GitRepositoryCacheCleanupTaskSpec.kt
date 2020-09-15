@@ -41,10 +41,10 @@ import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
-import java.time.ZoneOffset
-import java.time.ZonedDateTime
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
 
 object GitRepositoryCacheCleanupTaskSpec : Spek({
     describe("a Git repository cache cleanup task") {
@@ -110,20 +110,26 @@ object GitRepositoryCacheCleanupTaskSpec : Spek({
                 beforeEachTest { runWithRepositories(repo) }
 
                 it("logs a message before deleting the repository") {
-                    assertThat(logSink, hasMessage(
-                        withLogMessage("Deleting repository as it has not been used in over 30 days.")
-                            and withSeverity(Severity.Info)
-                            and withAdditionalData("repo", repo.repo)
-                            and withAdditionalData("lastUsed", repo.lastUsed)
-                    ))
+                    assertThat(
+                        logSink,
+                        hasMessage(
+                            withLogMessage("Deleting repository as it has not been used in over 30 days.")
+                                and withSeverity(Severity.Info)
+                                and withAdditionalData("repo", repo.repo)
+                                and withAdditionalData("lastUsed", repo.lastUsed)
+                        )
+                    )
                 }
 
                 it("logs a message after deleting the repository") {
-                    assertThat(logSink, hasMessage(
-                        withLogMessage("Repository deletion completed.")
-                            and withSeverity(Severity.Info)
-                            and withAdditionalData("repo", repo.repo)
-                    ))
+                    assertThat(
+                        logSink,
+                        hasMessage(
+                            withLogMessage("Repository deletion completed.")
+                                and withSeverity(Severity.Info)
+                                and withAdditionalData("repo", repo.repo)
+                        )
+                    )
                 }
 
                 it("deletes the repository") {
@@ -141,12 +147,15 @@ object GitRepositoryCacheCleanupTaskSpec : Spek({
                 }
 
                 it("logs a message when deletion fails") {
-                    assertThat(logSink, hasMessage(
-                        withLogMessage("Repository deletion failed.")
-                            and withSeverity(Severity.Warning)
-                            and withAdditionalData("repo", repo.repo)
-                            and withException(exception)
-                    ))
+                    assertThat(
+                        logSink,
+                        hasMessage(
+                            withLogMessage("Repository deletion failed.")
+                                and withSeverity(Severity.Warning)
+                                and withAdditionalData("repo", repo.repo)
+                                and withException(exception)
+                        )
+                    )
                 }
 
                 it("reports the exception in telemetry") {
@@ -206,11 +215,14 @@ object GitRepositoryCacheCleanupTaskSpec : Spek({
                 }
 
                 it("logs a message when deletion fails") {
-                    assertThat(logSink, hasMessage(
-                        withLogMessage("Repository deletion failed.")
-                            and withSeverity(Severity.Warning)
-                            and withException(exception)
-                    ))
+                    assertThat(
+                        logSink,
+                        hasMessage(
+                            withLogMessage("Repository deletion failed.")
+                                and withSeverity(Severity.Warning)
+                                and withException(exception)
+                        )
+                    )
                 }
 
                 it("reports the exception in telemetry") {

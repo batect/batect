@@ -32,12 +32,17 @@ object BuildImageStepSpec : Spek({
 
         on("attaching it to a log message") {
             it("returns a machine-readable representation of itself") {
-                assertThat(logRepresentationOf(step), equivalentTo("""
-                    |{
-                    |   "type": "${step::class.qualifiedName}",
-                    |   "container": "the-container"
-                    |}
-                """.trimMargin()))
+                assertThat(
+                    logRepresentationOf(step),
+                    equivalentTo(
+                        """
+                        |{
+                        |   "type": "${step::class.qualifiedName}",
+                        |   "container": "the-container"
+                        |}
+                        """.trimMargin()
+                    )
+                )
             }
         }
     }

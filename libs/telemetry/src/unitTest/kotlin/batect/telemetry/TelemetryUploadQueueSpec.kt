@@ -29,16 +29,16 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.isEmpty
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
-import java.nio.file.Files
-import java.time.ZoneOffset
-import java.time.ZonedDateTime
-import java.util.UUID
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonPrimitive
 import org.araqnid.hamkrest.json.equivalentTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.Suite
 import org.spekframework.spek2.style.specification.describe
+import java.nio.file.Files
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
+import java.util.UUID
 
 object TelemetryUploadQueueSpec : Spek({
     describe("a telemetry upload queue") {
@@ -101,47 +101,52 @@ object TelemetryUploadQueueSpec : Spek({
                 val actualPath by runForEachTest { queue.add(session) }
 
                 it("saves the session to disk") {
-                    assertThat(Files.readAllBytes(expectedPath).toString(Charsets.UTF_8), equivalentTo("""
-                        {
-                            "sessionId": "8a1058f8-e41e-4c78-aa42-663b78d15122",
-                            "userId": "07ab839b-ac26-475a-966a-77d18d00ac61",
-                            "sessionStartTime": "2020-08-07T03:49:10.000000678Z",
-                            "sessionEndTime": "2020-08-07T03:51:11.000000678Z",
-                            "applicationId": "my-app",
-                            "applicationVersion": "1.0.0",
-                            "attributes": {
-                                "someString": "string",
-                                "someNumber": 123,
-                                "someBoolean": false,
-                                "someNull": null
-                            },
-                            "events": [
+                    assertThat(
+                        Files.readAllBytes(expectedPath).toString(Charsets.UTF_8),
+                        equivalentTo(
+                            """
                                 {
-                                    "type": "some-event",
-                                    "time": "2020-08-07T03:49:20.000000678Z",
+                                    "sessionId": "8a1058f8-e41e-4c78-aa42-663b78d15122",
+                                    "userId": "07ab839b-ac26-475a-966a-77d18d00ac61",
+                                    "sessionStartTime": "2020-08-07T03:49:10.000000678Z",
+                                    "sessionEndTime": "2020-08-07T03:51:11.000000678Z",
+                                    "applicationId": "my-app",
+                                    "applicationVersion": "1.0.0",
                                     "attributes": {
                                         "someString": "string",
                                         "someNumber": 123,
                                         "someBoolean": false,
                                         "someNull": null
-                                    }
+                                    },
+                                    "events": [
+                                        {
+                                            "type": "some-event",
+                                            "time": "2020-08-07T03:49:20.000000678Z",
+                                            "attributes": {
+                                                "someString": "string",
+                                                "someNumber": 123,
+                                                "someBoolean": false,
+                                                "someNull": null
+                                            }
+                                        }
+                                    ],
+                                    "spans": [
+                                        {
+                                            "type": "some-span",
+                                            "startTime": "2020-08-07T03:49:30.000000678Z",
+                                            "endTime": "2020-08-07T03:49:40.000000678Z",
+                                            "attributes": {
+                                                "someString": "string",
+                                                "someNumber": 123,
+                                                "someBoolean": false,
+                                                "someNull": null
+                                            }
+                                        }
+                                    ]
                                 }
-                            ],
-                            "spans": [
-                                {
-                                    "type": "some-span",
-                                    "startTime": "2020-08-07T03:49:30.000000678Z",
-                                    "endTime": "2020-08-07T03:49:40.000000678Z",
-                                    "attributes": {
-                                        "someString": "string",
-                                        "someNumber": 123,
-                                        "someBoolean": false,
-                                        "someNull": null
-                                    }
-                                }
-                            ]
-                        }
-                    """.trimIndent()))
+                            """.trimIndent()
+                        )
+                    )
                 }
 
                 it("returns the path the session was saved to on disk") {

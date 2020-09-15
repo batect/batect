@@ -61,8 +61,6 @@ import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
-import java.time.Duration
-import java.util.concurrent.TimeUnit
 import jnr.constants.platform.Signal
 import okhttp3.Headers
 import okhttp3.HttpUrl.Companion.toHttpUrl
@@ -72,6 +70,8 @@ import okio.BufferedSink
 import okio.BufferedSource
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.time.Duration
+import java.util.concurrent.TimeUnit
 
 object ContainersAPISpec : Spek({
     describe("a Docker containers API client") {
@@ -128,9 +128,11 @@ object ContainersAPISpec : Spek({
                     }
 
                     it("creates the container with the expected settings") {
-                        verify(clientWithLongTimeout).newCall(requestWithJsonBody { body ->
-                            assertThat(body, equalTo(Json.default.parseToJsonElement(request.toJson())))
-                        })
+                        verify(clientWithLongTimeout).newCall(
+                            requestWithJsonBody { body ->
+                                assertThat(body, equalTo(Json.default.parseToJsonElement(request.toJson())))
+                            }
+                        )
                     }
 
                     it("returns the ID of the created container") {
@@ -226,7 +228,8 @@ object ContainersAPISpec : Spek({
                           "Retries": 4
                         }
                       }
-                    }""".trimIndent()
+                    }
+                    """.trimIndent()
 
                     beforeEachTest { httpClient.mockGet(expectedUrl, response, 200) }
 
@@ -234,26 +237,28 @@ object ContainersAPISpec : Spek({
                         val details by runForEachTest { api.inspect(container) }
 
                         it("returns the details of the container") {
-                            assertThat(details, equalTo(
-                                DockerContainerInfo(
-                                    DockerContainerState(
-                                        DockerContainerHealthCheckState(
-                                            listOf(
-                                                DockerHealthCheckResult(1, "something went wrong")
+                            assertThat(
+                                details,
+                                equalTo(
+                                    DockerContainerInfo(
+                                        DockerContainerState(
+                                            DockerContainerHealthCheckState(
+                                                listOf(
+                                                    DockerHealthCheckResult(1, "something went wrong")
+                                                )
                                             )
-                                        )
-                                    ),
-                                    DockerContainerConfiguration(
-                                        DockerContainerHealthCheckConfig(
-                                            listOf("some-test"),
-                                            Duration.ofNanos(20),
-                                            Duration.ofNanos(30),
-                                            Duration.ofNanos(100),
-                                            4
+                                        ),
+                                        DockerContainerConfiguration(
+                                            DockerContainerHealthCheckConfig(
+                                                listOf("some-test"),
+                                                Duration.ofNanos(20),
+                                                Duration.ofNanos(30),
+                                                Duration.ofNanos(100),
+                                                4
+                                            )
                                         )
                                     )
                                 )
-                            )
                             )
                         }
                     }
@@ -266,7 +271,8 @@ object ContainersAPISpec : Spek({
                       "Config": {
                         "Healthcheck": {}
                       }
-                    }""".trimIndent()
+                    }
+                    """.trimIndent()
 
                     beforeEachTest { httpClient.mockGet(expectedUrl, response, 200) }
 
@@ -274,12 +280,14 @@ object ContainersAPISpec : Spek({
                         val details by runForEachTest { api.inspect(container) }
 
                         it("returns the details of the container") {
-                            assertThat(details, equalTo(
-                                DockerContainerInfo(
-                                    DockerContainerState(health = null),
-                                    DockerContainerConfiguration(healthCheck = DockerContainerHealthCheckConfig())
+                            assertThat(
+                                details,
+                                equalTo(
+                                    DockerContainerInfo(
+                                        DockerContainerState(health = null),
+                                        DockerContainerConfiguration(healthCheck = DockerContainerHealthCheckConfig())
+                                    )
                                 )
-                            )
                             )
                         }
                     }
@@ -289,7 +297,8 @@ object ContainersAPISpec : Spek({
                     beforeEachTest { httpClient.mockGet(expectedUrl, errorResponse, 418) }
 
                     it("throws an appropriate exception") {
-                        assertThat({ api.inspect(container) },
+                        assertThat(
+                            { api.inspect(container) },
                             throws<ContainerInspectionFailedException>(withMessage("Could not inspect container 'some-container': $errorMessageWithCorrectLineEndings"))
                         )
                     }

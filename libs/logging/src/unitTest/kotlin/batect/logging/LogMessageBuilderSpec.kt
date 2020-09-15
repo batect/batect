@@ -24,11 +24,11 @@ import com.natpryce.hamkrest.hasElement
 import com.natpryce.hamkrest.throws
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
-import java.time.ZoneOffset
-import java.time.ZonedDateTime
 import kotlinx.serialization.builtins.serializer
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
 
 object LogMessageBuilderSpec : Spek({
     describe("a log message builder") {
@@ -52,9 +52,14 @@ object LogMessageBuilderSpec : Spek({
             }
 
             it("returns a log message with only the standard additional data") {
-                assertThat(message.additionalData, equalTo(mapOf<String, Any?>(
-                    "@something" to JsonableObject(456, Int.serializer())
-                )))
+                assertThat(
+                    message.additionalData,
+                    equalTo(
+                        mapOf<String, Any?>(
+                            "@something" to JsonableObject(456, Int.serializer())
+                        )
+                    )
+                )
             }
 
             it("returns a log message with the timestamp from the timestamp provider") {
@@ -77,9 +82,14 @@ object LogMessageBuilderSpec : Spek({
             }
 
             it("returns a log message with only the standard additional data") {
-                assertThat(message.additionalData, equalTo(mapOf<String, Jsonable>(
-                    "@something" to JsonableObject(456, Int.serializer())
-                )))
+                assertThat(
+                    message.additionalData,
+                    equalTo(
+                        mapOf<String, Jsonable>(
+                            "@something" to JsonableObject(456, Int.serializer())
+                        )
+                    )
+                )
             }
 
             it("returns a log message with the timestamp from the timestamp provider") {
@@ -103,11 +113,16 @@ object LogMessageBuilderSpec : Spek({
             }
 
             it("returns a log message with the standard additional data and the user-provided additional data") {
-                assertThat(message.additionalData, equalTo(mapOf<String, Jsonable>(
-                    "some-key" to JsonableObject(123, Int.serializer()),
-                    "some-other-data" to JsonableObject("value", String.serializer()),
-                    "@something" to JsonableObject(456, Int.serializer())
-                )))
+                assertThat(
+                    message.additionalData,
+                    equalTo(
+                        mapOf<String, Jsonable>(
+                            "some-key" to JsonableObject(123, Int.serializer()),
+                            "some-other-data" to JsonableObject("value", String.serializer()),
+                            "@something" to JsonableObject(456, Int.serializer())
+                        )
+                    )
+                )
             }
 
             it("returns a log message with the timestamp from the timestamp provider") {
@@ -131,12 +146,17 @@ object LogMessageBuilderSpec : Spek({
             }
 
             it("returns a log message with the standard additional data, logger-provided additional data and the user-provided additional data") {
-                assertThat(message.additionalData, equalTo(mapOf<String, Jsonable>(
-                    "some-key" to JsonableObject(123, Int.serializer()),
-                    "some-other-data" to JsonableObject("value", String.serializer()),
-                    "@something" to JsonableObject(456, Int.serializer()),
-                    "@source" to JsonableObject("some.class.name", String.serializer())
-                )))
+                assertThat(
+                    message.additionalData,
+                    equalTo(
+                        mapOf<String, Jsonable>(
+                            "some-key" to JsonableObject(123, Int.serializer()),
+                            "some-other-data" to JsonableObject("value", String.serializer()),
+                            "@something" to JsonableObject(456, Int.serializer()),
+                            "@source" to JsonableObject("some.class.name", String.serializer())
+                        )
+                    )
+                )
             }
 
             it("returns a log message with the timestamp from the timestamp provider") {

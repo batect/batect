@@ -26,14 +26,14 @@ import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
+import kotlinx.serialization.builtins.serializer
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 import java.io.OutputStream
 import java.io.PrintStream
 import java.nio.file.Files
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
-import kotlinx.serialization.builtins.serializer
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
 
 object FileLogSinkSpec : Spek({
     describe("a file log sink") {
@@ -61,11 +61,14 @@ object FileLogSinkSpec : Spek({
                 data("someLocalInfo", 888)
             }
 
-            val expectedMessage = LogMessage(Severity.Info, "This is the message", timestampToUse, mapOf(
-                "someAdditionalInfo" to JsonableObject("someValue", String.serializer()),
-                "someLocalInfo" to JsonableObject(888, Int.serializer()),
-                "someStandardInfo" to JsonableObject(false, Boolean.serializer())
-            ))
+            val expectedMessage = LogMessage(
+                Severity.Info, "This is the message", timestampToUse,
+                mapOf(
+                    "someAdditionalInfo" to JsonableObject("someValue", String.serializer()),
+                    "someLocalInfo" to JsonableObject(888, Int.serializer()),
+                    "someStandardInfo" to JsonableObject(false, Boolean.serializer())
+                )
+            )
 
             it("calls the builder function to create the log message and passes it to the writer") {
                 verify(writer).writeTo(eq(expectedMessage), any())

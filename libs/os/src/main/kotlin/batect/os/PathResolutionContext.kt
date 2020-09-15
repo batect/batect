@@ -16,8 +16,8 @@
 
 package batect.os
 
-import java.nio.file.Path
 import kotlinx.serialization.PolymorphicSerializer
+import java.nio.file.Path
 
 interface PathResolutionContext {
     val relativeTo: Path

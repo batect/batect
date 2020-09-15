@@ -32,8 +32,6 @@ import batect.logging.Logger
 import batect.os.SystemInfo
 import batect.primitives.CancellationContext
 import batect.primitives.executeInCancellationContext
-import java.io.ByteArrayOutputStream
-import java.util.Base64
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
@@ -44,6 +42,8 @@ import okhttp3.Response
 import okio.Buffer
 import okio.Sink
 import okio.sink
+import java.io.ByteArrayOutputStream
+import java.util.Base64
 
 class ImagesAPI(
     httpConfig: DockerHttpConfig,

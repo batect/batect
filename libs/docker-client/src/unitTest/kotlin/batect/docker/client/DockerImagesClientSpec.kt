@@ -53,13 +53,13 @@ import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
-import java.nio.file.Files
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 import okio.Sink
 import org.mockito.invocation.InvocationOnMock
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.nio.file.Files
 
 object DockerImagesClientSpec : Spek({
     describe("a Docker images client") {
@@ -164,7 +164,8 @@ object DockerImagesClientSpec : Spek({
 
                         it("sends status updates as the build progresses") {
                             assertThat(
-                                statusUpdates, equalTo(
+                                statusUpdates,
+                                equalTo(
                                     listOf(
                                         DockerImageBuildProgress(1, 5, "FROM nginx:1.13.0", null),
                                         DockerImageBuildProgress(1, 5, "FROM nginx:1.13.0", imagePullProgress),
@@ -204,7 +205,8 @@ object DockerImagesClientSpec : Spek({
 
                         it("sends status updates only once the first step is started") {
                             assertThat(
-                                statusUpdates, equalTo(
+                                statusUpdates,
+                                equalTo(
                                     listOf(
                                         DockerImageBuildProgress(1, 5, "FROM nginx:1.13.0", null),
                                         DockerImageBuildProgress(1, 5, "FROM nginx:1.13.0", imagePullProgress),
@@ -226,7 +228,8 @@ object DockerImagesClientSpec : Spek({
                     on("building the image") {
                         it("throws an appropriate exception") {
                             assertThat(
-                                { client.build(buildDirectory, buildArgs, dockerfilePath, pathResolutionContext, imageTags, forcePull, outputSink, cancellationContext, {}) }, throws<ImageBuildFailedException>(
+                                { client.build(buildDirectory, buildArgs, dockerfilePath, pathResolutionContext, imageTags, forcePull, outputSink, cancellationContext, {}) },
+                                throws<ImageBuildFailedException>(
                                     withMessage("Could not build image: Could not load credentials: something went wrong.")
                                         and withCause(exception)
                                 )
@@ -329,10 +332,13 @@ object DockerImagesClientSpec : Spek({
 
                         on("pulling the image") {
                             it("throws an appropriate exception") {
-                                assertThat({ client.pull("some-image", forcePull, cancellationContext, {}) }, throws<ImagePullFailedException>(
-                                    withMessage("Could not pull image 'some-image': Could not load credentials: something went wrong.")
-                                        and withCause(exception)
-                                ))
+                                assertThat(
+                                    { client.pull("some-image", forcePull, cancellationContext, {}) },
+                                    throws<ImagePullFailedException>(
+                                        withMessage("Could not pull image 'some-image': Could not load credentials: something went wrong.")
+                                            and withCause(exception)
+                                    )
+                                )
                             }
                         }
                     }

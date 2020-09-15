@@ -21,11 +21,11 @@ import batect.testutils.given
 import batect.testutils.withMessage
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.throws
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
 
 object TelemetrySpanSpec : Spek({
     describe("a telemetry span") {

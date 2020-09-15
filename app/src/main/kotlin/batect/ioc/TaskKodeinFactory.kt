@@ -29,11 +29,14 @@ import org.kodein.di.subDI
 class TaskKodeinFactory(
     private val baseKodein: DirectDI
 ) {
-    fun create(task: Task, runOptions: RunOptions): TaskKodein = TaskKodein(task, subDI(baseKodein.di) {
-        bind<RunOptions>() with scoped(TaskScope).singleton { runOptions }
+    fun create(task: Task, runOptions: RunOptions): TaskKodein = TaskKodein(
+        task,
+        subDI(baseKodein.di) {
+            bind<RunOptions>() with scoped(TaskScope).singleton { runOptions }
 
-        import(taskScopeModule)
-    }.direct.on(task))
+            import(taskScopeModule)
+        }.direct.on(task)
+    )
 }
 
 class TaskKodein(private val task: Task, kodein: DirectDI) : DirectDI by kodein, AutoCloseable {

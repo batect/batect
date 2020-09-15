@@ -33,9 +33,9 @@ import com.nhaarman.mockitokotlin2.inOrder
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.times
 import com.nhaarman.mockitokotlin2.verify
-import java.util.UUID
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.util.UUID
 
 object DisableTelemetryCommandSpec : Spek({
     describe("a 'disable telemetry' command") {

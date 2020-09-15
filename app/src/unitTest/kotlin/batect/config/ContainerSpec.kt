@@ -36,10 +36,10 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.throws
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
-import java.time.Duration
 import kotlinx.serialization.modules.serializersModuleOf
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.time.Duration
 
 object ContainerSpec : Spek({
     describe("a container") {
@@ -204,18 +204,24 @@ object ContainerSpec : Spek({
                 val result by runForEachTest { parser.decodeFromString(Container.Companion, yaml) }
 
                 it("returns the expected container configuration") {
-                    assertThat(result.imageSource, equalTo(BuildImage(
-                        LiteralValue("/container-1-build-dir"),
-                        pathResolverContext,
-                        mapOf("SOME_ARG" to LiteralValue("some_value"), "SOME_DYNAMIC_VALUE" to EnvironmentVariableReference("host_var")),
-                        "some-Dockerfile",
-                        ImagePullPolicy.Always
-                    )))
+                    assertThat(
+                        result.imageSource,
+                        equalTo(
+                            BuildImage(
+                                LiteralValue("/container-1-build-dir"),
+                                pathResolverContext,
+                                mapOf("SOME_ARG" to LiteralValue("some_value"), "SOME_DYNAMIC_VALUE" to EnvironmentVariableReference("host_var")),
+                                "some-Dockerfile",
+                                ImagePullPolicy.Always
+                            )
+                        )
+                    )
 
                     assertThat(result.command, equalTo(Command.parse("do-the-thing.sh some-param")))
                     assertThat(result.entrypoint, equalTo(Command.parse("sh")))
                     assertThat(
-                        result.environment, equalTo(
+                        result.environment,
+                        equalTo(
                             mapOf(
                                 "OPTS" to LiteralValue("-Dthing"),
                                 "INT_VALUE" to LiteralValue("1"),
@@ -227,7 +233,8 @@ object ContainerSpec : Spek({
                     )
                     assertThat(result.workingDirectory, equalTo("/here"))
                     assertThat(
-                        result.volumeMounts, equalTo(
+                        result.volumeMounts,
+                        equalTo(
                             setOf(
                                 LocalMount(LiteralValue("/volume1"), pathResolverContext, "/here", null),
                                 LocalMount(LiteralValue("/somewhere"), pathResolverContext, "/else", "ro")
@@ -235,7 +242,8 @@ object ContainerSpec : Spek({
                         )
                     )
                     assertThat(
-                        result.deviceMounts, equalTo(
+                        result.deviceMounts,
+                        equalTo(
                             setOf(
                                 DeviceMount("/dev/ttyUSB0", "/dev/ttyUSB0", null),
                                 DeviceMount("/dev/sda", "/dev/xvdc", "r")
@@ -251,10 +259,15 @@ object ContainerSpec : Spek({
                     assertThat(result.capabilitiesToDrop, equalTo(setOf(Capability.KILL)))
                     assertThat(result.additionalHostnames, equalTo(setOf("extra-name")))
                     assertThat(result.additionalHosts, equalTo(mapOf("does.not.exist" to "1.2.3.4")))
-                    assertThat(result.setupCommands, equalTo(listOf(
-                        SetupCommand(Command.parse("/do/the/thing.sh")),
-                        SetupCommand(Command.parse("/some/other/thing.sh"), "/some/dir")
-                    )))
+                    assertThat(
+                        result.setupCommands,
+                        equalTo(
+                            listOf(
+                                SetupCommand(Command.parse("/do/the/thing.sh")),
+                                SetupCommand(Command.parse("/some/other/thing.sh"), "/some/dir")
+                            )
+                        )
+                    )
                     assertThat(result.logDriver, equalTo("my_log_driver"))
                     assertThat(result.logOptions, equalTo(mapOf("option_1" to "value_1")))
                 }

@@ -28,10 +28,10 @@ import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockitokotlin2.mock
-import java.nio.file.Files
-import java.util.Properties
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.nio.file.Files
+import java.util.Properties
 
 object DockerRegistryCredentialsConfigurationFileSpec : Spek({
     describe("a Docker registry credentials configuration file") {
@@ -78,12 +78,15 @@ object DockerRegistryCredentialsConfigurationFileSpec : Spek({
             given("and it has no credential helpers configured") {
                 given("and it has a credential store configured") {
                     beforeEachTest {
-                        Files.write(configurationFilePath, """
-                            |{
-                            |   "auths": {},
-                            |   "credsStore": "awesomesauce"
-                            |}
-                        """.trimMargin().lines())
+                        Files.write(
+                            configurationFilePath,
+                            """
+                                    |{
+                                    |   "auths": {},
+                                    |   "credsStore": "awesomesauce"
+                                    |}
+                                """.trimMargin().lines()
+                        )
                     }
 
                     on("getting credentials for a registry") {
@@ -97,11 +100,14 @@ object DockerRegistryCredentialsConfigurationFileSpec : Spek({
 
                 given("and it does not have a credential store configured") {
                     beforeEachTest {
-                        Files.write(configurationFilePath, """
-                            |{
-                            |   "auths": {}
-                            |}
-                        """.trimMargin().lines())
+                        Files.write(
+                            configurationFilePath,
+                            """
+                                |{
+                                |   "auths": {}
+                                |}
+                            """.trimMargin().lines()
+                        )
                     }
 
                     on("getting credentials for a registry") {
@@ -117,15 +123,18 @@ object DockerRegistryCredentialsConfigurationFileSpec : Spek({
             given("and it has a credential helper configured for the registry") {
                 given("and it has a credential store configured") {
                     beforeEachTest {
-                        Files.write(configurationFilePath, """
-                            |{
-                            |   "auths": {},
-                            |   "credHelpers": {
-                            |       "someregistry.com": "specialsauce"
-                            |   },
-                            |   "credsStore": "awesomesauce"
-                            |}
-                        """.trimMargin().lines())
+                        Files.write(
+                            configurationFilePath,
+                            """
+                                |{
+                                |   "auths": {},
+                                |   "credHelpers": {
+                                |       "someregistry.com": "specialsauce"
+                                |   },
+                                |   "credsStore": "awesomesauce"
+                                |}
+                            """.trimMargin().lines()
+                        )
                     }
 
                     on("getting credentials for a registry") {
@@ -139,14 +148,17 @@ object DockerRegistryCredentialsConfigurationFileSpec : Spek({
 
                 given("and it does not have a credential store configured") {
                     beforeEachTest {
-                        Files.write(configurationFilePath, """
-                            |{
-                            |   "auths": {},
-                            |   "credHelpers": {
-                            |       "someregistry.com": "specialsauce"
-                            |   }
-                            |}
-                        """.trimMargin().lines())
+                        Files.write(
+                            configurationFilePath,
+                            """
+                                |{
+                                |   "auths": {},
+                                |   "credHelpers": {
+                                |       "someregistry.com": "specialsauce"
+                                |   }
+                                |}
+                            """.trimMargin().lines()
+                        )
                     }
 
                     on("getting credentials for a registry") {
@@ -162,15 +174,18 @@ object DockerRegistryCredentialsConfigurationFileSpec : Spek({
             given("and it has a credential helper configured for another registry") {
                 given("and it has a credential store configured") {
                     beforeEachTest {
-                        Files.write(configurationFilePath, """
-                            |{
-                            |   "auths": {},
-                            |   "credHelpers": {
-                            |       "someotherregistry.com": "specialsauce"
-                            |   },
-                            |   "credsStore": "awesomesauce"
-                            |}
-                        """.trimMargin().lines())
+                        Files.write(
+                            configurationFilePath,
+                            """
+                                |{
+                                |   "auths": {},
+                                |   "credHelpers": {
+                                |       "someotherregistry.com": "specialsauce"
+                                |   },
+                                |   "credsStore": "awesomesauce"
+                                |}
+                            """.trimMargin().lines()
+                        )
                     }
 
                     on("getting credentials for a registry") {
@@ -184,14 +199,17 @@ object DockerRegistryCredentialsConfigurationFileSpec : Spek({
 
                 given("and it does not have a credential store configured") {
                     beforeEachTest {
-                        Files.write(configurationFilePath, """
-                            |{
-                            |   "auths": {},
-                            |   "credHelpers": {
-                            |       "someotherregistry.com": "specialsauce"
-                            |   }
-                            |}
-                        """.trimMargin().lines())
+                        Files.write(
+                            configurationFilePath,
+                            """
+                                |{
+                                |   "auths": {},
+                                |   "credHelpers": {
+                                |       "someotherregistry.com": "specialsauce"
+                                |   }
+                                |}
+                            """.trimMargin().lines()
+                        )
                     }
 
                     on("getting credentials for the registry") {
@@ -209,16 +227,19 @@ object DockerRegistryCredentialsConfigurationFileSpec : Spek({
             given("and it has no credential helpers configured") {
                 given("and it has a credential store configured") {
                     beforeEachTest {
-                        Files.write(configurationFilePath, """
-                            |{
-                            |   "auths": {
-                            |       "someregistry.com": {
-                            |           "auth": "somecreds"
-                            |       }
-                            |   },
-                            |   "credsStore": "awesomesauce"
-                            |}
-                        """.trimMargin().lines())
+                        Files.write(
+                            configurationFilePath,
+                            """
+                                |{
+                                |   "auths": {
+                                |       "someregistry.com": {
+                                |           "auth": "somecreds"
+                                |       }
+                                |   },
+                                |   "credsStore": "awesomesauce"
+                                |}
+                            """.trimMargin().lines()
+                        )
                     }
 
                     on("getting credentials for a registry") {
@@ -232,17 +253,20 @@ object DockerRegistryCredentialsConfigurationFileSpec : Spek({
 
                 given("and it does not have a credential store configured") {
                     beforeEachTest {
-                        Files.write(configurationFilePath, """
-                            |{
-                            |   "auths": {
-                            |       "someregistry.com": {
-                            |           "auth": "somecreds"
-                            |       },
-                            |       "someregistrywithnoauth.com": {
-                            |       }
-                            |   }
-                            |}
-                        """.trimMargin().lines())
+                        Files.write(
+                            configurationFilePath,
+                            """
+                                |{
+                                |   "auths": {
+                                |       "someregistry.com": {
+                                |           "auth": "somecreds"
+                                |       },
+                                |       "someregistrywithnoauth.com": {
+                                |       }
+                                |   }
+                                |}
+                            """.trimMargin().lines()
+                        )
                     }
 
                     on("getting credentials for a registry with credentials specified") {
@@ -274,19 +298,22 @@ object DockerRegistryCredentialsConfigurationFileSpec : Spek({
             given("and it has a credential helper configured for the registry") {
                 given("and it has a credential store configured") {
                     beforeEachTest {
-                        Files.write(configurationFilePath, """
-                            |{
-                            |   "auths": {
-                            |       "someregistry.com": {
-                            |           "auth": "somecreds"
-                            |       }
-                            |   },
-                            |   "credHelpers": {
-                            |       "someregistry.com": "specialsauce"
-                            |   },
-                            |   "credsStore": "awesomesauce"
-                            |}
-                        """.trimMargin().lines())
+                        Files.write(
+                            configurationFilePath,
+                            """
+                                |{
+                                |   "auths": {
+                                |       "someregistry.com": {
+                                |           "auth": "somecreds"
+                                |       }
+                                |   },
+                                |   "credHelpers": {
+                                |       "someregistry.com": "specialsauce"
+                                |   },
+                                |   "credsStore": "awesomesauce"
+                                |}
+                            """.trimMargin().lines()
+                        )
                     }
 
                     on("getting credentials for a registry") {
@@ -300,18 +327,21 @@ object DockerRegistryCredentialsConfigurationFileSpec : Spek({
 
                 given("and it does not have a credential store configured") {
                     beforeEachTest {
-                        Files.write(configurationFilePath, """
-                            |{
-                            |   "auths": {
-                            |       "someregistry.com": {
-                            |           "auth": "somecreds"
-                            |       }
-                            |   },
-                            |   "credHelpers": {
-                            |       "someregistry.com": "specialsauce"
-                            |   }
-                            |}
-                        """.trimMargin().lines())
+                        Files.write(
+                            configurationFilePath,
+                            """
+                                |{
+                                |   "auths": {
+                                |       "someregistry.com": {
+                                |           "auth": "somecreds"
+                                |       }
+                                |   },
+                                |   "credHelpers": {
+                                |       "someregistry.com": "specialsauce"
+                                |   }
+                                |}
+                            """.trimMargin().lines()
+                        )
                     }
 
                     on("getting credentials for a registry") {
@@ -327,19 +357,22 @@ object DockerRegistryCredentialsConfigurationFileSpec : Spek({
             given("and it has a credential helper configured for another registry") {
                 given("and it has a credential store configured") {
                     beforeEachTest {
-                        Files.write(configurationFilePath, """
-                            |{
-                            |   "auths": {
-                            |       "someregistry.com": {
-                            |           "auth": "somecreds"
-                            |       }
-                            |   },
-                            |   "credHelpers": {
-                            |       "someotherregistry.com": "specialsauce"
-                            |   },
-                            |   "credsStore": "awesomesauce"
-                            |}
-                        """.trimMargin().lines())
+                        Files.write(
+                            configurationFilePath,
+                            """
+                                |{
+                                |   "auths": {
+                                |       "someregistry.com": {
+                                |           "auth": "somecreds"
+                                |       }
+                                |   },
+                                |   "credHelpers": {
+                                |       "someotherregistry.com": "specialsauce"
+                                |   },
+                                |   "credsStore": "awesomesauce"
+                                |}
+                            """.trimMargin().lines()
+                        )
                     }
 
                     on("getting credentials for a registry") {
@@ -353,18 +386,21 @@ object DockerRegistryCredentialsConfigurationFileSpec : Spek({
 
                 given("and it does not have a credential store configured") {
                     beforeEachTest {
-                        Files.write(configurationFilePath, """
-                            |{
-                            |   "auths": {
-                            |       "someregistry.com": {
-                            |           "auth": "somecreds"
-                            |       }
-                            |   },
-                            |   "credHelpers": {
-                            |       "someotherregistry.com": "specialsauce"
-                            |   }
-                            |}
-                        """.trimMargin().lines())
+                        Files.write(
+                            configurationFilePath,
+                            """
+                                |{
+                                |   "auths": {
+                                |       "someregistry.com": {
+                                |           "auth": "somecreds"
+                                |       }
+                                |   },
+                                |   "credHelpers": {
+                                |       "someotherregistry.com": "specialsauce"
+                                |   }
+                                |}
+                            """.trimMargin().lines()
+                        )
                     }
 
                     on("getting credentials for the registry") {

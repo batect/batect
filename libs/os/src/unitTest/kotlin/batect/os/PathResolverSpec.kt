@@ -21,11 +21,11 @@ import batect.testutils.given
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.assertion.assertThat
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.Properties
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
 
 object PathResolverSpec : Spek({
     describe("a path resolver") {
@@ -165,14 +165,17 @@ object PathResolverSpec : Spek({
             val path = "somefile.txt"
 
             it("resolves the path to the absolute path") {
-                assertThat(currentDirectoryResolver.resolve(path), equalTo(
-                    PathResolutionResult.Resolved(
-                        "somefile.txt",
-                        fileSystem.getPath("/some-work-dir/somefile.txt"),
-                        PathType.DoesNotExist,
-                        "resolved to '/some-work-dir/somefile.txt'"
+                assertThat(
+                    currentDirectoryResolver.resolve(path),
+                    equalTo(
+                        PathResolutionResult.Resolved(
+                            "somefile.txt",
+                            fileSystem.getPath("/some-work-dir/somefile.txt"),
+                            PathType.DoesNotExist,
+                            "resolved to '/some-work-dir/somefile.txt'"
+                        )
                     )
-                ))
+                )
             }
         }
     }

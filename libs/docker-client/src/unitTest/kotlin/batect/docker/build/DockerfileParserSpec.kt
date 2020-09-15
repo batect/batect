@@ -28,9 +28,9 @@ import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.throws
-import java.nio.file.Files
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.nio.file.Files
 
 object DockerfileParserSpec : Spek({
     describe("a Dockerfile parser") {
@@ -97,11 +97,14 @@ object DockerfileParserSpec : Spek({
 
         given("a Dockerfile with some comments before the FROM instruction") {
             beforeEachTest {
-                Files.write(path, listOf(
-                    "# A comment",
-                    "# Another",
-                    "FROM some-image"
-                ))
+                Files.write(
+                    path,
+                    listOf(
+                        "# A comment",
+                        "# Another",
+                        "FROM some-image"
+                    )
+                )
             }
 
             on("getting the base image names") {
@@ -129,10 +132,13 @@ object DockerfileParserSpec : Spek({
 
         given("a Dockerfile with multiple unnamed build stages") {
             beforeEachTest {
-                Files.write(path, listOf(
-                    "FROM the-image",
-                    "FROM the-other-image"
-                ))
+                Files.write(
+                    path,
+                    listOf(
+                        "FROM the-image",
+                        "FROM the-other-image"
+                    )
+                )
             }
 
             on("getting the base image names") {
@@ -146,24 +152,32 @@ object DockerfileParserSpec : Spek({
 
         given("a Dockerfile with multiple named build stages") {
             beforeEachTest {
-                Files.write(path, listOf(
-                    "FROM the-image AS stage1",
-                    "FROM the-other-image AS stage2",
-                    "FROM  the-third-image AS stage3",
-                    "FROM the-fourth-image   AS stage 4"
-                ))
+                Files.write(
+                    path,
+                    listOf(
+                        "FROM the-image AS stage1",
+                        "FROM the-other-image AS stage2",
+                        "FROM  the-third-image AS stage3",
+                        "FROM the-fourth-image   AS stage 4"
+                    )
+                )
             }
 
             on("getting the base image names") {
                 val baseImage by runForEachTest { parser.extractBaseImageNames(path) }
 
                 it("returns both image names") {
-                    assertThat(baseImage, equalTo(setOf(
-                        DockerImageReference("the-image"),
-                        DockerImageReference("the-other-image"),
-                        DockerImageReference("the-third-image"),
-                        DockerImageReference("the-fourth-image")
-                    )))
+                    assertThat(
+                        baseImage,
+                        equalTo(
+                            setOf(
+                                DockerImageReference("the-image"),
+                                DockerImageReference("the-other-image"),
+                                DockerImageReference("the-third-image"),
+                                DockerImageReference("the-fourth-image")
+                            )
+                        )
+                    )
                 }
             }
         }

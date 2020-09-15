@@ -103,7 +103,8 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
 
                             it("returns the environment variables from the container and from the additional environment variables") {
                                 assertThat(
-                                    environmentVariables, equalTo(
+                                    environmentVariables,
+                                    equalTo(
                                         mapOf(
                                             "SOME_VAR" to "SOME_VALUE",
                                             "SOME_HOST_VAR" to "SOME_HOST_VALUE"
@@ -126,7 +127,8 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
 
                             it("returns the environment variables from the container and from the additional environment variables, with the additional environment variables taking precedence") {
                                 assertThat(
-                                    environmentVariables, equalTo(
+                                    environmentVariables,
+                                    equalTo(
                                         mapOf(
                                             "SOME_HOST_VAR" to "SOME_HOST_VALUE"
                                         )
@@ -160,10 +162,15 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
                     val environmentVariables by createForEachTest { provider.environmentVariablesFor(container, config, terminalType) }
 
                     it("returns the environment variables from the container and the TERM environment variable from the host") {
-                        assertThat(environmentVariables, equalTo(mapOf(
-                            "SOME_VAR" to "SOME_VALUE",
-                            "TERM" to "some-term"
-                        )))
+                        assertThat(
+                            environmentVariables,
+                            equalTo(
+                                mapOf(
+                                    "SOME_VAR" to "SOME_VALUE",
+                                    "TERM" to "some-term"
+                                )
+                            )
+                        )
                     }
                 }
             }
@@ -185,10 +192,14 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
                     val environmentVariables by createForEachTest { provider.environmentVariablesFor(container, config, terminalType) }
 
                     it("returns the environment variables from the container and the TERM environment variable from the container") {
-                        assertThat(environmentVariables, equalTo(mapOf(
-                            "SOME_VAR" to "SOME_VALUE",
-                            "TERM" to "some-other-term"
-                        ))
+                        assertThat(
+                            environmentVariables,
+                            equalTo(
+                                mapOf(
+                                    "SOME_VAR" to "SOME_VALUE",
+                                    "TERM" to "some-other-term"
+                                )
+                            )
                         )
                     }
                 }
@@ -210,10 +221,14 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
                     val environmentVariables by createForEachTest { provider.environmentVariablesFor(container, config, terminalType) }
 
                     it("returns the environment variables from the container and the TERM environment variable from the additional environment variables") {
-                        assertThat(environmentVariables, equalTo(mapOf(
-                            "SOME_VAR" to "SOME_VALUE",
-                            "TERM" to "some-additional-term"
-                        ))
+                        assertThat(
+                            environmentVariables,
+                            equalTo(
+                                mapOf(
+                                    "SOME_VAR" to "SOME_VALUE",
+                                    "TERM" to "some-additional-term"
+                                )
+                            )
                         )
                     }
                 }
@@ -236,10 +251,15 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
                     val environmentVariables by createForEachTest { provider.environmentVariablesFor(container, config, terminalType) }
 
                     it("returns the environment variables from the container and the TERM environment variable from the additional environment variables") {
-                        assertThat(environmentVariables, equalTo(mapOf(
-                            "SOME_VAR" to "SOME_VALUE",
-                            "TERM" to "some-additional-term"
-                        )))
+                        assertThat(
+                            environmentVariables,
+                            equalTo(
+                                mapOf(
+                                    "SOME_VAR" to "SOME_VALUE",
+                                    "TERM" to "some-additional-term"
+                                )
+                            )
+                        )
                     }
                 }
             }
@@ -272,9 +292,14 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
                         val environmentVariables by createForEachTest { provider.environmentVariablesFor(container, config, terminalType) }
 
                         it("returns the value of the reference") {
-                            assertThat(environmentVariables, equalTo(mapOf(
-                                "SOME_VAR" to "SOME_VALID_VALUE"
-                            )))
+                            assertThat(
+                                environmentVariables,
+                                equalTo(
+                                    mapOf(
+                                        "SOME_VAR" to "SOME_VALID_VALUE"
+                                    )
+                                )
+                            )
                         }
                     }
                 }
@@ -290,7 +315,8 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
                         val config = configWithAdditionalEnvironmentVariables(additionalEnvironmentVariables)
 
                         it("throws an appropriate exception") {
-                            assertThat({ provider.environmentVariablesFor(container, config, terminalType) },
+                            assertThat(
+                                { provider.environmentVariablesFor(container, config, terminalType) },
                                 throws<ContainerCreationFailedException>(withMessage("The value for the environment variable 'SOME_VAR' cannot be evaluated: Couldn't evaluate expression."))
                             )
                         }
@@ -312,9 +338,14 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
                         val environmentVariables by createForEachTest { provider.environmentVariablesFor(container, config, terminalType) }
 
                         it("returns the overridden value") {
-                            assertThat(environmentVariables, equalTo(mapOf(
-                                "SOME_VAR" to "SOME_VALID_VALUE"
-                            )))
+                            assertThat(
+                                environmentVariables,
+                                equalTo(
+                                    mapOf(
+                                        "SOME_VAR" to "SOME_VALID_VALUE"
+                                    )
+                                )
+                            )
                         }
                     }
                 }
@@ -331,7 +362,8 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
                         val config = configWithAdditionalEnvironmentVariables(additionalEnvironmentVariables)
 
                         it("throws an appropriate exception") {
-                            assertThat({ provider.environmentVariablesFor(container, config, terminalType) },
+                            assertThat(
+                                { provider.environmentVariablesFor(container, config, terminalType) },
                                 throws<ContainerCreationFailedException>(withMessage("The value for the environment variable 'SOME_VAR' cannot be evaluated: Couldn't evaluate expression."))
                             )
                         }
@@ -352,9 +384,14 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
                         val environmentVariables by createForEachTest { provider.environmentVariablesFor(container, config, terminalType) }
 
                         it("returns the overridden value") {
-                            assertThat(environmentVariables, equalTo(mapOf(
-                                "SOME_VAR" to "SOME_VALID_VALUE"
-                            )))
+                            assertThat(
+                                environmentVariables,
+                                equalTo(
+                                    mapOf(
+                                        "SOME_VAR" to "SOME_VALID_VALUE"
+                                    )
+                                )
+                            )
                         }
                     }
                 }
@@ -388,10 +425,14 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
                         val environmentVariables by createForEachTest { provider.environmentVariablesFor(container, config, terminalType) }
 
                         it("returns the proxy environment variables from the host") {
-                            assertThat(environmentVariables, equalTo(mapOf(
-                                "HTTP_PROXY" to "http://some-proxy",
-                                "NO_PROXY" to "dont-proxy-this"
-                            ))
+                            assertThat(
+                                environmentVariables,
+                                equalTo(
+                                    mapOf(
+                                        "HTTP_PROXY" to "http://some-proxy",
+                                        "NO_PROXY" to "dont-proxy-this"
+                                    )
+                                )
                             )
                         }
                     }
@@ -413,10 +454,14 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
                         val environmentVariables by createForEachTest { provider.environmentVariablesFor(container, config, terminalType) }
 
                         it("returns the proxy environment variables from the host, with overrides from the container") {
-                            assertThat(environmentVariables, equalTo(mapOf(
-                                "HTTP_PROXY" to "http://some-other-proxy",
-                                "NO_PROXY" to "dont-proxy-this"
-                            ))
+                            assertThat(
+                                environmentVariables,
+                                equalTo(
+                                    mapOf(
+                                        "HTTP_PROXY" to "http://some-other-proxy",
+                                        "NO_PROXY" to "dont-proxy-this"
+                                    )
+                                )
                             )
                         }
                     }
@@ -440,10 +485,14 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
                         val environmentVariables by createForEachTest { provider.environmentVariablesFor(container, config, terminalType) }
 
                         it("returns the proxy environment variables from the host, with overrides from the container and additional environment variables") {
-                            assertThat(environmentVariables, equalTo(mapOf(
-                                "HTTP_PROXY" to "http://some-additional-proxy",
-                                "NO_PROXY" to "dont-proxy-this"
-                            ))
+                            assertThat(
+                                environmentVariables,
+                                equalTo(
+                                    mapOf(
+                                        "HTTP_PROXY" to "http://some-additional-proxy",
+                                        "NO_PROXY" to "dont-proxy-this"
+                                    )
+                                )
                             )
                         }
                     }

@@ -41,9 +41,9 @@ import com.natpryce.hamkrest.throws
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
-import java.nio.file.Files
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.nio.file.Files
 
 object VolumeMountResolverSpec : Spek({
     describe("a volume mount resolver") {
@@ -84,7 +84,8 @@ object VolumeMountResolverSpec : Spek({
 
                 it("resolves the local mount paths, preserving the container path and options") {
                     assertThat(
-                        resolver.resolve(mounts), equalTo(
+                        resolver.resolve(mounts),
+                        equalTo(
                             setOf(
                                 DockerVolumeMount(DockerVolumeMountSource.LocalPath("/resolved/file"), "/container-1"),
                                 DockerVolumeMount(DockerVolumeMountSource.LocalPath("/resolved/directory"), "/container-2", "options-2"),
@@ -105,7 +106,8 @@ object VolumeMountResolverSpec : Spek({
 
                 it("does not attempt to resolve the path and mounts it into the container") {
                     assertThat(
-                        resolver.resolve(mounts), equalTo(
+                        resolver.resolve(mounts),
+                        equalTo(
                             setOf(
                                 DockerVolumeMount(DockerVolumeMountSource.LocalPath("/var/run/docker.sock"), "/container-1", "some-options")
                             )
@@ -176,7 +178,8 @@ object VolumeMountResolverSpec : Spek({
 
                     it("resolves the mount to a cache volume, preserving the container path and options") {
                         assertThat(
-                            resolver.resolve(mounts), equalTo(
+                            resolver.resolve(mounts),
+                            equalTo(
                                 setOf(
                                     DockerVolumeMount(DockerVolumeMountSource.Volume("batect-cache-abc123-cache-1"), "/container-1"),
                                     DockerVolumeMount(DockerVolumeMountSource.Volume("batect-cache-abc123-cache-2"), "/container-2", "options-2")
@@ -200,7 +203,8 @@ object VolumeMountResolverSpec : Spek({
 
                     it("resolves the mount to a cache directory, preserving the container path and options") {
                         assertThat(
-                            resolvedMounts, equalTo(
+                            resolvedMounts,
+                            equalTo(
                                 setOf(
                                     DockerVolumeMount(DockerVolumeMountSource.LocalPath("/caches/cache-1"), "/container-1"),
                                     DockerVolumeMount(DockerVolumeMountSource.LocalPath("/caches/cache-2"), "/container-2", "options-2")

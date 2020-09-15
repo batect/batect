@@ -21,10 +21,10 @@
 package batect.os
 
 import batect.logging.PathSerializer
-import java.nio.file.Path
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseSerializers
+import java.nio.file.Path
 
 @Serializable
 @SerialName("default")

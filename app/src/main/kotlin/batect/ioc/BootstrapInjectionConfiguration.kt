@@ -28,10 +28,6 @@ import batect.os.unix.UnixNativeMethods
 import batect.os.windows.WindowsNativeMethods
 import batect.telemetry.TelemetrySessionBuilder
 import com.hypirion.io.RevivableInputStream
-import java.io.InputStream
-import java.io.PrintStream
-import java.nio.file.FileSystem
-import java.nio.file.FileSystems
 import jnr.ffi.Platform
 import jnr.posix.POSIX
 import jnr.posix.POSIXFactory
@@ -40,6 +36,10 @@ import org.kodein.di.DirectDI
 import org.kodein.di.bind
 import org.kodein.di.instance
 import org.kodein.di.singleton
+import java.io.InputStream
+import java.io.PrintStream
+import java.nio.file.FileSystem
+import java.nio.file.FileSystems
 
 fun createKodeinConfiguration(outputStream: PrintStream, errorStream: PrintStream, inputStream: InputStream): DirectDI = DI.direct {
     bind<FileSystem>() with singleton { FileSystems.getDefault() }

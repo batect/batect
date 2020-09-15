@@ -24,9 +24,9 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockitokotlin2.inOrder
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
-import java.io.ByteArrayInputStream
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.io.ByteArrayInputStream
 
 object PromptSpec : Spek({
     describe("a prompt") {

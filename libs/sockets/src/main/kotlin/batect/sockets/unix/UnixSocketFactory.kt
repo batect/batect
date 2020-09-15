@@ -16,15 +16,15 @@
 
 package batect.sockets.unix
 
+import jnr.unixsocket.UnixSocket
+import jnr.unixsocket.UnixSocketAddress
+import jnr.unixsocket.UnixSocketChannel
 import java.io.IOException
 import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.net.Socket
 import java.net.SocketAddress
 import javax.net.SocketFactory
-import jnr.unixsocket.UnixSocket
-import jnr.unixsocket.UnixSocketAddress
-import jnr.unixsocket.UnixSocketChannel
 
 // Unix sockets implementation inspired by
 // https://github.com/gesellix/okhttp/blob/master/samples/simple-client/src/main/java/okhttp3/sample/OkDocker.java and

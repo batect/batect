@@ -69,9 +69,11 @@ object RunTaskCommandSpec : Spek({
             val backgroundTaskManager by createForEachTest { mock<BackgroundTaskManager>() }
 
             val expectedTaskExitCode = 123
-            val sessionRunner by createForEachTest { mock<SessionRunner> {
-                on { runTaskAndPrerequisites(taskName) } doReturn expectedTaskExitCode
-            } }
+            val sessionRunner by createForEachTest {
+                mock<SessionRunner> {
+                    on { runTaskAndPrerequisites(taskName) } doReturn expectedTaskExitCode
+                }
+            }
 
             val sessionKodeinFactory by createForEachTest {
                 mock<SessionKodeinFactory> {
@@ -82,9 +84,11 @@ object RunTaskCommandSpec : Spek({
             }
 
             val dockerConnectivity by createForEachTest {
-                fakeDockerConnectivity(DI.direct {
-                    bind<SessionKodeinFactory>() with instance(sessionKodeinFactory)
-                })
+                fakeDockerConnectivity(
+                    DI.direct {
+                        bind<SessionKodeinFactory>() with instance(sessionKodeinFactory)
+                    }
+                )
             }
 
             given("quiet output mode is not being used") {

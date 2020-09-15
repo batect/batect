@@ -57,13 +57,13 @@ import com.nhaarman.mockitokotlin2.inOrder
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
-import java.io.ByteArrayOutputStream
-import java.io.PrintStream
 import org.kodein.di.DI
 import org.kodein.di.bind
 import org.kodein.di.instance
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.io.ByteArrayOutputStream
+import java.io.PrintStream
 
 object ApplicationSpec : Spek({
     describe("an application") {
@@ -207,11 +207,14 @@ object ApplicationSpec : Spek({
                         }
 
                         it("reports the exception in telemetry") {
-                            verify(telemetrySessionBuilder).addEvent(CommonEvents.UnhandledException, mapOf(
-                                CommonAttributes.Exception to AttributeValue(exception),
-                                CommonAttributes.ExceptionCaughtAt to AttributeValue("batect.Application.runCommand"),
-                                CommonAttributes.IsUserFacingException to AttributeValue(true)
-                            ))
+                            verify(telemetrySessionBuilder).addEvent(
+                                CommonEvents.UnhandledException,
+                                mapOf(
+                                    CommonAttributes.Exception to AttributeValue(exception),
+                                    CommonAttributes.ExceptionCaughtAt to AttributeValue("batect.Application.runCommand"),
+                                    CommonAttributes.IsUserFacingException to AttributeValue(true)
+                                )
+                            )
                         }
 
                         it("finishes the telemetry session after printing the exception message") {

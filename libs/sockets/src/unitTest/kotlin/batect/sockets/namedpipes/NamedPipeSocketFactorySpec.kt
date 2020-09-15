@@ -25,15 +25,15 @@ import batect.testutils.runForEachTest
 import batect.testutils.withMessage
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.throws
+import jnr.ffi.Platform
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 import java.io.IOException
 import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.net.SocketTimeoutException
 import java.util.UUID
 import java.util.concurrent.TimeUnit
-import jnr.ffi.Platform
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
 
 object NamedPipeSocketFactorySpec : Spek({
     onlyOn(setOf(Platform.OS.WINDOWS)) {
@@ -178,14 +178,17 @@ object NamedPipeSocketFactorySpec : Spek({
                 }
 
                 it("throws an appropriate exception when using non-primitive values") {
-                    assertThat({
-                        factory.createSocket(
-                            InetAddress.getLocalHost(),
-                            123,
-                            InetAddress.getLocalHost(),
-                            123
-                        )
-                    }, throws<UnsupportedOperationException>())
+                    assertThat(
+                        {
+                            factory.createSocket(
+                                InetAddress.getLocalHost(),
+                                123,
+                                InetAddress.getLocalHost(),
+                                123
+                            )
+                        },
+                        throws<UnsupportedOperationException>()
+                    )
                 }
             }
         }

@@ -57,8 +57,10 @@ class UnixConsoleManager(
     }
 
     private fun startRawMode() {
-        val command = listOf(applicationResolver.stty, "-ignbrk", "-brkint", "-parmrk", "-istrip", "-inlcr", "-igncr", "-icrnl", "-ixon", "-opost", "-echo", "-echonl",
-            "-icanon", "-isig", "-iexten", "-parenb", "cs8", "min", "1", "time", "0")
+        val command = listOf(
+            applicationResolver.stty, "-ignbrk", "-brkint", "-parmrk", "-istrip", "-inlcr", "-igncr", "-icrnl", "-ixon", "-opost", "-echo", "-echonl",
+            "-icanon", "-isig", "-iexten", "-parenb", "cs8", "min", "1", "time", "0"
+        )
 
         val output = processRunner.runWithStdinAttached(command)
 

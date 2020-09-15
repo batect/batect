@@ -19,11 +19,11 @@ package batect.docker
 import batect.testutils.given
 import batect.testutils.on
 import com.natpryce.hamkrest.assertion.assertThat
-import java.time.Duration
 import kotlinx.serialization.json.Json
 import org.araqnid.hamkrest.json.equivalentTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.time.Duration
 
 object DockerContainerCreationRequestSpec : Spek({
     describe("a Docker container creation request") {
@@ -61,84 +61,91 @@ object DockerContainerCreationRequestSpec : Spek({
                 val json = request.toJson()
 
                 it("returns the request in the format expected by the Docker API") {
-                    assertThat(json, equivalentTo("""{
-                        |   "AttachStdin": false,
-                        |   "AttachStdout": true,
-                        |   "AttachStderr": true,
-                        |   "Tty": true,
-                        |   "OpenStdin": false,
-                        |   "StdinOnce": false,
-                        |   "Image": "the-image",
-                        |   "Cmd": ["do-the-thing"],
-                        |   "Entrypoint": ["sh"],
-                        |   "Hostname": "the-hostname",
-                        |   "WorkingDir": "/work-dir",
-                        |   "User": "789:222",
-                        |   "Env": [
-                        |       "SOME_VAR=some value"
-                        |   ],
-                        |   "ExposedPorts": {
-                        |       "456/udp": {},
-                        |       "2000/my-protocol": {},
-                        |       "2001/my-protocol": {}
-                        |   },
-                        |   "HostConfig": {
-                        |       "NetworkMode": "the-network",
-                        |       "Binds": [
-                        |           "/local:/container-1:ro",
-                        |           "my-volume:/container-2:ro"
-                        |       ],
-                        |       "Devices": [
-                        |           {
-                        |               "PathOnHost": "/dev/local",
-                        |               "PathInContainer": "/dev/container",
-                        |               "CgroupPermissions": "rw"
-                        |           }
-                        |       ],
-                        |       "PortBindings": {
-                        |           "456/udp": [
-                        |               {
-                        |                   "HostIp": "",
-                        |                   "HostPort": "123"
-                        |               }
-                        |           ],
-                        |           "2000/my-protocol": [
-                        |               {
-                        |                   "HostIp": "",
-                        |                   "HostPort": "1000"
-                        |               }
-                        |           ],
-                        |           "2001/my-protocol": [
-                        |               {
-                        |                   "HostIp": "",
-                        |                   "HostPort": "1001"
-                        |               }
-                        |           ]
-                        |       },
-                        |       "Privileged": true,
-                        |       "Init": true,
-                        |       "CapAdd": ["NET_ADMIN", "KILL"],
-                        |       "CapDrop": ["AUDIT_READ", "CHOWN"],
-                        |       "LogConfig": { "Type": "some-log-driver", "Config": { "option-1": "value-1" } },
-                        |       "ExtraHosts": [ "does.not.exist.com:1.2.3.4", "other.com:5.6.7.8" ]
-                        |   },
-                        |   "Healthcheck": {
-                        |       "Test": ["CMD-SHELL", "exit 0"],
-                        |       "Interval": 555,
-                        |       "Retries": 12,
-                        |       "StartPeriod": 333
-                        |   },
-                        |   "NetworkingConfig": {
-                        |       "EndpointsConfig": {
-                        |           "the-network": {
-                        |               "Aliases": [
-                        |                   "the-first-network-alias",
-                        |                   "the-second-network-alias"
-                        |               ]
-                        |           }
-                        |       }
-                        |   }
-                        |}""".trimMargin()))
+                    assertThat(
+                        json,
+                        equivalentTo(
+                            """
+                            |{
+                            |   "AttachStdin": false,
+                            |   "AttachStdout": true,
+                            |   "AttachStderr": true,
+                            |   "Tty": true,
+                            |   "OpenStdin": false,
+                            |   "StdinOnce": false,
+                            |   "Image": "the-image",
+                            |   "Cmd": ["do-the-thing"],
+                            |   "Entrypoint": ["sh"],
+                            |   "Hostname": "the-hostname",
+                            |   "WorkingDir": "/work-dir",
+                            |   "User": "789:222",
+                            |   "Env": [
+                            |       "SOME_VAR=some value"
+                            |   ],
+                            |   "ExposedPorts": {
+                            |       "456/udp": {},
+                            |       "2000/my-protocol": {},
+                            |       "2001/my-protocol": {}
+                            |   },
+                            |   "HostConfig": {
+                            |       "NetworkMode": "the-network",
+                            |       "Binds": [
+                            |           "/local:/container-1:ro",
+                            |           "my-volume:/container-2:ro"
+                            |       ],
+                            |       "Devices": [
+                            |           {
+                            |               "PathOnHost": "/dev/local",
+                            |               "PathInContainer": "/dev/container",
+                            |               "CgroupPermissions": "rw"
+                            |           }
+                            |       ],
+                            |       "PortBindings": {
+                            |           "456/udp": [
+                            |               {
+                            |                   "HostIp": "",
+                            |                   "HostPort": "123"
+                            |               }
+                            |           ],
+                            |           "2000/my-protocol": [
+                            |               {
+                            |                   "HostIp": "",
+                            |                   "HostPort": "1000"
+                            |               }
+                            |           ],
+                            |           "2001/my-protocol": [
+                            |               {
+                            |                   "HostIp": "",
+                            |                   "HostPort": "1001"
+                            |               }
+                            |           ]
+                            |       },
+                            |       "Privileged": true,
+                            |       "Init": true,
+                            |       "CapAdd": ["NET_ADMIN", "KILL"],
+                            |       "CapDrop": ["AUDIT_READ", "CHOWN"],
+                            |       "LogConfig": { "Type": "some-log-driver", "Config": { "option-1": "value-1" } },
+                            |       "ExtraHosts": [ "does.not.exist.com:1.2.3.4", "other.com:5.6.7.8" ]
+                            |   },
+                            |   "Healthcheck": {
+                            |       "Test": ["CMD-SHELL", "exit 0"],
+                            |       "Interval": 555,
+                            |       "Retries": 12,
+                            |       "StartPeriod": 333
+                            |   },
+                            |   "NetworkingConfig": {
+                            |       "EndpointsConfig": {
+                            |           "the-network": {
+                            |               "Aliases": [
+                            |                   "the-first-network-alias",
+                            |                   "the-second-network-alias"
+                            |               ]
+                            |           }
+                            |       }
+                            |   }
+                            |}
+                            """.trimMargin()
+                        )
+                    )
                 }
             }
 
@@ -146,71 +153,76 @@ object DockerContainerCreationRequestSpec : Spek({
                 val json = Json.Default.encodeToString(DockerContainerCreationRequest.serializer(), request)
 
                 it("returns a JSON representation of the Kotlin object") {
-                    assertThat(json, equivalentTo("""
-                        |{
-                        |  "name": "the-container-name",
-                        |  "image": { "id": "the-image" },
-                        |  "network": { "id": "the-network" },
-                        |  "command": ["do-the-thing"],
-                        |  "entrypoint": ["sh"],
-                        |  "hostname": "the-hostname",
-                        |  "networkAliases": [
-                        |    "the-first-network-alias",
-                        |    "the-second-network-alias"
-                        |  ],
-                        |  "extraHosts": { "does.not.exist.com": "1.2.3.4", "other.com": "5.6.7.8" },
-                        |  "environmentVariables": {
-                        |    "SOME_VAR": "some value"
-                        |  },
-                        |  "workingDirectory": "/work-dir",
-                        |  "volumeMounts": [
-                        |    {
-                        |      "source": {
-                        |        "type": "batect.docker.DockerVolumeMountSource.LocalPath",
-                        |        "formatted": "/local",
-                        |        "path": "/local"
-                        |      },
-                        |      "containerPath": "/container-1",
-                        |      "options": "ro"
-                        |    },
-                        |    {
-                        |      "source": {
-                        |        "type": "batect.docker.DockerVolumeMountSource.Volume",
-                        |        "formatted": "my-volume",
-                        |        "name": "my-volume"
-                        |      },
-                        |      "containerPath": "/container-2",
-                        |      "options": "ro"
-                        |    }
-                        |  ],
-                        |  "deviceMounts": [
-                        |    {
-                        |      "localPath": "/dev/local",
-                        |      "containerPath": "/dev/container",
-                        |      "options": "rw"
-                        |    }
-                        |  ],
-                        |  "portMappings": [
-                        |    { "local": { "from": 123, "to": 123 }, "container": { "from": 456, "to": 456 }, "protocol": "udp" },
-                        |    { "local": { "from": 1000, "to": 1001 }, "container": { "from": 2000, "to": 2001 }, "protocol": "my-protocol" }
-                        |  ],
-                        |  "healthCheckConfig": {
-                        |    "interval": "555ns",
-                        |    "retries": 12,
-                        |    "startPeriod": "333ns",
-                        |    "command": "exit 0"
-                        |  },
-                        |  "userAndGroup": { "userId": 789, "groupId": 222 },
-                        |  "privileged": true,
-                        |  "init": true,
-                        |  "capabilitiesToAdd": ["NET_ADMIN", "KILL"],
-                        |  "capabilitiesToDrop": ["AUDIT_READ", "CHOWN"],
-                        |  "useTTY": true,
-                        |  "attachStdin": false,
-                        |  "logDriver": "some-log-driver",
-                        |  "logOptions": { "option-1": "value-1" }
-                        |}
-                    """.trimMargin()))
+                    assertThat(
+                        json,
+                        equivalentTo(
+                            """
+                            |{
+                            |  "name": "the-container-name",
+                            |  "image": { "id": "the-image" },
+                            |  "network": { "id": "the-network" },
+                            |  "command": ["do-the-thing"],
+                            |  "entrypoint": ["sh"],
+                            |  "hostname": "the-hostname",
+                            |  "networkAliases": [
+                            |    "the-first-network-alias",
+                            |    "the-second-network-alias"
+                            |  ],
+                            |  "extraHosts": { "does.not.exist.com": "1.2.3.4", "other.com": "5.6.7.8" },
+                            |  "environmentVariables": {
+                            |    "SOME_VAR": "some value"
+                            |  },
+                            |  "workingDirectory": "/work-dir",
+                            |  "volumeMounts": [
+                            |    {
+                            |      "source": {
+                            |        "type": "batect.docker.DockerVolumeMountSource.LocalPath",
+                            |        "formatted": "/local",
+                            |        "path": "/local"
+                            |      },
+                            |      "containerPath": "/container-1",
+                            |      "options": "ro"
+                            |    },
+                            |    {
+                            |      "source": {
+                            |        "type": "batect.docker.DockerVolumeMountSource.Volume",
+                            |        "formatted": "my-volume",
+                            |        "name": "my-volume"
+                            |      },
+                            |      "containerPath": "/container-2",
+                            |      "options": "ro"
+                            |    }
+                            |  ],
+                            |  "deviceMounts": [
+                            |    {
+                            |      "localPath": "/dev/local",
+                            |      "containerPath": "/dev/container",
+                            |      "options": "rw"
+                            |    }
+                            |  ],
+                            |  "portMappings": [
+                            |    { "local": { "from": 123, "to": 123 }, "container": { "from": 456, "to": 456 }, "protocol": "udp" },
+                            |    { "local": { "from": 1000, "to": 1001 }, "container": { "from": 2000, "to": 2001 }, "protocol": "my-protocol" }
+                            |  ],
+                            |  "healthCheckConfig": {
+                            |    "interval": "555ns",
+                            |    "retries": 12,
+                            |    "startPeriod": "333ns",
+                            |    "command": "exit 0"
+                            |  },
+                            |  "userAndGroup": { "userId": 789, "groupId": 222 },
+                            |  "privileged": true,
+                            |  "init": true,
+                            |  "capabilitiesToAdd": ["NET_ADMIN", "KILL"],
+                            |  "capabilitiesToDrop": ["AUDIT_READ", "CHOWN"],
+                            |  "useTTY": true,
+                            |  "attachStdin": false,
+                            |  "logDriver": "some-log-driver",
+                            |  "logOptions": { "option-1": "value-1" }
+                            |}
+                            """.trimMargin()
+                        )
+                    )
                 }
             }
         }
@@ -246,45 +258,51 @@ object DockerContainerCreationRequestSpec : Spek({
                 val json = request.toJson()
 
                 it("returns the request in the format expected by the Docker API") {
-                    assertThat(json, equivalentTo("""{
-                        |   "AttachStdin": false,
-                        |   "AttachStdout": true,
-                        |   "AttachStderr": true,
-                        |   "Tty": false,
-                        |   "OpenStdin": false,
-                        |   "StdinOnce": false,
-                        |   "Image": "the-image",
-                        |   "Hostname": "the-hostname",
-                        |   "Env": [],
-                        |   "ExposedPorts": {},
-                        |   "HostConfig": {
-                        |       "NetworkMode": "the-network",
-                        |       "Binds": [],
-                        |       "Devices": [],
-                        |       "PortBindings": {},
-                        |       "Privileged": false,
-                        |       "Init": false,
-                        |       "CapAdd": [],
-                        |       "CapDrop": [],
-                        |       "LogConfig": { "Type": "json-file", "Config": {} },
-                        |       "ExtraHosts": []
-                        |   },
-                        |   "Healthcheck": {
-                        |       "Test": [],
-                        |       "Interval": 0,
-                        |       "Retries": 0,
-                        |       "StartPeriod": 0
-                        |   },
-                        |   "NetworkingConfig": {
-                        |       "EndpointsConfig": {
-                        |           "the-network": {
-                        |               "Aliases": [
-                        |                   "the-network-alias"
-                        |               ]
-                        |           }
-                        |       }
-                        |   }
-                        |}""".trimMargin()))
+                    assertThat(
+                        json,
+                        equivalentTo(
+                            """{
+                            |   "AttachStdin": false,
+                            |   "AttachStdout": true,
+                            |   "AttachStderr": true,
+                            |   "Tty": false,
+                            |   "OpenStdin": false,
+                            |   "StdinOnce": false,
+                            |   "Image": "the-image",
+                            |   "Hostname": "the-hostname",
+                            |   "Env": [],
+                            |   "ExposedPorts": {},
+                            |   "HostConfig": {
+                            |       "NetworkMode": "the-network",
+                            |       "Binds": [],
+                            |       "Devices": [],
+                            |       "PortBindings": {},
+                            |       "Privileged": false,
+                            |       "Init": false,
+                            |       "CapAdd": [],
+                            |       "CapDrop": [],
+                            |       "LogConfig": { "Type": "json-file", "Config": {} },
+                            |       "ExtraHosts": []
+                            |   },
+                            |   "Healthcheck": {
+                            |       "Test": [],
+                            |       "Interval": 0,
+                            |       "Retries": 0,
+                            |       "StartPeriod": 0
+                            |   },
+                            |   "NetworkingConfig": {
+                            |       "EndpointsConfig": {
+                            |           "the-network": {
+                            |               "Aliases": [
+                            |                   "the-network-alias"
+                            |               ]
+                            |           }
+                            |       }
+                            |   }
+                            |}
+                            """.trimMargin()
+                        )
+                    )
                 }
             }
         }

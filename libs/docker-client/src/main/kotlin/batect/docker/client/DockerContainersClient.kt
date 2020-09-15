@@ -35,9 +35,9 @@ import batect.logging.Logger
 import batect.os.ConsoleManager
 import batect.os.Dimensions
 import batect.primitives.CancellationContext
-import java.time.Duration
 import okio.Sink
 import okio.Source
+import java.time.Duration
 
 class DockerContainersClient(
     private val api: ContainersAPI,

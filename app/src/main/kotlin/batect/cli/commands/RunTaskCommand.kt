@@ -24,9 +24,9 @@ import batect.execution.SessionRunner
 import batect.ioc.SessionKodeinFactory
 import batect.ui.OutputStyle
 import batect.updates.UpdateNotifier
-import java.nio.file.Path
 import org.kodein.di.DirectDI
 import org.kodein.di.instance
+import java.nio.file.Path
 
 class RunTaskCommand(
     private val configFile: Path,

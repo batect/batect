@@ -16,10 +16,10 @@
 
 package batect.config.includes
 
-import java.security.MessageDigest
 import kotlinx.serialization.Serializable
 import okio.ByteString.Companion.toByteString
 import org.bouncycastle.jce.provider.BouncyCastleProvider
+import java.security.MessageDigest
 
 @Serializable
 data class GitRepositoryReference(val remote: String, val ref: String) {

@@ -36,14 +36,19 @@ object DockerRegistryCredentialsSpec : Spek({
                 val json = credentials.toJSON().toString()
 
                 it("returns the credentials in the format expected by the Docker API") {
-                    assertThat(json, equivalentTo("""
-                        |{
-                        |   "username": "some-user",
-                        |   "password": "super-secret-password",
-                        |   "email": "",
-                        |   "serveraddress": "my-server.com"
-                        |}
-                    """.trimMargin()))
+                    assertThat(
+                        json,
+                        equivalentTo(
+                            """
+                                |{
+                                |   "username": "some-user",
+                                |   "password": "super-secret-password",
+                                |   "email": "",
+                                |   "serveraddress": "my-server.com"
+                                |}
+                            """.trimMargin()
+                        )
+                    )
                 }
             }
         }
@@ -55,11 +60,16 @@ object DockerRegistryCredentialsSpec : Spek({
                 val json = credentials.toJSON().toString()
 
                 it("returns the credentials in the format expected by the Docker API") {
-                    assertThat(json, equivalentTo("""
-                        |{
-                        |   "identitytoken": "some-token"
-                        |}
-                    """.trimMargin()))
+                    assertThat(
+                        json,
+                        equivalentTo(
+                            """
+                                |{
+                                |   "identitytoken": "some-token"
+                                |}
+                            """.trimMargin()
+                        )
+                    )
                 }
             }
         }

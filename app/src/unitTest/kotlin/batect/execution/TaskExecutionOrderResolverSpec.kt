@@ -73,7 +73,8 @@ object TaskExecutionOrderResolverSpec : Spek({
 
                 it("logs the execution order") {
                     assertThat(
-                        logSink, hasMessage(
+                        logSink,
+                        hasMessage(
                             withSeverity(Severity.Info) and
                                 withLogMessage("Resolved task execution order.") and
                                 withAdditionalData("executionOrder", listOf(task.name)) and
@@ -144,7 +145,8 @@ object TaskExecutionOrderResolverSpec : Spek({
 
                 it("logs the execution order") {
                     assertThat(
-                        logSink, hasMessage(
+                        logSink,
+                        hasMessage(
                             withSeverity(Severity.Info) and
                                 withLogMessage("Resolved task execution order.") and
                                 withAdditionalData("executionOrder", listOf(dependencyTask.name, mainTask.name)) and
@@ -368,7 +370,8 @@ object TaskExecutionOrderResolverSpec : Spek({
 
                 it("logs the execution order") {
                     assertThat(
-                        logSink, hasMessage(
+                        logSink,
+                        hasMessage(
                             withSeverity(Severity.Info) and
                                 withLogMessage("Resolved task execution order.") and
                                 withAdditionalData("executionOrder", listOf(task.name)) and
@@ -392,7 +395,8 @@ object TaskExecutionOrderResolverSpec : Spek({
 
                 it("logs the execution order") {
                     assertThat(
-                        logSink, hasMessage(
+                        logSink,
+                        hasMessage(
                             withSeverity(Severity.Info) and
                                 withLogMessage("Resolved task execution order.") and
                                 withAdditionalData("executionOrder", listOf(mainTask.name)) and

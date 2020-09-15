@@ -38,8 +38,6 @@ import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
-import java.io.FileDescriptor
-import java.nio.ByteBuffer
 import jnr.constants.platform.windows.LastError
 import jnr.ffi.Pointer
 import jnr.ffi.Runtime
@@ -50,6 +48,8 @@ import jnr.posix.WindowsLibC
 import jnr.posix.util.WindowsHelpers
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.io.FileDescriptor
+import java.nio.ByteBuffer
 
 object WindowsNativeMethodsSpec : Spek({
     describe("Windows native methods") {

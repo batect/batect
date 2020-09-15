@@ -20,8 +20,6 @@ import batect.os.Dimensions
 import batect.os.NativeMethods
 import batect.os.NoConsoleException
 import batect.os.throwWindowsNativeMethodFailed
-import java.io.FileDescriptor
-import java.nio.ByteBuffer
 import jnr.ffi.LibraryLoader
 import jnr.ffi.LibraryOption
 import jnr.ffi.Runtime
@@ -36,6 +34,8 @@ import jnr.ffi.mapper.TypeMapper
 import jnr.posix.HANDLE
 import jnr.posix.POSIX
 import jnr.posix.WindowsLibC
+import java.io.FileDescriptor
+import java.nio.ByteBuffer
 
 class WindowsNativeMethods(
     private val posix: POSIX,

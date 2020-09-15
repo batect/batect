@@ -17,10 +17,10 @@
 package batect.ioc
 
 import batect.config.Task
-import java.util.WeakHashMap
 import org.kodein.di.bindings.Scope
 import org.kodein.di.bindings.ScopeRegistry
 import org.kodein.di.bindings.StandardScopeRegistry
+import java.util.WeakHashMap
 
 object TaskScope : Scope<Task> {
     private val registries = WeakHashMap<Task, ScopeRegistry>()

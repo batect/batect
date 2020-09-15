@@ -55,16 +55,22 @@ object ContainerDependencyGraphProviderSpec : Spek({
             provider.createGraph(config, task)
 
             it("logs the details of the created dependency graph") {
-                assertThat(logSink, hasMessage(
-                    withSeverity(Severity.Info) and
-                        withLogMessage("Dependency graph for task created.") and
-                        withAdditionalData("task", task) and
-                        withAdditionalData("dependencies", mapOf(
-                            mainContainer.name to setOf(dependencyForContainer.name, dependencyForTask.name),
-                            dependencyForContainer.name to emptySet(),
-                            dependencyForTask.name to emptySet()
-                        ))
-                ))
+                assertThat(
+                    logSink,
+                    hasMessage(
+                        withSeverity(Severity.Info) and
+                            withLogMessage("Dependency graph for task created.") and
+                            withAdditionalData("task", task) and
+                            withAdditionalData(
+                                "dependencies",
+                                mapOf(
+                                    mainContainer.name to setOf(dependencyForContainer.name, dependencyForTask.name),
+                                    dependencyForContainer.name to emptySet(),
+                                    dependencyForTask.name to emptySet()
+                                )
+                            )
+                    )
+                )
             }
         }
     }

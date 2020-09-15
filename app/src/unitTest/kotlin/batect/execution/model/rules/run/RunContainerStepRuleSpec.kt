@@ -50,10 +50,17 @@ object RunContainerStepRuleSpec : Spek({
                     val result by runForEachTest { rule.evaluate(events) }
 
                     it("returns a 'run container' step") {
-                        assertThat(result, equalTo(TaskStepRuleEvaluationResult.Ready(RunContainerStep(
-                            container,
-                            dockerContainer
-                        ))))
+                        assertThat(
+                            result,
+                            equalTo(
+                                TaskStepRuleEvaluationResult.Ready(
+                                    RunContainerStep(
+                                        container,
+                                        dockerContainer
+                                    )
+                                )
+                            )
+                        )
                     }
                 }
             }
@@ -127,10 +134,17 @@ object RunContainerStepRuleSpec : Spek({
                         val result by runForEachTest { rule.evaluate(events) }
 
                         it("returns a 'run container' step") {
-                            assertThat(result, equalTo(TaskStepRuleEvaluationResult.Ready(RunContainerStep(
-                                container,
-                                dockerContainer
-                            ))))
+                            assertThat(
+                                result,
+                                equalTo(
+                                    TaskStepRuleEvaluationResult.Ready(
+                                        RunContainerStep(
+                                            container,
+                                            dockerContainer
+                                        )
+                                    )
+                                )
+                            )
                         }
                     }
                 }
@@ -155,13 +169,18 @@ object RunContainerStepRuleSpec : Spek({
             val rule = RunContainerStepRule(container, dependencies)
 
             it("returns a machine-readable representation of itself") {
-                assertThat(logRepresentationOf(rule), equivalentTo("""
-                    |{
-                    |   "type": "${rule::class.qualifiedName}",
-                    |   "container": "the-container",
-                    |   "dependencies": ["dependency-1", "dependency-2"]
-                    |}
-                """.trimMargin()))
+                assertThat(
+                    logRepresentationOf(rule),
+                    equivalentTo(
+                        """
+                        |{
+                        |   "type": "${rule::class.qualifiedName}",
+                        |   "container": "the-container",
+                        |   "dependencies": ["dependency-1", "dependency-2"]
+                        |}
+                        """.trimMargin()
+                    )
+                )
             }
         }
     }

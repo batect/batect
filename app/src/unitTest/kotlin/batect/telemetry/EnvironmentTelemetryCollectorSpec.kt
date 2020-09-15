@@ -30,20 +30,22 @@ import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
-import java.lang.management.RuntimeMXBean
-import java.util.Properties
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.Suite
 import org.spekframework.spek2.style.specification.describe
+import java.lang.management.RuntimeMXBean
+import java.util.Properties
 
 object EnvironmentTelemetryCollectorSpec : Spek({
     describe("an environment telemetry collector") {
         val telemetrySessionBuilder by createForEachTest { mock<TelemetrySessionBuilder>() }
         val gitClient by createForEachTest { mock<GitClient>() }
         val systemProperties by createForEachTest { Properties() }
-        val ciEnvironmentDetector by createForEachTest { mock<CIEnvironmentDetector> {
-            on { detect() } doReturn CIDetectionResult(false, null)
-        } }
+        val ciEnvironmentDetector by createForEachTest {
+            mock<CIEnvironmentDetector> {
+                on { detect() } doReturn CIDetectionResult(false, null)
+            }
+        }
 
         val consoleInfo by createForEachTest {
             mock<ConsoleInfo> {

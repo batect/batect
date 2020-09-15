@@ -127,7 +127,8 @@ object TelemetryAttributeSetBuilderSpec : Spek({
 
             it("stores all of the attributes on the built session") {
                 assertThat(
-                    attributes, equalTo(
+                    attributes,
+                    equalTo(
                         mapOf(
                             "thingType" to JsonPrimitive("stuff"),
                             "thingCount" to JsonPrimitive(12),

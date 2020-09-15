@@ -18,15 +18,15 @@ package batect.docker.run
 
 import batect.docker.DockerException
 import batect.primitives.CancellationContext
-import java.util.concurrent.CancellationException
-import java.util.concurrent.Executors
-import java.util.concurrent.Future
-import java.util.concurrent.TimeUnit
 import okio.Buffer
 import okio.BufferedSource
 import okio.Sink
 import okio.Source
 import okio.buffer
+import java.util.concurrent.CancellationException
+import java.util.concurrent.Executors
+import java.util.concurrent.Future
+import java.util.concurrent.TimeUnit
 
 class ContainerIOStreamer {
     fun stream(output: OutputConnection, input: InputConnection, cancellationContext: CancellationContext) {

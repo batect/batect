@@ -33,14 +33,14 @@ import com.nhaarman.mockitokotlin2.doThrow
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
-import java.io.IOException
-import java.time.Duration
 import okhttp3.Call
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okio.Buffer
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.io.IOException
+import java.time.Duration
 
 object AbacusClientSpec : Spek({
     describe("an Abacus client") {
@@ -122,10 +122,13 @@ object AbacusClientSpec : Spek({
                 }
 
                 it("throws an appropriate exception") {
-                    assertThat({ client.upload(sessionBytes) }, throws<AbacusClientException>(
-                        withMessage("HTTP PUT $uploadUrl failed: Something went wrong.")
-                            and withCause(exception)
-                    ))
+                    assertThat(
+                        { client.upload(sessionBytes) },
+                        throws<AbacusClientException>(
+                            withMessage("HTTP PUT $uploadUrl failed: Something went wrong.")
+                                and withCause(exception)
+                        )
+                    )
                 }
             }
         }

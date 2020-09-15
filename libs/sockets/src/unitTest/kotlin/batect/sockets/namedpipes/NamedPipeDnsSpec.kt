@@ -23,9 +23,9 @@ import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.containsSubstring
 import com.natpryce.hamkrest.throws
-import java.net.InetAddress
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.net.InetAddress
 
 object NamedPipeDnsSpec : Spek({
     describe("a named pipes DNS provider") {
@@ -36,9 +36,14 @@ object NamedPipeDnsSpec : Spek({
                 val hostName = NamedPipeDns.encodePath("""\\.\pipe\docker_engine""")
 
                 it("returns a dummy resolved address") {
-                    assertThat(dns.lookup(hostName), equalTo(listOf(
-                        InetAddress.getByAddress(hostName, byteArrayOf(0, 0, 0, 0))
-                    )))
+                    assertThat(
+                        dns.lookup(hostName),
+                        equalTo(
+                            listOf(
+                                InetAddress.getByAddress(hostName, byteArrayOf(0, 0, 0, 0))
+                            )
+                        )
+                    )
                 }
             }
 

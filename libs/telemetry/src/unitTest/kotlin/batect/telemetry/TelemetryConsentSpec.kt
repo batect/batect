@@ -22,9 +22,9 @@ import batect.testutils.given
 import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
-import java.util.UUID
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.util.UUID
 
 object TelemetryConsentSpec : Spek({
     describe("telemetry consent") {

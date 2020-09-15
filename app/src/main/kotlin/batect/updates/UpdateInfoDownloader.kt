@@ -20,12 +20,12 @@ import batect.logging.Logger
 import batect.logging.data
 import batect.primitives.Version
 import batect.utils.Json
-import java.time.ZoneOffset
-import java.time.ZonedDateTime
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
 
 class UpdateInfoDownloader(private val client: OkHttpClient, private val logger: Logger, private val dateTimeProvider: () -> ZonedDateTime) {
     constructor(client: OkHttpClient, logger: Logger) : this(client, logger, { ZonedDateTime.now(ZoneOffset.UTC) })

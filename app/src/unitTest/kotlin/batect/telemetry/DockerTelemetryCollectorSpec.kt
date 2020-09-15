@@ -32,9 +32,11 @@ import org.spekframework.spek2.style.specification.describe
 
 object DockerTelemetryCollectorSpec : Spek({
     describe("a Docker telemetry collector") {
-        val dockerHttpConfig by createForEachTest { mock<DockerHttpConfig> {
-            on { connectionType } doReturn ConnectionType.TCP
-        } }
+        val dockerHttpConfig by createForEachTest {
+            mock<DockerHttpConfig> {
+                on { connectionType } doReturn ConnectionType.TCP
+            }
+        }
 
         val cacheManager by createForEachTest {
             mock<CacheManager> {

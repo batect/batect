@@ -77,8 +77,10 @@ object ContainerCommandResolverSpec : Spek({
 
                             on("resolving the command for the container") {
                                 it("throws an appropriate exception") {
-                                    assertThat({ resolver.resolveCommand(container, task) },
-                                        throws<ContainerCommandResolutionException>(withMessage("Additional command line arguments for the task have been provided, but neither the task ($taskName) nor the main task container ($containerName) have an explicit command in the configuration file.")))
+                                    assertThat(
+                                        { resolver.resolveCommand(container, task) },
+                                        throws<ContainerCommandResolutionException>(withMessage("Additional command line arguments for the task have been provided, but neither the task ($taskName) nor the main task container ($containerName) have an explicit command in the configuration file."))
+                                    )
                                 }
                             }
                         }

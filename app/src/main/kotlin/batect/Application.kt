@@ -34,12 +34,12 @@ import batect.telemetry.addUnhandledExceptionEvent
 import batect.ui.Console
 import batect.ui.text.Text
 import batect.wrapper.WrapperCache
-import java.io.InputStream
-import java.io.PrintStream
-import kotlin.system.exitProcess
 import org.kodein.di.DirectDI
 import org.kodein.di.DirectDIAware
 import org.kodein.di.instance
+import java.io.InputStream
+import java.io.PrintStream
+import kotlin.system.exitProcess
 
 fun main(args: Array<String>) {
     try {

@@ -64,12 +64,12 @@ import com.nhaarman.mockitokotlin2.doThrow
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
-import java.nio.file.Files
-import java.nio.file.Path
-import java.time.Duration
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.Suite
 import org.spekframework.spek2.style.specification.describe
+import java.nio.file.Files
+import java.nio.file.Path
+import java.time.Duration
 
 object ConfigurationLoaderSpec : Spek({
     describe("a configuration loader") {
@@ -265,13 +265,18 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat(task.runConfiguration!!.container, equalTo("build-env"))
                 assertThat(task.runConfiguration!!.command, equalTo(Command.parse("./gradlew doStuff")))
                 assertThat(task.runConfiguration!!.entrypoint, equalTo(Command.parse("some-entrypoint")))
-                assertThat(task.runConfiguration!!.additionalEnvironmentVariables, equalTo(mapOf(
-                    "OPTS" to LiteralValue("-Dthing"),
-                    "INT_VALUE" to LiteralValue("1"),
-                    "FLOAT_VALUE" to LiteralValue("12.6000"),
-                    "BOOL_VALUE" to LiteralValue("true"),
-                    "OTHER_VALUE" to LiteralValue("the value")
-                )))
+                assertThat(
+                    task.runConfiguration!!.additionalEnvironmentVariables,
+                    equalTo(
+                        mapOf(
+                            "OPTS" to LiteralValue("-Dthing"),
+                            "INT_VALUE" to LiteralValue("1"),
+                            "FLOAT_VALUE" to LiteralValue("12.6000"),
+                            "BOOL_VALUE" to LiteralValue("true"),
+                            "OTHER_VALUE" to LiteralValue("the value")
+                        )
+                    )
+                )
                 assertThat(task.runConfiguration!!.additionalPortMappings, equalTo(setOf(PortMapping(123, 456), PortMapping(1000, 2000))))
                 assertThat(task.runConfiguration!!.workingDiretory, equalTo("/some/dir"))
                 assertThat(task.dependsOnContainers, isEmpty)
@@ -596,21 +601,31 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat(container.imageSource, equalTo(BuildImage(LiteralValue("container-1-build-dir"), DefaultPathResolutionContext(fileSystem.getPath("/")))))
                 assertThat(container.command, equalTo(Command.parse("do-the-thing.sh some-param")))
                 assertThat(container.entrypoint, equalTo(Command.parse("sh")))
-                assertThat(container.environment, equalTo(mapOf(
-                    "OPTS" to LiteralValue("-Dthing"),
-                    "INT_VALUE" to LiteralValue("1"),
-                    "FLOAT_VALUE" to LiteralValue("12.6000"),
-                    "BOOL_VALUE" to LiteralValue("true"),
-                    "OTHER_VALUE" to LiteralValue("the value")
-                )))
+                assertThat(
+                    container.environment,
+                    equalTo(
+                        mapOf(
+                            "OPTS" to LiteralValue("-Dthing"),
+                            "INT_VALUE" to LiteralValue("1"),
+                            "FLOAT_VALUE" to LiteralValue("12.6000"),
+                            "BOOL_VALUE" to LiteralValue("true"),
+                            "OTHER_VALUE" to LiteralValue("the value")
+                        )
+                    )
+                )
                 assertThat(container.workingDirectory, equalTo("/here"))
                 assertThat(container.portMappings, equalTo(setOf(PortMapping(1234, 5678), PortMapping(9012, 3456))))
                 assertThat(container.healthCheckConfig, equalTo(HealthCheckConfig(Duration.ofSeconds(2), 10, Duration.ofSeconds(1))))
                 assertThat(container.runAsCurrentUserConfig, equalTo(RunAsCurrentUserConfig.RunAsCurrentUser("/home/something")))
-                assertThat(container.volumeMounts, equalTo(setOf(
-                    LocalMount(LiteralValue("../"), DefaultPathResolutionContext(fileSystem.getPath("/")), "/here", null),
-                    LocalMount(LiteralValue("/somewhere"), DefaultPathResolutionContext(fileSystem.getPath("/")), "/else", "ro")
-                )))
+                assertThat(
+                    container.volumeMounts,
+                    equalTo(
+                        setOf(
+                            LocalMount(LiteralValue("../"), DefaultPathResolutionContext(fileSystem.getPath("/")), "/here", null),
+                            LocalMount(LiteralValue("/somewhere"), DefaultPathResolutionContext(fileSystem.getPath("/")), "/else", "ro")
+                        )
+                    )
+                )
             }
 
             itReportsTelemetryAboutTheConfigurationFile(containerCount = 1)
@@ -645,10 +660,15 @@ object ConfigurationLoaderSpec : Spek({
                 val container = config.containers["container-1"]!!
                 assertThat(container.name, equalTo("container-1"))
                 assertThat(container.imageSource, equalTo(BuildImage(LiteralValue("container-1-build-dir"), DefaultPathResolutionContext(fileSystem.getPath("/")))))
-                assertThat(container.volumeMounts, equalTo(setOf(
-                    LocalMount(LiteralValue("../"), DefaultPathResolutionContext(fileSystem.getPath("/")), "/here", null),
-                    LocalMount(LiteralValue("/somewhere"), DefaultPathResolutionContext(fileSystem.getPath("/")), "/else", "ro")
-                )))
+                assertThat(
+                    container.volumeMounts,
+                    equalTo(
+                        setOf(
+                            LocalMount(LiteralValue("../"), DefaultPathResolutionContext(fileSystem.getPath("/")), "/here", null),
+                            LocalMount(LiteralValue("/somewhere"), DefaultPathResolutionContext(fileSystem.getPath("/")), "/else", "ro")
+                        )
+                    )
+                )
             }
 
             itReportsTelemetryAboutTheConfigurationFile(containerCount = 1)
@@ -1483,24 +1503,39 @@ object ConfigurationLoaderSpec : Spek({
             val config by runForEachTest { loadConfiguration(files, rootConfigPath) }
 
             it("should merge the tasks from the referenced file with the tasks in the root configuration file") {
-                assertThat(config.tasks, equalTo(TaskMap(
-                    Task("task-1", TaskRunConfiguration("container-1")),
-                    Task("task-2", TaskRunConfiguration("container-2"))
-                )))
+                assertThat(
+                    config.tasks,
+                    equalTo(
+                        TaskMap(
+                            Task("task-1", TaskRunConfiguration("container-1")),
+                            Task("task-2", TaskRunConfiguration("container-2"))
+                        )
+                    )
+                )
             }
 
             it("should merge the containers from the referenced file with the containers in the root configuration file") {
-                assertThat(config.containers, equalTo(ContainerMap(
-                    Container("container-1", PullImage("alpine:1.2.3")),
-                    Container("container-2", PullImage("alpine:4.5.6"))
-                )))
+                assertThat(
+                    config.containers,
+                    equalTo(
+                        ContainerMap(
+                            Container("container-1", PullImage("alpine:1.2.3")),
+                            Container("container-2", PullImage("alpine:4.5.6"))
+                        )
+                    )
+                )
             }
 
             it("should merge the config variables from the referenced file with the config variables in the root configuration file") {
-                assertThat(config.configVariables, equalTo(ConfigVariableMap(
-                    ConfigVariableDefinition("config-var-1"),
-                    ConfigVariableDefinition("config-var-2")
-                )))
+                assertThat(
+                    config.configVariables,
+                    equalTo(
+                        ConfigVariableMap(
+                            ConfigVariableDefinition("config-var-1"),
+                            ConfigVariableDefinition("config-var-2")
+                        )
+                    )
+                )
             }
 
             it("should infer the project name based on the root configuration file's directory") {
@@ -1575,10 +1610,15 @@ object ConfigurationLoaderSpec : Spek({
             val config by runForEachTest { loadConfiguration(files, rootConfigPath) }
 
             it("should load and merge the configuration from both files without error") {
-                assertThat(config.configVariables, equalTo(ConfigVariableMap(
-                    ConfigVariableDefinition("config-var-1"),
-                    ConfigVariableDefinition("config-var-2")
-                )))
+                assertThat(
+                    config.configVariables,
+                    equalTo(
+                        ConfigVariableMap(
+                            ConfigVariableDefinition("config-var-1"),
+                            ConfigVariableDefinition("config-var-2")
+                        )
+                    )
+                )
             }
 
             itReportsTelemetryAboutTheConfigurationFile(configVariableCount = 2, fileIncludeCount = 1)
@@ -1682,15 +1722,18 @@ object ConfigurationLoaderSpec : Spek({
             val config by runForEachTest { loadConfiguration(files, rootConfigPath) }
 
             it("should resolve paths in the included file relative to the included file, not the root file") {
-                assertThat(config.containers.getValue("container-1"), equalTo(
-                    Container(
-                        "container-1",
-                        BuildImage(LiteralValue("some_build_directory"), DefaultPathResolutionContext(fileSystem.getPath("/project/includes"))),
-                        volumeMounts = setOf(
-                            LocalMount(LiteralValue("some_mount_directory"), DefaultPathResolutionContext(fileSystem.getPath("/project/includes")), "/mount")
+                assertThat(
+                    config.containers.getValue("container-1"),
+                    equalTo(
+                        Container(
+                            "container-1",
+                            BuildImage(LiteralValue("some_build_directory"), DefaultPathResolutionContext(fileSystem.getPath("/project/includes"))),
+                            volumeMounts = setOf(
+                                LocalMount(LiteralValue("some_mount_directory"), DefaultPathResolutionContext(fileSystem.getPath("/project/includes")), "/mount")
+                            )
                         )
                     )
-                ))
+                )
             }
         }
 
@@ -1871,9 +1914,12 @@ object ConfigurationLoaderSpec : Spek({
             }
 
             it("should fail with an error message with the user-facing configuration file path") {
-                assertThat({ loadConfiguration(files, rootConfigPath) }, throws(
-                    withLineNumber(1) and withColumn(1) and withFileName("https://myrepo.com/bundles/bundle.git@v1.2.3: 1.yml")
-                ))
+                assertThat(
+                    { loadConfiguration(files, rootConfigPath) },
+                    throws(
+                        withLineNumber(1) and withColumn(1) and withFileName("https://myrepo.com/bundles/bundle.git@v1.2.3: 1.yml")
+                    )
+                )
             }
         }
 
@@ -1900,10 +1946,13 @@ object ConfigurationLoaderSpec : Spek({
             }
 
             it("should fail with an error message with the user-facing configuration file path") {
-                assertThat({ loadConfiguration(files, rootConfigPath) }, throws(
-                    withMessage("Unknown property 'blah'. Known properties are: config_variables, containers, include, project_name, tasks") and
-                        withFileName("https://myrepo.com/bundles/bundle.git@v1.2.3: 2.yml")
-                ))
+                assertThat(
+                    { loadConfiguration(files, rootConfigPath) },
+                    throws(
+                        withMessage("Unknown property 'blah'. Known properties are: config_variables, containers, include, project_name, tasks") and
+                            withFileName("https://myrepo.com/bundles/bundle.git@v1.2.3: 2.yml")
+                    )
+                )
             }
         }
 
@@ -1930,10 +1979,13 @@ object ConfigurationLoaderSpec : Spek({
             }
 
             it("should fail with an error message with the user-facing configuration file path") {
-                assertThat({ loadConfiguration(files, rootConfigPath) }, throws(
-                    withMessage("Unknown property 'blah'. Known properties are: config_variables, containers, include, project_name, tasks") and
-                        withFileName("https://myrepo.com/bundles/bundle.git@v1.2.3: thing/2.yml")
-                ))
+                assertThat(
+                    { loadConfiguration(files, rootConfigPath) },
+                    throws(
+                        withMessage("Unknown property 'blah'. Known properties are: config_variables, containers, include, project_name, tasks") and
+                            withFileName("https://myrepo.com/bundles/bundle.git@v1.2.3: thing/2.yml")
+                    )
+                )
             }
         }
 
@@ -1960,10 +2012,13 @@ object ConfigurationLoaderSpec : Spek({
             }
 
             it("should fail with an error message with the user-facing configuration file path") {
-                assertThat({ loadConfiguration(files, rootConfigPath) }, throws(
-                    withMessage("Unknown property 'blah'. Known properties are: config_variables, containers, include, project_name, tasks") and
-                        withFileName("https://myrepo.com/bundles/bundle.git@v1.2.3: otherthings/2.yml")
-                ))
+                assertThat(
+                    { loadConfiguration(files, rootConfigPath) },
+                    throws(
+                        withMessage("Unknown property 'blah'. Known properties are: config_variables, containers, include, project_name, tasks") and
+                            withFileName("https://myrepo.com/bundles/bundle.git@v1.2.3: otherthings/2.yml")
+                    )
+                )
             }
         }
 
@@ -1986,10 +2041,13 @@ object ConfigurationLoaderSpec : Spek({
             }
 
             it("should fail with an error message with the user-facing configuration file path") {
-                assertThat({ loadConfiguration(files, rootConfigPath) }, throws(
-                    withMessage("Only the root configuration file can contain the project name, but this file has a project name.") and
-                    withFileName("https://myrepo.com/bundles/bundle.git@v1.2.3: 1.yml")
-                ))
+                assertThat(
+                    { loadConfiguration(files, rootConfigPath) },
+                    throws(
+                        withMessage("Only the root configuration file can contain the project name, but this file has a project name.") and
+                            withFileName("https://myrepo.com/bundles/bundle.git@v1.2.3: 1.yml")
+                    )
+                )
             }
         }
 
@@ -2016,10 +2074,13 @@ object ConfigurationLoaderSpec : Spek({
             }
 
             it("should fail with an error message with the user-facing configuration file path") {
-                assertThat({ loadConfiguration(files, rootConfigPath) }, throws(
-                    withMessage("Only the root configuration file can contain the project name, but this file has a project name.") and
-                        withFileName("https://myrepo.com/bundles/bundle.git@v1.2.3: 2.yml")
-                ))
+                assertThat(
+                    { loadConfiguration(files, rootConfigPath) },
+                    throws(
+                        withMessage("Only the root configuration file can contain the project name, but this file has a project name.") and
+                            withFileName("https://myrepo.com/bundles/bundle.git@v1.2.3: 2.yml")
+                    )
+                )
             }
         }
 
@@ -2042,10 +2103,13 @@ object ConfigurationLoaderSpec : Spek({
             }
 
             it("should fail with an error message with the user-facing configuration file path") {
-                assertThat({ loadConfiguration(files, rootConfigPath) }, throws(
-                    withMessage("Included file 'something.yml' (something.yml from https://myrepo.com/bundles/bundle.git@v1.2.3) does not exist.") and
-                    withFileName("/project/batect.yml")
-                ))
+                assertThat(
+                    { loadConfiguration(files, rootConfigPath) },
+                    throws(
+                        withMessage("Included file 'something.yml' (something.yml from https://myrepo.com/bundles/bundle.git@v1.2.3) does not exist.") and
+                            withFileName("/project/batect.yml")
+                    )
+                )
             }
         }
 
@@ -2069,11 +2133,14 @@ object ConfigurationLoaderSpec : Spek({
             }
 
             it("should fail with an error message with the user-facing configuration file path") {
-                assertThat({ loadConfiguration(files, rootConfigPath) }, throws(
-                    withMessage("Included file '2.yml' ('2.yml' from https://myrepo.com/bundles/bundle.git@v1.2.3) does not exist.") and
-                    withFileName("https://myrepo.com/bundles/bundle.git@v1.2.3: 1.yml") and
-                        withLineNumber(2) and withColumn(4)
-                ))
+                assertThat(
+                    { loadConfiguration(files, rootConfigPath) },
+                    throws(
+                        withMessage("Included file '2.yml' ('2.yml' from https://myrepo.com/bundles/bundle.git@v1.2.3) does not exist.") and
+                            withFileName("https://myrepo.com/bundles/bundle.git@v1.2.3: 1.yml") and
+                            withLineNumber(2) and withColumn(4)
+                    )
+                )
             }
         }
 
@@ -2097,11 +2164,14 @@ object ConfigurationLoaderSpec : Spek({
             }
 
             it("should fail with an error message with the user-facing configuration file path") {
-                assertThat({ loadConfiguration(files, rootConfigPath) }, throws(
-                    withMessage("Included file '../2.yml' ('2.yml' from https://myrepo.com/bundles/bundle.git@v1.2.3) does not exist.") and
-                        withFileName("https://myrepo.com/bundles/bundle.git@v1.2.3: things/1.yml") and
-                        withLineNumber(2) and withColumn(4)
-                ))
+                assertThat(
+                    { loadConfiguration(files, rootConfigPath) },
+                    throws(
+                        withMessage("Included file '../2.yml' ('2.yml' from https://myrepo.com/bundles/bundle.git@v1.2.3) does not exist.") and
+                            withFileName("https://myrepo.com/bundles/bundle.git@v1.2.3: things/1.yml") and
+                            withLineNumber(2) and withColumn(4)
+                    )
+                )
             }
         }
 
@@ -2209,9 +2279,12 @@ object ConfigurationLoaderSpec : Spek({
             }
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(files, rootConfigPath) }, throws(
-                    withMessage("Could not load include '1.yml' from https://myrepo.com/bundles/bundle.git@v1.2.3: Something went wrong.") and withFileName("/project/batect.yml")
-                ))
+                assertThat(
+                    { loadConfiguration(files, rootConfigPath) },
+                    throws(
+                        withMessage("Could not load include '1.yml' from https://myrepo.com/bundles/bundle.git@v1.2.3: Something went wrong.") and withFileName("/project/batect.yml")
+                    )
+                )
             }
         }
     }

@@ -90,11 +90,14 @@ object CleanupStageSpec : Spek({
                 on { manualCleanupSortOrder } doReturn ManualCleanupSortOrder.RemoveContainers
             }
 
-            val stage = CleanupStage(setOf(
-                ruleWithNoCommand,
-                lateCleanupRule,
-                earlyCleanupRule
-            ), OperatingSystem.Other)
+            val stage = CleanupStage(
+                setOf(
+                    ruleWithNoCommand,
+                    lateCleanupRule,
+                    earlyCleanupRule
+                ),
+                OperatingSystem.Other
+            )
 
             it("has the cleanup commands from the rules that have commands, sorted in execution order") {
                 assertThat(stage.manualCleanupInstructions, equalTo(listOf("do-this-first", "do-this-second")))

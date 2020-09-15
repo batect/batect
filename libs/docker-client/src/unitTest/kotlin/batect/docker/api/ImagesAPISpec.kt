@@ -49,8 +49,6 @@ import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
-import java.io.ByteArrayOutputStream
-import java.nio.file.Paths
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonObject
@@ -60,6 +58,8 @@ import okhttp3.OkHttpClient
 import okio.sink
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.io.ByteArrayOutputStream
+import java.nio.file.Paths
 
 object ImagesAPISpec : Spek({
     describe("a Docker images API client") {
@@ -172,23 +172,28 @@ object ImagesAPISpec : Spek({
                 }
 
                 it("writes all output from the build process to the provided output stream") {
-                    assertThat(output.toString(), equalTo("""
-                        |Step 1/5 : FROM nginx:1.13.0
-                        | ---> 3448f27c273f
-                        |Step 2/5 : RUN apt update && apt install -y curl && rm -rf /var/lib/apt/lists/*
-                        | ---> Using cache
-                        | ---> 0ceae477da9d
-                        |Step 3/5 : COPY index.html /usr/share/nginx/html
-                        | ---> b288a67b828c
-                        |Step 4/5 : COPY health-check.sh /tools/
-                        | ---> 951e32ae4f76
-                        |Step 5/5 : HEALTHCHECK --interval=2s --retries=1 CMD /tools/health-check.sh
-                        | ---> Running in 3de7e4521d69
-                        |Removing intermediate container 3de7e4521d69
-                        | ---> 24125bbc6cbe
-                        |Successfully built 24125bbc6cbe
-                        |
-                    """.trimMargin()))
+                    assertThat(
+                        output.toString(),
+                        equalTo(
+                            """
+                                |Step 1/5 : FROM nginx:1.13.0
+                                | ---> 3448f27c273f
+                                |Step 2/5 : RUN apt update && apt install -y curl && rm -rf /var/lib/apt/lists/*
+                                | ---> Using cache
+                                | ---> 0ceae477da9d
+                                |Step 3/5 : COPY index.html /usr/share/nginx/html
+                                | ---> b288a67b828c
+                                |Step 4/5 : COPY health-check.sh /tools/
+                                | ---> 951e32ae4f76
+                                |Step 5/5 : HEALTHCHECK --interval=2s --retries=1 CMD /tools/health-check.sh
+                                | ---> Running in 3de7e4521d69
+                                |Removing intermediate container 3de7e4521d69
+                                | ---> 24125bbc6cbe
+                                |Successfully built 24125bbc6cbe
+                                |
+                            """.trimMargin()
+                        )
+                    )
                 }
             }
 
@@ -236,9 +241,12 @@ object ImagesAPISpec : Spek({
                 }
 
                 it("throws an appropriate exception") {
-                    assertThat({ api.build(context, buildArgs, dockerfilePath, imageTags, pullImage, registryCredentials, null, cancellationContext, {}) }, throws<ImageBuildFailedException>(
-                        withMessage("Building image failed: $errorMessageWithCorrectLineEndings")
-                    ))
+                    assertThat(
+                        { api.build(context, buildArgs, dockerfilePath, imageTags, pullImage, registryCredentials, null, cancellationContext, {}) },
+                        throws<ImageBuildFailedException>(
+                            withMessage("Building image failed: $errorMessageWithCorrectLineEndings")
+                        )
+                    )
                 }
             }
 
@@ -258,27 +266,35 @@ object ImagesAPISpec : Spek({
                 beforeEachTest { clientWithLongTimeout.mock("POST", expectedUrl, response, 200, expectedHeadersForAuthentication) }
 
                 it("throws an appropriate exception with all line endings corrected for the host system") {
-                    assertThat({ api.build(context, buildArgs, dockerfilePath, imageTags, pullImage, registryCredentials, output.sink(), cancellationContext, {}) }, throws<ImageBuildFailedException>(
-                        withMessage(
-                            "Building image failed: The command '/bin/sh -c exit 1' returned a non-zero code: 1. Output from build process was:SYSTEM_LINE_SEPARATOR" +
-                            "Step 1/6 : FROM nginx:1.13.0SYSTEM_LINE_SEPARATOR" +
-                            " ---> 3448f27c273fSYSTEM_LINE_SEPARATOR" +
-                            "Step 2/6 : RUN exit 1SYSTEM_LINE_SEPARATOR" +
-                            " ---> Running in 4427f9f56fadSYSTEM_LINE_SEPARATOR" +
-                            "The command '/bin/sh -c exit 1' returned a non-zero code: 1"
+                    assertThat(
+                        { api.build(context, buildArgs, dockerfilePath, imageTags, pullImage, registryCredentials, output.sink(), cancellationContext, {}) },
+                        throws<ImageBuildFailedException>(
+                            withMessage(
+                                "Building image failed: The command '/bin/sh -c exit 1' returned a non-zero code: 1. Output from build process was:SYSTEM_LINE_SEPARATOR" +
+                                    "Step 1/6 : FROM nginx:1.13.0SYSTEM_LINE_SEPARATOR" +
+                                    " ---> 3448f27c273fSYSTEM_LINE_SEPARATOR" +
+                                    "Step 2/6 : RUN exit 1SYSTEM_LINE_SEPARATOR" +
+                                    " ---> Running in 4427f9f56fadSYSTEM_LINE_SEPARATOR" +
+                                    "The command '/bin/sh -c exit 1' returned a non-zero code: 1"
+                            )
                         )
-                    ))
+                    )
                 }
 
                 it("writes all output from the build process to the output stream") {
                     try { api.build(context, buildArgs, dockerfilePath, imageTags, pullImage, registryCredentials, output.sink(), cancellationContext, {}) } catch (_: Throwable) {}
-                    assertThat(output.toString(), equalTo("""
-                        Step 1/6 : FROM nginx:1.13.0
-                         ---> 3448f27c273f
-                        Step 2/6 : RUN exit 1
-                         ---> Running in 4427f9f56fad
-                        The command '/bin/sh -c exit 1' returned a non-zero code: 1
-                    """.trimIndent()))
+                    assertThat(
+                        output.toString(),
+                        equalTo(
+                            """
+                                Step 1/6 : FROM nginx:1.13.0
+                                 ---> 3448f27c273f
+                                Step 2/6 : RUN exit 1
+                                 ---> Running in 4427f9f56fad
+                                The command '/bin/sh -c exit 1' returned a non-zero code: 1
+                            """.trimIndent()
+                        )
+                    )
                 }
             }
 
@@ -292,9 +308,12 @@ object ImagesAPISpec : Spek({
                 }
 
                 it("throws an appropriate exception") {
-                    assertThat({ api.build(context, buildArgs, dockerfilePath, imageTags, pullImage, registryCredentials, null, cancellationContext, {}) }, throws<ImageBuildFailedException>(
-                        withMessage("Building image failed: daemon never sent built image ID.")
-                    ))
+                    assertThat(
+                        { api.build(context, buildArgs, dockerfilePath, imageTags, pullImage, registryCredentials, null, cancellationContext, {}) },
+                        throws<ImageBuildFailedException>(
+                            withMessage("Building image failed: daemon never sent built image ID.")
+                        )
+                    )
                 }
             }
         }
@@ -394,9 +413,11 @@ object ImagesAPISpec : Spek({
                 beforeEachTest { clientWithLongTimeout.mockPost(expectedUrl, errorResponse, 418, expectedHeadersForAuthentication) }
 
                 it("throws an appropriate exception") {
-                    assertThat({ api.pull(imageReference, registryCredentials, cancellationContext, {}) }, throws<ImagePullFailedException>(
-                        withMessage("Pulling image 'some-image:latest' failed: $errorMessageWithCorrectLineEndings")
-                    )
+                    assertThat(
+                        { api.pull(imageReference, registryCredentials, cancellationContext, {}) },
+                        throws<ImagePullFailedException>(
+                            withMessage("Pulling image 'some-image:latest' failed: $errorMessageWithCorrectLineEndings")
+                        )
                     )
                 }
             }
@@ -415,9 +436,12 @@ object ImagesAPISpec : Spek({
                 val progressReceiver = ProgressReceiver()
 
                 it("throws an appropriate exception with all line endings corrected for the host system") {
-                    assertThat({ api.pull(imageReference, registryCredentials, cancellationContext, progressReceiver::onProgressUpdate) }, throws<ImagePullFailedException>(
-                        withMessage("Pulling image 'some-image:latest' failed: Server error: 404 trying to fetch remote history for some-image.SYSTEM_LINE_SEPARATORMore details on following line.")
-                    ))
+                    assertThat(
+                        { api.pull(imageReference, registryCredentials, cancellationContext, progressReceiver::onProgressUpdate) },
+                        throws<ImagePullFailedException>(
+                            withMessage("Pulling image 'some-image:latest' failed: Server error: 404 trying to fetch remote history for some-image.SYSTEM_LINE_SEPARATORMore details on following line.")
+                        )
+                    )
                 }
 
                 it("sends all progress updates to the receiver except for the error") {

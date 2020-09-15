@@ -33,6 +33,11 @@ import com.natpryce.hamkrest.isA
 import com.natpryce.hamkrest.throws
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
+import okhttp3.Dns
+import okhttp3.HttpUrl.Companion.toHttpUrl
+import okhttp3.OkHttpClient
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 import java.net.InetSocketAddress
 import java.net.Proxy
 import java.time.Duration
@@ -41,11 +46,6 @@ import javax.net.SocketFactory
 import javax.net.ssl.HostnameVerifier
 import javax.net.ssl.SSLSocketFactory
 import javax.net.ssl.X509TrustManager
-import okhttp3.Dns
-import okhttp3.HttpUrl.Companion.toHttpUrl
-import okhttp3.OkHttpClient
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
 
 object DockerHttpConfigSpec : Spek({
     describe("a set of Docker HTTP configuration") {

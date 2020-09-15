@@ -27,9 +27,9 @@ import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.throws
-import java.nio.file.Files
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.nio.file.Files
 
 object DockerIgnoreParserSpec : Spek({
     describe("a .dockerignore file parser") {
@@ -102,9 +102,16 @@ object DockerIgnoreParserSpec : Spek({
                 val ignoreList by runForEachTest { parser.parse(path) }
 
                 it("returns a list with that pattern") {
-                    assertThat(ignoreList, equalTo(DockerImageBuildIgnoreList(listOf(
-                        DockerImageBuildIgnoreEntry("path/thing.go", false)
-                    ))))
+                    assertThat(
+                        ignoreList,
+                        equalTo(
+                            DockerImageBuildIgnoreList(
+                                listOf(
+                                    DockerImageBuildIgnoreEntry("path/thing.go", false)
+                                )
+                            )
+                        )
+                    )
                 }
             }
         }
@@ -118,9 +125,16 @@ object DockerIgnoreParserSpec : Spek({
                 val ignoreList by runForEachTest { parser.parse(path) }
 
                 it("returns a list with that pattern") {
-                    assertThat(ignoreList, equalTo(DockerImageBuildIgnoreList(listOf(
-                        DockerImageBuildIgnoreEntry("path/thing.go", true)
-                    ))))
+                    assertThat(
+                        ignoreList,
+                        equalTo(
+                            DockerImageBuildIgnoreList(
+                                listOf(
+                                    DockerImageBuildIgnoreEntry("path/thing.go", true)
+                                )
+                            )
+                        )
+                    )
                 }
             }
         }
@@ -134,9 +148,16 @@ object DockerIgnoreParserSpec : Spek({
                 val ignoreList by runForEachTest { parser.parse(path) }
 
                 it("returns a list with that pattern with the whitespace removed") {
-                    assertThat(ignoreList, equalTo(DockerImageBuildIgnoreList(listOf(
-                        DockerImageBuildIgnoreEntry("path/thing.go", false)
-                    ))))
+                    assertThat(
+                        ignoreList,
+                        equalTo(
+                            DockerImageBuildIgnoreList(
+                                listOf(
+                                    DockerImageBuildIgnoreEntry("path/thing.go", false)
+                                )
+                            )
+                        )
+                    )
                 }
             }
         }
@@ -150,9 +171,16 @@ object DockerIgnoreParserSpec : Spek({
                 val ignoreList by runForEachTest { parser.parse(path) }
 
                 it("returns a list with that pattern with the whitespace removed") {
-                    assertThat(ignoreList, equalTo(DockerImageBuildIgnoreList(listOf(
-                        DockerImageBuildIgnoreEntry("path/thing.go", false)
-                    ))))
+                    assertThat(
+                        ignoreList,
+                        equalTo(
+                            DockerImageBuildIgnoreList(
+                                listOf(
+                                    DockerImageBuildIgnoreEntry("path/thing.go", false)
+                                )
+                            )
+                        )
+                    )
                 }
             }
         }
@@ -173,22 +201,32 @@ object DockerIgnoreParserSpec : Spek({
 
         given("the file contains multiple patterns") {
             beforeEachTest {
-                Files.write(path, listOf(
-                    "path/thing.go",
-                    "something/else",
-                    "!not/this"
-                ))
+                Files.write(
+                    path,
+                    listOf(
+                        "path/thing.go",
+                        "something/else",
+                        "!not/this"
+                    )
+                )
             }
 
             on("parsing the file") {
                 val ignoreList by runForEachTest { parser.parse(path) }
 
                 it("returns a list with those patterns") {
-                    assertThat(ignoreList, equalTo(DockerImageBuildIgnoreList(listOf(
-                        DockerImageBuildIgnoreEntry("path/thing.go", false),
-                        DockerImageBuildIgnoreEntry("something/else", false),
-                        DockerImageBuildIgnoreEntry("not/this", true)
-                    ))))
+                    assertThat(
+                        ignoreList,
+                        equalTo(
+                            DockerImageBuildIgnoreList(
+                                listOf(
+                                    DockerImageBuildIgnoreEntry("path/thing.go", false),
+                                    DockerImageBuildIgnoreEntry("something/else", false),
+                                    DockerImageBuildIgnoreEntry("not/this", true)
+                                )
+                            )
+                        )
+                    )
                 }
             }
         }
@@ -228,29 +266,46 @@ object DockerIgnoreParserSpec : Spek({
                 val ignoreList by runForEachTest { parser.parse(path) }
 
                 it("returns a list with that pattern with the whitespace removed") {
-                    assertThat(ignoreList, equalTo(DockerImageBuildIgnoreList(listOf(
-                        DockerImageBuildIgnoreEntry("path/thing.go", true)
-                    ))))
+                    assertThat(
+                        ignoreList,
+                        equalTo(
+                            DockerImageBuildIgnoreList(
+                                listOf(
+                                    DockerImageBuildIgnoreEntry("path/thing.go", true)
+                                )
+                            )
+                        )
+                    )
                 }
             }
         }
 
         given("the file contains patterns with leading slashes") {
             beforeEachTest {
-                Files.write(path, listOf(
-                    "/path/thing.go",
-                    "!/path/otherthing.go"
-                ))
+                Files.write(
+                    path,
+                    listOf(
+                        "/path/thing.go",
+                        "!/path/otherthing.go"
+                    )
+                )
             }
 
             on("parsing the file") {
                 val ignoreList by runForEachTest { parser.parse(path) }
 
                 it("returns a list with those patterns with the slashes removed") {
-                    assertThat(ignoreList, equalTo(DockerImageBuildIgnoreList(listOf(
-                        DockerImageBuildIgnoreEntry("path/thing.go", false),
-                        DockerImageBuildIgnoreEntry("path/otherthing.go", true)
-                    ))))
+                    assertThat(
+                        ignoreList,
+                        equalTo(
+                            DockerImageBuildIgnoreList(
+                                listOf(
+                                    DockerImageBuildIgnoreEntry("path/thing.go", false),
+                                    DockerImageBuildIgnoreEntry("path/otherthing.go", true)
+                                )
+                            )
+                        )
+                    )
                 }
             }
         }
@@ -258,20 +313,30 @@ object DockerIgnoreParserSpec : Spek({
         // The following tests are based on https://golang.org/src/path/filepath/path_test.go, which is what the Docker CLI uses.
         given("the file contains patterns with multiple consecutive slashes") {
             beforeEachTest {
-                Files.write(path, listOf(
-                    "path//other///thing.go",
-                    "!path//otherthing.go"
-                ))
+                Files.write(
+                    path,
+                    listOf(
+                        "path//other///thing.go",
+                        "!path//otherthing.go"
+                    )
+                )
             }
 
             on("parsing the file") {
                 val ignoreList by runForEachTest { parser.parse(path) }
 
                 it("returns a list with those patterns with the extra slashes removed") {
-                    assertThat(ignoreList, equalTo(DockerImageBuildIgnoreList(listOf(
-                        DockerImageBuildIgnoreEntry("path/other/thing.go", false),
-                        DockerImageBuildIgnoreEntry("path/otherthing.go", true)
-                    ))))
+                    assertThat(
+                        ignoreList,
+                        equalTo(
+                            DockerImageBuildIgnoreList(
+                                listOf(
+                                    DockerImageBuildIgnoreEntry("path/other/thing.go", false),
+                                    DockerImageBuildIgnoreEntry("path/otherthing.go", true)
+                                )
+                            )
+                        )
+                    )
                 }
             }
         }
@@ -306,9 +371,16 @@ object DockerIgnoreParserSpec : Spek({
                         val ignoreList by runForEachTest { parser.parse(path) }
 
                         it("returns a list with the pattern simplified where possible") {
-                            assertThat(ignoreList, equalTo(DockerImageBuildIgnoreList(listOf(
-                                DockerImageBuildIgnoreEntry(expectedCleanedPattern, false)
-                            ))))
+                            assertThat(
+                                ignoreList,
+                                equalTo(
+                                    DockerImageBuildIgnoreList(
+                                        listOf(
+                                            DockerImageBuildIgnoreEntry(expectedCleanedPattern, false)
+                                        )
+                                    )
+                                )
+                            )
                         }
                     }
                 }
@@ -330,9 +402,16 @@ object DockerIgnoreParserSpec : Spek({
                         val ignoreList by runForEachTest { parser.parse(path) }
 
                         it("returns a list with the pattern simplified where possible") {
-                            assertThat(ignoreList, equalTo(DockerImageBuildIgnoreList(listOf(
-                                DockerImageBuildIgnoreEntry(expectedCleanedPattern, false)
-                            ))))
+                            assertThat(
+                                ignoreList,
+                                equalTo(
+                                    DockerImageBuildIgnoreList(
+                                        listOf(
+                                            DockerImageBuildIgnoreEntry(expectedCleanedPattern, false)
+                                        )
+                                    )
+                                )
+                            )
                         }
                     }
                 }
@@ -354,9 +433,16 @@ object DockerIgnoreParserSpec : Spek({
                         val ignoreList by runForEachTest { parser.parse(path) }
 
                         it("returns a list with the pattern simplified where possible") {
-                            assertThat(ignoreList, equalTo(DockerImageBuildIgnoreList(listOf(
-                                DockerImageBuildIgnoreEntry(expectedCleanedPattern, false)
-                            ))))
+                            assertThat(
+                                ignoreList,
+                                equalTo(
+                                    DockerImageBuildIgnoreList(
+                                        listOf(
+                                            DockerImageBuildIgnoreEntry(expectedCleanedPattern, false)
+                                        )
+                                    )
+                                )
+                            )
                         }
                     }
                 }

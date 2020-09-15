@@ -32,13 +32,16 @@ object ImagePullFailedEventSpec : Spek({
         on("attaching it to a log message") {
             it("returns a machine-readable representation of itself") {
                 assertThat(
-                    logRepresentationOf(event), equivalentTo("""
-                    |{
-                    |   "type": "${event::class.qualifiedName}",
-                    |   "source": {"imageName": "some-image", "imagePullPolicy": "IfNotPresent"},
-                    |   "message": "Something went wrong"
-                    |}
-                """.trimMargin())
+                    logRepresentationOf(event),
+                    equivalentTo(
+                        """
+                        |{
+                        |   "type": "${event::class.qualifiedName}",
+                        |   "source": {"imageName": "some-image", "imagePullPolicy": "IfNotPresent"},
+                        |   "message": "Something went wrong"
+                        |}
+                        """.trimMargin()
+                    )
                 )
             }
         }

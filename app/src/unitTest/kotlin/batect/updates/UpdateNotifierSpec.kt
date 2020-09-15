@@ -32,10 +32,10 @@ import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.verifyZeroInteractions
 import com.nhaarman.mockitokotlin2.whenever
-import java.time.ZoneOffset
-import java.time.ZonedDateTime
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
 
 object UpdateNotifierSpec : Spek({
     describe("an update notifier") {
@@ -175,10 +175,13 @@ object UpdateNotifierSpec : Spek({
                         }
 
                         it("reports an event in telemetry") {
-                            verify(telemetrySessionBuilder).addEvent("UpdateAvailableNotificationShown", mapOf(
-                                "currentVersion" to AttributeValue("0.2"),
-                                "newVersion" to AttributeValue("0.3")
-                            ))
+                            verify(telemetrySessionBuilder).addEvent(
+                                "UpdateAvailableNotificationShown",
+                                mapOf(
+                                    "currentVersion" to AttributeValue("0.2"),
+                                    "newVersion" to AttributeValue("0.3")
+                                )
+                            )
                         }
 
                         it("does not trigger an update of the cached update info") {
@@ -242,10 +245,13 @@ object UpdateNotifierSpec : Spek({
                         }
 
                         it("reports an event in telemetry") {
-                            verify(telemetrySessionBuilder).addEvent("UpdateAvailableNotificationShown", mapOf(
-                                "currentVersion" to AttributeValue("0.2"),
-                                "newVersion" to AttributeValue("0.3")
-                            ))
+                            verify(telemetrySessionBuilder).addEvent(
+                                "UpdateAvailableNotificationShown",
+                                mapOf(
+                                    "currentVersion" to AttributeValue("0.2"),
+                                    "newVersion" to AttributeValue("0.3")
+                                )
+                            )
                         }
                     }
                 }

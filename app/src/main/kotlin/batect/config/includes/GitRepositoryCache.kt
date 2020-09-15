@@ -22,12 +22,6 @@ import batect.io.ApplicationPaths
 import batect.os.deleteDirectory
 import batect.primitives.mapToSet
 import batect.utils.Json
-import java.nio.file.Files
-import java.nio.file.Path
-import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
-import java.util.stream.Collectors
-import java.util.stream.Stream
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
@@ -35,6 +29,12 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonObject
+import java.nio.file.Files
+import java.nio.file.Path
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
+import java.util.stream.Collectors
+import java.util.stream.Stream
 
 class GitRepositoryCache(
     private val applicationPaths: ApplicationPaths,
@@ -82,9 +82,11 @@ class GitRepositoryCache(
             }
         }
 
-        val info = JsonObject(existingContent + mapOf(
-            "lastUsed" to JsonPrimitive(lastUsed.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME))
-        ))
+        val info = JsonObject(
+            existingContent + mapOf(
+                "lastUsed" to JsonPrimitive(lastUsed.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME))
+            )
+        )
 
         Files.write(infoPath, info.toString().toByteArray(Charsets.UTF_8))
     }

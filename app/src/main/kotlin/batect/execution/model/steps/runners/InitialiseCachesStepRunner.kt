@@ -40,9 +40,9 @@ import batect.execution.model.events.TaskEventSink
 import batect.os.Dimensions
 import batect.primitives.CancellationContext
 import batect.utils.Json
-import java.io.ByteArrayOutputStream
 import kotlinx.serialization.Serializable
 import okio.sink
+import java.io.ByteArrayOutputStream
 
 class InitialiseCachesStepRunner(
     private val containerType: DockerContainerType,

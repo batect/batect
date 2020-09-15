@@ -79,11 +79,14 @@ object IncludeSpec : Spek({
                         givenPathResolvesTo(PathType.Directory)
 
                         it("throws an appropriate exception") {
-                            assertThat({ parser.decodeFromString(IncludeConfigSerializer, yaml) }, throws<ConfigurationException>(
-                                withMessage("'../some/path.yml' (described as '/resolved/some/path.yml') is not a file.") and
-                                    withLineNumber(1) and
-                                    withColumn(1)
-                            ))
+                            assertThat(
+                                { parser.decodeFromString(IncludeConfigSerializer, yaml) },
+                                throws<ConfigurationException>(
+                                    withMessage("'../some/path.yml' (described as '/resolved/some/path.yml') is not a file.") and
+                                        withLineNumber(1) and
+                                        withColumn(1)
+                                )
+                            )
                         }
                     }
 
@@ -91,11 +94,14 @@ object IncludeSpec : Spek({
                         givenPathResolvesTo(PathType.DoesNotExist)
 
                         it("throws an appropriate exception") {
-                            assertThat({ parser.decodeFromString(IncludeConfigSerializer, yaml) }, throws<ConfigurationException>(
-                                withMessage("Included file '../some/path.yml' (described as '/resolved/some/path.yml') does not exist.") and
-                                    withLineNumber(1) and
-                                    withColumn(1)
-                            ))
+                            assertThat(
+                                { parser.decodeFromString(IncludeConfigSerializer, yaml) },
+                                throws<ConfigurationException>(
+                                    withMessage("Included file '../some/path.yml' (described as '/resolved/some/path.yml') does not exist.") and
+                                        withLineNumber(1) and
+                                        withColumn(1)
+                                )
+                            )
                         }
                     }
                 }
@@ -120,11 +126,14 @@ object IncludeSpec : Spek({
                         givenPathResolvesTo(PathType.Directory)
 
                         it("throws an appropriate exception") {
-                            assertThat({ parser.decodeFromString(IncludeConfigSerializer, yaml) }, throws<ConfigurationException>(
-                                withMessage("'../some/path.yml' (described as '/resolved/some/path.yml') is not a file.") and
-                                    withLineNumber(2) and
-                                    withColumn(7)
-                            ))
+                            assertThat(
+                                { parser.decodeFromString(IncludeConfigSerializer, yaml) },
+                                throws<ConfigurationException>(
+                                    withMessage("'../some/path.yml' (described as '/resolved/some/path.yml') is not a file.") and
+                                        withLineNumber(2) and
+                                        withColumn(7)
+                                )
+                            )
                         }
                     }
 
@@ -132,11 +141,14 @@ object IncludeSpec : Spek({
                         givenPathResolvesTo(PathType.DoesNotExist)
 
                         it("throws an appropriate exception") {
-                            assertThat({ parser.decodeFromString(IncludeConfigSerializer, yaml) }, throws<ConfigurationException>(
-                                withMessage("Included file '../some/path.yml' (described as '/resolved/some/path.yml') does not exist.") and
-                                    withLineNumber(2) and
-                                    withColumn(7)
-                            ))
+                            assertThat(
+                                { parser.decodeFromString(IncludeConfigSerializer, yaml) },
+                                throws<ConfigurationException>(
+                                    withMessage("Included file '../some/path.yml' (described as '/resolved/some/path.yml') does not exist.") and
+                                        withLineNumber(2) and
+                                        withColumn(7)
+                                )
+                            )
                         }
                     }
                 }
@@ -180,9 +192,14 @@ object IncludeSpec : Spek({
                 val json by createForEachTest { Json.forLogging.encodeToString(IncludeConfigSerializer, include) }
 
                 it("serializes to the expected JSON") {
-                    assertThat(json, equivalentTo("""
-                        { "type": "file", "path": "/some/path" }
-                    """.trimIndent()))
+                    assertThat(
+                        json,
+                        equivalentTo(
+                            """
+                                { "type": "file", "path": "/some/path" }
+                            """.trimIndent()
+                        )
+                    )
                 }
             }
 
@@ -191,14 +208,19 @@ object IncludeSpec : Spek({
                 val json by createForEachTest { Json.forLogging.encodeToString(IncludeConfigSerializer, include) }
 
                 it("serializes to the expected JSON") {
-                    assertThat(json, equivalentTo("""
-                        {
-                            "type": "git",
-                            "repo": "https://github.com/my-org/my-repo.git",
-                            "ref": "v1.2.3",
-                            "path": "some-file.yml"
-                        }
-                    """.trimIndent()))
+                    assertThat(
+                        json,
+                        equivalentTo(
+                            """
+                                {
+                                    "type": "git",
+                                    "repo": "https://github.com/my-org/my-repo.git",
+                                    "ref": "v1.2.3",
+                                    "path": "some-file.yml"
+                                }
+                            """.trimIndent()
+                        )
+                    )
                 }
             }
         }

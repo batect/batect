@@ -37,10 +37,10 @@ import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
-import java.time.ZoneOffset
-import java.time.ZonedDateTime
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
 
 object UpdateInfoUpdaterSpec : Spek({
     describe("an update info updater") {
@@ -103,11 +103,14 @@ object UpdateInfoUpdaterSpec : Spek({
             }
 
             it("logs a warning") {
-                assertThat(logSink, hasMessage(
-                    withLogMessage("Could not update cached update information.")
-                        and withSeverity(Severity.Warning)
-                        and withException(exception)
-                ))
+                assertThat(
+                    logSink,
+                    hasMessage(
+                        withLogMessage("Could not update cached update information.")
+                            and withSeverity(Severity.Warning)
+                            and withException(exception)
+                    )
+                )
             }
 
             it("reports the exception in telemetry") {
@@ -134,11 +137,14 @@ object UpdateInfoUpdaterSpec : Spek({
             }
 
             it("logs a warning") {
-                assertThat(logSink, hasMessage(
-                    withLogMessage("Could not update cached update information.")
-                        and withSeverity(Severity.Warning)
-                        and withException(exception)
-                ))
+                assertThat(
+                    logSink,
+                    hasMessage(
+                        withLogMessage("Could not update cached update information.")
+                            and withSeverity(Severity.Warning)
+                            and withException(exception)
+                    )
+                )
             }
 
             it("reports the exception in telemetry") {

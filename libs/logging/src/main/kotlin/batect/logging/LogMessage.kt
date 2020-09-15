@@ -16,10 +16,10 @@
 
 package batect.logging
 
-import java.time.ZonedDateTime
 import kotlinx.serialization.SerializationStrategy
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
+import java.time.ZonedDateTime
 
 data class LogMessage(val severity: Severity, val message: String, val timestamp: ZonedDateTime, val additionalData: Map<String, Jsonable>)
 

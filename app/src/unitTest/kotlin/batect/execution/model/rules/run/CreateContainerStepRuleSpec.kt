@@ -223,21 +223,26 @@ object CreateContainerStepRuleSpec : Spek({
             val rule = CreateContainerStepRule(container, config)
 
             it("returns a machine-readable representation of itself") {
-                assertThat(logRepresentationOf(rule), equivalentTo("""
-                    |{
-                    |   "type": "${rule::class.qualifiedName}",
-                    |   "container": "the-container",
-                    |   "config": {
-                    |       "command": ["blah"],
-                    |       "entrypoint": ["entrypoint"],
-                    |       "workingDirectory": "/some/work/dir",
-                    |       "additionalEnvironmentVariables": {
-                    |           "VAR": {"type":"LiteralValue", "value":"value"}
-                    |       },
-                    |       "additionalPortMappings": [{"local": "123", "container": "456", "protocol": "tcp"}]
-                    |   }
-                    |}
-                """.trimMargin()))
+                assertThat(
+                    logRepresentationOf(rule),
+                    equivalentTo(
+                        """
+                        |{
+                        |   "type": "${rule::class.qualifiedName}",
+                        |   "container": "the-container",
+                        |   "config": {
+                        |       "command": ["blah"],
+                        |       "entrypoint": ["entrypoint"],
+                        |       "workingDirectory": "/some/work/dir",
+                        |       "additionalEnvironmentVariables": {
+                        |           "VAR": {"type":"LiteralValue", "value":"value"}
+                        |       },
+                        |       "additionalPortMappings": [{"local": "123", "container": "456", "protocol": "tcp"}]
+                        |   }
+                        |}
+                        """.trimMargin()
+                    )
+                )
             }
         }
     }

@@ -22,7 +22,6 @@ import batect.docker.Json
 import batect.docker.data
 import batect.logging.Logger
 import batect.os.SystemInfo
-import java.util.concurrent.TimeUnit
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -30,6 +29,7 @@ import kotlinx.serialization.json.put
 import okhttp3.HttpUrl
 import okhttp3.Request
 import okhttp3.Response
+import java.util.concurrent.TimeUnit
 
 class NetworksAPI(
     httpConfig: DockerHttpConfig,

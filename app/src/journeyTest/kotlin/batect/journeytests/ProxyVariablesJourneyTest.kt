@@ -40,7 +40,8 @@ object ProxyVariablesJourneyTest : Spek({
 
             val result by runBeforeGroup {
                 runner.runApplication(
-                    listOf("the-task"), mapOf(
+                    listOf("the-task"),
+                    mapOf(
                         "http_proxy" to httpProxy,
                         "https_proxy" to httpsProxy,
                         "ftp_proxy" to ftpProxy,
@@ -50,7 +51,8 @@ object ProxyVariablesJourneyTest : Spek({
             }
 
             it("prints the output from that task, which shows that the proxy environment variables were set at both build and run time") {
-                assert(result).output().contains("""
+                assert(result).output().contains(
+                    """
                     At build time, environment variables were:
                     http_proxy: $httpProxy
                     https_proxy: $httpsProxy
@@ -62,7 +64,8 @@ object ProxyVariablesJourneyTest : Spek({
                     https_proxy: $httpsProxy
                     ftp_proxy: $ftpProxy
                     no_proxy: $noProxy,build-env
-                """.trimIndent())
+                    """.trimIndent()
+                )
             }
 
             it("returns the exit code from that task") {

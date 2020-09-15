@@ -29,13 +29,18 @@ object CustomTaskNetworkCheckFailedEventSpec : Spek({
 
         on("attaching it to a log message") {
             it("returns a machine-readable representation of itself") {
-                assertThat(logRepresentationOf(event), equivalentTo("""
-                    |{
-                    |   "type": "${event::class.qualifiedName}",
-                    |   "networkIdentifier": "my-network",
-                    |   "message": "Something went wrong"
-                    |}
-                """.trimMargin()))
+                assertThat(
+                    logRepresentationOf(event),
+                    equivalentTo(
+                        """
+                        |{
+                        |   "type": "${event::class.qualifiedName}",
+                        |   "networkIdentifier": "my-network",
+                        |   "message": "Something went wrong"
+                        |}
+                        """.trimMargin()
+                    )
+                )
             }
         }
     }

@@ -104,14 +104,19 @@ object RemoveContainerStepRuleSpec : Spek({
             val rule = RemoveContainerStepRule(containerToRemove, dockerContainerToRemove, true)
 
             it("returns a machine-readable representation of itself") {
-                assertThat(logRepresentationOf(rule), equivalentTo("""
-                    |{
-                    |   "type": "${rule::class.qualifiedName}",
-                    |   "container": "the-container",
-                    |   "dockerContainer": {"id": "some-container-id", "name": null},
-                    |   "containerWasStarted": true
-                    |}
-                """.trimMargin()))
+                assertThat(
+                    logRepresentationOf(rule),
+                    equivalentTo(
+                        """
+                        |{
+                        |   "type": "${rule::class.qualifiedName}",
+                        |   "container": "the-container",
+                        |   "dockerContainer": {"id": "some-container-id", "name": null},
+                        |   "containerWasStarted": true
+                        |}
+                        """.trimMargin()
+                    )
+                )
             }
         }
     }

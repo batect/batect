@@ -22,12 +22,12 @@ import batect.sockets.namedpipes.NamedPipeDns
 import batect.sockets.namedpipes.NamedPipeSocketFactory
 import batect.sockets.unix.UnixSocketDns
 import batect.sockets.unix.UnixSocketFactory
-import java.net.Proxy
-import javax.net.SocketFactory
 import okhttp3.Dns
 import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
+import java.net.Proxy
+import javax.net.SocketFactory
 
 class DockerHttpConfig(
     private val baseClient: OkHttpClient,

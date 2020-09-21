@@ -69,14 +69,25 @@ The behaviour is the same as if the dependencies were specified for the [`depend
 container's definition.
 
 ## `prerequisites`
-List of other tasks that should be run to completion before running this task.
+List of other tasks that should be run to completion before running this task. Names are case-sensitive.
 
 If a prerequisite task finishes with a non-zero exit code, then neither this task nor any other prerequisites will be run.
 
-The tasks are run in the same order that they are declared in, unless reordering is required to satisfy the prerequisites of
-this task's prerequisites.
+The tasks are run in the same order that they are declared in, unless reordering is required to satisfy the prerequisites of this task's prerequisites. If a
+task is listed explicitly and also matches a wildcard, the first occurrence of the task is used.
 
 Passing the [`--skip-prerequisites`](../CLIReference.md#skip-prerequisites-skip-prerequisites) command line flag skips all defined prerequisites and runs only the task specified on the command line.
+
+### Wildcards
+
+Prerequisite names can include wildcards, denoted by `*`. For example, rather than listing `lint:bar` and `lint:foo`, you can give just `lint:*`, and batect will automatically run both `lint:bar` and
+`lint:foo`.
+
+A single `*` matches zero or more characters. For example, giving `lint:*` as a prerequisite would match the tasks `lint:a`, `lint:foo` and `lint:`.
+
+To avoid YAML syntax issues with `*` characters, it's recommended you enclose names containing wildcards in quotes (eg. use `"lint:*"` rather than `lint:*`).
+
+If a wildcard matches multiple tasks, the tasks are returned in alphabetic order. If a wildcard does not match any tasks, no error is raised.
 
 ## Names
 

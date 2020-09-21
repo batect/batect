@@ -52,6 +52,7 @@ class TaskExecutionOrderResolver(
 
     private fun resolvePrerequisitesForTask(task: Task, path: List<Task>, executionOrderSoFar: List<Task>): List<Task> {
         val prerequisites = task.prerequisiteTasks
+            .resolveWildcards()
             .map { prerequisiteTaskName -> resolvePrerequisiteForTask(task, prerequisiteTaskName, path) }
 
         var executionOrder = executionOrderSoFar
@@ -63,6 +64,49 @@ class TaskExecutionOrderResolver(
         }
 
         return executionOrder + task
+    }
+
+    private fun List<String>.resolveWildcards(): List<String> {
+        return this
+            .flatMap { prerequisiteSpec ->
+                if (!prerequisiteSpec.contains('*')) {
+                    listOf(prerequisiteSpec)
+                } else {
+                    val pattern = prerequisiteSpec.toWildcardRegex()
+
+                    config.tasks.keys
+                        .filter { it.matches(pattern) }
+                        .sorted()
+                }
+            }
+    }
+
+    private fun String.toWildcardRegex(): Regex {
+        val builder = StringBuilder()
+        builder.append('^')
+
+        var nextIndex = 0
+
+        while (nextIndex < this.length) {
+            if (this[nextIndex] == '*') {
+                builder.append(".*")
+                nextIndex++
+            } else {
+                val literalEnd = this.indexOf('*', nextIndex)
+
+                if (literalEnd == -1) {
+                    builder.append(Regex.escape(this.substring(nextIndex)))
+                    nextIndex = this.length
+                } else {
+                    builder.append(Regex.escape(this.substring(nextIndex, literalEnd)))
+                    nextIndex = literalEnd
+                }
+            }
+        }
+
+        builder.append('$')
+
+        return Regex(builder.toString())
     }
 
     private fun resolvePrerequisiteForTask(parentTask: Task, prerequisiteTaskName: String, path: List<Task>): Task {

@@ -39,6 +39,7 @@ import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
+import com.natpryce.hamkrest.hasSize
 import com.natpryce.hamkrest.throws
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
@@ -132,27 +133,72 @@ object TaskExecutionOrderResolverSpec : Spek({
                 }
             }
 
-            on("resolving the execution order for a task that has a single dependency") {
-                val dependencyTask = Task("dependency-task", taskRunConfiguration)
-                val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = listOf(dependencyTask.name))
-                val config = Configuration("some-project", TaskMap(mainTask, dependencyTask), ContainerMap())
+            describe("resolving the execution order for a task that has a single dependency") {
+                mapOf(
+                    "the dependent task's name is given explicitly" to "dependency-task",
+                    "the dependent task's name is given with a wildcard that matches part of the end of the dependent task's name" to "dependency-*",
+                    "the dependent task's name is given with a wildcard that matches part of the start of the dependent task's name" to "*cy-task",
+                    "the dependent task's name is given with a wildcard that matches part of the middle of the dependent task's name" to "dependen*-task",
+                    "the dependent task's name is given with a wildcard that matches a single character at the start of the dependent task's name" to "*ependency-task",
+                    "the dependent task's name is given with a wildcard that matches a single character at the end of the dependent task's name" to "dependency-tas*",
+                    "the dependent task's name is given with a wildcard that matches a single character in the middle of the dependent task's name" to "dependenc*-task",
+                    "the dependent task's name is given with a wildcard that matches no characters of the dependent task's name" to "dependency-task*",
+                ).forEach { description, prerequisiteSpec ->
+                    given(description) {
+                        val dependencyTask = Task("dependency-task", taskRunConfiguration)
+                        val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = listOf(prerequisiteSpec))
+                        val config = Configuration("some-project", TaskMap(mainTask, dependencyTask), ContainerMap())
 
-                val executionOrder by runForEachTest { resolveExecutionOrder(config, mainTask.name) }
+                        val executionOrder by runForEachTest { resolveExecutionOrder(config, mainTask.name) }
 
-                it("schedules the dependency to execute before the main task") {
-                    assertThat(executionOrder, dependencyTask executesBefore mainTask)
+                        it("schedules the dependency to execute before the main task") {
+                            assertThat(executionOrder, dependencyTask executesBefore mainTask)
+                        }
+
+                        it("logs the execution order") {
+                            assertThat(
+                                logSink,
+                                hasMessage(
+                                    withSeverity(Severity.Info) and
+                                        withLogMessage("Resolved task execution order.") and
+                                        withAdditionalData("executionOrder", listOf(dependencyTask.name, mainTask.name)) and
+                                        withAdditionalData("skipPrerequisites", false)
+                                )
+                            )
+                        }
+                    }
                 }
+            }
 
-                it("logs the execution order") {
-                    assertThat(
-                        logSink,
-                        hasMessage(
-                            withSeverity(Severity.Info) and
-                                withLogMessage("Resolved task execution order.") and
-                                withAdditionalData("executionOrder", listOf(dependencyTask.name, mainTask.name)) and
-                                withAdditionalData("skipPrerequisites", false)
-                        )
-                    )
+            describe("resolving the execution order for a task that has a wildcard dependency that does not match any tasks") {
+                mapOf(
+                    "the pattern has a different case to a defined task" to "Dependency-*",
+                    "the pattern does not match the full name of a defined task from the start" to "pendency-*",
+                    "the pattern does not match the full name of a defined task to the end" to "*-ta"
+                ).forEach { description, prerequisiteSpec ->
+                    given(description) {
+                        val dependencyTask = Task("dependency-task", taskRunConfiguration)
+                        val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = listOf(prerequisiteSpec))
+                        val config = Configuration("some-project", TaskMap(mainTask, dependencyTask), ContainerMap())
+
+                        val executionOrder by runForEachTest { resolveExecutionOrder(config, mainTask.name) }
+
+                        it("returns only the main task") {
+                            assertThat(executionOrder, equalTo(listOf(mainTask)))
+                        }
+
+                        it("logs the execution order") {
+                            assertThat(
+                                logSink,
+                                hasMessage(
+                                    withSeverity(Severity.Info) and
+                                        withLogMessage("Resolved task execution order.") and
+                                        withAdditionalData("executionOrder", listOf(mainTask.name)) and
+                                        withAdditionalData("skipPrerequisites", false)
+                                )
+                            )
+                        }
+                    }
                 }
             }
 
@@ -206,20 +252,80 @@ object TaskExecutionOrderResolverSpec : Spek({
             }
 
             on("resolving the execution order for a task that has multiple dependencies") {
-                val dependencyTask1 = Task("dependency-task-1", taskRunConfiguration)
-                val dependencyTask2 = Task("dependency-task-2", taskRunConfiguration)
-                val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = listOf(dependencyTask1.name, dependencyTask2.name))
-                val config = Configuration("some-project", TaskMap(mainTask, dependencyTask1, dependencyTask2), ContainerMap())
+                mapOf(
+                    "the tasks are given explicitly" to listOf("dependency-task-1", "dependency-task-2"),
+                    "the tasks are given with a wildcard" to listOf("dependency-task-*"),
+                    "the tasks are given with a wildcard and both are also specified before the entry with a wildcard" to listOf("dependency-task-1", "dependency-task-2", "dependency-task-*"),
+                    "the tasks are given with a wildcard and one is also specified before the entry with a wildcard" to listOf("dependency-task-1", "dependency-task-*"),
+                    "the tasks are given with a wildcard and one is also specified after the entry with a wildcard" to listOf("dependency-task-*", "dependency-task-2"),
+                ).forEach { description, prerequisites ->
+                    given(description) {
+                        val dependencyTask1 = Task("dependency-task-1", taskRunConfiguration)
+                        val dependencyTask2 = Task("dependency-task-2", taskRunConfiguration)
+                        val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = prerequisites)
+                        val config = Configuration("some-project", TaskMap(mainTask, dependencyTask1, dependencyTask2), ContainerMap())
 
-                val executionOrder by runForEachTest { resolveExecutionOrder(config, mainTask.name) }
+                        val executionOrder by runForEachTest { resolveExecutionOrder(config, mainTask.name) }
 
-                it("schedules the dependencies to execute before the main task") {
-                    assertThat(executionOrder, dependencyTask1 executesBefore mainTask)
-                    assertThat(executionOrder, dependencyTask2 executesBefore mainTask)
+                        it("schedules the dependencies to execute before the main task") {
+                            assertThat(executionOrder, dependencyTask1 executesBefore mainTask)
+                            assertThat(executionOrder, dependencyTask2 executesBefore mainTask)
+                        }
+
+                        it("schedules the dependencies in the same order they are specified in the configuration file, or sorted alphabetically if a wildcard is used") {
+                            assertThat(executionOrder, dependencyTask1 executesBefore dependencyTask2)
+                        }
+
+                        it("does not return any task more than once") {
+                            assertThat(executionOrder.toSet(), hasSize(equalTo(3)))
+                        }
+                    }
                 }
 
-                it("schedules the dependencies in the same order they are specified in the configuration file") {
-                    assertThat(executionOrder, dependencyTask1 executesBefore dependencyTask2)
+                given("the tasks are given with a wildcard and the tasks are not defined in alphabetical order") {
+                    val dependencyTask1 = Task("dependency-task-1", taskRunConfiguration)
+                    val dependencyTask2 = Task("dependency-task-2", taskRunConfiguration)
+                    val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = listOf("dependency-task-*"))
+                    val config = Configuration("some-project", TaskMap(mainTask, dependencyTask2, dependencyTask1), ContainerMap())
+
+                    val executionOrder by runForEachTest { resolveExecutionOrder(config, mainTask.name) }
+
+                    it("schedules the dependencies to execute before the main task") {
+                        assertThat(executionOrder, dependencyTask1 executesBefore mainTask)
+                        assertThat(executionOrder, dependencyTask2 executesBefore mainTask)
+                    }
+
+                    it("schedules the dependencies in alphabetical order") {
+                        assertThat(executionOrder, dependencyTask1 executesBefore dependencyTask2)
+                    }
+                }
+
+                given("the tasks are given with a wildcard and an explicit task that would otherwise sort in a different order alphabetically") {
+                    val dependencyTask1 = Task("dependency-task-1", taskRunConfiguration)
+                    val dependencyTask2 = Task("dependency-task-2", taskRunConfiguration)
+                    val dependencyTask3 = Task("dependency-task-3", taskRunConfiguration)
+                    val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = listOf("dependency-task-2", "dependency-task-*"))
+                    val config = Configuration("some-project", TaskMap(mainTask, dependencyTask2, dependencyTask1, dependencyTask3), ContainerMap())
+
+                    val executionOrder by runForEachTest { resolveExecutionOrder(config, mainTask.name) }
+
+                    it("schedules the dependencies to execute before the main task") {
+                        assertThat(executionOrder, dependencyTask1 executesBefore mainTask)
+                        assertThat(executionOrder, dependencyTask2 executesBefore mainTask)
+                        assertThat(executionOrder, dependencyTask3 executesBefore mainTask)
+                    }
+
+                    it("respects any dependencies given explicitly before the wildcard pattern") {
+                        assertThat(executionOrder, dependencyTask2 executesBefore dependencyTask1)
+                    }
+
+                    it("schedules the remaining dependencies in alphabetical order") {
+                        assertThat(executionOrder, dependencyTask1 executesBefore dependencyTask3)
+                    }
+
+                    it("does not return any task more than once") {
+                        assertThat(executionOrder.toSet(), hasSize(equalTo(4)))
+                    }
                 }
             }
 

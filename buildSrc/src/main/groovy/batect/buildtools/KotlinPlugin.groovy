@@ -194,7 +194,7 @@ class KotlinPlugin implements Plugin<Project> {
         project.plugins.apply('jacoco')
 
         project.jacoco {
-            toolVersion = '0.8.5'
+            toolVersion = '0.8.6'
         }
 
         project.jacocoTestReport {

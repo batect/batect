@@ -35,7 +35,7 @@ dependencies {
     implementation platform("org.jetbrains.kotlin:kotlin-bom")
 
     implementation 'org.jetbrains.kotlinx:kotlinx-serialization-core:1.0.0-RC'
-    implementation 'org.kodein.di:kodein-di:7.0.0'
+    implementation 'org.kodein.di:kodein-di:7.1.0'
     implementation 'com.squareup.okio:okio:2.8.0'
     implementation 'com.squareup.okhttp3:okhttp'
     implementation 'com.github.jnr:jnr-posix:3.0.57'

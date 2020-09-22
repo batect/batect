@@ -21,7 +21,7 @@ plugins {
 dependencies {
     implementation platform("com.squareup.okhttp3:okhttp-bom:4.9.0")
     implementation 'org.jetbrains.kotlin:kotlin-reflect'
-    implementation 'org.jetbrains.kotlinx:kotlinx-serialization-core:1.0.0-RC'
+    implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.0.0-RC2'
     implementation 'com.github.jnr:jnr-posix:3.0.57'
     implementation 'com.squareup.okhttp3:okhttp'
     implementation 'org.apache.commons:commons-compress:1.20'

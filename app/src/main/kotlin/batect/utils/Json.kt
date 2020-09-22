@@ -30,8 +30,21 @@ object Json {
         polymorphic(PathResolutionContext::class, GitIncludePathResolutionContext::class, GitIncludePathResolutionContext.serializer())
     }
 
-    val default = Json.Default
-    val ignoringUnknownKeys = Json { ignoreUnknownKeys = true }
-    val withoutDefaults = Json { encodeDefaults = false }
-    val forLogging = Json { serializersModule = loggingModule }
+    val default = Json {
+        encodeDefaults = true
+    }
+
+    val ignoringUnknownKeys = Json {
+        encodeDefaults = true
+        ignoreUnknownKeys = true
+    }
+
+    val withoutDefaults = Json {
+        encodeDefaults = false
+    }
+
+    val forLogging = Json {
+        encodeDefaults = true
+        serializersModule = loggingModule
+    }
 }

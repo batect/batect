@@ -81,7 +81,7 @@ private val executionModule = DI.Module("Task scope: execution") {
 }
 
 private val runnersModule = DI.Module("Task scope: execution.model.steps.runners") {
-    bind<BuildImageStepRunner>() with scoped(TaskScope).singleton { BuildImageStepRunner(instance(), instance(), instance(), instance(), instance(), instance(), instance(), instance(), instance()) }
+    bind<BuildImageStepRunner>() with scoped(TaskScope).singleton { BuildImageStepRunner(instance(), instance(), instance(), instance(), instance(), instance(), instance(), instance(), instance(), instance()) }
     bind<CreateContainerStepRunner>() with scoped(TaskScope).singleton { CreateContainerStepRunner(instance(), instance(), instance(), instance(), instance()) }
     bind<PrepareTaskNetworkStepRunner>() with scoped(TaskScope).singleton { PrepareTaskNetworkStepRunner(instance(), instance(), instance(), instance()) }
     bind<DeleteTaskNetworkStepRunner>() with scoped(TaskScope).singleton { DeleteTaskNetworkStepRunner(instance()) }

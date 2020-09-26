@@ -43,6 +43,8 @@ import batect.os.PathType
 import batect.os.SystemInfo
 import batect.primitives.CancellationContext
 import batect.proxies.ProxyEnvironmentVariablesProvider
+import batect.telemetry.TelemetrySessionBuilder
+import batect.telemetry.TelemetrySpanBuilder
 import batect.testutils.createForEachTest
 import batect.testutils.given
 import batect.testutils.on
@@ -51,6 +53,7 @@ import batect.testutils.pathResolutionContextDoesNotMatter
 import batect.ui.containerio.ContainerIOStreamingOptions
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.anyOrNull
+import com.nhaarman.mockitokotlin2.doAnswer
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.doThrow
 import com.nhaarman.mockitokotlin2.eq
@@ -103,6 +106,16 @@ object BuildImageStepRunnerSpec : Spek({
             on { lineSeparator } doReturn "SYSTEM_LINE_SEPARATOR"
         }
 
+        val telemetrySessionBuilder by createForEachTest {
+            mock<TelemetrySessionBuilder> {
+                onGeneric { addSpan<DockerImage>(any(), any()) } doAnswer { invocation ->
+                    @Suppress("UNCHECKED_CAST")
+                    val process = invocation.arguments[1] as ((TelemetrySpanBuilder) -> DockerImage)
+                    process(mock())
+                }
+            }
+        }
+
         val expressionEvaluationContext = ExpressionEvaluationContext(HostEnvironmentVariables("SOME_ENV_VAR" to "some env var value"), emptyMap())
         val eventSink by createForEachTest { mock<TaskEventSink>() }
 
@@ -116,7 +129,8 @@ object BuildImageStepRunnerSpec : Spek({
                 cancellationContext,
                 ioStreamingOptions,
                 CommandLineOptions(dontPropagateProxyEnvironmentVariables = false),
-                systemInfo
+                systemInfo,
+                telemetrySessionBuilder
             )
         }
 
@@ -160,6 +174,10 @@ object BuildImageStepRunnerSpec : Spek({
 
                     it("emits a 'image built' event") {
                         verify(eventSink).postEvent(ImageBuiltEvent(container, image))
+                    }
+
+                    it("records a span in telemetry for the image build") {
+                        verify(telemetrySessionBuilder).addSpan(eq("BuildImage"), any())
                     }
                 }
 
@@ -207,7 +225,8 @@ object BuildImageStepRunnerSpec : Spek({
                         cancellationContext,
                         ioStreamingOptions,
                         commandLineOptionsWithProxyEnvironmentVariablePropagationDisabled,
-                        systemInfo
+                        systemInfo,
+                        telemetrySessionBuilder
                     )
                 }
 

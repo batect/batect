@@ -36,6 +36,7 @@ import batect.os.PathType
 import batect.os.SystemInfo
 import batect.primitives.CancellationContext
 import batect.proxies.ProxyEnvironmentVariablesProvider
+import batect.telemetry.TelemetrySessionBuilder
 import batect.ui.containerio.ContainerIOStreamingOptions
 import java.nio.file.Path
 
@@ -48,7 +49,8 @@ class BuildImageStepRunner(
     private val cancellationContext: CancellationContext,
     private val ioStreamingOptions: ContainerIOStreamingOptions,
     private val commandLineOptions: CommandLineOptions,
-    private val systemInfo: SystemInfo
+    private val systemInfo: SystemInfo,
+    private val telemetrySessionBuilder: TelemetrySessionBuilder
 ) {
     fun run(step: BuildImageStep, eventSink: TaskEventSink) {
         try {
@@ -57,20 +59,21 @@ class BuildImageStepRunner(
             }
 
             val buildConfig = step.container.imageSource as BuildImage
-            val buildArgs = buildTimeProxyEnvironmentVariablesForOptions() +
-                substituteBuildArgs(buildConfig.buildArgs)
+            val buildArgs = buildTimeProxyEnvironmentVariablesForOptions() + substituteBuildArgs(buildConfig.buildArgs)
 
-            val image = imagesClient.build(
-                resolveBuildDirectory(buildConfig),
-                buildArgs,
-                buildConfig.dockerfilePath,
-                buildConfig.pathResolutionContext,
-                setOf(imageTagFor(step)),
-                buildConfig.imagePullPolicy.forciblyPull,
-                ioStreamingOptions.stdoutForImageBuild(step.container),
-                cancellationContext,
-                onStatusUpdate
-            )
+            val image = telemetrySessionBuilder.addSpan("BuildImage") {
+                imagesClient.build(
+                    resolveBuildDirectory(buildConfig),
+                    buildArgs,
+                    buildConfig.dockerfilePath,
+                    buildConfig.pathResolutionContext,
+                    setOf(imageTagFor(step)),
+                    buildConfig.imagePullPolicy.forciblyPull,
+                    ioStreamingOptions.stdoutForImageBuild(step.container),
+                    cancellationContext,
+                    onStatusUpdate
+                )
+            }
 
             eventSink.postEvent(ImageBuiltEvent(step.container, image))
         } catch (e: ImageBuildFailedException) {

@@ -520,7 +520,13 @@ class ContainersAPI(
         val buffer = StringBuffer()
 
         while (true) {
-            buffer.append(this.readUtf8CodePoint().toChar())
+            val possibleObjectEnd = this.indexOf('}'.toByte())
+
+            if (possibleObjectEnd == -1L) {
+                buffer.append(this.readUtf8())
+            } else {
+                buffer.append(this.readUtf8(possibleObjectEnd + 1))
+            }
 
             try {
                 return Json.default.parseToJsonElement(buffer.toString()).jsonObject

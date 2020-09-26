@@ -22,6 +22,7 @@ import batect.git.GitClient
 import batect.git.GitVersionRetrievalResult
 import batect.os.ConsoleInfo
 import batect.os.HostEnvironmentVariables
+import batect.os.SystemInfo
 import batect.testutils.createForEachTest
 import batect.testutils.given
 import batect.testutils.osIndependentPath
@@ -55,6 +56,15 @@ object EnvironmentTelemetryCollectorSpec : Spek({
             }
         }
 
+        val systemInfo by createForEachTest {
+            mock<SystemInfo> {
+                on { osArchitecture } doReturn "x86_64"
+                on { osName } doReturn "My Cool OS"
+                on { osVersion } doReturn "2020.08"
+                on { osDetails } doReturn "Ubuntu Linux 20.04"
+            }
+        }
+
         val runtimeMXBean by createForEachTest {
             mock<RuntimeMXBean> {
                 on { startTime } doReturn 1597138787193 // 2020-08-11T09:39:47.193Z
@@ -64,16 +74,13 @@ object EnvironmentTelemetryCollectorSpec : Spek({
         val commandType = VersionInfoCommand::class
 
         beforeEachTest {
-            systemProperties.setProperty("os.arch", "x86_64")
-            systemProperties.setProperty("os.name", "My Cool OS")
-            systemProperties.setProperty("os.version", "2020.08")
             systemProperties.setProperty("java.vendor", "JVMs R Us")
             systemProperties.setProperty("java.version", "2020.1")
             systemProperties.setProperty("java.vm.name", "64-Bit Server VM")
         }
 
         fun Suite.createEnvironmentCollector(hostEnvironmentVariables: HostEnvironmentVariables, commandLineOptions: CommandLineOptions = CommandLineOptions()) =
-            createForEachTest { EnvironmentTelemetryCollector(telemetrySessionBuilder, hostEnvironmentVariables, gitClient, consoleInfo, commandLineOptions, ciEnvironmentDetector, runtimeMXBean, systemProperties) }
+            createForEachTest { EnvironmentTelemetryCollector(telemetrySessionBuilder, hostEnvironmentVariables, gitClient, consoleInfo, commandLineOptions, ciEnvironmentDetector, systemInfo, runtimeMXBean, systemProperties) }
 
         given("the SHELL environment variable is set") {
             val shell = "/usr/local/bin/my-awesome-shell"
@@ -115,6 +122,7 @@ object EnvironmentTelemetryCollectorSpec : Spek({
                                     verify(telemetrySessionBuilder).addAttribute("osName", "My Cool OS")
                                     verify(telemetrySessionBuilder).addAttribute("osVersion", "2020.08")
                                     verify(telemetrySessionBuilder).addAttribute("osArchitecture", "x86_64")
+                                    verify(telemetrySessionBuilder).addAttribute("osDetails", "Ubuntu Linux 20.04")
                                 }
 
                                 it("reports details of the JVM") {

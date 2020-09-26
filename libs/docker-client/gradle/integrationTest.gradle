@@ -42,3 +42,7 @@ tasks.named("check").configure {
 tasks.named("integrationTestClasses").configure {
     mustRunAfter test
 }
+
+dependencies {
+    integrationTestImplementation 'org.graylog.repackaged:os-platform-finder:1.2.3'
+}

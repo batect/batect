@@ -20,6 +20,7 @@ import batect.logging.LogMessageBuilder
 import batect.logging.PathSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
+import org.jsoftbiz.utils.OS
 import java.nio.file.FileSystem
 import java.nio.file.Path
 import java.util.Properties
@@ -27,16 +28,22 @@ import java.util.Properties
 @Serializable()
 class SystemInfo(
     val operatingSystem: OperatingSystem,
+    val osName: String,
     val osVersion: String,
+    val osArchitecture: String,
+    val osDetails: String,
     val lineSeparator: String,
     val jvmVersion: String,
     val userName: String,
     @Serializable(with = PathSerializer::class) val homeDirectory: Path,
     @Serializable(with = PathSerializer::class) val tempDirectory: Path
 ) {
-    constructor(nativeMethods: NativeMethods, fileSystem: FileSystem, systemProperties: Properties = System.getProperties()) : this(
+    constructor(nativeMethods: NativeMethods, fileSystem: FileSystem, osInfo: OS, systemProperties: Properties = System.getProperties()) : this(
         determineOperatingSystem(systemProperties.getProperty("os.name")),
-        "${systemProperties.getProperty("os.name")} ${systemProperties.getProperty("os.version")} (${systemProperties.getProperty("os.arch")})",
+        systemProperties.getProperty("os.name"),
+        systemProperties.getProperty("os.version"),
+        systemProperties.getProperty("os.arch"),
+        osInfo.platformName,
         systemProperties.getProperty("line.separator"),
         "${systemProperties.getProperty("java.vm.vendor")} ${systemProperties.getProperty("java.vm.name")} ${systemProperties.getProperty("java.version")}",
         nativeMethods.getUserName(),
@@ -45,9 +52,24 @@ class SystemInfo(
         fileSystem
     )
 
-    constructor(operatingSystem: OperatingSystem, osVersion: String, lineSeparator: String, jvmVersion: String, userName: String, homeDirectory: Path, systemProperties: Properties, fileSystem: FileSystem) : this(
+    constructor(
+        operatingSystem: OperatingSystem,
+        osName: String,
+        osVersion: String,
+        osArchitecture: String,
+        osDetails: String,
+        lineSeparator: String,
+        jvmVersion: String,
+        userName: String,
+        homeDirectory: Path,
+        systemProperties: Properties,
+        fileSystem: FileSystem
+    ) : this(
         operatingSystem,
+        osName,
         osVersion,
+        osArchitecture,
+        osDetails,
         lineSeparator,
         jvmVersion,
         userName,
@@ -57,6 +79,12 @@ class SystemInfo(
             else -> fileSystem.getPath(systemProperties.getProperty("java.io.tmpdir"))
         }
     )
+
+    @Transient
+    val osSummary = when (operatingSystem) {
+        OperatingSystem.Linux -> "$osName $osVersion $osArchitecture ($osDetails)"
+        else -> "$osName $osVersion $osArchitecture"
+    }
 
     @Transient
     val isSupportedOperatingSystem = operatingSystem in setOf(OperatingSystem.Mac, OperatingSystem.Linux, OperatingSystem.Windows)

@@ -31,6 +31,7 @@ import com.hypirion.io.RevivableInputStream
 import jnr.ffi.Platform
 import jnr.posix.POSIX
 import jnr.posix.POSIXFactory
+import org.jsoftbiz.utils.OS
 import org.kodein.di.DI
 import org.kodein.di.DirectDI
 import org.kodein.di.bind
@@ -79,5 +80,6 @@ private val telemetryModule = DI.Module("bootstrap telemetry") {
 private val osModule = DI.Module("bootstrap os") {
     bind<HostEnvironmentVariables>() with singleton { HostEnvironmentVariables.current }
     bind<PathResolverFactory>() with singleton { PathResolverFactory(instance()) }
-    bind<SystemInfo>() with singleton { SystemInfo(instance(), instance()) }
+    bind<SystemInfo>() with singleton { SystemInfo(instance(), instance(), instance()) }
+    bind<OS>() with singleton { OS.getOs() }
 }

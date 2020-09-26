@@ -28,6 +28,7 @@ import com.nhaarman.mockitokotlin2.mock
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonObject
+import org.jsoftbiz.utils.OS
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.util.Properties
@@ -56,19 +57,37 @@ object SystemInfoSpec : Spek({
 
         val fileSystem by createForEachTest { Jimfs.newFileSystem(Configuration.unix()) }
 
+        val osInfo by createForEachTest {
+            mock<OS> {
+                on { platformName } doReturn "Bubuntu Linux 1.2.3"
+            }
+        }
+
         on("getting the JVM version") {
-            val jvmVersion by runForEachTest { SystemInfo(nativeMethods, fileSystem, systemProperties).jvmVersion }
+            val jvmVersion by runForEachTest { SystemInfo(nativeMethods, fileSystem, osInfo, systemProperties).jvmVersion }
 
             it("returns a formatted string containing the details of the JVM") {
                 assertThat(jvmVersion, equalTo("Awesome JVMs, Inc. Best JVM Ever 1.2.3"))
             }
         }
 
-        on("getting the OS version") {
-            val osVersion by runForEachTest { SystemInfo(nativeMethods, fileSystem, systemProperties).osVersion }
+        on("getting operating system information") {
+            val systemInfo by runForEachTest { SystemInfo(nativeMethods, fileSystem, osInfo, systemProperties) }
 
-            it("returns a formatted string containing the details of the OS") {
-                assertThat(osVersion, equalTo("Best OS Ever 4.5.6 (x86)"))
+            it("returns the operating system name") {
+                assertThat(systemInfo.osName, equalTo("Best OS Ever"))
+            }
+
+            it("returns the operating system version") {
+                assertThat(systemInfo.osVersion, equalTo("4.5.6"))
+            }
+
+            it("returns the operating system architecture") {
+                assertThat(systemInfo.osArchitecture, equalTo("x86"))
+            }
+
+            it("returns the operating system details") {
+                assertThat(systemInfo.osDetails, equalTo("Bubuntu Linux 1.2.3"))
             }
         }
 
@@ -79,7 +98,7 @@ object SystemInfoSpec : Spek({
                     systemProperties.setProperty("java.io.tmpdir", "/var/folders/tf/abc123/T/")
                 }
 
-                val systemInfo by runForEachTest { SystemInfo(nativeMethods, fileSystem, systemProperties) }
+                val systemInfo by runForEachTest { SystemInfo(nativeMethods, fileSystem, osInfo, systemProperties) }
 
                 it("returns that the operating system is Mac") {
                     assertThat(systemInfo.operatingSystem, equalTo(OperatingSystem.Mac))
@@ -92,6 +111,10 @@ object SystemInfoSpec : Spek({
                 it("returns that the temporary directory is '/tmp'") {
                     assertThat(systemInfo.tempDirectory, equalTo(fileSystem.getPath("/tmp")))
                 }
+
+                it("returns a summary of the operating system without details") {
+                    assertThat(systemInfo.osSummary, equalTo("Mac OS X 4.5.6 x86"))
+                }
             }
 
             on("when running on Linux") {
@@ -100,7 +123,7 @@ object SystemInfoSpec : Spek({
                     systemProperties.setProperty("java.io.tmpdir", "/tmp")
                 }
 
-                val systemInfo by runForEachTest { SystemInfo(nativeMethods, fileSystem, systemProperties) }
+                val systemInfo by runForEachTest { SystemInfo(nativeMethods, fileSystem, osInfo, systemProperties) }
 
                 it("returns that the operating system is Linux") {
                     assertThat(systemInfo.operatingSystem, equalTo(OperatingSystem.Linux))
@@ -113,6 +136,10 @@ object SystemInfoSpec : Spek({
                 it("returns that the temporary directory is '/tmp'") {
                     assertThat(systemInfo.tempDirectory, equalTo(fileSystem.getPath("/tmp")))
                 }
+
+                it("returns a summary of the operating system with details") {
+                    assertThat(systemInfo.osSummary, equalTo("Linux 4.5.6 x86 (Bubuntu Linux 1.2.3)"))
+                }
             }
 
             on("when running on Windows") {
@@ -121,7 +148,7 @@ object SystemInfoSpec : Spek({
                     systemProperties.setProperty("java.io.tmpdir", "C:\\some-temp-dir")
                 }
 
-                val systemInfo by runForEachTest { SystemInfo(nativeMethods, fileSystem, systemProperties) }
+                val systemInfo by runForEachTest { SystemInfo(nativeMethods, fileSystem, osInfo, systemProperties) }
 
                 it("returns that the operating system is Windows") {
                     assertThat(systemInfo.operatingSystem, equalTo(OperatingSystem.Windows))
@@ -134,12 +161,16 @@ object SystemInfoSpec : Spek({
                 it("returns that the temporary directory is the value of the 'java.io.tmpdir' system property") {
                     assertThat(systemInfo.tempDirectory, equalTo(fileSystem.getPath("C:\\some-temp-dir")))
                 }
+
+                it("returns a summary of the operating system without details") {
+                    assertThat(systemInfo.osSummary, equalTo("Windows 10 4.5.6 x86"))
+                }
             }
 
             on("when running on another operating system") {
                 beforeEachTest { systemProperties.setProperty("os.name", "Something else") }
 
-                val systemInfo by runForEachTest { SystemInfo(nativeMethods, fileSystem, systemProperties) }
+                val systemInfo by runForEachTest { SystemInfo(nativeMethods, fileSystem, osInfo, systemProperties) }
 
                 it("returns that the operating system is unknown") {
                     assertThat(systemInfo.operatingSystem, equalTo(OperatingSystem.Other))
@@ -148,11 +179,15 @@ object SystemInfoSpec : Spek({
                 it("returns that the operating system is not supported") {
                     assertThat(systemInfo.isSupportedOperatingSystem, equalTo(false))
                 }
+
+                it("returns a summary of the operating system without details") {
+                    assertThat(systemInfo.osSummary, equalTo("Something else 4.5.6 x86"))
+                }
             }
         }
 
         on("getting the home directory") {
-            val homeDir by runForEachTest { SystemInfo(nativeMethods, fileSystem, systemProperties).homeDirectory }
+            val homeDir by runForEachTest { SystemInfo(nativeMethods, fileSystem, osInfo, systemProperties).homeDirectory }
 
             it("returns the user's home directory") {
                 assertThat(homeDir, equalTo(fileSystem.getPath("/some/home/dir")))
@@ -160,7 +195,7 @@ object SystemInfoSpec : Spek({
         }
 
         on("getting the current user name") {
-            val userName by runForEachTest { SystemInfo(nativeMethods, fileSystem, systemProperties).userName }
+            val userName by runForEachTest { SystemInfo(nativeMethods, fileSystem, osInfo, systemProperties).userName }
 
             it("returns the ID given by the `id -un` command") {
                 assertThat(userName, equalTo("awesome-user"))
@@ -168,7 +203,7 @@ object SystemInfoSpec : Spek({
         }
 
         on("getting the line separator") {
-            val lineSeparator by runForEachTest { SystemInfo(nativeMethods, fileSystem, systemProperties).lineSeparator }
+            val lineSeparator by runForEachTest { SystemInfo(nativeMethods, fileSystem, osInfo, systemProperties).lineSeparator }
 
             it("returns the system's line separator") {
                 assertThat(lineSeparator, equalTo("some-long-line-separator"))
@@ -176,10 +211,10 @@ object SystemInfoSpec : Spek({
         }
 
         on("serializing system info") {
-            val json by runForEachTest { Json.Default.encodeToJsonElement(SystemInfo.serializer(), SystemInfo(nativeMethods, fileSystem, systemProperties)).jsonObject }
+            val json by runForEachTest { Json.Default.encodeToJsonElement(SystemInfo.serializer(), SystemInfo(nativeMethods, fileSystem, osInfo, systemProperties)).jsonObject }
 
             it("only includes the expected fields") {
-                assertThat(json.keys, equalTo(setOf("operatingSystem", "jvmVersion", "osVersion", "homeDirectory", "lineSeparator", "tempDirectory", "userName")))
+                assertThat(json.keys, equalTo(setOf("operatingSystem", "jvmVersion", "osName", "osVersion", "osArchitecture", "osDetails", "homeDirectory", "lineSeparator", "tempDirectory", "userName")))
             }
 
             it("includes the operating system") {
@@ -190,8 +225,20 @@ object SystemInfoSpec : Spek({
                 assertThat(json["jvmVersion"], equalTo(JsonPrimitive("Awesome JVMs, Inc. Best JVM Ever 1.2.3")))
             }
 
+            it("includes the operating system name") {
+                assertThat(json["osName"], equalTo(JsonPrimitive("Best OS Ever")))
+            }
+
             it("includes the operating system version") {
-                assertThat(json["osVersion"], equalTo(JsonPrimitive("Best OS Ever 4.5.6 (x86)")))
+                assertThat(json["osVersion"], equalTo(JsonPrimitive("4.5.6")))
+            }
+
+            it("includes the operating system architecture") {
+                assertThat(json["osArchitecture"], equalTo(JsonPrimitive("x86")))
+            }
+
+            it("includes the operating system details") {
+                assertThat(json["osDetails"], equalTo(JsonPrimitive("Bubuntu Linux 1.2.3")))
             }
 
             it("includes the home directory") {

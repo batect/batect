@@ -103,7 +103,7 @@ This information does not include personal or sensitive information such as the 
 |------|---------|--------------------------|
 | **Environmental information** |
 | batect version | `0.51.0` | Helps correlate and compare results for different versions of batect |
-| OS and version | `Mac OS X 10.15.4 (x86_64)` | Helps correlate and compare results for different operating systems and OS versions and helps plan compatibility changes for different operating systems (eg. dropping support for an older version of an operating system no longer commonly used) |
+| OS and version | `Mac OS X 10.15.4 (x86_64)` or `Ubuntu Linux 20.04 (x86_64)` | Helps correlate and compare results for different operating systems and OS versions and helps plan compatibility changes for different operating systems (eg. dropping support for an older version of an operating system no longer commonly used) |
 | Docker version | `19.03.8` | Helps correlate and compare results for different versions of Docker and helps plan compatibility changes for different versions of Docker (eg. dropping support for an older version of Docker no longer commonly used) |
 | JVM version | `Oracle Corporation Java HotSpot(TM) 64-Bit Server VM 1.8.0_162` | Helps correlate and compare results for different JVMs and helps plan compatibility changes for different JVMs (eg. dropping support for an older version of Java no longer commonly used) |
 | Git version | `2.27.0` | Helps correlate and compare results for different versions of Git and helps plan compatibility changes for different versions of Git (eg. dropping support for an older version of Git no longer commonly used) |

@@ -48,7 +48,7 @@ object VersionInfoCommandSpec : Spek({
 
             val systemInfo = mock<SystemInfo> {
                 on { jvmVersion } doReturn "THE JVM VERSION"
-                on { osVersion } doReturn "THE OS VERSION"
+                on { osSummary } doReturn "THE OS VERSION"
             }
 
             val dockerSystemInfoClient = mock<DockerSystemInfoClient> {

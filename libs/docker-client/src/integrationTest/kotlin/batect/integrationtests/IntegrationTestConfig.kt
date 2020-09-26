@@ -59,6 +59,7 @@ import jnr.ffi.Platform
 import jnr.posix.POSIX
 import jnr.posix.POSIXFactory
 import okhttp3.OkHttpClient
+import org.jsoftbiz.utils.OS
 import java.nio.file.FileSystems
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -68,7 +69,7 @@ val testImagesDirectory: Path = Paths.get("src", "integrationTest", "resources",
 fun createClient(posix: POSIX = POSIXFactory.getNativePOSIX(), nativeMethods: NativeMethods = getNativeMethodsForPlatform(posix)): DockerClient {
     val logger = mock<Logger>()
     val processRunner = ProcessRunner(logger)
-    val systemInfo = SystemInfo(nativeMethods, FileSystems.getDefault())
+    val systemInfo = SystemInfo(nativeMethods, FileSystems.getDefault(), OS.getOs())
     val dockerHost = getDockerHost(systemInfo)
     val tlsConfig = getDockerTLSConfig()
     val httpConfig = DockerHttpConfig(OkHttpClient(), dockerHost, tlsConfig, systemInfo)

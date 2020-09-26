@@ -37,7 +37,7 @@ class VersionInfoCommand(
         outputStream.println("Built:             ${versionInfo.buildDate}")
         outputStream.println("Built from commit: ${versionInfo.gitCommitHash} (commit date: ${versionInfo.gitCommitDate})")
         outputStream.println("JVM version:       ${systemInfo.jvmVersion}")
-        outputStream.println("OS version:        ${systemInfo.osVersion}")
+        outputStream.println("OS version:        ${systemInfo.osSummary}")
         outputStream.println("Docker version:    ${dockerSystemInfoClient.getDockerVersionInfo()}")
         outputStream.println("Git version:       ${gitClient.version}")
         outputStream.println()

@@ -22,6 +22,7 @@ import batect.git.GitClient
 import batect.git.GitVersionRetrievalResult
 import batect.os.ConsoleInfo
 import batect.os.HostEnvironmentVariables
+import batect.os.SystemInfo
 import java.lang.management.ManagementFactory
 import java.lang.management.RuntimeMXBean
 import java.time.Instant
@@ -37,6 +38,7 @@ class EnvironmentTelemetryCollector(
     private val consoleInfo: ConsoleInfo,
     private val commandLineOptions: CommandLineOptions,
     private val ciEnvironmentDetector: CIEnvironmentDetector,
+    private val systemInfo: SystemInfo,
     private val runtimeMXBean: RuntimeMXBean = ManagementFactory.getRuntimeMXBean(),
     private val systemProperties: Properties = System.getProperties()
 ) {
@@ -83,9 +85,10 @@ class EnvironmentTelemetryCollector(
     }
 
     private fun addOSAttributes() {
-        telemetrySessionBuilder.addAttribute("osName", systemProperties.getProperty("os.name"))
-        telemetrySessionBuilder.addAttribute("osArchitecture", systemProperties.getProperty("os.arch"))
-        telemetrySessionBuilder.addAttribute("osVersion", systemProperties.getProperty("os.version"))
+        telemetrySessionBuilder.addAttribute("osName", systemInfo.osName)
+        telemetrySessionBuilder.addAttribute("osArchitecture", systemInfo.osArchitecture)
+        telemetrySessionBuilder.addAttribute("osVersion", systemInfo.osVersion)
+        telemetrySessionBuilder.addAttribute("osDetails", systemInfo.osDetails)
     }
 
     private fun addJVMAttributes() {

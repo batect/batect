@@ -38,13 +38,13 @@
     function download() {
         checkForCurl
 
-        echo "Downloading batect version $VERSION from $DOWNLOAD_URL..."
         mkdir -p "$VERSION_CACHE_DIR"
         temp_file=$(mktemp)
 
         if [[ $QUIET_DOWNLOAD == 'true' ]]; then
-            curl --fail --show-error --location --output "$temp_file" "$DOWNLOAD_URL"
+            curl --silent --fail --show-error --location --output "$temp_file" "$DOWNLOAD_URL"
         else
+            echo "Downloading batect version $VERSION from $DOWNLOAD_URL..."
             curl -# --fail --show-error --location --output "$temp_file" "$DOWNLOAD_URL"
         fi
 

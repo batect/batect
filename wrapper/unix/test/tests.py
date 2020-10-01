@@ -97,11 +97,12 @@ class WrapperScriptTests(unittest.TestCase):
         result = self.run_script([], quiet_download="true")
         result_output = result.stdout.decode()
 
-        self.assertIn("Downloading batect", result_output)
+        self.assertNotIn("Downloading batect", result_output)
         self.assertIn("BATECT_WRAPPER_SCRIPT_DIR is: {}\n".format(self.get_script_dir()), result_output)
         self.assertIn("BATECT_WRAPPER_CACHE_DIR is: {}\n".format(self.cache_dir), result_output)
         self.assertIn("HOSTNAME is: {}\n".format(socket.gethostname()), result_output)
         self.assertNotIn("#", result_output)
+        self.assertNotIn("Xferd", result_output)
         self.assertEqual(result.returncode, 0)
 
     def test_no_curl(self):

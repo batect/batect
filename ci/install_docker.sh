@@ -14,6 +14,10 @@ fi
 # See https://blog.packagecloud.io/eng/2016/03/21/apt-hash-sum-mismatch/ for more details.
 echo 'Acquire::CompressionTypes::Order:: "gz";' | sudo tee /etc/apt/apt.conf.d/99compression-workaround > /dev/null
 
+# This works around "gpg: can't connect to the agent: IPC connect call failed" errors that sometimes occur when calling "apt-key add".
+pkill -9 gpg-agent
+source <(gpg-agent --daemon)
+
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
 sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
 sudo apt-get update

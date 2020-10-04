@@ -409,5 +409,6 @@ jobs:
         with:
           files: build/release/*
           fail_on_unmatched_files: true
+          draft: true # Update draft release with matching tag, if there is one.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -160,7 +160,7 @@ class ConfigurationLoader(
                 val path = try {
                     includeResolver.resolve(include)
                 } catch (e: GitException) {
-                    throw ConfigurationException("Could not load include '${include.path}' from ${include.repo}@${include.ref}: ${e.message}", null, null, e)
+                    throw ConfigurationException("Could not load include '${include.path}' from ${include.repo}@${include.ref}: ${e.message}", null, null, null, e)
                 }
 
                 if (!Files.exists(path)) {
@@ -235,9 +235,9 @@ class ConfigurationLoader(
         val pathToUse = includedAs?.toString() ?: filePath
 
         return when (e) {
-            is YamlException -> ConfigurationFileException(mapYamlExceptionMessage(e), pathToUse, e.line, e.column, e)
-            is ConfigurationException -> ConfigurationFileException(e.message, pathToUse, e.lineNumber, e.column, e)
-            else -> ConfigurationFileException("Could not load configuration file: ${e.message}", pathToUse, null, null, e)
+            is YamlException -> ConfigurationFileException(mapYamlExceptionMessage(e), pathToUse, e.path, e)
+            is ConfigurationException -> ConfigurationFileException(e.message, pathToUse, e.lineNumber, e.column, e.path)
+            else -> ConfigurationFileException("Could not load configuration file: ${e.message}", pathToUse, null, null, null, e)
         }
     }
 

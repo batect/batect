@@ -16,15 +16,19 @@
 
 package batect.config.io
 
+import com.charleskorn.kaml.YamlPath
+
 data class ConfigurationFileException(
     override val message: String,
     val fileName: String,
     val lineNumber: Int?,
     val column: Int?,
+    val path: String?,
     override val cause: Throwable? = null
 ) : RuntimeException(message, cause) {
 
-    constructor(message: String, fileName: String) : this(message, fileName, null, null, null)
+    constructor(message: String, fileName: String) : this(message, fileName, null, null, null, null)
+    constructor(message: String, fileName: String, path: YamlPath, cause: Throwable? = null) : this(message, fileName, path.endLocation.line, path.endLocation.column, path.toHumanReadableString(), cause)
 
     override fun toString(): String {
         val location = locationString()
@@ -37,6 +41,7 @@ data class ConfigurationFileException(
     }
 
     private fun locationString() = when {
+        lineNumber != null && column != null && path != null -> "$fileName (at $path on line $lineNumber, column $column)"
         lineNumber != null && column != null -> "$fileName (line $lineNumber, column $column)"
         lineNumber != null -> "$fileName (line $lineNumber)"
         else -> fileName

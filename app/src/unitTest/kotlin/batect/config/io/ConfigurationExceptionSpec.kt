@@ -27,7 +27,7 @@ object ConfigurationExceptionSpec : Spek({
     describe("a configuration exception") {
         describe("formatting") {
             given("an exception with a message") {
-                val exception = ConfigurationException("This is the error message", null, null, null)
+                val exception = ConfigurationException("This is the error message", null, null, null, null)
 
                 on("converting to a string") {
                     it("returns just the message") {
@@ -37,7 +37,7 @@ object ConfigurationExceptionSpec : Spek({
             }
 
             given("an exception with a message and a line number") {
-                val exception = ConfigurationException("This is the error message", 12, null, null)
+                val exception = ConfigurationException("This is the error message", 12, null, null, null)
 
                 on("converting to a string") {
                     it("returns the message and the line number") {
@@ -47,7 +47,7 @@ object ConfigurationExceptionSpec : Spek({
             }
 
             given("an exception with a message, a line number and a column") {
-                val exception = ConfigurationException("This is the error message", 12, 54, null)
+                val exception = ConfigurationException("This is the error message", 12, 54, null, null)
 
                 on("converting to a string") {
                     it("returns the message, the line number and the column") {
@@ -56,9 +56,19 @@ object ConfigurationExceptionSpec : Spek({
                 }
             }
 
+            given("an exception with a message, a line number, a column and a path") {
+                val exception = ConfigurationException("This is the error message", 12, 54, "colours.primary.saturation", null)
+
+                on("converting to a string") {
+                    it("returns the message, the line number, the column and the path") {
+                        assertThat(exception.toString(), equalTo("Error at colours.primary.saturation on line 12, column 54: This is the error message"))
+                    }
+                }
+            }
+
             given("an exception with a message, a line number, a column and a cause") {
                 val cause = RuntimeException("Something went wrong")
-                val exception = ConfigurationException("This is the error message", 12, 54, cause)
+                val exception = ConfigurationException("This is the error message", 12, 54, null, cause)
 
                 on("converting to a string") {
                     it("returns the message, the line number and the column, but not the cause") {

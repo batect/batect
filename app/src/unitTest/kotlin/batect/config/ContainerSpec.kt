@@ -30,6 +30,7 @@ import batect.testutils.runForEachTest
 import batect.testutils.withColumn
 import batect.testutils.withLineNumber
 import batect.testutils.withMessage
+import batect.testutils.withPath
 import com.charleskorn.kaml.Yaml
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
@@ -93,7 +94,7 @@ object ContainerSpec : Spek({
                 it("throws an appropriate exception") {
                     assertThat(
                         { parser.decodeFromString(Container.Companion, yaml) },
-                        throws(withMessage("Only one of build_directory or image can be specified for a container, but both have been provided for this container.") and withLineNumber(1) and withColumn(1))
+                        throws(withMessage("Only one of build_directory or image can be specified for a container, but both have been provided for this container.") and withLineNumber(1) and withColumn(1) and withPath("<root>"))
                     )
                 }
             }
@@ -110,7 +111,7 @@ object ContainerSpec : Spek({
                 it("throws an appropriate exception") {
                     assertThat(
                         { parser.decodeFromString(Container.Companion, yaml) },
-                        throws(withMessage("build_args cannot be used with image, but both have been provided.") and withLineNumber(1) and withColumn(1))
+                        throws(withMessage("build_args cannot be used with image, but both have been provided.") and withLineNumber(1) and withColumn(1) and withPath("<root>"))
                     )
                 }
             }
@@ -126,7 +127,7 @@ object ContainerSpec : Spek({
                 it("throws an appropriate exception") {
                     assertThat(
                         { parser.decodeFromString(Container.Companion, yaml) },
-                        throws(withMessage("dockerfile cannot be used with image, but both have been provided.") and withLineNumber(1) and withColumn(1))
+                        throws(withMessage("dockerfile cannot be used with image, but both have been provided.") and withLineNumber(1) and withColumn(1) and withPath("<root>"))
                     )
                 }
             }
@@ -141,7 +142,7 @@ object ContainerSpec : Spek({
                 it("throws an appropriate exception") {
                     assertThat(
                         { parser.decodeFromString(Container.Companion, yaml) },
-                        throws(withMessage("One of either build_directory or image must be specified for each container, but neither have been provided for this container.") and withLineNumber(1) and withColumn(1))
+                        throws(withMessage("One of either build_directory or image must be specified for each container, but neither have been provided for this container.") and withLineNumber(1) and withColumn(1) and withPath("<root>"))
                     )
                 }
             }

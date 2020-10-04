@@ -20,8 +20,8 @@ import batect.config.io.ConfigurationException
 import batect.config.io.deserializers.SimpleStringOrObjectSerializer
 import batect.docker.DockerPortMapping
 import batect.utils.pluralize
-import com.charleskorn.kaml.Location
 import com.charleskorn.kaml.YamlInput
+import com.charleskorn.kaml.YamlPath
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.SetSerializer
@@ -50,7 +50,7 @@ object PortMappingConfigSerializer : SimpleStringOrObjectSerializer<PortMapping>
 
     override fun deserializeFromString(value: String, input: YamlInput): PortMapping {
         if (value == "") {
-            throw ConfigurationException("Port mapping definition cannot be empty.", input.node.location.line, input.node.location.column)
+            throw ConfigurationException("Port mapping definition cannot be empty.", input.node)
         }
 
         val portSeparator = ':'
@@ -96,17 +96,15 @@ object PortMappingConfigSerializer : SimpleStringOrObjectSerializer<PortMapping>
     private fun invalidMappingDefinitionException(value: String, input: YamlInput, cause: Throwable? = null) =
         ConfigurationException(
             "Port mapping definition '$value' is invalid. It must be in the form 'local:container', 'local:container/protocol', 'from-to:from-to' or 'from-to:from-to/protocol' and each port must be a positive integer.",
-            input.node.location.line,
-            input.node.location.column,
+            input.node,
             cause
         )
 
-    override fun validateDeserializedObject(value: PortMapping, location: Location) {
+    override fun validateDeserializedObject(value: PortMapping, path: YamlPath) {
         if (value.local.size != value.container.size) {
             throw ConfigurationException(
                 "Port mapping definition is invalid. The local port range has ${pluralize(value.local.size, "port")} and the container port range has ${pluralize(value.container.size, "port")}, but the ranges must be the same size.",
-                location.line,
-                location.column
+                path
             )
         }
     }

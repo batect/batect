@@ -23,6 +23,7 @@ import batect.testutils.on
 import batect.testutils.withColumn
 import batect.testutils.withLineNumber
 import batect.testutils.withMessage
+import batect.testutils.withPath
 import batect.utils.Json
 import com.charleskorn.kaml.Yaml
 import com.natpryce.hamkrest.and
@@ -108,7 +109,7 @@ object PortRangeSpec : Spek({
                     }
 
                     it("deserializes to the expected value") {
-                        assertThat({ Yaml.default.decodeFromString(PortRange.serializer(), input) }, throws<ConfigurationException>(withMessage("Port range '$input' is invalid. It must be in the form 'port' or 'from-to' and each port must be a positive integer.") and withLineNumber(1) and withColumn(1)))
+                        assertThat({ Yaml.default.decodeFromString(PortRange.serializer(), input) }, throws<ConfigurationException>(withMessage("Port range '$input' is invalid. It must be in the form 'port' or 'from-to' and each port must be a positive integer.") and withLineNumber(1) and withColumn(1) and withPath("<root>")))
                     }
                 }
             }
@@ -119,7 +120,7 @@ object PortRangeSpec : Spek({
                 }
 
                 it("deserializes to the expected value") {
-                    assertThat({ Yaml.default.decodeFromString(PortRange.serializer(), "''") }, throws<ConfigurationException>(withMessage("Port range '' is invalid. It must be in the form 'port' or 'from-to' and each port must be a positive integer.") and withLineNumber(1) and withColumn(1)))
+                    assertThat({ Yaml.default.decodeFromString(PortRange.serializer(), "''") }, throws<ConfigurationException>(withMessage("Port range '' is invalid. It must be in the form 'port' or 'from-to' and each port must be a positive integer.") and withLineNumber(1) and withColumn(1) and withPath("<root>")))
                 }
             }
 
@@ -133,7 +134,7 @@ object PortRangeSpec : Spek({
                     }
 
                     it("deserializes to the expected value") {
-                        assertThat({ Yaml.default.decodeFromString(PortRange.serializer(), input) }, throws<ConfigurationException>(withMessage("Port range '$input' is invalid. Ports must be positive integers.") and withLineNumber(1) and withColumn(1)))
+                        assertThat({ Yaml.default.decodeFromString(PortRange.serializer(), input) }, throws<ConfigurationException>(withMessage("Port range '$input' is invalid. Ports must be positive integers.") and withLineNumber(1) and withColumn(1) and withPath("<root>")))
                     }
                 }
             }
@@ -146,7 +147,7 @@ object PortRangeSpec : Spek({
                 }
 
                 it("deserializes to the expected value") {
-                    assertThat({ Yaml.default.decodeFromString(PortRange.serializer(), input) }, throws<ConfigurationException>(withMessage("Port range '$input' is invalid. Port range limits must be given in ascending order.") and withLineNumber(1) and withColumn(1)))
+                    assertThat({ Yaml.default.decodeFromString(PortRange.serializer(), input) }, throws<ConfigurationException>(withMessage("Port range '$input' is invalid. Port range limits must be given in ascending order.") and withLineNumber(1) and withColumn(1) and withPath("<root>")))
                 }
             }
         }

@@ -23,6 +23,7 @@ import batect.testutils.given
 import batect.testutils.withColumn
 import batect.testutils.withLineNumber
 import batect.testutils.withMessage
+import batect.testutils.withPath
 import batect.utils.Json
 import com.charleskorn.kaml.Yaml
 import com.natpryce.hamkrest.and
@@ -91,7 +92,7 @@ object TaskSpec : Spek({
                 """.trimIndent()
 
                 it("throws an appropriate exception") {
-                    assertThat({ Yaml.default.decodeFromString(Task.serializer(), yaml) }, throws<ConfigurationException>(withMessage("At least one of 'run' or 'prerequisites' is required.") and withLineNumber(1) and withColumn(1)))
+                    assertThat({ Yaml.default.decodeFromString(Task.serializer(), yaml) }, throws<ConfigurationException>(withMessage("At least one of 'run' or 'prerequisites' is required.") and withLineNumber(1) and withColumn(1) and withPath("<root>")))
                 }
             }
 
@@ -105,7 +106,7 @@ object TaskSpec : Spek({
                 """.trimIndent()
 
                 it("throws an appropriate exception") {
-                    assertThat({ Yaml.default.decodeFromString(Task.serializer(), yaml) }, throws<ConfigurationException>(withMessage("'run' is required if 'dependencies' is provided.") and withLineNumber(1) and withColumn(1)))
+                    assertThat({ Yaml.default.decodeFromString(Task.serializer(), yaml) }, throws<ConfigurationException>(withMessage("'run' is required if 'dependencies' is provided.") and withLineNumber(1) and withColumn(1) and withPath("<root>")))
                 }
             }
         }

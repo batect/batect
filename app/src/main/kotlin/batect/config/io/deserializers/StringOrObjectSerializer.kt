@@ -17,9 +17,9 @@
 package batect.config.io.deserializers
 
 import batect.config.io.ConfigurationException
-import com.charleskorn.kaml.Location
 import com.charleskorn.kaml.YamlInput
 import com.charleskorn.kaml.YamlMap
+import com.charleskorn.kaml.YamlPath
 import com.charleskorn.kaml.YamlScalar
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
@@ -57,12 +57,12 @@ abstract class StringOrObjectSerializer<T> : KSerializer<T> {
         val result = when (input.node) {
             is YamlScalar -> beginAndDecodeString(input)
             is YamlMap -> beginAndDecodeObject(input)
-            else -> throw ConfigurationException(neitherStringNorObjectErrorMessage, decoder.node.location.line, decoder.node.location.column)
+            else -> throw ConfigurationException(neitherStringNorObjectErrorMessage, decoder.node)
         }
 
         input.endStructure(descriptor)
 
-        validateDeserializedObject(result, input.node.location)
+        validateDeserializedObject(result, input.node.path)
 
         return result
     }
@@ -84,7 +84,7 @@ abstract class StringOrObjectSerializer<T> : KSerializer<T> {
     protected abstract fun deserializeFromString(value: String, input: YamlInput): T
     protected abstract fun deserializeFromObject(input: YamlInput): T
 
-    protected open fun validateDeserializedObject(value: T, location: Location) {}
+    protected open fun validateDeserializedObject(value: T, path: YamlPath) {}
 }
 
 @OptIn(ExperimentalSerializationApi::class)

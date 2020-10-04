@@ -60,9 +60,7 @@ internal object DependencySetSerializer : KSerializer<Set<String>> {
         val value = input.decodeSerializableElement(descriptor, index, elementSerializer)
 
         if (value in soFar) {
-            val location = (input as YamlInput).getCurrentLocation()
-
-            throw ConfigurationException(getDuplicateValueMessage(value), location.line, location.column)
+            throw ConfigurationException(getDuplicateValueMessage(value), input as YamlInput)
         }
 
         return value

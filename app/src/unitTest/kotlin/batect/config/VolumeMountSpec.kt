@@ -31,6 +31,7 @@ import batect.testutils.runForEachTest
 import batect.testutils.withColumn
 import batect.testutils.withLineNumber
 import batect.testutils.withMessage
+import batect.testutils.withPath
 import batect.utils.Json
 import com.charleskorn.kaml.InvalidPropertyValueException
 import com.charleskorn.kaml.Yaml
@@ -153,7 +154,7 @@ object VolumeMountSpec : Spek({
 
                 on("parsing an empty volume mount definition") {
                     it("fails with an appropriate error message") {
-                        assertThat({ parser.decodeFromString(VolumeMount.Companion, "''") }, throws(withMessage("Volume mount definition cannot be empty.") and withLineNumber(1) and withColumn(1)))
+                        assertThat({ parser.decodeFromString(VolumeMount.Companion, "''") }, throws(withMessage("Volume mount definition cannot be empty.") and withLineNumber(1) and withColumn(1) and withPath("<root>")))
                     }
                 }
 
@@ -174,6 +175,7 @@ object VolumeMountSpec : Spek({
                                     withMessage("Volume mount definition '$it' is invalid. It must be in the form 'local_path:container_path' or 'local_path:container_path:options'.")
                                         and withLineNumber(1)
                                         and withColumn(1)
+                                        and withPath("<root>")
                                 )
                             )
                         }
@@ -269,6 +271,7 @@ object VolumeMountSpec : Spek({
                                 withMessage("Field 'local' is required for local path mounts but it is missing.")
                                     and withLineNumber(1)
                                     and withColumn(1)
+                                    and withPath("<root>")
                             )
                         )
                     }
@@ -284,6 +287,7 @@ object VolumeMountSpec : Spek({
                                 withMessage("Field 'container' is required but it is missing.")
                                     and withLineNumber(1)
                                     and withColumn(1)
+                                    and withPath("<root>")
                             )
                         )
                     }
@@ -303,6 +307,7 @@ object VolumeMountSpec : Spek({
                                 withMessage("Field 'name' is not permitted for local path mounts.")
                                     and withLineNumber(1)
                                     and withColumn(1)
+                                    and withPath("<root>")
                             )
                         )
                     }
@@ -368,6 +373,7 @@ object VolumeMountSpec : Spek({
                                 withMessage("Field 'name' is required for cache mounts but it is missing.")
                                     and withLineNumber(1)
                                     and withColumn(1)
+                                    and withPath("<root>")
                             )
                         )
                     }
@@ -388,6 +394,7 @@ object VolumeMountSpec : Spek({
                                 withMessage("Field 'local' is not permitted for cache mounts.")
                                     and withLineNumber(1)
                                     and withColumn(1)
+                                    and withPath("<root>")
                             )
                         )
                     }

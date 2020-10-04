@@ -20,6 +20,7 @@ import batect.testutils.on
 import batect.testutils.withColumn
 import batect.testutils.withLineNumber
 import batect.testutils.withMessage
+import batect.testutils.withPath
 import com.charleskorn.kaml.Yaml
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
@@ -67,7 +68,7 @@ object RunAsCurrentUserConfigSpec : Spek({
                 """.trimIndent()
 
                 it("throws an appropriate exception") {
-                    assertThat({ fromYaml(yaml) }, throws(withMessage("Running as the current user has been enabled, but a home directory for that user has not been provided.") and withLineNumber(1) and withColumn(1)))
+                    assertThat({ fromYaml(yaml) }, throws(withMessage("Running as the current user has been enabled, but a home directory for that user has not been provided.") and withLineNumber(1) and withColumn(1) and withPath("<root>")))
                 }
             }
 
@@ -78,7 +79,7 @@ object RunAsCurrentUserConfigSpec : Spek({
                 """.trimIndent()
 
                 it("throws an appropriate exception") {
-                    assertThat({ fromYaml(yaml) }, throws(withMessage("Running as the current user has not been enabled, but a home directory for that user has been provided.") and withLineNumber(1) and withColumn(1)))
+                    assertThat({ fromYaml(yaml) }, throws(withMessage("Running as the current user has not been enabled, but a home directory for that user has been provided.") and withLineNumber(1) and withColumn(1) and withPath("<root>")))
                 }
             }
 
@@ -88,7 +89,7 @@ object RunAsCurrentUserConfigSpec : Spek({
                 """.trimIndent()
 
                 it("throws an appropriate exception") {
-                    assertThat({ fromYaml(yaml) }, throws(withMessage("Running as the current user has not been enabled, but a home directory for that user has been provided.") and withLineNumber(1) and withColumn(1)))
+                    assertThat({ fromYaml(yaml) }, throws(withMessage("Running as the current user has not been enabled, but a home directory for that user has been provided.") and withLineNumber(1) and withColumn(1) and withPath("<root>")))
                 }
             }
         }

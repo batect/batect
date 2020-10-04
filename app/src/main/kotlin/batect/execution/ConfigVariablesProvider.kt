@@ -68,7 +68,7 @@ class ConfigVariablesProvider(
 
             return Yaml().decodeFromString(MapSerializer(nameSerializer, String.serializer()), configFileContent)
         } catch (e: YamlException) {
-            throw ConfigurationFileException(e.message, absolutePath.toString(), e.line, e.column, e)
+            throw ConfigurationFileException(e.message, absolutePath.toString(), e.path, e)
         }
     }
 
@@ -90,9 +90,9 @@ class ConfigVariablesProvider(
 
             if (!config.configVariables.containsKey(name)) {
                 val yaml = decoder as YamlInput
-                val location = yaml.getCurrentLocation()
+                val path = yaml.getCurrentPath()
 
-                throw ConfigurationFileException("The config variable '$name' has not been defined.", sourceFile.toString(), location.line, location.column)
+                throw ConfigurationFileException("The config variable '$name' has not been defined.", sourceFile.toString(), path)
             }
 
             return name

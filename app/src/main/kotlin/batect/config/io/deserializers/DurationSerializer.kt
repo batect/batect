@@ -36,9 +36,7 @@ object DurationSerializer : DurationLoggingSerializer() {
         val match = fullRegex.matchEntire(text)
 
         if (match == null) {
-            val location = (decoder as YamlInput).getCurrentLocation()
-
-            throw ConfigurationException("The value '$text' is not a valid duration.", location.line, location.column)
+            throw ConfigurationException("The value '$text' is not a valid duration.", decoder as YamlInput)
         }
 
         val sign = match.groupValues[1]

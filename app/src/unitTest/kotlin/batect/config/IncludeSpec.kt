@@ -29,6 +29,7 @@ import batect.testutils.runForEachTest
 import batect.testutils.withColumn
 import batect.testutils.withLineNumber
 import batect.testutils.withMessage
+import batect.testutils.withPath
 import batect.utils.Json
 import com.charleskorn.kaml.PolymorphismStyle
 import com.charleskorn.kaml.Yaml
@@ -84,7 +85,8 @@ object IncludeSpec : Spek({
                                 throws<ConfigurationException>(
                                     withMessage("'../some/path.yml' (described as '/resolved/some/path.yml') is not a file.") and
                                         withLineNumber(1) and
-                                        withColumn(1)
+                                        withColumn(1) and
+                                        withPath("<root>")
                                 )
                             )
                         }
@@ -99,7 +101,8 @@ object IncludeSpec : Spek({
                                 throws<ConfigurationException>(
                                     withMessage("Included file '../some/path.yml' (described as '/resolved/some/path.yml') does not exist.") and
                                         withLineNumber(1) and
-                                        withColumn(1)
+                                        withColumn(1) and
+                                        withPath("<root>")
                                 )
                             )
                         }
@@ -131,7 +134,8 @@ object IncludeSpec : Spek({
                                 throws<ConfigurationException>(
                                     withMessage("'../some/path.yml' (described as '/resolved/some/path.yml') is not a file.") and
                                         withLineNumber(2) and
-                                        withColumn(7)
+                                        withColumn(7) and
+                                        withPath("path")
                                 )
                             )
                         }
@@ -146,7 +150,8 @@ object IncludeSpec : Spek({
                                 throws<ConfigurationException>(
                                     withMessage("Included file '../some/path.yml' (described as '/resolved/some/path.yml') does not exist.") and
                                         withLineNumber(2) and
-                                        withColumn(7)
+                                        withColumn(7) and
+                                        withPath("path")
                                 )
                             )
                         }

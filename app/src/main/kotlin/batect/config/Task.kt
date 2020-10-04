@@ -70,8 +70,7 @@ data class Task(
         }
 
         private fun deserializeFromObject(input: YamlInput): Task {
-            val location = input.getCurrentLocation()
-
+            val path = input.getCurrentPath()
             var runConfiguration: TaskRunConfiguration? = null
             var description = ""
             var group = ""
@@ -92,11 +91,11 @@ data class Task(
             }
 
             if (runConfiguration == null && prerequisiteTasks.isEmpty()) {
-                throw ConfigurationException("At least one of '$runConfigurationFieldName' or '$prerequisiteTasksFieldName' is required.", location.line, location.column)
+                throw ConfigurationException("At least one of '$runConfigurationFieldName' or '$prerequisiteTasksFieldName' is required.", path)
             }
 
             if (dependsOnContainers.isNotEmpty() && runConfiguration == null) {
-                throw ConfigurationException("'$runConfigurationFieldName' is required if '$dependsOnContainersFieldName' is provided.", location.line, location.column)
+                throw ConfigurationException("'$runConfigurationFieldName' is required if '$dependsOnContainersFieldName' is provided.", path)
             }
 
             return Task(

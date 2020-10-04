@@ -65,16 +65,14 @@ object FileIncludePathSerializer : KSerializer<Path> {
     @OptIn(ExperimentalSerializationApi::class)
     override fun deserialize(decoder: Decoder): Path {
         val elementDeserializer = decoder.serializersModule.getContextual(PathResolutionResult::class)!!
-        val resolutionResult = decoder.decodeSerializableValue(elementDeserializer)
-        val location = (decoder as YamlInput).getCurrentLocation()
 
-        when (resolutionResult) {
+        when (val resolutionResult = decoder.decodeSerializableValue(elementDeserializer)) {
             is PathResolutionResult.Resolved -> when (resolutionResult.pathType) {
                 PathType.File -> return resolutionResult.absolutePath
-                PathType.DoesNotExist -> throw ConfigurationException("Included file '${resolutionResult.originalPath}' (${resolutionResult.resolutionDescription}) does not exist.", location.line, location.column)
-                else -> throw ConfigurationException("'${resolutionResult.originalPath}' (${resolutionResult.resolutionDescription}) is not a file.", location.line, location.column)
+                PathType.DoesNotExist -> throw ConfigurationException("Included file '${resolutionResult.originalPath}' (${resolutionResult.resolutionDescription}) does not exist.", decoder as YamlInput)
+                else -> throw ConfigurationException("'${resolutionResult.originalPath}' (${resolutionResult.resolutionDescription}) is not a file.", decoder as YamlInput)
             }
-            is PathResolutionResult.InvalidPath -> throw ConfigurationException("Include path '${resolutionResult.originalPath}' is not a valid path.", location.line, location.column)
+            is PathResolutionResult.InvalidPath -> throw ConfigurationException("Include path '${resolutionResult.originalPath}' is not a valid path.", decoder as YamlInput)
         }
     }
 

@@ -74,12 +74,12 @@ data class PortRange(val from: Int, val to: Int) {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor(PortRange::class.simpleName!!, PrimitiveKind.STRING)
 
         override fun deserialize(decoder: Decoder): PortRange {
-            val location = (decoder as YamlInput).getCurrentLocation()
+            val path = (decoder as YamlInput).getCurrentPath()
 
             try {
                 return parse(decoder.decodeString())
             } catch (e: InvalidPortRangeException) {
-                throw ConfigurationException(e.message!!, location.line, location.column, e)
+                throw ConfigurationException(e.message!!, path, e)
             }
         }
 

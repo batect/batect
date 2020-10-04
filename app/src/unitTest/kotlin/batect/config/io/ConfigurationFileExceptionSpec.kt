@@ -27,7 +27,7 @@ object ConfigurationFileExceptionSpec : Spek({
     describe("a configuration file exception") {
         describe("formatting") {
             given("an exception with a message and a file name") {
-                val exception = ConfigurationFileException("This is the error message", "source.txt", null, null, null)
+                val exception = ConfigurationFileException("This is the error message", "source.txt", null, null, null, null)
 
                 on("converting to a string") {
                     it("returns the message and the file name") {
@@ -37,7 +37,7 @@ object ConfigurationFileExceptionSpec : Spek({
             }
 
             given("an exception with a message, a file name and a line number") {
-                val exception = ConfigurationFileException("This is the error message", "source.txt", 12, null, null)
+                val exception = ConfigurationFileException("This is the error message", "source.txt", 12, null, null, null)
 
                 on("converting to a string") {
                     it("returns the message, the file name and the line number") {
@@ -47,7 +47,7 @@ object ConfigurationFileExceptionSpec : Spek({
             }
 
             given("an exception with a message, a file name, a line number and a column") {
-                val exception = ConfigurationFileException("This is the error message", "source.txt", 12, 54, null)
+                val exception = ConfigurationFileException("This is the error message", "source.txt", 12, 54, null, null)
 
                 on("converting to a string") {
                     it("returns the message, the file name, the line number and the column") {
@@ -56,9 +56,19 @@ object ConfigurationFileExceptionSpec : Spek({
                 }
             }
 
+            given("an exception with a message, a file name, a line number, a column and a path") {
+                val exception = ConfigurationFileException("This is the error message", "source.txt", 12, 54, "colours.primary.saturation", null)
+
+                on("converting to a string") {
+                    it("returns the message, the file name, the line number, the column and the path") {
+                        assertThat(exception.toString(), equalTo("source.txt (at colours.primary.saturation on line 12, column 54): This is the error message"))
+                    }
+                }
+            }
+
             given("an exception with a message, a file name, a line number, a column and a cause") {
                 val cause = RuntimeException("Something went wrong")
-                val exception = ConfigurationFileException("This is the error message", "source.txt", 12, 54, cause)
+                val exception = ConfigurationFileException("This is the error message", "source.txt", 12, 54, null, cause)
 
                 on("converting to a string") {
                     it("returns the message, the file name, the line number and the column, but not the cause") {

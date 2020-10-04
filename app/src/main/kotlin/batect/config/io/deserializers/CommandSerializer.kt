@@ -36,9 +36,7 @@ object CommandSerializer : KSerializer<Command> {
         Command.parse(decoder.decodeString())
     } catch (e: InvalidCommandLineException) {
         if (decoder is YamlInput) {
-            val location = decoder.getCurrentLocation()
-
-            throw ConfigurationException(e.message ?: "", location.line, location.column, e)
+            throw ConfigurationException(e.message ?: "", decoder)
         } else {
             throw e
         }

@@ -16,16 +16,25 @@
 
 package batect.config.io
 
+import com.charleskorn.kaml.YamlInput
+import com.charleskorn.kaml.YamlNode
+import com.charleskorn.kaml.YamlPath
+
 data class ConfigurationException(
     override val message: String,
     val lineNumber: Int?,
     val column: Int?,
+    val path: String?,
     override val cause: Throwable? = null
 ) : RuntimeException(message, cause) {
 
     constructor(message: String) : this(message, null, null, null)
+    constructor(message: String, path: YamlPath, cause: Throwable? = null) : this(message, path.endLocation.line, path.endLocation.column, path.toHumanReadableString(), cause)
+    constructor(message: String, input: YamlInput, cause: Throwable? = null) : this(message, input.getCurrentPath(), cause)
+    constructor(message: String, node: YamlNode, cause: Throwable? = null) : this(message, node.path, cause)
 
     override fun toString(): String = when {
+        lineNumber != null && column != null && path != null -> "Error at $path on line $lineNumber, column $column: $message"
         lineNumber != null && column != null -> "Error on line $lineNumber, column $column: $message"
         lineNumber != null -> "Error on line $lineNumber: $message"
         else -> message

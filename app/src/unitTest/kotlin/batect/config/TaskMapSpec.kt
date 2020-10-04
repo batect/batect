@@ -22,7 +22,9 @@ import batect.testutils.given
 import batect.testutils.withColumn
 import batect.testutils.withLineNumber
 import batect.testutils.withMessage
+import batect.testutils.withPath
 import com.charleskorn.kaml.Location
+import com.charleskorn.kaml.YamlPath
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.throws
@@ -45,7 +47,7 @@ object TaskMapSpec : Spek({
             ).forEach { name ->
                 given("the valid name '$name'") {
                     it("does not throw an exception") {
-                        assertThat({ TaskMap.validateName(name, Location(2, 3)) }, doesNotThrow())
+                        assertThat({ TaskMap.validateName(name, YamlPath.root) }, doesNotThrow())
                     }
                 }
             }
@@ -70,8 +72,8 @@ object TaskMapSpec : Spek({
                 given("the invalid name '$name'") {
                     it("throws an appropriate exception") {
                         assertThat(
-                            { TaskMap.validateName(name, Location(2, 3)) },
-                            throws<ConfigurationException>(withMessage("Invalid task name '$name'. Task names must contain only letters, digits, colons, dashes, periods and underscores, and must start and end with a letter or digit.") and withLineNumber(2) and withColumn(3))
+                            { TaskMap.validateName(name, YamlPath.root.withListEntry(0, Location(2, 3))) },
+                            throws<ConfigurationException>(withMessage("Invalid task name '$name'. Task names must contain only letters, digits, colons, dashes, periods and underscores, and must start and end with a letter or digit.") and withLineNumber(2) and withColumn(3) and withPath("[0]"))
                         )
                     }
                 }

@@ -33,12 +33,9 @@ object ProjectNameSerializer : KSerializer<String> {
         val projectName = decoder.decodeString()
 
         if (!DockerImageNameValidator.isValidImageName(projectName)) {
-            val location = (decoder as YamlInput).getCurrentLocation()
-
             throw ConfigurationException(
                 "Invalid project name '$projectName'. The project name must be a valid Docker reference: it ${DockerImageNameValidator.validNameDescription}.",
-                location.line,
-                location.column
+                decoder as YamlInput
             )
         }
 

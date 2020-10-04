@@ -21,8 +21,10 @@ import batect.testutils.given
 import batect.testutils.withColumn
 import batect.testutils.withLineNumber
 import batect.testutils.withMessage
+import batect.testutils.withPath
 import com.charleskorn.kaml.Location
 import com.charleskorn.kaml.YamlInput
+import com.charleskorn.kaml.YamlPath
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.throws
@@ -103,7 +105,7 @@ object DurationSerializerSpec : Spek({
                 given("the invalid string '$input'") {
                     val decoder = mock<YamlInput> {
                         on { decodeString() } doReturn input
-                        on { getCurrentLocation() } doReturn Location(3, 4)
+                        on { getCurrentPath() } doReturn YamlPath.root.withListEntry(0, Location(3, 4))
                     }
 
                     it("throws an appropriate exception") {
@@ -112,7 +114,8 @@ object DurationSerializerSpec : Spek({
                             throws(
                                 withMessage("The value '$input' is not a valid duration.") and
                                     withLineNumber(3) and
-                                    withColumn(4)
+                                    withColumn(4) and
+                                    withPath("[0]")
                             )
                         )
                     }

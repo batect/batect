@@ -22,7 +22,9 @@ import batect.testutils.given
 import batect.testutils.withColumn
 import batect.testutils.withLineNumber
 import batect.testutils.withMessage
+import batect.testutils.withPath
 import com.charleskorn.kaml.Location
+import com.charleskorn.kaml.YamlPath
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.throws
@@ -42,7 +44,7 @@ object ConfigVariableMapSpec : Spek({
             ).forEach { name ->
                 given("the valid name '$name'") {
                     it("does not throw an exception") {
-                        assertThat({ ConfigVariableMap.validateName(name, Location(2, 3)) }, doesNotThrow())
+                        assertThat({ ConfigVariableMap.validateName(name, YamlPath.root) }, doesNotThrow())
                     }
                 }
             }
@@ -68,8 +70,13 @@ object ConfigVariableMapSpec : Spek({
                 given("the invalid name '$name'") {
                     it("throws an appropriate exception") {
                         assertThat(
-                            { ConfigVariableMap.validateName(name, Location(2, 3)) },
-                            throws<ConfigurationException>(withMessage("Invalid config variable name '$name'. Config variable names must start with a letter, contain only letters, digits, dashes, periods and underscores, and must not start with 'batect'.") and withLineNumber(2) and withColumn(3))
+                            { ConfigVariableMap.validateName(name, YamlPath.root.withListEntry(0, Location(2, 3))) },
+                            throws<ConfigurationException>(
+                                withMessage("Invalid config variable name '$name'. Config variable names must start with a letter, contain only letters, digits, dashes, periods and underscores, and must not start with 'batect'.")
+                                    and withLineNumber(2)
+                                    and withColumn(3)
+                                    and withPath("[0]")
+                            )
                         )
                     }
                 }

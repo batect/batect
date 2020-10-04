@@ -24,8 +24,8 @@ import batect.config.io.deserializers.PathDeserializer
 import batect.docker.Capability
 import batect.os.Command
 import batect.os.PathResolutionResult
-import com.charleskorn.kaml.Location
 import com.charleskorn.kaml.YamlInput
+import com.charleskorn.kaml.YamlPath
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
@@ -212,7 +212,7 @@ data class Container(
 
             return Container(
                 "UNNAMED-FROM-CONFIG-FILE",
-                resolveImageSource(input, buildDirectory, buildArgs, dockerfilePath, imageName, imagePullPolicy, input.node.location),
+                resolveImageSource(input, buildDirectory, buildArgs, dockerfilePath, imageName, imagePullPolicy, input.node.path),
                 command,
                 entrypoint,
                 environment,
@@ -242,22 +242,22 @@ data class Container(
             dockerfilePath: String?,
             imageName: String?,
             imagePullPolicy: ImagePullPolicy,
-            location: Location
+            path: YamlPath
         ): ImageSource {
             if (buildDirectory == null && imageName == null) {
-                throw ConfigurationException("One of either build_directory or image must be specified for each container, but neither have been provided for this container.", location.line, location.column)
+                throw ConfigurationException("One of either build_directory or image must be specified for each container, but neither have been provided for this container.", path)
             }
 
             if (buildDirectory != null && imageName != null) {
-                throw ConfigurationException("Only one of build_directory or image can be specified for a container, but both have been provided for this container.", location.line, location.column)
+                throw ConfigurationException("Only one of build_directory or image can be specified for a container, but both have been provided for this container.", path)
             }
 
             if (imageName != null && buildArgs != null) {
-                throw ConfigurationException("build_args cannot be used with image, but both have been provided.", location.line, location.column)
+                throw ConfigurationException("build_args cannot be used with image, but both have been provided.", path)
             }
 
             if (imageName != null && dockerfilePath != null) {
-                throw ConfigurationException("dockerfile cannot be used with image, but both have been provided.", location.line, location.column)
+                throw ConfigurationException("dockerfile cannot be used with image, but both have been provided.", path)
             }
 
             return if (buildDirectory != null) {

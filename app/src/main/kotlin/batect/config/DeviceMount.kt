@@ -45,7 +45,7 @@ object DeviceMountConfigSerializer : SimpleStringOrObjectSerializer<DeviceMount>
 
     override fun deserializeFromString(value: String, input: YamlInput): DeviceMount {
         if (value == "") {
-            throw ConfigurationException("Device mount definition cannot be empty.", input.node.location.line, input.node.location.column)
+            throw ConfigurationException("Device mount definition cannot be empty.", input.node)
         }
 
         val regex = """(([a-zA-Z]:\\)?[^:]+):([^:]+)(:([^:]+))?""".toRegex()
@@ -65,7 +65,6 @@ object DeviceMountConfigSerializer : SimpleStringOrObjectSerializer<DeviceMount>
     private fun invalidMountDefinitionException(value: String, input: YamlInput) =
         ConfigurationException(
             "Device mount definition '$value' is invalid. It must be in the form 'local_path:container_path' or 'local_path:container_path:options'.",
-            input.node.location.line,
-            input.node.location.column
+            input.node
         )
 }

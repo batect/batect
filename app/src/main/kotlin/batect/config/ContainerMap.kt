@@ -18,7 +18,7 @@ package batect.config
 
 import batect.config.io.ConfigurationException
 import batect.docker.DockerImageNameValidator
-import com.charleskorn.kaml.Location
+import com.charleskorn.kaml.YamlPath
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.MapSerializer
@@ -35,12 +35,11 @@ class ContainerMap(contents: Iterable<Container>) : NamedObjectMap<Container>("c
         override fun getName(element: Container): String = element.name
         override fun createCollection(elements: Set<Container>): ContainerMap = ContainerMap(elements)
 
-        override fun validateName(name: String, location: Location) {
+        override fun validateName(name: String, path: YamlPath) {
             if (!DockerImageNameValidator.isValidImageName(name)) {
                 throw ConfigurationException(
                     "Invalid container name '$name'. Container names must be valid Docker references: they ${DockerImageNameValidator.validNameDescription}.",
-                    location.line,
-                    location.column
+                    path
                 )
             }
         }

@@ -20,6 +20,7 @@ import batect.testutils.on
 import batect.testutils.withColumn
 import batect.testutils.withLineNumber
 import batect.testutils.withMessage
+import batect.testutils.withPath
 import com.charleskorn.kaml.MissingRequiredPropertyException
 import com.charleskorn.kaml.Yaml
 import com.natpryce.hamkrest.and
@@ -99,13 +100,13 @@ object PortMappingSpec : Spek({
 
                 on("parsing an empty port mapping definition") {
                     it("fails with an appropriate error message") {
-                        assertThat({ fromYaml("''") }, throws(withMessage("Port mapping definition cannot be empty.") and withLineNumber(1) and withColumn(1)))
+                        assertThat({ fromYaml("''") }, throws(withMessage("Port mapping definition cannot be empty.") and withLineNumber(1) and withColumn(1) and withPath("<root>")))
                     }
                 }
 
                 on("parsing a port mapping definition with ranges of different sizes") {
                     it("fails with an appropriate error message") {
-                        assertThat({ fromYaml("10-11:20-23") }, throws(withMessage("Port mapping definition is invalid. The local port range has 2 ports and the container port range has 4 ports, but the ranges must be the same size.") and withLineNumber(1) and withColumn(1)))
+                        assertThat({ fromYaml("10-11:20-23") }, throws(withMessage("Port mapping definition is invalid. The local port range has 2 ports and the container port range has 4 ports, but the ranges must be the same size.") and withLineNumber(1) and withColumn(1) and withPath("<root>")))
                     }
                 }
 
@@ -132,7 +133,7 @@ object PortMappingSpec : Spek({
                 ).map {
                     on("parsing the invalid port mapping definition '$it'") {
                         it("fails with an appropriate error message") {
-                            assertThat({ fromYaml("'$it'") }, throws(withMessage("Port mapping definition '$it' is invalid. It must be in the form 'local:container', 'local:container/protocol', 'from-to:from-to' or 'from-to:from-to/protocol' and each port must be a positive integer.") and withLineNumber(1) and withColumn(1)))
+                            assertThat({ fromYaml("'$it'") }, throws(withMessage("Port mapping definition '$it' is invalid. It must be in the form 'local:container', 'local:container/protocol', 'from-to:from-to' or 'from-to:from-to/protocol' and each port must be a positive integer.") and withLineNumber(1) and withColumn(1) and withPath("<root>")))
                         }
                     }
                 }
@@ -238,6 +239,7 @@ object PortMappingSpec : Spek({
                                 withMessage("Port range '0' is invalid. Ports must be positive integers.")
                                     and withLineNumber(1)
                                     and withColumn(8)
+                                    and withPath("local")
                             )
                         )
                     }
@@ -256,6 +258,7 @@ object PortMappingSpec : Spek({
                                 withMessage("Port range '0' is invalid. Ports must be positive integers.")
                                     and withLineNumber(2)
                                     and withColumn(12)
+                                    and withPath("container")
                             )
                         )
                     }
@@ -284,7 +287,7 @@ object PortMappingSpec : Spek({
                     """.trimIndent()
 
                     it("fails with an appropriate error message") {
-                        assertThat({ fromYaml(yaml) }, throws(withMessage("Port mapping definition is invalid. The local port range has 2 ports and the container port range has 4 ports, but the ranges must be the same size.") and withLineNumber(1) and withColumn(1)))
+                        assertThat({ fromYaml(yaml) }, throws(withMessage("Port mapping definition is invalid. The local port range has 2 ports and the container port range has 4 ports, but the ranges must be the same size.") and withLineNumber(1) and withColumn(1) and withPath("<root>")))
                     }
                 }
             }
@@ -298,7 +301,7 @@ object PortMappingSpec : Spek({
                     assertThat(
                         { fromYaml(yaml) },
                         throws(
-                            withMessage("Port mapping definition is invalid. It must either be an object or a literal in the form 'local:container', 'local:container/protocol', 'from-to:from-to' or 'from-to:from-to/protocol'.") and withLineNumber(1) and withColumn(1)
+                            withMessage("Port mapping definition is invalid. It must either be an object or a literal in the form 'local:container', 'local:container/protocol', 'from-to:from-to' or 'from-to:from-to/protocol'.") and withLineNumber(1) and withColumn(1) and withPath("<root>")
                         )
                     )
                 }

@@ -17,7 +17,7 @@
 package batect.config
 
 import batect.config.io.ConfigurationException
-import com.charleskorn.kaml.Location
+import com.charleskorn.kaml.YamlPath
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.MapSerializer
@@ -39,9 +39,9 @@ class TaskMap(contents: Iterable<Task>) : NamedObjectMap<Task>("task", contents)
         private const val letterOrDigit = "a-zA-Z0-9"
         private val validNameRegex = """^[$letterOrDigit]([$letterOrDigit._:-]*[$letterOrDigit])*$""".toRegex()
 
-        override fun validateName(name: String, location: Location) {
+        override fun validateName(name: String, path: YamlPath) {
             if (!validNameRegex.matches(name)) {
-                throw ConfigurationException("Invalid task name '$name'. Task names must contain only letters, digits, colons, dashes, periods and underscores, and must start and end with a letter or digit.", location.line, location.column)
+                throw ConfigurationException("Invalid task name '$name'. Task names must contain only letters, digits, colons, dashes, periods and underscores, and must start and end with a letter or digit.", path)
             }
         }
     }

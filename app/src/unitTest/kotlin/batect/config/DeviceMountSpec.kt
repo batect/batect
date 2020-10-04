@@ -22,6 +22,7 @@ import batect.testutils.runForEachTest
 import batect.testutils.withColumn
 import batect.testutils.withLineNumber
 import batect.testutils.withMessage
+import batect.testutils.withPath
 import com.charleskorn.kaml.MissingRequiredPropertyException
 import com.charleskorn.kaml.Yaml
 import com.natpryce.hamkrest.absent
@@ -80,7 +81,7 @@ object DeviceMountSpec : Spek({
 
                 on("parsing an empty device mount definition") {
                     it("fails with an appropriate error message") {
-                        assertThat({ parser.decodeFromString(DeviceMountConfigSerializer, "''") }, throws(withMessage("Device mount definition cannot be empty.") and withLineNumber(1) and withColumn(1)))
+                        assertThat({ parser.decodeFromString(DeviceMountConfigSerializer, "''") }, throws(withMessage("Device mount definition cannot be empty.") and withLineNumber(1) and withColumn(1) and withPath("<root>")))
                     }
                 }
 
@@ -101,6 +102,7 @@ object DeviceMountSpec : Spek({
                                     withMessage("Device mount definition '$it' is invalid. It must be in the form 'local_path:container_path' or 'local_path:container_path:options'.")
                                         and withLineNumber(1)
                                         and withColumn(1)
+                                        and withPath("<root>")
                                 )
                             )
                         }

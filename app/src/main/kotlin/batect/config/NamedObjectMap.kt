@@ -16,8 +16,8 @@
 
 package batect.config
 
-import com.charleskorn.kaml.Location
 import com.charleskorn.kaml.YamlInput
+import com.charleskorn.kaml.YamlPath
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.descriptors.SerialDescriptor
@@ -96,9 +96,9 @@ abstract class NamedObjectMapSerializer<TCollection : Iterable<TElement>, TEleme
     }
 
     private fun readSingle(input: CompositeDecoder, nameIndex: Int): TElement {
-        val nameLocation = (input as YamlInput).getCurrentLocation()
+        val namePath = (input as YamlInput).getCurrentPath()
         val name = input.decodeSerializableElement(descriptor, nameIndex, keySerializer)
-        validateName(name, nameLocation)
+        validateName(name, namePath)
 
         val valueIndex = input.decodeElementIndex(descriptor)
         val unnamed = input.decodeSerializableElement(descriptor, valueIndex, elementSerializer)
@@ -118,7 +118,7 @@ abstract class NamedObjectMapSerializer<TCollection : Iterable<TElement>, TEleme
         output.endStructure(descriptor)
     }
 
-    open fun validateName(name: String, location: Location) {}
+    open fun validateName(name: String, path: YamlPath) {}
     protected abstract fun addName(name: String, element: TElement): TElement
     protected abstract fun createCollection(elements: Set<TElement>): TCollection
     protected abstract fun getName(element: TElement): String

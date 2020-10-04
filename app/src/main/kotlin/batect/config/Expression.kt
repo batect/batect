@@ -218,7 +218,7 @@ sealed class Expression(open val originalExpression: String) {
                 return result
             } catch (e: IllegalArgumentException) {
                 if (decoder is YamlInput) {
-                    throw ConfigurationException(e.message ?: "", decoder.node.location.line, decoder.node.location.column, e)
+                    throw ConfigurationException(e.message ?: "", decoder.node, e)
                 } else {
                     throw e
                 }

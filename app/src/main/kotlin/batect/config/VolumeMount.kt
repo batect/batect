@@ -63,7 +63,7 @@ sealed class VolumeMount(
 
         override fun deserializeFromString(value: String, input: YamlInput): VolumeMount {
             if (value == "") {
-                throw ConfigurationException("Volume mount definition cannot be empty.", input.node.location.line, input.node.location.column)
+                throw ConfigurationException("Volume mount definition cannot be empty.", input.node)
             }
 
             val regex = """(([a-zA-Z]:\\)?[^:]+):([^:]+)(:([^:]+))?""".toRegex()
@@ -85,8 +85,7 @@ sealed class VolumeMount(
         private fun invalidMountDefinitionException(value: String, input: YamlInput) =
             ConfigurationException(
                 "Volume mount definition '$value' is invalid. It must be in the form 'local_path:container_path' or 'local_path:container_path:options'.",
-                input.node.location.line,
-                input.node.location.column
+                input.node
             )
 
         override fun deserializeFromObject(input: YamlInput): VolumeMount {
@@ -109,17 +108,17 @@ sealed class VolumeMount(
             }
 
             if (containerPath == null) {
-                throw ConfigurationException("Field '${objectDescriptor.getElementName(containerPathFieldIndex)}' is required but it is missing.", input.node.location.line, input.node.location.column)
+                throw ConfigurationException("Field '${objectDescriptor.getElementName(containerPathFieldIndex)}' is required but it is missing.", input.node)
             }
 
             return when (type) {
                 VolumeMountType.Local -> {
                     if (localPath == null) {
-                        throw ConfigurationException("Field '${objectDescriptor.getElementName(localPathFieldIndex)}' is required for local path mounts but it is missing.", input.node.location.line, input.node.location.column)
+                        throw ConfigurationException("Field '${objectDescriptor.getElementName(localPathFieldIndex)}' is required for local path mounts but it is missing.", input.node)
                     }
 
                     if (name != null) {
-                        throw ConfigurationException("Field '${objectDescriptor.getElementName(nameFieldIndex)}' is not permitted for local path mounts.", input.node.location.line, input.node.location.column)
+                        throw ConfigurationException("Field '${objectDescriptor.getElementName(nameFieldIndex)}' is not permitted for local path mounts.", input.node)
                     }
 
                     LocalMount(localPath, input.pathResolutionContext, containerPath, options)
@@ -127,11 +126,11 @@ sealed class VolumeMount(
 
                 VolumeMountType.Cache -> {
                     if (name == null) {
-                        throw ConfigurationException("Field '${objectDescriptor.getElementName(nameFieldIndex)}' is required for cache mounts but it is missing.", input.node.location.line, input.node.location.column)
+                        throw ConfigurationException("Field '${objectDescriptor.getElementName(nameFieldIndex)}' is required for cache mounts but it is missing.", input.node)
                     }
 
                     if (localPath != null) {
-                        throw ConfigurationException("Field '${objectDescriptor.getElementName(localPathFieldIndex)}' is not permitted for cache mounts.", input.node.location.line, input.node.location.column)
+                        throw ConfigurationException("Field '${objectDescriptor.getElementName(localPathFieldIndex)}' is not permitted for cache mounts.", input.node)
                     }
 
                     CacheMount(name, containerPath, options)

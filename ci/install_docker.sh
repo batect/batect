@@ -15,7 +15,7 @@ fi
 echo 'Acquire::CompressionTypes::Order:: "gz";' | sudo tee /etc/apt/apt.conf.d/99compression-workaround > /dev/null
 
 # This works around "gpg: can't connect to the agent: IPC connect call failed" errors that sometimes occur when calling "apt-key add".
-pkill -9 gpg-agent
+pkill -9 gpg-agent || true
 source <(gpg-agent --daemon)
 
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -

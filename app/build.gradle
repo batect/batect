@@ -36,7 +36,7 @@ dependencies {
 
     implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.0.0-RC2'
     implementation 'org.kodein.di:kodein-di:7.1.0'
-    implementation 'com.squareup.okio:okio:2.8.0'
+    implementation 'com.squareup.okio:okio:2.9.0'
     implementation 'com.squareup.okhttp3:okhttp'
     implementation 'com.github.jnr:jnr-posix:3.0.57'
     implementation 'com.charleskorn.kaml:kaml:0.24.0'

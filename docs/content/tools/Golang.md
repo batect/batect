@@ -40,6 +40,8 @@ The solution to this is to mount a [cache](../tips/Performance.md#cache-volumes)
 For example, the [official Golang Docker images](https://hub.docker.com/_/golang) set `GOPATH` to `/go`, so mounting a cache at `/go` inside the container will
 allow your dependencies to be persisted across builds.
 
+The [example configuration](#example-configuration) above demonstrates how to do this.
+
 ### `GOCACHE`
 
 The Golang compiler caches intermediate build output (such as built libraries) in [`GOCACHE`](https://golang.org/cmd/go/#hdr-Build_and_test_caching).
@@ -48,5 +50,29 @@ all code for your project, even if it has not changed. This can also significant
 
 Again, the solution is to mount a [cache](../tips/Performance.md#cache-volumes) that persists between builds into your container for your `GOCACHE`.
 
-The [official Golang Docker images](https://hub.docker.com/_/golang) do not set a default for `GOCACHE`, so you will need to set this yourself. In the example above, `GOCACHE` has been placed
-inside `/go` (which is the default `GOPATH`) so that both use the same cache.
+The [official Golang Docker images](https://hub.docker.com/_/golang) do not set a default for `GOCACHE`, so you will need to set this yourself.
+
+In the [example above](#example-configuration), `GOCACHE` has been placed inside `/go` (which is the default `GOPATH`) so that both use the same cache.
+
+## `golangci-lint`
+
+!!! tip "tl;dr"
+    Mount a cache into your container at `~/.cache/golangci-lint/`, otherwise you'll experience slow performance from `golangci-lint`
+
+`golangci-lint` caches build artifacts used during analysis to speed up subsequent runs. By default, it stores this cache at `~/.cache/golangci-lint/`.
+
+Without a mounted cache, this directory would be lost every time batect starts a new container, causing `golangci-lint` to need to rebuild your application
+every time you run it.
+
+The solution to this is to mount a [cache](../tips/Performance.md#cache-volumes) that persists between builds into your container for `~/.cache/golangci-lint/`.
+For example, assuming the home directory for your container's user is `/home/container-user`:
+
+```yaml hl_lines="5-7"
+containers:
+  build-env:
+
+    volumes:
+      - type: cache
+        name: golangci-cache
+        container: /home/container-user/.cache/golangci-lint/
+```

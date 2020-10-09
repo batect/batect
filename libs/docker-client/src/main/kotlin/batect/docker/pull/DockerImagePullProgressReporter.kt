@@ -16,6 +16,7 @@
 
 package batect.docker.pull
 
+import batect.docker.DownloadOperation
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -26,12 +27,8 @@ class DockerImagePullProgressReporter {
     private var lastProgressUpdate: DockerImagePullProgress? = null
 
     fun processProgressUpdate(progressUpdate: JsonObject): DockerImagePullProgress? {
-        val status = progressUpdate["status"]?.jsonPrimitive?.content
-        val currentOperation = DownloadOperation.knownOperations[status]
-
-        if (currentOperation == null) {
-            return null
-        }
+        val status = progressUpdate["status"]?.jsonPrimitive?.content ?: return null
+        val currentOperation = operationForName(status) ?: return null
 
         if (!progressUpdate.containsKey("id")) {
             return extractNonLayerUpdate(currentOperation, progressUpdate)
@@ -60,7 +57,7 @@ class DockerImagePullProgressReporter {
             totalBytes = 0
         }
 
-        return DockerImagePullProgress(currentOperation.displayName, completedBytes, totalBytes)
+        return DockerImagePullProgress(currentOperation, completedBytes, totalBytes)
     }
 
     private fun computeNewStateForLayer(previousState: LayerStatus?, currentOperation: DownloadOperation, progressUpdate: JsonObject): LayerStatus {
@@ -68,12 +65,10 @@ class DockerImagePullProgressReporter {
         val completedBytes = progressDetail["current"]?.jsonPrimitive?.long
         val totalBytes = progressDetail["total"]?.jsonPrimitive?.long
 
-        val completedBytesToUse = if (completedBytes != null) {
-            completedBytes
-        } else if (currentOperation.assumeAllBytesCompleted && previousState != null) {
-            previousState.totalBytes
-        } else {
-            0
+        val completedBytesToUse = when {
+            completedBytes != null -> completedBytes
+            currentOperation.assumeAllBytesCompleted && previousState != null -> previousState.totalBytes
+            else -> 0
         }
 
         val totalBytesToUse = when {
@@ -102,22 +97,23 @@ class DockerImagePullProgressReporter {
         val overallCompletedBytes = layersInCurrentOperation.sumBy { it.completedBytes } + layersFinishedCurrentOperation.sumBy { it.totalBytes }
         val overallTotalBytes = layerStates.values.sumBy { it.totalBytes }
 
-        return DockerImagePullProgress(currentOperation.displayName, overallCompletedBytes, overallTotalBytes)
+        return DockerImagePullProgress(currentOperation, overallCompletedBytes, overallTotalBytes)
     }
 
-    private enum class DownloadOperation(val statusName: String, val assumeAllBytesCompleted: Boolean = false) {
-        Downloading("Downloading"),
-        VerifyingChecksum("Verifying Checksum"),
-        DownloadComplete("Download complete", assumeAllBytesCompleted = true),
-        Extracting("Extracting"),
-        PullComplete("Pull complete", assumeAllBytesCompleted = true);
+    private fun operationForName(name: String): DownloadOperation? = when (name) {
+        "Downloading" -> DownloadOperation.Downloading
+        "Verifying Checksum" -> DownloadOperation.VerifyingChecksum
+        "Download complete" -> DownloadOperation.DownloadComplete
+        "Extracting" -> DownloadOperation.Extracting
+        "Pull complete" -> DownloadOperation.PullComplete
+        else -> null
+    }
 
-        val displayName: String = statusName.toLowerCase()
-
-        companion object {
-            val knownOperations = values().associate { it.statusName to it }
+    private val DownloadOperation.assumeAllBytesCompleted: Boolean
+        get() = when (this) {
+            DownloadOperation.DownloadComplete, DownloadOperation.PullComplete -> true
+            else -> false
         }
-    }
 
     private data class LayerStatus(val currentOperation: DownloadOperation, val completedBytes: Long, val totalBytes: Long)
 

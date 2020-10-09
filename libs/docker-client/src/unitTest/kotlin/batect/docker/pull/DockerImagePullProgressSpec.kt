@@ -16,6 +16,7 @@
 
 package batect.docker.pull
 
+import batect.docker.DownloadOperation
 import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.on
@@ -24,64 +25,64 @@ import com.natpryce.hamkrest.startsWith
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
-object DockerImageProgressSpec : Spek({
+object DockerImagePullProgressSpec : Spek({
     describe("Docker image progress information") {
         given("the image is downloading") {
-            val progress = DockerImagePullProgress("Downloading", 10, 100)
+            val progress = DockerImagePullProgress(DownloadOperation.Downloading, 10, 100)
 
             on("formatting it for display to a user") {
                 val display = progress.toStringForDisplay()
 
                 it("formats the progress in the expected style") {
-                    assertThat(display, equalTo("Downloading: 10 B of 100 B (10%)"))
+                    assertThat(display, equalTo("downloading: 10 B of 100 B (10%)"))
                 }
             }
         }
 
         given("the total size is not known and the download has not started") {
-            val progress = DockerImagePullProgress("Downloading", 0, 0)
+            val progress = DockerImagePullProgress(DownloadOperation.Downloading, 0, 0)
 
             on("formatting it for display to a user") {
                 val display = progress.toStringForDisplay()
 
                 it("does not display the size and just shows the percentage") {
-                    assertThat(display, equalTo("Downloading"))
+                    assertThat(display, equalTo("downloading"))
                 }
             }
         }
 
         given("the total size is not known and the download has started") {
-            val progress = DockerImagePullProgress("Downloading", 100, 0)
+            val progress = DockerImagePullProgress(DownloadOperation.Downloading, 100, 0)
 
             on("formatting it for display to a user") {
                 val display = progress.toStringForDisplay()
 
                 it("does not display the size and just shows the percentage") {
-                    assertThat(display, equalTo("Downloading: 100 B"))
+                    assertThat(display, equalTo("downloading: 100 B"))
                 }
             }
         }
 
         given("the pull has not started") {
-            val progress = DockerImagePullProgress("Downloading", 0, 100)
+            val progress = DockerImagePullProgress(DownloadOperation.Downloading, 0, 100)
 
             on("formatting it for display to a user") {
                 val display = progress.toStringForDisplay()
 
                 it("formats the progress in the expected style") {
-                    assertThat(display, equalTo("Downloading: 0 B of 100 B (0%)"))
+                    assertThat(display, equalTo("downloading: 0 B of 100 B (0%)"))
                 }
             }
         }
 
         given("the pull has completed") {
-            val progress = DockerImagePullProgress("Downloading", 100, 100)
+            val progress = DockerImagePullProgress(DownloadOperation.Downloading, 100, 100)
 
             on("formatting it for display to a user") {
                 val display = progress.toStringForDisplay()
 
                 it("formats the progress in the expected style") {
-                    assertThat(display, equalTo("Downloading: 100 B of 100 B (100%)"))
+                    assertThat(display, equalTo("downloading: 100 B of 100 B (100%)"))
                 }
             }
         }
@@ -101,25 +102,25 @@ object DockerImageProgressSpec : Spek({
             2L * 1000 * 1000 * 1000 * 1000 to "2.0 TB"
         ).forEach { (bytes, expectedBytesDisplay) ->
             given("$bytes have been downloaded so far") {
-                val progress = DockerImagePullProgress("Downloading", bytes, 100)
+                val progress = DockerImagePullProgress(DownloadOperation.Downloading, bytes, 100)
 
                 on("formatting it for display to a user") {
                     val display = progress.toStringForDisplay()
 
                     it("formats the progress in the expected style") {
-                        assertThat(display, startsWith("Downloading: $expectedBytesDisplay of 100 B ("))
+                        assertThat(display, startsWith("downloading: $expectedBytesDisplay of 100 B ("))
                     }
                 }
             }
 
             given("$bytes need to be downloaded in total") {
-                val progress = DockerImagePullProgress("Downloading", 100, bytes)
+                val progress = DockerImagePullProgress(DownloadOperation.Downloading, 100, bytes)
 
                 on("formatting it for display to a user") {
                     val display = progress.toStringForDisplay()
 
                     it("formats the progress in the expected style") {
-                        assertThat(display, startsWith("Downloading: 100 B of $expectedBytesDisplay ("))
+                        assertThat(display, startsWith("downloading: 100 B of $expectedBytesDisplay ("))
                     }
                 }
             }

@@ -19,6 +19,7 @@ package batect.docker.client
 import batect.docker.DockerImage
 import batect.docker.DockerImageReference
 import batect.docker.DockerRegistryCredentialsException
+import batect.docker.DownloadOperation
 import batect.docker.ImageBuildFailedException
 import batect.docker.ImagePullFailedException
 import batect.docker.Json
@@ -139,7 +140,7 @@ object DockerImagesClientSpec : Spek({
                         |{"stream":"Successfully built 24125bbc6cbe\n"}
                     """.trimMargin()
 
-                        val imagePullProgress = DockerImagePullProgress("Doing something", 10, 20)
+                        val imagePullProgress = DockerImagePullProgress(DownloadOperation.Downloading, 10, 20)
 
                         beforeEachTest {
                             stubProgressUpdate(imageProgressReporter, output.lines()[0], imagePullProgress)
@@ -189,7 +190,7 @@ object DockerImagesClientSpec : Spek({
                         |{"stream":"Step 2/5 : RUN apt update \u0026\u0026 apt install -y curl \u0026\u0026 rm -rf /var/lib/apt/lists/*"}
                     """.trimMargin()
 
-                        val imagePullProgress = DockerImagePullProgress("Doing something", 10, 20)
+                        val imagePullProgress = DockerImagePullProgress(DownloadOperation.Downloading, 10, 20)
                         val statusUpdates by createForEachTest { mutableListOf<DockerImageBuildProgress>() }
 
                         beforeEachTest {
@@ -293,7 +294,7 @@ object DockerImagesClientSpec : Spek({
                             val secondProgressUpdate = Json.default.parseToJsonElement("""{"thing": "other value"}""").jsonObject
 
                             beforeEachTest {
-                                whenever(imageProgressReporter.processProgressUpdate(firstProgressUpdate)).thenReturn(DockerImagePullProgress("Doing something", 10, 20))
+                                whenever(imageProgressReporter.processProgressUpdate(firstProgressUpdate)).thenReturn(DockerImagePullProgress(DownloadOperation.Downloading, 10, 20))
                                 whenever(imageProgressReporter.processProgressUpdate(secondProgressUpdate)).thenReturn(null)
 
                                 whenever(api.pull(any(), any(), any(), any())).then { invocation ->
@@ -314,7 +315,7 @@ object DockerImagesClientSpec : Spek({
                             }
 
                             it("sends notifications for all relevant progress updates") {
-                                assertThat(progressUpdatesReceived, equalTo(listOf(DockerImagePullProgress("Doing something", 10, 20))))
+                                assertThat(progressUpdatesReceived, equalTo(listOf(DockerImagePullProgress(DownloadOperation.Downloading, 10, 20))))
                             }
 
                             it("returns the Docker image") {

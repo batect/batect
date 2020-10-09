@@ -19,7 +19,7 @@ plugins {
 }
 
 dependencies {
-    implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.0.0-RC2'
+    implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.0.0'
     implementation 'org.spekframework.spek2:spek-dsl-jvm:2.0.11'
     implementation 'com.natpryce:hamkrest:1.8.0.1'
     implementation 'com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0'

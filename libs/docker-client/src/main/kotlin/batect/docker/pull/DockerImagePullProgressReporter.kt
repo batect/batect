@@ -21,11 +21,11 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.long
 
-class DockerImageProgressReporter {
+class DockerImagePullProgressReporter {
     private val layerStates = mutableMapOf<String, LayerStatus>()
-    private var lastProgressUpdate: DockerImageProgress? = null
+    private var lastProgressUpdate: DockerImagePullProgress? = null
 
-    fun processProgressUpdate(progressUpdate: JsonObject): DockerImageProgress? {
+    fun processProgressUpdate(progressUpdate: JsonObject): DockerImagePullProgress? {
         val status = progressUpdate["status"]?.jsonPrimitive?.content
         val currentOperation = DownloadOperation.knownOperations[status]
 
@@ -51,7 +51,7 @@ class DockerImageProgressReporter {
         return null
     }
 
-    private fun extractNonLayerUpdate(currentOperation: DownloadOperation, progressUpdate: JsonObject): DockerImageProgress {
+    private fun extractNonLayerUpdate(currentOperation: DownloadOperation, progressUpdate: JsonObject): DockerImagePullProgress {
         val progressDetail = progressUpdate.getValue("progressDetail").jsonObject
         val completedBytes = progressDetail["current"]?.jsonPrimitive?.long ?: 0
         var totalBytes = progressDetail["total"]?.jsonPrimitive?.long ?: 0
@@ -60,7 +60,7 @@ class DockerImageProgressReporter {
             totalBytes = 0
         }
 
-        return DockerImageProgress(currentOperation.displayName, completedBytes, totalBytes)
+        return DockerImagePullProgress(currentOperation.displayName, completedBytes, totalBytes)
     }
 
     private fun computeNewStateForLayer(previousState: LayerStatus?, currentOperation: DownloadOperation, progressUpdate: JsonObject): LayerStatus {
@@ -85,7 +85,7 @@ class DockerImageProgressReporter {
         return LayerStatus(currentOperation, completedBytesToUse, totalBytesToUse)
     }
 
-    private fun computeOverallProgress(): DockerImageProgress {
+    private fun computeOverallProgress(): DockerImagePullProgress {
         val anyLayerIsExtractingOrComplete = layerStates.values.any { it.currentOperation >= DownloadOperation.Extracting }
         val allLayersHaveFinishedDownloading = layerStates.values.all { it.currentOperation >= DownloadOperation.DownloadComplete }
         val extractionPhase = anyLayerIsExtractingOrComplete && allLayersHaveFinishedDownloading
@@ -102,7 +102,7 @@ class DockerImageProgressReporter {
         val overallCompletedBytes = layersInCurrentOperation.sumBy { it.completedBytes } + layersFinishedCurrentOperation.sumBy { it.totalBytes }
         val overallTotalBytes = layerStates.values.sumBy { it.totalBytes }
 
-        return DockerImageProgress(currentOperation.displayName, overallCompletedBytes, overallTotalBytes)
+        return DockerImagePullProgress(currentOperation.displayName, overallCompletedBytes, overallTotalBytes)
     }
 
     private enum class DownloadOperation(val statusName: String, val assumeAllBytesCompleted: Boolean = false) {

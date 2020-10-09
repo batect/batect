@@ -22,7 +22,7 @@ import batect.config.Container
 import batect.config.PullImage
 import batect.config.SetupCommand
 import batect.docker.client.DockerImageBuildProgress
-import batect.docker.pull.DockerImageProgress
+import batect.docker.pull.DockerImagePullProgress
 import batect.execution.model.events.CachesInitialisedEvent
 import batect.execution.model.events.ContainerBecameHealthyEvent
 import batect.execution.model.events.ContainerBecameReadyEvent
@@ -49,7 +49,7 @@ data class ContainerStartupProgressLine(val container: Container, val dependenci
     private var isBuilding = false
     private var lastBuildProgressUpdate: DockerImageBuildProgress? = null
     private var isPulling = false
-    private var lastProgressUpdate: DockerImageProgress? = null
+    private var lastProgressUpdate: DockerImagePullProgress? = null
     private var hasBeenBuilt = false
     private var hasBeenPulled = false
     private var isCreating = false

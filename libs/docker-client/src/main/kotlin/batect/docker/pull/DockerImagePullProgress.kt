@@ -20,7 +20,7 @@ import kotlinx.serialization.Serializable
 import kotlin.math.roundToInt
 
 @Serializable
-data class DockerImageProgress(val currentOperation: String, val completedBytes: Long, val totalBytes: Long) {
+data class DockerImagePullProgress(val currentOperation: String, val completedBytes: Long, val totalBytes: Long) {
     fun toStringForDisplay(): String {
         if (totalBytes == 0L) {
             return when (completedBytes) {

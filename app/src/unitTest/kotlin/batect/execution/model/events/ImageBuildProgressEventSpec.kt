@@ -18,7 +18,7 @@ package batect.execution.model.events
 
 import batect.config.Container
 import batect.docker.client.DockerImageBuildProgress
-import batect.docker.pull.DockerImageProgress
+import batect.docker.pull.DockerImagePullProgress
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.logRepresentationOf
 import batect.testutils.on
@@ -30,7 +30,7 @@ import org.spekframework.spek2.style.specification.describe
 object ImageBuildProgressEventSpec : Spek({
     describe("an 'image build progress' event") {
         val container = Container("the-container", imageSourceDoesNotMatter())
-        val event = ImageBuildProgressEvent(container, DockerImageBuildProgress(1, 10, "Something is happening", DockerImageProgress("downloading", 12, 20)))
+        val event = ImageBuildProgressEvent(container, DockerImageBuildProgress(1, 10, "Something is happening", DockerImagePullProgress("downloading", 12, 20)))
 
         on("attaching it to a log message") {
             it("returns a machine-readable representation of itself") {

@@ -25,8 +25,8 @@ import batect.docker.api.ImagesAPI
 import batect.docker.build.DockerImageBuildContextFactory
 import batect.docker.build.DockerfileParser
 import batect.docker.data
-import batect.docker.pull.DockerImageProgress
-import batect.docker.pull.DockerImageProgressReporter
+import batect.docker.pull.DockerImagePullProgress
+import batect.docker.pull.DockerImagePullProgressReporter
 import batect.docker.pull.DockerRegistryCredentialsProvider
 import batect.logging.Logger
 import batect.os.PathResolutionContext
@@ -45,7 +45,7 @@ class DockerImagesClient(
     private val imageBuildContextFactory: DockerImageBuildContextFactory,
     private val dockerfileParser: DockerfileParser,
     private val logger: Logger,
-    private val imageProgressReporterFactory: () -> DockerImageProgressReporter = ::DockerImageProgressReporter
+    private val imagePullProgressReporterFactory: () -> DockerImagePullProgressReporter = ::DockerImagePullProgressReporter
 ) {
 
     fun build(
@@ -82,7 +82,7 @@ class DockerImagesClient(
             val baseImageNames = dockerfileParser.extractBaseImageNames(resolvedDockerfilePath)
             val credentials = baseImageNames.mapNotNull { credentialsProvider.getCredentials(it) }.toSet()
 
-            val reporter = imageProgressReporterFactory()
+            val reporter = imagePullProgressReporterFactory()
             var lastStepProgressUpdate: DockerImageBuildProgress? = null
 
             val image = api.build(context, buildArgs, dockerfilePath, imageTags, forcePull, credentials, outputSink, cancellationContext) { line ->
@@ -121,14 +121,14 @@ class DockerImagesClient(
         imageName: String,
         forcePull: Boolean,
         cancellationContext: CancellationContext,
-        onProgressUpdate: (DockerImageProgress) -> Unit
+        onProgressUpdate: (DockerImagePullProgress) -> Unit
     ): DockerImage {
         try {
             val imageReference = DockerImageReference(imageName)
 
             if (forcePull || !api.hasImage(imageReference)) {
                 val credentials = credentialsProvider.getCredentials(imageReference)
-                val reporter = imageProgressReporterFactory()
+                val reporter = imagePullProgressReporterFactory()
 
                 api.pull(imageReference, credentials, cancellationContext) { progress ->
                     val progressUpdate = reporter.processProgressUpdate(progress)
@@ -147,7 +147,7 @@ class DockerImagesClient(
 }
 
 @Serializable
-data class DockerImageBuildProgress(val currentStep: Int, val totalSteps: Int, val message: String, val progress: DockerImageProgress?) {
+data class DockerImageBuildProgress(val currentStep: Int, val totalSteps: Int, val message: String, val progress: DockerImagePullProgress?) {
     companion object {
         private val buildStepLineRegex = """^Step (\d+)/(\d+) : (.*)$""".toRegex()
 

@@ -7,7 +7,7 @@ insert_final_newline = true
 [*.{kt,gradle,sh}]
 indent_style = space
 indent_size = 4
-max_line_length = 120
+max_line_length = 160
 
 [*.{yml,yaml}]
 indent_style = space

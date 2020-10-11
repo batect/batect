@@ -22,9 +22,16 @@ import batect.docker.DockerImageReference
 import batect.docker.ImageBuildFailedException
 import batect.docker.ImagePullFailedException
 import batect.docker.Json
+import batect.docker.build.ActiveImageBuildStep
+import batect.docker.build.BuildComplete
+import batect.docker.build.BuildError
+import batect.docker.build.BuildProgress
 import batect.docker.build.DockerImageBuildContext
 import batect.docker.build.DockerImageBuildContextEntry
 import batect.docker.build.DockerImageBuildContextRequestBody
+import batect.docker.build.DockerImageBuildEvent
+import batect.docker.build.DockerImageBuildResponseBody
+import batect.docker.build.ImageBuildEventCallback
 import batect.docker.pull.DockerRegistryCredentials
 import batect.docker.pull.TokenDockerRegistryCredentials
 import batect.os.SystemInfo
@@ -55,10 +62,13 @@ import kotlinx.serialization.json.jsonObject
 import okhttp3.Headers
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
+import okio.Sink
+import okio.buffer
 import okio.sink
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.io.ByteArrayOutputStream
+import java.io.Reader
 import java.nio.file.Paths
 
 object ImagesAPISpec : Spek({
@@ -80,7 +90,8 @@ object ImagesAPISpec : Spek({
         }
 
         val logger by createLoggerForEachTestWithoutCustomSerializers()
-        val api by createForEachTest { ImagesAPI(httpConfig, systemInfo, logger) }
+        val buildResponseBody by createForEachTest { MockImageBuildResponseBody() }
+        val api by createForEachTest { ImagesAPI(httpConfig, systemInfo, logger, { buildResponseBody }) }
 
         val errorResponse = """{"message": "Something went wrong.\nMore details on next line."}"""
         val errorMessageWithCorrectLineEndings = "Something went wrong.SYSTEM_LINE_SEPARATORMore details on next line."
@@ -118,34 +129,27 @@ object ImagesAPISpec : Spek({
             val expectedHeadersForAuthentication = Headers.Builder().set("X-Registry-Config", base64EncodedJSONCredentials).build()
             val cancellationContext by createForEachTest { mock<CancellationContext>() }
 
-            val successResponse = """
-                |{"stream":"Step 1/5 : FROM nginx:1.13.0"}
-                |{"stream":"\n"}
-                |{"stream":" ---\u003e 3448f27c273f\n"}
-                |{"stream":"Step 2/5 : RUN apt update \u0026\u0026 apt install -y curl \u0026\u0026 rm -rf /var/lib/apt/lists/*"}
-                |{"stream":"\n"}
-                |{"stream":" ---\u003e Using cache\n"}
-                |{"stream":" ---\u003e 0ceae477da9d\n"}
-                |{"stream":"Step 3/5 : COPY index.html /usr/share/nginx/html"}
-                |{"stream":"\n"}
-                |{"stream":" ---\u003e b288a67b828c\n"}
-                |{"stream":"Step 4/5 : COPY health-check.sh /tools/"}
-                |{"stream":"\n"}
-                |{"stream":" ---\u003e 951e32ae4f76\n"}
-                |{"stream":"Step 5/5 : HEALTHCHECK --interval=2s --retries=1 CMD /tools/health-check.sh"}
-                |{"stream":"\n"}
-                |{"stream":" ---\u003e Running in 3de7e4521d69\n"}
-                |{"stream":"Removing intermediate container 3de7e4521d69\n"}
-                |{"stream":" ---\u003e 24125bbc6cbe\n"}
-                |{"aux":{"ID":"sha256:24125bbc6cbe08f530e97c81ee461357fa3ba56f4d7693d7895ec86671cf3540"}}
-                |{"stream":"Successfully built 24125bbc6cbe\n"}
-            """.trimMargin()
+            val successEvents = listOf(
+                BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(0, "FROM nginx:1.13.0")), 5),
+                BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(1, "RUN apt update \u0026\u0026 apt install -y curl \u0026\u0026 rm -rf /var/lib/apt/lists/*")), 5),
+                BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(2, "COPY index.html /usr/share/nginx/html")), 5),
+                BuildComplete(DockerImage("sha256:24125bbc6cbe08f530e97c81ee461357fa3ba56f4d7693d7895ec86671cf3540"))
+            )
+
+            val successProgressEvents = successEvents.dropLast(1)
+            val successOutput = "This is some output from the build process."
 
             on("the build succeeding") {
-                val call by createForEachTest { clientWithLongTimeout.mock("POST", expectedUrl, successResponse, 200, expectedHeadersForAuthentication) }
+                val call by createForEachTest { clientWithLongTimeout.mock("POST", expectedUrl, daemonBuildResponse, 200, expectedHeadersForAuthentication) }
                 val output by createForEachTest { ByteArrayOutputStream() }
-                val progressReceiver by createForEachTest { ProgressReceiver() }
-                val image by runForEachTest { api.build(context, buildArgs, dockerfilePath, imageTags, pullImage, registryCredentials, output.sink(), cancellationContext, progressReceiver::onProgressUpdate) }
+                val eventsReceiver by createForEachTest { BuildEventsReceiver() }
+
+                beforeEachTest {
+                    buildResponseBody.outputToStream = successOutput
+                    buildResponseBody.eventsToPost = successEvents
+                }
+
+                val image by runForEachTest { api.build(context, buildArgs, dockerfilePath, imageTags, pullImage, registryCredentials, output.sink(), cancellationContext, eventsReceiver::onProgressUpdate) }
 
                 it("sends a request to the Docker daemon to build the image") {
                     verify(call).execute()
@@ -159,8 +163,8 @@ object ImagesAPISpec : Spek({
                     verify(clientWithLongTimeout).newCall(requestWithBody(DockerImageBuildContextRequestBody(context)))
                 }
 
-                it("sends all progress updates to the receiver") {
-                    assertThat(progressReceiver, receivedAllUpdatesFrom(successResponse))
+                it("sends all build progress events to the receiver") {
+                    assertThat(eventsReceiver.eventsReceived, equalTo(successProgressEvents))
                 }
 
                 it("registers the API call with the cancellation context") {
@@ -172,28 +176,7 @@ object ImagesAPISpec : Spek({
                 }
 
                 it("writes all output from the build process to the provided output stream") {
-                    assertThat(
-                        output.toString(),
-                        equalTo(
-                            """
-                                |Step 1/5 : FROM nginx:1.13.0
-                                | ---> 3448f27c273f
-                                |Step 2/5 : RUN apt update && apt install -y curl && rm -rf /var/lib/apt/lists/*
-                                | ---> Using cache
-                                | ---> 0ceae477da9d
-                                |Step 3/5 : COPY index.html /usr/share/nginx/html
-                                | ---> b288a67b828c
-                                |Step 4/5 : COPY health-check.sh /tools/
-                                | ---> 951e32ae4f76
-                                |Step 5/5 : HEALTHCHECK --interval=2s --retries=1 CMD /tools/health-check.sh
-                                | ---> Running in 3de7e4521d69
-                                |Removing intermediate container 3de7e4521d69
-                                | ---> 24125bbc6cbe
-                                |Successfully built 24125bbc6cbe
-                                |
-                            """.trimMargin()
-                        )
-                    )
+                    assertThat(output.toString(), equalTo(successOutput))
                 }
             }
 
@@ -203,7 +186,13 @@ object ImagesAPISpec : Spek({
                     hasPath("/v1.37/build") and
                     hasQueryParameter("pull", "1")
 
-                val call by createForEachTest { clientWithLongTimeout.mock("POST", expectedUrlWithRePullingEnabled, successResponse, 200, expectedHeadersForAuthentication) }
+                val call by createForEachTest { clientWithLongTimeout.mock("POST", expectedUrlWithRePullingEnabled, daemonBuildResponse, 200, expectedHeadersForAuthentication) }
+
+                beforeEachTest {
+                    buildResponseBody.outputToStream = successOutput
+                    buildResponseBody.eventsToPost = successEvents
+                }
+
                 beforeEachTest { api.build(context, emptyMap(), dockerfilePath, imageTags, true, registryCredentials, null, cancellationContext, {}) }
 
                 it("sends a request to the Docker daemon to build the image with re-pulling all images enabled") {
@@ -213,7 +202,13 @@ object ImagesAPISpec : Spek({
 
             on("the build having no registry credentials") {
                 val expectedHeadersForNoAuthentication = Headers.Builder().build()
-                val call by createForEachTest { clientWithLongTimeout.mock("POST", expectedUrl, successResponse, 200, expectedHeadersForNoAuthentication) }
+                val call by createForEachTest { clientWithLongTimeout.mock("POST", expectedUrl, daemonBuildResponse, 200, expectedHeadersForNoAuthentication) }
+
+                beforeEachTest {
+                    buildResponseBody.outputToStream = successOutput
+                    buildResponseBody.eventsToPost = successEvents
+                }
+
                 beforeEachTest { api.build(context, buildArgs, dockerfilePath, imageTags, pullImage, emptySet(), null, cancellationContext, {}) }
 
                 it("sends a request to the Docker daemon to build the image with no authentication header") {
@@ -227,7 +222,13 @@ object ImagesAPISpec : Spek({
                     hasPath("/v1.37/build") and
                     hasQueryParameter("buildargs", """{}""")
 
-                val call by createForEachTest { clientWithLongTimeout.mock("POST", expectedUrlWithNoBuildArgs, successResponse, 200, expectedHeadersForAuthentication) }
+                val call by createForEachTest { clientWithLongTimeout.mock("POST", expectedUrlWithNoBuildArgs, daemonBuildResponse, 200, expectedHeadersForAuthentication) }
+
+                beforeEachTest {
+                    buildResponseBody.outputToStream = successOutput
+                    buildResponseBody.eventsToPost = successEvents
+                }
+
                 beforeEachTest { api.build(context, emptyMap(), dockerfilePath, imageTags, pullImage, registryCredentials, null, cancellationContext, {}) }
 
                 it("sends a request to the Docker daemon to build the image with an empty set of build args") {
@@ -251,19 +252,18 @@ object ImagesAPISpec : Spek({
             }
 
             on("the build failing during the build process") {
-                val response = """
-                    |{"stream":"Step 1/6 : FROM nginx:1.13.0"}
-                    |{"stream":"\n"}
-                    |{"stream":" ---\u003e 3448f27c273f\n"}
-                    |{"stream":"Step 2/6 : RUN exit 1"}
-                    |{"stream":"\n"}
-                    |{"stream":" ---\u003e Running in 4427f9f56fad\n"}
-                    |{"errorDetail":{"code":1,"message":"The command '/bin/sh -c exit 1' returned a non-zero code: 1"},"error":"The command '/bin/sh -c exit 1' returned a non-zero code: 1"}
-                """.trimMargin()
-
                 val output by createForEachTest { ByteArrayOutputStream() }
 
-                beforeEachTest { clientWithLongTimeout.mock("POST", expectedUrl, response, 200, expectedHeadersForAuthentication) }
+                beforeEachTest {
+                    clientWithLongTimeout.mock("POST", expectedUrl, daemonBuildResponse, 200, expectedHeadersForAuthentication)
+
+                    buildResponseBody.outputToStream = "This is some output from the build process.\nThis is some more output from the build process.\n"
+                    buildResponseBody.eventsToPost = listOf(
+                        BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(0, "FROM nginx:1.13.0")), 5),
+                        BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(1, "RUN exit 1")), 5),
+                        BuildError("The command '/bin/sh -c exit 1' returned a non-zero code: 1")
+                    )
+                }
 
                 it("throws an appropriate exception with all line endings corrected for the host system") {
                     assertThat(
@@ -271,11 +271,8 @@ object ImagesAPISpec : Spek({
                         throws<ImageBuildFailedException>(
                             withMessage(
                                 "Building image failed: The command '/bin/sh -c exit 1' returned a non-zero code: 1. Output from build process was:SYSTEM_LINE_SEPARATOR" +
-                                    "Step 1/6 : FROM nginx:1.13.0SYSTEM_LINE_SEPARATOR" +
-                                    " ---> 3448f27c273fSYSTEM_LINE_SEPARATOR" +
-                                    "Step 2/6 : RUN exit 1SYSTEM_LINE_SEPARATOR" +
-                                    " ---> Running in 4427f9f56fadSYSTEM_LINE_SEPARATOR" +
-                                    "The command '/bin/sh -c exit 1' returned a non-zero code: 1"
+                                    "This is some output from the build process.SYSTEM_LINE_SEPARATOR" +
+                                    "This is some more output from the build process."
                             )
                         )
                     )
@@ -287,24 +284,22 @@ object ImagesAPISpec : Spek({
                         output.toString(),
                         equalTo(
                             """
-                                Step 1/6 : FROM nginx:1.13.0
-                                 ---> 3448f27c273f
-                                Step 2/6 : RUN exit 1
-                                 ---> Running in 4427f9f56fad
-                                The command '/bin/sh -c exit 1' returned a non-zero code: 1
-                            """.trimIndent()
+                                |This is some output from the build process.
+                                |This is some more output from the build process.
+                                |
+                            """.trimMargin()
                         )
                     )
                 }
             }
 
             on("the build process never sending an output line with the built image ID") {
-                val malformedResponse = """
-                    |{"stream":"Step 1/6 : FROM nginx:1.13.0"}
-                """.trimMargin()
-
                 beforeEachTest {
-                    clientWithLongTimeout.mock("POST", expectedUrl, malformedResponse, 200, expectedHeadersForAuthentication)
+                    clientWithLongTimeout.mock("POST", expectedUrl, daemonBuildResponse, 200, expectedHeadersForAuthentication)
+
+                    buildResponseBody.eventsToPost = listOf(
+                        BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(0, "FROM nginx:1.13.0")), 5),
+                    )
                 }
 
                 it("throws an appropriate exception") {
@@ -348,7 +343,7 @@ object ImagesAPISpec : Spek({
                 """.trimMargin()
 
                 val call by createForEachTest { clientWithLongTimeout.mockPost(expectedUrl, response, 200, expectedHeadersForAuthentication) }
-                val progressReceiver by createForEachTest { ProgressReceiver() }
+                val progressReceiver by createForEachTest { ImageProgressReceiver() }
                 beforeEachTest { api.pull(imageReference, registryCredentials, cancellationContext, progressReceiver::onProgressUpdate) }
 
                 it("sends a request to the Docker daemon to pull the image") {
@@ -379,7 +374,7 @@ object ImagesAPISpec : Spek({
                 """.trimMargin()
 
                 val call by createForEachTest { clientWithLongTimeout.mockPost(expectedUrl, response, 200, expectedHeadersForAuthentication) }
-                val progressReceiver by createForEachTest { ProgressReceiver() }
+                val progressReceiver by createForEachTest { ImageProgressReceiver() }
                 beforeEachTest { api.pull(imageReference, registryCredentials, cancellationContext, progressReceiver::onProgressUpdate) }
 
                 it("sends a request to the Docker daemon to pull the image") {
@@ -433,7 +428,7 @@ object ImagesAPISpec : Spek({
                 """.trimMargin()
 
                 beforeEachTest { clientWithLongTimeout.mockPost(expectedUrl, response, 200, expectedHeadersForAuthentication) }
-                val progressReceiver = ProgressReceiver()
+                val progressReceiver = ImageProgressReceiver()
 
                 it("throws an appropriate exception with all line endings corrected for the host system") {
                     assertThat(
@@ -483,7 +478,15 @@ object ImagesAPISpec : Spek({
     }
 })
 
-private class ProgressReceiver {
+private class BuildEventsReceiver {
+    val eventsReceived = mutableListOf<BuildProgress>()
+
+    fun onProgressUpdate(update: BuildProgress) {
+        eventsReceived.add(update)
+    }
+}
+
+private class ImageProgressReceiver {
     val updatesReceived = mutableListOf<JsonObject>()
 
     fun onProgressUpdate(update: JsonObject) {
@@ -491,10 +494,25 @@ private class ProgressReceiver {
     }
 }
 
-private fun receivedAllUpdatesFrom(response: String): Matcher<ProgressReceiver> = receivedAllUpdatesFrom(response.lines())
+private fun receivedAllUpdatesFrom(response: String): Matcher<ImageProgressReceiver> = receivedAllUpdatesFrom(response.lines())
 
-private fun receivedAllUpdatesFrom(lines: Iterable<String>): Matcher<ProgressReceiver> {
+private fun receivedAllUpdatesFrom(lines: Iterable<String>): Matcher<ImageProgressReceiver> {
     val expectedUpdates = lines.map { Json.default.parseToJsonElement(it).jsonObject }
 
-    return has(ProgressReceiver::updatesReceived, equalTo(expectedUpdates))
+    return has(ImageProgressReceiver::updatesReceived, equalTo(expectedUpdates))
+}
+
+private val daemonBuildResponse = "This is the response from the daemon."
+
+private class MockImageBuildResponseBody : DockerImageBuildResponseBody {
+    var outputToStream: String = ""
+    var eventsToPost: List<DockerImageBuildEvent> = emptyList()
+
+    override fun readFrom(stream: Reader, outputStream: Sink, eventCallback: ImageBuildEventCallback) {
+        assertThat(stream.readText(), equalTo(daemonBuildResponse))
+
+        outputStream.buffer().writeString(outputToStream, Charsets.UTF_8).flush()
+
+        eventsToPost.forEach(eventCallback)
+    }
 }

@@ -14,13 +14,13 @@
    limitations under the License.
 */
 
-package batect.docker.pull
+package batect.docker.build
 
-import batect.docker.DownloadOperation
-import batect.docker.humanReadableStringForDownloadProgress
-import kotlinx.serialization.Serializable
+import okio.Sink
+import java.io.Reader
 
-@Serializable
-data class DockerImagePullProgress(val currentOperation: DownloadOperation, val completedBytes: Long, val totalBytes: Long) {
-    fun toStringForDisplay(): String = humanReadableStringForDownloadProgress(currentOperation, completedBytes, totalBytes)
+interface DockerImageBuildResponseBody {
+    fun readFrom(stream: Reader, outputStream: Sink, eventCallback: ImageBuildEventCallback)
 }
+
+typealias ImageBuildEventCallback = (DockerImageBuildEvent) -> Unit

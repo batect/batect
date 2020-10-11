@@ -24,6 +24,7 @@ import batect.docker.ImageBuildFailedException
 import batect.docker.ImagePullFailedException
 import batect.docker.Json
 import batect.docker.api.ImagesAPI
+import batect.docker.build.BuildProgress
 import batect.docker.build.DockerImageBuildContext
 import batect.docker.build.DockerImageBuildContextFactory
 import batect.docker.build.DockerfileParser
@@ -47,7 +48,6 @@ import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.throws
 import com.nhaarman.mockitokotlin2.any
-import com.nhaarman.mockitokotlin2.doAnswer
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.mock
@@ -57,7 +57,6 @@ import com.nhaarman.mockitokotlin2.whenever
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 import okio.Sink
-import org.mockito.invocation.InvocationOnMock
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.nio.file.Files
@@ -116,105 +115,18 @@ object DockerImagesClientSpec : Spek({
                     }
 
                     on("a successful build") {
-                        val output = """
-                        |{"stream":"Step 1/5 : FROM nginx:1.13.0"}
-                        |{"status":"pulling the image"}
-                        |{"stream":"\n"}
-                        |{"stream":" ---\u003e 3448f27c273f\n"}
-                        |{"stream":"Step 2/5 : RUN apt update \u0026\u0026 apt install -y curl \u0026\u0026 rm -rf /var/lib/apt/lists/*"}
-                        |{"stream":"\n"}
-                        |{"stream":" ---\u003e Using cache\n"}
-                        |{"stream":" ---\u003e 0ceae477da9d\n"}
-                        |{"stream":"Step 3/5 : COPY index.html /usr/share/nginx/html"}
-                        |{"stream":"\n"}
-                        |{"stream":" ---\u003e b288a67b828c\n"}
-                        |{"stream":"Step 4/5 : COPY health-check.sh /tools/"}
-                        |{"stream":"\n"}
-                        |{"stream":" ---\u003e 951e32ae4f76\n"}
-                        |{"stream":"Step 5/5 : HEALTHCHECK --interval=2s --retries=1 CMD /tools/health-check.sh"}
-                        |{"stream":"\n"}
-                        |{"stream":" ---\u003e Running in 3de7e4521d69\n"}
-                        |{"stream":"Removing intermediate container 3de7e4521d69\n"}
-                        |{"stream":" ---\u003e 24125bbc6cbe\n"}
-                        |{"aux":{"ID":"sha256:24125bbc6cbe08f530e97c81ee461357fa3ba56f4d7693d7895ec86671cf3540"}}
-                        |{"stream":"Successfully built 24125bbc6cbe\n"}
-                    """.trimMargin()
+                        val image = DockerImage("some-image-id")
+                        beforeEachTest { whenever(api.build(any(), any(), any(), any(), any(), any(), any(), any(), any())).doReturn(image) }
 
-                        val imagePullProgress = DockerImagePullProgress(DownloadOperation.Downloading, 10, 20)
-
-                        beforeEachTest {
-                            stubProgressUpdate(imageProgressReporter, output.lines()[0], imagePullProgress)
-                            whenever(api.build(any(), any(), any(), any(), any(), any(), any(), any(), any())).doAnswer(sendProgressAndReturnImage(output, DockerImage("some-image-id")))
-                        }
-
-                        val statusUpdates by createForEachTest { mutableListOf<DockerImageBuildProgress>() }
-
-                        val onStatusUpdate = fun(p: DockerImageBuildProgress) {
-                            statusUpdates.add(p)
-                        }
-
+                        val onStatusUpdate = fun(_: BuildProgress) {}
                         val result by runForEachTest { client.build(buildDirectory, buildArgs, dockerfilePath, pathResolutionContext, imageTags, forcePull, outputSink, cancellationContext, onStatusUpdate) }
 
                         it("builds the image") {
-                            verify(api).build(eq(context), eq(buildArgs), eq(dockerfilePath), eq(imageTags), eq(forcePull), eq(setOf(image1Credentials, image2Credentials)), eq(outputSink), eq(cancellationContext), any())
+                            verify(api).build(eq(context), eq(buildArgs), eq(dockerfilePath), eq(imageTags), eq(forcePull), eq(setOf(image1Credentials, image2Credentials)), eq(outputSink), eq(cancellationContext), eq(onStatusUpdate))
                         }
 
-                        it("returns the ID of the created image") {
-                            assertThat(result.id, equalTo("some-image-id"))
-                        }
-
-                        it("sends status updates as the build progresses") {
-                            assertThat(
-                                statusUpdates,
-                                equalTo(
-                                    listOf(
-                                        DockerImageBuildProgress(1, 5, "FROM nginx:1.13.0", null),
-                                        DockerImageBuildProgress(1, 5, "FROM nginx:1.13.0", imagePullProgress),
-                                        DockerImageBuildProgress(2, 5, "RUN apt update && apt install -y curl && rm -rf /var/lib/apt/lists/*", null),
-                                        DockerImageBuildProgress(3, 5, "COPY index.html /usr/share/nginx/html", null),
-                                        DockerImageBuildProgress(4, 5, "COPY health-check.sh /tools/", null),
-                                        DockerImageBuildProgress(5, 5, "HEALTHCHECK --interval=2s --retries=1 CMD /tools/health-check.sh", null)
-                                    )
-                                )
-                            )
-                        }
-                    }
-
-                    on("the daemon sending image pull information before sending any step progress information") {
-                        val output = """
-                        |{"status":"pulling the image"}
-                        |{"stream":"Step 1/5 : FROM nginx:1.13.0"}
-                        |{"status":"pulling the image"}
-                        |{"stream":"\n"}
-                        |{"stream":" ---\u003e 3448f27c273f\n"}
-                        |{"stream":"Step 2/5 : RUN apt update \u0026\u0026 apt install -y curl \u0026\u0026 rm -rf /var/lib/apt/lists/*"}
-                    """.trimMargin()
-
-                        val imagePullProgress = DockerImagePullProgress(DownloadOperation.Downloading, 10, 20)
-                        val statusUpdates by createForEachTest { mutableListOf<DockerImageBuildProgress>() }
-
-                        beforeEachTest {
-                            stubProgressUpdate(imageProgressReporter, output.lines()[0], imagePullProgress)
-                            whenever(api.build(any(), any(), any(), any(), any(), any(), any(), any(), any())).doAnswer(sendProgressAndReturnImage(output, DockerImage("some-image-id")))
-
-                            val onStatusUpdate = fun(p: DockerImageBuildProgress) {
-                                statusUpdates.add(p)
-                            }
-
-                            client.build(buildDirectory, buildArgs, dockerfilePath, pathResolutionContext, imageTags, forcePull, outputSink, cancellationContext, onStatusUpdate)
-                        }
-
-                        it("sends status updates only once the first step is started") {
-                            assertThat(
-                                statusUpdates,
-                                equalTo(
-                                    listOf(
-                                        DockerImageBuildProgress(1, 5, "FROM nginx:1.13.0", null),
-                                        DockerImageBuildProgress(1, 5, "FROM nginx:1.13.0", imagePullProgress),
-                                        DockerImageBuildProgress(2, 5, "RUN apt update && apt install -y curl && rm -rf /var/lib/apt/lists/*", null)
-                                    )
-                                )
-                            )
+                        it("returns the built image") {
+                            assertThat(result, equalTo(image))
                         }
                     }
                 }
@@ -390,19 +302,3 @@ object DockerImagesClientSpec : Spek({
         }
     }
 })
-
-private fun stubProgressUpdate(reporter: DockerImagePullProgressReporter, input: String, update: DockerImagePullProgress) {
-    val json = Json.default.parseToJsonElement(input).jsonObject
-    whenever(reporter.processProgressUpdate(eq(json))).thenReturn(update)
-}
-
-private fun sendProgressAndReturnImage(progressUpdates: String, image: DockerImage) = { invocation: InvocationOnMock ->
-    @Suppress("UNCHECKED_CAST")
-    val onProgressUpdate = invocation.arguments.last() as (JsonObject) -> Unit
-
-    progressUpdates.lines().forEach { line ->
-        onProgressUpdate(Json.default.parseToJsonElement(line).jsonObject)
-    }
-
-    image
-}

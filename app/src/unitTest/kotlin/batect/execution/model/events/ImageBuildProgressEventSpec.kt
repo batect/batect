@@ -18,8 +18,8 @@ package batect.execution.model.events
 
 import batect.config.Container
 import batect.docker.DownloadOperation
-import batect.docker.client.DockerImageBuildProgress
-import batect.docker.pull.DockerImagePullProgress
+import batect.docker.build.ActiveImageBuildStep
+import batect.docker.build.BuildProgress
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.logRepresentationOf
 import batect.testutils.on
@@ -31,7 +31,15 @@ import org.spekframework.spek2.style.specification.describe
 object ImageBuildProgressEventSpec : Spek({
     describe("an 'image build progress' event") {
         val container = Container("the-container", imageSourceDoesNotMatter())
-        val event = ImageBuildProgressEvent(container, DockerImageBuildProgress(1, 10, "Something is happening", DockerImagePullProgress(DownloadOperation.Downloading, 12, 20)))
+        val progress = BuildProgress(
+            setOf(
+                ActiveImageBuildStep.NotDownloading(3, "RUN the-thing.sh"),
+                ActiveImageBuildStep.Downloading(7, "FROM postgres:13.0", DownloadOperation.Extracting, 12, 20)
+            ),
+            10
+        )
+
+        val event = ImageBuildProgressEvent(container, progress)
 
         on("attaching it to a log message") {
             it("returns a machine-readable representation of itself") {
@@ -43,14 +51,22 @@ object ImageBuildProgressEventSpec : Spek({
                         |   "type": "${event::class.qualifiedName}",
                         |   "container": "the-container",
                         |   "buildProgress": {
-                        |       "currentStep": 1,
                         |       "totalSteps": 10,
-                        |       "message": "Something is happening",
-                        |       "progress": {
-                        |           "currentOperation": "Downloading",
-                        |           "completedBytes": 12,
-                        |           "totalBytes": 20
-                        |       }
+                        |       "activeSteps": [
+                        |           {
+                        |               "type": "NotDownloading",
+                        |               "stepIndex": 3,
+                        |               "name": "RUN the-thing.sh"
+                        |           },
+                        |           {
+                        |               "type": "Downloading",
+                        |               "stepIndex": 7,
+                        |               "name": "FROM postgres:13.0",
+                        |               "operation": "Extracting",
+                        |               "bytesDownloaded": 12,
+                        |               "totalBytes": 20
+                        |           }
+                        |       ]
                         |   }
                         |}
                         """.trimMargin()

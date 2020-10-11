@@ -28,7 +28,8 @@ import batect.config.ImagePullPolicy
 import batect.config.LiteralValue
 import batect.docker.DockerImage
 import batect.docker.ImageBuildFailedException
-import batect.docker.client.DockerImageBuildProgress
+import batect.docker.build.ActiveImageBuildStep
+import batect.docker.build.BuildProgress
 import batect.docker.client.DockerImagesClient
 import batect.execution.model.events.ImageBuildFailedEvent
 import batect.execution.model.events.ImageBuildProgressEvent
@@ -137,15 +138,15 @@ object BuildImageStepRunnerSpec : Spek({
         describe("when building the image succeeds") {
             on("and propagating proxy-related environment variables is enabled") {
                 val image = DockerImage("some-image")
-                val update1 = DockerImageBuildProgress(1, 2, "First step", null)
-                val update2 = DockerImageBuildProgress(2, 2, "Second step", null)
+                val update1 = BuildProgress(emptySet(), 2)
+                val update2 = BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(0, "First step")), 2)
 
                 describe("regardless of the image pull policy") {
                     beforeEachTest {
                         whenever(imagesClient.build(eq(resolvedBuildDirectory), any(), eq(dockerfilePath), eq(pathResolutionContext), eq(setOf("some-project-some-container")), eq(false), eq(outputSink), eq(cancellationContext), any()))
                             .then { invocation ->
                                 @Suppress("UNCHECKED_CAST")
-                                val onStatusUpdate = invocation.arguments[8] as (DockerImageBuildProgress) -> Unit
+                                val onStatusUpdate = invocation.arguments[8] as (BuildProgress) -> Unit
 
                                 onStatusUpdate(update1)
                                 onStatusUpdate(update2)

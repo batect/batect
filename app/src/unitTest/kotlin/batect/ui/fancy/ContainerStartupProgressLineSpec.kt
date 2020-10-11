@@ -26,7 +26,8 @@ import batect.docker.DockerContainer
 import batect.docker.DockerImage
 import batect.docker.DockerNetwork
 import batect.docker.DownloadOperation
-import batect.docker.client.DockerImageBuildProgress
+import batect.docker.build.ActiveImageBuildStep
+import batect.docker.build.BuildProgress
 import batect.docker.pull.DockerImagePullProgress
 import batect.execution.ContainerRuntimeConfiguration
 import batect.execution.model.events.CachesInitialisedEvent
@@ -108,7 +109,7 @@ object ContainerStartupProgressLineSpec : Spek({
             describe("after receiving an 'image build progress' notification") {
                 given("that notification is for this line's container") {
                     on("that notification containing image pull progress information") {
-                        val event = ImageBuildProgressEvent(container, DockerImageBuildProgress(1, 5, "FROM the-image:1.2.3", DockerImagePullProgress(DownloadOperation.Downloading, 12, 20)))
+                        val event = ImageBuildProgressEvent(container, BuildProgress(setOf(ActiveImageBuildStep.Downloading(0, "FROM the-image:1.2.3", DownloadOperation.Downloading, 12, 20)), 5))
                         beforeEachTest { line.onEventPosted(event) }
                         val output by runForEachTest { line.print() }
 
@@ -118,7 +119,7 @@ object ContainerStartupProgressLineSpec : Spek({
                     }
 
                     on("that notification not containing image pull progress information") {
-                        val event = ImageBuildProgressEvent(container, DockerImageBuildProgress(2, 5, "COPY health-check.sh /tools/", null))
+                        val event = ImageBuildProgressEvent(container, BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(1, "COPY health-check.sh /tools/")), 5))
                         beforeEachTest { line.onEventPosted(event) }
                         val output by runForEachTest { line.print() }
 
@@ -129,7 +130,7 @@ object ContainerStartupProgressLineSpec : Spek({
                 }
 
                 on("that notification being for another container") {
-                    val event = ImageBuildProgressEvent(otherContainer, DockerImageBuildProgress(2, 5, "COPY health-check.sh /tools/", null))
+                    val event = ImageBuildProgressEvent(otherContainer, BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(1, "COPY health-check.sh /tools/")), 5))
                     beforeEachTest { line.onEventPosted(event) }
                     val output by runForEachTest { line.print() }
 

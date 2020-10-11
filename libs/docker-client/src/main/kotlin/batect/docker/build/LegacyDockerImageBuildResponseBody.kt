@@ -34,11 +34,15 @@ import java.io.Reader
 
 class LegacyDockerImageBuildResponseBody : DockerImageBuildResponseBody {
     private var lastStepIndex: Int? = null
+    private var lastStepName: String? = null
+    private var totalSteps: Int? = null
     private var imagePullProgressReporter: DockerImagePullProgressReporter? = null
 
     override fun readFrom(stream: Reader, outputStream: Sink, eventCallback: ImageBuildEventCallback) {
         val outputBuffer = outputStream.buffer()
         lastStepIndex = null
+        lastStepName = null
+        totalSteps = null
 
         stream.forEachLine { line -> decodeLine(line, outputBuffer, eventCallback) }
     }
@@ -67,16 +71,15 @@ class LegacyDockerImageBuildResponseBody : DockerImageBuildResponseBody {
     private fun checkForNewStepStarting(output: String, eventCallback: ImageBuildEventCallback) {
         val buildStepLineMatch = buildStepLineRegex.matchEntire(output) ?: return
 
-        postLastStepCompleted(eventCallback)
-
         val stepNumber = buildStepLineMatch.groupValues[1].toInt()
         val stepIndex = stepNumber - 1
-        val totalSteps = buildStepLineMatch.groupValues[2].toInt()
         val name = buildStepLineMatch.groupValues[3]
-        val event = DockerImageBuildEvent.StepStarting(stepIndex, totalSteps, name)
+        totalSteps = buildStepLineMatch.groupValues[2].toInt()
+        val event = BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(stepIndex, name)), totalSteps!!)
         eventCallback(event)
 
         lastStepIndex = stepIndex
+        lastStepName = name
         imagePullProgressReporter = DockerImagePullProgressReporter()
     }
 
@@ -84,14 +87,13 @@ class LegacyDockerImageBuildResponseBody : DockerImageBuildResponseBody {
         val error = json["error"]?.jsonPrimitive?.content ?: return
 
         writeOutput(error, outputBuffer)
-        eventCallback(DockerImageBuildEvent.Error(error))
+        eventCallback(BuildError(error))
     }
 
     private fun decodeImageID(json: JsonObject, eventCallback: ImageBuildEventCallback) {
         val imageID = json["aux"]?.jsonObject?.get("ID")?.jsonPrimitive?.content ?: return
 
-        postLastStepCompleted(eventCallback)
-        eventCallback(DockerImageBuildEvent.BuildComplete(DockerImage(imageID)))
+        eventCallback(BuildComplete(DockerImage(imageID)))
     }
 
     private fun decodeProgress(json: JsonObject, eventCallback: ImageBuildEventCallback) {
@@ -107,7 +109,14 @@ class LegacyDockerImageBuildResponseBody : DockerImageBuildResponseBody {
     private fun decodeImagePullProgress(json: JsonObject, eventCallback: ImageBuildEventCallback) {
         val update = imagePullProgressReporter!!.processProgressUpdate(json) ?: return
 
-        eventCallback(DockerImageBuildEvent.StepDownloadProgress(lastStepIndex!!, update.currentOperation, update.completedBytes, update.totalBytes))
+        val event = BuildProgress(
+            setOf(
+                ActiveImageBuildStep.Downloading(lastStepIndex!!, lastStepName!!, update.currentOperation, update.completedBytes, update.totalBytes)
+            ),
+            totalSteps!!
+        )
+
+        eventCallback(event)
     }
 
     private fun decodeNonImageDownloadProgress(progress: JsonObject, eventCallback: ImageBuildEventCallback) {
@@ -115,13 +124,14 @@ class LegacyDockerImageBuildResponseBody : DockerImageBuildResponseBody {
         val totalBytes = progress["total"]!!.jsonPrimitive.long
         val totalBytesToReport = if (totalBytes == -1L) null else totalBytes
 
-        eventCallback(DockerImageBuildEvent.StepDownloadProgress(lastStepIndex!!, DownloadOperation.Downloading, bytesDownloaded, totalBytesToReport))
-    }
+        val event = BuildProgress(
+            setOf(
+                ActiveImageBuildStep.Downloading(lastStepIndex!!, lastStepName!!, DownloadOperation.Downloading, bytesDownloaded, totalBytesToReport)
+            ),
+            totalSteps!!
+        )
 
-    private fun postLastStepCompleted(eventCallback: ImageBuildEventCallback) {
-        if (lastStepIndex != null) {
-            eventCallback(DockerImageBuildEvent.StepComplete(lastStepIndex!!))
-        }
+        eventCallback(event)
     }
 
     private fun decodeToJsonObject(line: String): JsonObject {

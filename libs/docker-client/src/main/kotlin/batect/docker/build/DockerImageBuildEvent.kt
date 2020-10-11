@@ -18,30 +18,59 @@ package batect.docker.build
 
 import batect.docker.DockerImage
 import batect.docker.DownloadOperation
-import okio.Sink
-import java.io.Reader
+import batect.docker.humanReadableStringForDownloadProgress
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
-sealed class DockerImageBuildEvent {
-    data class StepStarting(
-        val stepIndex: Int,
-        val totalSteps: Int,
-        val name: String
-    ) : DockerImageBuildEvent()
+sealed class DockerImageBuildEvent
 
-    data class StepDownloadProgress(
-        val stepIndex: Int,
+@Serializable
+data class BuildProgress(val activeSteps: Set<ActiveImageBuildStep>, val totalSteps: Int) : DockerImageBuildEvent() {
+    fun toHumanReadableString(): String {
+        if (activeSteps.isEmpty()) {
+            return totalSteps.pluralise("step") + " total"
+        }
+
+        val firstStep = activeSteps.minByOrNull { it.stepIndex }!!
+        val otherStepsRunning = activeSteps.size - 1
+        val otherStepsDescription = if (otherStepsRunning == 0) "" else " (+${otherStepsRunning.pluralise("other step")} running)"
+
+        return "step ${firstStep.stepIndex + 1} of $totalSteps: ${firstStep.toHumanReadableString()}$otherStepsDescription"
+    }
+
+    private fun Int.pluralise(type: String): String = if (this == 1) "$this $type" else "$this ${type}s"
+}
+
+data class BuildError(val message: String) : DockerImageBuildEvent()
+
+data class BuildComplete(val image: DockerImage) : DockerImageBuildEvent()
+
+@Serializable
+sealed class ActiveImageBuildStep {
+    abstract val stepIndex: Int
+    abstract val name: String
+    internal abstract fun toHumanReadableString(): String
+
+    @Serializable
+    @SerialName("NotDownloading")
+    data class NotDownloading(
+        override val stepIndex: Int,
+        override val name: String
+    ) : ActiveImageBuildStep() {
+        override fun toHumanReadableString(): String = name
+    }
+
+    @Serializable
+    @SerialName("Downloading")
+    data class Downloading(
+        override val stepIndex: Int,
+        override val name: String,
         val operation: DownloadOperation,
         val bytesDownloaded: Long,
         val totalBytes: Long?
-    ) : DockerImageBuildEvent()
-
-    data class StepComplete(val stepIndex: Int) : DockerImageBuildEvent()
-    data class Error(val message: String) : DockerImageBuildEvent()
-    data class BuildComplete(val image: DockerImage) : DockerImageBuildEvent()
+    ) : ActiveImageBuildStep() {
+        override fun toHumanReadableString(): String {
+            return "$name: ${humanReadableStringForDownloadProgress(operation, bytesDownloaded, totalBytes)}"
+        }
+    }
 }
-
-interface DockerImageBuildResponseBody {
-    fun readFrom(stream: Reader, outputStream: Sink, eventCallback: ImageBuildEventCallback)
-}
-
-typealias ImageBuildEventCallback = (DockerImageBuildEvent) -> Unit

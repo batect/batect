@@ -27,7 +27,7 @@ import batect.config.SetupCommand
 import batect.docker.DockerContainer
 import batect.docker.DockerImage
 import batect.docker.DockerNetwork
-import batect.docker.client.DockerImageBuildProgress
+import batect.docker.build.BuildProgress
 import batect.docker.pull.DockerImagePullProgress
 import batect.execution.model.steps.TaskStep
 import batect.logging.ContainerNameOnlySerializer
@@ -66,7 +66,7 @@ data class ContainerStartedEvent(val container: Container) : TaskEvent()
 data class ContainerStoppedEvent(val container: Container) : TaskEvent()
 
 @Serializable
-data class ImageBuildProgressEvent(val container: Container, val buildProgress: DockerImageBuildProgress) : TaskEvent(isInformationalEvent = true)
+data class ImageBuildProgressEvent(val container: Container, val buildProgress: BuildProgress) : TaskEvent(isInformationalEvent = true)
 
 @Serializable
 data class ImageBuiltEvent(val container: Container, val image: DockerImage) : TaskEvent()

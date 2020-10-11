@@ -23,7 +23,7 @@ import batect.config.Expression
 import batect.config.ExpressionEvaluationContext
 import batect.config.ExpressionEvaluationException
 import batect.docker.ImageBuildFailedException
-import batect.docker.client.DockerImageBuildProgress
+import batect.docker.build.BuildProgress
 import batect.docker.client.DockerImagesClient
 import batect.execution.model.events.ImageBuildFailedEvent
 import batect.execution.model.events.ImageBuildProgressEvent
@@ -54,7 +54,7 @@ class BuildImageStepRunner(
 ) {
     fun run(step: BuildImageStep, eventSink: TaskEventSink) {
         try {
-            val onStatusUpdate = { p: DockerImageBuildProgress ->
+            val onStatusUpdate = { p: BuildProgress ->
                 eventSink.postEvent(ImageBuildProgressEvent(step.container, p))
             }
 

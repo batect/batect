@@ -22,6 +22,7 @@ import batect.docker.DockerRegistryCredentialsException
 import batect.docker.ImageBuildFailedException
 import batect.docker.ImagePullFailedException
 import batect.docker.api.ImagesAPI
+import batect.docker.build.BuildProgress
 import batect.docker.build.DockerImageBuildContextFactory
 import batect.docker.build.DockerfileParser
 import batect.docker.data
@@ -31,9 +32,6 @@ import batect.docker.pull.DockerRegistryCredentialsProvider
 import batect.logging.Logger
 import batect.os.PathResolutionContext
 import batect.primitives.CancellationContext
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.jsonPrimitive
 import okio.Sink
 import java.nio.file.Files
 import java.nio.file.LinkOption
@@ -57,7 +55,7 @@ class DockerImagesClient(
         forcePull: Boolean,
         outputSink: Sink?,
         cancellationContext: CancellationContext,
-        onStatusUpdate: (DockerImageBuildProgress) -> Unit
+        onProgressUpdate: (BuildProgress) -> Unit
     ): DockerImage {
         logger.info {
             message("Building image.")
@@ -81,30 +79,7 @@ class DockerImagesClient(
             val context = imageBuildContextFactory.createFromDirectory(buildDirectory, dockerfilePath)
             val baseImageNames = dockerfileParser.extractBaseImageNames(resolvedDockerfilePath)
             val credentials = baseImageNames.mapNotNull { credentialsProvider.getCredentials(it) }.toSet()
-
-            val reporter = imagePullProgressReporterFactory()
-            var lastStepProgressUpdate: DockerImageBuildProgress? = null
-
-            val image = api.build(context, buildArgs, dockerfilePath, imageTags, forcePull, credentials, outputSink, cancellationContext) { line ->
-                logger.debug {
-                    message("Received output from Docker during image build.")
-                    data("outputLine", line.toString())
-                }
-
-                val stepProgress = DockerImageBuildProgress.fromBuildOutput(line)
-
-                if (stepProgress != null) {
-                    lastStepProgressUpdate = stepProgress
-                    onStatusUpdate(lastStepProgressUpdate!!)
-                }
-
-                val pullProgress = reporter.processProgressUpdate(line)
-
-                if (pullProgress != null && lastStepProgressUpdate != null) {
-                    lastStepProgressUpdate = lastStepProgressUpdate!!.copy(progress = pullProgress)
-                    onStatusUpdate(lastStepProgressUpdate!!)
-                }
-            }
+            val image = api.build(context, buildArgs, dockerfilePath, imageTags, forcePull, credentials, outputSink, cancellationContext, onProgressUpdate)
 
             logger.info {
                 message("Image build succeeded.")
@@ -142,20 +117,6 @@ class DockerImagesClient(
             return DockerImage(imageName)
         } catch (e: DockerRegistryCredentialsException) {
             throw ImagePullFailedException("Could not pull image '$imageName': ${e.message}", e)
-        }
-    }
-}
-
-@Serializable
-data class DockerImageBuildProgress(val currentStep: Int, val totalSteps: Int, val message: String, val progress: DockerImagePullProgress?) {
-    companion object {
-        private val buildStepLineRegex = """^Step (\d+)/(\d+) : (.*)$""".toRegex()
-
-        fun fromBuildOutput(line: JsonObject): DockerImageBuildProgress? {
-            val output = line["stream"]?.jsonPrimitive?.content ?: return null
-            val stepLineMatch = buildStepLineRegex.matchEntire(output) ?: return null
-
-            return DockerImageBuildProgress(stepLineMatch.groupValues[1].toInt(), stepLineMatch.groupValues[2].toInt(), stepLineMatch.groupValues[3], null)
         }
     }
 }

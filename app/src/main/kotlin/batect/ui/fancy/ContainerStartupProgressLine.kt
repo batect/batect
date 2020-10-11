@@ -21,7 +21,7 @@ import batect.config.CacheMount
 import batect.config.Container
 import batect.config.PullImage
 import batect.config.SetupCommand
-import batect.docker.client.DockerImageBuildProgress
+import batect.docker.build.BuildProgress
 import batect.docker.pull.DockerImagePullProgress
 import batect.execution.model.events.CachesInitialisedEvent
 import batect.execution.model.events.ContainerBecameHealthyEvent
@@ -47,7 +47,7 @@ import batect.ui.text.TextRun
 
 data class ContainerStartupProgressLine(val container: Container, val dependencies: Set<Container>, val isTaskContainer: Boolean) {
     private var isBuilding = false
-    private var lastBuildProgressUpdate: DockerImageBuildProgress? = null
+    private var lastBuildProgressUpdate: BuildProgress? = null
     private var isPulling = false
     private var lastProgressUpdate: DockerImagePullProgress? = null
     private var hasBeenBuilt = false
@@ -122,13 +122,7 @@ data class ContainerStartupProgressLine(val container: Container, val dependenci
     }
 
     private fun descriptionWhenBuilding(): TextRun {
-        val progressInformation = if (lastBuildProgressUpdate!!.progress != null) {
-            ": " + lastBuildProgressUpdate!!.progress!!.toStringForDisplay()
-        } else {
-            ""
-        }
-
-        return TextRun("building image: step ${lastBuildProgressUpdate!!.currentStep} of ${lastBuildProgressUpdate!!.totalSteps}: ${lastBuildProgressUpdate!!.message}" + progressInformation)
+        return TextRun("building image: " + lastBuildProgressUpdate!!.toHumanReadableString())
     }
 
     private fun descriptionWhenWaitingToStart(): TextRun {

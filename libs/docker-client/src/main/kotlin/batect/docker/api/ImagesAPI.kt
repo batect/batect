@@ -23,8 +23,13 @@ import batect.docker.ImageBuildFailedException
 import batect.docker.ImagePullFailedException
 import batect.docker.Json
 import batect.docker.Tee
+import batect.docker.build.BuildComplete
+import batect.docker.build.BuildError
+import batect.docker.build.BuildProgress
 import batect.docker.build.DockerImageBuildContext
 import batect.docker.build.DockerImageBuildContextRequestBody
+import batect.docker.build.DockerImageBuildResponseBody
+import batect.docker.build.LegacyDockerImageBuildResponseBody
 import batect.docker.pull.DockerRegistryCredentials
 import batect.docker.toJsonObject
 import batect.logging.LogMessageBuilder
@@ -39,7 +44,6 @@ import kotlinx.serialization.json.jsonPrimitive
 import okhttp3.HttpUrl
 import okhttp3.Request
 import okhttp3.Response
-import okio.Buffer
 import okio.Sink
 import okio.sink
 import java.io.ByteArrayOutputStream
@@ -48,7 +52,8 @@ import java.util.Base64
 class ImagesAPI(
     httpConfig: DockerHttpConfig,
     systemInfo: SystemInfo,
-    logger: Logger
+    logger: Logger,
+    private val buildResponseBodyFactory: () -> DockerImageBuildResponseBody = ::LegacyDockerImageBuildResponseBody
 ) : APIBase(httpConfig, systemInfo, logger) {
     fun build(
         context: DockerImageBuildContext,
@@ -59,7 +64,7 @@ class ImagesAPI(
         registryCredentials: Set<DockerRegistryCredentials>,
         outputSink: Sink?,
         cancellationContext: CancellationContext,
-        onProgressUpdate: (JsonObject) -> Unit
+        onProgressUpdate: (BuildProgress) -> Unit
     ): DockerImage {
         logger.info {
             message("Building image.")
@@ -132,52 +137,28 @@ class ImagesAPI(
         return this
     }
 
-    private fun processBuildResponse(response: Response, outputStream: Sink?, onProgressUpdate: (JsonObject) -> Unit): DockerImage {
-        var builtImageId: String? = null
+    private fun processBuildResponse(response: Response, outputStream: Sink?, onProgressUpdate: (BuildProgress) -> Unit): DockerImage {
+        var builtImage: DockerImage? = null
         val outputBuffer = ByteArrayOutputStream()
         val sink = if (outputStream == null) { outputBuffer.sink() } else { Tee(outputBuffer.sink(), outputStream) }
 
         sink.use {
-            response.body!!.charStream().forEachLine { line ->
-                val parsedLine = Json.default.parseToJsonElement(line).jsonObject
-                val output = parsedLine["stream"]?.jsonPrimitive?.content
-                val error = parsedLine["error"]?.jsonPrimitive?.content
+            val body = buildResponseBodyFactory()
 
-                if (output != null) {
-                    sink.append(output)
+            body.readFrom(response.body!!.charStream(), sink) { event ->
+                when (event) {
+                    is BuildProgress -> onProgressUpdate(event)
+                    is BuildError -> throw ImageBuildFailedException("Building image failed: ${event.message}. Output from build process was:" + systemInfo.lineSeparator + outputBuffer.toString().trim().correctLineEndings())
+                    is BuildComplete -> builtImage = event.image
                 }
-
-                if (error != null) {
-                    sink.append(error)
-
-                    throw ImageBuildFailedException(
-                        "Building image failed: $error. Output from build process was:" + systemInfo.lineSeparator +
-                            outputBuffer.toString().trim().correctLineEndings()
-                    )
-                }
-
-                val imageId = parsedLine["aux"]?.jsonObject?.get("ID")?.jsonPrimitive?.content
-
-                if (imageId != null) {
-                    builtImageId = imageId
-                }
-
-                onProgressUpdate(parsedLine)
             }
 
-            if (builtImageId == null) {
+            if (builtImage == null) {
                 throw ImageBuildFailedException("Building image failed: daemon never sent built image ID.")
             }
 
-            return DockerImage(builtImageId!!)
+            return builtImage!!
         }
-    }
-
-    private fun Sink.append(text: String) {
-        val buffer = Buffer()
-        buffer.writeString(text, Charsets.UTF_8)
-
-        this.write(buffer, buffer.size)
     }
 
     fun pull(

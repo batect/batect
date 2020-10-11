@@ -28,7 +28,7 @@ Furthermore, Docker Compose has no concept of tasks, further cementing the need 
 to execute different commands, run prerequisite tasks or setup commands and provide the discoverability that comes with a
 [go script](https://www.thoughtworks.com/insights/blog/praise-go-script-part-i).
 
-Docker Compose also has equivalent concept to [bundles](Bundles.md).
+Docker Compose also has no equivalent concept to [bundles](Bundles.md).
 
 Docker Compose is also significantly slower than batect, as it does not parallelise all operations - in one test, batect was 17%
 faster than Docker Compose.

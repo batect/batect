@@ -35,17 +35,33 @@ import okhttp3.Request
 import okhttp3.Response
 import okhttp3.ResponseBody.Companion.toResponseBody
 
-fun OkHttpClient.mockGet(url: String, responseBody: String, statusCode: Int = 200, headers: Headers = Headers.Builder().build()): Call = mock("GET", url, responseBody, statusCode, headers)
-fun OkHttpClient.mockPost(url: String, responseBody: String, statusCode: Int = 200, headers: Headers = Headers.Builder().build()): Call = mock("POST", url, responseBody, statusCode, headers)
-fun OkHttpClient.mockDelete(url: String, responseBody: String, statusCode: Int = 200, headers: Headers = Headers.Builder().build()): Call = mock("DELETE", url, responseBody, statusCode, headers)
+fun OkHttpClient.mockGet(url: String, responseBody: String, statusCode: Int = 200, expectedRequestHeaders: Headers = Headers.Builder().build(), responseHeaders: Headers = Headers.Builder().build()): Call =
+    mock("GET", url, responseBody, statusCode, expectedRequestHeaders, responseHeaders)
 
-fun OkHttpClient.mock(method: String, url: String, responseBody: String, statusCode: Int = 200, headers: Headers = Headers.Builder().build()): Call {
+fun OkHttpClient.mockPost(url: String, responseBody: String, statusCode: Int = 200, expectedRequestHeaders: Headers = Headers.Builder().build()): Call = mock("POST", url, responseBody, statusCode, expectedRequestHeaders)
+fun OkHttpClient.mockDelete(url: String, responseBody: String, statusCode: Int = 200, expectedRequestHeaders: Headers = Headers.Builder().build()): Call = mock("DELETE", url, responseBody, statusCode, expectedRequestHeaders)
+
+fun OkHttpClient.mock(
+    method: String,
+    url: String,
+    responseBody: String,
+    statusCode: Int = 200,
+    expectedRequestHeaders: Headers = Headers.Builder().build(),
+    responseHeaders: Headers = Headers.Builder().build()
+): Call {
     val parsedUrl = url.toHttpUrl()
 
-    return this.mock(method, equalTo(parsedUrl), responseBody, statusCode, headers)
+    return this.mock(method, equalTo(parsedUrl), responseBody, statusCode, expectedRequestHeaders, responseHeaders)
 }
 
-fun OkHttpClient.mock(method: String, urlMatcher: Matcher<HttpUrl>, responseBody: String, statusCode: Int = 200, headers: Headers = Headers.Builder().build()): Call {
+fun OkHttpClient.mock(
+    method: String,
+    urlMatcher: Matcher<HttpUrl>,
+    responseBody: String,
+    statusCode: Int = 200,
+    expectedRequestHeaders: Headers = Headers.Builder().build(),
+    responseHeaders: Headers = Headers.Builder().build()
+): Call {
     val jsonMediaType = "application/json; charset=utf-8".toMediaType()
     val parsedResponseBody = responseBody.toResponseBody(jsonMediaType)
     val call = mock<Call>()
@@ -55,7 +71,7 @@ fun OkHttpClient.mock(method: String, urlMatcher: Matcher<HttpUrl>, responseBody
 
         assertThat(request, has(Request::methodValue, equalTo(method)))
         assertThat(request, has(Request::urlValue, urlMatcher))
-        assertThat(request, has(Request::headerSet, equalTo(headers)))
+        assertThat(request, has(Request::headerSet, equalTo(expectedRequestHeaders)))
 
         whenever(call.execute()).doReturn(
             Response.Builder()
@@ -64,6 +80,7 @@ fun OkHttpClient.mock(method: String, urlMatcher: Matcher<HttpUrl>, responseBody
                 .protocol(Protocol.HTTP_1_1)
                 .code(statusCode)
                 .message("Something happened")
+                .headers(responseHeaders)
                 .build()
         )
 
@@ -73,7 +90,7 @@ fun OkHttpClient.mock(method: String, urlMatcher: Matcher<HttpUrl>, responseBody
     return call
 }
 
-fun OkHttpClient.mock(method: String, url: String, response: Response, headers: Headers = Headers.Builder().build()): Call {
+fun OkHttpClient.mock(method: String, url: String, response: Response, expectedRequestHeaders: Headers = Headers.Builder().build()): Call {
     val parsedUrl = url.toHttpUrl()
     val call = mock<Call>()
 
@@ -82,7 +99,7 @@ fun OkHttpClient.mock(method: String, url: String, response: Response, headers: 
 
         assertThat(request, has(Request::methodValue, equalTo(method)))
         assertThat(request, has(Request::urlValue, equalTo(parsedUrl)))
-        assertThat(request, has(Request::headerSet, equalTo(headers)))
+        assertThat(request, has(Request::headerSet, equalTo(expectedRequestHeaders)))
 
         whenever(call.execute()).doReturn(response)
 

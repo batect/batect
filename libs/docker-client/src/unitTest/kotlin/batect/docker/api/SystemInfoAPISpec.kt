@@ -22,16 +22,18 @@ import batect.docker.DockerVersionInfo
 import batect.os.SystemInfo
 import batect.primitives.Version
 import batect.testutils.createForEachTest
-import batect.testutils.doesNotThrow
 import batect.testutils.equalTo
+import batect.testutils.given
 import batect.testutils.logging.createLoggerForEachTestWithoutCustomSerializers
 import batect.testutils.mockGet
 import batect.testutils.on
+import batect.testutils.runForEachTest
 import batect.testutils.withMessage
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.throws
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
+import okhttp3.Headers
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import org.spekframework.spek2.Spek
@@ -110,15 +112,50 @@ object SystemInfoAPISpec : Spek({
         describe("pinging the server") {
             val expectedUrl = "$dockerBaseUrl/_ping"
 
-            on("the ping succeeding") {
-                beforeEachTest { httpClient.mockGet(expectedUrl, "OK") }
+            given("the ping succeeds") {
+                given("the response does not include builder version information") {
+                    beforeEachTest { httpClient.mockGet(expectedUrl, "OK") }
 
-                it("does not throw an exception") {
-                    assertThat({ api.ping() }, doesNotThrow())
+                    val response by runForEachTest { api.ping() }
+
+                    it("returns a response with the legacy builder type") {
+                        assertThat(response.builderVersion, equalTo(BuilderVersion.Legacy))
+                    }
+                }
+
+                given("the response indicates that the daemon supports BuildKit") {
+                    val headers = Headers.Builder().add("Builder-Version", "2").build()
+                    beforeEachTest { httpClient.mockGet(expectedUrl, "OK", responseHeaders = headers) }
+
+                    val response by runForEachTest { api.ping() }
+
+                    it("returns a response with the BuildKit builder type") {
+                        assertThat(response.builderVersion, equalTo(BuilderVersion.BuildKit))
+                    }
+                }
+
+                given("the response indicates that the daemon does not support BuildKit") {
+                    val headers = Headers.Builder().add("Builder-Version", "1").build()
+                    beforeEachTest { httpClient.mockGet(expectedUrl, "OK", responseHeaders = headers) }
+
+                    val response by runForEachTest { api.ping() }
+
+                    it("returns a response with the legacy builder type") {
+                        assertThat(response.builderVersion, equalTo(BuilderVersion.Legacy))
+                    }
+                }
+
+                given("the response includes an unknown builder version") {
+                    val headers = Headers.Builder().add("Builder-Version", "3").build()
+                    beforeEachTest { httpClient.mockGet(expectedUrl, "OK", responseHeaders = headers) }
+
+                    it("throws an appropriate exception") {
+                        assertThat({ api.ping() }, throws<DockerException>(withMessage("Docker daemon responded with unknown Builder-Version '3'.")))
+                    }
                 }
             }
 
-            on("the ping failing") {
+            given("the ping fails") {
                 beforeEachTest { httpClient.mockGet(expectedUrl, errorResponse, 418) }
 
                 it("throws an appropriate exception") {
@@ -126,7 +163,7 @@ object SystemInfoAPISpec : Spek({
                 }
             }
 
-            on("the ping returning an unexpected response") {
+            given("the ping returns an unexpected response") {
                 beforeEachTest { httpClient.mockGet(expectedUrl, "Something went wrong.", 200) }
 
                 it("throws an appropriate exception") {

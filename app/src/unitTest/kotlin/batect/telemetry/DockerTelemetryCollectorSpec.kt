@@ -18,6 +18,7 @@ package batect.telemetry
 
 import batect.docker.ConnectionType
 import batect.docker.DockerHttpConfig
+import batect.docker.api.BuilderVersion
 import batect.docker.client.DockerConnectivityCheckResult
 import batect.docker.client.DockerContainerType
 import batect.execution.CacheManager
@@ -48,7 +49,7 @@ object DockerTelemetryCollectorSpec : Spek({
         val dockerTelemetryCollector by createForEachTest { DockerTelemetryCollector(dockerHttpConfig, cacheManager, telemetrySessionBuilder) }
 
         describe("when collecting telemetry") {
-            beforeEachTest { dockerTelemetryCollector.collectTelemetry(DockerConnectivityCheckResult.Succeeded(DockerContainerType.Linux, Version(19, 3, 1))) }
+            beforeEachTest { dockerTelemetryCollector.collectTelemetry(DockerConnectivityCheckResult.Succeeded(DockerContainerType.Linux, Version(19, 3, 1), BuilderVersion.BuildKit)) }
 
             it("adds the Docker version as an attribute on the telemetry session") {
                 verify(telemetrySessionBuilder).addAttribute("dockerVersion", "19.3.1")
@@ -56,6 +57,10 @@ object DockerTelemetryCollectorSpec : Spek({
 
             it("adds the Docker container type as an attribute on the telemetry session") {
                 verify(telemetrySessionBuilder).addAttribute("dockerContainerType", "Linux")
+            }
+
+            it("adds the daemon's preferred builder version as an attribute on the telemetry session") {
+                verify(telemetrySessionBuilder).addAttribute("dockerDaemonPreferredBuilderVersion", "BuildKit")
             }
 
             it("adds the Docker connection type as an attribute on the telemetry session") {

@@ -18,6 +18,8 @@ package batect.docker.client
 
 import batect.docker.DockerException
 import batect.docker.DockerVersionInfo
+import batect.docker.api.BuilderVersion
+import batect.docker.api.PingResponse
 import batect.docker.api.SystemInfoAPI
 import batect.primitives.Version
 import batect.telemetry.AttributeValue
@@ -70,6 +72,10 @@ object SystemInfoClientSpec : Spek({
 
         describe("checking connectivity to the Docker daemon") {
             given("pinging the daemon succeeds") {
+                beforeEachTest {
+                    whenever(api.ping()).thenReturn(PingResponse(BuilderVersion.BuildKit))
+                }
+
                 given("getting daemon version info succeeds") {
                     given("the daemon is running on Linux") {
                         val operatingSystem = "linux"
@@ -80,7 +86,7 @@ object SystemInfoClientSpec : Spek({
                             }
 
                             it("returns success") {
-                                assertThat(client.checkConnectivity(), equalTo(DockerConnectivityCheckResult.Succeeded(DockerContainerType.Linux, Version(1, 2, 3))))
+                                assertThat(client.checkConnectivity(), equalTo(DockerConnectivityCheckResult.Succeeded(DockerContainerType.Linux, Version(1, 2, 3), BuilderVersion.BuildKit)))
                             }
                         }
 
@@ -90,7 +96,7 @@ object SystemInfoClientSpec : Spek({
                             }
 
                             it("returns success") {
-                                assertThat(client.checkConnectivity(), equalTo(DockerConnectivityCheckResult.Succeeded(DockerContainerType.Linux, Version(1, 2, 3))))
+                                assertThat(client.checkConnectivity(), equalTo(DockerConnectivityCheckResult.Succeeded(DockerContainerType.Linux, Version(1, 2, 3), BuilderVersion.BuildKit)))
                             }
                         }
 
@@ -123,7 +129,7 @@ object SystemInfoClientSpec : Spek({
                             }
 
                             it("returns success") {
-                                assertThat(client.checkConnectivity(), equalTo(DockerConnectivityCheckResult.Succeeded(DockerContainerType.Windows, Version(1, 2, 3))))
+                                assertThat(client.checkConnectivity(), equalTo(DockerConnectivityCheckResult.Succeeded(DockerContainerType.Windows, Version(1, 2, 3), BuilderVersion.BuildKit)))
                             }
                         }
                     }

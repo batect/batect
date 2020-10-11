@@ -23,6 +23,7 @@ import batect.docker.Json
 import batect.logging.Logger
 import batect.os.SystemInfo
 import batect.primitives.Version
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import okhttp3.Request
@@ -73,7 +74,7 @@ class SystemInfoAPI(
         }
     }
 
-    fun ping() {
+    fun ping(): PingResponse {
         logger.info {
             message("Pinging daemon.")
         }
@@ -102,6 +103,22 @@ class SystemInfoAPI(
             if (responseBody != "OK") {
                 throw DockerException("Could not ping Docker daemon, daemon responded with HTTP ${response.code}: $responseBody")
             }
+
+            val builderVersionHeader = response.headers.get("Builder-Version") ?: "1"
+
+            return when (builderVersionHeader) {
+                "1" -> PingResponse(BuilderVersion.Legacy)
+                "2" -> PingResponse(BuilderVersion.BuildKit)
+                else -> throw DockerException("Docker daemon responded with unknown Builder-Version '$builderVersionHeader'.")
+            }
         }
     }
+}
+
+@Serializable
+data class PingResponse(val builderVersion: BuilderVersion)
+
+enum class BuilderVersion {
+    Legacy,
+    BuildKit
 }

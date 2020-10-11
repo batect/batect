@@ -16,6 +16,7 @@
 
 package batect.cli.commands
 
+import batect.docker.api.BuilderVersion
 import batect.docker.client.DockerConnectivityCheckResult
 import batect.docker.client.DockerContainerType
 import batect.docker.client.SystemInfoClient
@@ -69,7 +70,7 @@ object DockerConnectivitySpec : Spek({
             beforeEachTest {
                 ranTask = false
 
-                whenever(systemInfoClient.checkConnectivity()).doReturn(DockerConnectivityCheckResult.Succeeded(containerType, Version(19, 3, 1)))
+                whenever(systemInfoClient.checkConnectivity()).doReturn(DockerConnectivityCheckResult.Succeeded(containerType, Version(19, 3, 1), BuilderVersion.Legacy))
             }
 
             val exitCode by runForEachTest {
@@ -97,7 +98,7 @@ object DockerConnectivitySpec : Spek({
             }
 
             it("collects Docker environment telemetry") {
-                verify(dockerTelemetryCollector).collectTelemetry(DockerConnectivityCheckResult.Succeeded(containerType, Version(19, 3, 1)))
+                verify(dockerTelemetryCollector).collectTelemetry(DockerConnectivityCheckResult.Succeeded(containerType, Version(19, 3, 1), BuilderVersion.Legacy))
             }
         }
 

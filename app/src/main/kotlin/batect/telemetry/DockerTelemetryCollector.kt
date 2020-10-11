@@ -28,6 +28,7 @@ class DockerTelemetryCollector(
     fun collectTelemetry(result: DockerConnectivityCheckResult.Succeeded) {
         telemetrySessionBuilder.addAttribute("dockerContainerType", result.containerType.toString())
         telemetrySessionBuilder.addAttribute("dockerConnectionType", dockerHttpConfig.connectionType.toString())
+        telemetrySessionBuilder.addAttribute("dockerDaemonPreferredBuilderVersion", result.builderVersion.toString())
         telemetrySessionBuilder.addAttribute("dockerVersion", result.dockerVersion.toString())
         telemetrySessionBuilder.addAttribute("cacheType", cacheManager.cacheType.toString())
     }

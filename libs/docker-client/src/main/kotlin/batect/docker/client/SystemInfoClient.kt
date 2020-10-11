@@ -18,10 +18,13 @@ package batect.docker.client
 
 import batect.docker.DockerException
 import batect.docker.DockerVersionInfo
+import batect.docker.api.BuilderVersion
+import batect.docker.api.PingResponse
 import batect.docker.api.SystemInfoAPI
 import batect.docker.data
 import batect.docker.minimumDockerAPIVersion
 import batect.docker.minimumDockerVersion
+import batect.logging.LogMessageBuilder
 import batect.logging.Logger
 import batect.primitives.Version
 import batect.primitives.VersionComparisonMode
@@ -59,10 +62,11 @@ class SystemInfoClient(
         }
 
         try {
-            api.ping()
+            val pingResponse = api.ping()
 
             logger.info {
                 message("Ping succeeded.")
+                data("response", pingResponse)
             }
 
             val versionInfo = api.getServerVersionInfo()
@@ -84,7 +88,7 @@ class SystemInfoClient(
                 return DockerConnectivityCheckResult.Failed("batect requires Docker to be running in Linux or Windows containers mode.")
             }
 
-            return DockerConnectivityCheckResult.Succeeded(containerType, versionInfo.version)
+            return DockerConnectivityCheckResult.Succeeded(containerType, versionInfo.version, pingResponse.builderVersion)
         } catch (e: DockerException) {
             logger.warn {
                 message("Connectivity check failed.")
@@ -105,6 +109,8 @@ class SystemInfoClient(
             return DockerConnectivityCheckResult.Failed(e.message!!)
         }
     }
+
+    private fun LogMessageBuilder.data(key: String, value: PingResponse) = this.data(key, value, PingResponse.serializer())
 }
 
 sealed class DockerVersionInfoRetrievalResult {
@@ -118,7 +124,7 @@ sealed class DockerVersionInfoRetrievalResult {
 }
 
 sealed class DockerConnectivityCheckResult {
-    data class Succeeded(val containerType: DockerContainerType, val dockerVersion: Version) : DockerConnectivityCheckResult()
+    data class Succeeded(val containerType: DockerContainerType, val dockerVersion: Version, val builderVersion: BuilderVersion) : DockerConnectivityCheckResult()
 
     data class Failed(val message: String) : DockerConnectivityCheckResult()
 }

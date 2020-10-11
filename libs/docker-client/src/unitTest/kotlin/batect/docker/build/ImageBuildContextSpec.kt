@@ -34,14 +34,14 @@ import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.nio.file.Files
 
-object DockerImageBuildContextSpec : Spek({
+object ImageBuildContextSpec : Spek({
     describe("a Docker image build context factory") {
         describe("given the application is running on any operating system") {
             val fileSystem by createForEachTest { Jimfs.newFileSystem(Configuration.unix()) }
             val contextDirectory by createForEachTest { fileSystem.getPath("/some-dir") }
 
             val ignoreList by createForEachTest {
-                mock<DockerImageBuildIgnoreList> {
+                mock<ImageBuildIgnoreList> {
                     on { shouldIncludeInContext(any(), eq("Dockerfile")) } doReturn true
                 }
             }
@@ -52,7 +52,7 @@ object DockerImageBuildContextSpec : Spek({
                 }
             }
 
-            val factory by createForEachTest { DockerImageBuildContextFactory(dockerIgnoreParser) }
+            val factory by createForEachTest { ImageBuildContextFactory(dockerIgnoreParser) }
 
             beforeEachTest {
                 Files.createDirectories(contextDirectory)
@@ -63,7 +63,7 @@ object DockerImageBuildContextSpec : Spek({
                     val context by runForEachTest { factory.createFromDirectory(contextDirectory, "Dockerfile") }
 
                     it("returns an empty list of entries") {
-                        assertThat(context, equalTo(DockerImageBuildContext(emptySet())))
+                        assertThat(context, equalTo(ImageBuildContext(emptySet())))
                     }
                 }
             }
@@ -82,9 +82,9 @@ object DockerImageBuildContextSpec : Spek({
                         assertThat(
                             context,
                             equalTo(
-                                DockerImageBuildContext(
+                                ImageBuildContext(
                                     setOf(
-                                        DockerImageBuildContextEntry(dockerfilePath, "Dockerfile")
+                                        ImageBuildContextEntry(dockerfilePath, "Dockerfile")
                                     )
                                 )
                             )
@@ -113,10 +113,10 @@ object DockerImageBuildContextSpec : Spek({
                         assertThat(
                             context,
                             equalTo(
-                                DockerImageBuildContext(
+                                ImageBuildContext(
                                     setOf(
-                                        DockerImageBuildContextEntry(file1, "file1"),
-                                        DockerImageBuildContextEntry(file2, "file2")
+                                        ImageBuildContextEntry(file1, "file1"),
+                                        ImageBuildContextEntry(file2, "file2")
                                     )
                                 )
                             )
@@ -148,11 +148,11 @@ object DockerImageBuildContextSpec : Spek({
                         assertThat(
                             context,
                             equalTo(
-                                DockerImageBuildContext(
+                                ImageBuildContext(
                                     setOf(
-                                        DockerImageBuildContextEntry(file1, "file1"),
-                                        DockerImageBuildContextEntry(subdirectory, "subdir"),
-                                        DockerImageBuildContextEntry(file2, "subdir/file2")
+                                        ImageBuildContextEntry(file1, "file1"),
+                                        ImageBuildContextEntry(subdirectory, "subdir"),
+                                        ImageBuildContextEntry(file2, "subdir/file2")
                                     )
                                 )
                             )
@@ -183,10 +183,10 @@ object DockerImageBuildContextSpec : Spek({
                         assertThat(
                             context,
                             equalTo(
-                                DockerImageBuildContext(
+                                ImageBuildContext(
                                     setOf(
-                                        DockerImageBuildContextEntry(file1, "file1"),
-                                        DockerImageBuildContextEntry(file2, "file2")
+                                        ImageBuildContextEntry(file1, "file1"),
+                                        ImageBuildContextEntry(file2, "file2")
                                     )
                                 )
                             )
@@ -216,10 +216,10 @@ object DockerImageBuildContextSpec : Spek({
                         assertThat(
                             context,
                             equalTo(
-                                DockerImageBuildContext(
+                                ImageBuildContext(
                                     setOf(
-                                        DockerImageBuildContextEntry(directory1, "directory1"),
-                                        DockerImageBuildContextEntry(directory2, "directory2")
+                                        ImageBuildContextEntry(directory1, "directory1"),
+                                        ImageBuildContextEntry(directory2, "directory2")
                                     )
                                 )
                             )
@@ -253,10 +253,10 @@ object DockerImageBuildContextSpec : Spek({
                         assertThat(
                             context,
                             equalTo(
-                                DockerImageBuildContext(
+                                ImageBuildContext(
                                     setOf(
-                                        DockerImageBuildContextEntry(fileToInclude, "fileToInclude"),
-                                        DockerImageBuildContextEntry(dockerignoreFile, ".dockerignore")
+                                        ImageBuildContextEntry(fileToInclude, "fileToInclude"),
+                                        ImageBuildContextEntry(dockerignoreFile, ".dockerignore")
                                     )
                                 )
                             )
@@ -277,7 +277,7 @@ object DockerImageBuildContextSpec : Spek({
             val contextDirectory by createForEachTest { fileSystem.getPath("c:\\some-dir") }
 
             val ignoreList by createForEachTest {
-                mock<DockerImageBuildIgnoreList> {
+                mock<ImageBuildIgnoreList> {
                     on { shouldIncludeInContext(any(), eq("Dockerfile")) } doReturn true
                 }
             }
@@ -288,7 +288,7 @@ object DockerImageBuildContextSpec : Spek({
                 }
             }
 
-            val factory by createForEachTest { DockerImageBuildContextFactory(dockerIgnoreParser) }
+            val factory by createForEachTest { ImageBuildContextFactory(dockerIgnoreParser) }
 
             beforeEachTest {
                 Files.createDirectories(contextDirectory)
@@ -312,11 +312,11 @@ object DockerImageBuildContextSpec : Spek({
                         assertThat(
                             context,
                             equalTo(
-                                DockerImageBuildContext(
+                                ImageBuildContext(
                                     setOf(
-                                        DockerImageBuildContextEntry(file1, "file1"),
-                                        DockerImageBuildContextEntry(subdirectory, "subdir"),
-                                        DockerImageBuildContextEntry(file2, "subdir/file2")
+                                        ImageBuildContextEntry(file1, "file1"),
+                                        ImageBuildContextEntry(subdirectory, "subdir"),
+                                        ImageBuildContextEntry(file2, "subdir/file2")
                                     )
                                 )
                             )

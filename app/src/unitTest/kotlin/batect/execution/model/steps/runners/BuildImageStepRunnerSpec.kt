@@ -30,7 +30,7 @@ import batect.docker.DockerImage
 import batect.docker.ImageBuildFailedException
 import batect.docker.build.ActiveImageBuildStep
 import batect.docker.build.BuildProgress
-import batect.docker.client.DockerImagesClient
+import batect.docker.client.ImagesClient
 import batect.execution.model.events.ImageBuildFailedEvent
 import batect.execution.model.events.ImageBuildProgressEvent
 import batect.execution.model.events.ImageBuiltEvent
@@ -77,7 +77,7 @@ object BuildImageStepRunnerSpec : Spek({
         val outputSink by createForEachTest { mock<Sink>() }
 
         val config = Configuration("some-project")
-        val imagesClient by createForEachTest { mock<DockerImagesClient>() }
+        val imagesClient by createForEachTest { mock<ImagesClient>() }
         val proxyVariables = mapOf("SOME_PROXY_CONFIG" to "some_proxy", "SOME_OTHER_PROXY_CONFIG" to "some_other_value")
         val proxyEnvironmentVariablesProvider = mock<ProxyEnvironmentVariablesProvider> {
             on { getProxyEnvironmentVariables(emptySet()) } doReturn proxyVariables

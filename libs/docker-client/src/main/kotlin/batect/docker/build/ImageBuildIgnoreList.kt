@@ -18,7 +18,7 @@ package batect.docker.build
 
 import java.nio.file.Path
 
-data class DockerImageBuildIgnoreList(private val entries: List<DockerImageBuildIgnoreEntry>) {
+data class ImageBuildIgnoreList(private val entries: List<ImageBuildIgnoreEntry>) {
     fun shouldIncludeInContext(pathToTest: Path, dockerfilePath: String): Boolean {
         // We deliberately always use a Unix-style path separator here as the Dockerfile path
         // and .dockerignore rules must always use Unix-style path separators.

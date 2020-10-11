@@ -45,15 +45,15 @@ import batect.docker.api.NetworksAPI
 import batect.docker.api.SystemInfoAPI
 import batect.docker.api.VolumesAPI
 import batect.docker.build.DockerIgnoreParser
-import batect.docker.build.DockerImageBuildContextFactory
 import batect.docker.build.DockerfileParser
+import batect.docker.build.ImageBuildContextFactory
+import batect.docker.client.ContainersClient
 import batect.docker.client.DockerClient
-import batect.docker.client.DockerContainersClient
-import batect.docker.client.DockerExecClient
-import batect.docker.client.DockerImagesClient
-import batect.docker.client.DockerNetworksClient
-import batect.docker.client.DockerSystemInfoClient
-import batect.docker.client.DockerVolumesClient
+import batect.docker.client.ExecClient
+import batect.docker.client.ImagesClient
+import batect.docker.client.NetworksClient
+import batect.docker.client.SystemInfoClient
+import batect.docker.client.VolumesClient
 import batect.docker.pull.DockerRegistryCredentialsConfigurationFile
 import batect.docker.pull.DockerRegistryCredentialsProvider
 import batect.docker.run.ContainerIOStreamer
@@ -178,7 +178,7 @@ private val dockerModule = DI.Module("docker") {
     bind<ContainerWaiter>() with singleton { ContainerWaiter(instance()) }
     bind<DockerfileParser>() with singleton { DockerfileParser() }
     bind<DockerIgnoreParser>() with singleton { DockerIgnoreParser() }
-    bind<DockerImageBuildContextFactory>() with singleton { DockerImageBuildContextFactory(instance()) }
+    bind<ImageBuildContextFactory>() with singleton { ImageBuildContextFactory(instance()) }
     bind<DockerHostNameResolver>() with singleton { DockerHostNameResolver(instance(), instance()) }
     bind<DockerHttpConfig>() with singleton { DockerHttpConfig(instance(), commandLineOptions().dockerHost, instance(), instance()) }
     bind<DockerRegistryCredentialsConfigurationFile>() with singletonWithLogger { logger -> DockerRegistryCredentialsConfigurationFile(instance(), instance(), logger) }
@@ -205,12 +205,12 @@ private val dockerApiModule = DI.Module("docker.api") {
 }
 
 private val dockerClientModule = DI.Module("docker.client") {
-    bind<DockerContainersClient>() with singletonWithLogger { logger -> DockerContainersClient(instance(), instance(), instance(), instance(), instance(), logger) }
-    bind<DockerExecClient>() with singletonWithLogger { logger -> DockerExecClient(instance(), instance(), logger) }
-    bind<DockerImagesClient>() with singletonWithLogger { logger -> DockerImagesClient(instance(), instance(), instance(), instance(), logger) }
-    bind<DockerNetworksClient>() with singleton { DockerNetworksClient(instance()) }
-    bind<DockerSystemInfoClient>() with singletonWithLogger { logger -> DockerSystemInfoClient(instance(), instance(), logger) }
-    bind<DockerVolumesClient>() with singleton { DockerVolumesClient(instance()) }
+    bind<ContainersClient>() with singletonWithLogger { logger -> ContainersClient(instance(), instance(), instance(), instance(), instance(), logger) }
+    bind<ExecClient>() with singletonWithLogger { logger -> ExecClient(instance(), instance(), logger) }
+    bind<ImagesClient>() with singletonWithLogger { logger -> ImagesClient(instance(), instance(), instance(), instance(), logger) }
+    bind<NetworksClient>() with singleton { NetworksClient(instance()) }
+    bind<SystemInfoClient>() with singletonWithLogger { logger -> SystemInfoClient(instance(), instance(), logger) }
+    bind<VolumesClient>() with singleton { VolumesClient(instance()) }
     bind<DockerClient>() with singleton { DockerClient(instance(), instance(), instance(), instance(), instance(), instance()) }
 }
 

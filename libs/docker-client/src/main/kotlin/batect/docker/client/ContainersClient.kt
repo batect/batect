@@ -39,7 +39,7 @@ import okio.Sink
 import okio.Source
 import java.time.Duration
 
-class DockerContainersClient(
+class ContainersClient(
     private val api: ContainersAPI,
     private val consoleManager: ConsoleManager,
     private val waiter: ContainerWaiter,

@@ -22,10 +22,10 @@ import batect.docker.humanReadableStringForDownloadProgress
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-sealed class DockerImageBuildEvent
+sealed class ImageBuildEvent
 
 @Serializable
-data class BuildProgress(val activeSteps: Set<ActiveImageBuildStep>, val totalSteps: Int) : DockerImageBuildEvent() {
+data class BuildProgress(val activeSteps: Set<ActiveImageBuildStep>, val totalSteps: Int) : ImageBuildEvent() {
     fun toHumanReadableString(): String {
         if (activeSteps.isEmpty()) {
             return totalSteps.pluralise("step") + " total"
@@ -41,9 +41,9 @@ data class BuildProgress(val activeSteps: Set<ActiveImageBuildStep>, val totalSt
     private fun Int.pluralise(type: String): String = if (this == 1) "$this $type" else "$this ${type}s"
 }
 
-data class BuildError(val message: String) : DockerImageBuildEvent()
+data class BuildError(val message: String) : ImageBuildEvent()
 
-data class BuildComplete(val image: DockerImage) : DockerImageBuildEvent()
+data class BuildComplete(val image: DockerImage) : ImageBuildEvent()
 
 @Serializable
 sealed class ActiveImageBuildStep {

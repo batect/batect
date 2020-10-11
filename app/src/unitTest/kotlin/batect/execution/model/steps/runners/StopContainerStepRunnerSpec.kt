@@ -19,7 +19,7 @@ package batect.execution.model.steps.runners
 import batect.config.Container
 import batect.docker.DockerContainer
 import batect.docker.api.ContainerStopFailedException
-import batect.docker.client.DockerContainersClient
+import batect.docker.client.ContainersClient
 import batect.execution.model.events.ContainerStopFailedEvent
 import batect.execution.model.events.ContainerStoppedEvent
 import batect.execution.model.events.TaskEventSink
@@ -39,7 +39,7 @@ object StopContainerStepRunnerSpec : Spek({
         val dockerContainer = DockerContainer("some-id")
         val step = StopContainerStep(container, dockerContainer)
 
-        val containersClient by createForEachTest { mock<DockerContainersClient>() }
+        val containersClient by createForEachTest { mock<ContainersClient>() }
         val eventSink by createForEachTest { mock<TaskEventSink>() }
         val runner by createForEachTest { StopContainerStepRunner(containersClient) }
 

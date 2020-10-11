@@ -41,12 +41,12 @@ import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.io.IOException
 
-object DockerSystemInfoClientSpec : Spek({
+object SystemInfoClientSpec : Spek({
     describe("a Docker system info client") {
         val api by createForEachTest { mock<SystemInfoAPI>() }
         val telemetrySessionBuilder by createForEachTest { mock<TelemetrySessionBuilder>() }
         val logger by createLoggerForEachTestWithoutCustomSerializers()
-        val client by createForEachTest { DockerSystemInfoClient(api, telemetrySessionBuilder, logger) }
+        val client by createForEachTest { SystemInfoClient(api, telemetrySessionBuilder, logger) }
 
         describe("getting Docker version information") {
             on("the Docker version command invocation succeeding") {
@@ -166,7 +166,7 @@ object DockerSystemInfoClientSpec : Spek({
                         CommonEvents.UnhandledException,
                         mapOf(
                             CommonAttributes.Exception to AttributeValue(exception),
-                            CommonAttributes.ExceptionCaughtAt to AttributeValue("batect.docker.client.DockerSystemInfoClient.checkConnectivity"),
+                            CommonAttributes.ExceptionCaughtAt to AttributeValue("batect.docker.client.SystemInfoClient.checkConnectivity"),
                             CommonAttributes.IsUserFacingException to AttributeValue(true)
                         )
                     )
@@ -191,7 +191,7 @@ object DockerSystemInfoClientSpec : Spek({
                         CommonEvents.UnhandledException,
                         mapOf(
                             CommonAttributes.Exception to AttributeValue(exception),
-                            CommonAttributes.ExceptionCaughtAt to AttributeValue("batect.docker.client.DockerSystemInfoClient.checkConnectivity"),
+                            CommonAttributes.ExceptionCaughtAt to AttributeValue("batect.docker.client.SystemInfoClient.checkConnectivity"),
                             CommonAttributes.IsUserFacingException to AttributeValue(true)
                         )
                     )

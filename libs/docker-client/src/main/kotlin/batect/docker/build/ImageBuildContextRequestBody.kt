@@ -26,7 +26,7 @@ import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream
 import java.nio.file.Files
 import java.nio.file.LinkOption
 
-data class DockerImageBuildContextRequestBody(val context: DockerImageBuildContext) : RequestBody() {
+data class ImageBuildContextRequestBody(val context: ImageBuildContext) : RequestBody() {
     override fun contentType(): MediaType = "application/x-tar".toMediaType()
 
     override fun writeTo(sink: BufferedSink) {
@@ -39,7 +39,7 @@ data class DockerImageBuildContextRequestBody(val context: DockerImageBuildConte
         }
     }
 
-    private fun writeEntry(entry: DockerImageBuildContextEntry, output: TarArchiveOutputStream) {
+    private fun writeEntry(entry: ImageBuildContextEntry, output: TarArchiveOutputStream) {
         val archiveEntry = if (Files.isSymbolicLink(entry.localPath)) {
             createSymbolicLinkEntry(entry)
         } else {
@@ -63,9 +63,9 @@ data class DockerImageBuildContextRequestBody(val context: DockerImageBuildConte
         output.closeArchiveEntry()
     }
 
-    private fun createNormalEntry(entry: DockerImageBuildContextEntry) = TarArchiveEntry(entry.localPath.toFile(), entry.contextPath)
+    private fun createNormalEntry(entry: ImageBuildContextEntry) = TarArchiveEntry(entry.localPath.toFile(), entry.contextPath)
 
-    private fun createSymbolicLinkEntry(entry: DockerImageBuildContextEntry): TarArchiveEntry {
+    private fun createSymbolicLinkEntry(entry: ImageBuildContextEntry): TarArchiveEntry {
         val archiveEntry = TarArchiveEntry(entry.contextPath, TarArchiveEntry.LF_SYMLINK)
         val target = Files.readSymbolicLink(entry.localPath)
 

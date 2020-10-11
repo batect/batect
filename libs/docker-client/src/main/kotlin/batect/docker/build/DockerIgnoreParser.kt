@@ -23,9 +23,9 @@ import java.nio.file.Path
 class DockerIgnoreParser {
     // Based on https://github.com/docker/cli/blob/master/cli/command/image/build/dockerignore.go and
     // https://github.com/docker/engine/blob/master/builder/dockerignore/dockerignore.go
-    fun parse(path: Path): DockerImageBuildIgnoreList {
+    fun parse(path: Path): ImageBuildIgnoreList {
         if (Files.notExists(path)) {
-            return DockerImageBuildIgnoreList(emptyList())
+            return ImageBuildIgnoreList(emptyList())
         }
 
         val lines = Files.readAllLines(path)
@@ -46,10 +46,10 @@ class DockerIgnoreParser {
                     Pair(it, false)
                 }
             }.map { (pattern, inverted) ->
-                DockerImageBuildIgnoreEntry(cleanPattern(pattern), inverted)
+                ImageBuildIgnoreEntry(cleanPattern(pattern), inverted)
             }
 
-        return DockerImageBuildIgnoreList(entries)
+        return ImageBuildIgnoreList(entries)
     }
 
     // This needs to match the behaviour of Golang's filepath.Clean()

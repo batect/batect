@@ -33,13 +33,13 @@ import org.spekframework.spek2.style.specification.describe
 import java.io.ByteArrayOutputStream
 import java.io.StringReader
 
-object LegacyDockerImageBuildResponseBodySpec : Spek({
+object LegacyImageBuildResponseBodySpec : Spek({
     describe("a legacy image build response body") {
         val output by createForEachTest { ByteArrayOutputStream() }
         val outputStream by createForEachTest { output.sink() }
-        val eventsPosted by createForEachTest { mutableListOf<DockerImageBuildEvent>() }
+        val eventsPosted by createForEachTest { mutableListOf<ImageBuildEvent>() }
         val eventCallback: ImageBuildEventCallback = { e -> eventsPosted.add(e) }
-        val body by createForEachTest { LegacyDockerImageBuildResponseBody() }
+        val body by createForEachTest { LegacyImageBuildResponseBody() }
 
         given("an empty response") {
             val input = ""

@@ -19,7 +19,7 @@ package batect.docker.client
 import batect.docker.DockerNetwork
 import batect.docker.api.NetworksAPI
 
-class DockerNetworksClient(private val api: NetworksAPI) {
+class NetworksClient(private val api: NetworksAPI) {
     fun create(name: String, driver: String): DockerNetwork = api.create(name, driver)
     fun delete(network: DockerNetwork) = api.delete(network)
     fun getByNameOrId(identifier: String): DockerNetwork = api.getByNameOrId(identifier)

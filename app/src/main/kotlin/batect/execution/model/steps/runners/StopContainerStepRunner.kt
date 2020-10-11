@@ -17,14 +17,14 @@
 package batect.execution.model.steps.runners
 
 import batect.docker.api.ContainerStopFailedException
-import batect.docker.client.DockerContainersClient
+import batect.docker.client.ContainersClient
 import batect.execution.model.events.ContainerStopFailedEvent
 import batect.execution.model.events.ContainerStoppedEvent
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.steps.StopContainerStep
 
 class StopContainerStepRunner(
-    private val containersClient: DockerContainersClient
+    private val containersClient: ContainersClient
 ) {
     fun run(step: StopContainerStep, eventSink: TaskEventSink) {
         try {

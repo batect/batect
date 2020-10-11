@@ -25,9 +25,9 @@ import batect.docker.ImagePullFailedException
 import batect.docker.Json
 import batect.docker.api.ImagesAPI
 import batect.docker.build.BuildProgress
-import batect.docker.build.DockerImageBuildContext
-import batect.docker.build.DockerImageBuildContextFactory
 import batect.docker.build.DockerfileParser
+import batect.docker.build.ImageBuildContext
+import batect.docker.build.ImageBuildContextFactory
 import batect.docker.pull.DockerImagePullProgress
 import batect.docker.pull.DockerImagePullProgressReporter
 import batect.docker.pull.DockerRegistryCredentials
@@ -61,16 +61,16 @@ import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.nio.file.Files
 
-object DockerImagesClientSpec : Spek({
+object ImagesClientSpec : Spek({
     describe("a Docker images client") {
         val api by createForEachTest { mock<ImagesAPI>() }
         val credentialsProvider by createForEachTest { mock<DockerRegistryCredentialsProvider>() }
-        val imageBuildContextFactory by createForEachTest { mock<DockerImageBuildContextFactory>() }
+        val imageBuildContextFactory by createForEachTest { mock<ImageBuildContextFactory>() }
         val dockerfileParser by createForEachTest { mock<DockerfileParser>() }
         val logger by createLoggerForEachTestWithoutCustomSerializers()
         val imageProgressReporter by createForEachTest { mock<DockerImagePullProgressReporter>() }
         val imageProgressReporterFactory = { imageProgressReporter }
-        val client by createForEachTest { DockerImagesClient(api, credentialsProvider, imageBuildContextFactory, dockerfileParser, logger, imageProgressReporterFactory) }
+        val client by createForEachTest { ImagesClient(api, credentialsProvider, imageBuildContextFactory, dockerfileParser, logger, imageProgressReporterFactory) }
 
         describe("building an image") {
             val fileSystem by createForEachTest { Jimfs.newFileSystem(Configuration.unix()) }
@@ -92,7 +92,7 @@ object DockerImagesClientSpec : Spek({
 
             val outputSink by createForEachTest { mock<Sink>() }
             val cancellationContext by createForEachTest { mock<CancellationContext>() }
-            val context = DockerImageBuildContext(emptySet())
+            val context = ImageBuildContext(emptySet())
 
             given("the Dockerfile exists") {
                 val resolvedDockerfilePath by createForEachTest { buildDirectory.resolve(dockerfilePath) }

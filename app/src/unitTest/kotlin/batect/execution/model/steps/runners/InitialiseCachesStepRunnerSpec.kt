@@ -31,9 +31,9 @@ import batect.docker.DockerResourceNameGenerator
 import batect.docker.DockerVolumeMount
 import batect.docker.DockerVolumeMountSource
 import batect.docker.UserAndGroup
+import batect.docker.client.ContainersClient
 import batect.docker.client.DockerContainerType
-import batect.docker.client.DockerContainersClient
-import batect.docker.client.DockerImagesClient
+import batect.docker.client.ImagesClient
 import batect.execution.ContainerDependencyGraph
 import batect.execution.RunAsCurrentUserConfigurationProvider
 import batect.execution.VolumeMountResolver
@@ -65,14 +65,14 @@ object InitialiseCachesStepRunnerSpec : Spek({
         val cacheInitImageName = "batect-cache-init:abc123"
         val cacheInitImage = DockerImage("batect-cache-init")
         val imagesClient by createForEachTest {
-            mock<DockerImagesClient> {
+            mock<ImagesClient> {
                 on { pull(eq(cacheInitImageName), any(), any(), any()) } doReturn cacheInitImage
             }
         }
 
         val dockerContainer = DockerContainer("the-created-container")
         val containersClient by createForEachTest {
-            mock<DockerContainersClient> {
+            mock<ContainersClient> {
                 on { create(any()) } doReturn dockerContainer
                 on { run(any(), any(), anyOrNull(), any(), any(), any(), any()) } doReturn DockerContainerRunResult(0)
             }

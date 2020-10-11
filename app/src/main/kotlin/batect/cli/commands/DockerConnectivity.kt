@@ -17,7 +17,7 @@
 package batect.cli.commands
 
 import batect.docker.client.DockerConnectivityCheckResult
-import batect.docker.client.DockerSystemInfoClient
+import batect.docker.client.SystemInfoClient
 import batect.ioc.DockerConfigurationKodeinFactory
 import batect.telemetry.DockerTelemetryCollector
 import batect.ui.Console
@@ -27,7 +27,7 @@ import org.kodein.di.instance
 
 class DockerConnectivity(
     private val dockerConfigurationKodeinFactory: DockerConfigurationKodeinFactory,
-    private val dockerSystemInfoClient: DockerSystemInfoClient,
+    private val dockerSystemInfoClient: SystemInfoClient,
     private val errorConsole: Console
 ) {
     fun checkAndRun(task: TaskWithKodein): Int {

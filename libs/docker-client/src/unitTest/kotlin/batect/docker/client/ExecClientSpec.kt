@@ -44,12 +44,12 @@ import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.io.ByteArrayOutputStream
 
-object DockerExecClientSpec : Spek({
+object ExecClientSpec : Spek({
     describe("a Docker exec client") {
         val api by createForEachTest { mock<ExecAPI>() }
         val ioStreamer by createForEachTest { mock<ContainerIOStreamer>() }
         val logger by createLoggerForEachTestWithoutCustomSerializers()
-        val client by createForEachTest { DockerExecClient(api, ioStreamer, logger) }
+        val client by createForEachTest { ExecClient(api, ioStreamer, logger) }
 
         describe("running a command in a running container") {
             val command = Command.parse("do the thing")

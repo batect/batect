@@ -26,12 +26,12 @@ import batect.docker.build.ActiveImageBuildStep
 import batect.docker.build.BuildComplete
 import batect.docker.build.BuildError
 import batect.docker.build.BuildProgress
-import batect.docker.build.DockerImageBuildContext
-import batect.docker.build.DockerImageBuildContextEntry
-import batect.docker.build.DockerImageBuildContextRequestBody
-import batect.docker.build.DockerImageBuildEvent
-import batect.docker.build.DockerImageBuildResponseBody
+import batect.docker.build.ImageBuildContext
+import batect.docker.build.ImageBuildContextEntry
+import batect.docker.build.ImageBuildContextRequestBody
+import batect.docker.build.ImageBuildEvent
 import batect.docker.build.ImageBuildEventCallback
+import batect.docker.build.ImageBuildResponseBody
 import batect.docker.pull.DockerRegistryCredentials
 import batect.docker.pull.TokenDockerRegistryCredentials
 import batect.os.SystemInfo
@@ -109,7 +109,7 @@ object ImagesAPISpec : Spek({
                 whenever(httpClient.newBuilder()).doReturn(longTimeoutClientBuilder)
             }
 
-            val context = DockerImageBuildContext(setOf(DockerImageBuildContextEntry(Paths.get("/some/file"), "file")))
+            val context = ImageBuildContext(setOf(ImageBuildContextEntry(Paths.get("/some/file"), "file")))
             val buildArgs = mapOf("someArg" to "someValue")
             val dockerfilePath = "some-Dockerfile-path"
             val imageTags = setOf("some_image_tag", "some_other_image_tag")
@@ -160,7 +160,7 @@ object ImagesAPISpec : Spek({
                 }
 
                 it("builds the image with the expected context") {
-                    verify(clientWithLongTimeout).newCall(requestWithBody(DockerImageBuildContextRequestBody(context)))
+                    verify(clientWithLongTimeout).newCall(requestWithBody(ImageBuildContextRequestBody(context)))
                 }
 
                 it("sends all build progress events to the receiver") {
@@ -504,9 +504,9 @@ private fun receivedAllUpdatesFrom(lines: Iterable<String>): Matcher<ImageProgre
 
 private val daemonBuildResponse = "This is the response from the daemon."
 
-private class MockImageBuildResponseBody : DockerImageBuildResponseBody {
+private class MockImageBuildResponseBody : ImageBuildResponseBody {
     var outputToStream: String = ""
-    var eventsToPost: List<DockerImageBuildEvent> = emptyList()
+    var eventsToPost: List<ImageBuildEvent> = emptyList()
 
     override fun readFrom(stream: Reader, outputStream: Sink, eventCallback: ImageBuildEventCallback) {
         assertThat(stream.readText(), equalTo(daemonBuildResponse))

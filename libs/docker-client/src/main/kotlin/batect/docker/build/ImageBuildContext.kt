@@ -23,16 +23,16 @@ import java.nio.file.Path
 import java.util.stream.Collectors
 
 @Serializable
-data class DockerImageBuildContext(val entries: Set<DockerImageBuildContextEntry>)
+data class ImageBuildContext(val entries: Set<ImageBuildContextEntry>)
 
 @Serializable
-data class DockerImageBuildContextEntry(
+data class ImageBuildContextEntry(
     @Serializable(with = PathSerializer::class) val localPath: Path,
     val contextPath: String
 )
 
-class DockerImageBuildContextFactory(private val ignoreParser: DockerIgnoreParser) {
-    fun createFromDirectory(contextDirectory: Path, dockerfilePath: String): DockerImageBuildContext {
+class ImageBuildContextFactory(private val ignoreParser: DockerIgnoreParser) {
+    fun createFromDirectory(contextDirectory: Path, dockerfilePath: String): ImageBuildContext {
         val ignoreList = ignoreParser.parse(contextDirectory.resolve(".dockerignore"))
 
         Files.walk(contextDirectory).use { stream ->
@@ -41,10 +41,10 @@ class DockerImageBuildContextFactory(private val ignoreParser: DockerIgnoreParse
                 .map { it to contextDirectory.relativize(it) }
                 .filter { (_, contextPath) -> ignoreList.shouldIncludeInContext(contextPath, dockerfilePath) }
                 // We intentionally use the Unix-style path separator below to ensure consistency across operating systems.
-                .map { (localPath, contextPath) -> DockerImageBuildContextEntry(localPath, contextPath.joinToString("/")) }
+                .map { (localPath, contextPath) -> ImageBuildContextEntry(localPath, contextPath.joinToString("/")) }
                 .collect(Collectors.toSet())
 
-            return DockerImageBuildContext(files)
+            return ImageBuildContext(files)
         }
     }
 }

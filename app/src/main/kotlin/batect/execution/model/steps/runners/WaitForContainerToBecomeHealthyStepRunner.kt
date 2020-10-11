@@ -18,7 +18,7 @@ package batect.execution.model.steps.runners
 
 import batect.docker.ContainerHealthCheckException
 import batect.docker.DockerContainer
-import batect.docker.client.DockerContainersClient
+import batect.docker.client.ContainersClient
 import batect.docker.client.HealthStatus
 import batect.execution.model.events.ContainerBecameHealthyEvent
 import batect.execution.model.events.ContainerDidNotBecomeHealthyEvent
@@ -28,7 +28,7 @@ import batect.os.SystemInfo
 import batect.primitives.CancellationContext
 
 class WaitForContainerToBecomeHealthyStepRunner(
-    private val containersClient: DockerContainersClient,
+    private val containersClient: ContainersClient,
     private val cancellationContext: CancellationContext,
     private val systemInfo: SystemInfo
 ) {

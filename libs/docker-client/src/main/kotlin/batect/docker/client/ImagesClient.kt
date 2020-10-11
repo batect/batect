@@ -23,8 +23,8 @@ import batect.docker.ImageBuildFailedException
 import batect.docker.ImagePullFailedException
 import batect.docker.api.ImagesAPI
 import batect.docker.build.BuildProgress
-import batect.docker.build.DockerImageBuildContextFactory
 import batect.docker.build.DockerfileParser
+import batect.docker.build.ImageBuildContextFactory
 import batect.docker.data
 import batect.docker.pull.DockerImagePullProgress
 import batect.docker.pull.DockerImagePullProgressReporter
@@ -37,10 +37,10 @@ import java.nio.file.Files
 import java.nio.file.LinkOption
 import java.nio.file.Path
 
-class DockerImagesClient(
+class ImagesClient(
     private val api: ImagesAPI,
     private val credentialsProvider: DockerRegistryCredentialsProvider,
-    private val imageBuildContextFactory: DockerImageBuildContextFactory,
+    private val imageBuildContextFactory: ImageBuildContextFactory,
     private val dockerfileParser: DockerfileParser,
     private val logger: Logger,
     private val imagePullProgressReporterFactory: () -> DockerImagePullProgressReporter = ::DockerImagePullProgressReporter

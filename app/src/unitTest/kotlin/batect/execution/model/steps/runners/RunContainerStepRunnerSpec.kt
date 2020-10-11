@@ -20,7 +20,7 @@ import batect.config.Container
 import batect.docker.DockerContainer
 import batect.docker.DockerContainerRunResult
 import batect.docker.DockerException
-import batect.docker.client.DockerContainersClient
+import batect.docker.client.ContainersClient
 import batect.execution.model.events.ContainerRunFailedEvent
 import batect.execution.model.events.ContainerStartedEvent
 import batect.execution.model.events.RunningContainerExitedEvent
@@ -56,7 +56,7 @@ object RunContainerStepRunnerSpec : Spek({
         val useTTY = true
         val frameDimensions = Dimensions(20, 30)
 
-        val containersClient by createForEachTest { mock<DockerContainersClient>() }
+        val containersClient by createForEachTest { mock<ContainersClient>() }
 
         val ioStreamingOptions by createForEachTest {
             mock<ContainerIOStreamingOptions>() {

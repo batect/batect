@@ -24,7 +24,7 @@ import batect.config.ExpressionEvaluationContext
 import batect.config.ExpressionEvaluationException
 import batect.docker.ImageBuildFailedException
 import batect.docker.build.BuildProgress
-import batect.docker.client.DockerImagesClient
+import batect.docker.client.ImagesClient
 import batect.execution.model.events.ImageBuildFailedEvent
 import batect.execution.model.events.ImageBuildProgressEvent
 import batect.execution.model.events.ImageBuiltEvent
@@ -42,7 +42,7 @@ import java.nio.file.Path
 
 class BuildImageStepRunner(
     private val config: Configuration,
-    private val imagesClient: DockerImagesClient,
+    private val imagesClient: ImagesClient,
     private val proxyEnvironmentVariablesProvider: ProxyEnvironmentVariablesProvider,
     private val pathResolverFactory: PathResolverFactory,
     private val expressionEvaluationContext: ExpressionEvaluationContext,

@@ -18,7 +18,7 @@ package batect.logging
 
 import batect.VersionInfo
 import batect.data
-import batect.docker.client.DockerSystemInfoClient
+import batect.docker.client.SystemInfoClient
 import batect.git.GitClient
 import batect.os.ConsoleInfo
 import batect.os.HostEnvironmentVariables
@@ -30,7 +30,7 @@ class ApplicationInfoLogger(
     private val versionInfo: VersionInfo,
     private val systemInfo: SystemInfo,
     private val consoleInfo: ConsoleInfo,
-    private val dockerSystemInfoClient: DockerSystemInfoClient,
+    private val dockerSystemInfoClient: SystemInfoClient,
     private val gitClient: GitClient,
     private val environmentVariables: HostEnvironmentVariables
 ) {

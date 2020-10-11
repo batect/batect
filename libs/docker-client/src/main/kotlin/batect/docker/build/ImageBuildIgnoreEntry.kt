@@ -20,7 +20,7 @@ import batect.docker.DockerException
 
 // Based on https://github.com/docker/engine/blob/master/pkg/fileutils/fileutils_test.go,
 // https://golang.org/pkg/path/filepath/#Match and https://docs.docker.com/engine/reference/builder/#dockerignore-file.
-data class DockerImageBuildIgnoreEntry(val pattern: String, val inverted: Boolean) {
+data class ImageBuildIgnoreEntry(val pattern: String, val inverted: Boolean) {
     private val regex = buildRegex()
 
     private fun buildRegex(): Regex {

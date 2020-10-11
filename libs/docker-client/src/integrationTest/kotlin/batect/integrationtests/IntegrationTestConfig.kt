@@ -26,15 +26,15 @@ import batect.docker.api.NetworksAPI
 import batect.docker.api.SystemInfoAPI
 import batect.docker.api.VolumesAPI
 import batect.docker.build.DockerIgnoreParser
-import batect.docker.build.DockerImageBuildContextFactory
 import batect.docker.build.DockerfileParser
+import batect.docker.build.ImageBuildContextFactory
+import batect.docker.client.ContainersClient
 import batect.docker.client.DockerClient
-import batect.docker.client.DockerContainersClient
-import batect.docker.client.DockerExecClient
-import batect.docker.client.DockerImagesClient
-import batect.docker.client.DockerNetworksClient
-import batect.docker.client.DockerSystemInfoClient
-import batect.docker.client.DockerVolumesClient
+import batect.docker.client.ExecClient
+import batect.docker.client.ImagesClient
+import batect.docker.client.NetworksClient
+import batect.docker.client.SystemInfoClient
+import batect.docker.client.VolumesClient
 import batect.docker.pull.DockerRegistryCredentialsConfigurationFile
 import batect.docker.pull.DockerRegistryCredentialsProvider
 import batect.docker.run.ContainerIOStreamer
@@ -84,7 +84,7 @@ fun createClient(posix: POSIX = POSIXFactory.getNativePOSIX(), nativeMethods: Na
     val credentialsConfigurationFile = DockerRegistryCredentialsConfigurationFile(FileSystems.getDefault(), processRunner, logger)
     val credentialsProvider = DockerRegistryCredentialsProvider(credentialsConfigurationFile)
     val ignoreParser = DockerIgnoreParser()
-    val imageBuildContextFactory = DockerImageBuildContextFactory(ignoreParser)
+    val imageBuildContextFactory = ImageBuildContextFactory(ignoreParser)
     val dockerfileParser = DockerfileParser()
     val waiter = ContainerWaiter(containersAPI)
     val streamer = ContainerIOStreamer()
@@ -92,12 +92,12 @@ fun createClient(posix: POSIX = POSIXFactory.getNativePOSIX(), nativeMethods: Na
     val consoleDimensions = ConsoleDimensions(nativeMethods, signalListener, logger)
     val ttyManager = ContainerTTYManager(containersAPI, consoleDimensions, logger)
 
-    val containersClient = DockerContainersClient(containersAPI, consoleManager, waiter, streamer, ttyManager, logger)
-    val execClient = DockerExecClient(execAPI, streamer, logger)
-    val imagesClient = DockerImagesClient(imagesAPI, credentialsProvider, imageBuildContextFactory, dockerfileParser, logger)
-    val networksClient = DockerNetworksClient(networksAPI)
-    val systemInfoClient = DockerSystemInfoClient(systemInfoAPI, mock(), logger)
-    val volumesClient = DockerVolumesClient(volumesAPI)
+    val containersClient = ContainersClient(containersAPI, consoleManager, waiter, streamer, ttyManager, logger)
+    val execClient = ExecClient(execAPI, streamer, logger)
+    val imagesClient = ImagesClient(imagesAPI, credentialsProvider, imageBuildContextFactory, dockerfileParser, logger)
+    val networksClient = NetworksClient(networksAPI)
+    val systemInfoClient = SystemInfoClient(systemInfoAPI, mock(), logger)
+    val volumesClient = VolumesClient(volumesAPI)
 
     return DockerClient(containersClient, execClient, imagesClient, networksClient, systemInfoClient, volumesClient)
 }

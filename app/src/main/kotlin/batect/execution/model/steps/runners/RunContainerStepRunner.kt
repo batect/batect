@@ -17,7 +17,7 @@
 package batect.execution.model.steps.runners
 
 import batect.docker.DockerException
-import batect.docker.client.DockerContainersClient
+import batect.docker.client.ContainersClient
 import batect.execution.model.events.ContainerRunFailedEvent
 import batect.execution.model.events.ContainerStartedEvent
 import batect.execution.model.events.RunningContainerExitedEvent
@@ -27,7 +27,7 @@ import batect.primitives.CancellationContext
 import batect.ui.containerio.ContainerIOStreamingOptions
 
 class RunContainerStepRunner(
-    private val containersClient: DockerContainersClient,
+    private val containersClient: ContainersClient,
     private val ioStreamingOptions: ContainerIOStreamingOptions,
     private val cancellationContext: CancellationContext
 ) {

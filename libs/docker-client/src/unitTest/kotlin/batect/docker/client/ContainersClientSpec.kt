@@ -66,7 +66,7 @@ import org.spekframework.spek2.style.specification.describe
 import java.time.Duration
 import java.util.concurrent.CompletableFuture
 
-object DockerContainersClientSpec : Spek({
+object ContainersClientSpec : Spek({
     describe("a Docker containers client") {
         val api by createForEachTest { mock<ContainersAPI>() }
         val consoleManager by createForEachTest { mock<ConsoleManager>() }
@@ -74,7 +74,7 @@ object DockerContainersClientSpec : Spek({
         val ioStreamer by createForEachTest { mock<ContainerIOStreamer>() }
         val ttyManager by createForEachTest { mock<ContainerTTYManager>() }
         val logger by createLoggerForEachTestWithoutCustomSerializers()
-        val client by createForEachTest { DockerContainersClient(api, consoleManager, waiter, ioStreamer, ttyManager, logger) }
+        val client by createForEachTest { ContainersClient(api, consoleManager, waiter, ioStreamer, ttyManager, logger) }
 
         describe("creating a container") {
             given("a container configuration and a built image") {

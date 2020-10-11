@@ -19,7 +19,7 @@ package batect.docker.client
 import batect.docker.DockerVolume
 import batect.docker.api.VolumesAPI
 
-class DockerVolumesClient(private val api: VolumesAPI) {
+class VolumesClient(private val api: VolumesAPI) {
     fun getAll(): Set<DockerVolume> = api.getAll()
     fun delete(volume: DockerVolume) = api.delete(volume)
 }

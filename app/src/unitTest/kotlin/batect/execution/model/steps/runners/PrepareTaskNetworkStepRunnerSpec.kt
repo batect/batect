@@ -23,7 +23,7 @@ import batect.docker.api.NetworkCreationFailedException
 import batect.docker.api.NetworkDoesNotExistException
 import batect.docker.api.NetworkInspectionFailedException
 import batect.docker.client.DockerContainerType
-import batect.docker.client.DockerNetworksClient
+import batect.docker.client.NetworksClient
 import batect.execution.model.events.CustomTaskNetworkCheckFailedEvent
 import batect.execution.model.events.CustomTaskNetworkCheckedEvent
 import batect.execution.model.events.TaskEventSink
@@ -48,7 +48,7 @@ object PrepareTaskNetworkStepRunnerSpec : Spek({
             }
         }
 
-        val networksClient by createForEachTest { mock<DockerNetworksClient>() }
+        val networksClient by createForEachTest { mock<NetworksClient>() }
         val eventSink by createForEachTest { mock<TaskEventSink>() }
 
         given("no network to use is provided on the command line") {

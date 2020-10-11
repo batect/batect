@@ -34,7 +34,7 @@ import okio.Sink
 import okio.sink
 import java.io.ByteArrayOutputStream
 
-class DockerExecClient(
+class ExecClient(
     private val api: ExecAPI,
     private val ioStreamer: ContainerIOStreamer,
     private val logger: Logger

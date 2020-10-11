@@ -18,7 +18,7 @@ package batect.execution.model.steps.runners
 
 import batect.docker.DockerContainerEnvironmentVariableProvider
 import batect.docker.DockerException
-import batect.docker.client.DockerExecClient
+import batect.docker.client.ExecClient
 import batect.execution.RunAsCurrentUserConfigurationProvider
 import batect.execution.model.events.ContainerBecameReadyEvent
 import batect.execution.model.events.RunningSetupCommandEvent
@@ -31,7 +31,7 @@ import batect.primitives.CancellationContext
 import batect.ui.containerio.ContainerIOStreamingOptions
 
 class RunContainerSetupCommandsStepRunner(
-    private val execClient: DockerExecClient,
+    private val execClient: ExecClient,
     private val environmentVariableProvider: DockerContainerEnvironmentVariableProvider,
     private val runAsCurrentUserConfigurationProvider: RunAsCurrentUserConfigurationProvider,
     private val cancellationContext: CancellationContext,

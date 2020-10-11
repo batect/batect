@@ -17,8 +17,8 @@
 package batect.logging
 
 import batect.VersionInfo
-import batect.docker.client.DockerSystemInfoClient
 import batect.docker.client.DockerVersionInfoRetrievalResult
+import batect.docker.client.SystemInfoClient
 import batect.git.GitClient
 import batect.git.GitVersionRetrievalResult
 import batect.os.ConsoleInfo
@@ -50,7 +50,7 @@ object ApplicationInfoLoggerSpec : Spek({
         val systemInfo = SystemInfo(OperatingSystem.Linux, "Linux", "1.2.3", "x86", "Ubuntu Linux 1.2.3", "line-separator", "4.5.6", "me", fileSystem.getPath("/home"), fileSystem.getPath("/tmp"))
         val consoleInfo = mock<ConsoleInfo>()
         val environmentVariables = HostEnvironmentVariables("PATH" to "/bin:/usr/bin:/usr/local/bin")
-        val dockerSystemInfoClient = mock<DockerSystemInfoClient> {
+        val dockerSystemInfoClient = mock<SystemInfoClient> {
             on { getDockerVersionInfo() } doReturn DockerVersionInfoRetrievalResult.Failed("Docker version 1.2.3.4")
         }
 

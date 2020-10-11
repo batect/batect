@@ -20,7 +20,7 @@ import batect.config.Container
 import batect.docker.ContainerHealthCheckException
 import batect.docker.DockerContainer
 import batect.docker.DockerHealthCheckResult
-import batect.docker.client.DockerContainersClient
+import batect.docker.client.ContainersClient
 import batect.docker.client.HealthStatus
 import batect.execution.model.events.ContainerBecameHealthyEvent
 import batect.execution.model.events.ContainerDidNotBecomeHealthyEvent
@@ -45,7 +45,7 @@ object WaitForContainerToBecomeHealthyStepRunnerSpec : Spek({
         val dockerContainer = DockerContainer("some-id")
         val step = WaitForContainerToBecomeHealthyStep(container, dockerContainer)
 
-        val containersClient by createForEachTest { mock<DockerContainersClient>() }
+        val containersClient by createForEachTest { mock<ContainersClient>() }
         val cancellationContext by createForEachTest { mock<CancellationContext>() }
         val systemInfo = mock<SystemInfo> {
             on { lineSeparator } doReturn "SYSTEM_LINE_SEPARATOR"

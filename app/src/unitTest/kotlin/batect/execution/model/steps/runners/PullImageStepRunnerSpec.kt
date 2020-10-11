@@ -21,7 +21,7 @@ import batect.config.PullImage
 import batect.docker.DockerImage
 import batect.docker.DownloadOperation
 import batect.docker.ImagePullFailedException
-import batect.docker.client.DockerImagesClient
+import batect.docker.client.ImagesClient
 import batect.docker.pull.DockerImagePullProgress
 import batect.execution.model.events.ImagePullFailedEvent
 import batect.execution.model.events.ImagePullProgressEvent
@@ -42,7 +42,7 @@ import org.spekframework.spek2.style.specification.describe
 
 object PullImageStepRunnerSpec : Spek({
     describe("running a 'pull image' step") {
-        val imagesClient by createForEachTest { mock<DockerImagesClient>() }
+        val imagesClient by createForEachTest { mock<ImagesClient>() }
         val cancellationContext by createForEachTest { mock<CancellationContext>() }
         val eventSink by createForEachTest { mock<TaskEventSink>() }
 

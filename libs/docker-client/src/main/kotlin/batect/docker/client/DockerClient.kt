@@ -17,10 +17,10 @@
 package batect.docker.client
 
 class DockerClient(
-    val containers: DockerContainersClient,
-    val exec: DockerExecClient,
-    val images: DockerImagesClient,
-    val networks: DockerNetworksClient,
-    val systemInfo: DockerSystemInfoClient,
-    val volumes: DockerVolumesClient
+    val containers: ContainersClient,
+    val exec: ExecClient,
+    val images: ImagesClient,
+    val networks: NetworksClient,
+    val systemInfo: SystemInfoClient,
+    val volumes: VolumesClient
 )

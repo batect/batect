@@ -30,7 +30,7 @@ import batect.telemetry.TelemetrySessionBuilder
 import batect.telemetry.addUnhandledExceptionEvent
 import java.io.IOException
 
-class DockerSystemInfoClient(
+class SystemInfoClient(
     private val api: SystemInfoAPI,
     private val telemetrySessionBuilder: TelemetrySessionBuilder,
     private val logger: Logger

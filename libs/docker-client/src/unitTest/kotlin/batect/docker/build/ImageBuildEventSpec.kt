@@ -23,7 +23,7 @@ import com.natpryce.hamkrest.assertion.assertThat
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
-object DockerImageBuildEventSpec : Spek({
+object ImageBuildEventSpec : Spek({
     describe("image build events") {
         describe("build progress events") {
             describe("converting to a human readable string") {

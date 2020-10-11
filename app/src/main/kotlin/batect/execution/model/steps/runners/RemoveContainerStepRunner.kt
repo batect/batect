@@ -17,14 +17,14 @@
 package batect.execution.model.steps.runners
 
 import batect.docker.api.ContainerRemovalFailedException
-import batect.docker.client.DockerContainersClient
+import batect.docker.client.ContainersClient
 import batect.execution.model.events.ContainerRemovalFailedEvent
 import batect.execution.model.events.ContainerRemovedEvent
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.steps.RemoveContainerStep
 
 class RemoveContainerStepRunner(
-    private val containersClient: DockerContainersClient
+    private val containersClient: ContainersClient
 ) {
     fun run(step: RemoveContainerStep, eventSink: TaskEventSink) {
         try {

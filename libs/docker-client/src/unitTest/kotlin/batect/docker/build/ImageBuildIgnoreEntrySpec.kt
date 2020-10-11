@@ -25,10 +25,10 @@ import com.natpryce.hamkrest.throws
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
-object DockerImageBuildIgnoreEntrySpec : Spek({
+object ImageBuildIgnoreEntrySpec : Spek({
     describe("a Docker image build ignore entry") {
         given("a wildcard pattern") {
-            val entry = DockerImageBuildIgnoreEntry("*", false)
+            val entry = ImageBuildIgnoreEntry("*", false)
 
             it("should match anything") {
                 assertThat(entry.matches("fileutils.go"), equalTo(MatchResult.MatchedExclude))
@@ -36,7 +36,7 @@ object DockerImageBuildIgnoreEntrySpec : Spek({
         }
 
         given("an inverted wildcard pattern") {
-            val entry = DockerImageBuildIgnoreEntry("*", true)
+            val entry = ImageBuildIgnoreEntry("*", true)
 
             it("should match nothing") {
                 assertThat(entry.matches("fileutils.go"), equalTo(MatchResult.MatchedInclude))
@@ -44,7 +44,7 @@ object DockerImageBuildIgnoreEntrySpec : Spek({
         }
 
         given("a partial wildcard pattern") {
-            val entry = DockerImageBuildIgnoreEntry("*.go", false)
+            val entry = ImageBuildIgnoreEntry("*.go", false)
 
             it("should match anything that ends in the same suffix") {
                 assertThat(entry.matches("fileutils.go"), equalTo(MatchResult.MatchedExclude))
@@ -60,7 +60,7 @@ object DockerImageBuildIgnoreEntrySpec : Spek({
         }
 
         given("a pattern that matches a directory") {
-            val entry = DockerImageBuildIgnoreEntry("docs", false)
+            val entry = ImageBuildIgnoreEntry("docs", false)
 
             it("should match that directory") {
                 assertThat(entry.matches("docs"), equalTo(MatchResult.MatchedExclude))
@@ -80,7 +80,7 @@ object DockerImageBuildIgnoreEntrySpec : Spek({
         }
 
         given("a pattern that matches a directory with a trailing slash") {
-            val entry = DockerImageBuildIgnoreEntry("docs/", false)
+            val entry = ImageBuildIgnoreEntry("docs/", false)
 
             it("should match the directory, even if it is not given with a trailing slash") {
                 assertThat(entry.matches("docs"), equalTo(MatchResult.MatchedExclude))
@@ -117,7 +117,7 @@ object DockerImageBuildIgnoreEntrySpec : Spek({
         ).forEach { pattern ->
             given("the invalid pattern '$pattern'") {
                 it("should throw an appropriate exception when creating the entry") {
-                    assertThat({ DockerImageBuildIgnoreEntry(pattern, false) }, throws<DockerException>(withMessage("The .dockerignore pattern '$pattern' is invalid.")))
+                    assertThat({ ImageBuildIgnoreEntry(pattern, false) }, throws<DockerException>(withMessage("The .dockerignore pattern '$pattern' is invalid.")))
                 }
             }
         }
@@ -341,7 +341,7 @@ object DockerImageBuildIgnoreEntrySpec : Spek({
             )
         ).forEach { (pattern, testCases) ->
             given("the pattern '$pattern'") {
-                val entry = DockerImageBuildIgnoreEntry(pattern, false)
+                val entry = ImageBuildIgnoreEntry(pattern, false)
 
                 testCases.forEach { (path, shouldMatch) ->
                     if (shouldMatch) {

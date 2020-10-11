@@ -17,7 +17,7 @@
 package batect.execution.model.steps.runners
 
 import batect.docker.ImagePullFailedException
-import batect.docker.client.DockerImagesClient
+import batect.docker.client.ImagesClient
 import batect.execution.model.events.ImagePullFailedEvent
 import batect.execution.model.events.ImagePullProgressEvent
 import batect.execution.model.events.ImagePulledEvent
@@ -26,7 +26,7 @@ import batect.execution.model.steps.PullImageStep
 import batect.primitives.CancellationContext
 
 class PullImageStepRunner(
-    private val imagesClient: DockerImagesClient,
+    private val imagesClient: ImagesClient,
     private val cancellationContext: CancellationContext
 ) {
     fun run(step: PullImageStep, eventSink: TaskEventSink) {

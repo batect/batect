@@ -32,7 +32,7 @@ import okio.Sink
 import okio.buffer
 import java.io.Reader
 
-class LegacyDockerImageBuildResponseBody : DockerImageBuildResponseBody {
+class LegacyImageBuildResponseBody : ImageBuildResponseBody {
     private var lastStepIndex: Int? = null
     private var lastStepName: String? = null
     private var totalSteps: Int? = null

@@ -18,7 +18,7 @@ package batect.execution.model.steps.runners
 
 import batect.docker.ContainerCreationFailedException
 import batect.docker.DockerContainerCreationRequestFactory
-import batect.docker.client.DockerContainersClient
+import batect.docker.client.ContainersClient
 import batect.execution.RunAsCurrentUserConfigurationException
 import batect.execution.RunAsCurrentUserConfigurationProvider
 import batect.execution.VolumeMountResolutionException
@@ -30,7 +30,7 @@ import batect.execution.model.steps.CreateContainerStep
 import batect.ui.containerio.ContainerIOStreamingOptions
 
 class CreateContainerStepRunner(
-    private val containersClient: DockerContainersClient,
+    private val containersClient: ContainersClient,
     private val volumeMountResolver: VolumeMountResolver,
     private val runAsCurrentUserConfigurationProvider: RunAsCurrentUserConfigurationProvider,
     private val creationRequestFactory: DockerContainerCreationRequestFactory,

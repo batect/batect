@@ -46,7 +46,7 @@ object DockerIgnoreParserSpec : Spek({
                 val ignoreList by runForEachTest { parser.parse(path) }
 
                 it("returns an empty list") {
-                    assertThat(ignoreList, equalTo(DockerImageBuildIgnoreList(emptyList())))
+                    assertThat(ignoreList, equalTo(ImageBuildIgnoreList(emptyList())))
                 }
             }
         }
@@ -60,7 +60,7 @@ object DockerIgnoreParserSpec : Spek({
                 val ignoreList by runForEachTest { parser.parse(path) }
 
                 it("returns an empty list") {
-                    assertThat(ignoreList, equalTo(DockerImageBuildIgnoreList(emptyList())))
+                    assertThat(ignoreList, equalTo(ImageBuildIgnoreList(emptyList())))
                 }
             }
         }
@@ -74,7 +74,7 @@ object DockerIgnoreParserSpec : Spek({
                 val ignoreList by runForEachTest { parser.parse(path) }
 
                 it("returns an empty list") {
-                    assertThat(ignoreList, equalTo(DockerImageBuildIgnoreList(emptyList())))
+                    assertThat(ignoreList, equalTo(ImageBuildIgnoreList(emptyList())))
                 }
             }
         }
@@ -88,7 +88,7 @@ object DockerIgnoreParserSpec : Spek({
                 val ignoreList by runForEachTest { parser.parse(path) }
 
                 it("returns an empty list") {
-                    assertThat(ignoreList, equalTo(DockerImageBuildIgnoreList(emptyList())))
+                    assertThat(ignoreList, equalTo(ImageBuildIgnoreList(emptyList())))
                 }
             }
         }
@@ -105,9 +105,9 @@ object DockerIgnoreParserSpec : Spek({
                     assertThat(
                         ignoreList,
                         equalTo(
-                            DockerImageBuildIgnoreList(
+                            ImageBuildIgnoreList(
                                 listOf(
-                                    DockerImageBuildIgnoreEntry("path/thing.go", false)
+                                    ImageBuildIgnoreEntry("path/thing.go", false)
                                 )
                             )
                         )
@@ -128,9 +128,9 @@ object DockerIgnoreParserSpec : Spek({
                     assertThat(
                         ignoreList,
                         equalTo(
-                            DockerImageBuildIgnoreList(
+                            ImageBuildIgnoreList(
                                 listOf(
-                                    DockerImageBuildIgnoreEntry("path/thing.go", true)
+                                    ImageBuildIgnoreEntry("path/thing.go", true)
                                 )
                             )
                         )
@@ -151,9 +151,9 @@ object DockerIgnoreParserSpec : Spek({
                     assertThat(
                         ignoreList,
                         equalTo(
-                            DockerImageBuildIgnoreList(
+                            ImageBuildIgnoreList(
                                 listOf(
-                                    DockerImageBuildIgnoreEntry("path/thing.go", false)
+                                    ImageBuildIgnoreEntry("path/thing.go", false)
                                 )
                             )
                         )
@@ -174,9 +174,9 @@ object DockerIgnoreParserSpec : Spek({
                     assertThat(
                         ignoreList,
                         equalTo(
-                            DockerImageBuildIgnoreList(
+                            ImageBuildIgnoreList(
                                 listOf(
-                                    DockerImageBuildIgnoreEntry("path/thing.go", false)
+                                    ImageBuildIgnoreEntry("path/thing.go", false)
                                 )
                             )
                         )
@@ -194,7 +194,7 @@ object DockerIgnoreParserSpec : Spek({
                 val ignoreList by runForEachTest { parser.parse(path) }
 
                 it("returns an empty list") {
-                    assertThat(ignoreList, equalTo(DockerImageBuildIgnoreList(emptyList())))
+                    assertThat(ignoreList, equalTo(ImageBuildIgnoreList(emptyList())))
                 }
             }
         }
@@ -218,11 +218,11 @@ object DockerIgnoreParserSpec : Spek({
                     assertThat(
                         ignoreList,
                         equalTo(
-                            DockerImageBuildIgnoreList(
+                            ImageBuildIgnoreList(
                                 listOf(
-                                    DockerImageBuildIgnoreEntry("path/thing.go", false),
-                                    DockerImageBuildIgnoreEntry("something/else", false),
-                                    DockerImageBuildIgnoreEntry("not/this", true)
+                                    ImageBuildIgnoreEntry("path/thing.go", false),
+                                    ImageBuildIgnoreEntry("something/else", false),
+                                    ImageBuildIgnoreEntry("not/this", true)
                                 )
                             )
                         )
@@ -240,7 +240,7 @@ object DockerIgnoreParserSpec : Spek({
                 val ignoreList by runForEachTest { parser.parse(path) }
 
                 it("ignores the pattern") {
-                    assertThat(ignoreList, equalTo(DockerImageBuildIgnoreList(emptyList())))
+                    assertThat(ignoreList, equalTo(ImageBuildIgnoreList(emptyList())))
                 }
             }
         }
@@ -269,9 +269,9 @@ object DockerIgnoreParserSpec : Spek({
                     assertThat(
                         ignoreList,
                         equalTo(
-                            DockerImageBuildIgnoreList(
+                            ImageBuildIgnoreList(
                                 listOf(
-                                    DockerImageBuildIgnoreEntry("path/thing.go", true)
+                                    ImageBuildIgnoreEntry("path/thing.go", true)
                                 )
                             )
                         )
@@ -298,10 +298,10 @@ object DockerIgnoreParserSpec : Spek({
                     assertThat(
                         ignoreList,
                         equalTo(
-                            DockerImageBuildIgnoreList(
+                            ImageBuildIgnoreList(
                                 listOf(
-                                    DockerImageBuildIgnoreEntry("path/thing.go", false),
-                                    DockerImageBuildIgnoreEntry("path/otherthing.go", true)
+                                    ImageBuildIgnoreEntry("path/thing.go", false),
+                                    ImageBuildIgnoreEntry("path/otherthing.go", true)
                                 )
                             )
                         )
@@ -329,10 +329,10 @@ object DockerIgnoreParserSpec : Spek({
                     assertThat(
                         ignoreList,
                         equalTo(
-                            DockerImageBuildIgnoreList(
+                            ImageBuildIgnoreList(
                                 listOf(
-                                    DockerImageBuildIgnoreEntry("path/other/thing.go", false),
-                                    DockerImageBuildIgnoreEntry("path/otherthing.go", true)
+                                    ImageBuildIgnoreEntry("path/other/thing.go", false),
+                                    ImageBuildIgnoreEntry("path/otherthing.go", true)
                                 )
                             )
                         )
@@ -374,9 +374,9 @@ object DockerIgnoreParserSpec : Spek({
                             assertThat(
                                 ignoreList,
                                 equalTo(
-                                    DockerImageBuildIgnoreList(
+                                    ImageBuildIgnoreList(
                                         listOf(
-                                            DockerImageBuildIgnoreEntry(expectedCleanedPattern, false)
+                                            ImageBuildIgnoreEntry(expectedCleanedPattern, false)
                                         )
                                     )
                                 )
@@ -405,9 +405,9 @@ object DockerIgnoreParserSpec : Spek({
                             assertThat(
                                 ignoreList,
                                 equalTo(
-                                    DockerImageBuildIgnoreList(
+                                    ImageBuildIgnoreList(
                                         listOf(
-                                            DockerImageBuildIgnoreEntry(expectedCleanedPattern, false)
+                                            ImageBuildIgnoreEntry(expectedCleanedPattern, false)
                                         )
                                     )
                                 )
@@ -436,9 +436,9 @@ object DockerIgnoreParserSpec : Spek({
                             assertThat(
                                 ignoreList,
                                 equalTo(
-                                    DockerImageBuildIgnoreList(
+                                    ImageBuildIgnoreList(
                                         listOf(
-                                            DockerImageBuildIgnoreEntry(expectedCleanedPattern, false)
+                                            ImageBuildIgnoreEntry(expectedCleanedPattern, false)
                                         )
                                     )
                                 )

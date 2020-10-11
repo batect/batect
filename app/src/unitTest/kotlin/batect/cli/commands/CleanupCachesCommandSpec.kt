@@ -18,7 +18,7 @@ package batect.cli.commands
 
 import batect.config.ProjectPaths
 import batect.docker.DockerVolume
-import batect.docker.client.DockerVolumesClient
+import batect.docker.client.VolumesClient
 import batect.execution.CacheManager
 import batect.execution.CacheType
 import batect.testutils.createForEachTest
@@ -47,7 +47,7 @@ import kotlin.streams.toList
 object CleanupCachesCommandSpec : Spek({
     describe("a cleanup caches command") {
         val volumesClient by createForEachTest {
-            mock<DockerVolumesClient> {
+            mock<VolumesClient> {
                 on { getAll() } doReturn setOf(
                     DockerVolume("batect-cache-this-project-abc123"),
                     DockerVolume("batect-cache-this-project-def456"),

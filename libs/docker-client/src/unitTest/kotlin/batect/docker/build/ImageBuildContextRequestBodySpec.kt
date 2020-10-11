@@ -45,10 +45,10 @@ import java.nio.file.attribute.PosixFilePermissions
 
 // Unfortunately we can't use Jimfs here to simulate the filesystems on different operating systems -
 // Jimfs does not support Path.toFile(), and we need that in order to create the archive entries.
-object DockerImageBuildContextRequestBodySpec : Spek({
+object ImageBuildContextRequestBodySpec : Spek({
     describe("a Docker image build context request body") {
         on("getting the content type") {
-            val requestBody = DockerImageBuildContextRequestBody(DockerImageBuildContext(emptySet()))
+            val requestBody = ImageBuildContextRequestBody(ImageBuildContext(emptySet()))
 
             it("returns the TAR content type") {
                 assertThat(requestBody.contentType(), equalTo("application/x-tar".toMediaType()))
@@ -56,7 +56,7 @@ object DockerImageBuildContextRequestBodySpec : Spek({
         }
 
         on("getting the content length") {
-            val requestBody = DockerImageBuildContextRequestBody(DockerImageBuildContext(emptySet()))
+            val requestBody = ImageBuildContextRequestBody(ImageBuildContext(emptySet()))
 
             it("returns that the content length is unknown") {
                 assertThat(requestBody.contentLength(), equalTo(-1))
@@ -64,13 +64,13 @@ object DockerImageBuildContextRequestBodySpec : Spek({
         }
 
         describe("writing the context") {
-            val contextDir by createForEachTest { Files.createTempDirectory("${DockerImageBuildContextRequestBodySpec::class.simpleName}-") }
+            val contextDir by createForEachTest { Files.createTempDirectory("${ImageBuildContextRequestBodySpec::class.simpleName}-") }
 
             afterEachTest { contextDir.toFile().deleteRecursively() }
 
             given("the build context is empty") {
-                val context = DockerImageBuildContext(emptySet())
-                val requestBody = DockerImageBuildContextRequestBody(context)
+                val context = ImageBuildContext(emptySet())
+                val requestBody = ImageBuildContextRequestBody(context)
 
                 on("writing the request body") {
                     val outputStream = ByteArrayOutputStream()
@@ -99,14 +99,14 @@ object DockerImageBuildContextRequestBodySpec : Spek({
                 }
 
                 val context by createForEachTest {
-                    DockerImageBuildContext(
+                    ImageBuildContext(
                         setOf(
-                            DockerImageBuildContextEntry(path, "path-inside-context")
+                            ImageBuildContextEntry(path, "path-inside-context")
                         )
                     )
                 }
 
-                val requestBody by createForEachTest { DockerImageBuildContextRequestBody(context) }
+                val requestBody by createForEachTest { ImageBuildContextRequestBody(context) }
 
                 on("writing the request body") {
                     val outputStream by createForEachTest { ByteArrayOutputStream() }
@@ -159,14 +159,14 @@ object DockerImageBuildContextRequestBodySpec : Spek({
                 val nameInsideContext = "0123456789".repeat(10) + "-abc"
 
                 val context by createForEachTest {
-                    DockerImageBuildContext(
+                    ImageBuildContext(
                         setOf(
-                            DockerImageBuildContextEntry(path, nameInsideContext)
+                            ImageBuildContextEntry(path, nameInsideContext)
                         )
                     )
                 }
 
-                val requestBody by createForEachTest { DockerImageBuildContextRequestBody(context) }
+                val requestBody by createForEachTest { ImageBuildContextRequestBody(context) }
 
                 on("writing the request body") {
                     val outputStream by createForEachTest { ByteArrayOutputStream() }
@@ -199,14 +199,14 @@ object DockerImageBuildContextRequestBodySpec : Spek({
                 }
 
                 val context by createForEachTest {
-                    DockerImageBuildContext(
+                    ImageBuildContext(
                         setOf(
-                            DockerImageBuildContextEntry(path, "path-inside-context")
+                            ImageBuildContextEntry(path, "path-inside-context")
                         )
                     )
                 }
 
-                val requestBody by createForEachTest { DockerImageBuildContextRequestBody(context) }
+                val requestBody by createForEachTest { ImageBuildContextRequestBody(context) }
 
                 on("writing the request body") {
                     val outputStream by createForEachTest { ByteArrayOutputStream() }
@@ -255,15 +255,15 @@ object DockerImageBuildContextRequestBodySpec : Spek({
                 }
 
                 val context by createForEachTest {
-                    DockerImageBuildContext(
+                    ImageBuildContext(
                         setOf(
-                            DockerImageBuildContextEntry(directoryPath, "some-dir-context"),
-                            DockerImageBuildContextEntry(filePath, "some-dir-context/some-file-context")
+                            ImageBuildContextEntry(directoryPath, "some-dir-context"),
+                            ImageBuildContextEntry(filePath, "some-dir-context/some-file-context")
                         )
                     )
                 }
 
-                val requestBody by createForEachTest { DockerImageBuildContextRequestBody(context) }
+                val requestBody by createForEachTest { ImageBuildContextRequestBody(context) }
 
                 on("writing the request body") {
                     val outputStream by createForEachTest { ByteArrayOutputStream() }
@@ -308,14 +308,14 @@ object DockerImageBuildContextRequestBodySpec : Spek({
                 }
 
                 val context by createForEachTest {
-                    DockerImageBuildContext(
+                    ImageBuildContext(
                         setOf(
-                            DockerImageBuildContextEntry(path, "file1")
+                            ImageBuildContextEntry(path, "file1")
                         )
                     )
                 }
 
-                val requestBody by createForEachTest { DockerImageBuildContextRequestBody(context) }
+                val requestBody by createForEachTest { ImageBuildContextRequestBody(context) }
 
                 on("writing the request body") {
                     val outputStream by createForEachTest { ByteArrayOutputStream() }

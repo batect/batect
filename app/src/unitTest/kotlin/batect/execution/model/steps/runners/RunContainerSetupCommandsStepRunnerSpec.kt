@@ -23,7 +23,7 @@ import batect.docker.DockerContainerEnvironmentVariableProvider
 import batect.docker.DockerException
 import batect.docker.DockerExecResult
 import batect.docker.UserAndGroup
-import batect.docker.client.DockerExecClient
+import batect.docker.client.ExecClient
 import batect.execution.ContainerRuntimeConfiguration
 import batect.execution.RunAsCurrentUserConfigurationProvider
 import batect.execution.model.events.ContainerBecameReadyEvent
@@ -56,7 +56,7 @@ import org.spekframework.spek2.style.specification.describe
 
 object RunContainerSetupCommandsStepRunnerSpec : Spek({
     describe("running a 'run setup commands' step") {
-        val execClient by createForEachTest { mock<DockerExecClient>() }
+        val execClient by createForEachTest { mock<ExecClient>() }
         val environmentVariableProvider by createForEachTest { mock<DockerContainerEnvironmentVariableProvider>() }
         val userAndGroup = UserAndGroup(456, 789)
 

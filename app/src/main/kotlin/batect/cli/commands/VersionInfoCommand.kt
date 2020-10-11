@@ -18,7 +18,7 @@ package batect.cli.commands
 
 import batect.VersionInfo
 import batect.cli.CommandLineOptionsParser
-import batect.docker.client.DockerSystemInfoClient
+import batect.docker.client.SystemInfoClient
 import batect.git.GitClient
 import batect.os.SystemInfo
 import batect.updates.UpdateNotifier
@@ -28,7 +28,7 @@ class VersionInfoCommand(
     private val versionInfo: VersionInfo,
     private val outputStream: PrintStream,
     private val systemInfo: SystemInfo,
-    private val dockerSystemInfoClient: DockerSystemInfoClient,
+    private val dockerSystemInfoClient: SystemInfoClient,
     private val gitClient: GitClient,
     private val updateNotifier: UpdateNotifier
 ) : Command {

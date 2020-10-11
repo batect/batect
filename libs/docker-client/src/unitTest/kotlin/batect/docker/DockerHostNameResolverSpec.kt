@@ -16,8 +16,8 @@
 
 package batect.docker
 
-import batect.docker.client.DockerSystemInfoClient
 import batect.docker.client.DockerVersionInfoRetrievalResult
+import batect.docker.client.SystemInfoClient
 import batect.os.OperatingSystem
 import batect.os.SystemInfo
 import batect.primitives.Version
@@ -36,7 +36,7 @@ import org.spekframework.spek2.style.specification.describe
 object DockerHostNameResolverSpec : Spek({
     describe("a Docker host name resolver") {
         val systemInfo by createForEachTest { mock<SystemInfo>() }
-        val dockerSystemInfoClient by createForEachTest { mock<DockerSystemInfoClient>() }
+        val dockerSystemInfoClient by createForEachTest { mock<SystemInfoClient>() }
         val resolver by createForEachTest { DockerHostNameResolver(systemInfo, dockerSystemInfoClient) }
 
         given("the local system is running macOS") {

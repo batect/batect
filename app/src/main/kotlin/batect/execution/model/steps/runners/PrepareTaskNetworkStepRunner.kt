@@ -21,7 +21,7 @@ import batect.docker.DockerException
 import batect.docker.DockerResourceNameGenerator
 import batect.docker.api.NetworkCreationFailedException
 import batect.docker.client.DockerContainerType
-import batect.docker.client.DockerNetworksClient
+import batect.docker.client.NetworksClient
 import batect.execution.model.events.CustomTaskNetworkCheckFailedEvent
 import batect.execution.model.events.CustomTaskNetworkCheckedEvent
 import batect.execution.model.events.TaskEventSink
@@ -31,7 +31,7 @@ import batect.execution.model.events.TaskNetworkCreationFailedEvent
 class PrepareTaskNetworkStepRunner(
     private val nameGenerator: DockerResourceNameGenerator,
     private val containerType: DockerContainerType,
-    private val networksClient: DockerNetworksClient,
+    private val networksClient: NetworksClient,
     private val commandLineOptions: CommandLineOptions
 ) {
     fun run(eventSink: TaskEventSink) {

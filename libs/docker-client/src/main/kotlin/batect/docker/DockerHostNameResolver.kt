@@ -16,8 +16,8 @@
 
 package batect.docker
 
-import batect.docker.client.DockerSystemInfoClient
 import batect.docker.client.DockerVersionInfoRetrievalResult
+import batect.docker.client.SystemInfoClient
 import batect.os.OperatingSystem
 import batect.os.SystemInfo
 import batect.primitives.Version
@@ -25,7 +25,7 @@ import batect.primitives.VersionComparisonMode
 
 class DockerHostNameResolver(
     private val systemInfo: SystemInfo,
-    private val dockerSystemInfoClient: DockerSystemInfoClient
+    private val dockerSystemInfoClient: SystemInfoClient
 ) {
     private val dockerVersionInfoRetrievalResult by lazy { dockerSystemInfoClient.getDockerVersionInfo() }
 

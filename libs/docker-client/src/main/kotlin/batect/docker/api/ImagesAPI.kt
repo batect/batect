@@ -26,10 +26,10 @@ import batect.docker.Tee
 import batect.docker.build.BuildComplete
 import batect.docker.build.BuildError
 import batect.docker.build.BuildProgress
-import batect.docker.build.DockerImageBuildContext
-import batect.docker.build.DockerImageBuildContextRequestBody
-import batect.docker.build.DockerImageBuildResponseBody
-import batect.docker.build.LegacyDockerImageBuildResponseBody
+import batect.docker.build.ImageBuildContext
+import batect.docker.build.ImageBuildContextRequestBody
+import batect.docker.build.ImageBuildResponseBody
+import batect.docker.build.LegacyImageBuildResponseBody
 import batect.docker.pull.DockerRegistryCredentials
 import batect.docker.toJsonObject
 import batect.logging.LogMessageBuilder
@@ -53,10 +53,10 @@ class ImagesAPI(
     httpConfig: DockerHttpConfig,
     systemInfo: SystemInfo,
     logger: Logger,
-    private val buildResponseBodyFactory: () -> DockerImageBuildResponseBody = ::LegacyDockerImageBuildResponseBody
+    private val buildResponseBodyFactory: () -> ImageBuildResponseBody = ::LegacyImageBuildResponseBody
 ) : APIBase(httpConfig, systemInfo, logger) {
     fun build(
-        context: DockerImageBuildContext,
+        context: ImageBuildContext,
         buildArgs: Map<String, String>,
         dockerfilePath: String,
         imageTags: Set<String>,
@@ -100,7 +100,7 @@ class ImagesAPI(
     }
 
     private fun createBuildRequest(
-        context: DockerImageBuildContext,
+        context: ImageBuildContext,
         buildArgs: Map<String, String>,
         dockerfilePath: String,
         imageTags: Set<String>,
@@ -116,7 +116,7 @@ class ImagesAPI(
         imageTags.forEach { url.addQueryParameter("t", it) }
 
         return Request.Builder()
-            .post(DockerImageBuildContextRequestBody(context))
+            .post(ImageBuildContextRequestBody(context))
             .url(url.build())
             .addRegistryCredentialsForBuild(registryCredentials)
             .build()
@@ -264,5 +264,5 @@ class ImagesAPI(
         .addPathSegment("images")
         .build()
 
-    private fun LogMessageBuilder.data(key: String, value: DockerImageBuildContext) = this.data(key, value, DockerImageBuildContext.serializer())
+    private fun LogMessageBuilder.data(key: String, value: ImageBuildContext) = this.data(key, value, ImageBuildContext.serializer())
 }

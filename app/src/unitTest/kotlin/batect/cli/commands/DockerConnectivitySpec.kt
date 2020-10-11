@@ -18,7 +18,7 @@ package batect.cli.commands
 
 import batect.docker.client.DockerConnectivityCheckResult
 import batect.docker.client.DockerContainerType
-import batect.docker.client.DockerSystemInfoClient
+import batect.docker.client.SystemInfoClient
 import batect.ioc.DockerConfigurationKodeinFactory
 import batect.primitives.Version
 import batect.telemetry.DockerTelemetryCollector
@@ -58,7 +58,7 @@ object DockerConnectivitySpec : Spek({
             }
         }
 
-        val systemInfoClient by createForEachTest { mock<DockerSystemInfoClient>() }
+        val systemInfoClient by createForEachTest { mock<SystemInfoClient>() }
         val errorConsole by createForEachTest { mock<Console>() }
         val connectivity by createForEachTest { DockerConnectivity(dockerConfigurationKodeinFactory, systemInfoClient, errorConsole) }
 

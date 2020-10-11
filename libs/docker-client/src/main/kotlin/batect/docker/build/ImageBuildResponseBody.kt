@@ -19,8 +19,8 @@ package batect.docker.build
 import okio.Sink
 import java.io.Reader
 
-interface DockerImageBuildResponseBody {
+interface ImageBuildResponseBody {
     fun readFrom(stream: Reader, outputStream: Sink, eventCallback: ImageBuildEventCallback)
 }
 
-typealias ImageBuildEventCallback = (DockerImageBuildEvent) -> Unit
+typealias ImageBuildEventCallback = (ImageBuildEvent) -> Unit

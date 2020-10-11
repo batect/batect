@@ -28,9 +28,9 @@ import batect.docker.DockerResourceNameGenerator
 import batect.docker.DockerVolumeMount
 import batect.docker.DockerVolumeMountSource
 import batect.docker.UserAndGroup
+import batect.docker.client.ContainersClient
 import batect.docker.client.DockerContainerType
-import batect.docker.client.DockerContainersClient
-import batect.docker.client.DockerImagesClient
+import batect.docker.client.ImagesClient
 import batect.execution.ContainerDependencyGraph
 import batect.execution.RunAsCurrentUserConfigurationProvider
 import batect.execution.VolumeMountResolver
@@ -47,8 +47,8 @@ import java.io.ByteArrayOutputStream
 class InitialiseCachesStepRunner(
     private val containerType: DockerContainerType,
     private val cacheInitImageName: String,
-    private val imagesClient: DockerImagesClient,
-    private val containersClient: DockerContainersClient,
+    private val imagesClient: ImagesClient,
+    private val containersClient: ContainersClient,
     private val cancellationContext: CancellationContext,
     private val resourceNameGenerator: DockerResourceNameGenerator,
     private val volumeMountResolver: VolumeMountResolver,

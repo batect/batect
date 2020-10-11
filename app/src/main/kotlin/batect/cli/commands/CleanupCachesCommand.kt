@@ -17,7 +17,7 @@
 package batect.cli.commands
 
 import batect.config.ProjectPaths
-import batect.docker.client.DockerVolumesClient
+import batect.docker.client.VolumesClient
 import batect.execution.CacheManager
 import batect.execution.CacheType
 import batect.os.deleteDirectory
@@ -28,7 +28,7 @@ import kotlin.streams.toList
 
 class CleanupCachesCommand(
     private val dockerConnectivity: DockerConnectivity,
-    private val volumesClient: DockerVolumesClient,
+    private val volumesClient: VolumesClient,
     private val projectPaths: ProjectPaths,
     private val console: Console
 ) : Command {

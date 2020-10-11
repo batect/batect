@@ -17,14 +17,14 @@
 package batect.execution.model.steps.runners
 
 import batect.docker.api.NetworkDeletionFailedException
-import batect.docker.client.DockerNetworksClient
+import batect.docker.client.NetworksClient
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.events.TaskNetworkDeletedEvent
 import batect.execution.model.events.TaskNetworkDeletionFailedEvent
 import batect.execution.model.steps.DeleteTaskNetworkStep
 
 class DeleteTaskNetworkStepRunner(
-    private val networksClient: DockerNetworksClient
+    private val networksClient: NetworksClient
 ) {
     fun run(step: DeleteTaskNetworkStep, eventSink: TaskEventSink) {
         try {

@@ -19,7 +19,7 @@ package batect.execution.model.steps.runners
 import batect.config.Container
 import batect.docker.DockerContainer
 import batect.docker.api.ContainerRemovalFailedException
-import batect.docker.client.DockerContainersClient
+import batect.docker.client.ContainersClient
 import batect.execution.model.events.ContainerRemovalFailedEvent
 import batect.execution.model.events.ContainerRemovedEvent
 import batect.execution.model.events.TaskEventSink
@@ -39,7 +39,7 @@ object RemoveContainerStepRunnerSpec : Spek({
         val dockerContainer = DockerContainer("some-id")
         val step = RemoveContainerStep(container, dockerContainer)
 
-        val containersClient by createForEachTest { mock<DockerContainersClient>() }
+        val containersClient by createForEachTest { mock<ContainersClient>() }
         val eventSink by createForEachTest { mock<TaskEventSink>() }
         val runner by createForEachTest { RemoveContainerStepRunner(containersClient) }
 

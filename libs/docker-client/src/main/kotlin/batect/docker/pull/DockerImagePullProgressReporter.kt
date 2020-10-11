@@ -30,10 +30,6 @@ class DockerImagePullProgressReporter {
         val status = progressUpdate["status"]?.jsonPrimitive?.content ?: return null
         val currentOperation = operationForName(status) ?: return null
 
-        if (!progressUpdate.containsKey("id")) {
-            return extractNonLayerUpdate(currentOperation, progressUpdate)
-        }
-
         val layerId = progressUpdate.getValue("id").jsonPrimitive.content
         val previousState = layerStates[layerId]
         layerStates[layerId] = computeNewStateForLayer(previousState, currentOperation, progressUpdate)
@@ -46,18 +42,6 @@ class DockerImagePullProgressReporter {
         }
 
         return null
-    }
-
-    private fun extractNonLayerUpdate(currentOperation: DownloadOperation, progressUpdate: JsonObject): DockerImagePullProgress {
-        val progressDetail = progressUpdate.getValue("progressDetail").jsonObject
-        val completedBytes = progressDetail["current"]?.jsonPrimitive?.long ?: 0
-        var totalBytes = progressDetail["total"]?.jsonPrimitive?.long ?: 0
-
-        if (totalBytes == -1L) {
-            totalBytes = 0
-        }
-
-        return DockerImagePullProgress(currentOperation, completedBytes, totalBytes)
     }
 
     private fun computeNewStateForLayer(previousState: LayerStatus?, currentOperation: DownloadOperation, progressUpdate: JsonObject): LayerStatus {

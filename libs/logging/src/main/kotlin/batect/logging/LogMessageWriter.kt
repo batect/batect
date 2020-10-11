@@ -18,7 +18,6 @@ package batect.logging
 
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.json
 import kotlinx.serialization.json.put
 import java.io.OutputStream
 

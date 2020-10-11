@@ -25,16 +25,16 @@ import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
 // https://github.com/docker/distribution/blob/0ac367fd6bee057d404c405a298b4b7aedf301ec/reference/normalize_test.go is the basis of these tests.
-object DockerImageReferenceSpec : Spek({
+object ImageReferenceSpec : Spek({
     describe("a Docker image reference") {
         given("an empty image name") {
             it("throws an exception") {
-                assertThat({ DockerImageReference("") }, throws<DockerException>(withMessage("Image reference cannot be an empty string.")))
+                assertThat({ ImageReference("") }, throws<DockerException>(withMessage("Image reference cannot be an empty string.")))
             }
         }
 
         given("an image name without a tag, registry or repository name") {
-            val ref = DockerImageReference("ubuntu")
+            val ref = ImageReference("ubuntu")
 
             it("has the default registry domain name") {
                 assertThat(ref.registryDomain, equalTo("docker.io"))
@@ -50,7 +50,7 @@ object DockerImageReferenceSpec : Spek({
         }
 
         given("an image name with a tag but without a registry or repository name") {
-            val ref = DockerImageReference("ubuntu:latest")
+            val ref = ImageReference("ubuntu:latest")
 
             it("has the default registry domain name") {
                 assertThat(ref.registryDomain, equalTo("docker.io"))
@@ -66,7 +66,7 @@ object DockerImageReferenceSpec : Spek({
         }
 
         given("an image name with a digest but without a registry or repository name") {
-            val ref = DockerImageReference("ubuntu@sha256:e6693c20186f837fc393390135d8a598a96a833917917789d63766cab6c59582")
+            val ref = ImageReference("ubuntu@sha256:e6693c20186f837fc393390135d8a598a96a833917917789d63766cab6c59582")
 
             it("has the default registry domain name") {
                 assertThat(ref.registryDomain, equalTo("docker.io"))
@@ -82,7 +82,7 @@ object DockerImageReferenceSpec : Spek({
         }
 
         given("an image name with a tag and a digest but without a registry or repository name") {
-            val ref = DockerImageReference("ubuntu:latest@sha256:e6693c20186f837fc393390135d8a598a96a833917917789d63766cab6c59582")
+            val ref = ImageReference("ubuntu:latest@sha256:e6693c20186f837fc393390135d8a598a96a833917917789d63766cab6c59582")
 
             it("has the default registry domain name") {
                 assertThat(ref.registryDomain, equalTo("docker.io"))
@@ -98,7 +98,7 @@ object DockerImageReferenceSpec : Spek({
         }
 
         given("an image name with a repository but no registry name") {
-            val ref = DockerImageReference("library/ubuntu")
+            val ref = ImageReference("library/ubuntu")
 
             it("has the default registry domain name") {
                 assertThat(ref.registryDomain, equalTo("docker.io"))
@@ -114,7 +114,7 @@ object DockerImageReferenceSpec : Spek({
         }
 
         given("an image name with a repository and the default registry name") {
-            val ref = DockerImageReference("docker.io/library/ubuntu")
+            val ref = ImageReference("docker.io/library/ubuntu")
 
             it("has the default registry domain name") {
                 assertThat(ref.registryDomain, equalTo("docker.io"))
@@ -130,7 +130,7 @@ object DockerImageReferenceSpec : Spek({
         }
 
         given("an image name with a repository and the legacy default registry name") {
-            val ref = DockerImageReference("index.docker.io/library/ubuntu")
+            val ref = ImageReference("index.docker.io/library/ubuntu")
 
             it("has the default registry domain name") {
                 assertThat(ref.registryDomain, equalTo("docker.io"))
@@ -146,7 +146,7 @@ object DockerImageReferenceSpec : Spek({
         }
 
         given("an image name with a local registry and no repository") {
-            val ref = DockerImageReference("localhost/ubuntu")
+            val ref = ImageReference("localhost/ubuntu")
 
             it("has the provided registry domain name") {
                 assertThat(ref.registryDomain, equalTo("localhost"))
@@ -162,7 +162,7 @@ object DockerImageReferenceSpec : Spek({
         }
 
         given("an image name with a non-default registry name and no repository") {
-            val ref = DockerImageReference("some-docker-registry.com/ubuntu")
+            val ref = ImageReference("some-docker-registry.com/ubuntu")
 
             it("has the provided registry domain name") {
                 assertThat(ref.registryDomain, equalTo("some-docker-registry.com"))
@@ -178,7 +178,7 @@ object DockerImageReferenceSpec : Spek({
         }
 
         given("an image name with a non-default registry name that does not contain a dot but does contain a port and no repository") {
-            val ref = DockerImageReference("some-docker-registry:8080/ubuntu")
+            val ref = ImageReference("some-docker-registry:8080/ubuntu")
 
             it("has the provided registry domain name") {
                 assertThat(ref.registryDomain, equalTo("some-docker-registry:8080"))
@@ -194,7 +194,7 @@ object DockerImageReferenceSpec : Spek({
         }
 
         given("an image name with a repository and a non-default registry name") {
-            val ref = DockerImageReference("some-docker-registry.com/library/ubuntu")
+            val ref = ImageReference("some-docker-registry.com/library/ubuntu")
 
             it("has the provided registry domain name") {
                 assertThat(ref.registryDomain, equalTo("some-docker-registry.com"))
@@ -210,7 +210,7 @@ object DockerImageReferenceSpec : Spek({
         }
 
         given("an image name with a nested repository and a non-default registry name") {
-            val ref = DockerImageReference("some-docker-registry.com/library/linux/ubuntu")
+            val ref = ImageReference("some-docker-registry.com/library/linux/ubuntu")
 
             it("has the provided registry domain name") {
                 assertThat(ref.registryDomain, equalTo("some-docker-registry.com"))

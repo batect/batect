@@ -25,7 +25,7 @@ import java.nio.file.FileSystem
 import java.nio.file.Files
 import java.util.Properties
 
-class DockerRegistryCredentialsConfigurationFile(
+class RegistryCredentialsConfigurationFile(
     fileSystem: FileSystem,
     private val processRunner: ProcessRunner,
     private val logger: Logger,
@@ -52,7 +52,7 @@ class DockerRegistryCredentialsConfigurationFile(
         return Json.ignoringUnknownKeys.decodeFromString(DockerConfigFile.serializer(), configFileContent)
     }
 
-    fun getCredentialsForRegistry(registry: String): DockerRegistryCredentialsSource? {
+    fun getCredentialsForRegistry(registry: String): RegistryCredentialsSource? {
         logger.info {
             message("Getting credentials for registry.")
             data("registry", registry)

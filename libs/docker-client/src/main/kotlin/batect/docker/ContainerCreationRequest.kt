@@ -24,7 +24,7 @@ import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonObject
 
 @Serializable
-data class DockerContainerCreationRequest(
+data class ContainerCreationRequest(
     val name: String,
     val image: DockerImage,
     val network: DockerNetwork,
@@ -38,7 +38,7 @@ data class DockerContainerCreationRequest(
     val volumeMounts: Set<DockerVolumeMount>,
     val deviceMounts: Set<DockerDeviceMount>,
     val portMappings: Set<DockerPortMapping>,
-    val healthCheckConfig: DockerHealthCheckConfig,
+    val healthCheckConfig: HealthCheckConfig,
     val userAndGroup: UserAndGroup?,
     val privileged: Boolean,
     val init: Boolean,

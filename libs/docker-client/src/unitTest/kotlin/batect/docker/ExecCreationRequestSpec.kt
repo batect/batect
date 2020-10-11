@@ -22,11 +22,11 @@ import org.araqnid.hamkrest.json.equivalentTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
-object DockerExecCreationRequestSpec : Spek({
+object ExecCreationRequestSpec : Spek({
     describe("an exec instance creation request") {
         describe("converting a request to JSON") {
             describe("when a user and group is provided") {
-                val request = DockerExecCreationRequest(
+                val request = ExecCreationRequest(
                     attachStdin = false,
                     attachStdout = true,
                     attachStderr = false,
@@ -63,7 +63,7 @@ object DockerExecCreationRequestSpec : Spek({
             }
 
             describe("when a user and group is not provided") {
-                val request = DockerExecCreationRequest(
+                val request = ExecCreationRequest(
                     attachStdin = false,
                     attachStdout = true,
                     attachStderr = false,

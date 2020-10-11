@@ -25,10 +25,10 @@ import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.time.Duration
 
-object DockerContainerCreationRequestSpec : Spek({
+object ContainerCreationRequestSpec : Spek({
     describe("a Docker container creation request") {
         given("a request with all values provided") {
-            val request = DockerContainerCreationRequest(
+            val request = ContainerCreationRequest(
                 "the-container-name",
                 DockerImage("the-image"),
                 DockerNetwork("the-network"),
@@ -45,7 +45,7 @@ object DockerContainerCreationRequestSpec : Spek({
                 ),
                 setOf(DockerDeviceMount("/dev/local", "/dev/container", "rw")),
                 setOf(DockerPortMapping(123, 456, "udp"), DockerPortMapping(DockerPortRange(1000, 1001), DockerPortRange(2000, 2001), "my-protocol")),
-                DockerHealthCheckConfig(Duration.ofNanos(555), 12, Duration.ofNanos(333), "exit 0"),
+                HealthCheckConfig(Duration.ofNanos(555), 12, Duration.ofNanos(333), "exit 0"),
                 UserAndGroup(789, 222),
                 privileged = true,
                 init = true,
@@ -150,7 +150,7 @@ object DockerContainerCreationRequestSpec : Spek({
             }
 
             on("converting it to JSON for logging") {
-                val json = Json.Default.encodeToString(DockerContainerCreationRequest.serializer(), request)
+                val json = Json.Default.encodeToString(ContainerCreationRequest.serializer(), request)
 
                 it("returns a JSON representation of the Kotlin object") {
                     assertThat(
@@ -228,7 +228,7 @@ object DockerContainerCreationRequestSpec : Spek({
         }
 
         given("a request with only the minimal set of values provided") {
-            val request = DockerContainerCreationRequest(
+            val request = ContainerCreationRequest(
                 "the-container-name",
                 DockerImage("the-image"),
                 DockerNetwork("the-network"),
@@ -242,7 +242,7 @@ object DockerContainerCreationRequestSpec : Spek({
                 emptySet(),
                 emptySet(),
                 emptySet(),
-                DockerHealthCheckConfig(),
+                HealthCheckConfig(),
                 null,
                 privileged = false,
                 init = false,

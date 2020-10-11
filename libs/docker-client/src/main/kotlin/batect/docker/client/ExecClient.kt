@@ -18,8 +18,8 @@ package batect.docker.client
 
 import batect.docker.DockerContainer
 import batect.docker.DockerException
-import batect.docker.DockerExecCreationRequest
 import batect.docker.DockerExecResult
+import batect.docker.ExecCreationRequest
 import batect.docker.Tee
 import batect.docker.UserAndGroup
 import batect.docker.api.ExecAPI
@@ -55,7 +55,7 @@ class ExecClient(
             data("container", container)
         }
 
-        val creationRequest = DockerExecCreationRequest(
+        val creationRequest = ExecCreationRequest(
             false,
             true,
             true,

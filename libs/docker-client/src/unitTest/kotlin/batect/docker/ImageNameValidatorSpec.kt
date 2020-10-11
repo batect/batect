@@ -22,7 +22,7 @@ import com.natpryce.hamkrest.assertion.assertThat
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
-object DockerImageNameValidatorSpec : Spek({
+object ImageNameValidatorSpec : Spek({
     describe("a Docker image name validator") {
         listOf(
             "a",
@@ -38,7 +38,7 @@ object DockerImageNameValidatorSpec : Spek({
         ).forEach { name ->
             given("the name '$name'") {
                 it("reports that '$name' is a valid image name") {
-                    assertThat(DockerImageNameValidator.isValidImageName(name), equalTo(true))
+                    assertThat(ImageNameValidator.isValidImageName(name), equalTo(true))
                 }
             }
         }
@@ -59,7 +59,7 @@ object DockerImageNameValidatorSpec : Spek({
         ).forEach { name ->
             given("the name '$name'") {
                 it("reports that '$name' is not a valid image name") {
-                    assertThat(DockerImageNameValidator.isValidImageName(name), equalTo(false))
+                    assertThat(ImageNameValidator.isValidImageName(name), equalTo(false))
                 }
             }
         }

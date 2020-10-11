@@ -18,15 +18,15 @@ package batect.execution.model.steps.runners
 
 import batect.config.CacheMount
 import batect.config.Container
+import batect.docker.ContainerCreationRequest
 import batect.docker.DockerContainer
-import batect.docker.DockerContainerCreationRequest
 import batect.docker.DockerException
-import batect.docker.DockerHealthCheckConfig
 import batect.docker.DockerImage
 import batect.docker.DockerNetwork
 import batect.docker.DockerResourceNameGenerator
 import batect.docker.DockerVolumeMount
 import batect.docker.DockerVolumeMountSource
+import batect.docker.HealthCheckConfig
 import batect.docker.UserAndGroup
 import batect.docker.client.ContainersClient
 import batect.docker.client.DockerContainerType
@@ -116,7 +116,7 @@ class InitialiseCachesStepRunner(
         return caches
     }
 
-    private fun containerCreationRequest(volumes: Map<DockerVolumeMountSource.Volume, UserAndGroup?>): DockerContainerCreationRequest {
+    private fun containerCreationRequest(volumes: Map<DockerVolumeMountSource.Volume, UserAndGroup?>): ContainerCreationRequest {
         val image = pullImage()
         val containerName = resourceNameGenerator.generateNameFor("batect-cache-init")
         val mounts = mutableSetOf<DockerVolumeMount>()
@@ -132,7 +132,7 @@ class InitialiseCachesStepRunner(
 
         val input = Json.withoutDefaults.encodeToString(CacheInitConfig.serializer(), CacheInitConfig(configs))
 
-        return DockerContainerCreationRequest(
+        return ContainerCreationRequest(
             containerName,
             image,
             DockerNetwork("default"),
@@ -146,7 +146,7 @@ class InitialiseCachesStepRunner(
             mounts,
             emptySet(),
             emptySet(),
-            DockerHealthCheckConfig(),
+            HealthCheckConfig(),
             null,
             false,
             false,
@@ -165,7 +165,7 @@ class InitialiseCachesStepRunner(
         throw CacheInitialisationException("Pulling the cache initialisation image '$cacheInitImageName' failed: ${e.message}", e)
     }
 
-    private fun create(creationRequest: DockerContainerCreationRequest): DockerContainer = try {
+    private fun create(creationRequest: ContainerCreationRequest): DockerContainer = try {
         containersClient.create(creationRequest)
     } catch (e: DockerException) {
         throw CacheInitialisationException("Creating the cache initialisation container failed: ${e.message}", e)

@@ -18,7 +18,7 @@ package batect.execution.model.events
 
 import batect.config.PullImage
 import batect.docker.DownloadOperation
-import batect.docker.pull.DockerImagePullProgress
+import batect.docker.pull.ImagePullProgress
 import batect.testutils.logRepresentationOf
 import batect.testutils.on
 import com.natpryce.hamkrest.assertion.assertThat
@@ -29,7 +29,7 @@ import org.spekframework.spek2.style.specification.describe
 object ImagePullProgressEventSpec : Spek({
     describe("an 'image pull progress' event") {
         val source = PullImage("some-image")
-        val event = ImagePullProgressEvent(source, DockerImagePullProgress(DownloadOperation.Downloading, 10, 30))
+        val event = ImagePullProgressEvent(source, ImagePullProgress(DownloadOperation.Downloading, 10, 30))
 
         on("attaching it to a log message") {
             it("returns a machine-readable representation of itself") {

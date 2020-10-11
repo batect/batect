@@ -19,8 +19,8 @@ package batect.execution.model.steps.runners
 import batect.config.Container
 import batect.config.VolumeMount
 import batect.docker.ContainerCreationFailedException
+import batect.docker.ContainerCreationRequest
 import batect.docker.DockerContainer
-import batect.docker.DockerContainerCreationRequest
 import batect.docker.DockerContainerCreationRequestFactory
 import batect.docker.DockerImage
 import batect.docker.DockerNetwork
@@ -60,7 +60,7 @@ object CreateContainerStepRunnerSpec : Spek({
 
         val config = mock<ContainerRuntimeConfiguration>()
         val step = CreateContainerStep(container, config, image, network)
-        val request = mock<DockerContainerCreationRequest>()
+        val request = mock<ContainerCreationRequest>()
 
         val containersClient by createForEachTest { mock<ContainersClient>() }
 

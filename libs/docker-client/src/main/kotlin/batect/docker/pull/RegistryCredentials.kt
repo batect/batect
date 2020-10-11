@@ -20,17 +20,17 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
-sealed class DockerRegistryCredentials {
+sealed class RegistryCredentials {
     abstract val serverAddress: String
     abstract fun toJSON(): JsonElement
 }
 
-data class PasswordDockerRegistryCredentials(
+data class PasswordRegistryCredentials(
     val username: String,
     val password: String,
     override val serverAddress: String,
     val email: String = ""
-) : DockerRegistryCredentials() {
+) : RegistryCredentials() {
     override fun toJSON(): JsonElement = buildJsonObject {
         put("username", username)
         put("password", password)
@@ -39,10 +39,10 @@ data class PasswordDockerRegistryCredentials(
     }
 }
 
-data class TokenDockerRegistryCredentials(
+data class TokenRegistryCredentials(
     val identityToken: String,
     override val serverAddress: String
-) : DockerRegistryCredentials() {
+) : RegistryCredentials() {
     override fun toJSON(): JsonElement = buildJsonObject {
         put("identitytoken", identityToken)
     }

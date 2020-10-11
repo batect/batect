@@ -17,20 +17,20 @@
 package batect.docker.api
 
 import batect.docker.ContainerCreationFailedException
+import batect.docker.ContainerCreationRequest
 import batect.docker.DockerContainer
 import batect.docker.DockerContainerConfiguration
-import batect.docker.DockerContainerCreationRequest
 import batect.docker.DockerContainerHealthCheckConfig
 import batect.docker.DockerContainerHealthCheckState
 import batect.docker.DockerContainerInfo
 import batect.docker.DockerContainerState
 import batect.docker.DockerEvent
 import batect.docker.DockerException
-import batect.docker.DockerHealthCheckConfig
 import batect.docker.DockerHealthCheckResult
 import batect.docker.DockerHttpConfig
 import batect.docker.DockerImage
 import batect.docker.DockerNetwork
+import batect.docker.HealthCheckConfig
 import batect.docker.Json
 import batect.docker.run.ConnectionHijacker
 import batect.docker.run.ContainerInputStream
@@ -117,7 +117,7 @@ object ContainersAPISpec : Spek({
                 val network = DockerNetwork("the-network")
                 val command = listOf("doStuff")
                 val entrypoint = listOf("sh")
-                val request = DockerContainerCreationRequest("the-container", image, network, command, entrypoint, "some-host", setOf("some-host"), emptyMap(), emptyMap(), "/some-dir", emptySet(), emptySet(), emptySet(), DockerHealthCheckConfig(), null, false, false, emptySet(), emptySet(), true, true, "json-file", emptyMap())
+                val request = ContainerCreationRequest("the-container", image, network, command, entrypoint, "some-host", setOf("some-host"), emptyMap(), emptyMap(), "/some-dir", emptySet(), emptySet(), emptySet(), HealthCheckConfig(), null, false, false, emptySet(), emptySet(), true, true, "json-file", emptyMap())
 
                 on("a successful creation") {
                     val call by createForEachTest { clientWithLongTimeout.mockPost(expectedUrl, """{"Id": "abc123"}""", 201) }

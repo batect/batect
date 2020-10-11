@@ -16,10 +16,10 @@
 
 package batect.docker.client
 
+import batect.docker.ContainerCreationRequest
 import batect.docker.ContainerHealthCheckException
 import batect.docker.DockerContainer
 import batect.docker.DockerContainerConfiguration
-import batect.docker.DockerContainerCreationRequest
 import batect.docker.DockerContainerHealthCheckConfig
 import batect.docker.DockerContainerHealthCheckState
 import batect.docker.DockerContainerInfo
@@ -78,7 +78,7 @@ object ContainersClientSpec : Spek({
 
         describe("creating a container") {
             given("a container configuration and a built image") {
-                val request = mock<DockerContainerCreationRequest>()
+                val request = mock<ContainerCreationRequest>()
 
                 on("creating the container") {
                     beforeEachTest { whenever(api.create(request)).doReturn(DockerContainer("abc123")) }

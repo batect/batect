@@ -14,20 +14,21 @@
    limitations under the License.
 */
 
-package batect.docker.pull
+@file:UseSerializers(
+    DurationLoggingSerializer::class
+)
 
-import batect.docker.DockerImageReference
+package batect.docker
 
-class DockerRegistryCredentialsProvider(
-    private val configurationFile: DockerRegistryCredentialsConfigurationFile
-) {
-    fun getCredentials(imageReference: DockerImageReference): DockerRegistryCredentials? {
-        val source = configurationFile.getCredentialsForRegistry(imageReference.registryIndex)
+import batect.logging.DurationLoggingSerializer
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.UseSerializers
+import java.time.Duration
 
-        if (source == null) {
-            return null
-        }
-
-        return source.load()
-    }
-}
+@Serializable
+data class HealthCheckConfig(
+    val interval: Duration? = null,
+    val retries: Int? = null,
+    val startPeriod: Duration? = null,
+    val command: String? = null
+)

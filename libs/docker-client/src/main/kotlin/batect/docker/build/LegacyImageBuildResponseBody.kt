@@ -19,7 +19,7 @@ package batect.docker.build
 import batect.docker.DockerImage
 import batect.docker.DownloadOperation
 import batect.docker.ImageBuildFailedException
-import batect.docker.pull.DockerImagePullProgressReporter
+import batect.docker.pull.ImagePullProgressReporter
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
@@ -36,7 +36,7 @@ class LegacyImageBuildResponseBody : ImageBuildResponseBody {
     private var lastStepIndex: Int? = null
     private var lastStepName: String? = null
     private var totalSteps: Int? = null
-    private var imagePullProgressReporter: DockerImagePullProgressReporter? = null
+    private var imagePullProgressReporter: ImagePullProgressReporter? = null
 
     override fun readFrom(stream: Reader, outputStream: Sink, eventCallback: ImageBuildEventCallback) {
         val outputBuffer = outputStream.buffer()
@@ -80,7 +80,7 @@ class LegacyImageBuildResponseBody : ImageBuildResponseBody {
 
         lastStepIndex = stepIndex
         lastStepName = name
-        imagePullProgressReporter = DockerImagePullProgressReporter()
+        imagePullProgressReporter = ImagePullProgressReporter()
     }
 
     private fun decodeError(json: JsonObject, outputBuffer: BufferedSink, eventCallback: ImageBuildEventCallback) {

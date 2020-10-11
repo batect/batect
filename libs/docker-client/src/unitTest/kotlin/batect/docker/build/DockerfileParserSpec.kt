@@ -16,8 +16,8 @@
 
 package batect.docker.build
 
-import batect.docker.DockerImageReference
 import batect.docker.ImageBuildFailedException
+import batect.docker.ImageReference
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given
@@ -76,7 +76,7 @@ object DockerfileParserSpec : Spek({
                 val baseImage by runForEachTest { parser.extractBaseImageNames(path) }
 
                 it("returns the base image name") {
-                    assertThat(baseImage, equalTo(setOf(DockerImageReference("the-image"))))
+                    assertThat(baseImage, equalTo(setOf(ImageReference("the-image"))))
                 }
             }
         }
@@ -90,7 +90,7 @@ object DockerfileParserSpec : Spek({
                 val baseImage by runForEachTest { parser.extractBaseImageNames(path) }
 
                 it("returns the base image name with no leading spaces") {
-                    assertThat(baseImage, equalTo(setOf(DockerImageReference("the-image"))))
+                    assertThat(baseImage, equalTo(setOf(ImageReference("the-image"))))
                 }
             }
         }
@@ -111,7 +111,7 @@ object DockerfileParserSpec : Spek({
                 val baseImage by runForEachTest { parser.extractBaseImageNames(path) }
 
                 it("returns the base image name") {
-                    assertThat(baseImage, equalTo(setOf(DockerImageReference("some-image"))))
+                    assertThat(baseImage, equalTo(setOf(ImageReference("some-image"))))
                 }
             }
         }
@@ -125,7 +125,7 @@ object DockerfileParserSpec : Spek({
                 val baseImage by runForEachTest { parser.extractBaseImageNames(path) }
 
                 it("returns the base image name") {
-                    assertThat(baseImage, equalTo(setOf(DockerImageReference("the-image"))))
+                    assertThat(baseImage, equalTo(setOf(ImageReference("the-image"))))
                 }
             }
         }
@@ -145,7 +145,7 @@ object DockerfileParserSpec : Spek({
                 val baseImage by runForEachTest { parser.extractBaseImageNames(path) }
 
                 it("returns both image names") {
-                    assertThat(baseImage, equalTo(setOf(DockerImageReference("the-image"), DockerImageReference("the-other-image"))))
+                    assertThat(baseImage, equalTo(setOf(ImageReference("the-image"), ImageReference("the-other-image"))))
                 }
             }
         }
@@ -171,10 +171,10 @@ object DockerfileParserSpec : Spek({
                         baseImage,
                         equalTo(
                             setOf(
-                                DockerImageReference("the-image"),
-                                DockerImageReference("the-other-image"),
-                                DockerImageReference("the-third-image"),
-                                DockerImageReference("the-fourth-image")
+                                ImageReference("the-image"),
+                                ImageReference("the-other-image"),
+                                ImageReference("the-third-image"),
+                                ImageReference("the-fourth-image")
                             )
                         )
                     )

@@ -17,10 +17,10 @@
 package batect.docker.client
 
 import batect.docker.DockerContainer
-import batect.docker.DockerExecCreationRequest
 import batect.docker.DockerExecInstance
 import batect.docker.DockerExecInstanceInfo
 import batect.docker.DockerExecResult
+import batect.docker.ExecCreationRequest
 import batect.docker.UserAndGroup
 import batect.docker.api.ExecAPI
 import batect.docker.run.ContainerIOStreamer
@@ -81,7 +81,7 @@ object ExecClientSpec : Spek({
 
             val result by runForEachTest { client.run(command, container, environmentVariables, privileged, userAndGroup, workingDirectory, outputStream.sink(), cancellationContext) }
 
-            val expectedCreationRequest = DockerExecCreationRequest(
+            val expectedCreationRequest = ExecCreationRequest(
                 false,
                 true,
                 true,

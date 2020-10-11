@@ -29,9 +29,9 @@ import kotlinx.serialization.json.jsonObject
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
-object DockerImagePullProgressReporterSpec : Spek({
+object ImagePullProgressReporterSpec : Spek({
     describe("a Docker image pull progress reporter") {
-        val reporter by createForEachTest { DockerImagePullProgressReporter() }
+        val reporter by createForEachTest { ImagePullProgressReporter() }
 
         // This is the rough idea:
         // - we should show nothing if we have no layer information at all
@@ -69,7 +69,7 @@ object DockerImagePullProgressReporterSpec : Spek({
                 val progressUpdate by runNullableForEachTest { reporter.processRawProgressUpdate(json) }
 
                 it("returns an appropriate progress update") {
-                    assertThat(progressUpdate, equalTo(DockerImagePullProgress(DownloadOperation.Downloading, 329, 4159)))
+                    assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 329, 4159)))
                 }
             }
         }
@@ -81,7 +81,7 @@ object DockerImagePullProgressReporterSpec : Spek({
                 val progressUpdate by runNullableForEachTest { reporter.processRawProgressUpdate(json) }
 
                 it("returns an appropriate progress update") {
-                    assertThat(progressUpdate, equalTo(DockerImagePullProgress(DownloadOperation.Extracting, 329, 4159)))
+                    assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Extracting, 329, 4159)))
                 }
             }
         }
@@ -93,7 +93,7 @@ object DockerImagePullProgressReporterSpec : Spek({
                 val progressUpdate by runNullableForEachTest { reporter.processRawProgressUpdate(json) }
 
                 it("returns an appropriate progress update") {
-                    assertThat(progressUpdate, equalTo(DockerImagePullProgress(DownloadOperation.VerifyingChecksum, 0, 0)))
+                    assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.VerifyingChecksum, 0, 0)))
                 }
             }
         }
@@ -108,7 +108,7 @@ object DockerImagePullProgressReporterSpec : Spek({
                 val progressUpdate by runNullableForEachTest { reporter.processRawProgressUpdate(json) }
 
                 it("returns an appropriate progress update") {
-                    assertThat(progressUpdate, equalTo(DockerImagePullProgress(DownloadOperation.Downloading, 900, 4159)))
+                    assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 900, 4159)))
                 }
             }
 
@@ -128,7 +128,7 @@ object DockerImagePullProgressReporterSpec : Spek({
                 val progressUpdate by runNullableForEachTest { reporter.processRawProgressUpdate(json) }
 
                 it("returns an appropriate progress update") {
-                    assertThat(progressUpdate, equalTo(DockerImagePullProgress(DownloadOperation.VerifyingChecksum, 0, 4159)))
+                    assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.VerifyingChecksum, 0, 4159)))
                 }
             }
 
@@ -137,7 +137,7 @@ object DockerImagePullProgressReporterSpec : Spek({
                 val progressUpdate by runNullableForEachTest { reporter.processRawProgressUpdate(json) }
 
                 it("returns an appropriate progress update") {
-                    assertThat(progressUpdate, equalTo(DockerImagePullProgress(DownloadOperation.DownloadComplete, 4159, 4159)))
+                    assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.DownloadComplete, 4159, 4159)))
                 }
             }
 
@@ -146,7 +146,7 @@ object DockerImagePullProgressReporterSpec : Spek({
                 val progressUpdate by runNullableForEachTest { reporter.processRawProgressUpdate(json) }
 
                 it("returns an appropriate progress update") {
-                    assertThat(progressUpdate, equalTo(DockerImagePullProgress(DownloadOperation.Extracting, 1000, 4159)))
+                    assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Extracting, 1000, 4159)))
                 }
             }
 
@@ -155,7 +155,7 @@ object DockerImagePullProgressReporterSpec : Spek({
                 val progressUpdate by runNullableForEachTest { reporter.processRawProgressUpdate(json) }
 
                 it("returns an appropriate progress update") {
-                    assertThat(progressUpdate, equalTo(DockerImagePullProgress(DownloadOperation.PullComplete, 4159, 4159)))
+                    assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.PullComplete, 4159, 4159)))
                 }
             }
 
@@ -164,7 +164,7 @@ object DockerImagePullProgressReporterSpec : Spek({
                 val progressUpdate by runNullableForEachTest { reporter.processRawProgressUpdate(json) }
 
                 it("returns a progress update combining the state of both layers") {
-                    assertThat(progressUpdate, equalTo(DockerImagePullProgress(DownloadOperation.Downloading, 329 + 900, 4159 + 7000)))
+                    assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 329 + 900, 4159 + 7000)))
                 }
             }
 
@@ -183,7 +183,7 @@ object DockerImagePullProgressReporterSpec : Spek({
                         val progressUpdate by runNullableForEachTest { reporter.processRawProgressUpdate(json) }
 
                         it("returns a progress update combining the state of both layers") {
-                            assertThat(progressUpdate, equalTo(DockerImagePullProgress(DownloadOperation.Downloading, 329 + 7000, 4159 + 7000)))
+                            assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 329 + 7000, 4159 + 7000)))
                         }
                     }
                 }
@@ -199,7 +199,7 @@ object DockerImagePullProgressReporterSpec : Spek({
                     val progressUpdate by runNullableForEachTest { reporter.processRawProgressUpdate(json) }
 
                     it("returns a progress update combining the state of both layers") {
-                        assertThat(progressUpdate, equalTo(DockerImagePullProgress(DownloadOperation.Downloading, 4159 + 900, 4159 + 7000)))
+                        assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 4159 + 900, 4159 + 7000)))
                     }
                 }
             }
@@ -214,7 +214,7 @@ object DockerImagePullProgressReporterSpec : Spek({
                     val progressUpdate by runNullableForEachTest { reporter.processRawProgressUpdate(json) }
 
                     it("returns a progress update combining the state of both layers") {
-                        assertThat(progressUpdate, equalTo(DockerImagePullProgress(DownloadOperation.Extracting, 900, 4159 + 7000)))
+                        assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Extracting, 900, 4159 + 7000)))
                     }
                 }
             }
@@ -239,7 +239,7 @@ object DockerImagePullProgressReporterSpec : Spek({
                 val progressUpdate by runNullableForEachTest { reporter.processRawProgressUpdate(json) }
 
                 it("returns an appropriate progress update") {
-                    assertThat(progressUpdate, equalTo(DockerImagePullProgress(DownloadOperation.Downloading, 900, 4159)))
+                    assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 900, 4159)))
                 }
             }
         }
@@ -251,7 +251,7 @@ object DockerImagePullProgressReporterSpec : Spek({
             }
 
             it("returns a progress update that indicates the image is downloading") {
-                assertThat(progressUpdate, equalTo(DockerImagePullProgress(DownloadOperation.Downloading, 900, 7000)))
+                assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 900, 7000)))
             }
         }
 
@@ -263,7 +263,7 @@ object DockerImagePullProgressReporterSpec : Spek({
             }
 
             it("returns a progress update that indicates the image is downloading") {
-                assertThat(progressUpdate, equalTo(DockerImagePullProgress(DownloadOperation.Downloading, 4600, 7000)))
+                assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 4600, 7000)))
             }
         }
 
@@ -274,7 +274,7 @@ object DockerImagePullProgressReporterSpec : Spek({
             }
 
             it("returns a progress update that indicates the image is downloading") {
-                assertThat(progressUpdate, equalTo(DockerImagePullProgress(DownloadOperation.Downloading, 3300, 7000)))
+                assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 3300, 7000)))
             }
         }
 
@@ -288,7 +288,7 @@ object DockerImagePullProgressReporterSpec : Spek({
             }
 
             it("returns a progress update that indicates the image is downloading") {
-                assertThat(progressUpdate, equalTo(DockerImagePullProgress(DownloadOperation.Downloading, 7050, 16000)))
+                assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 7050, 16000)))
             }
         }
 
@@ -301,7 +301,7 @@ object DockerImagePullProgressReporterSpec : Spek({
             }
 
             it("returns a progress update that indicates the checksum is being verified") {
-                assertThat(progressUpdate, equalTo(DockerImagePullProgress(DownloadOperation.VerifyingChecksum, 3000, 7000)))
+                assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.VerifyingChecksum, 3000, 7000)))
             }
         }
 
@@ -314,7 +314,7 @@ object DockerImagePullProgressReporterSpec : Spek({
             }
 
             it("returns a progress update that indicates the image is extracting") {
-                assertThat(progressUpdate, equalTo(DockerImagePullProgress(DownloadOperation.Extracting, 700, 7000)))
+                assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Extracting, 700, 7000)))
             }
         }
 
@@ -327,7 +327,7 @@ object DockerImagePullProgressReporterSpec : Spek({
             }
 
             it("returns a progress update that indicates the image has finished downloading") {
-                assertThat(progressUpdate, equalTo(DockerImagePullProgress(DownloadOperation.DownloadComplete, 7000, 7000)))
+                assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.DownloadComplete, 7000, 7000)))
             }
         }
 
@@ -340,7 +340,7 @@ object DockerImagePullProgressReporterSpec : Spek({
             }
 
             it("returns a progress update that indicates the image has partly finished pulling") {
-                assertThat(progressUpdate, equalTo(DockerImagePullProgress(DownloadOperation.PullComplete, 3000, 7000)))
+                assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.PullComplete, 3000, 7000)))
             }
         }
 
@@ -353,7 +353,7 @@ object DockerImagePullProgressReporterSpec : Spek({
             }
 
             it("returns a progress update that indicates the image is extracting") {
-                assertThat(progressUpdate, equalTo(DockerImagePullProgress(DownloadOperation.Extracting, 3700, 7000)))
+                assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Extracting, 3700, 7000)))
             }
         }
 
@@ -366,13 +366,13 @@ object DockerImagePullProgressReporterSpec : Spek({
             }
 
             it("returns a progress update that indicates the image has finished pulling") {
-                assertThat(progressUpdate, equalTo(DockerImagePullProgress(DownloadOperation.PullComplete, 7000, 7000)))
+                assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.PullComplete, 7000, 7000)))
             }
         }
     }
 })
 
-private fun DockerImagePullProgressReporter.processRawProgressUpdate(json: String): DockerImagePullProgress? {
+private fun ImagePullProgressReporter.processRawProgressUpdate(json: String): ImagePullProgress? {
     val parsedJson = Json.default.parseToJsonElement(json).jsonObject
 
     return this.processProgressUpdate(parsedJson)

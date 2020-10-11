@@ -18,9 +18,9 @@ package batect.docker.api
 
 import batect.docker.DockerHttpConfig
 import batect.docker.DockerImage
-import batect.docker.DockerImageReference
 import batect.docker.ImageBuildFailedException
 import batect.docker.ImagePullFailedException
+import batect.docker.ImageReference
 import batect.docker.Json
 import batect.docker.Tee
 import batect.docker.build.BuildComplete
@@ -30,7 +30,7 @@ import batect.docker.build.ImageBuildContext
 import batect.docker.build.ImageBuildContextRequestBody
 import batect.docker.build.ImageBuildResponseBody
 import batect.docker.build.LegacyImageBuildResponseBody
-import batect.docker.pull.DockerRegistryCredentials
+import batect.docker.pull.RegistryCredentials
 import batect.docker.toJsonObject
 import batect.logging.LogMessageBuilder
 import batect.logging.Logger
@@ -61,7 +61,7 @@ class ImagesAPI(
         dockerfilePath: String,
         imageTags: Set<String>,
         forcePull: Boolean,
-        registryCredentials: Set<DockerRegistryCredentials>,
+        registryCredentials: Set<RegistryCredentials>,
         outputSink: Sink?,
         cancellationContext: CancellationContext,
         onProgressUpdate: (BuildProgress) -> Unit
@@ -105,7 +105,7 @@ class ImagesAPI(
         dockerfilePath: String,
         imageTags: Set<String>,
         forcePull: Boolean,
-        registryCredentials: Set<DockerRegistryCredentials>
+        registryCredentials: Set<RegistryCredentials>
     ): Request {
         val url = baseUrl.newBuilder()
             .addPathSegment("build")
@@ -122,7 +122,7 @@ class ImagesAPI(
             .build()
     }
 
-    private fun Request.Builder.addRegistryCredentialsForBuild(registryCredentials: Set<DockerRegistryCredentials>): Request.Builder {
+    private fun Request.Builder.addRegistryCredentialsForBuild(registryCredentials: Set<RegistryCredentials>): Request.Builder {
         if (registryCredentials.isNotEmpty()) {
             val jsonCredentials = buildJsonObject {
                 registryCredentials.forEach { put(it.serverAddress, it.toJSON()) }
@@ -162,8 +162,8 @@ class ImagesAPI(
     }
 
     fun pull(
-        imageReference: DockerImageReference,
-        registryCredentials: DockerRegistryCredentials?,
+        imageReference: ImageReference,
+        registryCredentials: RegistryCredentials?,
         cancellationContext: CancellationContext,
         onProgressUpdate: (JsonObject) -> Unit
     ) {
@@ -215,7 +215,7 @@ class ImagesAPI(
         }
     }
 
-    private fun Request.Builder.addRegistryCredentialsForPull(registryCredentials: DockerRegistryCredentials?): Request.Builder {
+    private fun Request.Builder.addRegistryCredentialsForPull(registryCredentials: RegistryCredentials?): Request.Builder {
         if (registryCredentials != null) {
             val credentialBytes = registryCredentials.toJSON().toString().toByteArray()
             val encodedCredentials = Base64.getEncoder().encodeToString(credentialBytes)
@@ -226,7 +226,7 @@ class ImagesAPI(
         return this
     }
 
-    fun hasImage(imageReference: DockerImageReference): Boolean {
+    fun hasImage(imageReference: ImageReference): Boolean {
         logger.info {
             message("Checking if image has already been pulled.")
             data("originalImageReference", imageReference.originalReference)

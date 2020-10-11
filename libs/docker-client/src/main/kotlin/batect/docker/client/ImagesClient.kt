@@ -17,18 +17,18 @@
 package batect.docker.client
 
 import batect.docker.DockerImage
-import batect.docker.DockerImageReference
 import batect.docker.DockerRegistryCredentialsException
 import batect.docker.ImageBuildFailedException
 import batect.docker.ImagePullFailedException
+import batect.docker.ImageReference
 import batect.docker.api.ImagesAPI
 import batect.docker.build.BuildProgress
 import batect.docker.build.DockerfileParser
 import batect.docker.build.ImageBuildContextFactory
 import batect.docker.data
-import batect.docker.pull.DockerImagePullProgress
-import batect.docker.pull.DockerImagePullProgressReporter
-import batect.docker.pull.DockerRegistryCredentialsProvider
+import batect.docker.pull.ImagePullProgress
+import batect.docker.pull.ImagePullProgressReporter
+import batect.docker.pull.RegistryCredentialsProvider
 import batect.logging.Logger
 import batect.os.PathResolutionContext
 import batect.primitives.CancellationContext
@@ -39,11 +39,11 @@ import java.nio.file.Path
 
 class ImagesClient(
     private val api: ImagesAPI,
-    private val credentialsProvider: DockerRegistryCredentialsProvider,
+    private val credentialsProvider: RegistryCredentialsProvider,
     private val imageBuildContextFactory: ImageBuildContextFactory,
     private val dockerfileParser: DockerfileParser,
     private val logger: Logger,
-    private val imagePullProgressReporterFactory: () -> DockerImagePullProgressReporter = ::DockerImagePullProgressReporter
+    private val imagePullProgressReporterFactory: () -> ImagePullProgressReporter = ::ImagePullProgressReporter
 ) {
 
     fun build(
@@ -96,10 +96,10 @@ class ImagesClient(
         imageName: String,
         forcePull: Boolean,
         cancellationContext: CancellationContext,
-        onProgressUpdate: (DockerImagePullProgress) -> Unit
+        onProgressUpdate: (ImagePullProgress) -> Unit
     ): DockerImage {
         try {
-            val imageReference = DockerImageReference(imageName)
+            val imageReference = ImageReference(imageName)
 
             if (forcePull || !api.hasImage(imageReference)) {
                 val credentials = credentialsProvider.getCredentials(imageReference)

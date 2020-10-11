@@ -17,10 +17,10 @@
 package batect.docker.api
 
 import batect.docker.DockerContainer
-import batect.docker.DockerExecCreationRequest
 import batect.docker.DockerExecInstance
 import batect.docker.DockerExecInstanceInfo
 import batect.docker.DockerHttpConfig
+import batect.docker.ExecCreationRequest
 import batect.docker.ExecFailedException
 import batect.docker.Json
 import batect.docker.data
@@ -46,7 +46,7 @@ class ExecAPI(
     logger: Logger,
     private val hijackerFactory: () -> ConnectionHijacker = ::ConnectionHijacker
 ) : APIBase(httpConfig, systemInfo, logger) {
-    fun create(container: DockerContainer, creationRequest: DockerExecCreationRequest): DockerExecInstance {
+    fun create(container: DockerContainer, creationRequest: ExecCreationRequest): DockerExecInstance {
         logger.info {
             message("Creating exec instance.")
             data("request", creationRequest)
@@ -86,7 +86,7 @@ class ExecAPI(
         }
     }
 
-    fun start(creationRequest: DockerExecCreationRequest, instance: DockerExecInstance): ContainerOutputStream {
+    fun start(creationRequest: ExecCreationRequest, instance: DockerExecInstance): ContainerOutputStream {
         logger.info {
             message("Starting exec instance.")
             data("instance", instance)

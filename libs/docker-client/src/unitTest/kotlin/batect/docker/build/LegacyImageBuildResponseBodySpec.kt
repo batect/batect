@@ -251,7 +251,7 @@ object LegacyImageBuildResponseBodySpec : Spek({
             }
         }
 
-        // There are deeper tests for this in DockerImagePullProgressReporterSpec.
+        // There are deeper tests for this in ImagePullProgressReporterSpec.
         given("a response with image download progress events") {
             val input = """
                 {"stream":"Step 1/2 : FROM postgres:13.0"}

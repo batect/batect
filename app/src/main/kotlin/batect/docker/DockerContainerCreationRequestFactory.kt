@@ -36,13 +36,13 @@ class DockerContainerCreationRequestFactory(
         terminalType: String?,
         useTTY: Boolean,
         attachStdin: Boolean
-    ): DockerContainerCreationRequest {
+    ): ContainerCreationRequest {
         val portMappings = if (commandLineOptions.disablePortMappings)
             emptySet()
         else
             (container.portMappings + config.additionalPortMappings).mapToSet { it.toDockerPortMapping() }
 
-        return DockerContainerCreationRequest(
+        return ContainerCreationRequest(
             resourceNameGenerator.generateNameFor(container),
             image,
             network,

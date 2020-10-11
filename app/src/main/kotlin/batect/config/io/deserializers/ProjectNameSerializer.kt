@@ -17,7 +17,7 @@
 package batect.config.io.deserializers
 
 import batect.config.io.ConfigurationException
-import batect.docker.DockerImageNameValidator
+import batect.docker.ImageNameValidator
 import com.charleskorn.kaml.YamlInput
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind
@@ -32,9 +32,9 @@ object ProjectNameSerializer : KSerializer<String> {
     override fun deserialize(decoder: Decoder): String {
         val projectName = decoder.decodeString()
 
-        if (!DockerImageNameValidator.isValidImageName(projectName)) {
+        if (!ImageNameValidator.isValidImageName(projectName)) {
             throw ConfigurationException(
-                "Invalid project name '$projectName'. The project name must be a valid Docker reference: it ${DockerImageNameValidator.validNameDescription}.",
+                "Invalid project name '$projectName'. The project name must be a valid Docker reference: it ${ImageNameValidator.validNameDescription}.",
                 decoder as YamlInput
             )
         }

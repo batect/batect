@@ -153,7 +153,7 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                 }
 
                 it("populates the health check configuration on the request with the health check configuration from the container") {
-                    assertThat(request.healthCheckConfig, equalTo(DockerHealthCheckConfig(Duration.ofSeconds(2), 10, Duration.ofSeconds(5))))
+                    assertThat(request.healthCheckConfig, equalTo(batect.docker.HealthCheckConfig(Duration.ofSeconds(2), 10, Duration.ofSeconds(5))))
                 }
 
                 it("populates the user and group configuration on the request with the provided values") {

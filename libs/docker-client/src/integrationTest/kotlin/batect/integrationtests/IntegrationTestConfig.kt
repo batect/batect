@@ -35,8 +35,8 @@ import batect.docker.client.ImagesClient
 import batect.docker.client.NetworksClient
 import batect.docker.client.SystemInfoClient
 import batect.docker.client.VolumesClient
-import batect.docker.pull.DockerRegistryCredentialsConfigurationFile
-import batect.docker.pull.DockerRegistryCredentialsProvider
+import batect.docker.pull.RegistryCredentialsConfigurationFile
+import batect.docker.pull.RegistryCredentialsProvider
 import batect.docker.run.ContainerIOStreamer
 import batect.docker.run.ContainerTTYManager
 import batect.docker.run.ContainerWaiter
@@ -81,8 +81,8 @@ fun createClient(posix: POSIX = POSIXFactory.getNativePOSIX(), nativeMethods: Na
     val volumesAPI = VolumesAPI(httpConfig, systemInfo, logger)
     val consoleInfo = ConsoleInfo(nativeMethods, systemInfo, HostEnvironmentVariables.current, logger)
     val consoleManager = getConsoleManagerForPlatform(consoleInfo, processRunner, nativeMethods, logger)
-    val credentialsConfigurationFile = DockerRegistryCredentialsConfigurationFile(FileSystems.getDefault(), processRunner, logger)
-    val credentialsProvider = DockerRegistryCredentialsProvider(credentialsConfigurationFile)
+    val credentialsConfigurationFile = RegistryCredentialsConfigurationFile(FileSystems.getDefault(), processRunner, logger)
+    val credentialsProvider = RegistryCredentialsProvider(credentialsConfigurationFile)
     val ignoreParser = DockerIgnoreParser()
     val imageBuildContextFactory = ImageBuildContextFactory(ignoreParser)
     val dockerfileParser = DockerfileParser()

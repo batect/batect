@@ -16,7 +16,7 @@
 
 package batect.integrationtests.endtoend
 
-import batect.docker.DockerContainerCreationRequest
+import batect.docker.ContainerCreationRequest
 import batect.docker.DockerImage
 import batect.docker.DockerNetwork
 import batect.docker.DockerVolumeMount
@@ -71,7 +71,7 @@ object FileSystemEndToEndIntegrationTest : Spek({
     }
 })
 
-private fun creationRequestForContainerThatCreatesFile(image: DockerImage, network: DockerNetwork, localFileToCreate: Path, nativeMethods: NativeMethods): DockerContainerCreationRequest {
+private fun creationRequestForContainerThatCreatesFile(image: DockerImage, network: DockerNetwork, localFileToCreate: Path, nativeMethods: NativeMethods): ContainerCreationRequest {
     val localMountDirectory = localFileToCreate.parent.toAbsolutePath()
     val containerMountDirectory = "/tmp/batect-integration-test"
     val containerFileToCreate = "$containerMountDirectory/${localFileToCreate.fileName}"

@@ -54,8 +54,8 @@ import batect.docker.client.ImagesClient
 import batect.docker.client.NetworksClient
 import batect.docker.client.SystemInfoClient
 import batect.docker.client.VolumesClient
-import batect.docker.pull.DockerRegistryCredentialsConfigurationFile
-import batect.docker.pull.DockerRegistryCredentialsProvider
+import batect.docker.pull.RegistryCredentialsConfigurationFile
+import batect.docker.pull.RegistryCredentialsProvider
 import batect.docker.run.ContainerIOStreamer
 import batect.docker.run.ContainerTTYManager
 import batect.docker.run.ContainerWaiter
@@ -181,8 +181,8 @@ private val dockerModule = DI.Module("docker") {
     bind<ImageBuildContextFactory>() with singleton { ImageBuildContextFactory(instance()) }
     bind<DockerHostNameResolver>() with singleton { DockerHostNameResolver(instance(), instance()) }
     bind<DockerHttpConfig>() with singleton { DockerHttpConfig(instance(), commandLineOptions().dockerHost, instance(), instance()) }
-    bind<DockerRegistryCredentialsConfigurationFile>() with singletonWithLogger { logger -> DockerRegistryCredentialsConfigurationFile(instance(), instance(), logger) }
-    bind<DockerRegistryCredentialsProvider>() with singleton { DockerRegistryCredentialsProvider(instance()) }
+    bind<RegistryCredentialsConfigurationFile>() with singletonWithLogger { logger -> RegistryCredentialsConfigurationFile(instance(), instance(), logger) }
+    bind<RegistryCredentialsProvider>() with singleton { RegistryCredentialsProvider(instance()) }
 
     bind<DockerTLSConfig>() with singleton {
         val options = commandLineOptions()

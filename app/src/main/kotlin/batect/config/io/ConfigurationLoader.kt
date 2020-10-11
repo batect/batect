@@ -29,7 +29,7 @@ import batect.config.TaskMap
 import batect.config.includes.GitIncludePathResolutionContext
 import batect.config.includes.IncludeResolver
 import batect.config.io.deserializers.PathDeserializer
-import batect.docker.DockerImageNameValidator
+import batect.docker.ImageNameValidator
 import batect.git.GitException
 import batect.logging.LogMessageBuilder
 import batect.logging.Logger
@@ -184,9 +184,9 @@ class ConfigurationLoader(
 
         val inferredProjectName = projectDirectory.fileName.toString().toLowerCase()
 
-        if (!DockerImageNameValidator.isValidImageName(inferredProjectName)) {
+        if (!ImageNameValidator.isValidImageName(inferredProjectName)) {
             throw ConfigurationFileException(
-                "The inferred project name '$inferredProjectName' is invalid. The project name must be a valid Docker reference: it ${DockerImageNameValidator.validNameDescription}. Provide a valid project name explicitly with 'project_name'.",
+                "The inferred project name '$inferredProjectName' is invalid. The project name must be a valid Docker reference: it ${ImageNameValidator.validNameDescription}. Provide a valid project name explicitly with 'project_name'.",
                 pathToRootConfigFile.toString()
             )
         }

@@ -23,10 +23,10 @@ import org.araqnid.hamkrest.json.equivalentTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
-object DockerRegistryCredentialsSpec : Spek({
+object RegistryCredentialsSpec : Spek({
     describe("a set of Docker registry credentials") {
         given("a user name, password and server address") {
-            val credentials = PasswordDockerRegistryCredentials(
+            val credentials = PasswordRegistryCredentials(
                 "some-user",
                 "super-secret-password",
                 "my-server.com"
@@ -54,7 +54,7 @@ object DockerRegistryCredentialsSpec : Spek({
         }
 
         given("a token") {
-            val credentials = TokenDockerRegistryCredentials("some-token", "some-server.com")
+            val credentials = TokenRegistryCredentials("some-token", "some-server.com")
 
             on("serialising the credentials to JSON") {
                 val json = credentials.toJSON().toString()

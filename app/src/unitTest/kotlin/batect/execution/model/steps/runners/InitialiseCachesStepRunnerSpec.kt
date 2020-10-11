@@ -20,16 +20,16 @@ import batect.config.CacheMount
 import batect.config.Container
 import batect.config.LiteralValue
 import batect.config.LocalMount
+import batect.docker.ContainerCreationRequest
 import batect.docker.DockerContainer
-import batect.docker.DockerContainerCreationRequest
 import batect.docker.DockerContainerRunResult
 import batect.docker.DockerException
-import batect.docker.DockerHealthCheckConfig
 import batect.docker.DockerImage
 import batect.docker.DockerNetwork
 import batect.docker.DockerResourceNameGenerator
 import batect.docker.DockerVolumeMount
 import batect.docker.DockerVolumeMountSource
+import batect.docker.HealthCheckConfig
 import batect.docker.UserAndGroup
 import batect.docker.client.ContainersClient
 import batect.docker.client.DockerContainerType
@@ -126,7 +126,7 @@ object InitialiseCachesStepRunnerSpec : Spek({
         fun Suite.itCreatesTheCacheInitContainer(expectedInput: String, mounts: Set<DockerVolumeMount>) {
             it("creates the cache init container with the expected options") {
                 verify(containersClient).create(
-                    DockerContainerCreationRequest(
+                    ContainerCreationRequest(
                         containerName,
                         cacheInitImage,
                         DockerNetwork("default"),
@@ -140,7 +140,7 @@ object InitialiseCachesStepRunnerSpec : Spek({
                         mounts,
                         emptySet(),
                         emptySet(),
-                        DockerHealthCheckConfig(),
+                        HealthCheckConfig(),
                         null,
                         false,
                         false,

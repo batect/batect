@@ -22,11 +22,11 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.long
 
-class DockerImagePullProgressReporter {
+class ImagePullProgressReporter {
     private val layerStates = mutableMapOf<String, LayerStatus>()
-    private var lastProgressUpdate: DockerImagePullProgress? = null
+    private var lastProgressUpdate: ImagePullProgress? = null
 
-    fun processProgressUpdate(progressUpdate: JsonObject): DockerImagePullProgress? {
+    fun processProgressUpdate(progressUpdate: JsonObject): ImagePullProgress? {
         val status = progressUpdate["status"]?.jsonPrimitive?.content ?: return null
         val currentOperation = operationForName(status) ?: return null
 
@@ -64,7 +64,7 @@ class DockerImagePullProgressReporter {
         return LayerStatus(currentOperation, completedBytesToUse, totalBytesToUse)
     }
 
-    private fun computeOverallProgress(): DockerImagePullProgress {
+    private fun computeOverallProgress(): ImagePullProgress {
         val anyLayerIsExtractingOrComplete = layerStates.values.any { it.currentOperation >= DownloadOperation.Extracting }
         val allLayersHaveFinishedDownloading = layerStates.values.all { it.currentOperation >= DownloadOperation.DownloadComplete }
         val extractionPhase = anyLayerIsExtractingOrComplete && allLayersHaveFinishedDownloading
@@ -81,7 +81,7 @@ class DockerImagePullProgressReporter {
         val overallCompletedBytes = layersInCurrentOperation.sumBy { it.completedBytes } + layersFinishedCurrentOperation.sumBy { it.totalBytes }
         val overallTotalBytes = layerStates.values.sumBy { it.totalBytes }
 
-        return DockerImagePullProgress(currentOperation, overallCompletedBytes, overallTotalBytes)
+        return ImagePullProgress(currentOperation, overallCompletedBytes, overallTotalBytes)
     }
 
     private fun operationForName(name: String): DownloadOperation? = when (name) {

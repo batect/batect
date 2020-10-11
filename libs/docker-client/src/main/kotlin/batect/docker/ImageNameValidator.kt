@@ -16,7 +16,7 @@
 
 package batect.docker
 
-object DockerImageNameValidator {
+object ImageNameValidator {
     private const val separators = """(\.|_|__|-+)"""
     private const val nonSeparators = "([a-z0-9]+)"
     private val nameRegex = Regex("^$nonSeparators($separators$nonSeparators)*$")

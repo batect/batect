@@ -16,8 +16,8 @@
 
 package batect.integrationtests
 
+import batect.docker.ContainerCreationRequest
 import batect.docker.DockerContainer
-import batect.docker.DockerContainerCreationRequest
 import batect.docker.DockerImage
 import batect.docker.DockerNetwork
 import batect.docker.client.DockerClient
@@ -41,7 +41,7 @@ fun <T> DockerClient.withNetwork(action: (DockerNetwork) -> T): T {
     }
 }
 
-fun <T> DockerClient.withContainer(creationRequest: DockerContainerCreationRequest, action: (DockerContainer) -> T): T {
+fun <T> DockerClient.withContainer(creationRequest: ContainerCreationRequest, action: (DockerContainer) -> T): T {
     val container = this.containers.create(creationRequest)
 
     try {

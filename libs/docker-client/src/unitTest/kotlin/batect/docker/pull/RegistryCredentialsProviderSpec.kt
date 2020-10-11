@@ -16,7 +16,7 @@
 
 package batect.docker.pull
 
-import batect.docker.DockerImageReference
+import batect.docker.ImageReference
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given
@@ -30,27 +30,27 @@ import com.nhaarman.mockitokotlin2.whenever
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
-object DockerRegistryCredentialsProviderSpec : Spek({
+object RegistryCredentialsProviderSpec : Spek({
     describe("a Docker registry credentials provider") {
         // Why are we mocking this type instead of just constructing one? It's critical that we use the registryIndex value,
         // not registryDomain, but these are usually the same, so mocking helps make sure that we're using the right value.
-        val imageRef = mock<DockerImageReference> {
+        val imageRef = mock<ImageReference> {
             on { registryIndex } doReturn "https://somedomain.com/index"
         }
 
-        val configurationFile by createForEachTest { mock<DockerRegistryCredentialsConfigurationFile>() }
-        val provider by createForEachTest { DockerRegistryCredentialsProvider(configurationFile) }
+        val configurationFile by createForEachTest { mock<RegistryCredentialsConfigurationFile>() }
+        val provider by createForEachTest { RegistryCredentialsProvider(configurationFile) }
 
         describe("getting credentials for pulling an image") {
             given("the configuration file has a credentials source for the registry") {
-                val source by createForEachTest { mock<DockerRegistryCredentialsSource>() }
+                val source by createForEachTest { mock<RegistryCredentialsSource>() }
 
                 beforeEachTest {
                     whenever(configurationFile.getCredentialsForRegistry("https://somedomain.com/index")).thenReturn(source)
                 }
 
                 given("the credentials source returns some credentials") {
-                    val credentialsFromSource = mock<DockerRegistryCredentials>()
+                    val credentialsFromSource = mock<RegistryCredentials>()
 
                     beforeEachTest {
                         whenever(source.load()).thenReturn(credentialsFromSource)

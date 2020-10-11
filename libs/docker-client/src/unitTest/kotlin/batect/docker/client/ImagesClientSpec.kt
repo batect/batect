@@ -17,21 +17,21 @@
 package batect.docker.client
 
 import batect.docker.DockerImage
-import batect.docker.DockerImageReference
 import batect.docker.DockerRegistryCredentialsException
 import batect.docker.DownloadOperation
 import batect.docker.ImageBuildFailedException
 import batect.docker.ImagePullFailedException
+import batect.docker.ImageReference
 import batect.docker.Json
 import batect.docker.api.ImagesAPI
 import batect.docker.build.BuildProgress
 import batect.docker.build.DockerfileParser
 import batect.docker.build.ImageBuildContext
 import batect.docker.build.ImageBuildContextFactory
-import batect.docker.pull.DockerImagePullProgress
-import batect.docker.pull.DockerImagePullProgressReporter
-import batect.docker.pull.DockerRegistryCredentials
-import batect.docker.pull.DockerRegistryCredentialsProvider
+import batect.docker.pull.ImagePullProgress
+import batect.docker.pull.ImagePullProgressReporter
+import batect.docker.pull.RegistryCredentials
+import batect.docker.pull.RegistryCredentialsProvider
 import batect.os.PathResolutionContext
 import batect.primitives.CancellationContext
 import batect.testutils.createForEachTest
@@ -64,11 +64,11 @@ import java.nio.file.Files
 object ImagesClientSpec : Spek({
     describe("a Docker images client") {
         val api by createForEachTest { mock<ImagesAPI>() }
-        val credentialsProvider by createForEachTest { mock<DockerRegistryCredentialsProvider>() }
+        val credentialsProvider by createForEachTest { mock<RegistryCredentialsProvider>() }
         val imageBuildContextFactory by createForEachTest { mock<ImageBuildContextFactory>() }
         val dockerfileParser by createForEachTest { mock<DockerfileParser>() }
         val logger by createLoggerForEachTestWithoutCustomSerializers()
-        val imageProgressReporter by createForEachTest { mock<DockerImagePullProgressReporter>() }
+        val imageProgressReporter by createForEachTest { mock<ImagePullProgressReporter>() }
         val imageProgressReporterFactory = { imageProgressReporter }
         val client by createForEachTest { ImagesClient(api, credentialsProvider, imageBuildContextFactory, dockerfileParser, logger, imageProgressReporterFactory) }
 
@@ -102,16 +102,16 @@ object ImagesClientSpec : Spek({
                     Files.createFile(resolvedDockerfilePath)
 
                     whenever(imageBuildContextFactory.createFromDirectory(buildDirectory, dockerfilePath)).doReturn(context)
-                    whenever(dockerfileParser.extractBaseImageNames(resolvedDockerfilePath)).doReturn(setOf(DockerImageReference("nginx:1.13.0"), DockerImageReference("some-other-image:2.3.4")))
+                    whenever(dockerfileParser.extractBaseImageNames(resolvedDockerfilePath)).doReturn(setOf(ImageReference("nginx:1.13.0"), ImageReference("some-other-image:2.3.4")))
                 }
 
                 given("getting the credentials for the base image succeeds") {
-                    val image1Credentials = mock<DockerRegistryCredentials>()
-                    val image2Credentials = mock<DockerRegistryCredentials>()
+                    val image1Credentials = mock<RegistryCredentials>()
+                    val image2Credentials = mock<RegistryCredentials>()
 
                     beforeEachTest {
-                        whenever(credentialsProvider.getCredentials(DockerImageReference("nginx:1.13.0"))).doReturn(image1Credentials)
-                        whenever(credentialsProvider.getCredentials(DockerImageReference("some-other-image:2.3.4"))).doReturn(image2Credentials)
+                        whenever(credentialsProvider.getCredentials(ImageReference("nginx:1.13.0"))).doReturn(image1Credentials)
+                        whenever(credentialsProvider.getCredentials(ImageReference("some-other-image:2.3.4"))).doReturn(image2Credentials)
                     }
 
                     on("a successful build") {
@@ -135,7 +135,7 @@ object ImagesClientSpec : Spek({
                     val exception = DockerRegistryCredentialsException("Could not load credentials: something went wrong.")
 
                     beforeEachTest {
-                        whenever(credentialsProvider.getCredentials(DockerImageReference("nginx:1.13.0"))).thenThrow(exception)
+                        whenever(credentialsProvider.getCredentials(ImageReference("nginx:1.13.0"))).thenThrow(exception)
                     }
 
                     on("building the image") {
@@ -191,14 +191,14 @@ object ImagesClientSpec : Spek({
 
                 given("the image does not exist locally") {
                     beforeEachTest {
-                        whenever(api.hasImage(DockerImageReference("some-image"))).thenReturn(false)
+                        whenever(api.hasImage(ImageReference("some-image"))).thenReturn(false)
                     }
 
                     given("getting credentials for the image succeeds") {
-                        val credentials = mock<DockerRegistryCredentials>()
+                        val credentials = mock<RegistryCredentials>()
 
                         beforeEachTest {
-                            whenever(credentialsProvider.getCredentials(DockerImageReference("some-image"))).thenReturn(credentials)
+                            whenever(credentialsProvider.getCredentials(ImageReference("some-image"))).thenReturn(credentials)
                         }
 
                         on("pulling the image") {
@@ -206,7 +206,7 @@ object ImagesClientSpec : Spek({
                             val secondProgressUpdate = Json.default.parseToJsonElement("""{"thing": "other value"}""").jsonObject
 
                             beforeEachTest {
-                                whenever(imageProgressReporter.processProgressUpdate(firstProgressUpdate)).thenReturn(DockerImagePullProgress(DownloadOperation.Downloading, 10, 20))
+                                whenever(imageProgressReporter.processProgressUpdate(firstProgressUpdate)).thenReturn(ImagePullProgress(DownloadOperation.Downloading, 10, 20))
                                 whenever(imageProgressReporter.processProgressUpdate(secondProgressUpdate)).thenReturn(null)
 
                                 whenever(api.pull(any(), any(), any(), any())).then { invocation ->
@@ -219,15 +219,15 @@ object ImagesClientSpec : Spek({
                                 }
                             }
 
-                            val progressUpdatesReceived by createForEachTest { mutableListOf<DockerImagePullProgress>() }
+                            val progressUpdatesReceived by createForEachTest { mutableListOf<ImagePullProgress>() }
                             val image by runForEachTest { client.pull("some-image", forcePull, cancellationContext) { progressUpdatesReceived.add(it) } }
 
                             it("calls the Docker API to pull the image") {
-                                verify(api).pull(eq(DockerImageReference("some-image")), eq(credentials), eq(cancellationContext), any())
+                                verify(api).pull(eq(ImageReference("some-image")), eq(credentials), eq(cancellationContext), any())
                             }
 
                             it("sends notifications for all relevant progress updates") {
-                                assertThat(progressUpdatesReceived, equalTo(listOf(DockerImagePullProgress(DownloadOperation.Downloading, 10, 20))))
+                                assertThat(progressUpdatesReceived, equalTo(listOf(ImagePullProgress(DownloadOperation.Downloading, 10, 20))))
                             }
 
                             it("returns the Docker image") {
@@ -240,7 +240,7 @@ object ImagesClientSpec : Spek({
                         val exception = DockerRegistryCredentialsException("Could not load credentials: something went wrong.")
 
                         beforeEachTest {
-                            whenever(credentialsProvider.getCredentials(DockerImageReference("some-image"))).thenThrow(exception)
+                            whenever(credentialsProvider.getCredentials(ImageReference("some-image"))).thenThrow(exception)
                         }
 
                         on("pulling the image") {
@@ -258,7 +258,7 @@ object ImagesClientSpec : Spek({
                 }
 
                 on("when the image already exists locally") {
-                    beforeEachTest { whenever(api.hasImage(DockerImageReference("some-image"))).thenReturn(true) }
+                    beforeEachTest { whenever(api.hasImage(ImageReference("some-image"))).thenReturn(true) }
 
                     val image by runForEachTest { client.pull("some-image", forcePull, cancellationContext, {}) }
 
@@ -276,17 +276,17 @@ object ImagesClientSpec : Spek({
                 val forcePull = true
 
                 given("getting credentials for the image succeeds") {
-                    val credentials = mock<DockerRegistryCredentials>()
+                    val credentials = mock<RegistryCredentials>()
 
                     beforeEachTest {
-                        whenever(credentialsProvider.getCredentials(DockerImageReference("some-image"))).thenReturn(credentials)
+                        whenever(credentialsProvider.getCredentials(ImageReference("some-image"))).thenReturn(credentials)
                     }
 
                     on("pulling the image") {
                         val image by runForEachTest { client.pull("some-image", forcePull, cancellationContext, {}) }
 
                         it("calls the Docker API to pull the image") {
-                            verify(api).pull(eq(DockerImageReference("some-image")), eq(credentials), eq(cancellationContext), any())
+                            verify(api).pull(eq(ImageReference("some-image")), eq(credentials), eq(cancellationContext), any())
                         }
 
                         it("returns the Docker image") {

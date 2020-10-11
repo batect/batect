@@ -16,9 +16,9 @@
 
 package batect.docker.client
 
+import batect.docker.ContainerCreationRequest
 import batect.docker.ContainerHealthCheckException
 import batect.docker.DockerContainer
-import batect.docker.DockerContainerCreationRequest
 import batect.docker.DockerContainerInfo
 import batect.docker.DockerContainerRunResult
 import batect.docker.DockerException
@@ -47,7 +47,7 @@ class ContainersClient(
     private val ttyManager: ContainerTTYManager,
     private val logger: Logger
 ) {
-    fun create(creationRequest: DockerContainerCreationRequest): DockerContainer = api.create(creationRequest)
+    fun create(creationRequest: ContainerCreationRequest): DockerContainer = api.create(creationRequest)
     fun stop(container: DockerContainer) = api.stop(container)
     fun remove(container: DockerContainer) = api.remove(container)
 

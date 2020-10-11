@@ -26,12 +26,12 @@ import kotlinx.serialization.json.jsonPrimitive
 import java.nio.charset.Charset
 import java.util.Base64
 
-sealed class DockerRegistryCredentialsSource {
-    abstract fun load(): DockerRegistryCredentials?
+sealed class RegistryCredentialsSource {
+    abstract fun load(): RegistryCredentials?
 }
 
-data class BasicCredentialsSource(val encodedCredentials: String, val serverAddress: String) : DockerRegistryCredentialsSource() {
-    override fun load(): DockerRegistryCredentials {
+data class BasicCredentialsSource(val encodedCredentials: String, val serverAddress: String) : RegistryCredentialsSource() {
+    override fun load(): RegistryCredentials {
         if (encodedCredentials == "") {
             throw DockerRegistryCredentialsException("Credentials for '$serverAddress' are empty.")
         }
@@ -46,9 +46,9 @@ data class BasicCredentialsSource(val encodedCredentials: String, val serverAddr
             }
 
             if (parts[0] == "<token>") {
-                return TokenDockerRegistryCredentials(parts[1], serverAddress)
+                return TokenRegistryCredentials(parts[1], serverAddress)
             } else {
-                return PasswordDockerRegistryCredentials(parts[0], parts[1], serverAddress)
+                return PasswordRegistryCredentials(parts[0], parts[1], serverAddress)
             }
         } catch (_: IllegalArgumentException) {
             throw DockerRegistryCredentialsException("Could not decode credentials for '$serverAddress'.")
@@ -56,10 +56,10 @@ data class BasicCredentialsSource(val encodedCredentials: String, val serverAddr
     }
 }
 
-data class HelperBasedCredentialsSource(val helperName: String, val serverAddress: String, private val processRunner: ProcessRunner) : DockerRegistryCredentialsSource() {
+data class HelperBasedCredentialsSource(val helperName: String, val serverAddress: String, private val processRunner: ProcessRunner) : RegistryCredentialsSource() {
     private val gcpTokenUsername = "_dcgcloud_token"
 
-    override fun load(): DockerRegistryCredentials? {
+    override fun load(): RegistryCredentials? {
         try {
             val command = listOf(helperName, "get")
             val result = processRunner.runAndCaptureOutput(command, serverAddress)
@@ -79,21 +79,21 @@ data class HelperBasedCredentialsSource(val helperName: String, val serverAddres
         }
     }
 
-    private fun convertOutputToCredentials(output: String): DockerRegistryCredentials {
+    private fun convertOutputToCredentials(output: String): RegistryCredentials {
         val parsed = parseCredentials(output)
         val username = parsed.getStringMember("Username")
         val secret = parsed.getStringMember("Secret")
 
         if (username == gcpTokenUsername) {
-            return PasswordDockerRegistryCredentials(username, secret, serverAddress)
+            return PasswordRegistryCredentials(username, secret, serverAddress)
         }
 
         val serverUrl = parsed.getStringMember("ServerURL")
 
         if (username == "<token>") {
-            return TokenDockerRegistryCredentials(secret, serverUrl)
+            return TokenRegistryCredentials(secret, serverUrl)
         } else {
-            return PasswordDockerRegistryCredentials(username, secret, serverUrl)
+            return PasswordRegistryCredentials(username, secret, serverUrl)
         }
     }
 

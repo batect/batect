@@ -28,7 +28,7 @@ import batect.docker.DockerNetwork
 import batect.docker.DownloadOperation
 import batect.docker.build.ActiveImageBuildStep
 import batect.docker.build.BuildProgress
-import batect.docker.pull.DockerImagePullProgress
+import batect.docker.pull.ImagePullProgress
 import batect.execution.ContainerRuntimeConfiguration
 import batect.execution.model.events.CachesInitialisedEvent
 import batect.execution.model.events.ContainerBecameHealthyEvent
@@ -596,7 +596,7 @@ object ContainerStartupProgressLineSpec : Spek({
                 }
 
                 on("that notification being for this line's container's image") {
-                    beforeEachTest { line.onEventPosted(ImagePullProgressEvent(imageSource, DockerImagePullProgress(DownloadOperation.Extracting, 10, 20))) }
+                    beforeEachTest { line.onEventPosted(ImagePullProgressEvent(imageSource, ImagePullProgress(DownloadOperation.Extracting, 10, 20))) }
                     val output by runForEachTest { line.print() }
 
                     it("prints that the image is being pulled with detailed progress information") {
@@ -605,7 +605,7 @@ object ContainerStartupProgressLineSpec : Spek({
                 }
 
                 on("that notification being for another image") {
-                    beforeEachTest { line.onEventPosted(ImagePullProgressEvent(otherImageSource, DockerImagePullProgress(DownloadOperation.Extracting, 10, 20))) }
+                    beforeEachTest { line.onEventPosted(ImagePullProgressEvent(otherImageSource, ImagePullProgress(DownloadOperation.Extracting, 10, 20))) }
                     val output by runForEachTest { line.print() }
 
                     it("prints that the image is being pulled") {
@@ -680,7 +680,7 @@ object ContainerStartupProgressLineSpec : Spek({
                 on("when the image is being pulled and some progress information has been received") {
                     beforeEachTest {
                         line.onEventPosted(StepStartingEvent(PullImageStep(imageSource)))
-                        line.onEventPosted(ImagePullProgressEvent(imageSource, DockerImagePullProgress(DownloadOperation.Extracting, 10, 20)))
+                        line.onEventPosted(ImagePullProgressEvent(imageSource, ImagePullProgress(DownloadOperation.Extracting, 10, 20)))
                         line.onEventPosted(event)
                     }
 

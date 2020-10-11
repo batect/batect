@@ -17,8 +17,8 @@
 package batect.docker.api
 
 import batect.docker.ContainerCreationFailedException
+import batect.docker.ContainerCreationRequest
 import batect.docker.DockerContainer
-import batect.docker.DockerContainerCreationRequest
 import batect.docker.DockerContainerInfo
 import batect.docker.DockerEvent
 import batect.docker.DockerException
@@ -58,7 +58,7 @@ class ContainersAPI(
     logger: Logger,
     private val hijackerFactory: () -> ConnectionHijacker = ::ConnectionHijacker
 ) : APIBase(httpConfig, systemInfo, logger) {
-    fun create(creationRequest: DockerContainerCreationRequest): DockerContainer {
+    fun create(creationRequest: ContainerCreationRequest): DockerContainer {
         logger.info {
             message("Creating container.")
             data("request", creationRequest)
@@ -509,7 +509,7 @@ class ContainersAPI(
         .addPathSegment(operation)
         .build()
 
-    private fun LogMessageBuilder.data(key: String, value: DockerContainerCreationRequest) = this.data(key, value, DockerContainerCreationRequest.serializer())
+    private fun LogMessageBuilder.data(key: String, value: ContainerCreationRequest) = this.data(key, value, ContainerCreationRequest.serializer())
 
     // HACK: This method is a workaround for two issues:
     // - starting with Docker 19.03.5, the /events API no longer sends new line characters between events, so we can't just read a full line of the response and parse that (see https://github.com/batect/batect/issues/393)

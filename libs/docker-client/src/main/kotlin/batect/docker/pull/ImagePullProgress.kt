@@ -21,6 +21,6 @@ import batect.docker.humanReadableStringForDownloadProgress
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class DockerImagePullProgress(val currentOperation: DownloadOperation, val completedBytes: Long, val totalBytes: Long) {
+data class ImagePullProgress(val currentOperation: DownloadOperation, val completedBytes: Long, val totalBytes: Long) {
     fun toStringForDisplay(): String = humanReadableStringForDownloadProgress(currentOperation, completedBytes, totalBytes)
 }

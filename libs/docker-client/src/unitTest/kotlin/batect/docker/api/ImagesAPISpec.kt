@@ -18,9 +18,9 @@ package batect.docker.api
 
 import batect.docker.DockerHttpConfig
 import batect.docker.DockerImage
-import batect.docker.DockerImageReference
 import batect.docker.ImageBuildFailedException
 import batect.docker.ImagePullFailedException
+import batect.docker.ImageReference
 import batect.docker.Json
 import batect.docker.build.ActiveImageBuildStep
 import batect.docker.build.BuildComplete
@@ -32,8 +32,8 @@ import batect.docker.build.ImageBuildContextRequestBody
 import batect.docker.build.ImageBuildEvent
 import batect.docker.build.ImageBuildEventCallback
 import batect.docker.build.ImageBuildResponseBody
-import batect.docker.pull.DockerRegistryCredentials
-import batect.docker.pull.TokenDockerRegistryCredentials
+import batect.docker.pull.RegistryCredentials
+import batect.docker.pull.TokenRegistryCredentials
 import batect.os.SystemInfo
 import batect.primitives.CancellationContext
 import batect.testutils.createForEachTest
@@ -114,7 +114,7 @@ object ImagesAPISpec : Spek({
             val dockerfilePath = "some-Dockerfile-path"
             val imageTags = setOf("some_image_tag", "some_other_image_tag")
             val pullImage = false
-            val registryCredentials = setOf(TokenDockerRegistryCredentials("some_token", "registry.com"))
+            val registryCredentials = setOf(TokenRegistryCredentials("some_token", "registry.com"))
 
             val expectedUrl = hasScheme("http") and
                 hasHost(dockerHost) and
@@ -314,7 +314,7 @@ object ImagesAPISpec : Spek({
         }
 
         describe("pulling an image") {
-            val imageReference = DockerImageReference("some-image")
+            val imageReference = ImageReference("some-image")
             val expectedUrl = "$dockerBaseUrl/v1.37/images/create?fromImage=some-image%3Alatest"
             val clientWithLongTimeout by createForEachTest { mock<OkHttpClient>() }
             val longTimeoutClientBuilder by createForEachTest {
@@ -328,7 +328,7 @@ object ImagesAPISpec : Spek({
                 whenever(httpClient.newBuilder()).doReturn(longTimeoutClientBuilder)
             }
 
-            val registryCredentials = mock<DockerRegistryCredentials> {
+            val registryCredentials = mock<RegistryCredentials> {
                 on { toJSON() } doReturn JsonPrimitive("some json credentials")
             }
 
@@ -446,7 +446,7 @@ object ImagesAPISpec : Spek({
         }
 
         describe("checking if an image has been pulled") {
-            val imageReference = DockerImageReference("some-image")
+            val imageReference = ImageReference("some-image")
             val expectedUrl = "$dockerBaseUrl/v1.37/images/some-image:latest/json"
 
             given("the image has already been pulled") {

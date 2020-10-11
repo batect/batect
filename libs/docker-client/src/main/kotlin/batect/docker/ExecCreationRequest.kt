@@ -22,7 +22,7 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
 @Serializable
-data class DockerExecCreationRequest(
+data class ExecCreationRequest(
     val attachStdin: Boolean,
     val attachStdout: Boolean,
     val attachStderr: Boolean,
@@ -49,4 +49,4 @@ data class DockerExecCreationRequest(
     }.toString()
 }
 
-fun LogMessageBuilder.data(key: String, value: DockerExecCreationRequest) = this.data(key, value, DockerExecCreationRequest.serializer())
+fun LogMessageBuilder.data(key: String, value: ExecCreationRequest) = this.data(key, value, ExecCreationRequest.serializer())

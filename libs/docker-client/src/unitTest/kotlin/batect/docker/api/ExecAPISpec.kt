@@ -17,10 +17,10 @@
 package batect.docker.api
 
 import batect.docker.DockerContainer
-import batect.docker.DockerExecCreationRequest
 import batect.docker.DockerExecInstance
 import batect.docker.DockerExecInstanceInfo
 import batect.docker.DockerHttpConfig
+import batect.docker.ExecCreationRequest
 import batect.docker.ExecFailedException
 import batect.docker.Json
 import batect.docker.run.ConnectionHijacker
@@ -98,7 +98,7 @@ object ExecAPISpec : Spek({
 
             given("a container and exec creation request") {
                 val container = DockerContainer("abc123")
-                val request = DockerExecCreationRequest(false, true, true, true, emptyMap(), emptyList(), false, null, "/some/work/dir")
+                val request = ExecCreationRequest(false, true, true, true, emptyMap(), emptyList(), false, null, "/some/work/dir")
                 val expectedUrl = "$dockerBaseUrl/v1.37/containers/abc123/exec"
 
                 on("a successful creation") {
@@ -161,7 +161,7 @@ object ExecAPISpec : Spek({
 
             given("an exec instance and creation request") {
                 val attachTty = true
-                val request = DockerExecCreationRequest(false, false, false, attachTty, emptyMap(), emptyList(), false, null, "/some/work/dir")
+                val request = ExecCreationRequest(false, false, false, attachTty, emptyMap(), emptyList(), false, null, "/some/work/dir")
                 val instance = DockerExecInstance("the-exec-instance")
                 val expectedHeaders = Headers.Builder()
                     .add("Connection", "Upgrade")

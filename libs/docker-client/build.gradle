@@ -70,4 +70,6 @@ checkUnitTestLayout {
 }
 
 apply from: 'gradle/integrationTest.gradle'
-apply from: 'gradle/protobuf.gradle'
+
+// Disabled until https://github.com/square/wire/issues/1325#issuecomment-706886096 is fixed.
+// apply from: 'gradle/protobuf.gradle'

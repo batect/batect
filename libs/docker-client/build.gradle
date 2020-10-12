@@ -34,6 +34,7 @@ plugins {
 
 repositories {
     // This is only required until Wire 3.4.1 is published (we're currently using a snapshot to get https://github.com/square/wire/pull/1799).
+    // If you remove this, remove it from app/build.gradle as well.
     maven { url 'https://oss.sonatype.org/content/repositories/snapshots/' }
 }
 

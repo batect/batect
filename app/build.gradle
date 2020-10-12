@@ -28,6 +28,9 @@ repositories {
     mavenCentral()
     maven { url "https://kotlin.bintray.com/kotlinx" }
     jcenter()
+
+    // This is only required until Wire 3.4.1 is published (we're currently using a snapshot to get https://github.com/square/wire/pull/1799).
+    maven { url 'https://oss.sonatype.org/content/repositories/snapshots/' }
 }
 
 dependencies {

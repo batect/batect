@@ -14,8 +14,27 @@
    limitations under the License.
 */
 
+buildscript {
+    repositories {
+        mavenCentral()
+
+        // This is only required until Wire 3.4.1 is published.
+        maven { url 'https://oss.sonatype.org/content/repositories/snapshots/' }
+    }
+
+    dependencies {
+        classpath 'com.squareup.wire:wire-gradle-plugin:3.4.1-SNAPSHOT'
+    }
+}
+
 plugins {
     id 'batect-kotlin'
+    id 'de.undercouch.download'
+}
+
+repositories {
+    // This is only required until Wire 3.4.1 is published (we're currently using a snapshot to get https://github.com/square/wire/pull/1799).
+    maven { url 'https://oss.sonatype.org/content/repositories/snapshots/' }
 }
 
 dependencies {
@@ -50,3 +69,4 @@ checkUnitTestLayout {
 }
 
 apply from: 'gradle/integrationTest.gradle'
+apply from: 'gradle/protobuf.gradle'

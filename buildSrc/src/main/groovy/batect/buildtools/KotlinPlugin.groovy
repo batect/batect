@@ -66,6 +66,8 @@ class KotlinPlugin implements Plugin<Project> {
                 trimTrailingWhitespace()
                 indentWithSpaces()
                 endWithNewline()
+
+                targetExclude('build/**')
             }
         }
 

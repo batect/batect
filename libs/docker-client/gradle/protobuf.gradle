@@ -16,20 +16,9 @@
 
 import java.nio.file.FileSystems
 
-apply plugin: 'com.squareup.wire'
-
 def protosDir = project.buildDir.toPath().resolve("protos")
-
-// The Wire plugin fails to initialise if the directory doesn't exist at configuration time.
-protosDir.toFile().mkdirs()
-
-wire {
-    root 'moby.buildkit.v1.StatusResponse'
-    sourcePath protosDir.toString()
-    kotlin {}
-}
-
 def buildKitVersion = 'v0.7.2'
+def protobufVersion = '3.13.0'
 
 def protos = [
     'github.com/moby/buildkit/api/services/control/control.proto': buildKitVersion,
@@ -72,8 +61,27 @@ task downloadProtos() {
     }
 }
 
+sourceSets {
+    main {
+        proto {
+            srcDir protosDir
+        }
+    }
+}
+
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:$protobufVersion"
+    }
+}
+
+dependencies {
+    protobuf "com.google.protobuf:protobuf-java:$protobufVersion"
+    compile "com.google.protobuf:protobuf-java:$protobufVersion"
+}
+
 afterEvaluate {
-    tasks.named("generateMainProtos").configure {
+    tasks.named("generateProto").configure {
         dependsOn downloadProtos
     }
 }

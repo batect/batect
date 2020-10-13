@@ -16,6 +16,7 @@
 
 package batect.integrationtests.endtoend
 
+import batect.docker.DockerImage
 import batect.docker.api.BuilderVersion
 import batect.integrationtests.build
 import batect.integrationtests.createClient
@@ -31,6 +32,7 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import okio.sink
 import org.spekframework.spek2.Spek
+import org.spekframework.spek2.dsl.Skip
 import org.spekframework.spek2.style.specification.describe
 import java.io.ByteArrayOutputStream
 
@@ -39,11 +41,16 @@ object ContainerEndToEndIntegrationTest : Spek({
         val client by createForGroup { createClient() }
         val imageDirectory = testImagesDirectory.resolve("basic-image")
 
-        mapOf(
-            "using a pulled image" to { client.pull("alpine:3.7") },
-            "using a built image" to { client.build(imageDirectory, "batect-integration-tests-image-legacy-builder") }
-        ).forEach { (description, imageSource) ->
-            describe(description) {
+        data class TestCase(val description: String, val imageSource: () -> DockerImage, val enabled: Boolean = true)
+
+        setOf(
+            TestCase("using a pulled image", { client.pull("alpine:3.7") }),
+            TestCase("using an image built with the legacy builder", { client.build(imageDirectory, "batect-integration-tests-image-legacy-builder", BuilderVersion.Legacy) }),
+            TestCase("using an image built with BuildKit", { client.build(imageDirectory, "batect-integration-tests-image-legacy-builder", BuilderVersion.BuildKit) }, enabled = System.getProperty("skipBuildKitTests", "false") == "false"),
+        ).forEach { (description, imageSource, enabled) ->
+            val skip = if (enabled) Skip.No else Skip.Yes("not supported on this version of Docker")
+
+            describe(description, skip) {
                 val image by runBeforeGroup { imageSource() }
 
                 describe("using that image to create and run a container") {

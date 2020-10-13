@@ -32,6 +32,8 @@ tasks.register("integrationTest", Test) {
     testClassesDirs = sourceSets.integrationTest.output.classesDirs
     classpath = sourceSets.integrationTest.runtimeClasspath
 
+    systemProperty "skipBuildKitTests", project.properties.containsKey("skipBuildKitTests")
+
     mustRunAfter test
 }
 

@@ -284,10 +284,13 @@ jobs:
         include:
           - docker_version: latest
             connection_type: Unix socket
+            test_options: ""
           - docker_version: 18.03.1~ce~3-0~ubuntu
             connection_type: Unix socket
+            test_options: "-PskipBuildKitTests"
           - docker_version: latest
             connection_type: TLS over TCP
+            test_options: ""
 
       fail-fast: false
 
@@ -325,7 +328,7 @@ jobs:
         if: matrix.connection_type == 'TLS over TCP'
 
       - name: Run integration tests
-        run: unset JAVA_TOOL_OPTIONS && ./gradlew --parallel :libs:docker-client:integrationTest
+        run: unset JAVA_TOOL_OPTIONS && ./gradlew --parallel :libs:docker-client:integrationTest ${{ matrix.test_options }}
 
   publish-release:
     name: "Publish release"

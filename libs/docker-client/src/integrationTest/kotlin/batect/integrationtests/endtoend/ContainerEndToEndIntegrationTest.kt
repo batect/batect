@@ -41,8 +41,7 @@ object ContainerEndToEndIntegrationTest : Spek({
 
         mapOf(
             "using a pulled image" to { client.pull("alpine:3.7") },
-            "using an image built with the legacy builder" to { client.build(imageDirectory, "batect-integration-tests-image-legacy-builder", BuilderVersion.Legacy) },
-            "using an image built with BuildKit" to { client.build(imageDirectory, "batect-integration-tests-image-buildkit", BuilderVersion.BuildKit) }
+            "using a built image" to { client.build(imageDirectory, "batect-integration-tests-image-legacy-builder") }
         ).forEach { (description, imageSource) ->
             describe(description) {
                 val image by runBeforeGroup { imageSource() }

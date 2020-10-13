@@ -143,10 +143,10 @@ object BuildImageStepRunnerSpec : Spek({
 
                 describe("regardless of the image pull policy") {
                     beforeEachTest {
-                        whenever(imagesClient.build(eq(resolvedBuildDirectory), any(), eq(dockerfilePath), eq(pathResolutionContext), eq(setOf("some-project-some-container")), eq(false), eq(outputSink), eq(cancellationContext), any()))
+                        whenever(imagesClient.build(any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
                             .then { invocation ->
                                 @Suppress("UNCHECKED_CAST")
-                                val onStatusUpdate = invocation.arguments[8] as (BuildProgress) -> Unit
+                                val onStatusUpdate = invocation.arguments[9] as (BuildProgress) -> Unit
 
                                 onStatusUpdate(update1)
                                 onStatusUpdate(update2)
@@ -157,6 +157,18 @@ object BuildImageStepRunnerSpec : Spek({
                         runner.run(step, eventSink)
                     }
 
+                    it("passes the resolved build directory, Dockerfile path and path resolution context to the image build") {
+                        verify(imagesClient).build(eq(resolvedBuildDirectory), any(), eq(dockerfilePath), eq(pathResolutionContext), any(), any(), any(), any(), any(), any())
+                    }
+
+                    it("generates a name for the image based on the project and container names") {
+                        verify(imagesClient).build(any(), any(), any(), any(), eq(setOf("some-project-some-container")), any(), any(), any(), any(), any())
+                    }
+
+                    it("passes the output sink and cancellation context to the image build") {
+                        verify(imagesClient).build(any(), any(), any(), any(), any(), any(), eq(outputSink), any(), eq(cancellationContext), any())
+                    }
+
                     it("passes the image build args provided by the user as well as any proxy-related build args, with user-provided build args overriding the generated proxy-related build args, and with the cache setup command included") {
                         val expectedArgs = mapOf(
                             "some_arg" to "some_value",
@@ -165,7 +177,7 @@ object BuildImageStepRunnerSpec : Spek({
                             "SOME_HOST_VAR" to "some env var value"
                         )
 
-                        verify(imagesClient).build(any(), eq(expectedArgs), any(), any(), any(), any(), any(), any(), any())
+                        verify(imagesClient).build(any(), eq(expectedArgs), any(), any(), any(), any(), any(), any(), any(), any())
                     }
 
                     it("emits a 'image build progress' event for each update received from Docker") {
@@ -187,13 +199,13 @@ object BuildImageStepRunnerSpec : Spek({
                     val stepWithImagePullPolicy = BuildImageStep(containerWithImagePullPolicy)
 
                     beforeEachTest {
-                        whenever(imagesClient.build(any(), any(), any(), any(), any(), any(), anyOrNull(), any(), any())).doReturn(image)
+                        whenever(imagesClient.build(any(), any(), any(), any(), any(), any(), anyOrNull(), any(), any(), any())).doReturn(image)
 
                         runner.run(stepWithImagePullPolicy, eventSink)
                     }
 
                     it("calls the Docker API with forcibly pulling the image disabled") {
-                        verify(imagesClient).build(any(), any(), any(), any(), any(), eq(false), anyOrNull(), any(), any())
+                        verify(imagesClient).build(any(), any(), any(), any(), any(), eq(false), anyOrNull(), any(), any(), any())
                     }
                 }
 
@@ -202,13 +214,13 @@ object BuildImageStepRunnerSpec : Spek({
                     val stepWithImagePullPolicy = BuildImageStep(containerWithImagePullPolicy)
 
                     beforeEachTest {
-                        whenever(imagesClient.build(any(), any(), any(), any(), any(), any(), anyOrNull(), any(), any())).doReturn(image)
+                        whenever(imagesClient.build(any(), any(), any(), any(), any(), any(), anyOrNull(), any(), any(), any())).doReturn(image)
 
                         runner.run(stepWithImagePullPolicy, eventSink)
                     }
 
                     it("calls the Docker API with forcibly pulling the image enabled") {
-                        verify(imagesClient).build(any(), any(), any(), any(), any(), eq(true), anyOrNull(), any(), any())
+                        verify(imagesClient).build(any(), any(), any(), any(), any(), eq(true), anyOrNull(), any(), any(), any())
                     }
                 }
             }
@@ -232,7 +244,7 @@ object BuildImageStepRunnerSpec : Spek({
                 }
 
                 beforeEachTest {
-                    whenever(imagesClient.build(eq(resolvedBuildDirectory), any(), eq(dockerfilePath), eq(pathResolutionContext), eq(setOf("some-project-some-container")), eq(false), eq(outputSink), eq(cancellationContext), any())).thenReturn(image)
+                    whenever(imagesClient.build(eq(resolvedBuildDirectory), any(), eq(dockerfilePath), eq(pathResolutionContext), eq(setOf("some-project-some-container")), eq(false), eq(outputSink), any(), eq(cancellationContext), any())).thenReturn(image)
 
                     runnerWithProxyEnvironmentVariablePropagationDisabled.run(step, eventSink)
                 }
@@ -244,7 +256,7 @@ object BuildImageStepRunnerSpec : Spek({
                         "SOME_HOST_VAR" to "some env var value"
                     )
 
-                    verify(imagesClient).build(any(), eq(expectedArgs), any(), any(), any(), any(), any(), any(), any())
+                    verify(imagesClient).build(any(), eq(expectedArgs), any(), any(), any(), any(), any(), any(), any(), any())
                 }
 
                 it("emits a 'image built' event") {
@@ -255,7 +267,9 @@ object BuildImageStepRunnerSpec : Spek({
 
         on("when building the image fails") {
             beforeEachTest {
-                whenever(imagesClient.build(eq(resolvedBuildDirectory), any(), eq(dockerfilePath), eq(pathResolutionContext), eq(setOf("some-project-some-container")), eq(false), eq(outputSink), eq(cancellationContext), any())).thenThrow(ImageBuildFailedException("Something went wrong.\nMore details on this line."))
+                whenever(imagesClient.build(eq(resolvedBuildDirectory), any(), eq(dockerfilePath), eq(pathResolutionContext), eq(setOf("some-project-some-container")), eq(false), eq(outputSink), any(), eq(cancellationContext), any()))
+                    .thenThrow(ImageBuildFailedException("Something went wrong.\nMore details on this line."))
+
                 runner.run(step, eventSink)
             }
 

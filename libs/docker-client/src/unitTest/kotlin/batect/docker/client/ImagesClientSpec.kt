@@ -23,6 +23,7 @@ import batect.docker.ImageBuildFailedException
 import batect.docker.ImagePullFailedException
 import batect.docker.ImageReference
 import batect.docker.Json
+import batect.docker.api.BuilderVersion
 import batect.docker.api.ImagesAPI
 import batect.docker.build.BuildProgress
 import batect.docker.build.DockerfileParser
@@ -116,13 +117,13 @@ object ImagesClientSpec : Spek({
 
                     on("a successful build") {
                         val image = DockerImage("some-image-id")
-                        beforeEachTest { whenever(api.build(any(), any(), any(), any(), any(), any(), any(), any(), any())).doReturn(image) }
+                        beforeEachTest { whenever(api.build(any(), any(), any(), any(), any(), any(), any(), any(), any(), any())).doReturn(image) }
 
                         val onStatusUpdate = fun(_: BuildProgress) {}
-                        val result by runForEachTest { client.build(buildDirectory, buildArgs, dockerfilePath, pathResolutionContext, imageTags, forcePull, outputSink, cancellationContext, onStatusUpdate) }
+                        val result by runForEachTest { client.build(buildDirectory, buildArgs, dockerfilePath, pathResolutionContext, imageTags, forcePull, outputSink, BuilderVersion.Legacy, cancellationContext, onStatusUpdate) }
 
                         it("builds the image") {
-                            verify(api).build(eq(context), eq(buildArgs), eq(dockerfilePath), eq(imageTags), eq(forcePull), eq(setOf(image1Credentials, image2Credentials)), eq(outputSink), eq(cancellationContext), eq(onStatusUpdate))
+                            verify(api).build(eq(context), eq(buildArgs), eq(dockerfilePath), eq(imageTags), eq(forcePull), eq(setOf(image1Credentials, image2Credentials)), eq(outputSink), eq(BuilderVersion.Legacy), eq(cancellationContext), eq(onStatusUpdate))
                         }
 
                         it("returns the built image") {
@@ -141,7 +142,7 @@ object ImagesClientSpec : Spek({
                     on("building the image") {
                         it("throws an appropriate exception") {
                             assertThat(
-                                { client.build(buildDirectory, buildArgs, dockerfilePath, pathResolutionContext, imageTags, forcePull, outputSink, cancellationContext, {}) },
+                                { client.build(buildDirectory, buildArgs, dockerfilePath, pathResolutionContext, imageTags, forcePull, outputSink, BuilderVersion.Legacy, cancellationContext) {} },
                                 throws<ImageBuildFailedException>(
                                     withMessage("Could not build image: Could not load credentials: something went wrong.")
                                         and withCause(exception)
@@ -156,7 +157,7 @@ object ImagesClientSpec : Spek({
                 on("building the image") {
                     it("throws an appropriate exception") {
                         assertThat(
-                            { client.build(buildDirectory, buildArgs, dockerfilePath, pathResolutionContext, imageTags, forcePull, outputSink, cancellationContext, {}) },
+                            { client.build(buildDirectory, buildArgs, dockerfilePath, pathResolutionContext, imageTags, forcePull, outputSink, BuilderVersion.Legacy, cancellationContext) {} },
                             throws<ImageBuildFailedException>(withMessage("Could not build image: the Dockerfile 'some-Dockerfile-path' does not exist in the build directory <a nicely formatted version of the build directory>"))
                         )
                     }
@@ -175,7 +176,7 @@ object ImagesClientSpec : Spek({
                 on("building the image") {
                     it("throws an appropriate exception") {
                         assertThat(
-                            { client.build(buildDirectory, buildArgs, dockerfilePathOutsideBuildDir, pathResolutionContext, imageTags, forcePull, outputSink, cancellationContext, {}) },
+                            { client.build(buildDirectory, buildArgs, dockerfilePathOutsideBuildDir, pathResolutionContext, imageTags, forcePull, outputSink, BuilderVersion.Legacy, cancellationContext) {} },
                             throws<ImageBuildFailedException>(withMessage("Could not build image: the Dockerfile '../some-Dockerfile' is not a child of the build directory <a nicely formatted version of the build directory>"))
                         )
                     }

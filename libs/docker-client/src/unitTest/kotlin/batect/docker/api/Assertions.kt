@@ -63,6 +63,25 @@ internal fun hasQueryParameter(key: String, expectedValue: String) = object : Ma
         get() = "has query parameter '$key' with value '$expectedValue'"
 }
 
+internal fun doesNotHaveQueryParameter(key: String) = object : Matcher<HttpUrl> {
+    override fun invoke(actual: HttpUrl): MatchResult {
+        val actualParameterValues = actual.queryParameterValues(key)
+
+        if (actualParameterValues.isEmpty()) {
+            return MatchResult.Match
+        }
+
+        if (actualParameterValues.size == 1) {
+            return MatchResult.Mismatch("'$actual' has query parameter '$key' with value '${actualParameterValues.single()}'")
+        } else {
+            return MatchResult.Mismatch("'$actual' has query parameter '$key' with values '$actualParameterValues'")
+        }
+    }
+
+    override val description: String
+        get() = "does not have query parameter '$key'"
+}
+
 internal fun requestWithJsonBody(predicate: (JsonObject) -> Unit) = com.nhaarman.mockitokotlin2.check<Request> { request ->
     assertThat(request.body!!.contentType(), equalTo("application/json; charset=utf-8".toMediaType()))
 

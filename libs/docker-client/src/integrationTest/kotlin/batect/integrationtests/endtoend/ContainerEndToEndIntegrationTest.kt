@@ -16,6 +16,7 @@
 
 package batect.integrationtests.endtoend
 
+import batect.docker.api.BuilderVersion
 import batect.integrationtests.build
 import batect.integrationtests.createClient
 import batect.integrationtests.creationRequestForContainer
@@ -36,10 +37,12 @@ import java.io.ByteArrayOutputStream
 object ContainerEndToEndIntegrationTest : Spek({
     describe("running containers") {
         val client by createForGroup { createClient() }
+        val imageDirectory = testImagesDirectory.resolve("basic-image")
 
         mapOf(
             "using a pulled image" to { client.pull("alpine:3.7") },
-            "using a built image" to { client.build(testImagesDirectory.resolve("basic-image"), "batect-integration-tests-image") }
+            "using an image built with the legacy builder" to { client.build(imageDirectory, "batect-integration-tests-image-legacy-builder", BuilderVersion.Legacy) },
+            "using an image built with BuildKit" to { client.build(imageDirectory, "batect-integration-tests-image-buildkit", BuilderVersion.BuildKit) }
         ).forEach { (description, imageSource) ->
             describe(description) {
                 val image by runBeforeGroup { imageSource() }

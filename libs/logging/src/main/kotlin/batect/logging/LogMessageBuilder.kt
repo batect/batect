@@ -57,6 +57,7 @@ class LogMessageBuilder(val severity: Severity, val loggerAdditionalData: Map<St
     fun data(key: String, value: Path) = data(key, value.toString())
     fun data(key: String, value: Iterable<String>) = data(key, value.toList(), ListSerializer(String.serializer()))
     fun data(key: String, value: Map<String, String>) = data(key, value, MapSerializer(String.serializer(), String.serializer()))
+    fun <E : Enum<E>> data(key: String, value: Enum<E>) = data(key, value.name)
 
     @JvmName("nullableData")
     fun data(key: String, value: String?) = data(key, value, String.serializer().nullable)

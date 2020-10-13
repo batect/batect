@@ -25,6 +25,7 @@ import batect.docker.Json
 import batect.docker.Tee
 import batect.docker.build.BuildComplete
 import batect.docker.build.BuildError
+import batect.docker.build.BuildKitImageBuildResponseBody
 import batect.docker.build.BuildProgress
 import batect.docker.build.ImageBuildContext
 import batect.docker.build.ImageBuildContextRequestBody
@@ -53,7 +54,7 @@ class ImagesAPI(
     httpConfig: DockerHttpConfig,
     systemInfo: SystemInfo,
     logger: Logger,
-    private val buildResponseBodyFactory: () -> ImageBuildResponseBody = ::LegacyImageBuildResponseBody
+    private val buildResponseBodyFactory: (BuilderVersion) -> ImageBuildResponseBody = ::buildResponseBodyForBuilder
 ) : APIBase(httpConfig, systemInfo, logger) {
     fun build(
         context: ImageBuildContext,
@@ -63,6 +64,7 @@ class ImagesAPI(
         forcePull: Boolean,
         registryCredentials: Set<RegistryCredentials>,
         outputSink: Sink?,
+        builderVersion: BuilderVersion,
         cancellationContext: CancellationContext,
         onProgressUpdate: (BuildProgress) -> Unit
     ): DockerImage {
@@ -74,7 +76,7 @@ class ImagesAPI(
             data("forcePull", forcePull)
         }
 
-        val request = createBuildRequest(context, buildArgs, dockerfilePath, imageTags, forcePull, registryCredentials)
+        val request = createBuildRequest(context, buildArgs, dockerfilePath, imageTags, forcePull, registryCredentials, builderVersion)
 
         clientWithNoTimeout()
             .newCall(request)
@@ -88,7 +90,7 @@ class ImagesAPI(
                     throw ImageBuildFailedException("Building image failed: ${error.message}")
                 }
 
-                val image = processBuildResponse(response, outputSink, onProgressUpdate)
+                val image = processBuildResponse(response, outputSink, builderVersion, onProgressUpdate)
 
                 logger.info {
                     message("Image built.")
@@ -105,7 +107,8 @@ class ImagesAPI(
         dockerfilePath: String,
         imageTags: Set<String>,
         forcePull: Boolean,
-        registryCredentials: Set<RegistryCredentials>
+        registryCredentials: Set<RegistryCredentials>,
+        builderVersion: BuilderVersion
     ): Request {
         val url = baseUrl.newBuilder()
             .addPathSegment("build")
@@ -114,6 +117,11 @@ class ImagesAPI(
             .addQueryParameter("pull", if (forcePull) "1" else "0")
 
         imageTags.forEach { url.addQueryParameter("t", it) }
+
+        when (builderVersion) {
+            BuilderVersion.Legacy -> { /* Nothing to do. */ }
+            BuilderVersion.BuildKit -> url.addQueryParameter("version", "2")
+        }
 
         return Request.Builder()
             .post(ImageBuildContextRequestBody(context))
@@ -137,13 +145,13 @@ class ImagesAPI(
         return this
     }
 
-    private fun processBuildResponse(response: Response, outputStream: Sink?, onProgressUpdate: (BuildProgress) -> Unit): DockerImage {
+    private fun processBuildResponse(response: Response, outputStream: Sink?, builderVersion: BuilderVersion, onProgressUpdate: (BuildProgress) -> Unit): DockerImage {
         var builtImage: DockerImage? = null
         val outputBuffer = ByteArrayOutputStream()
         val sink = if (outputStream == null) { outputBuffer.sink() } else { Tee(outputBuffer.sink(), outputStream) }
 
         sink.use {
-            val body = buildResponseBodyFactory()
+            val body = buildResponseBodyFactory(builderVersion)
 
             body.readFrom(response.body!!.charStream(), sink) { event ->
                 when (event) {
@@ -265,4 +273,11 @@ class ImagesAPI(
         .build()
 
     private fun LogMessageBuilder.data(key: String, value: ImageBuildContext) = this.data(key, value, ImageBuildContext.serializer())
+
+    companion object {
+        private fun buildResponseBodyForBuilder(builderVersion: BuilderVersion) = when (builderVersion) {
+            BuilderVersion.Legacy -> LegacyImageBuildResponseBody()
+            BuilderVersion.BuildKit -> BuildKitImageBuildResponseBody()
+        }
+    }
 }

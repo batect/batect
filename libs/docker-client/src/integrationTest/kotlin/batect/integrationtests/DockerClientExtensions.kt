@@ -20,6 +20,7 @@ import batect.docker.ContainerCreationRequest
 import batect.docker.DockerContainer
 import batect.docker.DockerImage
 import batect.docker.DockerNetwork
+import batect.docker.api.BuilderVersion
 import batect.docker.client.DockerClient
 import batect.os.DefaultPathResolutionContext
 import batect.os.Dimensions
@@ -55,8 +56,8 @@ fun DockerClient.pull(imageName: String): DockerImage = retry(3) {
     this.images.pull(imageName, false, CancellationContext(), {})
 }
 
-fun DockerClient.build(imageDirectory: Path, tag: String): DockerImage =
-    this.images.build(imageDirectory, emptyMap(), "Dockerfile", DefaultPathResolutionContext(imageDirectory), setOf(tag), false, null, CancellationContext()) {}
+fun DockerClient.build(imageDirectory: Path, tag: String, builderVersion: BuilderVersion = BuilderVersion.Legacy): DockerImage =
+    this.images.build(imageDirectory, emptyMap(), "Dockerfile", DefaultPathResolutionContext(imageDirectory), setOf(tag), false, null, builderVersion, CancellationContext()) {}
 
 fun DockerClient.runContainerAndWaitForCompletion(container: DockerContainer, stdout: Sink = System.out.sink(), useTTY: Boolean = true) =
     this.runContainer(container, stdout, useTTY) {}

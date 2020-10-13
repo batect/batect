@@ -23,6 +23,7 @@ import batect.config.Expression
 import batect.config.ExpressionEvaluationContext
 import batect.config.ExpressionEvaluationException
 import batect.docker.ImageBuildFailedException
+import batect.docker.api.BuilderVersion
 import batect.docker.build.BuildProgress
 import batect.docker.client.ImagesClient
 import batect.execution.model.events.ImageBuildFailedEvent
@@ -70,6 +71,7 @@ class BuildImageStepRunner(
                     setOf(imageTagFor(step)),
                     buildConfig.imagePullPolicy.forciblyPull,
                     ioStreamingOptions.stdoutForImageBuild(step.container),
+                    BuilderVersion.Legacy,
                     cancellationContext,
                     onStatusUpdate
                 )

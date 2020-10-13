@@ -21,6 +21,7 @@ import batect.docker.DockerRegistryCredentialsException
 import batect.docker.ImageBuildFailedException
 import batect.docker.ImagePullFailedException
 import batect.docker.ImageReference
+import batect.docker.api.BuilderVersion
 import batect.docker.api.ImagesAPI
 import batect.docker.build.BuildProgress
 import batect.docker.build.DockerfileParser
@@ -54,6 +55,7 @@ class ImagesClient(
         imageTags: Set<String>,
         forcePull: Boolean,
         outputSink: Sink?,
+        builderVersion: BuilderVersion,
         cancellationContext: CancellationContext,
         onProgressUpdate: (BuildProgress) -> Unit
     ): DockerImage {
@@ -63,6 +65,7 @@ class ImagesClient(
             data("buildArgs", buildArgs)
             data("dockerfilePath", dockerfilePath)
             data("imageTags", imageTags)
+            data("builderVersion", builderVersion)
         }
 
         try {
@@ -79,7 +82,7 @@ class ImagesClient(
             val context = imageBuildContextFactory.createFromDirectory(buildDirectory, dockerfilePath)
             val baseImageNames = dockerfileParser.extractBaseImageNames(resolvedDockerfilePath)
             val credentials = baseImageNames.mapNotNull { credentialsProvider.getCredentials(it) }.toSet()
-            val image = api.build(context, buildArgs, dockerfilePath, imageTags, forcePull, credentials, outputSink, cancellationContext, onProgressUpdate)
+            val image = api.build(context, buildArgs, dockerfilePath, imageTags, forcePull, credentials, outputSink, builderVersion, cancellationContext, onProgressUpdate)
 
             logger.info {
                 message("Image build succeeded.")

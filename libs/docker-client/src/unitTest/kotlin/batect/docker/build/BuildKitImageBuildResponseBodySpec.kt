@@ -252,6 +252,60 @@ object BuildKitImageBuildResponseBodySpec : Spek({
             }
         }
 
+        given("a response with a trace message containing multi-line output") {
+            val input = """
+                {"id":"moby.buildkit.trace","aux":"Cs8BCkdzaGEyNTY6MWZjNWU4MWE0YTZiNGNmMzAwNzRhMDA3ZTA3YTY4ZjM0YmQ0MjdhODgyNDllZjNiNzZkZjg3YTRkMzk0MTcwYRJHc2hhMjU2OmZkYWQ2NzFhOTEyYjJkMDEwMzMzYWYzMGQwNTAzNjdkN2YwYzY3ZjZiZDQ4ZTQzYmMzYTJlZWQ3ODkxNDdkMzIaLlsyLzJdIFJVTiBzaCAtYyAnZWNobyAiaGVsbG8iICYmIGVjaG8gIndvcmxkIicqCwjun5r8BRDU4bMI"}
+                {"id":"moby.buildkit.trace","aux":"GmYKR3NoYTI1NjoxZmM1ZTgxYTRhNmI0Y2YzMDA3NGEwMDdlMDdhNjhmMzRiZDQyN2E4ODI0OWVmM2I3NmRmODdhNGQzOTQxNzBhEgsI7p+a/AUQ1LrxZBgBIgxoZWxsbwp3b3JsZAo="}
+                {"id":"moby.buildkit.trace","aux":"CtwBCkdzaGEyNTY6MWZjNWU4MWE0YTZiNGNmMzAwNzRhMDA3ZTA3YTY4ZjM0YmQ0MjdhODgyNDllZjNiNzZkZjg3YTRkMzk0MTcwYRJHc2hhMjU2OmZkYWQ2NzFhOTEyYjJkMDEwMzMzYWYzMGQwNTAzNjdkN2YwYzY3ZjZiZDQ4ZTQzYmMzYTJlZWQ3ODkxNDdkMzIaLlsyLzJdIFJVTiBzaCAtYyAnZWNobyAiaGVsbG8iICYmIGVjaG8gIndvcmxkIicqCwjun5r8BRDU4bMIMgsI7p+a/AUQ/K76eA=="}
+            """.trimIndent()
+
+            beforeEachTest {
+                body.readFrom(StringReader(input), outputStream, eventCallback)
+            }
+
+            it("prefixes each line of the output") {
+                assertThat(
+                    output.toString(),
+                    equalTo(
+                        """
+                        |#1 [2/2] RUN sh -c 'echo "hello" && echo "world"'
+                        |#1 0.193 hello
+                        |#1 0.193 world
+                        |#1 DONE
+                        |
+                        """.trimMargin()
+                    )
+                )
+            }
+        }
+
+        given("a response with a trace message containing output that does not end with a newline character") {
+            val input = """
+                {"id":"moby.buildkit.trace","aux":"CtIBCkdzaGEyNTY6MTlkODAzMDQ5ODA5MzdiOTgzNjA3YTkzNDgwODkzYjdlMDRhZmMxMDJmNDVmYTU0ODYyMmI0MWI0YmE4YTE3ORJHc2hhMjU2OmZkYWQ2NzFhOTEyYjJkMDEwMzMzYWYzMGQwNTAzNjdkN2YwYzY3ZjZiZDQ4ZTQzYmMzYTJlZWQ3ODkxNDdkMzIaMVsyLzJdIFJVTiBzaCAtYyAnZWNobyAiaGVsbG8iICYmIGVjaG8gLW4gIndvcmxkIicqCwihpJr8BRComIVU"}
+                {"id":"moby.buildkit.trace","aux":"GmYKR3NoYTI1NjoxOWQ4MDMwNDk4MDkzN2I5ODM2MDdhOTM0ODA4OTNiN2UwNGFmYzEwMmY0NWZhNTQ4NjIyYjQxYjRiYThhMTc5EgwIoaSa/AUQzMuaqgEYASILaGVsbG8Kd29ybGQ="}
+                {"id":"moby.buildkit.trace","aux":"CuABCkdzaGEyNTY6MTlkODAzMDQ5ODA5MzdiOTgzNjA3YTkzNDgwODkzYjdlMDRhZmMxMDJmNDVmYTU0ODYyMmI0MWI0YmE4YTE3ORJHc2hhMjU2OmZkYWQ2NzFhOTEyYjJkMDEwMzMzYWYzMGQwNTAzNjdkN2YwYzY3ZjZiZDQ4ZTQzYmMzYTJlZWQ3ODkxNDdkMzIaMVsyLzJdIFJVTiBzaCAtYyAnZWNobyAiaGVsbG8iICYmIGVjaG8gLW4gIndvcmxkIicqCwihpJr8BRComIVUMgwIoaSa/AUQuIvLwQE="}
+            """.trimIndent()
+
+            beforeEachTest {
+                body.readFrom(StringReader(input), outputStream, eventCallback)
+            }
+
+            it("appends a new line to the end of the output") {
+                assertThat(
+                    output.toString(),
+                    equalTo(
+                        """
+                        |#1 [2/2] RUN sh -c 'echo "hello" && echo -n "world"'
+                        |#1 0.180 hello
+                        |#1 0.180 world
+                        |#1 DONE
+                        |
+                        """.trimMargin()
+                    )
+                )
+            }
+        }
+
         mapOf(
             "\n" to """""""",
             "{\n" to """"{""""

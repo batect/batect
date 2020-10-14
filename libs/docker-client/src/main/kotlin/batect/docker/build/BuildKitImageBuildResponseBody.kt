@@ -184,10 +184,9 @@ class BuildKitImageBuildResponseBody : ImageBuildResponseBody {
             val vertex = startedVertices.getValue(log.vertex)
             val timestamp = Duration.between(vertex.started, log.timestamp.toInstant()).toShortString()
 
-            // TODO: handle multi-line message
-            val message = log.msg.toString(Charsets.UTF_8)
-
-            outputBuffer.writeString("#${vertex.stepNumber} $timestamp $message")
+            log.msg.toString(Charsets.UTF_8).trimEnd().lineSequence().forEach { line ->
+                outputBuffer.writeString("#${vertex.stepNumber} $timestamp $line\n")
+            }
 
             // TODO: update lastVertex
         }

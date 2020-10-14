@@ -90,7 +90,7 @@ object LegacyImageBuildResponseBodySpec : Spek({
                     eventsPosted,
                     equalTo(
                         listOf(
-                            BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(0, "FROM postgres:13.0")), 2)
+                            BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(0, "step 1 of 2: FROM postgres:13.0")))
                         )
                     )
                 )
@@ -118,8 +118,8 @@ object LegacyImageBuildResponseBodySpec : Spek({
                     eventsPosted,
                     equalTo(
                         listOf(
-                            BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(0, "FROM postgres:13.0")), 2),
-                            BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(1, "HEALTHCHECK --interval=0.1s CMD echo -n \"Hello from the healthcheck\"")), 2)
+                            BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(0, "step 1 of 2: FROM postgres:13.0"))),
+                            BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(1, "step 2 of 2: HEALTHCHECK --interval=0.1s CMD echo -n \"Hello from the healthcheck\"")))
                         )
                     )
                 )
@@ -182,8 +182,8 @@ object LegacyImageBuildResponseBodySpec : Spek({
                     eventsPosted,
                     equalTo(
                         listOf(
-                            BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(0, "FROM postgres:13.0")), 2),
-                            BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(1, "HEALTHCHECK --interval=0.1s CMD echo -n \"Hello from the healthcheck\"")), 2),
+                            BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(0, "step 1 of 2: FROM postgres:13.0"))),
+                            BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(1, "step 2 of 2: HEALTHCHECK --interval=0.1s CMD echo -n \"Hello from the healthcheck\""))),
                             BuildComplete(DockerImage("sha256:af6fb21f41800ce17f3df91c26c3d03b775c2ad9208a5ca32c1141f1e9191b12"))
                         )
                     )
@@ -207,8 +207,8 @@ object LegacyImageBuildResponseBodySpec : Spek({
                     eventsPosted,
                     equalTo(
                         listOf(
-                            BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(1, "ADD http://httpbin.org/get test.txt")), 2),
-                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, "ADD http://httpbin.org/get test.txt", DownloadOperation.Downloading, 329, 4159)), 2)
+                            BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(1, "step 2 of 2: ADD http://httpbin.org/get test.txt"))),
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, "step 2 of 2: ADD http://httpbin.org/get test.txt", DownloadOperation.Downloading, 329, 4159)))
                         )
                     )
                 )
@@ -243,8 +243,8 @@ object LegacyImageBuildResponseBodySpec : Spek({
                     eventsPosted,
                     equalTo(
                         listOf(
-                            BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(1, "ADD http://httpbin.org/get test.txt")), 2),
-                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, "ADD http://httpbin.org/get test.txt", DownloadOperation.Downloading, 329, null)), 2)
+                            BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(1, "step 2 of 2: ADD http://httpbin.org/get test.txt"))),
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, "step 2 of 2: ADD http://httpbin.org/get test.txt", DownloadOperation.Downloading, 329, null)))
                         )
                     )
                 )
@@ -298,29 +298,29 @@ object LegacyImageBuildResponseBodySpec : Spek({
                     eventsPosted,
                     equalTo(
                         listOf(
-                            BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(0, "FROM postgres:13.0")), 2),
-                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(0, "FROM postgres:13.0", DownloadOperation.Downloading, 423, 1772)), 2),
-                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(0, "FROM postgres:13.0", DownloadOperation.Downloading, 42704 + 423, 4178135 + 1772)), 2),
-                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(0, "FROM postgres:13.0", DownloadOperation.Downloading, 281854 + 42704 + 423, 27092161 + 4178135 + 1772)), 2),
-                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(0, "FROM postgres:13.0", DownloadOperation.Downloading, 281854 + 42704 + 1772, 27092161 + 4178135 + 1772)), 2),
-                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(0, "FROM postgres:13.0", DownloadOperation.Downloading, 5863899 + 42704 + 1772, 27092161 + 4178135 + 1772)), 2),
-                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(0, "FROM postgres:13.0", DownloadOperation.Downloading, 5863899 + 4164061 + 1772, 27092161 + 4178135 + 1772)), 2),
-                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(0, "FROM postgres:13.0", DownloadOperation.Downloading, 5863899 + 4178135 + 1772, 27092161 + 4178135 + 1772)), 2),
-                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(0, "FROM postgres:13.0", DownloadOperation.Downloading, 6978011 + 4178135 + 1772, 27092161 + 4178135 + 1772)), 2),
-                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(0, "FROM postgres:13.0", DownloadOperation.VerifyingChecksum, 0 + 4178135 + 1772, 27092161 + 4178135 + 1772)), 2),
-                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(0, "FROM postgres:13.0", DownloadOperation.DownloadComplete, 27092161 + 4178135 + 1772, 27092161 + 4178135 + 1772)), 2),
-                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(0, "FROM postgres:13.0", DownloadOperation.Extracting, 294912 + 0 + 0, 27092161 + 4178135 + 1772)), 2),
-                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(0, "FROM postgres:13.0", DownloadOperation.PullComplete, 27092161 + 0 + 0, 27092161 + 4178135 + 1772)), 2),
-                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(0, "FROM postgres:13.0", DownloadOperation.Downloading, 27092161 + 4178135 + 1772 + 503039, 27092161 + 4178135 + 1772 + 1419223)), 2),
-                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(0, "FROM postgres:13.0", DownloadOperation.VerifyingChecksum, 27092161 + 4178135 + 1772 + 0, 27092161 + 4178135 + 1772 + 1419223)), 2),
-                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(0, "FROM postgres:13.0", DownloadOperation.PullComplete, 27092161 + 0 + 0 + 0, 27092161 + 4178135 + 1772 + 1419223)), 2),
-                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(0, "FROM postgres:13.0", DownloadOperation.Extracting, 27092161 + 65536 + 0 + 0, 27092161 + 4178135 + 1772 + 1419223)), 2),
-                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(0, "FROM postgres:13.0", DownloadOperation.Extracting, 27092161 + 4178134 + 0 + 0, 27092161 + 4178135 + 1772 + 1419223)), 2),
-                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(0, "FROM postgres:13.0", DownloadOperation.PullComplete, 27092161 + 4178135 + 0 + 0, 27092161 + 4178135 + 1772 + 1419223)), 2),
-                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(0, "FROM postgres:13.0", DownloadOperation.Extracting, 27092161 + 4178135 + 1772 + 0, 27092161 + 4178135 + 1772 + 1419223)), 2),
-                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(0, "FROM postgres:13.0", DownloadOperation.PullComplete, 27092161 + 4178135 + 1772 + 0, 27092161 + 4178135 + 1772 + 1419223)), 2),
-                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(0, "FROM postgres:13.0", DownloadOperation.Extracting, 27092161 + 4178135 + 1772 + 1419223, 27092161 + 4178135 + 1772 + 1419223)), 2),
-                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(0, "FROM postgres:13.0", DownloadOperation.PullComplete, 27092161 + 4178135 + 1772 + 1419223, 27092161 + 4178135 + 1772 + 1419223)), 2),
+                            BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(0, "step 1 of 2: FROM postgres:13.0"))),
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(0, "step 1 of 2: FROM postgres:13.0", DownloadOperation.Downloading, 423, 1772))),
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(0, "step 1 of 2: FROM postgres:13.0", DownloadOperation.Downloading, 42704 + 423, 4178135 + 1772))),
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(0, "step 1 of 2: FROM postgres:13.0", DownloadOperation.Downloading, 281854 + 42704 + 423, 27092161 + 4178135 + 1772))),
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(0, "step 1 of 2: FROM postgres:13.0", DownloadOperation.Downloading, 281854 + 42704 + 1772, 27092161 + 4178135 + 1772))),
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(0, "step 1 of 2: FROM postgres:13.0", DownloadOperation.Downloading, 5863899 + 42704 + 1772, 27092161 + 4178135 + 1772))),
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(0, "step 1 of 2: FROM postgres:13.0", DownloadOperation.Downloading, 5863899 + 4164061 + 1772, 27092161 + 4178135 + 1772))),
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(0, "step 1 of 2: FROM postgres:13.0", DownloadOperation.Downloading, 5863899 + 4178135 + 1772, 27092161 + 4178135 + 1772))),
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(0, "step 1 of 2: FROM postgres:13.0", DownloadOperation.Downloading, 6978011 + 4178135 + 1772, 27092161 + 4178135 + 1772))),
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(0, "step 1 of 2: FROM postgres:13.0", DownloadOperation.VerifyingChecksum, 0 + 4178135 + 1772, 27092161 + 4178135 + 1772))),
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(0, "step 1 of 2: FROM postgres:13.0", DownloadOperation.DownloadComplete, 27092161 + 4178135 + 1772, 27092161 + 4178135 + 1772))),
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(0, "step 1 of 2: FROM postgres:13.0", DownloadOperation.Extracting, 294912 + 0 + 0, 27092161 + 4178135 + 1772))),
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(0, "step 1 of 2: FROM postgres:13.0", DownloadOperation.PullComplete, 27092161 + 0 + 0, 27092161 + 4178135 + 1772))),
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(0, "step 1 of 2: FROM postgres:13.0", DownloadOperation.Downloading, 27092161 + 4178135 + 1772 + 503039, 27092161 + 4178135 + 1772 + 1419223))),
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(0, "step 1 of 2: FROM postgres:13.0", DownloadOperation.VerifyingChecksum, 27092161 + 4178135 + 1772 + 0, 27092161 + 4178135 + 1772 + 1419223))),
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(0, "step 1 of 2: FROM postgres:13.0", DownloadOperation.PullComplete, 27092161 + 0 + 0 + 0, 27092161 + 4178135 + 1772 + 1419223))),
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(0, "step 1 of 2: FROM postgres:13.0", DownloadOperation.Extracting, 27092161 + 65536 + 0 + 0, 27092161 + 4178135 + 1772 + 1419223))),
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(0, "step 1 of 2: FROM postgres:13.0", DownloadOperation.Extracting, 27092161 + 4178134 + 0 + 0, 27092161 + 4178135 + 1772 + 1419223))),
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(0, "step 1 of 2: FROM postgres:13.0", DownloadOperation.PullComplete, 27092161 + 4178135 + 0 + 0, 27092161 + 4178135 + 1772 + 1419223))),
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(0, "step 1 of 2: FROM postgres:13.0", DownloadOperation.Extracting, 27092161 + 4178135 + 1772 + 0, 27092161 + 4178135 + 1772 + 1419223))),
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(0, "step 1 of 2: FROM postgres:13.0", DownloadOperation.PullComplete, 27092161 + 4178135 + 1772 + 0, 27092161 + 4178135 + 1772 + 1419223))),
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(0, "step 1 of 2: FROM postgres:13.0", DownloadOperation.Extracting, 27092161 + 4178135 + 1772 + 1419223, 27092161 + 4178135 + 1772 + 1419223))),
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(0, "step 1 of 2: FROM postgres:13.0", DownloadOperation.PullComplete, 27092161 + 4178135 + 1772 + 1419223, 27092161 + 4178135 + 1772 + 1419223))),
                         )
                     )
                 )
@@ -359,11 +359,11 @@ object LegacyImageBuildResponseBodySpec : Spek({
                     eventsPosted,
                     equalTo(
                         listOf(
-                            BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(0, "FROM postgres:13.0")), 2),
-                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(0, "FROM postgres:13.0", DownloadOperation.Downloading, 423, 1772)), 2),
-                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(0, "FROM postgres:13.0", DownloadOperation.Downloading, 500, 1772)), 2),
-                            BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(1, "FROM postgres:12.0")), 2),
-                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, "FROM postgres:12.0", DownloadOperation.Downloading, 900, 1300)), 2),
+                            BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(0, "step 1 of 2: FROM postgres:13.0"))),
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(0, "step 1 of 2: FROM postgres:13.0", DownloadOperation.Downloading, 423, 1772))),
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(0, "step 1 of 2: FROM postgres:13.0", DownloadOperation.Downloading, 500, 1772))),
+                            BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(1, "step 2 of 2: FROM postgres:12.0"))),
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, "step 2 of 2: FROM postgres:12.0", DownloadOperation.Downloading, 900, 1300))),
                         )
                     )
                 )

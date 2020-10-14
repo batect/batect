@@ -138,8 +138,8 @@ object BuildImageStepRunnerSpec : Spek({
         describe("when building the image succeeds") {
             on("and propagating proxy-related environment variables is enabled") {
                 val image = DockerImage("some-image")
-                val update1 = BuildProgress(emptySet(), 2)
-                val update2 = BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(0, "First step")), 2)
+                val update1 = BuildProgress(emptySet())
+                val update2 = BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(0, "First step")))
 
                 describe("regardless of the image pull policy") {
                     beforeEachTest {

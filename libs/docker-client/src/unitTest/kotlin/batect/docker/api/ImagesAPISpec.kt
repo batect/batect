@@ -138,9 +138,9 @@ object ImagesAPISpec : Spek({
             val cancellationContext by createForEachTest { mock<CancellationContext>() }
 
             val successEvents = listOf(
-                BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(0, "FROM nginx:1.13.0")), 5),
-                BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(1, "RUN apt update \u0026\u0026 apt install -y curl \u0026\u0026 rm -rf /var/lib/apt/lists/*")), 5),
-                BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(2, "COPY index.html /usr/share/nginx/html")), 5),
+                BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(0, "FROM nginx:1.13.0"))),
+                BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(1, "RUN apt update \u0026\u0026 apt install -y curl \u0026\u0026 rm -rf /var/lib/apt/lists/*"))),
+                BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(2, "COPY index.html /usr/share/nginx/html"))),
                 BuildComplete(DockerImage("sha256:24125bbc6cbe08f530e97c81ee461357fa3ba56f4d7693d7895ec86671cf3540"))
             )
 
@@ -290,8 +290,8 @@ object ImagesAPISpec : Spek({
 
                     buildResponseBody.outputToStream = "This is some output from the build process.\nThis is some more output from the build process.\n"
                     buildResponseBody.eventsToPost = listOf(
-                        BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(0, "FROM nginx:1.13.0")), 5),
-                        BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(1, "RUN exit 1")), 5),
+                        BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(0, "FROM nginx:1.13.0"))),
+                        BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(1, "RUN exit 1"))),
                         BuildError("The command '/bin/sh -c exit 1' returned a non-zero code: 1")
                     )
                 }
@@ -329,7 +329,7 @@ object ImagesAPISpec : Spek({
                     clientWithLongTimeout.mock("POST", expectedLegacyBuilderUrl, daemonBuildResponse, 200, expectedHeadersForAuthentication)
 
                     buildResponseBody.eventsToPost = listOf(
-                        BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(0, "FROM nginx:1.13.0")), 5),
+                        BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(0, "FROM nginx:1.13.0"))),
                     )
                 }
 

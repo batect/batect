@@ -35,14 +35,12 @@ import java.io.Reader
 class LegacyImageBuildResponseBody : ImageBuildResponseBody {
     private var lastStepIndex: Int? = null
     private var lastStepName: String? = null
-    private var totalSteps: Int? = null
     private var imagePullProgressReporter: ImagePullProgressReporter? = null
 
     override fun readFrom(stream: Reader, outputStream: Sink, eventCallback: ImageBuildEventCallback) {
         val outputBuffer = outputStream.buffer()
         lastStepIndex = null
         lastStepName = null
-        totalSteps = null
 
         stream.forEachLine { line -> decodeLine(line, outputBuffer, eventCallback) }
     }
@@ -72,10 +70,11 @@ class LegacyImageBuildResponseBody : ImageBuildResponseBody {
         val buildStepLineMatch = buildStepLineRegex.matchEntire(output) ?: return
 
         val stepNumber = buildStepLineMatch.groupValues[1].toInt()
+        val totalSteps = buildStepLineMatch.groupValues[2].toInt()
         val stepIndex = stepNumber - 1
-        val name = buildStepLineMatch.groupValues[3]
-        totalSteps = buildStepLineMatch.groupValues[2].toInt()
-        val event = BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(stepIndex, name)), totalSteps!!)
+        val originalName = buildStepLineMatch.groupValues[3]
+        val name = "step $stepNumber of $totalSteps: $originalName"
+        val event = BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(stepIndex, name)))
         eventCallback(event)
 
         lastStepIndex = stepIndex
@@ -112,8 +111,7 @@ class LegacyImageBuildResponseBody : ImageBuildResponseBody {
         val event = BuildProgress(
             setOf(
                 ActiveImageBuildStep.Downloading(lastStepIndex!!, lastStepName!!, update.currentOperation, update.completedBytes, update.totalBytes)
-            ),
-            totalSteps!!
+            )
         )
 
         eventCallback(event)
@@ -127,8 +125,7 @@ class LegacyImageBuildResponseBody : ImageBuildResponseBody {
         val event = BuildProgress(
             setOf(
                 ActiveImageBuildStep.Downloading(lastStepIndex!!, lastStepName!!, DownloadOperation.Downloading, bytesDownloaded, totalBytesToReport)
-            ),
-            totalSteps!!
+            )
         )
 
         eventCallback(event)

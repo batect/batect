@@ -109,7 +109,7 @@ object ContainerStartupProgressLineSpec : Spek({
             describe("after receiving an 'image build progress' notification") {
                 given("that notification is for this line's container") {
                     on("that notification containing image pull progress information") {
-                        val event = ImageBuildProgressEvent(container, BuildProgress(setOf(ActiveImageBuildStep.Downloading(0, "FROM the-image:1.2.3", DownloadOperation.Downloading, 12, 20)), 5))
+                        val event = ImageBuildProgressEvent(container, BuildProgress(setOf(ActiveImageBuildStep.Downloading(0, "step 1 of 5: FROM the-image:1.2.3", DownloadOperation.Downloading, 12, 20))))
                         beforeEachTest { line.onEventPosted(event) }
                         val output by runForEachTest { line.print() }
 
@@ -119,7 +119,7 @@ object ContainerStartupProgressLineSpec : Spek({
                     }
 
                     on("that notification not containing image pull progress information") {
-                        val event = ImageBuildProgressEvent(container, BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(1, "COPY health-check.sh /tools/")), 5))
+                        val event = ImageBuildProgressEvent(container, BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(1, "step 2 of 5: COPY health-check.sh /tools/"))))
                         beforeEachTest { line.onEventPosted(event) }
                         val output by runForEachTest { line.print() }
 
@@ -130,7 +130,7 @@ object ContainerStartupProgressLineSpec : Spek({
                 }
 
                 on("that notification being for another container") {
-                    val event = ImageBuildProgressEvent(otherContainer, BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(1, "COPY health-check.sh /tools/")), 5))
+                    val event = ImageBuildProgressEvent(otherContainer, BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(1, "step 2 of 5: COPY health-check.sh /tools/"))))
                     beforeEachTest { line.onEventPosted(event) }
                     val output by runForEachTest { line.print() }
 

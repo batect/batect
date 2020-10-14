@@ -33,10 +33,9 @@ object ImageBuildProgressEventSpec : Spek({
         val container = Container("the-container", imageSourceDoesNotMatter())
         val progress = BuildProgress(
             setOf(
-                ActiveImageBuildStep.NotDownloading(3, "RUN the-thing.sh"),
-                ActiveImageBuildStep.Downloading(7, "FROM postgres:13.0", DownloadOperation.Extracting, 12, 20)
-            ),
-            10
+                ActiveImageBuildStep.NotDownloading(3, "step 4 of 10: RUN the-thing.sh"),
+                ActiveImageBuildStep.Downloading(7, "step 8 of 10: FROM postgres:13.0", DownloadOperation.Extracting, 12, 20)
+            )
         )
 
         val event = ImageBuildProgressEvent(container, progress)
@@ -51,17 +50,16 @@ object ImageBuildProgressEventSpec : Spek({
                         |   "type": "${event::class.qualifiedName}",
                         |   "container": "the-container",
                         |   "buildProgress": {
-                        |       "totalSteps": 10,
                         |       "activeSteps": [
                         |           {
                         |               "type": "NotDownloading",
                         |               "stepIndex": 3,
-                        |               "name": "RUN the-thing.sh"
+                        |               "name": "step 4 of 10: RUN the-thing.sh"
                         |           },
                         |           {
                         |               "type": "Downloading",
                         |               "stepIndex": 7,
-                        |               "name": "FROM postgres:13.0",
+                        |               "name": "step 8 of 10: FROM postgres:13.0",
                         |               "operation": "Extracting",
                         |               "bytesDownloaded": 12,
                         |               "totalBytes": 20

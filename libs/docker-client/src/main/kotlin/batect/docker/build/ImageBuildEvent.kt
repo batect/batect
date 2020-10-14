@@ -25,17 +25,17 @@ import kotlinx.serialization.Serializable
 sealed class ImageBuildEvent
 
 @Serializable
-data class BuildProgress(val activeSteps: Set<ActiveImageBuildStep>, val totalSteps: Int) : ImageBuildEvent() {
+data class BuildProgress(val activeSteps: Set<ActiveImageBuildStep>) : ImageBuildEvent() {
     fun toHumanReadableString(): String {
         if (activeSteps.isEmpty()) {
-            return totalSteps.pluralise("step") + " total"
+            return "building..."
         }
 
         val firstStep = activeSteps.minByOrNull { it.stepIndex }!!
         val otherStepsRunning = activeSteps.size - 1
         val otherStepsDescription = if (otherStepsRunning == 0) "" else " (+${otherStepsRunning.pluralise("other step")} running)"
 
-        return "step ${firstStep.stepIndex + 1} of $totalSteps: ${firstStep.toHumanReadableString()}$otherStepsDescription"
+        return "${firstStep.toHumanReadableString()}$otherStepsDescription"
     }
 
     private fun Int.pluralise(type: String): String = if (this == 1) "$this $type" else "$this ${type}s"

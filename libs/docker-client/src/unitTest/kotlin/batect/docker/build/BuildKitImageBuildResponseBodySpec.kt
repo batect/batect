@@ -384,6 +384,62 @@ object BuildKitImageBuildResponseBodySpec : Spek({
             }
         }
 
+        given("a response with trace messages for a file download") {
+            val input = """
+                {"id":"moby.buildkit.trace","aux":"CnUKR3NoYTI1NjpmZGFkNjcxYTkxMmIyZDAxMDMzM2FmMzBkMDUwMzY3ZDdmMGM2N2Y2YmQ0OGU0M2JjM2EyZWVkNzg5MTQ3ZDMyGipbMS8yXSBGUk9NIGRvY2tlci5pby9saWJyYXJ5L2FscGluZTozLjEyLjAKlgEKR3NoYTI1Njo5M2JkMTZkOWFkN2Y2MjcxZGFkZmE0MjE1YTIwZWJkMzlmNjE0YzU2NTM3NTdmMDZkMDE5NWY1N2JlZWFmM2NiGktodHRwczovL2dpdGh1Yi5jb20vYmF0ZWN0L2JhdGVjdC9yZWxlYXNlcy9kb3dubG9hZC8wLjU5LjAvYmF0ZWN0LTAuNTkuMC5qYXIKvQIKR3NoYTI1NjozNTA2OTc5NDM3ZDU5ZjFjNzNlNTM2MGExY2EzZjU4YmI0ODBmNTJjMTRlM2IwNmIzY2YwMWQ2YzMzOTE4MzVmEkdzaGEyNTY6ZmRhZDY3MWE5MTJiMmQwMTAzMzNhZjMwZDA1MDM2N2Q3ZjBjNjdmNmJkNDhlNDNiYzNhMmVlZDc4OTE0N2QzMhJHc2hhMjU2OjkzYmQxNmQ5YWQ3ZjYyNzFkYWRmYTQyMTVhMjBlYmQzOWY2MTRjNTY1Mzc1N2YwNmQwMTk1ZjU3YmVlYWYzY2IaYFsyLzJdIEFERCBodHRwczovL2dpdGh1Yi5jb20vYmF0ZWN0L2JhdGVjdC9yZWxlYXNlcy9kb3dubG9hZC8wLjU5LjAvYmF0ZWN0LTAuNTkuMC5qYXIgYmF0ZWN0Lmphcg=="}
+                {"id":"moby.buildkit.trace","aux":"CqMBCkdzaGEyNTY6OTNiZDE2ZDlhZDdmNjI3MWRhZGZhNDIxNWEyMGViZDM5ZjYxNGM1NjUzNzU3ZjA2ZDAxOTVmNTdiZWVhZjNjYhpLaHR0cHM6Ly9naXRodWIuY29tL2JhdGVjdC9iYXRlY3QvcmVsZWFzZXMvZG93bmxvYWQvMC41OS4wL2JhdGVjdC0wLjU5LjAuamFyKgsI1+ud/AUQzJ+FYAqCAQpHc2hhMjU2OmZkYWQ2NzFhOTEyYjJkMDEwMzMzYWYzMGQwNTAzNjdkN2YwYzY3ZjZiZDQ4ZTQzYmMzYTJlZWQ3ODkxNDdkMzIaKlsxLzJdIEZST00gZG9ja2VyLmlvL2xpYnJhcnkvYWxwaW5lOjMuMTIuMCoLCNfrnfwFEI7tjGA="}
+                {"id":"moby.buildkit.trace","aux":"Co8BCkdzaGEyNTY6ZmRhZDY3MWE5MTJiMmQwMTAzMzNhZjMwZDA1MDM2N2Q3ZjBjNjdmNmJkNDhlNDNiYzNhMmVlZDc4OTE0N2QzMhoqWzEvMl0gRlJPTSBkb2NrZXIuaW8vbGlicmFyeS9hbHBpbmU6My4xMi4wKgsI1+ud/AUQju2MYDILCNfrnfwFELDYomA="}
+                {"id":"moby.buildkit.trace","aux":"CpEBCkdzaGEyNTY6ZmRhZDY3MWE5MTJiMmQwMTAzMzNhZjMwZDA1MDM2N2Q3ZjBjNjdmNmJkNDhlNDNiYzNhMmVlZDc4OTE0N2QzMhoqWzEvMl0gRlJPTSBkb2NrZXIuaW8vbGlicmFyeS9hbHBpbmU6My4xMi4wIAEqCwjX6538BRC5la9gMgsI1+ud/AUQv6qwYA=="}
+                {"id":"moby.buildkit.trace","aux":"CrEBCkdzaGEyNTY6OTNiZDE2ZDlhZDdmNjI3MWRhZGZhNDIxNWEyMGViZDM5ZjYxNGM1NjUzNzU3ZjA2ZDAxOTVmNTdiZWVhZjNjYhpLaHR0cHM6Ly9naXRodWIuY29tL2JhdGVjdC9iYXRlY3QvcmVsZWFzZXMvZG93bmxvYWQvMC41OS4wL2JhdGVjdC0wLjU5LjAuamFyKgsI1+ud/AUQzJ+FYDIMCNrrnfwFEMWy0+8B"}
+                {"id":"moby.buildkit.trace","aux":"CrIBCkdzaGEyNTY6OTNiZDE2ZDlhZDdmNjI3MWRhZGZhNDIxNWEyMGViZDM5ZjYxNGM1NjUzNzU3ZjA2ZDAxOTVmNTdiZWVhZjNjYhpLaHR0cHM6Ly9naXRodWIuY29tL2JhdGVjdC9iYXRlY3QvcmVsZWFzZXMvZG93bmxvYWQvMC41OS4wL2JhdGVjdC0wLjU5LjAuamFyKgwI2uud/AUQ4tby7wEyDAja6538BRD7kfPvAQ=="}
+                {"id":"moby.buildkit.trace","aux":"CssCCkdzaGEyNTY6MzUwNjk3OTQzN2Q1OWYxYzczZTUzNjBhMWNhM2Y1OGJiNDgwZjUyYzE0ZTNiMDZiM2NmMDFkNmMzMzkxODM1ZhJHc2hhMjU2OmZkYWQ2NzFhOTEyYjJkMDEwMzMzYWYzMGQwNTAzNjdkN2YwYzY3ZjZiZDQ4ZTQzYmMzYTJlZWQ3ODkxNDdkMzISR3NoYTI1Njo5M2JkMTZkOWFkN2Y2MjcxZGFkZmE0MjE1YTIwZWJkMzlmNjE0YzU2NTM3NTdmMDZkMDE5NWY1N2JlZWFmM2NiGmBbMi8yXSBBREQgaHR0cHM6Ly9naXRodWIuY29tL2JhdGVjdC9iYXRlY3QvcmVsZWFzZXMvZG93bmxvYWQvMC41OS4wL2JhdGVjdC0wLjU5LjAuamFyIGJhdGVjdC5qYXIqDAja6538BRCwj9iLAg=="}
+                {"id":"moby.buildkit.trace","aux":"CtkCCkdzaGEyNTY6MzUwNjk3OTQzN2Q1OWYxYzczZTUzNjBhMWNhM2Y1OGJiNDgwZjUyYzE0ZTNiMDZiM2NmMDFkNmMzMzkxODM1ZhJHc2hhMjU2OmZkYWQ2NzFhOTEyYjJkMDEwMzMzYWYzMGQwNTAzNjdkN2YwYzY3ZjZiZDQ4ZTQzYmMzYTJlZWQ3ODkxNDdkMzISR3NoYTI1Njo5M2JkMTZkOWFkN2Y2MjcxZGFkZmE0MjE1YTIwZWJkMzlmNjE0YzU2NTM3NTdmMDZkMDE5NWY1N2JlZWFmM2NiGmBbMi8yXSBBREQgaHR0cHM6Ly9naXRodWIuY29tL2JhdGVjdC9iYXRlY3QvcmVsZWFzZXMvZG93bmxvYWQvMC41OS4wL2JhdGVjdC0wLjU5LjAuamFyIGJhdGVjdC5qYXIqDAja6538BRCwj9iLAjIMCNrrnfwFEMGUpbgC"}
+            """.trimIndent()
+
+            beforeEachTest {
+                body.readFrom(StringReader(input), outputStream, eventCallback)
+            }
+
+            it("posts build status messages as the build progresses") {
+                val imagePullStep = ActiveImageBuildStep.NotDownloading(1, "[1/2] FROM docker.io/library/alpine:3.12.0")
+                val download = ActiveImageBuildStep.NotDownloading(0, "https://github.com/batect/batect/releases/download/0.59.0/batect-0.59.0.jar")
+                val addStep = ActiveImageBuildStep.NotDownloading(2, "[2/2] ADD https://github.com/batect/batect/releases/download/0.59.0/batect-0.59.0.jar batect.jar")
+
+                assertThat(
+                    eventsPosted,
+                    equalTo(
+                        listOf(
+                            BuildProgress(setOf(imagePullStep, download)),
+                            BuildProgress(setOf(download)),
+                            BuildProgress(setOf(addStep))
+                        )
+                    )
+                )
+            }
+
+            it("streams output showing the progression of the build") {
+                assertThat(
+                    output.toString(),
+                    equalTo(
+                        """
+                        |#1 https://github.com/batect/batect/releases/download/0.59.0/batect-0.59.0.jar
+                        |#1 ...
+                        |
+                        |#2 [1/2] FROM docker.io/library/alpine:3.12.0
+                        |#2 CACHED
+                        |
+                        |#1 https://github.com/batect/batect/releases/download/0.59.0/batect-0.59.0.jar
+                        |#1 DONE
+                        |
+                        |#3 [2/2] ADD https://github.com/batect/batect/releases/download/0.59.0/batect-0.59.0.jar batect.jar
+                        |#3 DONE
+                        |
+                        """.trimMargin()
+                    )
+                )
+            }
+        }
+
         mapOf(
             "\n" to """""""",
             "{\n" to """"{""""

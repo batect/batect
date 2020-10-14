@@ -43,7 +43,7 @@ class BuildKitImageBuildResponseBody : ImageBuildResponseBody {
     private val activeVertices = mutableSetOf<String>()
 
     private var pendingCompletedVertex: Vertex? = null
-    private var lastVertex: String? = null
+    private var lastVertexDigest: String? = null
 
     override fun readFrom(stream: Reader, outputStream: Sink, eventCallback: ImageBuildEventCallback) {
         val outputBuffer = outputStream.buffer()
@@ -142,44 +142,47 @@ class BuildKitImageBuildResponseBody : ImageBuildResponseBody {
             return
         }
 
-        writeTransitionTo(vertex.digest, outputBuffer)
-
         if (!startedVertices.keys.contains(vertex.digest)) {
             val stepNumber = startedVertices.size + 1
             startedVertices[vertex.digest] = VertexInfo(vertex.started.toInstant(), stepNumber, vertex.name)
 
-            outputBuffer.writeString("#$stepNumber ${vertex.name}\n")
+            writeTransitionTo(vertex.digest, outputBuffer)
         }
 
         writeLogs(logs, outputBuffer)
         writeCompletedStatuses(completedStatuses, outputBuffer)
 
         if (vertex.hasCompleted()) {
+            writeTransitionTo(vertex.digest, outputBuffer)
             handleCompletedVertexUpdate(vertex, outputBuffer)
         }
     }
 
     private fun writeTransitionTo(vertexDigest: String, outputBuffer: BufferedSink) {
-        if (lastVertex == null || lastVertex == vertexDigest) {
-            lastVertex = vertexDigest
+        if (lastVertexDigest == vertexDigest) {
             return
         }
 
-        if (pendingCompletedVertex != null) {
-            writePendingCompletedVertex(outputBuffer)
-        } else {
-            val stepNumber = startedVertices.getValue(lastVertex!!).stepNumber
-            outputBuffer.writeString("#$stepNumber ...\n")
+        if (lastVertexDigest != null) {
+            if (pendingCompletedVertex != null) {
+                writePendingCompletedVertex(outputBuffer)
+            } else {
+                val stepNumber = startedVertices.getValue(lastVertexDigest!!).stepNumber
+                outputBuffer.writeString("#$stepNumber ...\n")
+            }
+
+            outputBuffer.writeString("\n")
         }
 
-        outputBuffer.writeString("\n")
+        val vertex = startedVertices.getValue(vertexDigest)
+        outputBuffer.writeString("#${vertex.stepNumber} ${vertex.name}\n")
 
-        lastVertex = vertexDigest
+        lastVertexDigest = vertexDigest
     }
 
     private fun writeLogs(logs: Iterable<VertexLog>, outputBuffer: BufferedSink) {
         logs.forEach { log ->
-            // TODO: handle transition from old vertex to new vertex
+            writeTransitionTo(log.vertex, outputBuffer)
 
             val vertex = startedVertices.getValue(log.vertex)
             val timestamp = Duration.between(vertex.started, log.timestamp.toInstant()).toShortString()
@@ -187,8 +190,6 @@ class BuildKitImageBuildResponseBody : ImageBuildResponseBody {
             log.msg.toString(Charsets.UTF_8).trimEnd().lineSequence().forEach { line ->
                 outputBuffer.writeString("#${vertex.stepNumber} $timestamp $line\n")
             }
-
-            // TODO: update lastVertex
         }
     }
 
@@ -205,7 +206,9 @@ class BuildKitImageBuildResponseBody : ImageBuildResponseBody {
 
     private fun handleCompletedVertexUpdate(vertex: Vertex, outputBuffer: BufferedSink) {
         if (!vertex.error.isNullOrEmpty()) {
-            val stepNumber = startedVertices.getValue(lastVertex!!).stepNumber
+            writeTransitionTo(vertex.digest, outputBuffer)
+
+            val stepNumber = startedVertices.getValue(lastVertexDigest!!).stepNumber
             outputBuffer.writeString("#$stepNumber ERROR: ${vertex.error}\n")
         } else {
             // Why not just write 'DONE' as soon as we see the vertex is completed?
@@ -220,7 +223,8 @@ class BuildKitImageBuildResponseBody : ImageBuildResponseBody {
             return
         }
 
-        val stepNumber = startedVertices.getValue(pendingCompletedVertex!!.digest).stepNumber
+        val vertex = startedVertices.getValue(pendingCompletedVertex!!.digest)
+        val stepNumber = vertex.stepNumber
         val description = if (pendingCompletedVertex!!.cached) "CACHED" else "DONE"
 
         outputBuffer.writeString("#$stepNumber $description\n")

@@ -306,6 +306,84 @@ object BuildKitImageBuildResponseBodySpec : Spek({
             }
         }
 
+        given("a response with trace messages containing output from two simultaneously executing build steps") {
+            val input = """
+                {"id":"moby.buildkit.trace","aux":"CokBCkdzaGEyNTY6ZmRhZDY3MWE5MTJiMmQwMTAzMzNhZjMwZDA1MDM2N2Q3ZjBjNjdmNmJkNDhlNDNiYzNhMmVlZDc4OTE0N2QzMhowW2ZpcnN0IDEvMl0gRlJPTSBkb2NrZXIuaW8vbGlicmFyeS9hbHBpbmU6My4xMi4wKgwI3Kqa/AUQ7PKLuQI="}
+                {"id":"moby.buildkit.trace","aux":"CpcBCkdzaGEyNTY6ZmRhZDY3MWE5MTJiMmQwMTAzMzNhZjMwZDA1MDM2N2Q3ZjBjNjdmNmJkNDhlNDNiYzNhMmVlZDc4OTE0N2QzMhowW2ZpcnN0IDEvMl0gRlJPTSBkb2NrZXIuaW8vbGlicmFyeS9hbHBpbmU6My4xMi4wKgwI3Kqa/AUQ7PKLuQIyDAjcqpr8BRDA4KG5Ag=="}
+                {"id":"moby.buildkit.trace","aux":"CpkBCkdzaGEyNTY6ZmRhZDY3MWE5MTJiMmQwMTAzMzNhZjMwZDA1MDM2N2Q3ZjBjNjdmNmJkNDhlNDNiYzNhMmVlZDc4OTE0N2QzMhowW2ZpcnN0IDEvMl0gRlJPTSBkb2NrZXIuaW8vbGlicmFyeS9hbHBpbmU6My4xMi4wIAEqDAjcqpr8BRDg4Ly5AjIMCNyqmvwFEJDDybkCCvYBCkdzaGEyNTY6MTA0YTM5NDcyMjQyNThmOGUyYjk4NGFlMzczNGM5YzgzYmNjOTk0Nzg2ODMyNWRmYzYzNjFlZTM5NWMwYmM2NhJHc2hhMjU2OmZkYWQ2NzFhOTEyYjJkMDEwMzMzYWYzMGQwNTAzNjdkN2YwYzY3ZjZiZDQ4ZTQzYmMzYTJlZWQ3ODkxNDdkMzIaVFtmaXJzdCAyLzJdIFJVTiBzaCAtYyAnZm9yIGkgaW4gMSAyIDMgNCA1OyBkbyBlY2hvICJGaXJzdCBzdGFnZTogJGkiOyBzbGVlcCAzOyBkb25lJyoMCNyqmvwFELDH0rkC"}
+                {"id":"moby.buildkit.trace","aux":"CvwBCkdzaGEyNTY6ZGViYWJlMTQzNDk5NTM3NDBlOWFkOGJmMjg5ODNhMDk1Mjk0MGFiZmIyNDg5YWNhNmI1YjNiMjU2NTQxZTM4ZRJHc2hhMjU2OmZkYWQ2NzFhOTEyYjJkMDEwMzMzYWYzMGQwNTAzNjdkN2YwYzY3ZjZiZDQ4ZTQzYmMzYTJlZWQ3ODkxNDdkMzIaWltzZWNvbmQgMi8zXSBSVU4gc2ggLWMgJ2ZvciBpIGluIDEgMiAzIDQgNSA2IDc7IGRvIGVjaG8gIlNlY29uZCBzdGFnZTogJGkiOyBzbGVlcCAyOyBkb25lJyoMCNyqmvwFENiI3bkC"}
+                {"id":"moby.buildkit.trace","aux":"GmsKR3NoYTI1NjpkZWJhYmUxNDM0OTk1Mzc0MGU5YWQ4YmYyODk4M2EwOTUyOTQwYWJmYjI0ODlhY2E2YjViM2IyNTY1NDFlMzhlEgwI3Kqa/AUQgMnqqgMYASIQU2Vjb25kIHN0YWdlOiAxCg=="}
+                {"id":"moby.buildkit.trace","aux":"GmoKR3NoYTI1NjoxMDRhMzk0NzIyNDI1OGY4ZTJiOTg0YWUzNzM0YzljODNiY2M5OTQ3ODY4MzI1ZGZjNjM2MWVlMzk1YzBiYzY2EgwI3Kqa/AUQlLOxuwMYASIPRmlyc3Qgc3RhZ2U6IDEK"}
+                {"id":"moby.buildkit.trace","aux":"GmsKR3NoYTI1NjpkZWJhYmUxNDM0OTk1Mzc0MGU5YWQ4YmYyODk4M2EwOTUyOTQwYWJmYjI0ODlhY2E2YjViM2IyNTY1NDFlMzhlEgwI3qqa/AUQ/ObHrAMYASIQU2Vjb25kIHN0YWdlOiAyCg=="}
+                {"id":"moby.buildkit.trace","aux":"GmoKR3NoYTI1NjoxMDRhMzk0NzIyNDI1OGY4ZTJiOTg0YWUzNzM0YzljODNiY2M5OTQ3ODY4MzI1ZGZjNjM2MWVlMzk1YzBiYzY2EgwI36qa/AUQ5IrJvAMYASIPRmlyc3Qgc3RhZ2U6IDIK"}
+                {"id":"moby.buildkit.trace","aux":"GmsKR3NoYTI1NjpkZWJhYmUxNDM0OTk1Mzc0MGU5YWQ4YmYyODk4M2EwOTUyOTQwYWJmYjI0ODlhY2E2YjViM2IyNTY1NDFlMzhlEgwI4Kqa/AUQxMuCsAMYASIQU2Vjb25kIHN0YWdlOiAzCg=="}
+                {"id":"moby.buildkit.trace","aux":"GmsKR3NoYTI1NjpkZWJhYmUxNDM0OTk1Mzc0MGU5YWQ4YmYyODk4M2EwOTUyOTQwYWJmYjI0ODlhY2E2YjViM2IyNTY1NDFlMzhlEgwI4qqa/AUQnOe6sQMYASIQU2Vjb25kIHN0YWdlOiA0Cg=="}
+                {"id":"moby.buildkit.trace","aux":"CooCCkdzaGEyNTY6ZGViYWJlMTQzNDk5NTM3NDBlOWFkOGJmMjg5ODNhMDk1Mjk0MGFiZmIyNDg5YWNhNmI1YjNiMjU2NTQxZTM4ZRJHc2hhMjU2OmZkYWQ2NzFhOTEyYjJkMDEwMzMzYWYzMGQwNTAzNjdkN2YwYzY3ZjZiZDQ4ZTQzYmMzYTJlZWQ3ODkxNDdkMzIaWltzZWNvbmQgMi8zXSBSVU4gc2ggLWMgJ2ZvciBpIGluIDEgMiAzIDQgNSA2IDc7IGRvIGVjaG8gIlNlY29uZCBzdGFnZTogJGkiOyBzbGVlcCAyOyBkb25lJyoMCNyqmvwFENiI3bkCMgwI6qqa/AUQ2NmN0AM="}
+                {"id":"moby.buildkit.trace","aux":"CoQCCkdzaGEyNTY6MTA0YTM5NDcyMjQyNThmOGUyYjk4NGFlMzczNGM5YzgzYmNjOTk0Nzg2ODMyNWRmYzYzNjFlZTM5NWMwYmM2NhJHc2hhMjU2OmZkYWQ2NzFhOTEyYjJkMDEwMzMzYWYzMGQwNTAzNjdkN2YwYzY3ZjZiZDQ4ZTQzYmMzYTJlZWQ3ODkxNDdkMzIaVFtmaXJzdCAyLzJdIFJVTiBzaCAtYyAnZm9yIGkgaW4gMSAyIDMgNCA1OyBkbyBlY2hvICJGaXJzdCBzdGFnZTogJGkiOyBzbGVlcCAzOyBkb25lJyoMCNyqmvwFELDH0rkCMgwI66qa/AUQlNnO1AM="}
+            """.trimIndent()
+
+            beforeEachTest {
+                body.readFrom(StringReader(input), outputStream, eventCallback)
+            }
+
+            it("posts build status messages as the build progresses") {
+                val firstStep = ActiveImageBuildStep.NotDownloading(1, "[first 2/2] RUN sh -c 'for i in 1 2 3 4 5; do echo \"First stage: \$i\"; sleep 3; done'")
+                val secondStep = ActiveImageBuildStep.NotDownloading(2, "[second 2/3] RUN sh -c 'for i in 1 2 3 4 5 6 7; do echo \"Second stage: \$i\"; sleep 2; done'")
+
+                assertThat(
+                    eventsPosted,
+                    equalTo(
+                        listOf(
+                            BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(0, "[first 1/2] FROM docker.io/library/alpine:3.12.0"))),
+                            BuildProgress(setOf(firstStep)),
+                            BuildProgress(setOf(firstStep, secondStep)),
+                            BuildProgress(setOf(firstStep))
+                        )
+                    )
+                )
+            }
+
+            it("correctly prefixes each line of the output, labelling and ending each block of output") {
+                assertThat(
+                    output.toString(),
+                    equalTo(
+                        """
+                        |#1 [first 1/2] FROM docker.io/library/alpine:3.12.0
+                        |#1 CACHED
+                        |
+                        |#2 [first 2/2] RUN sh -c 'for i in 1 2 3 4 5; do echo "First stage: ${'$'}i"; sleep 3; done'
+                        |#2 ...
+                        |
+                        |#3 [second 2/3] RUN sh -c 'for i in 1 2 3 4 5 6 7; do echo "Second stage: ${'$'}i"; sleep 2; done'
+                        |#3 0.237 Second stage: 1
+                        |#3 ...
+                        |
+                        |#2 [first 2/2] RUN sh -c 'for i in 1 2 3 4 5; do echo "First stage: ${'$'}i"; sleep 3; done'
+                        |#2 0.272 First stage: 1
+                        |#2 ...
+                        |
+                        |#3 [second 2/3] RUN sh -c 'for i in 1 2 3 4 5 6 7; do echo "Second stage: ${'$'}i"; sleep 2; done'
+                        |#3 2.240 Second stage: 2
+                        |#3 ...
+                        |
+                        |#2 [first 2/2] RUN sh -c 'for i in 1 2 3 4 5; do echo "First stage: ${'$'}i"; sleep 3; done'
+                        |#2 3.274 First stage: 2
+                        |#2 ...
+                        |
+                        |#3 [second 2/3] RUN sh -c 'for i in 1 2 3 4 5 6 7; do echo "Second stage: ${'$'}i"; sleep 2; done'
+                        |#3 4.248 Second stage: 3
+                        |#3 6.251 Second stage: 4
+                        |#3 DONE
+                        |
+                        |#2 [first 2/2] RUN sh -c 'for i in 1 2 3 4 5; do echo "First stage: ${'$'}i"; sleep 3; done'
+                        |#2 DONE
+                        |
+                        """.trimMargin()
+                    )
+                )
+            }
+        }
+
         mapOf(
             "\n" to """""""",
             "{\n" to """"{""""

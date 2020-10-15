@@ -21,8 +21,8 @@ import batect.primitives.Version
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class DockerVersionInfo(val version: Version, val apiVersion: String, val minAPIVersion: String, val gitCommit: String, val operatingSystem: String) {
-    override fun toString(): String = "$version (API version: $apiVersion, minimum supported API version: $minAPIVersion, commit: $gitCommit, operating system: '$operatingSystem')"
+data class DockerVersionInfo(val version: Version, val apiVersion: String, val minAPIVersion: String, val gitCommit: String, val operatingSystem: String, val experimental: Boolean) {
+    override fun toString(): String = "$version (API version: $apiVersion, minimum supported API version: $minAPIVersion, commit: $gitCommit, operating system: '$operatingSystem', experimental: $experimental)"
 }
 
 fun LogMessageBuilder.data(key: String, value: DockerVersionInfo) = this.data(key, value, DockerVersionInfo.serializer())

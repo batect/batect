@@ -64,13 +64,14 @@ object DockerConnectivitySpec : Spek({
         val connectivity by createForEachTest { DockerConnectivity(dockerConfigurationKodeinFactory, systemInfoClient, errorConsole) }
 
         given("the check succeeds") {
+            val checkResult = DockerConnectivityCheckResult.Succeeded(containerType, Version(19, 3, 1), BuilderVersion.Legacy, false)
             var ranTask = false
             var kodeinSeenInTask: DirectDI? = null
 
             beforeEachTest {
                 ranTask = false
 
-                whenever(systemInfoClient.checkConnectivity()).doReturn(DockerConnectivityCheckResult.Succeeded(containerType, Version(19, 3, 1), BuilderVersion.Legacy))
+                whenever(systemInfoClient.checkConnectivity()).doReturn(checkResult)
             }
 
             val exitCode by runForEachTest {
@@ -98,7 +99,7 @@ object DockerConnectivitySpec : Spek({
             }
 
             it("collects Docker environment telemetry") {
-                verify(dockerTelemetryCollector).collectTelemetry(DockerConnectivityCheckResult.Succeeded(containerType, Version(19, 3, 1), BuilderVersion.Legacy))
+                verify(dockerTelemetryCollector).collectTelemetry(checkResult)
             }
         }
 

@@ -88,7 +88,7 @@ class SystemInfoClient(
                 return DockerConnectivityCheckResult.Failed("batect requires Docker to be running in Linux or Windows containers mode.")
             }
 
-            return DockerConnectivityCheckResult.Succeeded(containerType, versionInfo.version, pingResponse.builderVersion)
+            return DockerConnectivityCheckResult.Succeeded(containerType, versionInfo.version, pingResponse.builderVersion, versionInfo.experimental)
         } catch (e: DockerException) {
             logger.warn {
                 message("Connectivity check failed.")
@@ -124,7 +124,7 @@ sealed class DockerVersionInfoRetrievalResult {
 }
 
 sealed class DockerConnectivityCheckResult {
-    data class Succeeded(val containerType: DockerContainerType, val dockerVersion: Version, val builderVersion: BuilderVersion) : DockerConnectivityCheckResult()
+    data class Succeeded(val containerType: DockerContainerType, val dockerVersion: Version, val builderVersion: BuilderVersion, val experimentalFeaturesEnabled: Boolean) : DockerConnectivityCheckResult()
 
     data class Failed(val message: String) : DockerConnectivityCheckResult()
 }

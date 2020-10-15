@@ -66,37 +66,82 @@ object SystemInfoAPISpec : Spek({
         describe("getting server version information") {
             val expectedUrl = "$dockerBaseUrl/v1.37/version"
 
-            on("the Docker version command invocation succeeding") {
-                beforeEachTest {
-                    httpClient.mockGet(
-                        expectedUrl,
-                        """
-                            |{
-                            |  "Version": "17.04.0",
-                            |  "Os": "my_cool_os",
-                            |  "KernelVersion": "3.19.0-23-generic",
-                            |  "GoVersion": "go1.7.5",
-                            |  "GitCommit": "deadbee",
-                            |  "Arch": "amd64",
-                            |  "ApiVersion": "1.27",
-                            |  "MinAPIVersion": "1.12",
-                            |  "BuildTime": "2016-06-14T07:09:13.444803460+00:00",
-                            |  "Experimental": true
-                            |}
-                        """.trimMargin(),
-                        200
-                    )
-                }
+            given("the Docker version command invocation succeeds") {
+                given("the response indicates the daemon has experimental features enabled") {
+                    beforeEachTest {
+                        httpClient.mockGet(
+                            expectedUrl,
+                            """
+                                |{
+                                |  "Version": "17.04.0",
+                                |  "Os": "my_cool_os",
+                                |  "KernelVersion": "3.19.0-23-generic",
+                                |  "GoVersion": "go1.7.5",
+                                |  "GitCommit": "deadbee",
+                                |  "Arch": "amd64",
+                                |  "ApiVersion": "1.27",
+                                |  "MinAPIVersion": "1.12",
+                                |  "BuildTime": "2016-06-14T07:09:13.444803460+00:00",
+                                |  "Experimental": true
+                                |}
+                            """.trimMargin(),
+                            200
+                        )
+                    }
 
-                it("returns the version information from Docker") {
-                    assertThat(
-                        api.getServerVersionInfo(),
-                        equalTo(
-                            DockerVersionInfo(
-                                Version(17, 4, 0), "1.27", "1.12", "deadbee", "my_cool_os"
+                    it("returns the version information from Docker") {
+                        assertThat(
+                            api.getServerVersionInfo(),
+                            equalTo(
+                                DockerVersionInfo(
+                                    Version(17, 4, 0),
+                                    "1.27",
+                                    "1.12",
+                                    "deadbee",
+                                    "my_cool_os",
+                                    true
+                                )
                             )
                         )
-                    )
+                    }
+                }
+
+                given("the response does not include information about whether the daemon is running in experimental mode") {
+                    beforeEachTest {
+                        httpClient.mockGet(
+                            expectedUrl,
+                            """
+                                |{
+                                |  "Version": "17.04.0",
+                                |  "Os": "my_cool_os",
+                                |  "KernelVersion": "3.19.0-23-generic",
+                                |  "GoVersion": "go1.7.5",
+                                |  "GitCommit": "deadbee",
+                                |  "Arch": "amd64",
+                                |  "ApiVersion": "1.27",
+                                |  "MinAPIVersion": "1.12",
+                                |  "BuildTime": "2016-06-14T07:09:13.444803460+00:00"
+                                |}
+                            """.trimMargin(),
+                            200
+                        )
+                    }
+
+                    it("returns the version information from Docker, and indicates that the daemon is not running in experimental mode") {
+                        assertThat(
+                            api.getServerVersionInfo(),
+                            equalTo(
+                                DockerVersionInfo(
+                                    Version(17, 4, 0),
+                                    "1.27",
+                                    "1.12",
+                                    "deadbee",
+                                    "my_cool_os",
+                                    false
+                                )
+                            )
+                        )
+                    }
                 }
             }
 

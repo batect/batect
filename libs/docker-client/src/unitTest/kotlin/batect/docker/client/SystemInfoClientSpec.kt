@@ -52,7 +52,7 @@ object SystemInfoClientSpec : Spek({
 
         describe("getting Docker version information") {
             on("the Docker version command invocation succeeding") {
-                val versionInfo = DockerVersionInfo(Version(17, 4, 0), "1.27", "1.12", "deadbee", "my_cool_os")
+                val versionInfo = DockerVersionInfo(Version(17, 4, 0), "1.27", "1.12", "deadbee", "my_cool_os", false)
 
                 beforeEachTest { whenever(api.getServerVersionInfo()).doReturn(versionInfo) }
 
@@ -82,27 +82,27 @@ object SystemInfoClientSpec : Spek({
 
                         given("the daemon reports an API version that is greater than required") {
                             beforeEachTest {
-                                whenever(api.getServerVersionInfo()).thenReturn(DockerVersionInfo(Version(1, 2, 3), "1.38", "xxx", "xxx", operatingSystem))
+                                whenever(api.getServerVersionInfo()).thenReturn(DockerVersionInfo(Version(1, 2, 3), "1.38", "xxx", "xxx", operatingSystem, false))
                             }
 
                             it("returns success") {
-                                assertThat(client.checkConnectivity(), equalTo(DockerConnectivityCheckResult.Succeeded(DockerContainerType.Linux, Version(1, 2, 3), BuilderVersion.BuildKit)))
+                                assertThat(client.checkConnectivity(), equalTo(DockerConnectivityCheckResult.Succeeded(DockerContainerType.Linux, Version(1, 2, 3), BuilderVersion.BuildKit, false)))
                             }
                         }
 
                         given("the daemon reports an API version that is exactly the required version") {
                             beforeEachTest {
-                                whenever(api.getServerVersionInfo()).thenReturn(DockerVersionInfo(Version(1, 2, 3), "1.37", "xxx", "xxx", operatingSystem))
+                                whenever(api.getServerVersionInfo()).thenReturn(DockerVersionInfo(Version(1, 2, 3), "1.37", "xxx", "xxx", operatingSystem, false))
                             }
 
                             it("returns success") {
-                                assertThat(client.checkConnectivity(), equalTo(DockerConnectivityCheckResult.Succeeded(DockerContainerType.Linux, Version(1, 2, 3), BuilderVersion.BuildKit)))
+                                assertThat(client.checkConnectivity(), equalTo(DockerConnectivityCheckResult.Succeeded(DockerContainerType.Linux, Version(1, 2, 3), BuilderVersion.BuildKit, false)))
                             }
                         }
 
                         given("the daemon reports an API version that is lower than required") {
                             beforeEachTest {
-                                whenever(api.getServerVersionInfo()).thenReturn(DockerVersionInfo(Version(1, 2, 3), "1.36", "xxx", "xxx", operatingSystem))
+                                whenever(api.getServerVersionInfo()).thenReturn(DockerVersionInfo(Version(1, 2, 3), "1.36", "xxx", "xxx", operatingSystem, false))
                             }
 
                             val result by runForEachTest { client.checkConnectivity() }
@@ -125,18 +125,18 @@ object SystemInfoClientSpec : Spek({
                     given("the daemon is running in Windows mode") {
                         given("the daemon reports a compatible API version") {
                             beforeEachTest {
-                                whenever(api.getServerVersionInfo()).thenReturn(DockerVersionInfo(Version(1, 2, 3), "2.0", "xxx", "xxx", "windows"))
+                                whenever(api.getServerVersionInfo()).thenReturn(DockerVersionInfo(Version(1, 2, 3), "2.0", "xxx", "xxx", "windows", false))
                             }
 
                             it("returns success") {
-                                assertThat(client.checkConnectivity(), equalTo(DockerConnectivityCheckResult.Succeeded(DockerContainerType.Windows, Version(1, 2, 3), BuilderVersion.BuildKit)))
+                                assertThat(client.checkConnectivity(), equalTo(DockerConnectivityCheckResult.Succeeded(DockerContainerType.Windows, Version(1, 2, 3), BuilderVersion.BuildKit, false)))
                             }
                         }
                     }
 
                     given("the daemon is running in another mode") {
                         beforeEachTest {
-                            whenever(api.getServerVersionInfo()).thenReturn(DockerVersionInfo(Version(1, 2, 3), "2.0", "xxx", "xxx", "something-else"))
+                            whenever(api.getServerVersionInfo()).thenReturn(DockerVersionInfo(Version(1, 2, 3), "2.0", "xxx", "xxx", "something-else", false))
                         }
 
                         it("returns success") {

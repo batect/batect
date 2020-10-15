@@ -29,6 +29,7 @@ class DockerTelemetryCollector(
         telemetrySessionBuilder.addAttribute("dockerContainerType", result.containerType.toString())
         telemetrySessionBuilder.addAttribute("dockerConnectionType", dockerHttpConfig.connectionType.toString())
         telemetrySessionBuilder.addAttribute("dockerDaemonPreferredBuilderVersion", result.builderVersion.toString())
+        telemetrySessionBuilder.addAttribute("dockerDaemonExperimentalFeaturesEnabled", result.experimentalFeaturesEnabled)
         telemetrySessionBuilder.addAttribute("dockerVersion", result.dockerVersion.toString())
         telemetrySessionBuilder.addAttribute("cacheType", cacheManager.cacheType.toString())
     }

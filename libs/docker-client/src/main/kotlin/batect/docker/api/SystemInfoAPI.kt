@@ -24,6 +24,7 @@ import batect.logging.Logger
 import batect.os.SystemInfo
 import batect.primitives.Version
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.boolean
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import okhttp3.Request
@@ -63,13 +64,15 @@ class SystemInfoAPI(
             val minAPIVersion = parsedResponse.getValue("MinAPIVersion").jsonPrimitive.content
             val gitCommit = parsedResponse.getValue("GitCommit").jsonPrimitive.content
             val operatingSystem = parsedResponse.getValue("Os").jsonPrimitive.content
+            val experimental = parsedResponse["Experimental"]?.jsonPrimitive?.boolean ?: false
 
             return DockerVersionInfo(
                 Version.parse(version),
                 apiVersion,
                 minAPIVersion,
                 gitCommit,
-                operatingSystem
+                operatingSystem,
+                experimental
             )
         }
     }

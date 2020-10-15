@@ -56,8 +56,8 @@ fun DockerClient.pull(imageName: String): DockerImage = retry(3) {
     this.images.pull(imageName, false, CancellationContext(), {})
 }
 
-fun DockerClient.build(imageDirectory: Path, tag: String, builderVersion: BuilderVersion = BuilderVersion.Legacy): DockerImage =
-    this.images.build(imageDirectory, emptyMap(), "Dockerfile", DefaultPathResolutionContext(imageDirectory), setOf(tag), false, null, builderVersion, CancellationContext()) {}
+fun DockerClient.build(imageDirectory: Path, tag: String, builderVersion: BuilderVersion = BuilderVersion.Legacy, outputSink: Sink? = null): DockerImage =
+    this.images.build(imageDirectory, emptyMap(), "Dockerfile", DefaultPathResolutionContext(imageDirectory), setOf(tag), false, outputSink, builderVersion, CancellationContext()) {}
 
 fun DockerClient.runContainerAndWaitForCompletion(container: DockerContainer, stdout: Sink = System.out.sink(), useTTY: Boolean = true) =
     this.runContainer(container, stdout, useTTY) {}

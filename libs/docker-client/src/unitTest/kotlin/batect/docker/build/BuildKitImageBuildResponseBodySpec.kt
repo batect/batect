@@ -175,6 +175,7 @@ object BuildKitImageBuildResponseBodySpec : Spek({
                         |#5 naming to docker.io/library/batect-integration-tests-image: done
                         |#5 DONE
                         |
+                        |
                         """.trimMargin()
                     )
                 )
@@ -247,6 +248,7 @@ object BuildKitImageBuildResponseBodySpec : Spek({
                         |#6 [3/3] RUN exit 1
                         |#6 ERROR: executor failed running [/bin/sh -c exit 1]: runc did not terminate sucessfully
                         |
+                        |
                         """.trimMargin()
                     )
                 )
@@ -274,6 +276,7 @@ object BuildKitImageBuildResponseBodySpec : Spek({
                         |#1 0.193 world
                         |#1 DONE
                         |
+                        |
                         """.trimMargin()
                     )
                 )
@@ -300,6 +303,7 @@ object BuildKitImageBuildResponseBodySpec : Spek({
                         |#1 0.180 hello
                         |#1 0.180 world
                         |#1 DONE
+                        |
                         |
                         """.trimMargin()
                     )
@@ -379,6 +383,7 @@ object BuildKitImageBuildResponseBodySpec : Spek({
                         |#2 [first 2/2] RUN sh -c 'for i in 1 2 3 4 5; do echo "First stage: ${'$'}i"; sleep 3; done'
                         |#2 DONE
                         |
+                        |
                         """.trimMargin()
                     )
                 )
@@ -434,6 +439,7 @@ object BuildKitImageBuildResponseBodySpec : Spek({
                         |
                         |#3 [2/2] ADD https://github.com/batect/batect/releases/download/0.59.0/batect-0.59.0.jar batect.jar
                         |#3 DONE
+                        |
                         |
                         """.trimMargin()
                     )
@@ -514,6 +520,7 @@ object BuildKitImageBuildResponseBodySpec : Spek({
                         |#3 writing image sha256:53330a03403ddf96dd13692e0b29ef0da8fd298a2bd8b57cd530151548867f88: done
                         |#3 naming to docker.io/library/batect-integration-tests-image-legacy-builder: done
                         |#3 DONE
+                        |
                         |
                         """.trimMargin()
                     )
@@ -615,7 +622,7 @@ object BuildKitImageBuildResponseBodySpec : Spek({
                             // Line 29:
                             BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.Downloading, 7333575 + 643660 + 4545605 + 1371 + 1165 + 6518896, 7333575 + 643660 + 4545605 + 1371 + 1165 + 59741782))),
                             // Line 30:
-                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.DownloadComplete, 7333575 + 643660 + 4545605 + 1371 + 1165 + 59741782, 7333575 + 643660 + 4545605 + 1371 + 1165 + 59741782))),
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.PullComplete, 7333575 + 643660 + 4545605 + 1371 + 1165 + 0, 7333575 + 643660 + 4545605 + 1371 + 1165 + 59741782))),
                             // Line 31:
                             BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.Extracting, 7333575 + 643660 + 4545605 + 1371 + 1165 + 0, 7333575 + 643660 + 4545605 + 1371 + 1165 + 59741782))),
                             // Line 32: no change
@@ -660,6 +667,242 @@ object BuildKitImageBuildResponseBodySpec : Spek({
                         |#3 writing image sha256:a944a906cc971980e5f55d991fb91faa92a25a0a866bcd57fce26a5628f92fa5: done
                         |#3 naming to docker.io/library/batect-integration-tests-image-legacy-builder: done
                         |#3 DONE
+                        |
+                        |
+                        """.trimMargin()
+                    )
+                )
+            }
+        }
+
+        given("a response with trace messages for a multi-stage build with multiple images being pulled simultaneously") {
+            val input = """
+                {"id":"moby.buildkit.trace","aux":"CtYBCkdzaGEyNTY6MjM3MDAwMGI4ZmEyNTFmYmNlMmM4Y2I3YWRlMDZkYzQyYTcwYmZjODMzMTg0YzBhN2E2M2I4YzUwODI1OGRjMBp9W2ludGVybmFsXSBsb2FkIG1ldGFkYXRhIGZvciBnY3IuaW8vZGlzdHJvbGVzcy9zdGF0aWNAc2hhMjU2OmQwZjQxNGM2NGJkYjBjZWViZWE2NTFiMTRhZDViZTlhMjgxYTdhMWQ2Nzc1MWY5ZGU0MTkzMTYzOTAyMzliNjIqDAj4j5/8BRCUptr6AgrUAQpHc2hhMjU2OjY1YWE0YjcwOGE2M2Q2N2RiNTc3YTZkYjEwNTIxZGNmNjQ4NGUxYzczMDc5YjhiOTI1OGNmOWRhMjRlYjM5OTMae1tpbnRlcm5hbF0gbG9hZCBtZXRhZGF0YSBmb3IgZ2NyLmlvL2Rpc3Ryb2xlc3MvYmFzZUBzaGEyNTY6MmMxMmJkZTNkMDUwODUwZTk3NmZlNjgyMTkzYjk0ZjA4NTU4NjZlYTRmMzdhMTJlZDdkYjg2NjhlODA3MTA0NyoMCPiPn/wFEODO4PoC"}
+                {"id":"moby.buildkit.trace","aux":"CuMBCkdzaGEyNTY6MjM3MDAwMGI4ZmEyNTFmYmNlMmM4Y2I3YWRlMDZkYzQyYTcwYmZjODMzMTg0YzBhN2E2M2I4YzUwODI1OGRjMBp9W2ludGVybmFsXSBsb2FkIG1ldGFkYXRhIGZvciBnY3IuaW8vZGlzdHJvbGVzcy9zdGF0aWNAc2hhMjU2OmQwZjQxNGM2NGJkYjBjZWViZWE2NTFiMTRhZDViZTlhMjgxYTdhMWQ2Nzc1MWY5ZGU0MTkzMTYzOTAyMzliNjIqDAj4j5/8BRCUptr6AjILCPyPn/wFEMS07DQ="}
+                {"id":"moby.buildkit.trace","aux":"CuIBCkdzaGEyNTY6NjVhYTRiNzA4YTYzZDY3ZGI1NzdhNmRiMTA1MjFkY2Y2NDg0ZTFjNzMwNzliOGI5MjU4Y2Y5ZGEyNGViMzk5Mxp7W2ludGVybmFsXSBsb2FkIG1ldGFkYXRhIGZvciBnY3IuaW8vZGlzdHJvbGVzcy9iYXNlQHNoYTI1NjoyYzEyYmRlM2QwNTA4NTBlOTc2ZmU2ODIxOTNiOTRmMDg1NTg2NmVhNGYzN2ExMmVkN2RiODY2OGU4MDcxMDQ3KgwI+I+f/AUQ4M7g+gIyDAj8j5/8BRCQrKiMAw=="}
+                {"id":"moby.buildkit.trace","aux":"CpQCCkdzaGEyNTY6YTA2N2ExMDNiNjVjNzgwM2ZmYzkyMzNkZGY3YTM2ZTBkYTM0NWM2OTM4NGVmY2Q2MTgzNjk0ZTQxZDRjNDQ3ZBJHc2hhMjU2OjZjYjM2YWJkZDk1MTVhNjA0YjNhOTBjNmQ0OGQ4OTkyM2JhNzdlNGQ4N2VlZjYwM2Y5ZWIwYzhlYjEzYmI5NjISR3NoYTI1Njo5ODU0MDAyNzUwYTk3ZmJlZjczMDZkNmY1MjhlNzc5Y2VjY2ViNDhlZTJlM2U1ZDFiN2FiMTZjN2MxMDdmN2IzGjdbc3RhZ2UtMSAyLzJdIENPUFkgLS1mcm9tPWZpcnN0IC9ldGMvcGFzc3dkIC9ldGMvcGFzc3dkCtoBCkdzaGEyNTY6NmNiMzZhYmRkOTUxNWE2MDRiM2E5MGM2ZDQ4ZDg5OTIzYmE3N2U0ZDg3ZWVmNjAzZjllYjBjOGViMTNiYjk2MhpzW3N0YWdlLTEgMS8yXSBGUk9NIGdjci5pby9kaXN0cm9sZXNzL3N0YXRpY0BzaGEyNTY6ZDBmNDE0YzY0YmRiMGNlZWJlYTY1MWIxNGFkNWJlOWEyODFhN2ExZDY3NzUxZjlkZTQxOTMxNjM5MDIzOWI2MioMCPyPn/wFELjw44wDMgwI/I+f/AUQ9J/vjAMKyAEKR3NoYTI1Njo5ODU0MDAyNzUwYTk3ZmJlZjczMDZkNmY1MjhlNzc5Y2VjY2ViNDhlZTJlM2U1ZDFiN2FiMTZjN2MxMDdmN2IzGm9bZmlyc3QgMS8xXSBGUk9NIGdjci5pby9kaXN0cm9sZXNzL2Jhc2VAc2hhMjU2OjJjMTJiZGUzZDA1MDg1MGU5NzZmZTY4MjE5M2I5NGYwODU1ODY2ZWE0ZjM3YTEyZWQ3ZGI4NjY4ZTgwNzEwNDcqDAj8j5/8BRD4tvKMAw=="}
+                {"id":"moby.buildkit.trace","aux":"CswBCkdzaGEyNTY6NmNiMzZhYmRkOTUxNWE2MDRiM2E5MGM2ZDQ4ZDg5OTIzYmE3N2U0ZDg3ZWVmNjAzZjllYjBjOGViMTNiYjk2MhpzW3N0YWdlLTEgMS8yXSBGUk9NIGdjci5pby9kaXN0cm9sZXNzL3N0YXRpY0BzaGEyNTY6ZDBmNDE0YzY0YmRiMGNlZWJlYTY1MWIxNGFkNWJlOWEyODFhN2ExZDY3NzUxZjlkZTQxOTMxNjM5MDIzOWI2MioMCPyPn/wFELCN94wDEs0BCmZyZXNvbHZlIGdjci5pby9kaXN0cm9sZXNzL2Jhc2VAc2hhMjU2OjJjMTJiZGUzZDA1MDg1MGU5NzZmZTY4MjE5M2I5NGYwODU1ODY2ZWE0ZjM3YTEyZWQ3ZGI4NjY4ZTgwNzEwNDcSR3NoYTI1Njo5ODU0MDAyNzUwYTk3ZmJlZjczMDZkNmY1MjhlNzc5Y2VjY2ViNDhlZTJlM2U1ZDFiN2FiMTZjN2MxMDdmN2IzMgwI/I+f/AUQ3MT2jAM6DAj8j5/8BRDMq/WMAxLPAQpocmVzb2x2ZSBnY3IuaW8vZGlzdHJvbGVzcy9zdGF0aWNAc2hhMjU2OmQwZjQxNGM2NGJkYjBjZWViZWE2NTFiMTRhZDViZTlhMjgxYTdhMWQ2Nzc1MWY5ZGU0MTkzMTYzOTAyMzliNjISR3NoYTI1Njo2Y2IzNmFiZGQ5NTE1YTYwNGIzYTkwYzZkNDhkODk5MjNiYTc3ZTRkODdlZWY2MDNmOWViMGM4ZWIxM2JiOTYyMgwI/I+f/AUQxKT7jAM6DAj8j5/8BRCo9vmMAw=="}
+                {"id":"moby.buildkit.trace","aux":"CtoBCkdzaGEyNTY6NmNiMzZhYmRkOTUxNWE2MDRiM2E5MGM2ZDQ4ZDg5OTIzYmE3N2U0ZDg3ZWVmNjAzZjllYjBjOGViMTNiYjk2MhpzW3N0YWdlLTEgMS8yXSBGUk9NIGdjci5pby9kaXN0cm9sZXNzL3N0YXRpY0BzaGEyNTY6ZDBmNDE0YzY0YmRiMGNlZWJlYTY1MWIxNGFkNWJlOWEyODFhN2ExZDY3NzUxZjlkZTQxOTMxNjM5MDIzOWI2MioMCPyPn/wFELCN94wDMgwI/I+f/AUQ3KipjQMS3QEKaHJlc29sdmUgZ2NyLmlvL2Rpc3Ryb2xlc3Mvc3RhdGljQHNoYTI1NjpkMGY0MTRjNjRiZGIwY2VlYmVhNjUxYjE0YWQ1YmU5YTI4MWE3YTFkNjc3NTFmOWRlNDE5MzE2MzkwMjM5YjYyEkdzaGEyNTY6NmNiMzZhYmRkOTUxNWE2MDRiM2E5MGM2ZDQ4ZDg5OTIzYmE3N2U0ZDg3ZWVmNjAzZjllYjBjOGViMTNiYjk2MjIMCPyPn/wFEMz/pI0DOgwI/I+f/AUQqPb5jANCDAj8j5/8BRDU3qONAw=="}
+                {"id":"moby.buildkit.trace","aux":"CswBCkdzaGEyNTY6NmNiMzZhYmRkOTUxNWE2MDRiM2E5MGM2ZDQ4ZDg5OTIzYmE3N2U0ZDg3ZWVmNjAzZjllYjBjOGViMTNiYjk2MhpzW3N0YWdlLTEgMS8yXSBGUk9NIGdjci5pby9kaXN0cm9sZXNzL3N0YXRpY0BzaGEyNTY6ZDBmNDE0YzY0YmRiMGNlZWJlYTY1MWIxNGFkNWJlOWEyODFhN2ExZDY3NzUxZjlkZTQxOTMxNjM5MDIzOWI2MioMCPyPn/wFEICjwI0DEtsBCmZyZXNvbHZlIGdjci5pby9kaXN0cm9sZXNzL2Jhc2VAc2hhMjU2OjJjMTJiZGUzZDA1MDg1MGU5NzZmZTY4MjE5M2I5NGYwODU1ODY2ZWE0ZjM3YTEyZWQ3ZGI4NjY4ZTgwNzEwNDcSR3NoYTI1Njo5ODU0MDAyNzUwYTk3ZmJlZjczMDZkNmY1MjhlNzc5Y2VjY2ViNDhlZTJlM2U1ZDFiN2FiMTZjN2MxMDdmN2IzMgwI/I+f/AUQkLTMjQM6DAj8j5/8BRDMq/WMA0IMCPyPn/wFELSSy40D"}
+                {"id":"moby.buildkit.trace","aux":"CtYBCkdzaGEyNTY6OTg1NDAwMjc1MGE5N2ZiZWY3MzA2ZDZmNTI4ZTc3OWNlY2NlYjQ4ZWUyZTNlNWQxYjdhYjE2YzdjMTA3ZjdiMxpvW2ZpcnN0IDEvMV0gRlJPTSBnY3IuaW8vZGlzdHJvbGVzcy9iYXNlQHNoYTI1NjoyYzEyYmRlM2QwNTA4NTBlOTc2ZmU2ODIxOTNiOTRmMDg1NTg2NmVhNGYzN2ExMmVkN2RiODY2OGU4MDcxMDQ3KgwI/I+f/AUQ+LbyjAMyDAj8j5/8BRCQnNSNAw=="}
+                {"id":"moby.buildkit.trace","aux":"CsgBCkdzaGEyNTY6OTg1NDAwMjc1MGE5N2ZiZWY3MzA2ZDZmNTI4ZTc3OWNlY2NlYjQ4ZWUyZTNlNWQxYjdhYjE2YzdjMTA3ZjdiMxpvW2ZpcnN0IDEvMV0gRlJPTSBnY3IuaW8vZGlzdHJvbGVzcy9iYXNlQHNoYTI1NjoyYzEyYmRlM2QwNTA4NTBlOTc2ZmU2ODIxOTNiOTRmMDg1NTg2NmVhNGYzN2ExMmVkN2RiODY2OGU4MDcxMDQ3KgwI/I+f/AUQxN/1jQM="}
+                {"id":"moby.buildkit.trace","aux":"EsgBCkdzaGEyNTY6ZDBmNDE0YzY0YmRiMGNlZWJlYTY1MWIxNGFkNWJlOWEyODFhN2ExZDY3NzUxZjlkZTQxOTMxNjM5MDIzOWI2MhJHc2hhMjU2OjZjYjM2YWJkZDk1MTVhNjA0YjNhOTBjNmQ0OGQ4OTkyM2JhNzdlNGQ4N2VlZjYwM2Y5ZWIwYzhlYjEzYmI5NjIaBGRvbmUg3AUo3AUyDAj9j5/8BRCAsdzeAjoMCP2Pn/wFEICb37MCQgwI+o+f/AUQoJXVpAMSxwEKR3NoYTI1NjoyNWI4ZmQ0MmZmMzY3NWI2MWJjNjQwMjA5ZGEwYzE3NmQyZWVjZjYzMzZhZDVlZjNjMDkwMDFhZmVkOTQxZGRlEkdzaGEyNTY6NmNiMzZhYmRkOTUxNWE2MDRiM2E5MGM2ZDQ4ZDg5OTIzYmE3N2U0ZDg3ZWVmNjAzZjllYjBjOGViMTNiYjk2MhoEZG9uZSD7BCj7BDIMCP2Pn/wFEMTu594COgwI/Y+f/AUQoJy0tAJCCwj8j5/8BRCYtdI0Er8BCkdzaGEyNTY6NDAwMGFkYmJjM2ViMTA5OWUzYTI2M2M0MThmN2MxZDdkZWYxZmEyZGUwYWUwMGJhNDgyNDVjZGE5Mzg5YzgyMxJHc2hhMjU2OjZjYjM2YWJkZDk1MTVhNjA0YjNhOTBjNmQ0OGQ4OTkyM2JhNzdlNGQ4N2VlZjYwM2Y5ZWIwYzhlYjEzYmI5NjIaC2Rvd25sb2FkaW5nKLSDJzIMCP2Pn/wFEPit6d4COgwI/Y+f/AUQyLz7tAISvQEKR3NoYTI1NjozYzJjYmE5MTkyODNhMjEwNjY1ZTQ4MGJjYmY5NDNlYWFmNGVkODdhODNmMDJlODFiYjI4NmI4YmRlYWQwZTc1EkdzaGEyNTY6NmNiMzZhYmRkOTUxNWE2MDRiM2E5MGM2ZDQ4ZDg5OTIzYmE3N2U0ZDg3ZWVmNjAzZjllYjBjOGViMTNiYjk2MhoLZG93bmxvYWRpbmcoMTIMCP2Pn/wFEJjK6t4COgwI/Y+f/AUQ/OL8tAI="}
+                {"id":"moby.buildkit.trace","aux":"EsgBCkdzaGEyNTY6MmMxMmJkZTNkMDUwODUwZTk3NmZlNjgyMTkzYjk0ZjA4NTU4NjZlYTRmMzdhMTJlZDdkYjg2NjhlODA3MTA0NxJHc2hhMjU2Ojk4NTQwMDI3NTBhOTdmYmVmNzMwNmQ2ZjUyOGU3NzljZWNjZWI0OGVlMmUzZTVkMWI3YWIxNmM3YzEwN2Y3YjMaBGRvbmUg5QUo5QUyDAj9j5/8BRC805XfAjoMCP2Pn/wFEOC/kcsCQgwI+o+f/AUQuLSTpQMSyAEKR3NoYTI1NjoxZGJmMDc3YTkzMTNjMDk0YTliNGFlZGQ4NWVhMTM0OTY0NmFiZGRiNGNmYzU4YTVkYzgyM2QyNzQ3N2IyNjgzEkdzaGEyNTY6OTg1NDAwMjc1MGE5N2ZiZWY3MzA2ZDZmNTI4ZTc3OWNlY2NlYjQ4ZWUyZTNlNWQxYjdhYjE2YzdjMTA3ZjdiMxoEZG9uZSCzByizBzIMCP2Pn/wFEKDhmd8COgwI/Y+f/AUQiPPBywJCDAj7j5/8BRCwruG0AhLIAQpHc2hhMjU2OmI0NDdhMzcyMTk2NWZhYWQ1NmY2OTYzNDhmNzlkOGM4MzJlMjZhMDVkOTY2MmE3NjkwZDVkZjhlNTZkOWVhYzcSR3NoYTI1Njo5ODU0MDAyNzUwYTk3ZmJlZjczMDZkNmY1MjhlNzc5Y2VjY2ViNDhlZTJlM2U1ZDFiN2FiMTZjN2MxMDdmN2IzGgRkb25lIK4GKK4GMgwI/Y+f/AUQvNqb3wI6DAj9j5/8BRDI0unLAkIMCPyPn/wFENDajIwDEr8BCkdzaGEyNTY6YTRlYjhhMTQxMmEyMzg5OGRhMzU5Y2Q3M2EzNDg1NjAxYjRhNDFlMjNkZTBhNWVhYjJjYjkzNmFhYTRhZDQ0ZBJHc2hhMjU2Ojk4NTQwMDI3NTBhOTdmYmVmNzMwNmQ2ZjUyOGU3NzljZWNjZWI0OGVlMmUzZTVkMWI3YWIxNmM3YzEwN2Y3YjMaC2Rvd25sb2FkaW5nKO2tKjIMCP2Pn/wFEOTTpN8COgwI/Y+f/AUQ6PK8zAI="}
+                {"id":"moby.buildkit.trace","aux":"EsMBCkdzaGEyNTY6YTRlYjhhMTQxMmEyMzg5OGRhMzU5Y2Q3M2EzNDg1NjAxYjRhNDFlMjNkZTBhNWVhYjJjYjkzNmFhYTRhZDQ0ZBJHc2hhMjU2Ojk4NTQwMDI3NTBhOTdmYmVmNzMwNmQ2ZjUyOGU3NzljZWNjZWI0OGVlMmUzZTVkMWI3YWIxNmM3YzEwN2Y3YjMaC2Rvd25sb2FkaW5nIICAHCjtrSoyDAj+j5/8BRDE8YPQAToMCP2Pn/wFEOjyvMwC"}
+                {"id":"moby.buildkit.trace","aux":"EsIBClJleHRyYWN0aW5nIHNoYTI1NjphNGViOGExNDEyYTIzODk4ZGEzNTljZDczYTM0ODU2MDFiNGE0MWUyM2RlMGE1ZWFiMmNiOTM2YWFhNGFkNDRkEkdzaGEyNTY6OTg1NDAwMjc1MGE5N2ZiZWY3MzA2ZDZmNTI4ZTc3OWNlY2NlYjQ4ZWUyZTNlNWQxYjdhYjE2YzdjMTA3ZjdiMxoHZXh0cmFjdDIMCP6Pn/wFELzw/9oBOgwI/o+f/AUQhJH+2gE="}
+                {"id":"moby.buildkit.trace","aux":"EtABClJleHRyYWN0aW5nIHNoYTI1NjphNGViOGExNDEyYTIzODk4ZGEzNTljZDczYTM0ODU2MDFiNGE0MWUyM2RlMGE1ZWFiMmNiOTM2YWFhNGFkNDRkEkdzaGEyNTY6OTg1NDAwMjc1MGE5N2ZiZWY3MzA2ZDZmNTI4ZTc3OWNlY2NlYjQ4ZWUyZTNlNWQxYjdhYjE2YzdjMTA3ZjdiMxoHZXh0cmFjdDIMCP6Pn/wFELDlzf0BOgwI/o+f/AUQhJH+2gFCDAj+j5/8BRDo/8z9AQ=="}
+                {"id":"moby.buildkit.trace","aux":"Er8BCkdzaGEyNTY6NDAwMGFkYmJjM2ViMTA5OWUzYTI2M2M0MThmN2MxZDdkZWYxZmEyZGUwYWUwMGJhNDgyNDVjZGE5Mzg5YzgyMxJHc2hhMjU2OjZjYjM2YWJkZDk1MTVhNjA0YjNhOTBjNmQ0OGQ4OTkyM2JhNzdlNGQ4N2VlZjYwM2Y5ZWIwYzhlYjEzYmI5NjIaC2Rvd25sb2FkaW5nKLSDJzIMCP6Pn/wFEMyggv8BOgwI/Y+f/AUQyLz7tAISxgEKR3NoYTI1NjozYzJjYmE5MTkyODNhMjEwNjY1ZTQ4MGJjYmY5NDNlYWFmNGVkODdhODNmMDJlODFiYjI4NmI4YmRlYWQwZTc1EkdzaGEyNTY6NmNiMzZhYmRkOTUxNWE2MDRiM2E5MGM2ZDQ4ZDg5OTIzYmE3N2U0ZDg3ZWVmNjAzZjllYjBjOGViMTNiYjk2MhoEZG9uZSAxKDEyDAj+j5/8BRDQ1oP/AToMCP2Pn/wFEPzi/LQCQgwI/o+f/AUQjOH07wE="}
+                {"id":"moby.buildkit.trace","aux":"EsoBCkdzaGEyNTY6YTRlYjhhMTQxMmEyMzg5OGRhMzU5Y2Q3M2EzNDg1NjAxYjRhNDFlMjNkZTBhNWVhYjJjYjkzNmFhYTRhZDQ0ZBJHc2hhMjU2Ojk4NTQwMDI3NTBhOTdmYmVmNzMwNmQ2ZjUyOGU3NzljZWNjZWI0OGVlMmUzZTVkMWI3YWIxNmM3YzEwN2Y3YjMaBGRvbmUg7a0qKO2tKjIMCP6Pn/wFEMiDzP8BOgwI/Y+f/AUQ6PK8zAJCDAj+j5/8BRDwjOPaAQ=="}
+                {"id":"moby.buildkit.trace","aux":"CtYBCkdzaGEyNTY6OTg1NDAwMjc1MGE5N2ZiZWY3MzA2ZDZmNTI4ZTc3OWNlY2NlYjQ4ZWUyZTNlNWQxYjdhYjE2YzdjMTA3ZjdiMxpvW2ZpcnN0IDEvMV0gRlJPTSBnY3IuaW8vZGlzdHJvbGVzcy9iYXNlQHNoYTI1NjoyYzEyYmRlM2QwNTA4NTBlOTc2ZmU2ODIxOTNiOTRmMDg1NTg2NmVhNGYzN2ExMmVkN2RiODY2OGU4MDcxMDQ3KgwI/I+f/AUQxN/1jQMyDAj+j5/8BRCg55COAg=="}
+                {"id":"moby.buildkit.trace","aux":"EsIBClJleHRyYWN0aW5nIHNoYTI1Njo0MDAwYWRiYmMzZWIxMDk5ZTNhMjYzYzQxOGY3YzFkN2RlZjFmYTJkZTBhZTAwYmE0ODI0NWNkYTkzODljODIzEkdzaGEyNTY6NmNiMzZhYmRkOTUxNWE2MDRiM2E5MGM2ZDQ4ZDg5OTIzYmE3N2U0ZDg3ZWVmNjAzZjllYjBjOGViMTNiYjk2MhoHZXh0cmFjdDIMCP6Pn/wFEIi/i/kCOgwI/o+f/AUQ9NOJ+QI="}
+                {"id":"moby.buildkit.trace","aux":"EsoBCkdzaGEyNTY6NDAwMGFkYmJjM2ViMTA5OWUzYTI2M2M0MThmN2MxZDdkZWYxZmEyZGUwYWUwMGJhNDgyNDVjZGE5Mzg5YzgyMxJHc2hhMjU2OjZjYjM2YWJkZDk1MTVhNjA0YjNhOTBjNmQ0OGQ4OTkyM2JhNzdlNGQ4N2VlZjYwM2Y5ZWIwYzhlYjEzYmI5NjIaBGRvbmUgtIMnKLSDJzIMCP6Pn/wFELy9hI4DOgwI/Y+f/AUQyLz7tAJCDAj+j5/8BRDM3eb4Ag=="}
+                {"id":"moby.buildkit.trace","aux":"EtABClJleHRyYWN0aW5nIHNoYTI1Njo0MDAwYWRiYmMzZWIxMDk5ZTNhMjYzYzQxOGY3YzFkN2RlZjFmYTJkZTBhZTAwYmE0ODI0NWNkYTkzODljODIzEkdzaGEyNTY6NmNiMzZhYmRkOTUxNWE2MDRiM2E5MGM2ZDQ4ZDg5OTIzYmE3N2U0ZDg3ZWVmNjAzZjllYjBjOGViMTNiYjk2MhoHZXh0cmFjdDIMCP6Pn/wFELyv4K4DOgwI/o+f/AUQ9NOJ+QJCDAj+j5/8BRDg2N+uAw=="}
+                {"id":"moby.buildkit.trace","aux":"EsABClJleHRyYWN0aW5nIHNoYTI1NjozYzJjYmE5MTkyODNhMjEwNjY1ZTQ4MGJjYmY5NDNlYWFmNGVkODdhODNmMDJlODFiYjI4NmI4YmRlYWQwZTc1EkdzaGEyNTY6NmNiMzZhYmRkOTUxNWE2MDRiM2E5MGM2ZDQ4ZDg5OTIzYmE3N2U0ZDg3ZWVmNjAzZjllYjBjOGViMTNiYjk2MhoHZXh0cmFjdDILCP+Pn/wFELTUmgY6Cwj/j5/8BRCs/pgG"}
+                {"id":"moby.buildkit.trace","aux":"Es0BClJleHRyYWN0aW5nIHNoYTI1NjozYzJjYmE5MTkyODNhMjEwNjY1ZTQ4MGJjYmY5NDNlYWFmNGVkODdhODNmMDJlODFiYjI4NmI4YmRlYWQwZTc1EkdzaGEyNTY6NmNiMzZhYmRkOTUxNWE2MDRiM2E5MGM2ZDQ4ZDg5OTIzYmE3N2U0ZDg3ZWVmNjAzZjllYjBjOGViMTNiYjk2MhoHZXh0cmFjdDILCP+Pn/wFENzLxQY6Cwj/j5/8BRCs/pgGQgsI/4+f/AUQ+ObEBg=="}
+                {"id":"moby.buildkit.trace","aux":"CtkBCkdzaGEyNTY6NmNiMzZhYmRkOTUxNWE2MDRiM2E5MGM2ZDQ4ZDg5OTIzYmE3N2U0ZDg3ZWVmNjAzZjllYjBjOGViMTNiYjk2MhpzW3N0YWdlLTEgMS8yXSBGUk9NIGdjci5pby9kaXN0cm9sZXNzL3N0YXRpY0BzaGEyNTY6ZDBmNDE0YzY0YmRiMGNlZWJlYTY1MWIxNGFkNWJlOWEyODFhN2ExZDY3NzUxZjlkZTQxOTMxNjM5MDIzOWI2MioMCPyPn/wFEICjwI0DMgsI/4+f/AUQ1PrfIw=="}
+                {"id":"moby.buildkit.trace","aux":"CqECCkdzaGEyNTY6YTA2N2ExMDNiNjVjNzgwM2ZmYzkyMzNkZGY3YTM2ZTBkYTM0NWM2OTM4NGVmY2Q2MTgzNjk0ZTQxZDRjNDQ3ZBJHc2hhMjU2OjZjYjM2YWJkZDk1MTVhNjA0YjNhOTBjNmQ0OGQ4OTkyM2JhNzdlNGQ4N2VlZjYwM2Y5ZWIwYzhlYjEzYmI5NjISR3NoYTI1Njo5ODU0MDAyNzUwYTk3ZmJlZjczMDZkNmY1MjhlNzc5Y2VjY2ViNDhlZTJlM2U1ZDFiN2FiMTZjN2MxMDdmN2IzGjdbc3RhZ2UtMSAyLzJdIENPUFkgLS1mcm9tPWZpcnN0IC9ldGMvcGFzc3dkIC9ldGMvcGFzc3dkKgsI/4+f/AUQ4NLPJA=="}
+                {"id":"moby.buildkit.trace","aux":"Cq4CCkdzaGEyNTY6YTA2N2ExMDNiNjVjNzgwM2ZmYzkyMzNkZGY3YTM2ZTBkYTM0NWM2OTM4NGVmY2Q2MTgzNjk0ZTQxZDRjNDQ3ZBJHc2hhMjU2OjZjYjM2YWJkZDk1MTVhNjA0YjNhOTBjNmQ0OGQ4OTkyM2JhNzdlNGQ4N2VlZjYwM2Y5ZWIwYzhlYjEzYmI5NjISR3NoYTI1Njo5ODU0MDAyNzUwYTk3ZmJlZjczMDZkNmY1MjhlNzc5Y2VjY2ViNDhlZTJlM2U1ZDFiN2FiMTZjN2MxMDdmN2IzGjdbc3RhZ2UtMSAyLzJdIENPUFkgLS1mcm9tPWZpcnN0IC9ldGMvcGFzc3dkIC9ldGMvcGFzc3dkKgsI/4+f/AUQ4NLPJDILCP+Pn/wFEIT8zj0="}
+                {"id":"moby.buildkit.trace","aux":"CmoKR3NoYTI1NjplOGM2MTNlMDdiMGI3ZmYzMzg5M2I2OTRmNzc1OWExMGQ0MmUxODBmMmI0ZGMzNDlmYjU3ZGM2YjcxZGNhYjAwGhJleHBvcnRpbmcgdG8gaW1hZ2UqCwj/j5/8BRDUiLE/EnUKEGV4cG9ydGluZyBsYXllcnMSR3NoYTI1NjplOGM2MTNlMDdiMGI3ZmYzMzg5M2I2OTRmNzc1OWExMGQ0MmUxODBmMmI0ZGMzNDlmYjU3ZGM2YjcxZGNhYjAwMgsI/4+f/AUQhNS0PzoLCP+Pn/wFENT/sz8="}
+                {"id":"moby.buildkit.trace","aux":"EoIBChBleHBvcnRpbmcgbGF5ZXJzEkdzaGEyNTY6ZThjNjEzZTA3YjBiN2ZmMzM4OTNiNjk0Zjc3NTlhMTBkNDJlMTgwZjJiNGRjMzQ5ZmI1N2RjNmI3MWRjYWIwMDILCP+Pn/wFELytxUM6Cwj/j5/8BRDU/7M/QgsI/4+f/AUQsM3EQw=="}
+                {"id":"moby.buildkit.trace","aux":"EroBClV3cml0aW5nIGltYWdlIHNoYTI1NjplZGU3ZjA1N2Q1YWUwNWQ0YWNhM2M2NWUxYTFkNTExNTgwMDJmMjcyMWQ3NzFkZTc1Zjc5MGNjYTRiMDc0OGY5EkdzaGEyNTY6ZThjNjEzZTA3YjBiN2ZmMzM4OTNiNjk0Zjc3NTlhMTBkNDJlMTgwZjJiNGRjMzQ5ZmI1N2RjNmI3MWRjYWIwMDILCP+Pn/wFEOjBikQ6Cwj/j5/8BRDs5IlE"}
+                {"id":"moby.buildkit.trace","aux":"EscBClV3cml0aW5nIGltYWdlIHNoYTI1NjplZGU3ZjA1N2Q1YWUwNWQ0YWNhM2M2NWUxYTFkNTExNTgwMDJmMjcyMWQ3NzFkZTc1Zjc5MGNjYTRiMDc0OGY5EkdzaGEyNTY6ZThjNjEzZTA3YjBiN2ZmMzM4OTNiNjk0Zjc3NTlhMTBkNDJlMTgwZjJiNGRjMzQ5ZmI1N2RjNmI3MWRjYWIwMDILCP+Pn/wFELSo2EQ6Cwj/j5/8BRDs5IlEQgsI/4+f/AUQ8MnXRBKoAQpDbmFtaW5nIHRvIGRvY2tlci5pby9saWJyYXJ5L2JhdGVjdC1pbnRlZ3JhdGlvbi10ZXN0cy1pbWFnZS1idWlsZGtpdBJHc2hhMjU2OmU4YzYxM2UwN2IwYjdmZjMzODkzYjY5NGY3NzU5YTEwZDQyZTE4MGYyYjRkYzM0OWZiNTdkYzZiNzFkY2FiMDAyCwj/j5/8BRDIqdtEOgsI/4+f/AUQwNDaRA=="}
+                {"id":"moby.image.id","aux":{"ID":"sha256:ede7f057d5ae05d4aca3c65e1a1d51158002f2721d771de75f790cca4b0748f9"}}
+                {"id":"moby.buildkit.trace","aux":"CncKR3NoYTI1NjplOGM2MTNlMDdiMGI3ZmYzMzg5M2I2OTRmNzc1OWExMGQ0MmUxODBmMmI0ZGMzNDlmYjU3ZGM2YjcxZGNhYjAwGhJleHBvcnRpbmcgdG8gaW1hZ2UqCwj/j5/8BRDUiLE/MgsI/4+f/AUQqPSkRRK1AQpDbmFtaW5nIHRvIGRvY2tlci5pby9saWJyYXJ5L2JhdGVjdC1pbnRlZ3JhdGlvbi10ZXN0cy1pbWFnZS1idWlsZGtpdBJHc2hhMjU2OmU4YzYxM2UwN2IwYjdmZjMzODkzYjY5NGY3NzU5YTEwZDQyZTE4MGYyYjRkYzM0OWZiNTdkYzZiNzFkY2FiMDAyCwj/j5/8BRDkzaJFOgsI/4+f/AUQwNDaREILCP+Pn/wFEKDvoUU="}
+                {"stream":"Successfully tagged batect-integration-tests-image-buildkit:latest\n"}
+            """.trimIndent()
+
+            beforeEachTest {
+                body.readFrom(StringReader(input), outputStream, eventCallback)
+            }
+
+            it("posts build status messages as the build progresses") {
+                val loadStaticImageMetadataStep = ActiveImageBuildStep.NotDownloading(0, "[internal] load metadata for gcr.io/distroless/static@sha256:d0f414c64bdb0ceebea651b14ad5be9a281a7a1d67751f9de419316390239b62")
+                val loadBaseImageMetadataStep = ActiveImageBuildStep.NotDownloading(1, "[internal] load metadata for gcr.io/distroless/base@sha256:2c12bde3d050850e976fe682193b94f0855866ea4f37a12ed7db8668e8071047")
+                val pullStaticImageStepName = "[stage-1 1/2] FROM gcr.io/distroless/static@sha256:d0f414c64bdb0ceebea651b14ad5be9a281a7a1d67751f9de419316390239b62"
+                val pullStaticImageStepIndex = 2
+                val pullBaseImageStepName = "[first 1/1] FROM gcr.io/distroless/base@sha256:2c12bde3d050850e976fe682193b94f0855866ea4f37a12ed7db8668e8071047"
+                val pullBaseImageStepIndex = 3
+                val pullBaseImageComplete = ActiveImageBuildStep.Downloading(pullBaseImageStepIndex, pullBaseImageStepName, DownloadOperation.PullComplete, 741 + 947 + 814 + 693997, 741 + 947 + 814 + 693997)
+
+                assertThat(
+                    eventsPosted,
+                    equalTo(
+                        listOf(
+                            // Line 1:
+                            BuildProgress(setOf(loadStaticImageMetadataStep, loadBaseImageMetadataStep)),
+                            // Line 2:
+                            BuildProgress(setOf(loadBaseImageMetadataStep)),
+                            // Line 3: no change (all steps complete, wait for next update)
+                            // Line 4:
+                            BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(pullBaseImageStepIndex, pullBaseImageStepName))),
+                            // Line 5:
+                            BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(pullBaseImageStepIndex, pullBaseImageStepName), ActiveImageBuildStep.NotDownloading(pullStaticImageStepIndex, pullStaticImageStepName))),
+                            // Line 6:
+                            BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(pullBaseImageStepIndex, pullBaseImageStepName))),
+                            // Line 7:
+                            BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(pullBaseImageStepIndex, pullBaseImageStepName), ActiveImageBuildStep.NotDownloading(pullStaticImageStepIndex, pullStaticImageStepName))),
+                            // Line 8:
+                            BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(pullStaticImageStepIndex, pullStaticImageStepName))),
+                            // Line 9:
+                            BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(pullStaticImageStepIndex, pullStaticImageStepName), ActiveImageBuildStep.NotDownloading(pullBaseImageStepIndex, pullBaseImageStepName))),
+                            // Line 10:
+                            BuildProgress(
+                                setOf(
+                                    ActiveImageBuildStep.Downloading(pullStaticImageStepIndex, pullStaticImageStepName, DownloadOperation.Downloading, 732 + 635 + 0 + 0, 732 + 635 + 639412 + 49),
+                                    ActiveImageBuildStep.NotDownloading(pullBaseImageStepIndex, pullBaseImageStepName),
+                                )
+                            ),
+                            // Line 11:
+                            BuildProgress(
+                                setOf(
+                                    ActiveImageBuildStep.Downloading(pullStaticImageStepIndex, pullStaticImageStepName, DownloadOperation.Downloading, 732 + 635 + 0 + 0, 732 + 635 + 639412 + 49),
+                                    ActiveImageBuildStep.Downloading(pullBaseImageStepIndex, pullBaseImageStepName, DownloadOperation.Downloading, 741 + 947 + 814 + 0, 741 + 947 + 814 + 693997),
+                                )
+                            ),
+                            // Line 12:
+                            BuildProgress(
+                                setOf(
+                                    ActiveImageBuildStep.Downloading(pullStaticImageStepIndex, pullStaticImageStepName, DownloadOperation.Downloading, 732 + 635 + 0 + 0, 732 + 635 + 639412 + 49),
+                                    ActiveImageBuildStep.Downloading(pullBaseImageStepIndex, pullBaseImageStepName, DownloadOperation.Downloading, 741 + 947 + 814 + 458752, 741 + 947 + 814 + 693997),
+                                )
+                            ),
+                            // Line 13:
+                            BuildProgress(
+                                setOf(
+                                    ActiveImageBuildStep.Downloading(pullStaticImageStepIndex, pullStaticImageStepName, DownloadOperation.Downloading, 732 + 635 + 0 + 0, 732 + 635 + 639412 + 49),
+                                    ActiveImageBuildStep.Downloading(pullBaseImageStepIndex, pullBaseImageStepName, DownloadOperation.Extracting, 741 + 947 + 814 + 0, 741 + 947 + 814 + 693997),
+                                )
+                            ),
+                            // Line 14:
+                            BuildProgress(
+                                setOf(
+                                    ActiveImageBuildStep.Downloading(pullStaticImageStepIndex, pullStaticImageStepName, DownloadOperation.Downloading, 732 + 635 + 0 + 0, 732 + 635 + 639412 + 49),
+                                    pullBaseImageComplete,
+                                )
+                            ),
+                            // Line 15:
+                            BuildProgress(
+                                setOf(
+                                    ActiveImageBuildStep.Downloading(pullStaticImageStepIndex, pullStaticImageStepName, DownloadOperation.Downloading, 732 + 635 + 0 + 49, 732 + 635 + 639412 + 49),
+                                    pullBaseImageComplete,
+                                )
+                            ),
+                            // Line 16: no change
+                            // Line 17:
+                            BuildProgress(
+                                setOf(
+                                    ActiveImageBuildStep.Downloading(pullStaticImageStepIndex, pullStaticImageStepName, DownloadOperation.Downloading, 732 + 635 + 0 + 49, 732 + 635 + 639412 + 49),
+                                )
+                            ),
+                            // Line 18:
+                            BuildProgress(
+                                setOf(
+                                    ActiveImageBuildStep.Downloading(pullStaticImageStepIndex, pullStaticImageStepName, DownloadOperation.Extracting, 732 + 635 + 0 + 0, 732 + 635 + 639412 + 49),
+                                )
+                            ),
+                            // Line 19:
+                            BuildProgress(
+                                setOf(
+                                    ActiveImageBuildStep.Downloading(pullStaticImageStepIndex, pullStaticImageStepName, DownloadOperation.PullComplete, 732 + 635 + 639412 + 0, 732 + 635 + 639412 + 49),
+                                )
+                            ),
+                            // Line 20:
+                            BuildProgress(
+                                setOf(
+                                    ActiveImageBuildStep.Downloading(pullStaticImageStepIndex, pullStaticImageStepName, DownloadOperation.Extracting, 732 + 635 + 639412 + 0, 732 + 635 + 639412 + 49),
+                                )
+                            ),
+                            // Line 21: no change
+                            // Line 22:
+                            BuildProgress(
+                                setOf(
+                                    ActiveImageBuildStep.Downloading(pullStaticImageStepIndex, pullStaticImageStepName, DownloadOperation.PullComplete, 732 + 635 + 639412 + 49, 732 + 635 + 639412 + 49),
+                                )
+                            ),
+                            // Line 23: no change (all steps complete, wait for next update)
+                            // Line 24:
+                            BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(4, "[stage-1 2/2] COPY --from=first /etc/passwd /etc/passwd"))),
+                            // Line 25: no change (all steps complete, wait for next update)
+                            // Line 26:
+                            BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(5, "exporting to image"))),
+                            // Line 27: no change
+                            // Line 28: no change
+                            // Line 29: no change
+                            // Line 30:
+                            BuildComplete(DockerImage("sha256:ede7f057d5ae05d4aca3c65e1a1d51158002f2721d771de75f790cca4b0748f9"))
+                            // Line 31: no change (all steps complete, wait for next update)
+                            // Line 32: no change
+                        )
+                    )
+                )
+            }
+
+            it("streams output showing the progression of the build") {
+                assertThat(
+                    output.toString(),
+                    equalTo(
+                        """
+                        |#1 [internal] load metadata for gcr.io/distroless/static@sha256:d0f414c64bdb0ceebea651b14ad5be9a281a7a1d67751f9de419316390239b62
+                        |#1 ...
+                        |
+                        |#2 [internal] load metadata for gcr.io/distroless/base@sha256:2c12bde3d050850e976fe682193b94f0855866ea4f37a12ed7db8668e8071047
+                        |#2 ...
+                        |
+                        |#1 [internal] load metadata for gcr.io/distroless/static@sha256:d0f414c64bdb0ceebea651b14ad5be9a281a7a1d67751f9de419316390239b62
+                        |#1 DONE
+                        |
+                        |#2 [internal] load metadata for gcr.io/distroless/base@sha256:2c12bde3d050850e976fe682193b94f0855866ea4f37a12ed7db8668e8071047
+                        |#2 DONE
+                        |
+                        |#3 [stage-1 1/2] FROM gcr.io/distroless/static@sha256:d0f414c64bdb0ceebea651b14ad5be9a281a7a1d67751f9de419316390239b62
+                        |#3 ...
+                        |
+                        |#4 [first 1/1] FROM gcr.io/distroless/base@sha256:2c12bde3d050850e976fe682193b94f0855866ea4f37a12ed7db8668e8071047
+                        |#4 ...
+                        |
+                        |#3 [stage-1 1/2] FROM gcr.io/distroless/static@sha256:d0f414c64bdb0ceebea651b14ad5be9a281a7a1d67751f9de419316390239b62
+                        |#3 resolve gcr.io/distroless/static@sha256:d0f414c64bdb0ceebea651b14ad5be9a281a7a1d67751f9de419316390239b62: done
+                        |#3 ...
+                        |
+                        |#4 [first 1/1] FROM gcr.io/distroless/base@sha256:2c12bde3d050850e976fe682193b94f0855866ea4f37a12ed7db8668e8071047
+                        |#4 resolve gcr.io/distroless/base@sha256:2c12bde3d050850e976fe682193b94f0855866ea4f37a12ed7db8668e8071047: done
+                        |#4 ...
+                        |
+                        |#3 [stage-1 1/2] FROM gcr.io/distroless/static@sha256:d0f414c64bdb0ceebea651b14ad5be9a281a7a1d67751f9de419316390239b62
+                        |#3 sha256:d0f414c64bdb0ceebea651b14ad5be9a281a7a1d67751f9de419316390239b62: done
+                        |#3 sha256:25b8fd42ff3675b61bc640209da0c176d2eecf6336ad5ef3c09001afed941dde: done
+                        |#3 sha256:4000adbbc3eb1099e3a263c418f7c1d7def1fa2de0ae00ba48245cda9389c823: downloading 639.4 KB
+                        |#3 sha256:3c2cba919283a210665e480bcbf943eaaf4ed87a83f02e81bb286b8bdead0e75: downloading 49 B
+                        |#3 ...
+                        |
+                        |#4 [first 1/1] FROM gcr.io/distroless/base@sha256:2c12bde3d050850e976fe682193b94f0855866ea4f37a12ed7db8668e8071047
+                        |#4 sha256:2c12bde3d050850e976fe682193b94f0855866ea4f37a12ed7db8668e8071047: done
+                        |#4 sha256:1dbf077a9313c094a9b4aedd85ea1349646abddb4cfc58a5dc823d27477b2683: done
+                        |#4 sha256:b447a3721965faad56f696348f79d8c832e26a05d9662a7690d5df8e56d9eac7: done
+                        |#4 sha256:a4eb8a1412a23898da359cd73a3485601b4a41e23de0a5eab2cb936aaa4ad44d: downloading 694.0 KB
+                        |#4 sha256:a4eb8a1412a23898da359cd73a3485601b4a41e23de0a5eab2cb936aaa4ad44d: extracting
+                        |#4 sha256:a4eb8a1412a23898da359cd73a3485601b4a41e23de0a5eab2cb936aaa4ad44d: done
+                        |#4 ...
+                        |
+                        |#3 [stage-1 1/2] FROM gcr.io/distroless/static@sha256:d0f414c64bdb0ceebea651b14ad5be9a281a7a1d67751f9de419316390239b62
+                        |#3 sha256:4000adbbc3eb1099e3a263c418f7c1d7def1fa2de0ae00ba48245cda9389c823: extracting
+                        |#3 sha256:4000adbbc3eb1099e3a263c418f7c1d7def1fa2de0ae00ba48245cda9389c823: done
+                        |#3 sha256:3c2cba919283a210665e480bcbf943eaaf4ed87a83f02e81bb286b8bdead0e75: extracting
+                        |#3 sha256:3c2cba919283a210665e480bcbf943eaaf4ed87a83f02e81bb286b8bdead0e75: done
+                        |#3 DONE
+                        |
+                        |#4 [first 1/1] FROM gcr.io/distroless/base@sha256:2c12bde3d050850e976fe682193b94f0855866ea4f37a12ed7db8668e8071047
+                        |#4 DONE
+                        |
+                        |#5 [stage-1 2/2] COPY --from=first /etc/passwd /etc/passwd
+                        |#5 DONE
+                        |
+                        |#6 exporting to image
+                        |#6 exporting layers: done
+                        |#6 writing image sha256:ede7f057d5ae05d4aca3c65e1a1d51158002f2721d771de75f790cca4b0748f9: done
+                        |#6 naming to docker.io/library/batect-integration-tests-image-buildkit: done
+                        |#6 DONE
+                        |
                         |
                         """.trimMargin()
                     )

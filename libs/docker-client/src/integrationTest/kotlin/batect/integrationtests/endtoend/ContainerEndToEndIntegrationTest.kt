@@ -22,6 +22,7 @@ import batect.integrationtests.build
 import batect.integrationtests.createClient
 import batect.integrationtests.creationRequestForContainer
 import batect.integrationtests.pull
+import batect.integrationtests.runBuildKitTests
 import batect.integrationtests.runContainerAndWaitForCompletion
 import batect.integrationtests.testImagesDirectory
 import batect.integrationtests.withContainer
@@ -46,7 +47,7 @@ object ContainerEndToEndIntegrationTest : Spek({
         setOf(
             TestCase("using a pulled image", { client.pull("alpine:3.7") }),
             TestCase("using an image built with the legacy builder", { client.build(imageDirectory, "batect-integration-tests-image-legacy-builder", BuilderVersion.Legacy) }),
-            TestCase("using an image built with BuildKit", { client.build(imageDirectory, "batect-integration-tests-image-buildkit", BuilderVersion.BuildKit) }, enabled = System.getProperty("skipBuildKitTests", "false") == "false"),
+            TestCase("using an image built with BuildKit", { client.build(imageDirectory, "batect-integration-tests-image-buildkit", BuilderVersion.BuildKit) }, enabled = runBuildKitTests),
         ).forEach { (description, imageSource, enabled) ->
             val skip = if (enabled) Skip.No else Skip.Yes("not supported on this version of Docker")
 

@@ -17,18 +17,25 @@
 package batect.integrationtests
 
 import batect.docker.DockerImage
+import batect.docker.api.BuilderVersion
 import batect.os.ProcessOutput
 import batect.os.ProcessRunner
 import batect.testutils.createForGroup
 import batect.testutils.runBeforeGroup
+import com.natpryce.hamkrest.anyElement
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.containsSubstring
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
+import com.natpryce.hamkrest.hasElement
+import com.natpryce.hamkrest.matches
 import com.natpryce.hamkrest.or
 import com.nhaarman.mockitokotlin2.mock
+import okio.sink
 import org.spekframework.spek2.Spek
+import org.spekframework.spek2.dsl.Skip
 import org.spekframework.spek2.style.specification.describe
+import java.io.ByteArrayOutputStream
 
 object ImageClientIntegrationTest : Spek({
     describe("a Docker images client") {
@@ -40,6 +47,31 @@ object ImageClientIntegrationTest : Spek({
 
             it("pulls the image successfully") {
                 assertThat(image, equalTo(DockerImage("hello-world:latest")))
+            }
+        }
+
+        describe("building an image with BuildKit", skip = if (runBuildKitTests) Skip.No else Skip.Yes("not supported on this version of Docker")) {
+            val imageDirectory = testImagesDirectory.resolve("basic-image")
+            val output by createForGroup { ByteArrayOutputStream() }
+            runBeforeGroup { client.build(imageDirectory, "batect-integration-tests-image-buildkit", BuilderVersion.BuildKit, output.sink()) }
+
+            it("includes all expected output in the response") {
+                val lines = output.toString().lines()
+
+                assertThat(lines, hasElement("#1 [internal] load remote build context"))
+                assertThat(lines, hasElement("#1 CACHED") or hasElement("#1 DONE"))
+
+                assertThat(lines, hasElement("#2 copy /context /"))
+                assertThat(lines, hasElement("#2 CACHED") or hasElement("#2 DONE"))
+
+                assertThat(lines, anyElement(matches("""^#3 \[internal] load metadata for docker.io/library/alpine:.*""".toRegex())))
+                assertThat(lines, hasElement("#3 CACHED") or hasElement("#3 DONE"))
+
+                assertThat(lines, anyElement(matches("""^#4 \[1/1] FROM docker.io/library/alpine:.*""".toRegex())))
+                assertThat(lines, hasElement("#4 CACHED") or hasElement("#4 DONE"))
+
+                assertThat(lines, hasElement("#5 exporting to image"))
+                assertThat(lines, hasElement("#5 CACHED") or hasElement("#5 DONE"))
             }
         }
     }

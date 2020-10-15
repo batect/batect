@@ -82,3 +82,5 @@ inline fun <T> retry(retries: Int, delayMillisecondsBetweenAttempts: Long = 200,
 
     throw RuntimeException("Could not execute operation after $retries attempts. Exceptions were:\n$exceptionDetails")
 }
+
+val runBuildKitTests = System.getProperty("skipBuildKitTests", "false") == "false"

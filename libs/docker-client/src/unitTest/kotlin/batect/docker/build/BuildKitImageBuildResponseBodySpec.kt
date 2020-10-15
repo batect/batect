@@ -521,6 +521,152 @@ object BuildKitImageBuildResponseBodySpec : Spek({
             }
         }
 
+        given("a response with trace messages for a single image pull with multiple layers to download") {
+            val input = """
+                {"id":"moby.buildkit.trace","aux":"CtMBCkdzaGEyNTY6OTc0MmM4MGE1NzhkNTQxZWIxNzVjMzFiZmY2ZDhmYzM0NjEwZWU3ZmVhNzgwNTJjMGJlOTg1MDFmNjk3YWVhMBp7W2ludGVybmFsXSBsb2FkIG1ldGFkYXRhIGZvciBnY3IuaW8vZGlzdHJvbGVzcy9qYXZhQHNoYTI1NjoyOGVjNTUyNDA1YTkyZWQxYTM3NjdiODFhYWVjZTVjNDhiZDFiODlkZmI1ZjNjMTQ0YjBlNGNlYTRkZDVmZmE0KgsIytae/AUQ1LetSQ=="}
+                {"id":"moby.buildkit.trace","aux":"CuEBCkdzaGEyNTY6OTc0MmM4MGE1NzhkNTQxZWIxNzVjMzFiZmY2ZDhmYzM0NjEwZWU3ZmVhNzgwNTJjMGJlOTg1MDFmNjk3YWVhMBp7W2ludGVybmFsXSBsb2FkIG1ldGFkYXRhIGZvciBnY3IuaW8vZGlzdHJvbGVzcy9qYXZhQHNoYTI1NjoyOGVjNTUyNDA1YTkyZWQxYTM3NjdiODFhYWVjZTVjNDhiZDFiODlkZmI1ZjNjMTQ0YjBlNGNlYTRkZDVmZmE0KgsIytae/AUQ1LetSTIMCMzWnvwFEPC12vQCCrQBCkdzaGEyNTY6MTY5MWJjZjhjMDVhZDU4NDVmMmI2MjQ1Njg4YTczYjQzOTc5YmZjZWQ2ZTM0OTU3NTUyOTk2MTE2NGUyNjM4MRppWzEvMV0gRlJPTSBnY3IuaW8vZGlzdHJvbGVzcy9qYXZhQHNoYTI1NjoyOGVjNTUyNDA1YTkyZWQxYTM3NjdiODFhYWVjZTVjNDhiZDFiODlkZmI1ZjNjMTQ0YjBlNGNlYTRkZDVmZmE0"}
+                {"id":"moby.buildkit.trace","aux":"CtABCkdzaGEyNTY6MTY5MWJjZjhjMDVhZDU4NDVmMmI2MjQ1Njg4YTczYjQzOTc5YmZjZWQ2ZTM0OTU3NTUyOTk2MTE2NGUyNjM4MRppWzEvMV0gRlJPTSBnY3IuaW8vZGlzdHJvbGVzcy9qYXZhQHNoYTI1NjoyOGVjNTUyNDA1YTkyZWQxYTM3NjdiODFhYWVjZTVjNDhiZDFiODlkZmI1ZjNjMTQ0YjBlNGNlYTRkZDVmZmE0KgwIzNae/AUQ9IaF9QIyDAjM1p78BRDEvZH1Ag=="}
+                {"id":"moby.buildkit.trace","aux":"CsIBCkdzaGEyNTY6MTY5MWJjZjhjMDVhZDU4NDVmMmI2MjQ1Njg4YTczYjQzOTc5YmZjZWQ2ZTM0OTU3NTUyOTk2MTE2NGUyNjM4MRppWzEvMV0gRlJPTSBnY3IuaW8vZGlzdHJvbGVzcy9qYXZhQHNoYTI1NjoyOGVjNTUyNDA1YTkyZWQxYTM3NjdiODFhYWVjZTVjNDhiZDFiODlkZmI1ZjNjMTQ0YjBlNGNlYTRkZDVmZmE0KgwIzNae/AUQ1MKh9QISzQEKZnJlc29sdmUgZ2NyLmlvL2Rpc3Ryb2xlc3MvamF2YUBzaGEyNTY6MjhlYzU1MjQwNWE5MmVkMWEzNzY3YjgxYWFlY2U1YzQ4YmQxYjg5ZGZiNWYzYzE0NGIwZTRjZWE0ZGQ1ZmZhNBJHc2hhMjU2OjE2OTFiY2Y4YzA1YWQ1ODQ1ZjJiNjI0NTY4OGE3M2I0Mzk3OWJmY2VkNmUzNDk1NzU1Mjk5NjExNjRlMjYzODEyDAjM1p78BRC4zab1AjoMCMzWnvwFEMyopfUC"}
+                {"id":"moby.buildkit.trace","aux":"CtABCkdzaGEyNTY6MTY5MWJjZjhjMDVhZDU4NDVmMmI2MjQ1Njg4YTczYjQzOTc5YmZjZWQ2ZTM0OTU3NTUyOTk2MTE2NGUyNjM4MRppWzEvMV0gRlJPTSBnY3IuaW8vZGlzdHJvbGVzcy9qYXZhQHNoYTI1NjoyOGVjNTUyNDA1YTkyZWQxYTM3NjdiODFhYWVjZTVjNDhiZDFiODlkZmI1ZjNjMTQ0YjBlNGNlYTRkZDVmZmE0KgwIzNae/AUQ1MKh9QIyDAjM1p78BRDIpKH2AhLbAQpmcmVzb2x2ZSBnY3IuaW8vZGlzdHJvbGVzcy9qYXZhQHNoYTI1NjoyOGVjNTUyNDA1YTkyZWQxYTM3NjdiODFhYWVjZTVjNDhiZDFiODlkZmI1ZjNjMTQ0YjBlNGNlYTRkZDVmZmE0EkdzaGEyNTY6MTY5MWJjZjhjMDVhZDU4NDVmMmI2MjQ1Njg4YTczYjQzOTc5YmZjZWQ2ZTM0OTU3NTUyOTk2MTE2NGUyNjM4MTIMCMzWnvwFEIiWkfYCOgwIzNae/AUQzKil9QJCDAjM1p78BRCAwI/2Ag=="}
+                {"id":"moby.buildkit.trace","aux":"CsIBCkdzaGEyNTY6MTY5MWJjZjhjMDVhZDU4NDVmMmI2MjQ1Njg4YTczYjQzOTc5YmZjZWQ2ZTM0OTU3NTUyOTk2MTE2NGUyNjM4MRppWzEvMV0gRlJPTSBnY3IuaW8vZGlzdHJvbGVzcy9qYXZhQHNoYTI1NjoyOGVjNTUyNDA1YTkyZWQxYTM3NjdiODFhYWVjZTVjNDhiZDFiODlkZmI1ZjNjMTQ0YjBlNGNlYTRkZDVmZmE0KgwIzNae/AUQ3Mip9gI="}
+                {"id":"moby.buildkit.trace","aux":"EsABCkdzaGEyNTY6MzFlYjI4OTk2ODA0YmViNDZhZTY4NmQ4NjU3MjFmZjYxMGUyYTg5ZGMxM2QzZGNiN2M0NjIyMzc3NDQ3ZjExZBJHc2hhMjU2OjE2OTFiY2Y4YzA1YWQ1ODQ1ZjJiNjI0NTY4OGE3M2I0Mzk3OWJmY2VkNmUzNDk1NzU1Mjk5NjExNjRlMjYzODEaC2Rvd25sb2FkaW5nKMfNvwMyDAjN1p78BRDgnI+YAjoMCM3WnvwFEJCM2/wBEr8BCkdzaGEyNTY6ZTcwOGJlOThjNThmNmJiMjdiZjJiNzgzOWQ3ZTYzYWQ1YmU2NjdiMTU4NWM2MTQyYWY0ZDNkYmJlODBhNzMzMBJHc2hhMjU2OjE2OTFiY2Y4YzA1YWQ1ODQ1ZjJiNjI0NTY4OGE3M2I0Mzk3OWJmY2VkNmUzNDk1NzU1Mjk5NjExNjRlMjYzODEaC2Rvd25sb2FkaW5nKMykJzIMCM3WnvwFEOi3k5gCOgwIzdae/AUQhKbc/AESwAEKR3NoYTI1Njo0ZmFiZmVkM2E4MjFkZjBjODMxMTVkMGNlNjVlYWY0Y2QzNmJlODc3N2U2M2U5ZDZmNmM3MjJjYWU4MGY0N2Y5EkdzaGEyNTY6MTY5MWJjZjhjMDVhZDU4NDVmMmI2MjQ1Njg4YTczYjQzOTc5YmZjZWQ2ZTM0OTU3NTUyOTk2MTE2NGUyNjM4MRoLZG93bmxvYWRpbmcoxbiVAjIMCM3WnvwFEKSelZgCOgwIzdae/AUQmILj/AESxwEKR3NoYTI1NjoyOGVjNTUyNDA1YTkyZWQxYTM3NjdiODFhYWVjZTVjNDhiZDFiODlkZmI1ZjNjMTQ0YjBlNGNlYTRkZDVmZmE0EkdzaGEyNTY6MTY5MWJjZjhjMDVhZDU4NDVmMmI2MjQ1Njg4YTczYjQzOTc5YmZjZWQ2ZTM0OTU3NTUyOTk2MTE2NGUyNjM4MRoEZG9uZSDbCijbCjIMCM3WnvwFEMzxmZgCOgwIzdae/AUQ/MTQ+wFCCwjM1p78BRCwvdhM"}
+                {"id":"moby.buildkit.trace","aux":"EsgBCkdzaGEyNTY6NTZjMWQxMDBhMDgyZDQzMzE3YmRjNTFmMDJlMDJlYTFkNmMyZjJiMmE0MmQ0Njc0MGUxNzRjNjAyODliODk5YhJHc2hhMjU2OjE2OTFiY2Y4YzA1YWQ1ODQ1ZjJiNjI0NTY4OGE3M2I0Mzk3OWJmY2VkNmUzNDk1NzU1Mjk5NjExNjRlMjYzODEaBGRvbmUgjQkojQkyDAjN1p78BRDwqpyYAjoMCM3WnvwFELCUh/wBQgwIzNae/AUQ+NnC9AI="}
+                {"id":"moby.buildkit.trace","aux":"EsABCkdzaGEyNTY6NGZhYmZlZDNhODIxZGYwYzgzMTE1ZDBjZTY1ZWFmNGNkMzZiZTg3NzdlNjNlOWQ2ZjZjNzIyY2FlODBmNDdmORJHc2hhMjU2OjE2OTFiY2Y4YzA1YWQ1ODQ1ZjJiNjI0NTY4OGE3M2I0Mzk3OWJmY2VkNmUzNDk1NzU1Mjk5NjExNjRlMjYzODEaC2Rvd25sb2FkaW5nKMW4lQIyDAjN1p78BRCk9czHAjoMCM3WnvwFEJiC4/wBEsABCkdzaGEyNTY6MzFlYjI4OTk2ODA0YmViNDZhZTY4NmQ4NjU3MjFmZjYxMGUyYTg5ZGMxM2QzZGNiN2M0NjIyMzc3NDQ3ZjExZBJHc2hhMjU2OjE2OTFiY2Y4YzA1YWQ1ODQ1ZjJiNjI0NTY4OGE3M2I0Mzk3OWJmY2VkNmUzNDk1NzU1Mjk5NjExNjRlMjYzODEaC2Rvd25sb2FkaW5nKMfNvwMyDAjN1p78BRCkxNTHAjoMCM3WnvwFEJCM2/wBEr8BCkdzaGEyNTY6ZTcwOGJlOThjNThmNmJiMjdiZjJiNzgzOWQ3ZTYzYWQ1YmU2NjdiMTU4NWM2MTQyYWY0ZDNkYmJlODBhNzMzMBJHc2hhMjU2OjE2OTFiY2Y4YzA1YWQ1ODQ1ZjJiNjI0NTY4OGE3M2I0Mzk3OWJmY2VkNmUzNDk1NzU1Mjk5NjExNjRlMjYzODEaC2Rvd25sb2FkaW5nKMykJzIMCM3WnvwFEPTp1ccCOgwIzdae/AUQhKbc/AE="}
+                {"id":"moby.buildkit.trace","aux":"EsABCkdzaGEyNTY6MzFlYjI4OTk2ODA0YmViNDZhZTY4NmQ4NjU3MjFmZjYxMGUyYTg5ZGMxM2QzZGNiN2M0NjIyMzc3NDQ3ZjExZBJHc2hhMjU2OjE2OTFiY2Y4YzA1YWQ1ODQ1ZjJiNjI0NTY4OGE3M2I0Mzk3OWJmY2VkNmUzNDk1NzU1Mjk5NjExNjRlMjYzODEaC2Rvd25sb2FkaW5nKMfNvwMyDAjN1p78BRCMhoX3AjoMCM3WnvwFEJCM2/wBEr8BCkdzaGEyNTY6ZTcwOGJlOThjNThmNmJiMjdiZjJiNzgzOWQ3ZTYzYWQ1YmU2NjdiMTU4NWM2MTQyYWY0ZDNkYmJlODBhNzMzMBJHc2hhMjU2OjE2OTFiY2Y4YzA1YWQ1ODQ1ZjJiNjI0NTY4OGE3M2I0Mzk3OWJmY2VkNmUzNDk1NzU1Mjk5NjExNjRlMjYzODEaC2Rvd25sb2FkaW5nKMykJzIMCM3WnvwFEPDFifcCOgwIzdae/AUQhKbc/AESwAEKR3NoYTI1Njo0ZmFiZmVkM2E4MjFkZjBjODMxMTVkMGNlNjVlYWY0Y2QzNmJlODc3N2U2M2U5ZDZmNmM3MjJjYWU4MGY0N2Y5EkdzaGEyNTY6MTY5MWJjZjhjMDVhZDU4NDVmMmI2MjQ1Njg4YTczYjQzOTc5YmZjZWQ2ZTM0OTU3NTUyOTk2MTE2NGUyNjM4MRoLZG93bmxvYWRpbmcoxbiVAjIMCM3WnvwFELi4jvcCOgwIzdae/AUQmILj/AE="}
+                {"id":"moby.buildkit.trace","aux":"EsIBCkdzaGEyNTY6ZTcwOGJlOThjNThmNmJiMjdiZjJiNzgzOWQ3ZTYzYWQ1YmU2NjdiMTU4NWM2MTQyYWY0ZDNkYmJlODBhNzMzMBJHc2hhMjU2OjE2OTFiY2Y4YzA1YWQ1ODQ1ZjJiNjI0NTY4OGE3M2I0Mzk3OWJmY2VkNmUzNDk1NzU1Mjk5NjExNjRlMjYzODEaC2Rvd25sb2FkaW5nIICAECjMpCcyCwjO1p78BRCMsJIpOgwIzdae/AUQhKbc/AESwwEKR3NoYTI1Njo0ZmFiZmVkM2E4MjFkZjBjODMxMTVkMGNlNjVlYWY0Y2QzNmJlODc3N2U2M2U5ZDZmNmM3MjJjYWU4MGY0N2Y5EkdzaGEyNTY6MTY5MWJjZjhjMDVhZDU4NDVmMmI2MjQ1Njg4YTczYjQzOTc5YmZjZWQ2ZTM0OTU3NTUyOTk2MTE2NGUyNjM4MRoLZG93bmxvYWRpbmcggIAXKMW4lQIyCwjO1p78BRCU6pQpOgwIzdae/AUQmILj/AESwwEKR3NoYTI1NjozMWViMjg5OTY4MDRiZWI0NmFlNjg2ZDg2NTcyMWZmNjEwZTJhODlkYzEzZDNkY2I3YzQ2MjIzNzc0NDdmMTFkEkdzaGEyNTY6MTY5MWJjZjhjMDVhZDU4NDVmMmI2MjQ1Njg4YTczYjQzOTc5YmZjZWQ2ZTM0OTU3NTUyOTk2MTE2NGUyNjM4MRoLZG93bmxvYWRpbmcggIACKMfNvwMyCwjO1p78BRDEuJcpOgwIzdae/AUQkIzb/AE="}
+                {"id":"moby.buildkit.trace","aux":"EsgBCkdzaGEyNTY6ZTcwOGJlOThjNThmNmJiMjdiZjJiNzgzOWQ3ZTYzYWQ1YmU2NjdiMTU4NWM2MTQyYWY0ZDNkYmJlODBhNzMzMBJHc2hhMjU2OjE2OTFiY2Y4YzA1YWQ1ODQ1ZjJiNjI0NTY4OGE3M2I0Mzk3OWJmY2VkNmUzNDk1NzU1Mjk5NjExNjRlMjYzODEaBGRvbmUgzKQnKMykJzILCM7WnvwFEKzg2Fg6DAjN1p78BRCEptz8AUILCM7WnvwFEOSS5kASwwEKR3NoYTI1Njo0ZmFiZmVkM2E4MjFkZjBjODMxMTVkMGNlNjVlYWY0Y2QzNmJlODc3N2U2M2U5ZDZmNmM3MjJjYWU4MGY0N2Y5EkdzaGEyNTY6MTY5MWJjZjhjMDVhZDU4NDVmMmI2MjQ1Njg4YTczYjQzOTc5YmZjZWQ2ZTM0OTU3NTUyOTk2MTE2NGUyNjM4MRoLZG93bmxvYWRpbmcggIBAKMW4lQIyCwjO1p78BRDM7d5YOgwIzdae/AUQmILj/AESvwEKR3NoYTI1NjpmZWJhYjMxMWQ0MzIzNzdhNjhlNTM3ZGZkMTZhODNhMTg1ZTlmYzIxNGU5YjUwOWFmZWEwZDVlOWU4MTU0MDUzEkdzaGEyNTY6MTY5MWJjZjhjMDVhZDU4NDVmMmI2MjQ1Njg4YTczYjQzOTc5YmZjZWQ2ZTM0OTU3NTUyOTk2MTE2NGUyNjM4MRoLZG93bmxvYWRpbmco1qy+HDILCM7WnvwFEMTD31g6DAjN1p78BRCM4eb8ARLDAQpHc2hhMjU2OjMxZWIyODk5NjgwNGJlYjQ2YWU2ODZkODY1NzIxZmY2MTBlMmE4OWRjMTNkM2RjYjdjNDYyMjM3NzQ0N2YxMWQSR3NoYTI1NjoxNjkxYmNmOGMwNWFkNTg0NWYyYjYyNDU2ODhhNzNiNDM5NzliZmNlZDZlMzQ5NTc1NTI5OTYxMTY0ZTI2MzgxGgtkb3dubG9hZGluZyCAgBQox82/AzILCM7WnvwFEOC84Vg6DAjN1p78BRCQjNv8AQ=="}
+                {"id":"moby.buildkit.trace","aux":"EsQBCkdzaGEyNTY6MzFlYjI4OTk2ODA0YmViNDZhZTY4NmQ4NjU3MjFmZjYxMGUyYTg5ZGMxM2QzZGNiN2M0NjIyMzc3NDQ3ZjExZBJHc2hhMjU2OjE2OTFiY2Y4YzA1YWQ1ODQ1ZjJiNjI0NTY4OGE3M2I0Mzk3OWJmY2VkNmUzNDk1NzU1Mjk5NjExNjRlMjYzODEaC2Rvd25sb2FkaW5nIICASijHzb8DMgwIztae/AUQ9Lrh5wE6DAjN1p78BRCQjNv8ARLFAQpHc2hhMjU2OjRmYWJmZWQzYTgyMWRmMGM4MzExNWQwY2U2NWVhZjRjZDM2YmU4Nzc3ZTYzZTlkNmY2YzcyMmNhZTgwZjQ3ZjkSR3NoYTI1NjoxNjkxYmNmOGMwNWFkNTg0NWYyYjYyNDU2ODhhNzNiNDM5NzliZmNlZDZlMzQ5NTc1NTI5OTYxMTY0ZTI2MzgxGgtkb3dubG9hZGluZyCAgOYBKMW4lQIyDAjO1p78BRDs3+nnAToMCM3WnvwFEJiC4/wBEsABCkdzaGEyNTY6ZmViYWIzMTFkNDMyMzc3YTY4ZTUzN2RmZDE2YTgzYTE4NWU5ZmMyMTRlOWI1MDlhZmVhMGQ1ZTllODE1NDA1MxJHc2hhMjU2OjE2OTFiY2Y4YzA1YWQ1ODQ1ZjJiNjI0NTY4OGE3M2I0Mzk3OWJmY2VkNmUzNDk1NzU1Mjk5NjExNjRlMjYzODEaC2Rvd25sb2FkaW5nKNasvhwyDAjO1p78BRC80+rnAToMCM3WnvwFEIzh5vwB"}
+                {"id":"moby.buildkit.trace","aux":"EsABCkdzaGEyNTY6ZmViYWIzMTFkNDMyMzc3YTY4ZTUzN2RmZDE2YTgzYTE4NWU5ZmMyMTRlOWI1MDlhZmVhMGQ1ZTllODE1NDA1MxJHc2hhMjU2OjE2OTFiY2Y4YzA1YWQ1ODQ1ZjJiNjI0NTY4OGE3M2I0Mzk3OWJmY2VkNmUzNDk1NzU1Mjk5NjExNjRlMjYzODEaC2Rvd25sb2FkaW5nKNasvhwyDAjO1p78BRDg1MKXAjoMCM3WnvwFEIzh5vwBEsQBCkdzaGEyNTY6MzFlYjI4OTk2ODA0YmViNDZhZTY4NmQ4NjU3MjFmZjYxMGUyYTg5ZGMxM2QzZGNiN2M0NjIyMzc3NDQ3ZjExZBJHc2hhMjU2OjE2OTFiY2Y4YzA1YWQ1ODQ1ZjJiNjI0NTY4OGE3M2I0Mzk3OWJmY2VkNmUzNDk1NzU1Mjk5NjExNjRlMjYzODEaC2Rvd25sb2FkaW5nIICAXijHzb8DMgwIztae/AUQhO/GlwI6DAjN1p78BRCQjNv8ARLMAQpHc2hhMjU2OjRmYWJmZWQzYTgyMWRmMGM4MzExNWQwY2U2NWVhZjRjZDM2YmU4Nzc3ZTYzZTlkNmY2YzcyMmNhZTgwZjQ3ZjkSR3NoYTI1NjoxNjkxYmNmOGMwNWFkNTg0NWYyYjYyNDU2ODhhNzNiNDM5NzliZmNlZDZlMzQ5NTc1NTI5OTYxMTY0ZTI2MzgxGgRkb25lIMW4lQIoxbiVAjIMCM7WnvwFEKiryJcCOgwIzdae/AUQmILj/AFCDAjO1p78BRD8vraVAg=="}
+                {"id":"moby.buildkit.trace","aux":"EsABClJleHRyYWN0aW5nIHNoYTI1NjozMWViMjg5OTY4MDRiZWI0NmFlNjg2ZDg2NTcyMWZmNjEwZTJhODlkYzEzZDNkY2I3YzQ2MjIzNzc0NDdmMTFkEkdzaGEyNTY6MTY5MWJjZjhjMDVhZDU4NDVmMmI2MjQ1Njg4YTczYjQzOTc5YmZjZWQ2ZTM0OTU3NTUyOTk2MTE2NGUyNjM4MRoHZXh0cmFjdDILCM/WnvwFEPTW6Rw6CwjP1p78BRC0nucc"}
+                {"id":"moby.buildkit.trace","aux":"EsoBCkdzaGEyNTY6MzFlYjI4OTk2ODA0YmViNDZhZTY4NmQ4NjU3MjFmZjYxMGUyYTg5ZGMxM2QzZGNiN2M0NjIyMzc3NDQ3ZjExZBJHc2hhMjU2OjE2OTFiY2Y4YzA1YWQ1ODQ1ZjJiNjI0NTY4OGE3M2I0Mzk3OWJmY2VkNmUzNDk1NzU1Mjk5NjExNjRlMjYzODEaBGRvbmUgx82/AyjHzb8DMgsIz9ae/AUQqKP9KDoMCM3WnvwFEJCM2/wBQgsIz9ae/AUQlMDlGxLDAQpHc2hhMjU2OmZlYmFiMzExZDQzMjM3N2E2OGU1MzdkZmQxNmE4M2ExODVlOWZjMjE0ZTliNTA5YWZlYTBkNWU5ZTgxNTQwNTMSR3NoYTI1NjoxNjkxYmNmOGMwNWFkNTg0NWYyYjYyNDU2ODhhNzNiNDM5NzliZmNlZDZlMzQ5NTc1NTI5OTYxMTY0ZTI2MzgxGgtkb3dubG9hZGluZyDw8Bco1qy+HDILCM/WnvwFENip/ig6DAjN1p78BRCM4eb8AQ=="}
+                {"id":"moby.buildkit.trace","aux":"EsABClJleHRyYWN0aW5nIHNoYTI1NjozMWViMjg5OTY4MDRiZWI0NmFlNjg2ZDg2NTcyMWZmNjEwZTJhODlkYzEzZDNkY2I3YzQ2MjIzNzc0NDdmMTFkEkdzaGEyNTY6MTY5MWJjZjhjMDVhZDU4NDVmMmI2MjQ1Njg4YTczYjQzOTc5YmZjZWQ2ZTM0OTU3NTUyOTk2MTE2NGUyNjM4MRoHZXh0cmFjdDILCM/WnvwFEJSElU06CwjP1p78BRC0nucc"}
+                {"id":"moby.buildkit.trace","aux":"EsMBCkdzaGEyNTY6ZmViYWIzMTFkNDMyMzc3YTY4ZTUzN2RmZDE2YTgzYTE4NWU5ZmMyMTRlOWI1MDlhZmVhMGQ1ZTllODE1NDA1MxJHc2hhMjU2OjE2OTFiY2Y4YzA1YWQ1ODQ1ZjJiNjI0NTY4OGE3M2I0Mzk3OWJmY2VkNmUzNDk1NzU1Mjk5NjExNjRlMjYzODEaC2Rvd25sb2FkaW5nIPDwbyjWrL4cMgsIz9ae/AUQxLjSWDoMCM3WnvwFEIzh5vwB"}
+                {"id":"moby.buildkit.trace","aux":"EsABClJleHRyYWN0aW5nIHNoYTI1NjozMWViMjg5OTY4MDRiZWI0NmFlNjg2ZDg2NTcyMWZmNjEwZTJhODlkYzEzZDNkY2I3YzQ2MjIzNzc0NDdmMTFkEkdzaGEyNTY6MTY5MWJjZjhjMDVhZDU4NDVmMmI2MjQ1Njg4YTczYjQzOTc5YmZjZWQ2ZTM0OTU3NTUyOTk2MTE2NGUyNjM4MRoHZXh0cmFjdDILCM/WnvwFEPCtqn06CwjP1p78BRC0nucc"}
+                {"id":"moby.buildkit.trace","aux":"EsUBCkdzaGEyNTY6ZmViYWIzMTFkNDMyMzc3YTY4ZTUzN2RmZDE2YTgzYTE4NWU5ZmMyMTRlOWI1MDlhZmVhMGQ1ZTllODE1NDA1MxJHc2hhMjU2OjE2OTFiY2Y4YzA1YWQ1ODQ1ZjJiNjI0NTY4OGE3M2I0Mzk3OWJmY2VkNmUzNDk1NzU1Mjk5NjExNjRlMjYzODEaC2Rvd25sb2FkaW5nIPDwwwEo1qy+HDIMCM/WnvwFEJijpIgBOgwIzdae/AUQjOHm/AE="}
+                {"id":"moby.buildkit.trace","aux":"Es8BClJleHRyYWN0aW5nIHNoYTI1NjozMWViMjg5OTY4MDRiZWI0NmFlNjg2ZDg2NTcyMWZmNjEwZTJhODlkYzEzZDNkY2I3YzQ2MjIzNzc0NDdmMTFkEkdzaGEyNTY6MTY5MWJjZjhjMDVhZDU4NDVmMmI2MjQ1Njg4YTczYjQzOTc5YmZjZWQ2ZTM0OTU3NTUyOTk2MTE2NGUyNjM4MRoHZXh0cmFjdDIMCM/WnvwFEOy3zpYBOgsIz9ae/AUQtJ7nHEIMCM/WnvwFEPThzZYB"}
+                {"id":"moby.buildkit.trace","aux":"EsIBClJleHRyYWN0aW5nIHNoYTI1NjplNzA4YmU5OGM1OGY2YmIyN2JmMmI3ODM5ZDdlNjNhZDViZTY2N2IxNTg1YzYxNDJhZjRkM2RiYmU4MGE3MzMwEkdzaGEyNTY6MTY5MWJjZjhjMDVhZDU4NDVmMmI2MjQ1Njg4YTczYjQzOTc5YmZjZWQ2ZTM0OTU3NTUyOTk2MTE2NGUyNjM4MRoHZXh0cmFjdDIMCM/WnvwFELjR2KcBOgwIz9ae/AUQ5IvXpwE="}
+                {"id":"moby.buildkit.trace","aux":"EsUBCkdzaGEyNTY6ZmViYWIzMTFkNDMyMzc3YTY4ZTUzN2RmZDE2YTgzYTE4NWU5ZmMyMTRlOWI1MDlhZmVhMGQ1ZTllODE1NDA1MxJHc2hhMjU2OjE2OTFiY2Y4YzA1YWQ1ODQ1ZjJiNjI0NTY4OGE3M2I0Mzk3OWJmY2VkNmUzNDk1NzU1Mjk5NjExNjRlMjYzODEaC2Rvd25sb2FkaW5nIPDwkQIo1qy+HDIMCM/WnvwFEOSG/LcBOgwIzdae/AUQjOHm/AE="}
+                {"id":"moby.buildkit.trace","aux":"EtABClJleHRyYWN0aW5nIHNoYTI1NjplNzA4YmU5OGM1OGY2YmIyN2JmMmI3ODM5ZDdlNjNhZDViZTY2N2IxNTg1YzYxNDJhZjRkM2RiYmU4MGE3MzMwEkdzaGEyNTY6MTY5MWJjZjhjMDVhZDU4NDVmMmI2MjQ1Njg4YTczYjQzOTc5YmZjZWQ2ZTM0OTU3NTUyOTk2MTE2NGUyNjM4MRoHZXh0cmFjdDIMCM/WnvwFELS2h8cBOgwIz9ae/AUQ5IvXpwFCDAjP1p78BRCc2obHAQ=="}
+                {"id":"moby.buildkit.trace","aux":"EsIBClJleHRyYWN0aW5nIHNoYTI1Njo0ZmFiZmVkM2E4MjFkZjBjODMxMTVkMGNlNjVlYWY0Y2QzNmJlODc3N2U2M2U5ZDZmNmM3MjJjYWU4MGY0N2Y5EkdzaGEyNTY6MTY5MWJjZjhjMDVhZDU4NDVmMmI2MjQ1Njg4YTczYjQzOTc5YmZjZWQ2ZTM0OTU3NTUyOTk2MTE2NGUyNjM4MRoHZXh0cmFjdDIMCM/WnvwFEKDBkdIBOgwIz9ae/AUQ+P2P0gE="}
+                {"id":"moby.buildkit.trace","aux":"EsUBCkdzaGEyNTY6ZmViYWIzMTFkNDMyMzc3YTY4ZTUzN2RmZDE2YTgzYTE4NWU5ZmMyMTRlOWI1MDlhZmVhMGQ1ZTllODE1NDA1MxJHc2hhMjU2OjE2OTFiY2Y4YzA1YWQ1ODQ1ZjJiNjI0NTY4OGE3M2I0Mzk3OWJmY2VkNmUzNDk1NzU1Mjk5NjExNjRlMjYzODEaC2Rvd25sb2FkaW5nIPDwvwIo1qy+HDIMCM/WnvwFENCc1ucBOgwIzdae/AUQjOHm/AE="}
+                {"id":"moby.buildkit.trace","aux":"EsIBClJleHRyYWN0aW5nIHNoYTI1Njo0ZmFiZmVkM2E4MjFkZjBjODMxMTVkMGNlNjVlYWY0Y2QzNmJlODc3N2U2M2U5ZDZmNmM3MjJjYWU4MGY0N2Y5EkdzaGEyNTY6MTY5MWJjZjhjMDVhZDU4NDVmMmI2MjQ1Njg4YTczYjQzOTc5YmZjZWQ2ZTM0OTU3NTUyOTk2MTE2NGUyNjM4MRoHZXh0cmFjdDIMCM/WnvwFEMSaoIICOgwIz9ae/AUQ+P2P0gE="}
+                {"id":"moby.buildkit.trace","aux":"EtABClJleHRyYWN0aW5nIHNoYTI1Njo0ZmFiZmVkM2E4MjFkZjBjODMxMTVkMGNlNjVlYWY0Y2QzNmJlODc3N2U2M2U5ZDZmNmM3MjJjYWU4MGY0N2Y5EkdzaGEyNTY6MTY5MWJjZjhjMDVhZDU4NDVmMmI2MjQ1Njg4YTczYjQzOTc5YmZjZWQ2ZTM0OTU3NTUyOTk2MTE2NGUyNjM4MRoHZXh0cmFjdDIMCM/WnvwFEODPnZYCOgwIz9ae/AUQ+P2P0gFCDAjP1p78BRCk5pyWAg=="}
+                {"id":"moby.buildkit.trace","aux":"EsUBCkdzaGEyNTY6ZmViYWIzMTFkNDMyMzc3YTY4ZTUzN2RmZDE2YTgzYTE4NWU5ZmMyMTRlOWI1MDlhZmVhMGQ1ZTllODE1NDA1MxJHc2hhMjU2OjE2OTFiY2Y4YzA1YWQ1ODQ1ZjJiNjI0NTY4OGE3M2I0Mzk3OWJmY2VkNmUzNDk1NzU1Mjk5NjExNjRlMjYzODEaC2Rvd25sb2FkaW5nIPDwjQMo1qy+HDIMCM/WnvwFEKi6qpcCOgwIzdae/AUQjOHm/AE="}
+                {"id":"moby.buildkit.trace","aux":"EswBCkdzaGEyNTY6ZmViYWIzMTFkNDMyMzc3YTY4ZTUzN2RmZDE2YTgzYTE4NWU5ZmMyMTRlOWI1MDlhZmVhMGQ1ZTllODE1NDA1MxJHc2hhMjU2OjE2OTFiY2Y4YzA1YWQ1ODQ1ZjJiNjI0NTY4OGE3M2I0Mzk3OWJmY2VkNmUzNDk1NzU1Mjk5NjExNjRlMjYzODEaBGRvbmUg1qy+HCjWrL4cMgwI09ae/AUQmIrolQM6DAjN1p78BRCM4eb8AUIMCNPWnvwFELTO3oAD"}
+                {"id":"moby.buildkit.trace","aux":"EsIBClJleHRyYWN0aW5nIHNoYTI1NjpmZWJhYjMxMWQ0MzIzNzdhNjhlNTM3ZGZkMTZhODNhMTg1ZTlmYzIxNGU5YjUwOWFmZWEwZDVlOWU4MTU0MDUzEkdzaGEyNTY6MTY5MWJjZjhjMDVhZDU4NDVmMmI2MjQ1Njg4YTczYjQzOTc5YmZjZWQ2ZTM0OTU3NTUyOTk2MTE2NGUyNjM4MRoHZXh0cmFjdDIMCNPWnvwFEPCknJ4DOgwI09ae/AUQzOiangM="}
+                {"id":"moby.buildkit.trace","aux":"EsIBClJleHRyYWN0aW5nIHNoYTI1NjpmZWJhYjMxMWQ0MzIzNzdhNjhlNTM3ZGZkMTZhODNhMTg1ZTlmYzIxNGU5YjUwOWFmZWEwZDVlOWU4MTU0MDUzEkdzaGEyNTY6MTY5MWJjZjhjMDVhZDU4NDVmMmI2MjQ1Njg4YTczYjQzOTc5YmZjZWQ2ZTM0OTU3NTUyOTk2MTE2NGUyNjM4MRoHZXh0cmFjdDIMCNPWnvwFEPCZg9QDOgwI09ae/AUQzOiangM="}
+                {"id":"moby.buildkit.trace","aux":"Es4BClJleHRyYWN0aW5nIHNoYTI1NjpmZWJhYjMxMWQ0MzIzNzdhNjhlNTM3ZGZkMTZhODNhMTg1ZTlmYzIxNGU5YjUwOWFmZWEwZDVlOWU4MTU0MDUzEkdzaGEyNTY6MTY5MWJjZjhjMDVhZDU4NDVmMmI2MjQ1Njg4YTczYjQzOTc5YmZjZWQ2ZTM0OTU3NTUyOTk2MTE2NGUyNjM4MRoHZXh0cmFjdDILCNXWnvwFEKCuyTE6DAjT1p78BRDM6JqeA0ILCNXWnvwFEPDAyDE="}
+                {"id":"moby.buildkit.trace","aux":"Cs8BCkdzaGEyNTY6MTY5MWJjZjhjMDVhZDU4NDVmMmI2MjQ1Njg4YTczYjQzOTc5YmZjZWQ2ZTM0OTU3NTUyOTk2MTE2NGUyNjM4MRppWzEvMV0gRlJPTSBnY3IuaW8vZGlzdHJvbGVzcy9qYXZhQHNoYTI1NjoyOGVjNTUyNDA1YTkyZWQxYTM3NjdiODFhYWVjZTVjNDhiZDFiODlkZmI1ZjNjMTQ0YjBlNGNlYTRkZDVmZmE0KgwIzNae/AUQ3Mip9gIyCwjV1p78BRCwx5dC"}
+                {"id":"moby.buildkit.trace","aux":"CmoKR3NoYTI1NjplOGM2MTNlMDdiMGI3ZmYzMzg5M2I2OTRmNzc1OWExMGQ0MmUxODBmMmI0ZGMzNDlmYjU3ZGM2YjcxZGNhYjAwGhJleHBvcnRpbmcgdG8gaW1hZ2UqCwjV1p78BRDEqN9CEoIBChBleHBvcnRpbmcgbGF5ZXJzEkdzaGEyNTY6ZThjNjEzZTA3YjBiN2ZmMzM4OTNiNjk0Zjc3NTlhMTBkNDJlMTgwZjJiNGRjMzQ5ZmI1N2RjNmI3MWRjYWIwMDILCNXWnvwFELCS40I6CwjV1p78BRCg/OBCQgsI1dae/AUQuLziQg=="}
+                {"id":"moby.buildkit.trace","aux":"EroBClV3cml0aW5nIGltYWdlIHNoYTI1NjphOTQ0YTkwNmNjOTcxOTgwZTVmNTVkOTkxZmI5MWZhYTkyYTI1YTBhODY2YmNkNTdmY2UyNmE1NjI4ZjkyZmE1EkdzaGEyNTY6ZThjNjEzZTA3YjBiN2ZmMzM4OTNiNjk0Zjc3NTlhMTBkNDJlMTgwZjJiNGRjMzQ5ZmI1N2RjNmI3MWRjYWIwMDILCNXWnvwFEMTVsUQ6CwjV1p78BRDk97BE"}
+                {"id":"moby.buildkit.trace","aux":"EscBClV3cml0aW5nIGltYWdlIHNoYTI1NjphOTQ0YTkwNmNjOTcxOTgwZTVmNTVkOTkxZmI5MWZhYTkyYTI1YTBhODY2YmNkNTdmY2UyNmE1NjI4ZjkyZmE1EkdzaGEyNTY6ZThjNjEzZTA3YjBiN2ZmMzM4OTNiNjk0Zjc3NTlhMTBkNDJlMTgwZjJiNGRjMzQ5ZmI1N2RjNmI3MWRjYWIwMDILCNXWnvwFEJjkuUU6CwjV1p78BRDk97BEQgsI1dae/AUQhPa4RRKuAQpJbmFtaW5nIHRvIGRvY2tlci5pby9saWJyYXJ5L2JhdGVjdC1pbnRlZ3JhdGlvbi10ZXN0cy1pbWFnZS1sZWdhY3ktYnVpbGRlchJHc2hhMjU2OmU4YzYxM2UwN2IwYjdmZjMzODkzYjY5NGY3NzU5YTEwZDQyZTE4MGYyYjRkYzM0OWZiNTdkYzZiNzFkY2FiMDAyCwjV1p78BRCg/71FOgsI1dae/AUQ7KO9RQ=="}
+                {"id":"moby.buildkit.trace","aux":"CncKR3NoYTI1NjplOGM2MTNlMDdiMGI3ZmYzMzg5M2I2OTRmNzc1OWExMGQ0MmUxODBmMmI0ZGMzNDlmYjU3ZGM2YjcxZGNhYjAwGhJleHBvcnRpbmcgdG8gaW1hZ2UqCwjV1p78BRDEqN9CMgsI1dae/AUQqJbqRhK7AQpJbmFtaW5nIHRvIGRvY2tlci5pby9saWJyYXJ5L2JhdGVjdC1pbnRlZ3JhdGlvbi10ZXN0cy1pbWFnZS1sZWdhY3ktYnVpbGRlchJHc2hhMjU2OmU4YzYxM2UwN2IwYjdmZjMzODkzYjY5NGY3NzU5YTEwZDQyZTE4MGYyYjRkYzM0OWZiNTdkYzZiNzFkY2FiMDAyCwjV1p78BRCM1eZGOgsI1dae/AUQ7KO9RUILCNXWnvwFEJjt5UY="}
+                {"id":"moby.image.id","aux":{"ID":"sha256:a944a906cc971980e5f55d991fb91faa92a25a0a866bcd57fce26a5628f92fa5"}}
+                {"stream":"Successfully tagged batect-integration-tests-image-legacy-builder:latest\n"}
+            """.trimIndent()
+
+            beforeEachTest {
+                body.readFrom(StringReader(input), outputStream, eventCallback)
+            }
+
+            it("posts build status messages as the build progresses") {
+                val pullStepName = "[1/1] FROM gcr.io/distroless/java@sha256:28ec552405a92ed1a3767b81aaece5c48bd1b89dfb5f3c144b0e4cea4dd5ffa4"
+
+                assertThat(
+                    eventsPosted,
+                    equalTo(
+                        listOf(
+                            BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(0, "[internal] load metadata for gcr.io/distroless/java@sha256:28ec552405a92ed1a3767b81aaece5c48bd1b89dfb5f3c144b0e4cea4dd5ffa4"))),
+                            BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(1, pullStepName))),
+                            // Line 7:
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.Downloading, 0 + 0 + 0 + 1371, 7333575 + 643660 + 4545605 + 1371))),
+                            // Line 8:
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.Downloading, 0 + 0 + 0 + 1371 + 1165, 7333575 + 643660 + 4545605 + 1371 + 1165))),
+                            // Line 9: no change
+                            // Line 10: no change
+                            // Line 11:
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.Downloading, 32768 + 262144 + 376832 + 1371 + 1165, 7333575 + 643660 + 4545605 + 1371 + 1165))),
+                            // Line 12:
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.Downloading, 327680 + 643660 + 1048576 + 1371 + 1165 + 0, 7333575 + 643660 + 4545605 + 1371 + 1165 + 59741782))),
+                            // Line 13:
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.Downloading, 1212416 + 643660 + 3768320 + 1371 + 1165 + 0, 7333575 + 643660 + 4545605 + 1371 + 1165 + 59741782))),
+                            // Line 14:
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.Downloading, 1540096 + 643660 + 4545605 + 1371 + 1165 + 0, 7333575 + 643660 + 4545605 + 1371 + 1165 + 59741782))),
+                            // Line 15:
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.Downloading, 7333575 + 643660 + 4545605 + 1371 + 1165 + 0, 7333575 + 643660 + 4545605 + 1371 + 1165 + 59741782))),
+                            // Line 16:
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.Downloading, 7333575 + 643660 + 4545605 + 1371 + 1165 + 391280, 7333575 + 643660 + 4545605 + 1371 + 1165 + 59741782))),
+                            // Line 17: no change
+                            // Line 18:
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.Downloading, 7333575 + 643660 + 4545605 + 1371 + 1165 + 1833072, 7333575 + 643660 + 4545605 + 1371 + 1165 + 59741782))),
+                            // Line 19: no change
+                            // Line 20:
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.Downloading, 7333575 + 643660 + 4545605 + 1371 + 1165 + 3209328, 7333575 + 643660 + 4545605 + 1371 + 1165 + 59741782))),
+                            // Line 21: no change
+                            // Line 22: no change
+                            // Line 23:
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.Downloading, 7333575 + 643660 + 4545605 + 1371 + 1165 + 4487280, 7333575 + 643660 + 4545605 + 1371 + 1165 + 59741782))),
+                            // Line 24: no change
+                            // Line 25: no change
+                            // Line 26:
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.Downloading, 7333575 + 643660 + 4545605 + 1371 + 1165 + 5240944, 7333575 + 643660 + 4545605 + 1371 + 1165 + 59741782))),
+                            // Line 27: no change
+                            // Line 28: no change
+                            // Line 29:
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.Downloading, 7333575 + 643660 + 4545605 + 1371 + 1165 + 6518896, 7333575 + 643660 + 4545605 + 1371 + 1165 + 59741782))),
+                            // Line 30:
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.DownloadComplete, 7333575 + 643660 + 4545605 + 1371 + 1165 + 59741782, 7333575 + 643660 + 4545605 + 1371 + 1165 + 59741782))),
+                            // Line 31:
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.Extracting, 7333575 + 643660 + 4545605 + 1371 + 1165 + 0, 7333575 + 643660 + 4545605 + 1371 + 1165 + 59741782))),
+                            // Line 32: no change
+                            // Line 33:
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.PullComplete, 7333575 + 643660 + 4545605 + 1371 + 1165 + 59741782, 7333575 + 643660 + 4545605 + 1371 + 1165 + 59741782))),
+                            // Line 35
+                            BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(2, "exporting to image"))),
+                            BuildComplete(DockerImage("sha256:a944a906cc971980e5f55d991fb91faa92a25a0a866bcd57fce26a5628f92fa5"))
+                        )
+                    )
+                )
+            }
+
+            it("streams output showing the progression of the build") {
+                assertThat(
+                    output.toString(),
+                    equalTo(
+                        """
+                        |#1 [internal] load metadata for gcr.io/distroless/java@sha256:28ec552405a92ed1a3767b81aaece5c48bd1b89dfb5f3c144b0e4cea4dd5ffa4
+                        |#1 DONE
+                        |
+                        |#2 [1/1] FROM gcr.io/distroless/java@sha256:28ec552405a92ed1a3767b81aaece5c48bd1b89dfb5f3c144b0e4cea4dd5ffa4
+                        |#2 resolve gcr.io/distroless/java@sha256:28ec552405a92ed1a3767b81aaece5c48bd1b89dfb5f3c144b0e4cea4dd5ffa4: done
+                        |#2 sha256:31eb28996804beb46ae686d865721ff610e2a89dc13d3dcb7c4622377447f11d: downloading 7.3 MB
+                        |#2 sha256:e708be98c58f6bb27bf2b7839d7e63ad5be667b1585c6142af4d3dbbe80a7330: downloading 643.7 KB
+                        |#2 sha256:4fabfed3a821df0c83115d0ce65eaf4cd36be8777e63e9d6f6c722cae80f47f9: downloading 4.5 MB
+                        |#2 sha256:28ec552405a92ed1a3767b81aaece5c48bd1b89dfb5f3c144b0e4cea4dd5ffa4: done
+                        |#2 sha256:56c1d100a082d43317bdc51f02e02ea1d6c2f2b2a42d46740e174c60289b899b: done
+                        |#2 sha256:febab311d432377a68e537dfd16a83a185e9fc214e9b509afea0d5e9e8154053: downloading 59.7 MB
+                        |#2 sha256:31eb28996804beb46ae686d865721ff610e2a89dc13d3dcb7c4622377447f11d: extracting
+                        |#2 sha256:31eb28996804beb46ae686d865721ff610e2a89dc13d3dcb7c4622377447f11d: done
+                        |#2 sha256:e708be98c58f6bb27bf2b7839d7e63ad5be667b1585c6142af4d3dbbe80a7330: extracting
+                        |#2 sha256:e708be98c58f6bb27bf2b7839d7e63ad5be667b1585c6142af4d3dbbe80a7330: done
+                        |#2 sha256:4fabfed3a821df0c83115d0ce65eaf4cd36be8777e63e9d6f6c722cae80f47f9: extracting
+                        |#2 sha256:4fabfed3a821df0c83115d0ce65eaf4cd36be8777e63e9d6f6c722cae80f47f9: done
+                        |#2 sha256:febab311d432377a68e537dfd16a83a185e9fc214e9b509afea0d5e9e8154053: extracting
+                        |#2 sha256:febab311d432377a68e537dfd16a83a185e9fc214e9b509afea0d5e9e8154053: done
+                        |#2 DONE
+                        |
+                        |#3 exporting to image
+                        |#3 exporting layers: done
+                        |#3 writing image sha256:a944a906cc971980e5f55d991fb91faa92a25a0a866bcd57fce26a5628f92fa5: done
+                        |#3 naming to docker.io/library/batect-integration-tests-image-legacy-builder: done
+                        |#3 DONE
+                        |
+                        """.trimMargin()
+                    )
+                )
+            }
+        }
+
         mapOf(
             "\n" to """""""",
             "{\n" to """"{""""

@@ -218,7 +218,7 @@ class BuildKitImageBuildResponseBody : ImageBuildResponseBody {
         val layerDigest = status.id.substringAfter("extracting ")
         val currentOperation = startedVertices[status.vertex]?.layers?.get(layerDigest)?.currentOperation
 
-        if (status.name == "done" && currentOperation != null && currentOperation != DownloadOperation.Downloading) {
+        if (status.name == "done" && currentOperation != null && currentOperation >= DownloadOperation.Downloading) {
             // We received a status update for a layer download out of order (eg. the extraction has already started).
             // Don't print anything.
             return
@@ -356,28 +356,41 @@ class BuildKitImageBuildResponseBody : ImageBuildResponseBody {
                 return this
             }
 
-            if (status.name == "downloading") {
-                val newLayers = layers + (status.id to LayerInfo(DownloadOperation.Downloading, status.current, status.total))
-                return copy(layers = newLayers)
+            when (status.name) {
+                "downloading" -> {
+                    val newLayers = layers + (status.id to LayerInfo(DownloadOperation.Downloading, status.current, status.total))
+                    return copy(layers = newLayers)
+                }
+                "extract" -> {
+                    val digest = status.id.substringAfter("extracting ")
+                    val oldLayer = layers[digest]
+                    val totalBytes = oldLayer?.totalBytes ?: 0
+                    val completedBytes = if (status.hasCompleted()) totalBytes else 0
+                    val operation = if (status.hasCompleted()) DownloadOperation.PullComplete else DownloadOperation.Extracting
+                    val newLayers = layers + (digest to LayerInfo(operation, completedBytes, totalBytes))
+
+                    return copy(layers = newLayers)
+                }
+                "done" -> {
+                    if (layers.keys.contains(status.id)) {
+                        val currentOperation = layers[status.id]?.currentOperation
+
+                        if (currentOperation != null && currentOperation > DownloadOperation.DownloadComplete) {
+                            // We've already marked the layer as extracting (eg. because the extracting status arrived first).
+                            return this
+                        }
+
+                        val newLayers = layers + (status.id to LayerInfo(DownloadOperation.DownloadComplete, status.current, status.total))
+                        return copy(layers = newLayers)
+                    } else {
+                        // Layer was cached.
+                        val newLayers = layers + (status.id to LayerInfo(DownloadOperation.PullComplete, status.current, status.total))
+                        return copy(layers = newLayers)
+                    }
+                }
+                else -> return this
             }
 
-            if (status.name == "extract") {
-                val digest = status.id.substringAfter("extracting ")
-                val oldLayer = layers[digest]
-                val totalBytes = oldLayer?.totalBytes ?: 0
-                val completedBytes = if (status.hasCompleted()) totalBytes else 0
-                val operation = if (status.hasCompleted()) DownloadOperation.PullComplete else DownloadOperation.Extracting
-                val newLayers = layers + (digest to LayerInfo(operation, completedBytes, totalBytes))
-
-                return copy(layers = newLayers)
-            }
-
-            if (status.name == "done" && !layers.keys.contains(status.id)) {
-                val newLayers = layers + (status.id to LayerInfo(DownloadOperation.PullComplete, status.current, status.total))
-                return copy(layers = newLayers)
-            }
-
-            return this
         }
     }
 

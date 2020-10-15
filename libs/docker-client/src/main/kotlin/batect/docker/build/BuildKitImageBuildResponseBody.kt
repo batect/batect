@@ -390,7 +390,6 @@ class BuildKitImageBuildResponseBody : ImageBuildResponseBody {
                 }
                 else -> return this
             }
-
         }
     }
 

@@ -17,6 +17,7 @@
 package batect.telemetry
 
 import batect.docker.DockerHttpConfig
+import batect.docker.api.BuilderVersion
 import batect.docker.client.DockerConnectivityCheckResult
 import batect.execution.CacheManager
 
@@ -25,7 +26,8 @@ class DockerTelemetryCollector(
     private val cacheManager: CacheManager,
     private val telemetrySessionBuilder: TelemetrySessionBuilder
 ) {
-    fun collectTelemetry(result: DockerConnectivityCheckResult.Succeeded) {
+    fun collectTelemetry(result: DockerConnectivityCheckResult.Succeeded, builderVersion: BuilderVersion) {
+        telemetrySessionBuilder.addAttribute("dockerBuilderVersionInUse", builderVersion.toString())
         telemetrySessionBuilder.addAttribute("dockerContainerType", result.containerType.toString())
         telemetrySessionBuilder.addAttribute("dockerConnectionType", dockerHttpConfig.connectionType.toString())
         telemetrySessionBuilder.addAttribute("dockerDaemonPreferredBuilderVersion", result.builderVersion.toString())

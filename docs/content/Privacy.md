@@ -134,6 +134,7 @@ This information does not include personal or sensitive information such as the 
 | **Task run information** |
 | Type of container being run | Windows or Linux | Helps understand usage behaviour and helps plan and prioritise possible future features
 | Docker daemon's preferred image builder | Legacy or BuildKit | Helps understand usage behaviour and helps plan and prioritise possible future features
+| Image builder in use | Legacy or BuildKit | Helps understand usage behaviour and helps plan and prioritise possible future features
 | Type of cache being used | volume or directory | Helps understand usage behaviour and helps plan and prioritise possible future features
 | Total number of tasks in the project | 10 | Helps understand usage behaviour and helps plan and prioritise possible future features (eg. performance improvements for very large projects)
 | Total number of containers in the project | 4 | Helps understand usage behaviour and helps plan and prioritise possible future features (eg. performance improvements for very large projects)

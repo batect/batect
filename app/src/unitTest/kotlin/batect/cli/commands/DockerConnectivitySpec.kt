@@ -102,7 +102,7 @@ object DockerConnectivitySpec : Spek({
             }
 
             it("collects Docker environment telemetry") {
-                verify(dockerTelemetryCollector).collectTelemetry(checkResult)
+                verify(dockerTelemetryCollector).collectTelemetry(checkResult, expectedBuilderVersion)
             }
 
             it("creates the Kodein context with the expected builder version") {
@@ -137,17 +137,6 @@ object DockerConnectivitySpec : Spek({
                 assertThat(exitCode, !equalTo(0))
             }
         }
-
-        // No preference - legacy builder
-        // BuildKit disabled - legacy builder
-        // BuildKit enabled
-        // - 18.09: allowed
-        // - 19.03: allowed
-        // - 17.06: not allowed
-        // - 17.07 + experimental: allowed
-        // - 17.07 + not experimental: not allowed
-        // - 18.06 + experimental: allowed
-        // - 18.06 + not experimental: not allowed
 
         given("the connectivity check succeeds") {
             given("the user has not provided a builder preference") {

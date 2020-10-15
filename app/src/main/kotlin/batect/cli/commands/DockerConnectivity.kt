@@ -60,7 +60,7 @@ class DockerConnectivity(
         }
 
         val kodein = dockerConfigurationKodeinFactory.create(connectivityCheckResult.containerType, builderVersion)
-        kodein.instance<DockerTelemetryCollector>().collectTelemetry(connectivityCheckResult)
+        kodein.instance<DockerTelemetryCollector>().collectTelemetry(connectivityCheckResult, builderVersion)
 
         return task(kodein)
     }

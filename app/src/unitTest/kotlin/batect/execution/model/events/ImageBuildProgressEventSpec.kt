@@ -61,7 +61,7 @@ object ImageBuildProgressEventSpec : Spek({
                         |               "stepIndex": 7,
                         |               "name": "step 8 of 10: FROM postgres:13.0",
                         |               "operation": "Extracting",
-                        |               "bytesDownloaded": 12,
+                        |               "completedBytes": 12,
                         |               "totalBytes": 20
                         |           }
                         |       ]

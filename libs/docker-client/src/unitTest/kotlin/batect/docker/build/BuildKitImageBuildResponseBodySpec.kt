@@ -17,6 +17,7 @@
 package batect.docker.build
 
 import batect.docker.DockerImage
+import batect.docker.DownloadOperation
 import batect.docker.ImageBuildFailedException
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
@@ -432,6 +433,86 @@ object BuildKitImageBuildResponseBodySpec : Spek({
                         |#1 DONE
                         |
                         |#3 [2/2] ADD https://github.com/batect/batect/releases/download/0.59.0/batect-0.59.0.jar batect.jar
+                        |#3 DONE
+                        |
+                        """.trimMargin()
+                    )
+                )
+            }
+        }
+
+        given("a response with trace messages for a single image pull with a single layer to download") {
+            val input = """
+                {"id":"moby.buildkit.trace","aux":"CpUBCkdzaGEyNTY6ZDU4ZWUyMjFmOWRiYWNiOWU3M2ZmOGY1YmQ0NjliNmYzZTI5Nzk4NmUzZDBjODYzYjZlNWI1NTIzODgyNTkzYho8W2ludGVybmFsXSBsb2FkIG1ldGFkYXRhIGZvciBkb2NrZXIuaW8vbGlicmFyeS9hbHBpbmU6My4xMC4wKgwIl/Cd/AUQg7mjkQM="}
+                {"id":"moby.buildkit.trace","aux":"CqMBCkdzaGEyNTY6ZDU4ZWUyMjFmOWRiYWNiOWU3M2ZmOGY1YmQ0NjliNmYzZTI5Nzk4NmUzZDBjODYzYjZlNWI1NTIzODgyNTkzYho8W2ludGVybmFsXSBsb2FkIG1ldGFkYXRhIGZvciBkb2NrZXIuaW8vbGlicmFyeS9hbHBpbmU6My4xMC4wKgwIl/Cd/AUQg7mjkQMyDAic8J38BRCcmPz5Ag=="}
+                {"id":"moby.buildkit.trace","aux":"Cr0BCkdzaGEyNTY6Yzc4ZjkyOGNjODhjZWU1MmFhODc4Mzg4MTc4YjViYTY0YzgwMTkwNTZlZGM0MDNhZDI3NWJmNGRlZWNkMjM3YxpyWzEvMV0gRlJPTSBkb2NrZXIuaW8vbGlicmFyeS9hbHBpbmU6My4xMC4wQHNoYTI1NjpjYTFjOTQ0YTRmODQ4NmExNTMwMjRkOTk2NWFhZmJlMjRmNTcyM2MxZDVjMDJmNDk2NGMwNDVhMTZkMTlkYzU0"}
+                {"id":"moby.buildkit.trace","aux":"CssBCkdzaGEyNTY6Yzc4ZjkyOGNjODhjZWU1MmFhODc4Mzg4MTc4YjViYTY0YzgwMTkwNTZlZGM0MDNhZDI3NWJmNGRlZWNkMjM3YxpyWzEvMV0gRlJPTSBkb2NrZXIuaW8vbGlicmFyeS9hbHBpbmU6My4xMC4wQHNoYTI1NjpjYTFjOTQ0YTRmODQ4NmExNTMwMjRkOTk2NWFhZmJlMjRmNTcyM2MxZDVjMDJmNDk2NGMwNDVhMTZkMTlkYzU0KgwInPCd/AUQ4/6Q+gI="}
+                {"id":"moby.buildkit.trace","aux":"CtkBCkdzaGEyNTY6Yzc4ZjkyOGNjODhjZWU1MmFhODc4Mzg4MTc4YjViYTY0YzgwMTkwNTZlZGM0MDNhZDI3NWJmNGRlZWNkMjM3YxpyWzEvMV0gRlJPTSBkb2NrZXIuaW8vbGlicmFyeS9hbHBpbmU6My4xMC4wQHNoYTI1NjpjYTFjOTQ0YTRmODQ4NmExNTMwMjRkOTk2NWFhZmJlMjRmNTcyM2MxZDVjMDJmNDk2NGMwNDVhMTZkMTlkYzU0KgwInPCd/AUQ4/6Q+gIyDAic8J38BRD5xLT6Ag=="}
+                {"id":"moby.buildkit.trace","aux":"CssBCkdzaGEyNTY6Yzc4ZjkyOGNjODhjZWU1MmFhODc4Mzg4MTc4YjViYTY0YzgwMTkwNTZlZGM0MDNhZDI3NWJmNGRlZWNkMjM3YxpyWzEvMV0gRlJPTSBkb2NrZXIuaW8vbGlicmFyeS9hbHBpbmU6My4xMC4wQHNoYTI1NjpjYTFjOTQ0YTRmODQ4NmExNTMwMjRkOTk2NWFhZmJlMjRmNTcyM2MxZDVjMDJmNDk2NGMwNDVhMTZkMTlkYzU0KgwInPCd/AUQ5t+6+gIS1gEKb3Jlc29sdmUgZG9ja2VyLmlvL2xpYnJhcnkvYWxwaW5lOjMuMTAuMEBzaGEyNTY6Y2ExYzk0NGE0Zjg0ODZhMTUzMDI0ZDk5NjVhYWZiZTI0ZjU3MjNjMWQ1YzAyZjQ5NjRjMDQ1YTE2ZDE5ZGM1NBJHc2hhMjU2OmM3OGY5MjhjYzg4Y2VlNTJhYTg3ODM4ODE3OGI1YmE2NGM4MDE5MDU2ZWRjNDAzYWQyNzViZjRkZWVjZDIzN2MyDAic8J38BRDEiLv6AjoMCJzwnfwFEOWFu/oC"}
+                {"id":"moby.buildkit.trace","aux":"CtkBCkdzaGEyNTY6Yzc4ZjkyOGNjODhjZWU1MmFhODc4Mzg4MTc4YjViYTY0YzgwMTkwNTZlZGM0MDNhZDI3NWJmNGRlZWNkMjM3YxpyWzEvMV0gRlJPTSBkb2NrZXIuaW8vbGlicmFyeS9hbHBpbmU6My4xMC4wQHNoYTI1NjpjYTFjOTQ0YTRmODQ4NmExNTMwMjRkOTk2NWFhZmJlMjRmNTcyM2MxZDVjMDJmNDk2NGMwNDVhMTZkMTlkYzU0KgwInPCd/AUQ5t+6+gIyDAic8J38BRDZsZz7AhLkAQpvcmVzb2x2ZSBkb2NrZXIuaW8vbGlicmFyeS9hbHBpbmU6My4xMC4wQHNoYTI1NjpjYTFjOTQ0YTRmODQ4NmExNTMwMjRkOTk2NWFhZmJlMjRmNTcyM2MxZDVjMDJmNDk2NGMwNDVhMTZkMTlkYzU0EkdzaGEyNTY6Yzc4ZjkyOGNjODhjZWU1MmFhODc4Mzg4MTc4YjViYTY0YzgwMTkwNTZlZGM0MDNhZDI3NWJmNGRlZWNkMjM3YzIMCJzwnfwFEKjgkvsCOgwInPCd/AUQ5YW7+gJCDAic8J38BRDG1pL7Ag=="}
+                {"id":"moby.buildkit.trace","aux":"CssBCkdzaGEyNTY6Yzc4ZjkyOGNjODhjZWU1MmFhODc4Mzg4MTc4YjViYTY0YzgwMTkwNTZlZGM0MDNhZDI3NWJmNGRlZWNkMjM3YxpyWzEvMV0gRlJPTSBkb2NrZXIuaW8vbGlicmFyeS9hbHBpbmU6My4xMC4wQHNoYTI1NjpjYTFjOTQ0YTRmODQ4NmExNTMwMjRkOTk2NWFhZmJlMjRmNTcyM2MxZDVjMDJmNDk2NGMwNDVhMTZkMTlkYzU0KgwInPCd/AUQts+p+wI="}
+                {"id":"moby.buildkit.trace","aux":"EscBCkdzaGEyNTY6Y2ExYzk0NGE0Zjg0ODZhMTUzMDI0ZDk5NjVhYWZiZTI0ZjU3MjNjMWQ1YzAyZjQ5NjRjMDQ1YTE2ZDE5ZGM1NBJHc2hhMjU2OmM3OGY5MjhjYzg4Y2VlNTJhYTg3ODM4ODE3OGI1YmE2NGM4MDE5MDU2ZWRjNDAzYWQyNzViZjRkZWVjZDIzN2MaBGRvbmUg5gwo5gwyDAid8J38BRCMtqy9AToMCJ3wnfwFEKnTx5QBQgsIm/Cd/AUQ98G3dRLIAQpHc2hhMjU2Ojk3YTA0MmJmMDlmMWJmNzhjOGNmM2RjZWJlZjk0NjE0ZjJiOTVmYTJmOTg4YTVjMDczMTQwMzFiYzI1NzBjN2ESR3NoYTI1NjpjNzhmOTI4Y2M4OGNlZTUyYWE4NzgzODgxNzhiNWJhNjRjODAxOTA1NmVkYzQwM2FkMjc1YmY0ZGVlY2QyMzdjGgRkb25lIJAEKJAEMgwInfCd/AUQ3Ze7vQE6DAid8J38BRDFwNeUAUIMCJvwnfwFEN/f/Z4CEsgBCkdzaGEyNTY6NGQ5MDU0MmYwNjIzYzcxZjFmOWMxMWJlM2RhMjMxNjcxNzRhYzlkOTM3MzFjZjkxOTEyOTIyZTkxNmJhYjAyYxJHc2hhMjU2OmM3OGY5MjhjYzg4Y2VlNTJhYTg3ODM4ODE3OGI1YmE2NGM4MDE5MDU2ZWRjNDAzYWQyNzViZjRkZWVjZDIzN2MaBGRvbmUg6Aso6AsyDAid8J38BRDth7y9AToMCJ3wnfwFEMLw/5QBQgwInPCd/AUQp7TZ+QISwAEKR3NoYTI1Njo5MjFiMzFhYjc3MmIzODE3MmZkOWY5NDJhNDBmYWU2ZGIyNGRlY2JkNjcwNmY2NzgzNjI2MGQ0N2E3MmJhYWI1EkdzaGEyNTY6Yzc4ZjkyOGNjODhjZWU1MmFhODc4Mzg4MTc4YjViYTY0YzgwMTkwNTZlZGM0MDNhZDI3NWJmNGRlZWNkMjM3YxoLZG93bmxvYWRpbmco1aGqATIMCJ3wnfwFEIihvL0BOgwInfCd/AUQjI+wlQE="}
+                {"id":"moby.buildkit.trace","aux":"EsABCkdzaGEyNTY6OTIxYjMxYWI3NzJiMzgxNzJmZDlmOTQyYTQwZmFlNmRiMjRkZWNiZDY3MDZmNjc4MzYyNjBkNDdhNzJiYWFiNRJHc2hhMjU2OmM3OGY5MjhjYzg4Y2VlNTJhYTg3ODM4ODE3OGI1YmE2NGM4MDE5MDU2ZWRjNDAzYWQyNzViZjRkZWVjZDIzN2MaC2Rvd25sb2FkaW5nKNWhqgEyDAid8J38BRCNxP/sAToMCJ3wnfwFEIyPsJUB"}
+                {"id":"moby.buildkit.trace","aux":"EsABCkdzaGEyNTY6OTIxYjMxYWI3NzJiMzgxNzJmZDlmOTQyYTQwZmFlNmRiMjRkZWNiZDY3MDZmNjc4MzYyNjBkNDdhNzJiYWFiNRJHc2hhMjU2OmM3OGY5MjhjYzg4Y2VlNTJhYTg3ODM4ODE3OGI1YmE2NGM4MDE5MDU2ZWRjNDAzYWQyNzViZjRkZWVjZDIzN2MaC2Rvd25sb2FkaW5nKNWhqgEyDAid8J38BRDswK6dAjoMCJ3wnfwFEIyPsJUB"}
+                {"id":"moby.buildkit.trace","aux":"EsABCkdzaGEyNTY6OTIxYjMxYWI3NzJiMzgxNzJmZDlmOTQyYTQwZmFlNmRiMjRkZWNiZDY3MDZmNjc4MzYyNjBkNDdhNzJiYWFiNRJHc2hhMjU2OmM3OGY5MjhjYzg4Y2VlNTJhYTg3ODM4ODE3OGI1YmE2NGM4MDE5MDU2ZWRjNDAzYWQyNzViZjRkZWVjZDIzN2MaC2Rvd25sb2FkaW5nKNWhqgEyDAid8J38BRD07pnMAjoMCJ3wnfwFEIyPsJUB"}
+                {"id":"moby.buildkit.trace","aux":"EsQBCkdzaGEyNTY6OTIxYjMxYWI3NzJiMzgxNzJmZDlmOTQyYTQwZmFlNmRiMjRkZWNiZDY3MDZmNjc4MzYyNjBkNDdhNzJiYWFiNRJHc2hhMjU2OmM3OGY5MjhjYzg4Y2VlNTJhYTg3ODM4ODE3OGI1YmE2NGM4MDE5MDU2ZWRjNDAzYWQyNzViZjRkZWVjZDIzN2MaC2Rvd25sb2FkaW5nIMT3RyjVoaoBMgwInfCd/AUQxJfa+wI6DAid8J38BRCMj7CVAQ=="}
+                {"id":"moby.buildkit.trace","aux":"EsUBCkdzaGEyNTY6OTIxYjMxYWI3NzJiMzgxNzJmZDlmOTQyYTQwZmFlNmRiMjRkZWNiZDY3MDZmNjc4MzYyNjBkNDdhNzJiYWFiNRJHc2hhMjU2OmM3OGY5MjhjYzg4Y2VlNTJhYTg3ODM4ODE3OGI1YmE2NGM4MDE5MDU2ZWRjNDAzYWQyNzViZjRkZWVjZDIzN2MaC2Rvd25sb2FkaW5nILDzlQEo1aGqATIMCJ3wnfwFEOPfr6sDOgwInfCd/AUQjI+wlQE="}
+                {"id":"moby.buildkit.trace","aux":"EsIBClJleHRyYWN0aW5nIHNoYTI1Njo5MjFiMzFhYjc3MmIzODE3MmZkOWY5NDJhNDBmYWU2ZGIyNGRlY2JkNjcwNmY2NzgzNjI2MGQ0N2E3MmJhYWI1EkdzaGEyNTY6Yzc4ZjkyOGNjODhjZWU1MmFhODc4Mzg4MTc4YjViYTY0YzgwMTkwNTZlZGM0MDNhZDI3NWJmNGRlZWNkMjM3YxoHZXh0cmFjdDIMCJ3wnfwFEO6cys0DOgwInfCd/AUQ9YLKzQM="}
+                {"id":"moby.buildkit.trace","aux":"EswBCkdzaGEyNTY6OTIxYjMxYWI3NzJiMzgxNzJmZDlmOTQyYTQwZmFlNmRiMjRkZWNiZDY3MDZmNjc4MzYyNjBkNDdhNzJiYWFiNRJHc2hhMjU2OmM3OGY5MjhjYzg4Y2VlNTJhYTg3ODM4ODE3OGI1YmE2NGM4MDE5MDU2ZWRjNDAzYWQyNzViZjRkZWVjZDIzN2MaBGRvbmUg1aGqASjVoaoBMgwInfCd/AUQ2qz72gM6DAid8J38BRCMj7CVAUIMCJ3wnfwFEPWGqM0D"}
+                {"id":"moby.buildkit.trace","aux":"EsEBClJleHRyYWN0aW5nIHNoYTI1Njo5MjFiMzFhYjc3MmIzODE3MmZkOWY5NDJhNDBmYWU2ZGIyNGRlY2JkNjcwNmY2NzgzNjI2MGQ0N2E3MmJhYWI1EkdzaGEyNTY6Yzc4ZjkyOGNjODhjZWU1MmFhODc4Mzg4MTc4YjViYTY0YzgwMTkwNTZlZGM0MDNhZDI3NWJmNGRlZWNkMjM3YxoHZXh0cmFjdDILCJ7wnfwFEJ+F1SA6DAid8J38BRD1gsrNAw=="}
+                {"id":"moby.buildkit.trace","aux":"Es4BClJleHRyYWN0aW5nIHNoYTI1Njo5MjFiMzFhYjc3MmIzODE3MmZkOWY5NDJhNDBmYWU2ZGIyNGRlY2JkNjcwNmY2NzgzNjI2MGQ0N2E3MmJhYWI1EkdzaGEyNTY6Yzc4ZjkyOGNjODhjZWU1MmFhODc4Mzg4MTc4YjViYTY0YzgwMTkwNTZlZGM0MDNhZDI3NWJmNGRlZWNkMjM3YxoHZXh0cmFjdDILCJ7wnfwFEICIwSM6DAid8J38BRD1gsrNA0ILCJ7wnfwFENaAwSM="}
+                {"id":"moby.buildkit.trace","aux":"CtgBCkdzaGEyNTY6Yzc4ZjkyOGNjODhjZWU1MmFhODc4Mzg4MTc4YjViYTY0YzgwMTkwNTZlZGM0MDNhZDI3NWJmNGRlZWNkMjM3YxpyWzEvMV0gRlJPTSBkb2NrZXIuaW8vbGlicmFyeS9hbHBpbmU6My4xMC4wQHNoYTI1NjpjYTFjOTQ0YTRmODQ4NmExNTMwMjRkOTk2NWFhZmJlMjRmNTcyM2MxZDVjMDJmNDk2NGMwNDVhMTZkMTlkYzU0KgwInPCd/AUQts+p+wIyCwie8J38BRCyp6s0"}
+                {"id":"moby.buildkit.trace","aux":"CmoKR3NoYTI1NjplOGM2MTNlMDdiMGI3ZmYzMzg5M2I2OTRmNzc1OWExMGQ0MmUxODBmMmI0ZGMzNDlmYjU3ZGM2YjcxZGNhYjAwGhJleHBvcnRpbmcgdG8gaW1hZ2UqCwie8J38BRCUmeE0EoIBChBleHBvcnRpbmcgbGF5ZXJzEkdzaGEyNTY6ZThjNjEzZTA3YjBiN2ZmMzM4OTNiNjk0Zjc3NTlhMTBkNDJlMTgwZjJiNGRjMzQ5ZmI1N2RjNmI3MWRjYWIwMDILCJ7wnfwFEMG84TQ6Cwie8J38BRC9q+E0QgsInvCd/AUQ0rvhNBK6AQpVd3JpdGluZyBpbWFnZSBzaGEyNTY6NTMzMzBhMDM0MDNkZGY5NmRkMTM2OTJlMGIyOWVmMGRhOGZkMjk4YTJiZDhiNTdjZDUzMDE1MTU0ODg2N2Y4OBJHc2hhMjU2OmU4YzYxM2UwN2IwYjdmZjMzODkzYjY5NGY3NzU5YTEwZDQyZTE4MGYyYjRkYzM0OWZiNTdkYzZiNzFkY2FiMDAyCwie8J38BRCfw+U0OgsInvCd/AUQ68HlNA=="}
+                {"id":"moby.buildkit.trace","aux":"EscBClV3cml0aW5nIGltYWdlIHNoYTI1Njo1MzMzMGEwMzQwM2RkZjk2ZGQxMzY5MmUwYjI5ZWYwZGE4ZmQyOThhMmJkOGI1N2NkNTMwMTUxNTQ4ODY3Zjg4EkdzaGEyNTY6ZThjNjEzZTA3YjBiN2ZmMzM4OTNiNjk0Zjc3NTlhMTBkNDJlMTgwZjJiNGRjMzQ5ZmI1N2RjNmI3MWRjYWIwMDILCJ7wnfwFEJDToTU6Cwie8J38BRDrweU0QgsInvCd/AUQ4M+hNRKuAQpJbmFtaW5nIHRvIGRvY2tlci5pby9saWJyYXJ5L2JhdGVjdC1pbnRlZ3JhdGlvbi10ZXN0cy1pbWFnZS1sZWdhY3ktYnVpbGRlchJHc2hhMjU2OmU4YzYxM2UwN2IwYjdmZjMzODkzYjY5NGY3NzU5YTEwZDQyZTE4MGYyYjRkYzM0OWZiNTdkYzZiNzFkY2FiMDAyCwie8J38BRD6naI1OgsInvCd/AUQqZyiNQ=="}
+                {"id":"moby.buildkit.trace","aux":"CncKR3NoYTI1NjplOGM2MTNlMDdiMGI3ZmYzMzg5M2I2OTRmNzc1OWExMGQ0MmUxODBmMmI0ZGMzNDlmYjU3ZGM2YjcxZGNhYjAwGhJleHBvcnRpbmcgdG8gaW1hZ2UqCwie8J38BRCUmeE0MgsInvCd/AUQlIbpNRK7AQpJbmFtaW5nIHRvIGRvY2tlci5pby9saWJyYXJ5L2JhdGVjdC1pbnRlZ3JhdGlvbi10ZXN0cy1pbWFnZS1sZWdhY3ktYnVpbGRlchJHc2hhMjU2OmU4YzYxM2UwN2IwYjdmZjMzODkzYjY5NGY3NzU5YTEwZDQyZTE4MGYyYjRkYzM0OWZiNTdkYzZiNzFkY2FiMDAyCwie8J38BRDsweg1OgsInvCd/AUQqZyiNUILCJ7wnfwFEJ2+6DU="}
+            """.trimIndent()
+
+            beforeEachTest {
+                body.readFrom(StringReader(input), outputStream, eventCallback)
+            }
+
+            it("posts build status messages as the build progresses") {
+                val pullStepName = "[1/1] FROM docker.io/library/alpine:3.10.0@sha256:ca1c944a4f8486a153024d9965aafbe24f5723c1d5c02f4964c045a16d19dc54"
+
+                assertThat(
+                    eventsPosted,
+                    equalTo(
+                        listOf(
+                            BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(0, "[internal] load metadata for docker.io/library/alpine:3.10.0"))),
+                            BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(1, pullStepName))),
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.Downloading, 1638 + 528 + 1512, 1638 + 528 + 1512 + 2789589))),
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.Downloading, 1638 + 528 + 1512 + 1178564, 1638 + 528 + 1512 + 2789589))),
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.Downloading, 1638 + 528 + 1512 + 2455984, 1638 + 528 + 1512 + 2789589))),
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.Extracting, 1638 + 528 + 1512, 1638 + 528 + 1512 + 2789589))),
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.PullComplete, 1638 + 528 + 1512 + 2789589, 1638 + 528 + 1512 + 2789589))),
+                            BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(2, "exporting to image")))
+                        )
+                    )
+                )
+            }
+
+            it("streams output showing the progression of the build") {
+                assertThat(
+                    output.toString(),
+                    equalTo(
+                        """
+                        |#1 [internal] load metadata for docker.io/library/alpine:3.10.0
+                        |#1 DONE
+                        |
+                        |#2 [1/1] FROM docker.io/library/alpine:3.10.0@sha256:ca1c944a4f8486a153024d9965aafbe24f5723c1d5c02f4964c045a16d19dc54
+                        |#2 resolve docker.io/library/alpine:3.10.0@sha256:ca1c944a4f8486a153024d9965aafbe24f5723c1d5c02f4964c045a16d19dc54: done
+                        |#2 sha256:ca1c944a4f8486a153024d9965aafbe24f5723c1d5c02f4964c045a16d19dc54: done
+                        |#2 sha256:97a042bf09f1bf78c8cf3dcebef94614f2b95fa2f988a5c07314031bc2570c7a: done
+                        |#2 sha256:4d90542f0623c71f1f9c11be3da23167174ac9d93731cf91912922e916bab02c: done
+                        |#2 sha256:921b31ab772b38172fd9f942a40fae6db24decbd6706f67836260d47a72baab5: downloading 2.8 MB
+                        |#2 sha256:921b31ab772b38172fd9f942a40fae6db24decbd6706f67836260d47a72baab5: extracting
+                        |#2 sha256:921b31ab772b38172fd9f942a40fae6db24decbd6706f67836260d47a72baab5: done
+                        |#2 DONE
+                        |
+                        |#3 exporting to image
+                        |#3 exporting layers: done
+                        |#3 writing image sha256:53330a03403ddf96dd13692e0b29ef0da8fd298a2bd8b57cd530151548867f88: done
+                        |#3 naming to docker.io/library/batect-integration-tests-image-legacy-builder: done
                         |#3 DONE
                         |
                         """.trimMargin()

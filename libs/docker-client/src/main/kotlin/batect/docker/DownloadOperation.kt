@@ -39,7 +39,7 @@ internal fun humanReadableStringForDownloadProgress(currentOperation: DownloadOp
     return "${currentOperation.displayName}: ${humaniseBytes(completedBytes)} of ${humaniseBytes(totalBytes)} ($percentage%)"
 }
 
-private fun humaniseBytes(bytes: Long): String = when {
+fun humaniseBytes(bytes: Long): String = when {
     bytes < oneKilobyte -> "$bytes B"
     bytes < oneMegabyte -> "${formatFraction(bytes.toDouble() / oneKilobyte)} KB"
     bytes < oneGigabyte -> "${formatFraction(bytes.toDouble() / oneMegabyte)} MB"

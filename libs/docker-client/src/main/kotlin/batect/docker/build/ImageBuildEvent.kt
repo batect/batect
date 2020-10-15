@@ -66,11 +66,11 @@ sealed class ActiveImageBuildStep {
         override val stepIndex: Int,
         override val name: String,
         val operation: DownloadOperation,
-        val bytesDownloaded: Long,
+        val completedBytes: Long,
         val totalBytes: Long?
     ) : ActiveImageBuildStep() {
         override fun toHumanReadableString(): String {
-            return "$name: ${humanReadableStringForDownloadProgress(operation, bytesDownloaded, totalBytes)}"
+            return "$name: ${humanReadableStringForDownloadProgress(operation, completedBytes, totalBytes)}"
         }
     }
 }

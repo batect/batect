@@ -16,6 +16,7 @@
 
 package batect.ioc
 
+import batect.docker.api.BuilderVersion
 import batect.docker.client.DockerContainerType
 import org.kodein.di.DirectDI
 import org.kodein.di.bind
@@ -26,8 +27,9 @@ import org.kodein.di.subDI
 class DockerConfigurationKodeinFactory(
     private val baseKodein: DirectDI
 ) {
-    fun create(containerType: DockerContainerType): DirectDI = subDI(baseKodein.di) {
+    fun create(containerType: DockerContainerType, builderVersion: BuilderVersion): DirectDI = subDI(baseKodein.di) {
         bind<DockerContainerType>() with instance(containerType)
+        bind<BuilderVersion>() with instance(builderVersion)
         import(dockerConfigurationModule)
     }.direct
 }

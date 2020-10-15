@@ -65,7 +65,8 @@ data class CommandLineOptions(
     val linuxCacheInitImageName: String = CacheInitialisationImage.linuxDefault,
     val existingNetworkToUse: String? = null,
     val skipPrerequisites: Boolean = false,
-    val disableTelemetry: Boolean? = null
+    val disableTelemetry: Boolean? = null,
+    val enableBuildKit: Boolean? = null
 ) {
     fun extend(originalKodein: DirectDI): DirectDI = subDI(originalKodein.di) {
         bind<CommandLineOptions>() with instance(this@CommandLineOptions)

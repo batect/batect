@@ -43,7 +43,7 @@ object InjectionConfigurationSpec : Spek({
 
         val baseConfiguration = createKodeinConfiguration(PrintStream(ByteArrayOutputStream()), PrintStream(ByteArrayOutputStream()), ByteArrayInputStream(ByteArray(0)))
         val afterCommandLineOptions = CommandLineOptions(taskName = task.name).extend(baseConfiguration)
-        val inDockerDaemonContext = DockerConfigurationKodeinFactory(afterCommandLineOptions).create(mock())
+        val inDockerDaemonContext = DockerConfigurationKodeinFactory(afterCommandLineOptions).create(mock(), mock())
         val inSessionContext = SessionKodeinFactory(inDockerDaemonContext, HostEnvironmentVariables(), mock()).create(config)
         val inTaskContext = TaskKodeinFactory(inSessionContext).create(task, mock())
 

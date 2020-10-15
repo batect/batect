@@ -232,7 +232,28 @@ Example:
 ./batect --linux-cache-init-image=my.registry.com/batect-cache-init-image:abcd1234 the-task
 ```
 
-### Customise Docker connection options
+### Customise Docker options
+
+#### Use BuildKit to build images <small>(`--enable-buildkit`)</small>
+
+!!! warning
+    Support for BuildKit in batect is considered experimental. Please [file an issue](https://github.com/batect/batect/issues) if you encounter any problems.
+
+By default, batect will use the legacy builder to build Docker images. Docker recently introduced a new image builder, BuildKit, that offers
+improved performance and some new features.
+
+Use this option to instruct batect to use BuildKit to build images, rather than the legacy image builder.
+
+Example:
+
+```shell
+./batect --enable-buildkit the-task
+```
+
+batect will automatically enable this flag if the `DOCKER_BUILDKIT` environment variable is set to `1` or `true`.
+
+Note that BuildKit is only supported on Docker 18.09 or later, or on earlier versions when Docker is running with
+[experimental features enabled](https://docs.docker.com/engine/reference/commandline/dockerd/#description).
 
 #### Use a non-standard Docker host <small>(`--docker-host`)</small>
 

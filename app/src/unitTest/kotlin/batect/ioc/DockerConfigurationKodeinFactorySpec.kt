@@ -16,6 +16,7 @@
 
 package batect.ioc
 
+import batect.docker.api.BuilderVersion
 import batect.docker.client.DockerContainerType
 import batect.testutils.createForEachTest
 import batect.testutils.on
@@ -34,10 +35,11 @@ object DockerConfigurationKodeinFactorySpec : Spek({
         }
 
         val containerType = DockerContainerType.Linux
+        val builderVersion = BuilderVersion.BuildKit
         val factory by createForEachTest { DockerConfigurationKodeinFactory(baseKodein) }
 
         on("creating a Docker configuration Kodein context") {
-            val extendedKodein by createForEachTest { factory.create(containerType) }
+            val extendedKodein by createForEachTest { factory.create(containerType, builderVersion) }
 
             it("includes the configuration from the original instance") {
                 assertThat(extendedKodein.instance<String>("some string"), equalTo("The string value"))
@@ -45,6 +47,10 @@ object DockerConfigurationKodeinFactorySpec : Spek({
 
             it("includes the container type for the current Docker daemon") {
                 assertThat(extendedKodein.instance<DockerContainerType>(), equalTo(containerType))
+            }
+
+            it("includes the builder version for the current Docker daemon") {
+                assertThat(extendedKodein.instance<BuilderVersion>(), equalTo(builderVersion))
             }
         }
     }

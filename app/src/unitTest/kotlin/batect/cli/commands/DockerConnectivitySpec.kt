@@ -16,6 +16,7 @@
 
 package batect.cli.commands
 
+import batect.cli.CommandLineOptions
 import batect.docker.api.BuilderVersion
 import batect.docker.client.DockerConnectivityCheckResult
 import batect.docker.client.DockerContainerType
@@ -30,7 +31,9 @@ import batect.testutils.runForEachTest
 import batect.ui.Console
 import batect.ui.text.Text
 import com.natpryce.hamkrest.assertion.assertThat
+import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doReturn
+import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.verifyZeroInteractions
@@ -40,12 +43,14 @@ import org.kodein.di.DirectDI
 import org.kodein.di.bind
 import org.kodein.di.instance
 import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.Suite
 import org.spekframework.spek2.style.specification.describe
 
 object DockerConnectivitySpec : Spek({
     describe("a Docker connectivity check") {
         val containerType = DockerContainerType.Linux
         val dockerTelemetryCollector by createForEachTest { mock<DockerTelemetryCollector>() }
+        val commandLineOptions by createForEachTest { mock<CommandLineOptions>() }
         val kodeinFromFactory by createForEachTest {
             DI.direct {
                 bind<String>() with instance("Something from the base Kodein")
@@ -55,22 +60,20 @@ object DockerConnectivitySpec : Spek({
 
         val dockerConfigurationKodeinFactory by createForEachTest {
             mock<DockerConfigurationKodeinFactory> {
-                on { create(containerType) } doReturn kodeinFromFactory
+                on { create(eq(containerType), any()) } doReturn kodeinFromFactory
             }
         }
 
         val systemInfoClient by createForEachTest { mock<SystemInfoClient>() }
         val errorConsole by createForEachTest { mock<Console>() }
-        val connectivity by createForEachTest { DockerConnectivity(dockerConfigurationKodeinFactory, systemInfoClient, errorConsole) }
+        val connectivity by createForEachTest { DockerConnectivity(dockerConfigurationKodeinFactory, systemInfoClient, errorConsole, commandLineOptions) }
 
-        given("the check succeeds") {
-            val checkResult = DockerConnectivityCheckResult.Succeeded(containerType, Version(19, 3, 1), BuilderVersion.Legacy, false)
+        fun Suite.itRunsTheTaskWithBuilder(checkResult: DockerConnectivityCheckResult.Succeeded, expectedBuilderVersion: BuilderVersion) {
             var ranTask = false
             var kodeinSeenInTask: DirectDI? = null
 
             beforeEachTest {
                 ranTask = false
-
                 whenever(systemInfoClient.checkConnectivity()).doReturn(checkResult)
             }
 
@@ -101,15 +104,18 @@ object DockerConnectivitySpec : Spek({
             it("collects Docker environment telemetry") {
                 verify(dockerTelemetryCollector).collectTelemetry(checkResult)
             }
+
+            it("creates the Kodein context with the expected builder version") {
+                verify(dockerConfigurationKodeinFactory).create(any(), eq(expectedBuilderVersion))
+            }
         }
 
-        given("the check fails") {
+        fun Suite.itDoesNotRunTheTaskAndFailsWithError(checkResult: DockerConnectivityCheckResult, expectedErrorMessage: String) {
             var ranTask = false
 
             beforeEachTest {
                 ranTask = false
-
-                whenever(systemInfoClient.checkConnectivity()).doReturn(DockerConnectivityCheckResult.Failed("Something went wrong."))
+                whenever(systemInfoClient.checkConnectivity()).doReturn(checkResult)
             }
 
             val exitCode by runForEachTest {
@@ -124,12 +130,81 @@ object DockerConnectivitySpec : Spek({
             }
 
             it("prints a message to the output") {
-                verify(errorConsole).println(Text.red("Docker is not installed, not running or not compatible with batect: Something went wrong."))
+                verify(errorConsole).println(Text.red(expectedErrorMessage))
             }
 
             it("returns a non-zero exit code") {
                 assertThat(exitCode, !equalTo(0))
             }
+        }
+
+        // No preference - legacy builder
+        // BuildKit disabled - legacy builder
+        // BuildKit enabled
+        // - 18.09: allowed
+        // - 19.03: allowed
+        // - 17.06: not allowed
+        // - 17.07 + experimental: allowed
+        // - 17.07 + not experimental: not allowed
+        // - 18.06 + experimental: allowed
+        // - 18.06 + not experimental: not allowed
+
+        given("the connectivity check succeeds") {
+            given("the user has not provided a builder preference") {
+                beforeEachTest { whenever(commandLineOptions.enableBuildKit).doReturn(null) }
+
+                val checkResult = DockerConnectivityCheckResult.Succeeded(containerType, Version(19, 3, 1), BuilderVersion.BuildKit, true)
+
+                itRunsTheTaskWithBuilder(checkResult, BuilderVersion.Legacy)
+            }
+
+            given("the user has explicitly disabled BuildKit") {
+                beforeEachTest { whenever(commandLineOptions.enableBuildKit).doReturn(false) }
+
+                val checkResult = DockerConnectivityCheckResult.Succeeded(containerType, Version(19, 3, 1), BuilderVersion.BuildKit, true)
+
+                itRunsTheTaskWithBuilder(checkResult, BuilderVersion.Legacy)
+            }
+
+            given("the user has requested BuildKit") {
+                beforeEachTest { whenever(commandLineOptions.enableBuildKit).doReturn(true) }
+
+                given("the user is running a version of the Docker daemon that supports BuildKit without experimental features being enabled") {
+                    val dockerVersion = Version(18, 9, 0)
+                    val checkResult = DockerConnectivityCheckResult.Succeeded(containerType, dockerVersion, BuilderVersion.Legacy, false)
+
+                    itRunsTheTaskWithBuilder(checkResult, BuilderVersion.BuildKit)
+                }
+
+                given("the user is running a version of the Docker daemon that supports BuildKit but only if experimental features are enabled") {
+                    val dockerVersion = Version(18, 6, 0)
+
+                    given("experimental features are enabled") {
+                        val checkResult = DockerConnectivityCheckResult.Succeeded(containerType, dockerVersion, BuilderVersion.Legacy, true)
+
+                        itRunsTheTaskWithBuilder(checkResult, BuilderVersion.BuildKit)
+                    }
+
+                    given("experimental features are disabled") {
+                        val checkResult = DockerConnectivityCheckResult.Succeeded(containerType, dockerVersion, BuilderVersion.Legacy, false)
+
+                        itDoesNotRunTheTaskAndFailsWithError(checkResult, "BuildKit has been enabled with --enable-buildkit or the DOCKER_BUILDKIT environment variable, but the current version of Docker requires experimental features to be enabled to use BuildKit and experimental features are currently disabled.")
+                    }
+                }
+
+                given("the user is running a version of the Docker daemon that does not support BuildKit") {
+                    val dockerVersion = Version(17, 6, 0)
+                    val checkResult = DockerConnectivityCheckResult.Succeeded(containerType, dockerVersion, BuilderVersion.BuildKit, true)
+
+                    itDoesNotRunTheTaskAndFailsWithError(checkResult, "BuildKit has been enabled with --enable-buildkit or the DOCKER_BUILDKIT environment variable, but the current version of Docker does not support BuildKit, even with experimental features enabled.")
+                }
+            }
+        }
+
+        given("the connectivity check fails") {
+            val checkResult = DockerConnectivityCheckResult.Failed("Something went wrong.")
+
+            itDoesNotRunTheTaskAndFailsWithError(checkResult, "Docker is not installed, not running or not compatible with batect: Something went wrong.")
         }
     }
 })

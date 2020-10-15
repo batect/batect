@@ -50,6 +50,7 @@ class BuildImageStepRunner(
     private val cancellationContext: CancellationContext,
     private val ioStreamingOptions: ContainerIOStreamingOptions,
     private val commandLineOptions: CommandLineOptions,
+    private val builderVersion: BuilderVersion,
     private val systemInfo: SystemInfo,
     private val telemetrySessionBuilder: TelemetrySessionBuilder
 ) {
@@ -71,7 +72,7 @@ class BuildImageStepRunner(
                     setOf(imageTagFor(step)),
                     buildConfig.imagePullPolicy.forciblyPull,
                     ioStreamingOptions.stdoutForImageBuild(step.container),
-                    BuilderVersion.Legacy,
+                    builderVersion,
                     cancellationContext,
                     onStatusUpdate
                 )

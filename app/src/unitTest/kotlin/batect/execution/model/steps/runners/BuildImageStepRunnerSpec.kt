@@ -28,6 +28,7 @@ import batect.config.ImagePullPolicy
 import batect.config.LiteralValue
 import batect.docker.DockerImage
 import batect.docker.ImageBuildFailedException
+import batect.docker.api.BuilderVersion
 import batect.docker.build.ActiveImageBuildStep
 import batect.docker.build.BuildProgress
 import batect.docker.client.ImagesClient
@@ -75,6 +76,7 @@ object BuildImageStepRunnerSpec : Spek({
         val container = Container("some-container", BuildImage(buildDirectory, pathResolutionContext, buildArgs, dockerfilePath))
         val step = BuildImageStep(container)
         val outputSink by createForEachTest { mock<Sink>() }
+        val builderVersion = BuilderVersion.BuildKit
 
         val config = Configuration("some-project")
         val imagesClient by createForEachTest { mock<ImagesClient>() }
@@ -130,6 +132,7 @@ object BuildImageStepRunnerSpec : Spek({
                 cancellationContext,
                 ioStreamingOptions,
                 CommandLineOptions(dontPropagateProxyEnvironmentVariables = false),
+                builderVersion,
                 systemInfo,
                 telemetrySessionBuilder
             )
@@ -167,6 +170,10 @@ object BuildImageStepRunnerSpec : Spek({
 
                     it("passes the output sink and cancellation context to the image build") {
                         verify(imagesClient).build(any(), any(), any(), any(), any(), any(), eq(outputSink), any(), eq(cancellationContext), any())
+                    }
+
+                    it("runs the build with the specified image builder") {
+                        verify(imagesClient).build(any(), any(), any(), any(), any(), any(), any(), eq(builderVersion), any(), any())
                     }
 
                     it("passes the image build args provided by the user as well as any proxy-related build args, with user-provided build args overriding the generated proxy-related build args, and with the cache setup command included") {
@@ -238,6 +245,7 @@ object BuildImageStepRunnerSpec : Spek({
                         cancellationContext,
                         ioStreamingOptions,
                         commandLineOptionsWithProxyEnvironmentVariablePropagationDisabled,
+                        builderVersion,
                         systemInfo,
                         telemetrySessionBuilder
                     )

@@ -49,6 +49,8 @@ class CommandLineOptionsParser(
         const val configVariableOptionName = "config-var"
         const val permanentlyDisableTelemetryFlagName = "permanently-disable-telemetry"
         const val permanentlyEnableTelemetryFlagName = "permanently-enable-telemetry"
+        const val enableBuildKitFlagName = "enable-buildkit"
+        const val enableBuildKitEnvironmentVariableName = "DOCKER_BUILDKIT"
         const val helpBlurb = "For documentation and further information on batect, visit https://github.com/batect/batect."
     }
 
@@ -206,6 +208,8 @@ class CommandLineOptionsParser(
 
     private val dockerTLSKeyPath: Path by dockerTLSKeyPathOption
 
+    private val enableBuildKit: Boolean? by tristateFlagOption(dockerConnectionOptionsGroup, enableBuildKitFlagName, "Use BuildKit for image builds.", environmentVariableDefaultValueProviderFactory.create(enableBuildKitEnvironmentVariableName, null, ValueConverters::boolean))
+
     private val permanentlyDisableTelemetry: Boolean by flagOption(telemetryOptionsGroup, permanentlyDisableTelemetryFlagName, "Permanently disable telemetry collection and uploading, and remove any telemetry data queued for upload.")
     private val permanentlyEnableTelemetry: Boolean by flagOption(telemetryOptionsGroup, permanentlyEnableTelemetryFlagName, "Permanently enable telemetry collection and uploading.")
 
@@ -295,7 +299,8 @@ class CommandLineOptionsParser(
         linuxCacheInitImageName = linuxCacheInitImageName,
         existingNetworkToUse = existingNetworkToUse,
         skipPrerequisites = skipPrerequisites,
-        disableTelemetry = disableTelemetry
+        disableTelemetry = disableTelemetry,
+        enableBuildKit = enableBuildKit
     )
 }
 

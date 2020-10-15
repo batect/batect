@@ -8,9 +8,19 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROTOS_DIR="$(cd "$SCRIPT_DIR/../../../../../../build/protos" && pwd)"
 
-EVENTS=$(jq 'select(.id == "moby.buildkit.trace")' | jq -r '.aux')
+LINE=0
 
-for event in $EVENTS; do
-    echo "$event" | base64 --decode | protoc --decode moby.buildkit.v1.StatusResponse --proto_path "$PROTOS_DIR" github.com/moby/buildkit/api/services/control/control.proto
+while read -r event || [ -n "$event" ]; do
+    ((LINE=LINE+1))
+    echo "$(tput setaf 4)Line $LINE$(tput sgr0)"
+    AUX=$(echo "$event" | jq 'select(.id == "moby.buildkit.trace")' | jq -r '.aux')
+
+    if [[ "$AUX" == "" ]]; then
+        echo "Line is not a trace event."
+        echo "$event"
+    else
+        echo "$AUX" | base64 --decode | protoc --decode moby.buildkit.v1.StatusResponse --proto_path "$PROTOS_DIR" github.com/moby/buildkit/api/services/control/control.proto
+    fi
+
     echo
 done

@@ -229,17 +229,27 @@ jobs:
           if-no-files-found: error
 
   journey-test-linux:
-    name: "Run journey tests (Linux / Docker ${{ matrix.docker_version }})"
+    name: "Run journey tests (Linux, Docker ${{ matrix.docker_version }}, BuildKit enabled: ${{ matrix.enable_buildkit }})"
     needs:
       - build-linux
     runs-on: ubuntu-18.04
 
     strategy:
       matrix:
-        docker_version:
-          - 18.03.1~ce~3-0~ubuntu
-          - latest
+        include:
+          - docker_version: latest
+            enable_buildkit: false
+
+          - docker_version: latest
+            enable_buildkit: true
+
+          - docker_version: 18.03.1~ce~3-0~ubuntu
+            enable_buildkit: false
+
       fail-fast: false
+
+    env:
+      DOCKER_BUILDKIT: ${{ matrix.enable_buildkit }}
 
     steps:
       - name: Check out code
@@ -274,7 +284,7 @@ jobs:
         run: unset JAVA_TOOL_OPTIONS && ./gradlew --parallel journeyTest
 
   integration-test-linux:
-    name: "Run integration tests (Linux / Docker ${{ matrix.docker_version }} using ${{ matrix.connection_type }})"
+    name: "Run integration tests (Linux, Docker ${{ matrix.docker_version }}, ${{ matrix.connection_type }})"
     needs:
       - build-linux
     runs-on: ubuntu-18.04
@@ -285,9 +295,11 @@ jobs:
           - docker_version: latest
             connection_type: Unix socket
             test_options: ""
+
           - docker_version: 18.03.1~ce~3-0~ubuntu
             connection_type: Unix socket
             test_options: "-PskipBuildKitTests"
+
           - docker_version: latest
             connection_type: TLS over TCP
             test_options: ""

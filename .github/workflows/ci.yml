@@ -54,7 +54,7 @@ jobs:
         run: ./gradlew --parallel -DgenerateCoverage=true app:check libs:git-client:integrationTest jacocoTestReport
 
       - name: Upload coverage to codecov.io
-        uses: codecov/codecov-action@v1.0.13
+        uses: codecov/codecov-action@v1.0.14
         with:
           flags: windows
 
@@ -120,7 +120,7 @@ jobs:
         run: unset JAVA_TOOL_OPTIONS && ./gradlew --parallel -DgenerateCoverage=true check libs:git-client:integrationTest jacocoTestReport -x wrapper:unix:check -x wrapper:windows:check
 
       - name: Upload coverage to codecov.io
-        uses: codecov/codecov-action@v1.0.13
+        uses: codecov/codecov-action@v1.0.14
         with:
           flags: linux
 

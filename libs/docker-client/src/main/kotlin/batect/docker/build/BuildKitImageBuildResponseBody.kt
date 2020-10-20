@@ -54,6 +54,7 @@ class BuildKitImageBuildResponseBody : ImageBuildResponseBody {
     private val pendingCompletedVertices = mutableMapOf<String, Vertex>()
     private var lastWrittenVertexDigest: String? = null
     private var lastProgressUpdate: BuildProgress? = null
+    private val outstandingOutput = mutableMapOf<String, StringBuilder>()
 
     override fun readFrom(stream: Reader, outputStream: Sink, eventCallback: ImageBuildEventCallback) {
         val outputBuffer = outputStream.buffer()
@@ -198,15 +199,32 @@ class BuildKitImageBuildResponseBody : ImageBuildResponseBody {
 
     private fun writeLogs(logs: Iterable<VertexLog>, outputBuffer: BufferedSink) {
         logs.forEach { log ->
-            writeTransitionTo(log.vertex, outputBuffer)
-
+            val outstandingOutputForVertex = outstandingOutput.getOrPut(log.vertex, ::StringBuilder)
             val vertex = startedVertices.getValue(log.vertex)
-            val timestamp = Duration.between(vertex.started, log.timestamp.toInstant()).toShortString()
+            val timestamp = Duration.between(vertex.started, log.timestamp.toInstant())
+            val message = log.msg.toString(Charsets.UTF_8)
+            var startIndex = 0
 
-            log.msg.toString(Charsets.UTF_8).trimEnd().lineSequence().forEach { line ->
-                outputBuffer.writeString("#${vertex.stepNumber} $timestamp $line\n")
+            while (true) {
+                val endOfLine = message.indexOf('\n', startIndex)
+
+                if (endOfLine == -1) {
+                    outstandingOutputForVertex.append(message.substring(startIndex))
+                    break
+                }
+
+                val line = "${outstandingOutputForVertex}${message.substring(startIndex, endOfLine)}"
+                writeTransitionTo(log.vertex, outputBuffer)
+                writeLogLine(vertex.stepNumber, timestamp, line, outputBuffer)
+
+                outstandingOutputForVertex.clear()
+                startIndex = endOfLine + 1
             }
         }
+    }
+
+    private fun writeLogLine(stepNumber: Int, timestamp: Duration, line: String, outputBuffer: BufferedSink) {
+        outputBuffer.writeString("#$stepNumber ${timestamp.toShortString()} $line\n")
     }
 
     private fun writeStatuses(statuses: Iterable<VertexStatus>, outputBuffer: BufferedSink) {
@@ -255,12 +273,7 @@ class BuildKitImageBuildResponseBody : ImageBuildResponseBody {
     }
 
     private fun handleCompletedVertexUpdate(vertex: Vertex, outputBuffer: BufferedSink) {
-        if (!vertex.error.isNullOrEmpty()) {
-            writeTransitionTo(vertex.digest, outputBuffer)
-
-            val stepNumber = startedVertices.getValue(lastWrittenVertexDigest!!).stepNumber
-            outputBuffer.writeString("#$stepNumber ERROR: ${vertex.error}\n\n")
-        } else if (vertex.canTrustCompletedStatus) {
+        if (vertex.canTrustCompletedStatus || !vertex.error.isNullOrEmpty()) {
             writeCompletedVertexImmediately(vertex, outputBuffer)
         } else {
             // Why not just write 'DONE' as soon as we see the vertex is completed? See note at the start of this file.
@@ -280,11 +293,31 @@ class BuildKitImageBuildResponseBody : ImageBuildResponseBody {
 
     private fun writeCompletedVertexImmediately(vertex: Vertex, outputBuffer: BufferedSink) {
         val stepNumber = startedVertices.getValue(vertex.digest).stepNumber
-        val description = if (vertex.cached) "CACHED" else "DONE"
+
+        val description = when {
+            !vertex.error.isNullOrEmpty() -> "ERROR: ${vertex.error}"
+            vertex.cached -> "CACHED"
+            else -> "DONE"
+        }
 
         writeTransitionTo(vertex.digest, outputBuffer)
+        writeOutstandingOutput(vertex, outputBuffer)
         outputBuffer.writeString("#$stepNumber $description\n\n")
         lastWrittenVertexDigest = null
+    }
+
+    private fun writeOutstandingOutput(vertex: Vertex, outputBuffer: BufferedSink) {
+        val outstandingOutputForVertex = outstandingOutput[vertex.digest]
+
+        if (outstandingOutputForVertex.isNullOrEmpty()) {
+            return
+        }
+
+        val stepNumber = startedVertices.getValue(vertex.digest).stepNumber
+        val timestamp = Duration.between(vertex.started.toInstant(), vertex.completed.toInstant())
+
+        writeLogLine(stepNumber, timestamp, outstandingOutputForVertex.toString(), outputBuffer)
+        outstandingOutputForVertex.clear()
     }
 
     private fun postProgressEventIfRequired(statusResponse: StatusResponse, eventCallback: ImageBuildEventCallback) {

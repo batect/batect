@@ -4,6 +4,9 @@ set -euo pipefail
 
 # Run this script like this:
 # cat <file with raw JSON events from daemon> | ./buildkit_decode.sh
+#
+# If you want to encode a modified, decoded message, save it as a text file, then run:
+# cat <decoded file> | protoc --encode  moby.buildkit.v1.StatusResponse --proto_path libs/docker-client/build/protos github.com/moby/buildkit/api/services/control/control.proto | base64
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROTOS_DIR="$(cd "$SCRIPT_DIR/../../../../../../build/protos" && pwd)"

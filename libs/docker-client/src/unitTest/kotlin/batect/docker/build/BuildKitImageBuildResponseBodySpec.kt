@@ -285,24 +285,83 @@ object BuildKitImageBuildResponseBodySpec : Spek({
 
         given("a response with a trace message containing output that does not end with a newline character") {
             val input = """
-                {"id":"moby.buildkit.trace","aux":"CtIBCkdzaGEyNTY6MTlkODAzMDQ5ODA5MzdiOTgzNjA3YTkzNDgwODkzYjdlMDRhZmMxMDJmNDVmYTU0ODYyMmI0MWI0YmE4YTE3ORJHc2hhMjU2OmZkYWQ2NzFhOTEyYjJkMDEwMzMzYWYzMGQwNTAzNjdkN2YwYzY3ZjZiZDQ4ZTQzYmMzYTJlZWQ3ODkxNDdkMzIaMVsyLzJdIFJVTiBzaCAtYyAnZWNobyAiaGVsbG8iICYmIGVjaG8gLW4gIndvcmxkIicqCwihpJr8BRComIVU"}
+                {"id":"moby.buildkit.trace","aux":"CoECCkdzaGEyNTY6MTlkODAzMDQ5ODA5MzdiOTgzNjA3YTkzNDgwODkzYjdlMDRhZmMxMDJmNDVmYTU0ODYyMmI0MWI0YmE4YTE3ORJHc2hhMjU2OmZkYWQ2NzFhOTEyYjJkMDEwMzMzYWYzMGQwNTAzNjdkN2YwYzY3ZjZiZDQ4ZTQzYmMzYTJlZWQ3ODkxNDdkMzIaYFsyLzJdIFJVTiBzaCAtYyAnZWNobyAiaGVsbG8iICYmIGVjaG8gLW4gIndvcmxkIiAmJiBlY2hvICJtb3JlIiAmJiBlY2hvIC1uICJmcm9tIHRoZSBuZXh0IGxpbmUiJyoLCKGkmvwFEKiYhVQ="}
                 {"id":"moby.buildkit.trace","aux":"GmYKR3NoYTI1NjoxOWQ4MDMwNDk4MDkzN2I5ODM2MDdhOTM0ODA4OTNiN2UwNGFmYzEwMmY0NWZhNTQ4NjIyYjQxYjRiYThhMTc5EgwIoaSa/AUQzMuaqgEYASILaGVsbG8Kd29ybGQ="}
-                {"id":"moby.buildkit.trace","aux":"CuABCkdzaGEyNTY6MTlkODAzMDQ5ODA5MzdiOTgzNjA3YTkzNDgwODkzYjdlMDRhZmMxMDJmNDVmYTU0ODYyMmI0MWI0YmE4YTE3ORJHc2hhMjU2OmZkYWQ2NzFhOTEyYjJkMDEwMzMzYWYzMGQwNTAzNjdkN2YwYzY3ZjZiZDQ4ZTQzYmMzYTJlZWQ3ODkxNDdkMzIaMVsyLzJdIFJVTiBzaCAtYyAnZWNobyAiaGVsbG8iICYmIGVjaG8gLW4gIndvcmxkIicqCwihpJr8BRComIVUMgwIoaSa/AUQuIvLwQE="}
+                {"id":"moby.buildkit.trace","aux":"GnIKR3NoYTI1NjoxOWQ4MDMwNDk4MDkzN2I5ODM2MDdhOTM0ODA4OTNiN2UwNGFmYzEwMmY0NWZhNTQ4NjIyYjQxYjRiYThhMTc5EgwIoaSa/AUQzNSUqwEYASIXbW9yZQpmcm9tIHRoZSBuZXh0IGxpbmU="}
+                {"id":"moby.buildkit.trace","aux":"Co8CCkdzaGEyNTY6MTlkODAzMDQ5ODA5MzdiOTgzNjA3YTkzNDgwODkzYjdlMDRhZmMxMDJmNDVmYTU0ODYyMmI0MWI0YmE4YTE3ORJHc2hhMjU2OmZkYWQ2NzFhOTEyYjJkMDEwMzMzYWYzMGQwNTAzNjdkN2YwYzY3ZjZiZDQ4ZTQzYmMzYTJlZWQ3ODkxNDdkMzIaYFsyLzJdIFJVTiBzaCAtYyAnZWNobyAiaGVsbG8iICYmIGVjaG8gLW4gIndvcmxkIiAmJiBlY2hvICJtb3JlIiAmJiBlY2hvIC1uICJmcm9tIHRoZSBuZXh0IGxpbmUiJyoLCKGkmvwFEKiYhVQyDAihpJr8BRC4i8vBAQ=="}
             """.trimIndent()
 
             beforeEachTest {
                 body.readFrom(StringReader(input), outputStream, eventCallback)
             }
 
-            it("appends a new line to the end of the output") {
+            it("waits to receive any further output for that line before writing it, printing any remaining output before the task is marked as done") {
                 assertThat(
                     output.toString(),
                     equalTo(
                         """
-                        |#1 [2/2] RUN sh -c 'echo "hello" && echo -n "world"'
+                        |#1 [2/2] RUN sh -c 'echo "hello" && echo -n "world" && echo "more" && echo -n "from the next line"'
                         |#1 0.180 hello
-                        |#1 0.180 world
+                        |#1 0.182 worldmore
+                        |#1 0.229 from the next line
                         |#1 DONE
+                        |
+                        |
+                        """.trimMargin()
+                    )
+                )
+            }
+        }
+
+        given("a response with a trace message containing output that does not contain a newline character") {
+            val input = """
+                {"id":"moby.buildkit.trace","aux":"CroBCkdzaGEyNTY6YjNmZjNjZjFhMTM3MGI0NDlkMjUzODQxNDYzMTRjZmQ3YmY4NDY1NDNhODlhNDEyMGJjNDk5MTIxYmNlNTJlNhJHc2hhMjU2OmZkYWQ2NzFhOTEyYjJkMDEwMzMzYWYzMGQwNTAzNjdkN2YwYzY3ZjZiZDQ4ZTQzYmMzYTJlZWQ3ODkxNDdkMzIaGVsyLzJdIFJVTiBlY2hvIC1uICJoZWxsbyIqCwi0qrn8BRCAyaV8"}
+                {"id":"moby.buildkit.trace","aux":"GmAKR3NoYTI1NjpiM2ZmM2NmMWExMzcwYjQ0OWQyNTM4NDE0NjMxNGNmZDdiZjg0NjU0M2E4OWE0MTIwYmM0OTkxMjFiY2U1MmU2EgwItKq5/AUQ2OaY9QEYASIFaGVsbG8="}
+                {"id":"moby.buildkit.trace","aux":"CsgBCkdzaGEyNTY6YjNmZjNjZjFhMTM3MGI0NDlkMjUzODQxNDYzMTRjZmQ3YmY4NDY1NDNhODlhNDEyMGJjNDk5MTIxYmNlNTJlNhJHc2hhMjU2OmZkYWQ2NzFhOTEyYjJkMDEwMzMzYWYzMGQwNTAzNjdkN2YwYzY3ZjZiZDQ4ZTQzYmMzYTJlZWQ3ODkxNDdkMzIaGVsyLzJdIFJVTiBlY2hvIC1uICJoZWxsbyIqCwi0qrn8BRCAyaV8MgwItKq5/AUQgJX5kgI="}
+            """.trimIndent()
+
+            beforeEachTest {
+                body.readFrom(StringReader(input), outputStream, eventCallback)
+            }
+
+            it("prints the output before reporting that the task is done") {
+                assertThat(
+                    output.toString(),
+                    equalTo(
+                        """
+                        |#1 [2/2] RUN echo -n "hello"
+                        |#1 0.315 hello
+                        |#1 DONE
+                        |
+                        |
+                        """.trimMargin()
+                    )
+                )
+            }
+        }
+
+        given("a response with a trace message containing output that does not end with a newline character that culminates in an error") {
+            val input = """
+                {"id":"moby.buildkit.trace","aux":"CoECCkdzaGEyNTY6MTlkODAzMDQ5ODA5MzdiOTgzNjA3YTkzNDgwODkzYjdlMDRhZmMxMDJmNDVmYTU0ODYyMmI0MWI0YmE4YTE3ORJHc2hhMjU2OmZkYWQ2NzFhOTEyYjJkMDEwMzMzYWYzMGQwNTAzNjdkN2YwYzY3ZjZiZDQ4ZTQzYmMzYTJlZWQ3ODkxNDdkMzIaYFsyLzJdIFJVTiBzaCAtYyAnZWNobyAiaGVsbG8iICYmIGVjaG8gLW4gIndvcmxkIiAmJiBlY2hvICJtb3JlIiAmJiBlY2hvIC1uICJmcm9tIHRoZSBuZXh0IGxpbmUiJyoLCKGkmvwFEKiYhVQ="}
+                {"id":"moby.buildkit.trace","aux":"GmYKR3NoYTI1NjoxOWQ4MDMwNDk4MDkzN2I5ODM2MDdhOTM0ODA4OTNiN2UwNGFmYzEwMmY0NWZhNTQ4NjIyYjQxYjRiYThhMTc5EgwIoaSa/AUQzMuaqgEYASILaGVsbG8Kd29ybGQ="}
+                {"id":"moby.buildkit.trace","aux":"GnIKR3NoYTI1NjoxOWQ4MDMwNDk4MDkzN2I5ODM2MDdhOTM0ODA4OTNiN2UwNGFmYzEwMmY0NWZhNTQ4NjIyYjQxYjRiYThhMTc5EgwIoaSa/AUQzNSUqwEYASIXbW9yZQpmcm9tIHRoZSBuZXh0IGxpbmU="}
+                {"id":"moby.buildkit.trace","aux":"CqUCCkdzaGEyNTY6MTlkODAzMDQ5ODA5MzdiOTgzNjA3YTkzNDgwODkzYjdlMDRhZmMxMDJmNDVmYTU0ODYyMmI0MWI0YmE4YTE3ORJHc2hhMjU2OmZkYWQ2NzFhOTEyYjJkMDEwMzMzYWYzMGQwNTAzNjdkN2YwYzY3ZjZiZDQ4ZTQzYmMzYTJlZWQ3ODkxNDdkMzIaYFsyLzJdIFJVTiBzaCAtYyAnZWNobyAiaGVsbG8iICYmIGVjaG8gLW4gIndvcmxkIiAmJiBlY2hvICJtb3JlIiAmJiBlY2hvIC1uICJmcm9tIHRoZSBuZXh0IGxpbmUiJyoLCKGkmvwFEKiYhVQyDAihpJr8BRC4i8vBAToUU29tZXRoaW5nIHdlbnQgd3Jvbmc="}
+            """.trimIndent()
+
+            beforeEachTest {
+                body.readFrom(StringReader(input), outputStream, eventCallback)
+            }
+
+            it("waits to receive any further output for that line before writing it, printing any remaining output before the task is marked as done") {
+                assertThat(
+                    output.toString(),
+                    equalTo(
+                        """
+                        |#1 [2/2] RUN sh -c 'echo "hello" && echo -n "world" && echo "more" && echo -n "from the next line"'
+                        |#1 0.180 hello
+                        |#1 0.182 worldmore
+                        |#1 0.229 from the next line
+                        |#1 ERROR: Something went wrong
                         |
                         |
                         """.trimMargin()

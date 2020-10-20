@@ -14,16 +14,34 @@
    limitations under the License.
 */
 
+import com.google.auth.oauth2.GoogleCredentials
+import com.google.cloud.storage.BlobId
+import com.google.cloud.storage.BlobInfo
+import com.google.cloud.storage.Storage
+import com.google.cloud.storage.StorageOptions
+import java.io.FileInputStream
 import java.nio.file.Files
+import java.io.ByteArrayInputStream
 
-tasks.register("generateUpdateInfoFile") {
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath("com.google.cloud:google-cloud-storage:1.113.1")
+    }
+}
+
+val updateInfoFile = buildDir.resolve("updateInfo").resolve("latest.json")
+
+val generateUpdateInfoFile = tasks.register("generateUpdateInfoFile") {
     description = "Generates update information file."
     group = "Distribution"
 
     inputs.property("version", { project.version.toString() })
-
-    val outputFile = buildDir.resolve("updateInfo").resolve("latest.json")
-    outputs.file(outputFile)
+    outputs.file(updateInfoFile)
 
     doLast {
         val version = project.version.toString()
@@ -46,6 +64,42 @@ tasks.register("generateUpdateInfoFile") {
             .replace(" ", "")
             .replace("\n", "")
 
-        Files.write(outputFile.toPath(), content.toByteArray(Charsets.UTF_8))
+        Files.write(updateInfoFile.toPath(), content.toByteArray(Charsets.UTF_8))
+    }
+}
+
+tasks.register("uploadUpdateInfoFile") {
+    description = "Uploads update information file to publicly-accessible location."
+    group = "Distribution"
+
+    dependsOn(generateUpdateInfoFile)
+    inputs.file(updateInfoFile)
+    outputs.upToDateWhen { false }
+
+    doLast {
+        val environmentVariableName = "GCP_SERVICE_ACCOUNT_KEY"
+        val serviceAccountKey = System.getenv(environmentVariableName)
+
+        if (serviceAccountKey == null) {
+            throw RuntimeException("'$environmentVariableName' environment variable not set.")
+        }
+
+        val credentials = GoogleCredentials
+            .fromStream(ByteArrayInputStream(serviceAccountKey.toByteArray(Charsets.UTF_8)))
+            .createScoped(listOf("https://www.googleapis.com/auth/cloud-platform"))
+
+        val storage = StorageOptions.newBuilder()
+            .setProjectId("batect-updates-prod")
+            .setCredentials(credentials)
+            .build()
+            .getService()
+
+        val blobId = BlobId.of("batect-updates-prod-public", "v1/latest.json")
+        val blobInfo = BlobInfo.newBuilder(blobId)
+            .setCacheControl("public, max-age=300")
+            .setContentType("application/json")
+            .build()
+
+        storage.create(blobInfo, Files.readAllBytes(updateInfoFile.toPath()))
     }
 }

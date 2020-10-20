@@ -427,3 +427,8 @@ jobs:
           draft: true # Update draft release with matching tag, if there is one.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload update information to bucket
+        run: ./gradlew uploadUpdateInfoFile
+        env:
+          GCP_SERVICE_ACCOUNT_KEY: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}

@@ -20,7 +20,6 @@ import batect.logging.Logger
 import batect.logging.data
 import batect.primitives.Version
 import batect.utils.Json
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -31,7 +30,7 @@ class UpdateInfoDownloader(private val client: OkHttpClient, private val logger:
     constructor(client: OkHttpClient, logger: Logger) : this(client, logger, { ZonedDateTime.now(ZoneOffset.UTC) })
 
     fun getLatestVersionInfo(): UpdateInfo {
-        val url = "https://api.github.com/repos/batect/batect/releases/latest"
+        val url = "https://updates.batect.dev/v1/latest"
         val request = Request.Builder()
             .url(url)
             .build()
@@ -54,9 +53,9 @@ class UpdateInfoDownloader(private val client: OkHttpClient, private val logger:
                     throw UpdateInfoDownloadException("The server returned HTTP ${response.code}.")
                 }
 
-                val releaseInfo = Json.ignoringUnknownKeys.decodeFromString(GitHubReleaseInfo.serializer(), response.body!!.string())
-                val scripts = extractScriptInfo(releaseInfo)
-                val updateInfo = UpdateInfo(Version.parse(releaseInfo.tagName), releaseInfo.htmlUrl, dateTimeProvider(), scripts)
+                val versionInfo = Json.ignoringUnknownKeys.decodeFromString(VersionInfo.serializer(), response.body!!.string())
+                val scripts = extractScriptInfo(versionInfo)
+                val updateInfo = UpdateInfo(Version.parse(versionInfo.version), versionInfo.url, dateTimeProvider(), scripts)
 
                 logger.info {
                     message("Parsed latest version information.")
@@ -76,23 +75,23 @@ class UpdateInfoDownloader(private val client: OkHttpClient, private val logger:
         }
     }
 
-    private fun extractScriptInfo(releaseInfo: GitHubReleaseInfo): List<ScriptInfo> {
-        return releaseInfo.assets
+    private fun extractScriptInfo(versionInfo: VersionInfo): List<ScriptInfo> {
+        return versionInfo.files
             .filter { it.name in setOf("batect", "batect.cmd") }
-            .map { ScriptInfo(it.name, it.browserDownloadUrl) }
+            .map { ScriptInfo(it.name, it.url) }
     }
 
     @Serializable
-    private data class GitHubReleaseInfo(
-        @SerialName("tag_name") val tagName: String,
-        @SerialName("html_url") val htmlUrl: String,
-        val assets: List<GitHubReleaseAsset>
+    private data class VersionInfo(
+        val version: String,
+        val url: String,
+        val files: List<VersionFile>
     )
 
     @Serializable
-    private data class GitHubReleaseAsset(
+    private data class VersionFile(
         val name: String,
-        @SerialName("browser_download_url") val browserDownloadUrl: String
+        val url: String
     )
 }
 

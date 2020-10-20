@@ -43,7 +43,7 @@ import java.time.ZonedDateTime
 
 object UpdateInfoDownloaderSpec : Spek({
     describe("an update information downloader") {
-        val downloadUrl = "https://api.github.com/repos/batect/batect/releases/latest"
+        val downloadUrl = "https://updates.batect.dev/v1/latest"
         val client by createForEachTest { mock<OkHttpClient>() }
 
         val logger by createLoggerForEachTest()
@@ -54,18 +54,16 @@ object UpdateInfoDownloaderSpec : Spek({
         on("when the latest release information can be retrieved successfully and includes known wrapper script information") {
             beforeEachTest {
                 val responseBody = """{
-                      "url": "https://api.github.com/repos/batect/batect/releases/7936494",
-                      "html_url": "https://github.com/batect/batect/releases/tag/0.3",
-                      "id": 7936494,
-                      "tag_name": "0.3",
-                      "assets": [
+                      "url": "https://github.com/batect/batect/releases/tag/0.3",
+                      "version": "0.3",
+                      "files": [
                         {
                           "name": "batect",
-                          "browser_download_url": "https://github.com/batect/batect/releases/download/0.3/batect"
+                          "url": "https://github.com/batect/batect/releases/download/0.3/batect"
                         },
                         {
                           "name": "batect.cmd",
-                          "browser_download_url": "https://github.com/batect/batect/releases/download/0.3/batect.cmd"
+                          "url": "https://github.com/batect/batect/releases/download/0.3/batect.cmd"
                         }
                       ]
                   }
@@ -104,11 +102,9 @@ object UpdateInfoDownloaderSpec : Spek({
         on("when the latest release information does not include any assets") {
             beforeEachTest {
                 val responseBody = """{
-                      "url": "https://api.github.com/repos/batect/batect/releases/7936494",
-                      "html_url": "https://github.com/batect/batect/releases/tag/0.3",
-                      "id": 7936494,
-                      "tag_name": "0.3",
-                      "assets": []
+                      "url": "https://github.com/batect/batect/releases/tag/0.3",
+                      "version": "0.3",
+                      "files": []
                   }
                 """.trimIndent()
 
@@ -125,14 +121,12 @@ object UpdateInfoDownloaderSpec : Spek({
         on("when the latest release information does not contain an asset with a known script name") {
             beforeEachTest {
                 val responseBody = """{
-                      "url": "https://api.github.com/repos/batect/batect/releases/7936494",
-                      "html_url": "https://github.com/batect/batect/releases/tag/0.3",
-                      "id": 7936494,
-                      "tag_name": "0.3",
-                      "assets": [
+                      "url": "https://github.com/batect/batect/releases/tag/0.3",
+                      "version": "0.3",
+                      "files": [
                         {
                           "name": "batect.jar",
-                          "browser_download_url": "https://github.com/batect/batect/releases/download/0.3/batect.jar"
+                          "url": "https://github.com/batect/batect/releases/download/0.3/batect.jar"
                         }
                       ]
                   }
@@ -154,7 +148,7 @@ object UpdateInfoDownloaderSpec : Spek({
             it("throws an appropriate exception") {
                 assertThat(
                     { downloader.getLatestVersionInfo() },
-                    throws(withMessage("Could not download latest release information from https://api.github.com/repos/batect/batect/releases/latest: The server returned HTTP 404."))
+                    throws(withMessage("Could not download latest release information from https://updates.batect.dev/v1/latest: The server returned HTTP 404."))
                 )
             }
         }
@@ -174,7 +168,7 @@ object UpdateInfoDownloaderSpec : Spek({
                 assertThat(
                     { downloader.getLatestVersionInfo() },
                     throws(
-                        withMessage("Could not download latest release information from https://api.github.com/repos/batect/batect/releases/latest: Could not do what you asked because stuff happened.")
+                        withMessage("Could not download latest release information from https://updates.batect.dev/v1/latest: Could not do what you asked because stuff happened.")
                             and withCause(exception)
                     )
                 )

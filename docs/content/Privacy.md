@@ -72,24 +72,29 @@ to enable them to operate their services, and their respective privacy policies 
 
 ## In-app update notifications
 
-batect checks for updated versions and displays a reminder to the user if a newer version is available.
+batect checks for updated versions and displays a reminder to the user if a newer version is available. It automatically checks for updates at most once every 36 hours.
 
-It uses the public, unauthenticated GitHub API to check for new versions. It checks for updates at most once every 36 hours.
+It uses a public, encrypted, unauthenticated API hosted by the batect project on GCP and Cloudflare to check for new versions.
+A secure, private GCP project dedicated to the purpose of hosting update information hosts the API.
+
+The source code and configuration for this API is available in the [updates.batect.dev](https://github.com/batect/updates.batect.dev) GitHub repository.
 
 Running `./batect --upgrade` uses the same API in the same way to deliver new versions of batect.
 
 ### What data is collected and how it is used
 
-No personally identifiable information or credentials are sent to GitHub as part of this process, and [GitHub's privacy policy](https://github.com/site/privacy)
-applies to any data it collects.
+No personally identifiable information or telemetry information is sent to the API as part of this process.
 
-The GitHub API requires encrypted HTTPS connections.
+Basic diagnostic information such as IP addresses may be collected in the API's logs. This information is used solely to administer, maintain and monitor the updates API, and is
+not combined with telemetry information or any other information source.
+
+The API requires encrypted HTTPS connections.
 
 ### How to opt-out
 
 Run batect with `--no-update-notification` to disable checking for new versions.
 
-Note that running `./batect --upgrade` ignores `--no-update-notification` if it is set, and will always use the GitHub API to check for a new version.
+Note that running `./batect --upgrade` ignores `--no-update-notification` if it is set, and will always use the updates API to check for a new version.
 
 ## In-app telemetry
 
@@ -175,7 +180,7 @@ performance and reliability, and improve it.
 
 ### How data is collected and stored
 
-Data is collected as the application runs, and then uploaded to a secure, private GCP account dedicated to storing and processing this information.
+Data is collected as the application runs, and then uploaded to a secure, private GCP project dedicated to storing and processing this information.
 
 All data is transferred over HTTPS, and encrypted at rest. A variety of controls are in place to ensure that raw data is not disclosed publicly.
 

@@ -1,6 +1,9 @@
 version: "{build}"
 image: Visual Studio 2019
 skip_tags: true
+branches:
+  except:
+    - /^dependabot\/docker\/.*\/alpine-.*$/
 
 environment:
   GRADLE_OPTS: "-Dorg.gradle.internal.launcher.welcomeMessageEnabled=false"

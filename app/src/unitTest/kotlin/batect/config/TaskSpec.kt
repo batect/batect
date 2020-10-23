@@ -66,6 +66,13 @@ object TaskSpec : Spek({
                         - the-other-container
                     run:
                         container: the-container
+                    customise:
+                        some-other-container:
+                            working_directory: /blah
+                            environment:
+                                SOME_CONFIG: blah
+                            ports:
+                                - 123:456
                 """.trimIndent()
 
                 val task by createForEachTest { Yaml.default.decodeFromString(Task.serializer(), yaml) }
@@ -79,7 +86,14 @@ object TaskSpec : Spek({
                                 group = "Things",
                                 prerequisiteTasks = listOf("the-other-task"),
                                 dependsOnContainers = setOf("the-other-container"),
-                                runConfiguration = TaskRunConfiguration("the-container")
+                                runConfiguration = TaskRunConfiguration("the-container"),
+                                customisations = mapOf(
+                                    "some-other-container" to TaskContainerCustomisation(
+                                        workingDirectory = "/blah",
+                                        additionalEnvironmentVariables = mapOf("SOME_CONFIG" to LiteralValue("blah")),
+                                        additionalPortMappings = setOf(PortMapping(123, 456))
+                                    )
+                                )
                             )
                         )
                     )
@@ -109,6 +123,20 @@ object TaskSpec : Spek({
                     assertThat({ Yaml.default.decodeFromString(Task.serializer(), yaml) }, throws<ConfigurationException>(withMessage("'run' is required if 'dependencies' is provided.") and withLineNumber(1) and withColumn(1) and withPath("<root>")))
                 }
             }
+
+            given("a task with customisations for the main task container") {
+                val yaml = """
+                    run:
+                        container: the-container
+                    customise:
+                        the-container:
+                            working_directory: /blah
+                """.trimIndent()
+
+                it("throws an appropriate exception") {
+                    assertThat({ Yaml.default.decodeFromString(Task.serializer(), yaml) }, throws<ConfigurationException>(withMessage("Cannot apply customisations to main task container 'the-container'. Set the corresponding properties on 'run' instead.") and withLineNumber(3) and withColumn(1) and withPath("customise")))
+                }
+            }
         }
 
         describe("writing a task as JSON for logging") {
@@ -118,7 +146,14 @@ object TaskSpec : Spek({
                 group = "Things",
                 prerequisiteTasks = listOf("the-other-task"),
                 dependsOnContainers = setOf("the-other-container"),
-                runConfiguration = TaskRunConfiguration("the-container")
+                runConfiguration = TaskRunConfiguration("the-container"),
+                customisations = mapOf(
+                    "some-other-container" to TaskContainerCustomisation(
+                        workingDirectory = "/blah",
+                        additionalEnvironmentVariables = mapOf("SOME_CONFIG" to LiteralValue("blah")),
+                        additionalPortMappings = setOf(PortMapping(123, 456))
+                    )
+                )
             )
 
             it("serializes to the expected JSON") {
@@ -138,6 +173,17 @@ object TaskSpec : Spek({
                                 "environment": {},
                                 "ports": [],
                                 "working_directory": null
+                            },
+                            "customise": {
+                                "some-other-container": {
+                                    "working_directory": "/blah",
+                                    "environment": {
+                                        "SOME_CONFIG": { "type": "LiteralValue", "value": "blah" }
+                                    },
+                                    "ports": [
+                                        { "local": "123", "container": "456", "protocol": "tcp" }
+                                    ]
+                                }
                             }
                         }
                         """.trimIndent()

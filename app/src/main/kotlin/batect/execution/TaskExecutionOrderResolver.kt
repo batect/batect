@@ -119,7 +119,7 @@ class TaskExecutionOrderResolver(
 
         if (path.contains(prerequisite)) {
             val description = cycleDescription(path + prerequisite)
-            throw DependencyCycleException("There is a dependency cycle between tasks: $description.")
+            throw TaskDependencyCycleException("There is a dependency cycle between tasks: $description.")
         }
 
         return prerequisite
@@ -154,4 +154,4 @@ sealed class TaskExecutionOrderResolutionException(override val message: String)
 
 class TaskDoesNotExistException(message: String) : TaskExecutionOrderResolutionException(message)
 class PrerequisiteTaskDoesNotExistException(message: String) : TaskExecutionOrderResolutionException(message)
-class DependencyCycleException(message: String) : TaskExecutionOrderResolutionException(message)
+class TaskDependencyCycleException(message: String) : TaskExecutionOrderResolutionException(message)

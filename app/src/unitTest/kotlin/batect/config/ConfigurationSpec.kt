@@ -56,7 +56,14 @@ object ConfigurationSpec : Spek({
                     "Does the thing",
                     "Group 1",
                     setOf("container-1"),
-                    listOf("task-1")
+                    listOf("task-1"),
+                    mapOf(
+                        "other-container" to TaskContainerCustomisation(
+                            workingDirectory = "/blah",
+                            additionalEnvironmentVariables = mapOf("SOME_CONFIG" to LiteralValue("blah")),
+                            additionalPortMappings = setOf(PortMapping(123, 456))
+                        )
+                    )
                 )
 
                 val configuration = Configuration("the-project", TaskMap(task), ContainerMap())
@@ -90,7 +97,18 @@ object ConfigurationSpec : Spek({
                                         "description": "Does the thing",
                                         "group": "Group 1",
                                         "dependencies": ["container-1"],
-                                        "prerequisites": ["task-1"]
+                                        "prerequisites": ["task-1"],
+                                        "customise": {
+                                            "other-container": {
+                                                "working_directory": "/blah",
+                                                "environment": {
+                                                    "SOME_CONFIG": { "type": "LiteralValue", "value": "blah" }
+                                                },
+                                                "ports": [
+                                                    { "local": "123", "container": "456", "protocol": "tcp" }
+                                                ]
+                                            }
+                                        }
                                     }
                                 },
                                 "containers": {},

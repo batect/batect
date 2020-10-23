@@ -1,0 +1,27 @@
+project_name: task-with-environment-task
+
+containers:
+  build-env:
+    image: alpine:3.6
+
+  dependency:
+    image: alpine:3.6
+    command: sh -c 'echo "Working directory is $(pwd)" && echo "Value of CONTAINER_VAR is $CONTAINER_VAR" && echo "Value of OVERRIDDEN_VAR is $OVERRIDDEN_VAR" && echo "Value of NEW_VAR is $NEW_VAR"'
+    environment:
+      CONTAINER_VAR: set on container
+      OVERRIDDEN_VAR: should not be used
+    working_directory: /should-not-be-used
+
+tasks:
+  the-task:
+    dependencies:
+      - dependency
+    run:
+      container: build-env
+      command: sh -c "sleep 1 && echo 'This is the main task'"
+    customise:
+      dependency:
+        working_directory: /customised
+        environment:
+          OVERRIDDEN_VAR: overridden value from task
+          NEW_VAR: new value from task

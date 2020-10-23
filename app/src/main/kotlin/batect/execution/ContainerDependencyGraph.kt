@@ -36,6 +36,14 @@ data class ContainerDependencyGraph(
     val allNodes = nodesMap.values
     val allContainers = allNodes.mapToSet { it.container }
 
+    init {
+        task.customisations.keys.forEach { customisationName ->
+            if (allContainers.none { it.name == customisationName }) {
+                throw CustomisationForContainerNotInTaskDependencyGraphException("The task '${task.name}' has customisations for container '$customisationName', but the container '$customisationName' will not be started as part of the task.")
+            }
+        }
+    }
+
     fun nodeFor(container: Container): ContainerDependencyGraphNode {
         val node = nodesMap[container] ?: throw IllegalArgumentException("Container '${container.name}' is not part of this dependency graph.")
 
@@ -44,7 +52,7 @@ data class ContainerDependencyGraph(
 
     private fun createNodes(): Map<Container, ContainerDependencyGraphNode> {
         if (task.dependsOnContainers.contains(runConfiguration.container)) {
-            throw DependencyResolutionFailedException("The task '${task.name}' cannot start the container '${runConfiguration.container}' and also run it.")
+            throw MainTaskContainerIsDependencyException("The task '${task.name}' cannot have the container '${runConfiguration.container}' as both the main task container and also a dependency.")
         }
 
         val taskContainer = findContainer(runConfiguration.container, "task '${task.name}'")
@@ -64,7 +72,7 @@ data class ContainerDependencyGraph(
     private fun getOrCreateNode(container: Container, dependencies: Set<Container>, isRootNode: Boolean, nodesAlreadyCreated: MutableMap<Container, ContainerDependencyGraphNode>, path: List<Container>): ContainerDependencyGraphNode {
         return nodesAlreadyCreated.getOrPut(container) {
             if (dependencies.contains(container)) {
-                throw DependencyResolutionFailedException("The container '${container.name}' cannot depend on itself.")
+                throw ContainerSelfDependencyException("The container '${container.name}' cannot depend on itself.")
             }
 
             val newPath = path + container
@@ -79,8 +87,8 @@ data class ContainerDependencyGraph(
                 commandResolver.resolveCommand(container, task),
                 entrypointResolver.resolveEntrypoint(container, task),
                 workingDirectory(isRootNode, container),
-                additionalEnvironmentVariables(isRootNode),
-                additionalPortMappings(isRootNode)
+                additionalEnvironmentVariables(isRootNode, container),
+                additionalPortMappings(isRootNode, container)
             )
 
             ContainerDependencyGraphNode(
@@ -107,7 +115,7 @@ data class ContainerDependencyGraph(
         val container = config.containers[name]
 
         if (container == null) {
-            throw DependencyResolutionFailedException("The container '$name' referenced by $parentDescription does not exist.")
+            throw ContainerDoesNotExistException("The container '$name' referenced by $parentDescription does not exist.")
         }
 
         return container
@@ -118,7 +126,7 @@ data class ContainerDependencyGraph(
         val isCycleDueToTaskDependency = task.dependsOnContainers.contains(path[1].name)
         val description = if (isCycleDueToTaskDependency) descriptionForTaskDependencyCycle(path) else descriptionForContainerDependencyCycle(path)
 
-        return DependencyResolutionFailedException(introduction + description)
+        return ContainerDependencyCycleException(introduction + description)
     }
 
     private fun descriptionForTaskDependencyCycle(path: List<Container>): String {
@@ -144,27 +152,33 @@ data class ContainerDependencyGraph(
         return "Container $firstContainer depends on " + otherContainers.joinToString(", which depends on ") + "."
     }
 
-    private fun additionalEnvironmentVariables(isRootNode: Boolean): Map<String, Expression> =
+    private fun additionalEnvironmentVariables(isRootNode: Boolean, container: Container): Map<String, Expression> =
         if (isRootNode) {
             runConfiguration.additionalEnvironmentVariables
         } else {
-            emptyMap()
+            task.customisations[container.name]?.additionalEnvironmentVariables ?: emptyMap()
         }
 
-    private fun additionalPortMappings(isRootNode: Boolean): Set<PortMapping> =
+    private fun additionalPortMappings(isRootNode: Boolean, container: Container): Set<PortMapping> =
         if (isRootNode) {
             runConfiguration.additionalPortMappings
         } else {
-            emptySet()
+            task.customisations[container.name]?.additionalPortMappings ?: emptySet()
         }
 
     private fun workingDirectory(isRootNode: Boolean, container: Container): String? = if (isRootNode) {
         runConfiguration.workingDiretory ?: container.workingDirectory
     } else {
-        container.workingDirectory
+        task.customisations[container.name]?.workingDirectory ?: container.workingDirectory
     }
 }
 
-class DependencyResolutionFailedException(message: String) : Exception(message) {
+sealed class DependencyResolutionFailedException(message: String) : Exception(message) {
     override fun toString(): String = message!!
 }
+
+class ContainerDependencyCycleException(message: String) : DependencyResolutionFailedException(message)
+class ContainerDoesNotExistException(message: String) : DependencyResolutionFailedException(message)
+class ContainerSelfDependencyException(message: String) : DependencyResolutionFailedException(message)
+class MainTaskContainerIsDependencyException(message: String) : DependencyResolutionFailedException(message)
+class CustomisationForContainerNotInTaskDependencyGraphException(message: String) : DependencyResolutionFailedException(message)

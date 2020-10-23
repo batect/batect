@@ -336,7 +336,7 @@ object TaskExecutionOrderResolverSpec : Spek({
                 it("throws an appropriate exception") {
                     assertThat(
                         { resolveExecutionOrder(config, mainTask.name) },
-                        throws<DependencyCycleException>(withMessage("There is a dependency cycle between tasks: task 'main-task' has 'main-task' as a prerequisite."))
+                        throws<TaskDependencyCycleException>(withMessage("There is a dependency cycle between tasks: task 'main-task' has 'main-task' as a prerequisite."))
                     )
                 }
             }
@@ -422,7 +422,7 @@ object TaskExecutionOrderResolverSpec : Spek({
                 it("throws an appropriate exception") {
                     assertThat(
                         { resolveExecutionOrder(config, mainTask.name) },
-                        throws<DependencyCycleException>(withMessage("There is a dependency cycle between tasks: task 'main-task' has 'other-task' as a prerequisite, which has 'main-task' as a prerequisite."))
+                        throws<TaskDependencyCycleException>(withMessage("There is a dependency cycle between tasks: task 'main-task' has 'other-task' as a prerequisite, which has 'main-task' as a prerequisite."))
                     )
                 }
             }
@@ -436,7 +436,7 @@ object TaskExecutionOrderResolverSpec : Spek({
                 it("throws an appropriate exception") {
                     assertThat(
                         { resolveExecutionOrder(config, mainTask.name) },
-                        throws<DependencyCycleException>(withMessage("There is a dependency cycle between tasks: task 'main-task' has 'task-A' as a prerequisite, which has 'task-B' as a prerequisite, which has 'main-task' as a prerequisite."))
+                        throws<TaskDependencyCycleException>(withMessage("There is a dependency cycle between tasks: task 'main-task' has 'task-A' as a prerequisite, which has 'task-B' as a prerequisite, which has 'main-task' as a prerequisite."))
                     )
                 }
             }
@@ -450,7 +450,7 @@ object TaskExecutionOrderResolverSpec : Spek({
                 it("throws an appropriate exception") {
                     assertThat(
                         { resolveExecutionOrder(config, mainTask.name) },
-                        throws<DependencyCycleException>(withMessage("There is a dependency cycle between tasks: task 'main-task' has 'task-A' as a prerequisite, which has 'task-B' as a prerequisite, which has 'task-A' as a prerequisite."))
+                        throws<TaskDependencyCycleException>(withMessage("There is a dependency cycle between tasks: task 'main-task' has 'task-A' as a prerequisite, which has 'task-B' as a prerequisite, which has 'task-A' as a prerequisite."))
                     )
                 }
             }

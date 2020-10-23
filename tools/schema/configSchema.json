@@ -201,6 +201,13 @@
           "items": {
             "type": "string"
           }
+        },
+        "customise": {
+          "type": "object",
+          "description": "Customisations for dependency containers run as part of this task",
+          "additionalProperties": {
+            "$ref": "#/definitions/taskContainerCustomisation"
+          }
         }
       },
       "anyOf": [
@@ -259,6 +266,25 @@
       "required": [
         "container"
       ]
+    },
+    "taskContainerCustomisation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "environment": {
+          "description": "List of environment variables to pass to the container, in addition to those defined on the container itself",
+          "$ref": "#/definitions/environmentVariableList"
+        },
+        "ports": {
+          "description": "List of port mappings to create for the container, in addition to those defined on the container itself",
+          "$ref": "#/definitions/portMappingList"
+        },
+        "working_directory": {
+          "type": "string",
+          "description": "Working directory to start the container in",
+          "minLength": 1
+        }
+      }
     },
     "containerDependencyList": {
       "type": "array",

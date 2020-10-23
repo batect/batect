@@ -68,6 +68,77 @@ List of other containers (not tasks) that should be started and healthy before s
 The behaviour is the same as if the dependencies were specified for the [`dependencies`](Containers.md#dependencies) property of the task's
 container's definition.
 
+## `customise`
+Customisations to apply to containers started as part of this task.
+
+Customisations can modify [the working directory](#working_directory_1) used by a container, add or override [environment variables](#environment_1),
+or expose additional [ports](#ports_1).
+
+Customisations can apply to containers listed as a dependency [directly on the task](#dependencies) or [on another container](Containers.md#dependencies).
+
+Customisations cannot be applied to the main task container specified with [`container`](#container). Use the corresponding fields on [`run`](#run) instead.
+
+Customisations do not apply to containers started as part of prerequisite tasks.
+
+### Example
+
+In the example below, running the `build` task will start both `main-container` and `container-a`. `container-a` will run with the following configuration:
+
+* [Working directory](#working_directory_1): `/customised`
+* [Exposed ports](#ports_1): both `1000:2000` and `3000:4000`
+* [Environment variables](#environment_1):
+    * `CONTAINER_VAR`: `set on container`
+    * `OVERRIDDEN_VAR`: `overridden value from task`
+    * `NEW_VAR`: `new value from task`
+
+```yaml
+containers:
+  main-container:
+    image: ...
+
+  container-a:
+    image: ...
+    environment:
+      CONTAINER_VAR: set on container
+      OVERRIDDEN_VAR: won't be used
+    working_directory: /wont-be-used
+    ports:
+      - 1000:2000
+
+tasks:
+  build:
+    dependencies:
+      - dependency
+    run:
+      container: build-env
+    customise:
+      container-a:
+        working_directory: /customised
+        environment:
+          OVERRIDDEN_VAR: overridden value from task
+          NEW_VAR: new value from task
+        ports:
+          - 3000:4000
+```
+
+### `environment`
+List of environment variables (in `name: value` format) to pass to the container, in addition to those defined on the container itself.
+
+If a variable is specified both here and on the container itself, the value given here will override the value defined on the container.
+
+Values can be [expressions](Expressions.md).
+
+### `ports`
+List of port mappings to create for the container, in addition to those defined on the container itself.
+
+Behaves identically to [specifying a port mapping directly on the container](Containers.md#ports), and supports the same syntax.
+
+### `working_directory`
+Override the working directory used by the container.
+
+Takes precedence over [the working directory specified on the container definition](Containers.md#working_directory) (if any) and the
+default working directory in the image.
+
 ## `prerequisites`
 List of other tasks that should be run to completion before running this task. Names are case-sensitive.
 

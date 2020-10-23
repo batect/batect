@@ -286,6 +286,9 @@ List of environment variables (in `name: value` format) for the container.
 
 Values can be [expressions](Expressions.md).
 
+Can be extended for a task's main container with [`run.environment`](Tasks.md#environment) or dependencies with
+[`customise.<container>.environment`](Tasks.md#environment_1).
+
 ### Example
 Let's assume we have the following configuration:
 
@@ -495,6 +498,9 @@ All protocols supported by Docker are supported. The default protocol is TCP if 
 
 The port does not need to have a corresponding `EXPOSE` instruction in the Dockerfile.
 
+Can be extended for a task's main container with [`run.ports`](Tasks.md#ports) or dependencies with
+[`customise.<container>.ports`](Tasks.md#ports_1).
+
 For example, the `my-container` container in the following configuration allows accessing port 5678 from the container on port 1234 on the host machine:
 
 ```yaml
@@ -690,7 +696,8 @@ Working directory to start the container in.
 
 If not provided, the default working directory for the image will be used.
 
-Both of these can be overridden for an individual task by specifying a [`working_directory` at the task level](Tasks.md#run).
+Can be overridden for a task's main container with [`run.working_directory`](Tasks.md#working_directory) or dependencies with
+[`customise.<container>.working_directory`](Tasks.md#working_directory_1).
 
 For example, the container `my-container` in the following configuration will start with the working directory set to `/somewhere`:
 

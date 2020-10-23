@@ -171,6 +171,7 @@ tasks:
       container: build-env
       command: sh -c "echo 'This is some output from task 1' && exit 123"
       entrypoint: some-entrypoint
+      working_directory: /some-dir
       environment:
         VAR: value
       ports:
@@ -188,6 +189,26 @@ tasks:
         - local: 4002-4003
           container: 5002-5003
           protocol: udp
+    customise:
+      some-container:
+        working_directory: /some-dir
+        environment:
+          VAR: value
+        ports:
+          - 1000:2000
+          - 1001:2001/udp
+          - 2000-2001:3000-3001
+          - 2002-2003:3002-3003/sctp
+          - local: 3000
+            container: 4000
+          - local: 3001
+            container: 4001
+            protocol: udp
+          - local: 4000-4001
+            container: 5000-5001
+          - local: 4002-4003
+            container: 5002-5003
+            protocol: udp
 
 config_variables:
   my_empty_var: {}

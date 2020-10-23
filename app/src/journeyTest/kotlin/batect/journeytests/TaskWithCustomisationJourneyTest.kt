@@ -37,10 +37,10 @@ object TaskWithCustomisationJourneyTest : Spek({
             val result by runBeforeGroup { runner.runApplication(listOf("--output=all", "the-task")) }
 
             it("prints the expected output from the dependency container indicating that the customisation has been applied") {
-                assert(result).output().contains("dependency | Working directory is /customised\n")
-                    .and.contains("dependency | Value of CONTAINER_VAR is set on container\n")
-                    .and.contains("dependency | Value of OVERRIDDEN_VAR is overridden value from task\n")
-                    .and.contains("dependency | Value of NEW_VAR is new value from task\n")
+                assert(result).output().contains("dependency | Working directory is /customised")
+                    .and.contains("dependency | Value of CONTAINER_VAR is set on container")
+                    .and.contains("dependency | Value of OVERRIDDEN_VAR is overridden value from task")
+                    .and.contains("dependency | Value of NEW_VAR is new value from task")
             }
 
             it("returns the exit code from that task") {

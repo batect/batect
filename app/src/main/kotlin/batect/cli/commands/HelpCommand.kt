@@ -23,9 +23,9 @@ import batect.utils.breakAt
 import java.io.PrintStream
 
 class HelpCommand(
-    val optionsParser: CommandLineOptionsParser,
-    val outputStream: PrintStream,
-    val consoleDimensions: ConsoleDimensions
+    private val optionsParser: CommandLineOptionsParser,
+    private val outputStream: PrintStream,
+    private val consoleDimensions: ConsoleDimensions
 ) : Command {
     private val consoleWidth: Int = consoleDimensions.current?.width ?: Int.MAX_VALUE
 
@@ -33,7 +33,10 @@ class HelpCommand(
         outputStream.println("Usage: batect [options] task [-- additional arguments to pass to task]")
         outputStream.println()
 
-        val options = optionsParser.optionParser.getOptions().associateWith { nameFor(it) }
+        val options = optionsParser.optionParser.getOptions()
+            .filter { it.showInHelp }
+            .associateWith { nameFor(it) }
+
         val alignToColumn = determineColumnSize(options.values)
         val lines = options.map { (option, name) -> OptionLine(option, name) }
 

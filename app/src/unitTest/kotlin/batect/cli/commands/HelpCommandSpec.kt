@@ -38,8 +38,8 @@ import java.io.PrintStream
 
 object HelpCommandSpec : Spek({
     describe("a help command") {
-        fun createOption(group: OptionGroup, longName: String, description: String, acceptsValue: Boolean, shortName: Char? = null): OptionDefinition =
-            object : OptionDefinition(group, longName, description, acceptsValue, shortName) {
+        fun createOption(group: OptionGroup, longName: String, description: String, acceptsValue: Boolean, shortName: Char? = null, showInHelp: Boolean = true): OptionDefinition =
+            object : OptionDefinition(group, longName, description, acceptsValue, shortName, showInHelp = showInHelp) {
                 override fun parseValue(args: Iterable<String>): OptionParsingResult = throw NotImplementedError()
                 override fun checkDefaultValue(): DefaultApplicationResult = DefaultApplicationResult.Succeeded
                 override val valueSource: OptionValueSource
@@ -61,10 +61,11 @@ object HelpCommandSpec : Spek({
 
             val options = mock<OptionParser> {
                 on { getOptions() } doReturn setOf(
-                    createOption(group2, "awesomeness-level", "Level of awesomeness to use.", true),
-                    createOption(group2, "booster-level", "Level of boosters to use.", true),
-                    createOption(group1, "file", "File name to use.", true, 'f'),
-                    createOption(group1, "enable-extra-stuff", "Something you can enable if you want.", false)
+                    createOption(group2, "awesomeness-level", "Level of awesomeness to use.", acceptsValue = true),
+                    createOption(group2, "booster-level", "Level of boosters to use.", acceptsValue = true),
+                    createOption(group1, "file", "File name to use.", acceptsValue = true, shortName = 'f'),
+                    createOption(group1, "enable-extra-stuff", "Something you can enable if you want.", acceptsValue = false),
+                    createOption(group1, "super-secret-command", "You should never see this", acceptsValue = false, showInHelp = false)
                 )
             }
 

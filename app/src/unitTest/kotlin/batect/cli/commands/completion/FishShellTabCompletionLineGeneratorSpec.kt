@@ -42,7 +42,7 @@ object FishShellTabCompletionLineGeneratorSpec : Spek({
                 val option = FlagOption(optionGroup, "some-option", "Not important", StaticDefaultValueProvider(false), null)
 
                 it("generates a completion line with only the long option") {
-                    assertThat(generator.generate(option, registerAs), equalTo("""complete -c $registerAs -l some-option --no-files --condition "not __fish_seen_argument -l some-option""""))
+                    assertThat(generator.generate(option, registerAs), equalTo("""complete -c $registerAs -l some-option --no-files --condition "not __fish_seen_argument -l some-option; and not __fish_seen_subcommand_from --""""))
                 }
             }
 
@@ -50,7 +50,7 @@ object FishShellTabCompletionLineGeneratorSpec : Spek({
                 val option = FlagOption(optionGroup, "some-option", "Not important", StaticDefaultValueProvider(false), 's')
 
                 it("generates a completion line with both forms of the option") {
-                    assertThat(generator.generate(option, registerAs), equalTo("""complete -c $registerAs -l some-option -o s --no-files --condition "not __fish_seen_argument -l some-option -o s""""))
+                    assertThat(generator.generate(option, registerAs), equalTo("""complete -c $registerAs -l some-option -o s --no-files --condition "not __fish_seen_argument -l some-option -o s; and not __fish_seen_subcommand_from --""""))
                 }
             }
         }
@@ -61,7 +61,7 @@ object FishShellTabCompletionLineGeneratorSpec : Spek({
                     val option = ValueOption(optionGroup, "some-option", "Not important", StaticDefaultValueProvider(""), ValueConverters.string)
 
                     it("generates a completion line with only the long option, specifying that the option requires a value") {
-                        assertThat(generator.generate(option, registerAs), equalTo("""complete -c $registerAs -l some-option --no-files --condition "not __fish_seen_argument -l some-option" --require-parameter"""))
+                        assertThat(generator.generate(option, registerAs), equalTo("""complete -c $registerAs -l some-option --no-files --condition "not __fish_seen_argument -l some-option; and not __fish_seen_subcommand_from --" --require-parameter"""))
                     }
                 }
 
@@ -69,7 +69,7 @@ object FishShellTabCompletionLineGeneratorSpec : Spek({
                     val option = ValueOption(optionGroup, "some-option", "Not important", StaticDefaultValueProvider(""), ValueConverters.string, 's')
 
                     it("generates a completion line with both forms of the option") {
-                        assertThat(generator.generate(option, registerAs), equalTo("""complete -c $registerAs -l some-option -o s --no-files --condition "not __fish_seen_argument -l some-option -o s" --require-parameter"""))
+                        assertThat(generator.generate(option, registerAs), equalTo("""complete -c $registerAs -l some-option -o s --no-files --condition "not __fish_seen_argument -l some-option -o s; and not __fish_seen_subcommand_from --" --require-parameter"""))
                     }
                 }
             }
@@ -78,7 +78,7 @@ object FishShellTabCompletionLineGeneratorSpec : Spek({
                 val option = ValueOption(optionGroup, "some-option", "Not important", StaticDefaultValueProvider(OutputStyle.Fancy), ValueConverters.enum())
 
                 it("generates a completion line with the possible enum values") {
-                    assertThat(generator.generate(option, registerAs), equalTo("""complete -c $registerAs -l some-option --no-files --condition "not __fish_seen_argument -l some-option" --require-parameter -a "all fancy quiet simple""""))
+                    assertThat(generator.generate(option, registerAs), equalTo("""complete -c $registerAs -l some-option --no-files --condition "not __fish_seen_argument -l some-option; and not __fish_seen_subcommand_from --" --require-parameter -a "all fancy quiet simple""""))
                 }
             }
 
@@ -86,7 +86,7 @@ object FishShellTabCompletionLineGeneratorSpec : Spek({
                 val option = ValueOption(optionGroup, "some-option", "Not important", StaticDefaultValueProvider(OutputStyle.Fancy), mock<PathValueConverter>())
 
                 it("generates a completion line with the possible enum values") {
-                    assertThat(generator.generate(option, registerAs), equalTo("""complete -c $registerAs -l some-option --force-files --condition "not __fish_seen_argument -l some-option" --require-parameter"""))
+                    assertThat(generator.generate(option, registerAs), equalTo("""complete -c $registerAs -l some-option --force-files --condition "not __fish_seen_argument -l some-option; and not __fish_seen_subcommand_from --" --require-parameter"""))
                 }
             }
         }
@@ -95,7 +95,7 @@ object FishShellTabCompletionLineGeneratorSpec : Spek({
             val option = MapOption(optionGroup, "some-option", "Not important")
 
             it("generates a completion line that does not restrict the number of times the option is given") {
-                assertThat(generator.generate(option, registerAs), equalTo("""complete -c $registerAs -l some-option --no-files --require-parameter"""))
+                assertThat(generator.generate(option, registerAs), equalTo("""complete -c $registerAs -l some-option --no-files --condition "not __fish_seen_subcommand_from --" --require-parameter"""))
             }
         }
     }

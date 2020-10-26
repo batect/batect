@@ -42,8 +42,10 @@ class FishShellTabCompletionLineGenerator {
             builder.append(" --no-files")
         }
 
-        if (!option.allowMultiple) {
-            builder.appendOnlyAllowedOnce(option)
+        if (option.allowMultiple) {
+            builder.appendOnlyAllowedBeforeTaskArgumentsSeparator()
+        } else {
+            builder.appendOnlyAllowedOnceAndBeforeTaskArgumentsSeparator(option)
         }
 
         if (option.acceptsValue) {
@@ -57,7 +59,11 @@ class FishShellTabCompletionLineGenerator {
         return builder.toString()
     }
 
-    private fun StringBuilder.appendOnlyAllowedOnce(option: OptionDefinition) {
+    private fun StringBuilder.appendOnlyAllowedBeforeTaskArgumentsSeparator() {
+        this.append(" --condition \"$notSeenTaskArgumentsSeparator\"")
+    }
+
+    private fun StringBuilder.appendOnlyAllowedOnceAndBeforeTaskArgumentsSeparator(option: OptionDefinition) {
         this.append(" --condition \"not __fish_seen_argument -l ")
         this.append(option.longName)
 
@@ -66,7 +72,7 @@ class FishShellTabCompletionLineGenerator {
             this.append(option.shortName)
         }
 
-        this.append('"')
+        this.append("; and $notSeenTaskArgumentsSeparator\"")
     }
 
     private fun StringBuilder.appendValueOption(option: ValueOption<*, *>) {
@@ -83,5 +89,9 @@ class FishShellTabCompletionLineGenerator {
 
             this.append('"')
         }
+    }
+
+    companion object {
+        private const val notSeenTaskArgumentsSeparator = "not __fish_seen_subcommand_from --"
     }
 }

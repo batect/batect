@@ -57,11 +57,29 @@ class GenerateShellTabCompletionScriptCommand(
     private fun emitCompletionScript() {
         val registerAs = environmentVariables["BATECT_COMPLETION_PROXY_REGISTER_AS"] ?: throw IllegalArgumentException("'BATECT_COMPLETION_PROXY_REGISTER_AS' environment variable not set.")
 
+        emitPostTaskArgumentsHandler(registerAs)
+        emitOptions(registerAs)
+
+        outputStream.flush()
+    }
+
+    private fun emitPostTaskArgumentsHandler(registerAs: String) {
+        outputStream.println("""
+            function __batect_completion_${registerAs}_post_task_argument_handler
+                set -l tokens (commandline -opc) (commandline -ct)
+                set -l index (contains -i -- -- (commandline -opc))
+                set -e tokens[1..${'$'}index]
+                complete -C"${'$'}tokens"
+            end 
+            
+            complete -c $registerAs --condition "contains -- -- (commandline -opc)" -a "(__batect_completion_${registerAs}_post_task_argument_handler)"
+        """.trimIndent())
+    }
+
+    private fun emitOptions(registerAs: String) {
         optionsParser.optionParser.getOptions()
             .filter { it.showInHelp }
             .forEach { outputStream.println(fishLineGenerator.generate(it, registerAs)) }
-
-        outputStream.flush()
     }
 }
 

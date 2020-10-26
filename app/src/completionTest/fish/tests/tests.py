@@ -64,6 +64,11 @@ class FishCompletionTests(unittest.TestCase):
         results = self.run_completions_for("./batect --output=", "/app/bin")
         self.assertEqual(results, ["--output=all", "--output=fancy", "--output=quiet", "--output=simple"])
 
+    def test_completion_after_task_name(self):
+        batect_results = self.run_completions_for("./batect my-task -- ls -", "/app/bin")
+        system_results = self.run_completions_for("ls -", "/app/bin")
+        self.assertEqual(batect_results, system_results)
+
     def run_completions_for(self, input, working_directory):
         stdout = self.run_fish_command('complete -C"{}"'.format(input), working_directory)
 

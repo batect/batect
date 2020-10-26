@@ -64,16 +64,18 @@ class GenerateShellTabCompletionScriptCommand(
     }
 
     private fun emitPostTaskArgumentsHandler(registerAs: String) {
-        outputStream.println("""
-            function __batect_completion_${registerAs}_post_task_argument_handler
-                set -l tokens (commandline -opc) (commandline -ct)
-                set -l index (contains -i -- -- (commandline -opc))
-                set -e tokens[1..${'$'}index]
-                complete -C"${'$'}tokens"
-            end 
-            
-            complete -c $registerAs --condition "contains -- -- (commandline -opc)" -a "(__batect_completion_${registerAs}_post_task_argument_handler)"
-        """.trimIndent())
+        outputStream.println(
+            """
+                function __batect_completion_${registerAs}_post_task_argument_handler
+                    set -l tokens (commandline -opc) (commandline -ct)
+                    set -l index (contains -i -- -- (commandline -opc))
+                    set -e tokens[1..${'$'}index]
+                    complete -C"${'$'}tokens"
+                end
+
+                complete -c $registerAs --condition "contains -- -- (commandline -opc)" -a "(__batect_completion_${registerAs}_post_task_argument_handler)"
+            """.trimIndent()
+        )
     }
 
     private fun emitOptions(registerAs: String) {

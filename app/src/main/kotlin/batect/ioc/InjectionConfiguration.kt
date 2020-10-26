@@ -156,7 +156,7 @@ private val cliModule = DI.Module("cli") {
     bind<DisableTelemetryCommand>() with singleton { DisableTelemetryCommand(instance(), instance(), instance(StreamType.Output)) }
     bind<DockerConnectivity>() with singleton { DockerConnectivity(instance(), instance(), instance(StreamType.Error), instance()) }
     bind<EnableTelemetryCommand>() with singleton { EnableTelemetryCommand(instance(), instance(StreamType.Output)) }
-    bind<GenerateShellTabCompletionScriptCommand>() with singleton { GenerateShellTabCompletionScriptCommand(instance(), instance(), instance(), instance(StreamType.Output), instance()) }
+    bind<GenerateShellTabCompletionScriptCommand>() with singleton { GenerateShellTabCompletionScriptCommand(instance(), instance(), instance(), instance(StreamType.Output), instance(), instance()) }
     bind<FishShellTabCompletionLineGenerator>() with singleton { FishShellTabCompletionLineGenerator() }
     bind<HelpCommand>() with singleton { HelpCommand(instance(), instance(StreamType.Output), instance()) }
     bind<ListTasksCommand>() with singleton { ListTasksCommand(commandLineOptions().configurationFileName, instance(), instance(), instance(StreamType.Output)) }

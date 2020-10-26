@@ -88,22 +88,22 @@ interface OptionParserContainer {
     val optionParser: OptionParser
 
     fun valueOption(group: OptionGroup, longName: String, description: String, shortName: Char? = null) =
-        valueOption(group, longName, description, ValueConverters::string, shortName)
+        valueOption(group, longName, description, ValueConverters.string, shortName)
 
-    fun <V> valueOption(group: OptionGroup, longName: String, description: String, valueConverter: (String) -> ValueConversionResult<V>, shortName: Char? = null) =
-        valueOption(group, longName, description, StaticDefaultValueProvider<V?>(null), valueConverter, shortName)
+    fun <V> valueOption(group: OptionGroup, longName: String, description: String, valueConverter: ValueConverter<V>, shortName: Char? = null, showInHelp: Boolean = true) =
+        valueOption(group, longName, description, StaticDefaultValueProvider<V?>(null), valueConverter, shortName, showInHelp)
 
     fun valueOption(group: OptionGroup, longName: String, description: String, defaultValue: String, shortName: Char? = null) =
-        valueOption(group, longName, description, defaultValue, ValueConverters::string, shortName)
+        valueOption(group, longName, description, defaultValue, ValueConverters.string, shortName)
 
-    fun <StorageType, ValueType : StorageType> valueOption(group: OptionGroup, longName: String, description: String, defaultValue: StorageType, valueConverter: (String) -> ValueConversionResult<ValueType>, shortName: Char? = null) =
-        valueOption(group, longName, description, StaticDefaultValueProvider(defaultValue), valueConverter, shortName)
+    fun <StorageType, ValueType : StorageType> valueOption(group: OptionGroup, longName: String, description: String, defaultValue: StorageType, valueConverter: ValueConverter<ValueType>, shortName: Char? = null, showInHelp: Boolean = true) =
+        valueOption(group, longName, description, StaticDefaultValueProvider(defaultValue), valueConverter, shortName, showInHelp)
 
     fun valueOption(group: OptionGroup, longName: String, description: String, defaultValueProvider: DefaultValueProvider<String>, shortName: Char? = null) =
-        valueOption(group, longName, description, defaultValueProvider, ValueConverters::string, shortName)
+        valueOption(group, longName, description, defaultValueProvider, ValueConverters.string, shortName)
 
-    fun <StorageType, ValueType : StorageType> valueOption(group: OptionGroup, longName: String, description: String, defaultValueProvider: DefaultValueProvider<StorageType>, valueConverter: (String) -> ValueConversionResult<ValueType>, shortName: Char? = null) =
-        ValueOption(group, longName, description, defaultValueProvider, valueConverter, shortName)
+    fun <StorageType, ValueType : StorageType> valueOption(group: OptionGroup, longName: String, description: String, defaultValueProvider: DefaultValueProvider<StorageType>, valueConverter: ValueConverter<ValueType>, shortName: Char? = null, showInHelp: Boolean = true) =
+        ValueOption(group, longName, description, defaultValueProvider, valueConverter, shortName, showInHelp)
 
     fun flagOption(group: OptionGroup, longName: String, description: String, shortName: Char? = null) =
         flagOption(group, longName, description, StandardFlagOptionDefaultValueProvider, shortName)

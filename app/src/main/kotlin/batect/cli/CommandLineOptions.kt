@@ -16,6 +16,7 @@
 
 package batect.cli
 
+import batect.cli.commands.completion.KnownShell
 import batect.execution.CacheInitialisationImage
 import batect.execution.CacheType
 import batect.ioc.rootModule
@@ -66,7 +67,8 @@ data class CommandLineOptions(
     val existingNetworkToUse: String? = null,
     val skipPrerequisites: Boolean = false,
     val disableTelemetry: Boolean? = null,
-    val enableBuildKit: Boolean? = null
+    val enableBuildKit: Boolean? = null,
+    val generateShellTabCompletion: KnownShell? = null
 ) {
     fun extend(originalKodein: DirectDI): DirectDI = subDI(originalKodein.di) {
         bind<CommandLineOptions>() with instance(this@CommandLineOptions)

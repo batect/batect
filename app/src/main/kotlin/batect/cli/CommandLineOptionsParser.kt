@@ -16,6 +16,7 @@
 
 package batect.cli
 
+import batect.cli.commands.completion.KnownShell
 import batect.cli.options.OptionGroup
 import batect.cli.options.OptionParser
 import batect.cli.options.OptionParserContainer
@@ -60,6 +61,7 @@ class CommandLineOptionsParser(
     private val outputOptionsGroup = OptionGroup("Output options")
     private val helpOptionsGroup = OptionGroup("Help options")
     private val telemetryOptionsGroup = OptionGroup("Telemetry options")
+    private val hiddenOptionsGroup = OptionGroup("Hidden options")
 
     private val showHelp: Boolean by flagOption(helpOptionsGroup, "help", "Show this help information and exit.")
     private val showVersionInfo: Boolean by flagOption(helpOptionsGroup, "version", "Show batect version information and exit.")
@@ -139,14 +141,14 @@ class CommandLineOptionsParser(
         cacheOptionsGroup,
         "linux-cache-init-image",
         "Image to use to initialise caches.",
-        environmentVariableDefaultValueProviderFactory.create("BATECT_LINUX_CACHE_INIT_IMAGE", CacheInitialisationImage.linuxDefault, ValueConverters::string)
+        environmentVariableDefaultValueProviderFactory.create("BATECT_LINUX_CACHE_INIT_IMAGE", CacheInitialisationImage.linuxDefault, ValueConverters.string)
     )
 
     private val dockerHost: String by valueOption(
         dockerConnectionOptionsGroup,
         "docker-host",
         "Docker host to use, in the format 'unix:///var/run/docker.sock', 'npipe:////./pipe/docker_engine' or 'tcp://1.2.3.4:5678'.",
-        environmentVariableDefaultValueProviderFactory.create("DOCKER_HOST", dockerHttpConfigDefaults.defaultDockerHost, ValueConverters::string)
+        environmentVariableDefaultValueProviderFactory.create("DOCKER_HOST", dockerHttpConfigDefaults.defaultDockerHost, ValueConverters.string)
     )
 
     private val dockerUseTLSOption = flagOption(
@@ -161,7 +163,7 @@ class CommandLineOptionsParser(
         dockerConnectionOptionsGroup,
         "docker-tls-verify",
         "Use TLS when communicating with the Docker host and verify the certificate presented by the Docker host. Implies ${dockerUseTLSOption.longOption}.",
-        environmentVariableDefaultValueProviderFactory.create("DOCKER_TLS_VERIFY", false, ValueConverters::boolean)
+        environmentVariableDefaultValueProviderFactory.create("DOCKER_TLS_VERIFY", false, ValueConverters.boolean)
     )
 
     private val dockerVerifyTLS: Boolean by dockerVerifyTLSOption
@@ -208,7 +210,7 @@ class CommandLineOptionsParser(
 
     private val dockerTLSKeyPath: Path by dockerTLSKeyPathOption
 
-    private val enableBuildKit: Boolean? by tristateFlagOption(dockerConnectionOptionsGroup, enableBuildKitFlagName, "Use BuildKit for image builds.", environmentVariableDefaultValueProviderFactory.create(enableBuildKitEnvironmentVariableName, null, ValueConverters::boolean))
+    private val enableBuildKit: Boolean? by tristateFlagOption(dockerConnectionOptionsGroup, enableBuildKitFlagName, "Use BuildKit for image builds.", environmentVariableDefaultValueProviderFactory.create(enableBuildKitEnvironmentVariableName, null, ValueConverters.boolean))
 
     private val permanentlyDisableTelemetry: Boolean by flagOption(telemetryOptionsGroup, permanentlyDisableTelemetryFlagName, "Permanently disable telemetry collection and uploading, and remove any telemetry data queued for upload.")
     private val permanentlyEnableTelemetry: Boolean by flagOption(telemetryOptionsGroup, permanentlyEnableTelemetryFlagName, "Permanently enable telemetry collection and uploading.")
@@ -217,8 +219,10 @@ class CommandLineOptionsParser(
         telemetryOptionsGroup,
         "no-telemetry",
         "Disable telemetry for this command line invocation.",
-        environmentVariableDefaultValueProviderFactory.create("BATECT_ENABLE_TELEMETRY", null, ValueConverters::invertingBoolean)
+        environmentVariableDefaultValueProviderFactory.create("BATECT_ENABLE_TELEMETRY", null, ValueConverters.invertingBoolean)
     )
+
+    private val generateShellTabCompletion: KnownShell? by valueOption(hiddenOptionsGroup, "generate-completion-script", "Generate shell tab completion script for given shell.", ValueConverters.enum<KnownShell>(), showInHelp = false)
 
     fun parse(args: Iterable<String>): CommandLineOptionsParsingResult {
         when (val result = optionParser.parseOptions(args)) {
@@ -232,7 +236,7 @@ class CommandLineOptionsParser(
             return CommandLineOptionsParsingResult.Failed("Fancy output mode cannot be used when color output has been disabled.")
         }
 
-        if (showHelp || showVersionInfo || listTasks || runUpgrade || runCleanup || permanentlyDisableTelemetry || permanentlyEnableTelemetry) {
+        if (showHelp || showVersionInfo || listTasks || runUpgrade || runCleanup || permanentlyDisableTelemetry || permanentlyEnableTelemetry || generateShellTabCompletion != null) {
             return CommandLineOptionsParsingResult.Succeeded(createOptionsObject(null, emptyList()))
         }
 
@@ -300,7 +304,8 @@ class CommandLineOptionsParser(
         existingNetworkToUse = existingNetworkToUse,
         skipPrerequisites = skipPrerequisites,
         disableTelemetry = disableTelemetry,
-        enableBuildKit = enableBuildKit
+        enableBuildKit = enableBuildKit,
+        generateShellTabCompletion = generateShellTabCompletion
     )
 }
 

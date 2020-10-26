@@ -112,7 +112,7 @@ object ValueOptionSpec : Spek({
         }
 
         on("not applying a value for the option") {
-            val option = ValueOption(group, "value", "The value", StaticDefaultValueProvider(9999), ValueConverters::positiveInteger, 'v')
+            val option = ValueOption(group, "value", "The value", StaticDefaultValueProvider(9999), ValueConverters.positiveInteger, 'v')
 
             it("returns the default value") {
                 assertThat(option.getValue(mock(), mock()), equalTo(9999))
@@ -129,7 +129,7 @@ object ValueOptionSpec : Spek({
                     onGeneric { value } doReturn PossibleValue.Valid("foo")
                 }
 
-                val option by createForEachTest { ValueOption(group, "value", "The value.", defaultProvider, ValueConverters::string) }
+                val option by createForEachTest { ValueOption(group, "value", "The value.", defaultProvider, ValueConverters.string) }
 
                 on("checking the default value for the option") {
                     it("does not return an error") {
@@ -147,7 +147,7 @@ object ValueOptionSpec : Spek({
                     onGeneric { value } doReturn PossibleValue.Invalid("The default value is invalid")
                 }
 
-                val option by createForEachTest { ValueOption(group, "value", "The value.", defaultProvider, ValueConverters::string) }
+                val option by createForEachTest { ValueOption(group, "value", "The value.", defaultProvider, ValueConverters.string) }
 
                 given("the default value has not been overridden") {
                     on("checking the default value for the option") {

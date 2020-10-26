@@ -19,69 +19,52 @@ package batect.cli.options
 import batect.os.PathResolutionResult
 import batect.os.PathResolverFactory
 import batect.os.PathType
-import batect.utils.asHumanReadableList
 import java.nio.file.Path
 import java.util.Locale
 
 object ValueConverters {
-    fun string(value: String): ValueConversionResult<String> = ValueConversionResult.ConversionSucceeded(value)
+    val string: ValueConverter<String> = ValueConverter { value -> ValueConversionResult.ConversionSucceeded(value) }
 
-    fun boolean(value: String): ValueConversionResult<Boolean> {
-        if (value in setOf("1", "yes", "true", "YES", "TRUE")) {
-            return ValueConversionResult.ConversionSucceeded(true)
+    val boolean: ValueConverter<Boolean> = ValueConverter { value ->
+        when (value) {
+            in setOf("1", "yes", "true", "YES", "TRUE") -> ValueConversionResult.ConversionSucceeded(true)
+            in setOf("0", "no", "false", "NO", "FALSE") -> ValueConversionResult.ConversionSucceeded(false)
+            else -> ValueConversionResult.ConversionFailed("Value is not a recognised boolean value.")
         }
-
-        if (value in setOf("0", "no", "false", "NO", "FALSE")) {
-            return ValueConversionResult.ConversionSucceeded(false)
-        }
-
-        return ValueConversionResult.ConversionFailed("Value is not a recognised boolean value.")
     }
 
-    fun invertingBoolean(value: String): ValueConversionResult<Boolean> = when (val booleanResult = boolean(value)) {
-        is ValueConversionResult.ConversionSucceeded -> ValueConversionResult.ConversionSucceeded(!booleanResult.value)
-        is ValueConversionResult.ConversionFailed -> booleanResult
+    val invertingBoolean: ValueConverter<Boolean> = ValueConverter { value ->
+        when (val booleanResult = boolean.convert(value)) {
+            is ValueConversionResult.ConversionSucceeded -> ValueConversionResult.ConversionSucceeded(!booleanResult.value)
+            is ValueConversionResult.ConversionFailed -> booleanResult
+        }
     }
 
-    fun positiveInteger(value: String): ValueConversionResult<Int> {
+    val positiveInteger: ValueConverter<Int> = ValueConverter { value ->
         try {
             val parsedValue = Integer.parseInt(value)
 
             if (parsedValue <= 0) {
-                return ValueConversionResult.ConversionFailed("Value must be positive.")
+                ValueConversionResult.ConversionFailed("Value must be positive.")
+            } else {
+                ValueConversionResult.ConversionSucceeded(parsedValue)
             }
-
-            return ValueConversionResult.ConversionSucceeded(parsedValue)
         } catch (_: NumberFormatException) {
-            return ValueConversionResult.ConversionFailed("Value is not a valid integer.")
+            ValueConversionResult.ConversionFailed("Value is not a valid integer.")
         }
     }
 
-    inline fun <reified T : Enum<T>> enum(): (String) -> ValueConversionResult<T> {
+    inline fun <reified T : Enum<T>> enum(): ValueConverter<T> {
         val valueMap = enumValues<T>()
             .associate { it.name.toLowerCase(Locale.ROOT) to it }
 
-        return { value ->
-            val convertedValue = valueMap.get(value)
-
-            if (convertedValue != null) {
-                ValueConversionResult.ConversionSucceeded(convertedValue)
-            } else {
-                val validOptions = valueMap.keys
-                    .sorted()
-                    .map { "'$it'" }
-
-                val optionsDescription = validOptions.asHumanReadableList("or")
-
-                ValueConversionResult.ConversionFailed("Value must be one of $optionsDescription.")
-            }
-        }
+        return EnumValueConverter<T>(valueMap)
     }
 
-    fun pathToFile(pathResolverFactory: PathResolverFactory, mustExist: Boolean = false): (String) -> ValueConversionResult<Path> {
+    fun pathToFile(pathResolverFactory: PathResolverFactory, mustExist: Boolean = false): ValueConverter<Path> {
         val resolver = pathResolverFactory.createResolverForCurrentDirectory()
 
-        return { value ->
+        return PathValueConverter { value ->
             when (val result = resolver.resolve(value)) {
                 is PathResolutionResult.Resolved -> when (result.pathType) {
                     PathType.File -> ValueConversionResult.ConversionSucceeded(result.absolutePath)
@@ -99,10 +82,10 @@ object ValueConverters {
         }
     }
 
-    fun pathToDirectory(pathResolverFactory: PathResolverFactory, mustExist: Boolean = false): (String) -> ValueConversionResult<Path> {
+    fun pathToDirectory(pathResolverFactory: PathResolverFactory, mustExist: Boolean = false): ValueConverter<Path> {
         val resolver = pathResolverFactory.createResolverForCurrentDirectory()
 
-        return { value ->
+        return PathValueConverter { value ->
             when (val result = resolver.resolve(value)) {
                 is PathResolutionResult.Resolved -> when (result.pathType) {
                     PathType.File -> ValueConversionResult.ConversionFailed("The path '$value' (${result.resolutionDescription}) refers to a file.")

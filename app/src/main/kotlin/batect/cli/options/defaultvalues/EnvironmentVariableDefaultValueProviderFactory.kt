@@ -17,20 +17,21 @@
 package batect.cli.options.defaultvalues
 
 import batect.cli.options.ValueConversionResult
+import batect.cli.options.ValueConverter
 import batect.os.HostEnvironmentVariables
 
 class EnvironmentVariableDefaultValueProviderFactory(private val environment: HostEnvironmentVariables) {
     fun <StorageType, ValueType : StorageType> create(
         name: String,
         fallback: StorageType,
-        valueConverter: (String) -> ValueConversionResult<ValueType>
+        valueConverter: ValueConverter<ValueType>
     ) = create(name, fallback, fallback.toString(), valueConverter)
 
     fun <StorageType, ValueType : StorageType> create(
         name: String,
         fallback: StorageType,
         fallbackDisplay: String = fallback.toString(),
-        valueConverter: (String) -> ValueConversionResult<ValueType>
+        valueConverter: ValueConverter<ValueType>
     ): DefaultValueProvider<StorageType> = object : DefaultValueProvider<StorageType> {
         override val value: PossibleValue<StorageType>
             get() {
@@ -40,7 +41,7 @@ class EnvironmentVariableDefaultValueProviderFactory(private val environment: Ho
                     return PossibleValue.Valid(fallback)
                 }
 
-                return when (val conversionResult = valueConverter(environmentVariableValue)) {
+                return when (val conversionResult = valueConverter.convert(environmentVariableValue)) {
                     is ValueConversionResult.ConversionSucceeded -> PossibleValue.Valid(conversionResult.value)
                     is ValueConversionResult.ConversionFailed -> PossibleValue.Invalid("The value of the $name environment variable ('$environmentVariableValue') is invalid: ${conversionResult.message}")
                 }

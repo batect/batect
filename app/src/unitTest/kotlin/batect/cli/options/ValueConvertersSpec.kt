@@ -36,7 +36,7 @@ object ValueConvertersSpec : Spek({
         describe("string value converter") {
             it("returns the value passed to it") {
                 assertThat(
-                    ValueConverters.string("some-value"),
+                    ValueConverters.string.convert("some-value"),
                     equalTo(ValueConversionResult.ConversionSucceeded("some-value"))
                 )
             }
@@ -52,7 +52,7 @@ object ValueConvertersSpec : Spek({
             ).forEach { value ->
                 given("the value '$value'") {
                     it("returns the value 'true'") {
-                        assertThat(ValueConverters.boolean(value), equalTo(ValueConversionResult.ConversionSucceeded(true)))
+                        assertThat(ValueConverters.boolean.convert(value), equalTo(ValueConversionResult.ConversionSucceeded(true)))
                     }
                 }
             }
@@ -66,14 +66,14 @@ object ValueConvertersSpec : Spek({
             ).forEach { value ->
                 given("the value '$value'") {
                     it("returns the value 'false'") {
-                        assertThat(ValueConverters.boolean(value), equalTo(ValueConversionResult.ConversionSucceeded(false)))
+                        assertThat(ValueConverters.boolean.convert(value), equalTo(ValueConversionResult.ConversionSucceeded(false)))
                     }
                 }
             }
 
             given("an invalid value") {
                 it("returns an appropriate error") {
-                    assertThat(ValueConverters.boolean("blah"), equalTo(ValueConversionResult.ConversionFailed("Value is not a recognised boolean value.")))
+                    assertThat(ValueConverters.boolean.convert("blah"), equalTo(ValueConversionResult.ConversionFailed("Value is not a recognised boolean value.")))
                 }
             }
         }
@@ -88,7 +88,7 @@ object ValueConvertersSpec : Spek({
             ).forEach { value ->
                 given("the value '$value'") {
                     it("returns the value 'false'") {
-                        assertThat(ValueConverters.invertingBoolean(value), equalTo(ValueConversionResult.ConversionSucceeded(false)))
+                        assertThat(ValueConverters.invertingBoolean.convert(value), equalTo(ValueConversionResult.ConversionSucceeded(false)))
                     }
                 }
             }
@@ -102,14 +102,14 @@ object ValueConvertersSpec : Spek({
             ).forEach { value ->
                 given("the value '$value'") {
                     it("returns the value 'true'") {
-                        assertThat(ValueConverters.invertingBoolean(value), equalTo(ValueConversionResult.ConversionSucceeded(true)))
+                        assertThat(ValueConverters.invertingBoolean.convert(value), equalTo(ValueConversionResult.ConversionSucceeded(true)))
                     }
                 }
             }
 
             given("an invalid value") {
                 it("returns an appropriate error") {
-                    assertThat(ValueConverters.invertingBoolean("blah"), equalTo(ValueConversionResult.ConversionFailed("Value is not a recognised boolean value.")))
+                    assertThat(ValueConverters.invertingBoolean.convert("blah"), equalTo(ValueConversionResult.ConversionFailed("Value is not a recognised boolean value.")))
                 }
             }
         }
@@ -118,7 +118,7 @@ object ValueConvertersSpec : Spek({
             given("a positive integer") {
                 it("returns the parsed representation of that integer") {
                     assertThat(
-                        ValueConverters.positiveInteger("1"),
+                        ValueConverters.positiveInteger.convert("1"),
                         equalTo(ValueConversionResult.ConversionSucceeded(1))
                     )
                 }
@@ -127,7 +127,7 @@ object ValueConvertersSpec : Spek({
             given("zero") {
                 it("returns an error") {
                     assertThat(
-                        ValueConverters.positiveInteger("0"),
+                        ValueConverters.positiveInteger.convert("0"),
                         equalTo(ValueConversionResult.ConversionFailed("Value must be positive."))
                     )
                 }
@@ -136,7 +136,7 @@ object ValueConvertersSpec : Spek({
             given("a negative integer") {
                 it("returns an error") {
                     assertThat(
-                        ValueConverters.positiveInteger("-1"),
+                        ValueConverters.positiveInteger.convert("-1"),
                         equalTo(ValueConversionResult.ConversionFailed("Value must be positive."))
                     )
                 }
@@ -145,7 +145,7 @@ object ValueConvertersSpec : Spek({
             given("an empty string") {
                 it("returns an error") {
                     assertThat(
-                        ValueConverters.positiveInteger(""),
+                        ValueConverters.positiveInteger.convert(""),
                         equalTo(ValueConversionResult.ConversionFailed("Value is not a valid integer."))
                     )
                 }
@@ -154,7 +154,7 @@ object ValueConvertersSpec : Spek({
             given("a hexadecimal number") {
                 it("returns an error") {
                     assertThat(
-                        ValueConverters.positiveInteger("123AAA"),
+                        ValueConverters.positiveInteger.convert("123AAA"),
                         equalTo(ValueConversionResult.ConversionFailed("Value is not a valid integer."))
                     )
                 }
@@ -163,7 +163,7 @@ object ValueConvertersSpec : Spek({
             given("something that is not a number") {
                 it("returns an error") {
                     assertThat(
-                        ValueConverters.positiveInteger("x"),
+                        ValueConverters.positiveInteger.convert("x"),
                         equalTo(ValueConversionResult.ConversionFailed("Value is not a valid integer."))
                     )
                 }
@@ -175,19 +175,19 @@ object ValueConvertersSpec : Spek({
 
             given("a valid value") {
                 it("returns the equivalent enum constant") {
-                    assertThat(converter("simple"), equalTo(ValueConversionResult.ConversionSucceeded(OutputStyle.Simple)))
+                    assertThat(converter.convert("simple"), equalTo(ValueConversionResult.ConversionSucceeded(OutputStyle.Simple)))
                 }
             }
 
             given("an empty string") {
                 it("returns an error") {
-                    assertThat(converter(""), equalTo(ValueConversionResult.ConversionFailed("Value must be one of 'all', 'fancy', 'quiet' or 'simple'.")))
+                    assertThat(converter.convert(""), equalTo(ValueConversionResult.ConversionFailed("Value must be one of 'all', 'fancy', 'quiet' or 'simple'.")))
                 }
             }
 
             given("an invalid value") {
                 it("returns an error") {
-                    assertThat(converter("nonsense"), equalTo(ValueConversionResult.ConversionFailed("Value must be one of 'all', 'fancy', 'quiet' or 'simple'.")))
+                    assertThat(converter.convert("nonsense"), equalTo(ValueConversionResult.ConversionFailed("Value must be one of 'all', 'fancy', 'quiet' or 'simple'.")))
                 }
             }
         }
@@ -212,31 +212,31 @@ object ValueConvertersSpec : Spek({
 
                 given("a path to a file that exists") {
                     it("returns the resolved path") {
-                        assertThat(converter("file"), equalTo(ValueConversionResult.ConversionSucceeded(fileSystem.getPath("/resolved/file"))))
+                        assertThat(converter.convert("file"), equalTo(ValueConversionResult.ConversionSucceeded(fileSystem.getPath("/resolved/file"))))
                     }
                 }
 
                 given("a path to a directory") {
                     it("returns an error") {
-                        assertThat(converter("directory"), equalTo(ValueConversionResult.ConversionFailed("The path 'directory' (described as directory by resolver) refers to a directory.")))
+                        assertThat(converter.convert("directory"), equalTo(ValueConversionResult.ConversionFailed("The path 'directory' (described as directory by resolver) refers to a directory.")))
                     }
                 }
 
                 given("a path to something other than a file or directory") {
                     it("returns an error") {
-                        assertThat(converter("other"), equalTo(ValueConversionResult.ConversionFailed("The path 'other' (described as other by resolver) refers to something other than a file.")))
+                        assertThat(converter.convert("other"), equalTo(ValueConversionResult.ConversionFailed("The path 'other' (described as other by resolver) refers to something other than a file.")))
                     }
                 }
 
                 given("a path to a file that does not exist") {
                     it("returns the resolved path") {
-                        assertThat(converter("does-not-exist"), equalTo(ValueConversionResult.ConversionSucceeded(fileSystem.getPath("/resolved/does-not-exist"))))
+                        assertThat(converter.convert("does-not-exist"), equalTo(ValueConversionResult.ConversionSucceeded(fileSystem.getPath("/resolved/does-not-exist"))))
                     }
                 }
 
                 given("an invalid path") {
                     it("returns an error") {
-                        assertThat(converter("invalid"), equalTo(ValueConversionResult.ConversionFailed("'invalid' is not a valid path.")))
+                        assertThat(converter.convert("invalid"), equalTo(ValueConversionResult.ConversionFailed("'invalid' is not a valid path.")))
                     }
                 }
             }
@@ -246,31 +246,31 @@ object ValueConvertersSpec : Spek({
 
                 given("a path to a file that exists") {
                     it("returns the resolved path") {
-                        assertThat(converter("file"), equalTo(ValueConversionResult.ConversionSucceeded(fileSystem.getPath("/resolved/file"))))
+                        assertThat(converter.convert("file"), equalTo(ValueConversionResult.ConversionSucceeded(fileSystem.getPath("/resolved/file"))))
                     }
                 }
 
                 given("a path to a directory") {
                     it("returns an error") {
-                        assertThat(converter("directory"), equalTo(ValueConversionResult.ConversionFailed("The path 'directory' (described as directory by resolver) refers to a directory.")))
+                        assertThat(converter.convert("directory"), equalTo(ValueConversionResult.ConversionFailed("The path 'directory' (described as directory by resolver) refers to a directory.")))
                     }
                 }
 
                 given("a path to something other than a file or directory") {
                     it("returns an error") {
-                        assertThat(converter("other"), equalTo(ValueConversionResult.ConversionFailed("The path 'other' (described as other by resolver) refers to something other than a file.")))
+                        assertThat(converter.convert("other"), equalTo(ValueConversionResult.ConversionFailed("The path 'other' (described as other by resolver) refers to something other than a file.")))
                     }
                 }
 
                 given("a path to a file that does not exist") {
                     it("returns an error") {
-                        assertThat(converter("does-not-exist"), equalTo(ValueConversionResult.ConversionFailed("The file 'does-not-exist' (described as does not exist by resolver) does not exist.")))
+                        assertThat(converter.convert("does-not-exist"), equalTo(ValueConversionResult.ConversionFailed("The file 'does-not-exist' (described as does not exist by resolver) does not exist.")))
                     }
                 }
 
                 given("an invalid path") {
                     it("returns an error") {
-                        assertThat(converter("invalid"), equalTo(ValueConversionResult.ConversionFailed("'invalid' is not a valid path.")))
+                        assertThat(converter.convert("invalid"), equalTo(ValueConversionResult.ConversionFailed("'invalid' is not a valid path.")))
                     }
                 }
             }
@@ -296,31 +296,31 @@ object ValueConvertersSpec : Spek({
 
                 given("a path to a file") {
                     it("returns an error") {
-                        assertThat(converter("file"), equalTo(ValueConversionResult.ConversionFailed("The path 'file' (described as file by resolver) refers to a file.")))
+                        assertThat(converter.convert("file"), equalTo(ValueConversionResult.ConversionFailed("The path 'file' (described as file by resolver) refers to a file.")))
                     }
                 }
 
                 given("a path to a directory") {
                     it("returns the resolved path") {
-                        assertThat(converter("directory"), equalTo(ValueConversionResult.ConversionSucceeded(fileSystem.getPath("/resolved/directory"))))
+                        assertThat(converter.convert("directory"), equalTo(ValueConversionResult.ConversionSucceeded(fileSystem.getPath("/resolved/directory"))))
                     }
                 }
 
                 given("a path to something other than a file or directory") {
                     it("returns an error") {
-                        assertThat(converter("other"), equalTo(ValueConversionResult.ConversionFailed("The path 'other' (described as other by resolver) refers to something other than a directory.")))
+                        assertThat(converter.convert("other"), equalTo(ValueConversionResult.ConversionFailed("The path 'other' (described as other by resolver) refers to something other than a directory.")))
                     }
                 }
 
                 given("a path to a directory that does not exist") {
                     it("returns the resolved path") {
-                        assertThat(converter("does-not-exist"), equalTo(ValueConversionResult.ConversionSucceeded(fileSystem.getPath("/resolved/does-not-exist"))))
+                        assertThat(converter.convert("does-not-exist"), equalTo(ValueConversionResult.ConversionSucceeded(fileSystem.getPath("/resolved/does-not-exist"))))
                     }
                 }
 
                 given("an invalid path") {
                     it("returns an error") {
-                        assertThat(converter("invalid"), equalTo(ValueConversionResult.ConversionFailed("'invalid' is not a valid path.")))
+                        assertThat(converter.convert("invalid"), equalTo(ValueConversionResult.ConversionFailed("'invalid' is not a valid path.")))
                     }
                 }
             }
@@ -330,31 +330,31 @@ object ValueConvertersSpec : Spek({
 
                 given("a path to a file") {
                     it("returns an error") {
-                        assertThat(converter("file"), equalTo(ValueConversionResult.ConversionFailed("The path 'file' (described as file by resolver) refers to a file.")))
+                        assertThat(converter.convert("file"), equalTo(ValueConversionResult.ConversionFailed("The path 'file' (described as file by resolver) refers to a file.")))
                     }
                 }
 
                 given("a path to a directory") {
                     it("returns the resolved path") {
-                        assertThat(converter("directory"), equalTo(ValueConversionResult.ConversionSucceeded(fileSystem.getPath("/resolved/directory"))))
+                        assertThat(converter.convert("directory"), equalTo(ValueConversionResult.ConversionSucceeded(fileSystem.getPath("/resolved/directory"))))
                     }
                 }
 
                 given("a path to something other than a file or directory") {
                     it("returns an error") {
-                        assertThat(converter("other"), equalTo(ValueConversionResult.ConversionFailed("The path 'other' (described as other by resolver) refers to something other than a directory.")))
+                        assertThat(converter.convert("other"), equalTo(ValueConversionResult.ConversionFailed("The path 'other' (described as other by resolver) refers to something other than a directory.")))
                     }
                 }
 
                 given("a path to a directory that does not exist") {
                     it("returns an error") {
-                        assertThat(converter("does-not-exist"), equalTo(ValueConversionResult.ConversionFailed("The directory 'does-not-exist' (described as does not exist by resolver) does not exist.")))
+                        assertThat(converter.convert("does-not-exist"), equalTo(ValueConversionResult.ConversionFailed("The directory 'does-not-exist' (described as does not exist by resolver) does not exist.")))
                     }
                 }
 
                 given("an invalid path") {
                     it("returns an error") {
-                        assertThat(converter("invalid"), equalTo(ValueConversionResult.ConversionFailed("'invalid' is not a valid path.")))
+                        assertThat(converter.convert("invalid"), equalTo(ValueConversionResult.ConversionFailed("'invalid' is not a valid path.")))
                     }
                 }
             }

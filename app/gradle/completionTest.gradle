@@ -55,10 +55,13 @@ tasks.register("testFishCompletion", Exec) {
     outputs.file upToDateFile
 
     dependsOn buildFishCompletionTestEnvironmentImage
+    dependsOn installShadowDist
 
     commandLine 'docker', 'run', '--rm', '-t',
         '-v', "$fishDir/tests:/tests",
+        '-v', "$buildDir/install/app-shadow:/app",
         '-w', "/tests",
+        '-e', "BATECT_ENABLE_TELEMETRY=false",
         testEnvironmentImageName, './tests.py'
 
     doLast {

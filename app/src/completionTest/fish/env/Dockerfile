@@ -4,8 +4,8 @@ RUN apk --no-cache add \
     bash==5.0.17-r0 \
     curl==7.69.1-r1 \
     fish==3.1.2-r0 \
-    pkgconf==1.7.2-r0 \
+    openjdk8-jre=8.252.09-r0 \
     python3==3.8.5-r0
 
 RUN curl --location --fail --show-error https://raw.githubusercontent.com/batect/fish-completion/efadd48dd797e738de2a4fbd62250c3c220d3d52/completions/batect.fish \
-    -o $(pkg-config --variable completionsdir fish)/batect.fish
+    -o /usr/share/fish/vendor_completions.d/batect.fish

@@ -17,6 +17,8 @@
 package batect.cli.commands
 
 import batect.cli.CommandLineOptions
+import batect.cli.commands.completion.GenerateShellTabCompletionScriptCommand
+import batect.cli.commands.completion.KnownShell
 import batect.testutils.given
 import batect.testutils.on
 import com.natpryce.hamkrest.assertion.assertThat
@@ -35,6 +37,7 @@ object CommandFactorySpec : Spek({
             bind<CleanupCachesCommand>() with instance(mock())
             bind<DisableTelemetryCommand>() with instance(mock())
             bind<EnableTelemetryCommand>() with instance(mock())
+            bind<GenerateShellTabCompletionScriptCommand>() with instance(mock())
             bind<HelpCommand>() with instance(mock())
             bind<ListTasksCommand>() with instance(mock())
             bind<RunTaskCommand>() with instance(mock())
@@ -115,6 +118,17 @@ object CommandFactorySpec : Spek({
             on("creating the command") {
                 it("returns a 'enable telemetry' command") {
                     assertThat(command, isA<EnableTelemetryCommand>())
+                }
+            }
+        }
+
+        given("a set of options with the 'generate shell tab completion script' flag set") {
+            val options = CommandLineOptions(generateShellTabCompletion = KnownShell.Fish)
+            val command = factory.createCommand(options, kodein)
+
+            on("creating the command") {
+                it("returns a 'generate shell tab completion script' command") {
+                    assertThat(command, isA<GenerateShellTabCompletionScriptCommand>())
                 }
             }
         }

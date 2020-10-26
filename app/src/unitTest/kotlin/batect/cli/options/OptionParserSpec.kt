@@ -196,7 +196,7 @@ object OptionParserSpec : Spek({
                 val parser by createForEachTest { OptionParser() }
                 val group = OptionGroup("the group")
                 val defaultValueProvider = StaticDefaultValueProvider<String?>(null)
-                val option = ValueOption(group, "value", "The value", defaultValueProvider, ValueConverters::string, 'v')
+                val option = ValueOption(group, "value", "The value", defaultValueProvider, ValueConverters.string, 'v')
                 beforeEachTest { parser.addOption(option) }
 
                 on("getting the list of all options") {
@@ -210,7 +210,7 @@ object OptionParserSpec : Spek({
                 on("attempting to add another option with the same name") {
                     it("throws an exception") {
                         assertThat(
-                            { parser.addOption(ValueOption(group, "value", "The other value", defaultValueProvider, ValueConverters::string)) },
+                            { parser.addOption(ValueOption(group, "value", "The other value", defaultValueProvider, ValueConverters.string)) },
                             throws<IllegalArgumentException>(withMessage("An option with the name 'value' has already been added."))
                         )
                     }
@@ -219,7 +219,7 @@ object OptionParserSpec : Spek({
                 on("attempting to add another option with the same short name") {
                     it("throws an exception") {
                         assertThat(
-                            { parser.addOption(ValueOption(group, "other-value", "The other value", defaultValueProvider, ValueConverters::string, 'v')) },
+                            { parser.addOption(ValueOption(group, "other-value", "The other value", defaultValueProvider, ValueConverters.string, 'v')) },
                             throws<IllegalArgumentException>(withMessage("An option with the name 'v' has already been added."))
                         )
                     }

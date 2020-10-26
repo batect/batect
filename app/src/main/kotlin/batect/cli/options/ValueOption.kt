@@ -30,9 +30,10 @@ class ValueOption<StorageType, ValueType : StorageType>(
     longName: String,
     description: String,
     val defaultValueProvider: DefaultValueProvider<StorageType>,
-    val valueConverter: (String) -> ValueConversionResult<ValueType>,
-    shortName: Char? = null
-) : OptionDefinition(group, longName, description, true, shortName), ReadOnlyProperty<OptionParserContainer, StorageType> {
+    val valueConverter: ValueConverter<ValueType>,
+    shortName: Char? = null,
+    showInHelp: Boolean = true
+) : OptionDefinition(group, longName, description, true, shortName, showInHelp = showInHelp), ReadOnlyProperty<OptionParserContainer, StorageType> {
 
     private var value: PossibleValue<StorageType> = defaultValueProvider.value
     override var valueSource: OptionValueSource = OptionValueSource.Default
@@ -52,7 +53,7 @@ class ValueOption<StorageType, ValueType : StorageType>(
             value
         }
 
-        return when (val conversionResult = valueConverter(argValue)) {
+        return when (val conversionResult = valueConverter.convert(argValue)) {
             is ValueConversionResult.ConversionFailed -> OptionParsingResult.InvalidOption("The value '$argValue' for option '$arg' is invalid: ${conversionResult.message}")
             is ValueConversionResult.ConversionSucceeded -> {
                 value = PossibleValue.Valid(conversionResult.value)

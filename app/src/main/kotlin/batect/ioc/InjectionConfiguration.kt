@@ -29,6 +29,8 @@ import batect.cli.commands.ListTasksCommand
 import batect.cli.commands.RunTaskCommand
 import batect.cli.commands.UpgradeCommand
 import batect.cli.commands.VersionInfoCommand
+import batect.cli.commands.completion.FishShellTabCompletionLineGenerator
+import batect.cli.commands.completion.GenerateShellTabCompletionScriptCommand
 import batect.config.ProjectPaths
 import batect.config.includes.GitRepositoryCache
 import batect.config.includes.GitRepositoryCacheCleanupTask
@@ -154,6 +156,8 @@ private val cliModule = DI.Module("cli") {
     bind<DisableTelemetryCommand>() with singleton { DisableTelemetryCommand(instance(), instance(), instance(StreamType.Output)) }
     bind<DockerConnectivity>() with singleton { DockerConnectivity(instance(), instance(), instance(StreamType.Error), instance()) }
     bind<EnableTelemetryCommand>() with singleton { EnableTelemetryCommand(instance(), instance(StreamType.Output)) }
+    bind<GenerateShellTabCompletionScriptCommand>() with singleton { GenerateShellTabCompletionScriptCommand(instance(), instance(), instance(), instance(StreamType.Output), instance()) }
+    bind<FishShellTabCompletionLineGenerator>() with singleton { FishShellTabCompletionLineGenerator() }
     bind<HelpCommand>() with singleton { HelpCommand(instance(), instance(StreamType.Output), instance()) }
     bind<ListTasksCommand>() with singleton { ListTasksCommand(commandLineOptions().configurationFileName, instance(), instance(), instance(StreamType.Output)) }
     bind<VersionInfoCommand>() with singleton { VersionInfoCommand(instance(), instance(StreamType.Output), instance(), instance(), instance(), instance()) }

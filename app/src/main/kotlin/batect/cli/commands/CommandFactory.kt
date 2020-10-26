@@ -17,6 +17,7 @@
 package batect.cli.commands
 
 import batect.cli.CommandLineOptions
+import batect.cli.commands.completion.GenerateShellTabCompletionScriptCommand
 import org.kodein.di.DirectDI
 import org.kodein.di.instance
 
@@ -30,6 +31,7 @@ class CommandFactory {
             options.runCleanup -> kodein.instance<CleanupCachesCommand>()
             options.permanentlyDisableTelemetry -> kodein.instance<DisableTelemetryCommand>()
             options.permanentlyEnableTelemetry -> kodein.instance<EnableTelemetryCommand>()
+            options.generateShellTabCompletion != null -> kodein.instance<GenerateShellTabCompletionScriptCommand>()
             else -> kodein.instance<RunTaskCommand>()
         }
     }

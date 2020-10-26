@@ -41,6 +41,8 @@ class GenerateShellTabCompletionScriptCommand(
             .filter { it.showInHelp }
             .forEach { outputStream.println(fishLineGenerator.generate(it, registerAs)) }
 
+        outputStream.flush()
+
         return 0
     }
 }

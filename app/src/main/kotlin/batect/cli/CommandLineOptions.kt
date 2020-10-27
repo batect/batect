@@ -68,7 +68,8 @@ data class CommandLineOptions(
     val skipPrerequisites: Boolean = false,
     val disableTelemetry: Boolean? = null,
     val enableBuildKit: Boolean? = null,
-    val generateShellTabCompletion: KnownShell? = null
+    val generateShellTabCompletionScript: KnownShell? = null,
+    val generateShellTabCompletionTaskInformation: KnownShell? = null,
 ) {
     fun extend(originalKodein: DirectDI): DirectDI = subDI(originalKodein.di) {
         bind<CommandLineOptions>() with instance(this@CommandLineOptions)

@@ -25,16 +25,16 @@ import java.util.concurrent.ConcurrentHashMap
 class IncludeResolver(private val gitRepositoryCache: GitRepositoryCache) {
     private val gitRepositoryPaths = ConcurrentHashMap<GitRepositoryReference, Path>()
 
-    fun resolve(include: Include): Path = when (include) {
+    fun resolve(include: Include, listener: GitRepositoryCacheNotificationListener): Path = when (include) {
         is FileInclude -> include.path
         is GitInclude -> {
-            val rootPath = rootPathFor(include.repositoryReference)
+            val rootPath = rootPathFor(include.repositoryReference, listener)
 
             rootPath.resolve(include.path)
         }
     }
 
-    fun rootPathFor(repo: GitRepositoryReference): Path = gitRepositoryPaths.getOrPut(repo) {
-        gitRepositoryCache.ensureCached(repo)
+    fun rootPathFor(repo: GitRepositoryReference, listener: GitRepositoryCacheNotificationListener): Path = gitRepositoryPaths.getOrPut(repo) {
+        gitRepositoryCache.ensureCached(repo, listener)
     }
 }

@@ -27,6 +27,7 @@ import batect.config.IncludeConfigSerializer
 import batect.config.NamedObjectMap
 import batect.config.TaskMap
 import batect.config.includes.GitIncludePathResolutionContext
+import batect.config.includes.GitRepositoryCacheNotificationListener
 import batect.config.includes.IncludeResolver
 import batect.config.io.deserializers.PathDeserializer
 import batect.docker.ImageNameValidator
@@ -55,9 +56,10 @@ class ConfigurationLoader(
     private val includeResolver: IncludeResolver,
     private val pathResolverFactory: PathResolverFactory,
     private val telemetrySessionBuilder: TelemetrySessionBuilder,
+    private val defaultGitRepositoryCacheNotificationListener: GitRepositoryCacheNotificationListener,
     private val logger: Logger
 ) {
-    fun loadConfig(rootConfigFilePath: Path): ConfigurationLoadResult {
+    fun loadConfig(rootConfigFilePath: Path, gitRepositoryCacheNotificationListener: GitRepositoryCacheNotificationListener = defaultGitRepositoryCacheNotificationListener): ConfigurationLoadResult {
         return telemetrySessionBuilder.addSpan("LoadConfiguration") { span ->
             val absolutePathToRootConfigFile = rootConfigFilePath.toAbsolutePath()
 
@@ -75,7 +77,7 @@ class ConfigurationLoader(
                 throw ConfigurationException("The file '$absolutePathToRootConfigFile' does not exist.")
             }
 
-            val rootConfigFile = loadConfigFile(absolutePathToRootConfigFile, null)
+            val rootConfigFile = loadConfigFile(absolutePathToRootConfigFile, null, gitRepositoryCacheNotificationListener)
             val pathsLoaded = mutableSetOf(absolutePathToRootConfigFile)
             val filesLoaded = mutableMapOf<Include, ConfigurationFile>(FileInclude(absolutePathToRootConfigFile) to rootConfigFile)
             val remainingIncludesToLoad = mutableSetOf<Include>()
@@ -83,10 +85,10 @@ class ConfigurationLoader(
 
             while (remainingIncludesToLoad.isNotEmpty()) {
                 val includeToLoad = remainingIncludesToLoad.first()
-                val pathToLoad = includeResolver.resolve(includeToLoad)
+                val pathToLoad = includeResolver.resolve(includeToLoad, gitRepositoryCacheNotificationListener)
                 pathsLoaded.add(pathToLoad)
 
-                val file = loadConfigFile(pathToLoad, includeToLoad)
+                val file = loadConfigFile(pathToLoad, includeToLoad, gitRepositoryCacheNotificationListener)
                 checkForProjectName(file, includeToLoad)
 
                 filesLoaded[includeToLoad] = file
@@ -113,7 +115,7 @@ class ConfigurationLoader(
         }
     }
 
-    private fun loadConfigFile(path: Path, includedAs: Include?): ConfigurationFile {
+    private fun loadConfigFile(path: Path, includedAs: Include?, gitRepositoryCacheNotificationListener: GitRepositoryCacheNotificationListener): ConfigurationFile {
         logger.info {
             message("Loading configuration file.")
             data("path", path)
@@ -124,7 +126,7 @@ class ConfigurationLoader(
         }
 
         val content = Files.readAllBytes(path).toString(Charset.defaultCharset())
-        val pathResolver = pathResolverFor(path, includedAs)
+        val pathResolver = pathResolverFor(path, includedAs, gitRepositoryCacheNotificationListener)
         val pathDeserializer = PathDeserializer(pathResolver)
         val module = serializersModuleOf(PathResolutionResult::class, pathDeserializer)
         val config = YamlConfiguration(extensionDefinitionPrefix = ".", polymorphismStyle = PolymorphismStyle.Property)
@@ -132,7 +134,7 @@ class ConfigurationLoader(
 
         try {
             val file = parser.decodeFromString(ConfigurationFile.serializer(), content)
-            checkGitIncludesExist(file)
+            checkGitIncludesExist(file, gitRepositoryCacheNotificationListener)
 
             logger.info {
                 message("Configuration file loaded.")
@@ -141,7 +143,7 @@ class ConfigurationLoader(
             }
 
             return when (includedAs) {
-                is GitInclude -> file.replaceFileIncludesWithGitIncludes(includedAs)
+                is GitInclude -> file.replaceFileIncludesWithGitIncludes(includedAs, gitRepositoryCacheNotificationListener)
                 else -> file
             }
         } catch (e: Throwable) {
@@ -156,12 +158,12 @@ class ConfigurationLoader(
     }
 
     // File includes are checked as part of the deserialization process, so we don't need to check them here.
-    private fun checkGitIncludesExist(file: ConfigurationFile) {
+    private fun checkGitIncludesExist(file: ConfigurationFile, gitRepositoryCacheNotificationListener: GitRepositoryCacheNotificationListener) {
         file.includes
             .filterIsInstance<GitInclude>()
             .forEach { include ->
                 val path = try {
-                    includeResolver.resolve(include)
+                    includeResolver.resolve(include, gitRepositoryCacheNotificationListener)
                 } catch (e: GitException) {
                     throw ConfigurationException("Could not load include '${include.path}' from ${include.repo}@${include.ref}: ${e.message}", null, null, null, e)
                 }
@@ -249,16 +251,16 @@ class ConfigurationLoader(
         else -> e.message
     }
 
-    private fun pathResolverFor(file: Path, includedAs: Include?): PathResolver = when (includedAs) {
-        is GitInclude -> pathResolverFactory.createResolver(GitIncludePathResolutionContext(file.parent, includeResolver.rootPathFor(includedAs.repositoryReference), includedAs))
+    private fun pathResolverFor(file: Path, includedAs: Include?, gitRepositoryCacheNotificationListener: GitRepositoryCacheNotificationListener): PathResolver = when (includedAs) {
+        is GitInclude -> pathResolverFactory.createResolver(GitIncludePathResolutionContext(file.parent, includeResolver.rootPathFor(includedAs.repositoryReference, gitRepositoryCacheNotificationListener), includedAs))
         else -> pathResolverFactory.createResolver(DefaultPathResolutionContext(file.parent))
     }
 
-    private fun ConfigurationFile.replaceFileIncludesWithGitIncludes(sourceInclude: GitInclude): ConfigurationFile =
+    private fun ConfigurationFile.replaceFileIncludesWithGitIncludes(sourceInclude: GitInclude, gitRepositoryCacheNotificationListener: GitRepositoryCacheNotificationListener): ConfigurationFile =
         this.copy(
             includes = this.includes.mapToSet { include ->
                 if (include is FileInclude) {
-                    val rootPath = includeResolver.rootPathFor(sourceInclude.repositoryReference)
+                    val rootPath = includeResolver.rootPathFor(sourceInclude.repositoryReference, gitRepositoryCacheNotificationListener)
                     val newInclude = sourceInclude.copy(path = rootPath.relativize(include.path).toString())
 
                     logger.info {

@@ -35,6 +35,7 @@ import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.nhaarman.mockitokotlin2.any
+import com.nhaarman.mockitokotlin2.anyOrNull
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.inOrder
 import com.nhaarman.mockitokotlin2.mock
@@ -56,6 +57,7 @@ object RunTaskCommandSpec : Spek({
             val configWithImageOverrides = Configuration("the_project", TaskMap(), ContainerMap(Container("the-container", PullImage("the-new-image"))))
 
             val baseCommandLineOptions = CommandLineOptions(
+                configurationFileName = configFile,
                 imageOverrides = mapOf("the-container" to "the-new-image"),
                 taskName = taskName
             )
@@ -94,7 +96,7 @@ object RunTaskCommandSpec : Spek({
 
             given("quiet output mode is not being used") {
                 val commandLineOptions = baseCommandLineOptions.copy(requestedOutputStyle = OutputStyle.Fancy)
-                val command by createForEachTest { RunTaskCommand(configFile, commandLineOptions, configLoader, updateNotifier, backgroundTaskManager, dockerConnectivity) }
+                val command by createForEachTest { RunTaskCommand(commandLineOptions, configLoader, updateNotifier, backgroundTaskManager, dockerConnectivity) }
                 val exitCode by runForEachTest { command.run() }
 
                 it("runs the task") {
@@ -114,7 +116,7 @@ object RunTaskCommandSpec : Spek({
 
                 it("triggers background tasks after loading the config but before running the task") {
                     inOrder(configLoader, backgroundTaskManager, sessionRunner) {
-                        verify(configLoader).loadConfig(any())
+                        verify(configLoader).loadConfig(any(), anyOrNull())
                         verify(backgroundTaskManager).startBackgroundTasks()
                         verify(sessionRunner).runTaskAndPrerequisites(any())
                     }
@@ -127,7 +129,7 @@ object RunTaskCommandSpec : Spek({
 
             given("quiet output mode is being used") {
                 val commandLineOptions = baseCommandLineOptions.copy(requestedOutputStyle = OutputStyle.Quiet)
-                val command by createForEachTest { RunTaskCommand(configFile, commandLineOptions, configLoader, updateNotifier, backgroundTaskManager, dockerConnectivity) }
+                val command by createForEachTest { RunTaskCommand(commandLineOptions, configLoader, updateNotifier, backgroundTaskManager, dockerConnectivity) }
                 beforeEachTest { command.run() }
 
                 it("does not display any update notifications") {

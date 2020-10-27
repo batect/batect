@@ -31,7 +31,9 @@ import batect.cli.commands.UpgradeCommand
 import batect.cli.commands.VersionInfoCommand
 import batect.cli.commands.completion.FishShellTabCompletionLineGenerator
 import batect.cli.commands.completion.GenerateShellTabCompletionScriptCommand
+import batect.cli.commands.completion.GenerateShellTabCompletionTaskInformationCommand
 import batect.config.ProjectPaths
+import batect.config.includes.DefaultGitRepositoryCacheNotificationListener
 import batect.config.includes.GitRepositoryCache
 import batect.config.includes.GitRepositoryCacheCleanupTask
 import batect.config.includes.GitRepositoryCacheNotificationListener
@@ -147,28 +149,26 @@ val rootModule = DI.Module("root") {
 private val cliModule = DI.Module("cli") {
     bind<CommandFactory>() with singleton { CommandFactory() }
 
-    bind<RunTaskCommand>() with singleton {
-        RunTaskCommand(commandLineOptions().configurationFileName, instance(), instance(), instance(), instance(), instance())
-    }
-
     bind<BackgroundTaskManager>() with singleton { BackgroundTaskManager(instance(), instance(), instance()) }
     bind<CleanupCachesCommand>() with singleton { CleanupCachesCommand(instance(), instance(), instance(), instance(StreamType.Output)) }
     bind<DisableTelemetryCommand>() with singleton { DisableTelemetryCommand(instance(), instance(), instance(StreamType.Output)) }
     bind<DockerConnectivity>() with singleton { DockerConnectivity(instance(), instance(), instance(StreamType.Error), instance()) }
     bind<EnableTelemetryCommand>() with singleton { EnableTelemetryCommand(instance(), instance(StreamType.Output)) }
     bind<GenerateShellTabCompletionScriptCommand>() with singleton { GenerateShellTabCompletionScriptCommand(instance(), instance(), instance(), instance(StreamType.Output), instance(), instance()) }
+    bind<GenerateShellTabCompletionTaskInformationCommand>() with singleton { GenerateShellTabCompletionTaskInformationCommand(instance(), instance(StreamType.Output), instance(), instance(), instance()) }
     bind<FishShellTabCompletionLineGenerator>() with singleton { FishShellTabCompletionLineGenerator() }
     bind<HelpCommand>() with singleton { HelpCommand(instance(), instance(StreamType.Output), instance()) }
     bind<ListTasksCommand>() with singleton { ListTasksCommand(instance(), instance(), instance(StreamType.Output)) }
-    bind<VersionInfoCommand>() with singleton { VersionInfoCommand(instance(), instance(StreamType.Output), instance(), instance(), instance(), instance()) }
+    bind<RunTaskCommand>() with singleton { RunTaskCommand(instance(), instance(), instance(), instance(), instance()) }
     bind<UpgradeCommand>() with singletonWithLogger { logger -> UpgradeCommand(instance(), instance(), instance(), instance(), instance(StreamType.Output), instance(StreamType.Error), instance(), instance(), logger) }
+    bind<VersionInfoCommand>() with singleton { VersionInfoCommand(instance(), instance(StreamType.Output), instance(), instance(), instance(), instance()) }
 }
 
 private val configModule = DI.Module("config") {
-    bind<ConfigurationLoader>() with singletonWithLogger { logger -> ConfigurationLoader(instance(), instance(), instance(), logger) }
-    bind<GitRepositoryCache>() with singleton { GitRepositoryCache(instance(), instance(), instance(), instance()) }
+    bind<ConfigurationLoader>() with singletonWithLogger { logger -> ConfigurationLoader(instance(), instance(), instance(), instance(), logger) }
+    bind<GitRepositoryCache>() with singleton { GitRepositoryCache(instance(), instance(), instance()) }
     bind<GitRepositoryCacheCleanupTask>() with singletonWithLogger { logger -> GitRepositoryCacheCleanupTask(instance(), instance(), logger) }
-    bind<GitRepositoryCacheNotificationListener>() with singleton { GitRepositoryCacheNotificationListener(instance(StreamType.Output), commandLineOptions().requestedOutputStyle) }
+    bind<GitRepositoryCacheNotificationListener>() with singleton { DefaultGitRepositoryCacheNotificationListener(instance(StreamType.Output), commandLineOptions().requestedOutputStyle) }
     bind<IncludeResolver>() with singleton { IncludeResolver(instance()) }
     bind<ProjectPaths>() with singleton { ProjectPaths(commandLineOptions().configurationFileName) }
 }

@@ -34,7 +34,7 @@ class GenerateShellTabCompletionScriptCommand(
     private val telemetrySessionBuilder: TelemetrySessionBuilder
 ) : Command {
     override fun run(): Int {
-        if (commandLineOptions.generateShellTabCompletion != KnownShell.Fish) {
+        if (commandLineOptions.generateShellTabCompletionScript != KnownShell.Fish) {
             throw IllegalArgumentException("Can only generate completions for Fish.")
         }
 
@@ -48,7 +48,7 @@ class GenerateShellTabCompletionScriptCommand(
         telemetrySessionBuilder.addEvent(
             "GeneratedShellTabCompletionScript",
             mapOf(
-                "shell" to AttributeValue(commandLineOptions.generateShellTabCompletion.toString()),
+                "shell" to AttributeValue(commandLineOptions.generateShellTabCompletionScript.toString()),
                 "proxyCompletionScriptVersion" to AttributeValue(environmentVariables["BATECT_COMPLETION_PROXY_VERSION"])
             )
         )

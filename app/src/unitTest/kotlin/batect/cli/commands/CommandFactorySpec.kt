@@ -18,6 +18,7 @@ package batect.cli.commands
 
 import batect.cli.CommandLineOptions
 import batect.cli.commands.completion.GenerateShellTabCompletionScriptCommand
+import batect.cli.commands.completion.GenerateShellTabCompletionTaskInformationCommand
 import batect.cli.commands.completion.KnownShell
 import batect.testutils.given
 import batect.testutils.on
@@ -38,6 +39,7 @@ object CommandFactorySpec : Spek({
             bind<DisableTelemetryCommand>() with instance(mock())
             bind<EnableTelemetryCommand>() with instance(mock())
             bind<GenerateShellTabCompletionScriptCommand>() with instance(mock())
+            bind<GenerateShellTabCompletionTaskInformationCommand>() with instance(mock())
             bind<HelpCommand>() with instance(mock())
             bind<ListTasksCommand>() with instance(mock())
             bind<RunTaskCommand>() with instance(mock())
@@ -123,7 +125,7 @@ object CommandFactorySpec : Spek({
         }
 
         given("a set of options with the 'generate shell tab completion script' flag set") {
-            val options = CommandLineOptions(generateShellTabCompletion = KnownShell.Fish)
+            val options = CommandLineOptions(generateShellTabCompletionScript = KnownShell.Fish)
             val command = factory.createCommand(options, kodein)
 
             on("creating the command") {
@@ -133,6 +135,16 @@ object CommandFactorySpec : Spek({
             }
         }
 
+        given("a set of options with the 'generate shell tab completion task information' flag set") {
+            val options = CommandLineOptions(generateShellTabCompletionTaskInformation = KnownShell.Fish)
+            val command = factory.createCommand(options, kodein)
+
+            on("creating the command") {
+                it("returns a 'generate shell tab completion task information' command") {
+                    assertThat(command, isA<GenerateShellTabCompletionTaskInformationCommand>())
+                }
+            }
+        }
         given("a set of options with no special flags set") {
             val options = CommandLineOptions()
             val command = factory.createCommand(options, kodein)

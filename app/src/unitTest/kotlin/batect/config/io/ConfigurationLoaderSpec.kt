@@ -19,7 +19,6 @@ package batect.config.io
 import batect.config.BuildImage
 import batect.config.ConfigVariableDefinition
 import batect.config.ConfigVariableMap
-import batect.config.Configuration
 import batect.config.Container
 import batect.config.ContainerMap
 import batect.config.FileInclude
@@ -34,6 +33,7 @@ import batect.config.RunAsCurrentUserConfig
 import batect.config.Task
 import batect.config.TaskMap
 import batect.config.TaskRunConfiguration
+import batect.config.includes.GitRepositoryCacheNotificationListener
 import batect.config.includes.GitRepositoryReference
 import batect.config.includes.IncludeResolver
 import batect.git.GitException
@@ -74,19 +74,20 @@ import java.time.Duration
 object ConfigurationLoaderSpec : Spek({
     describe("a configuration loader") {
         val fileSystem by createForEachTest { Jimfs.newFileSystem(com.google.common.jimfs.Configuration.unix()) }
+        val gitRepositoryCacheNotificationListener by createForEachTest { mock<GitRepositoryCacheNotificationListener>() }
 
         fun pathForGitInclude(repo: String, ref: String, path: String): Path = fileSystem.getPath("/git", repo, ref, path)
 
         val includeResolver by createForEachTest {
             mock<IncludeResolver> {
-                on { resolve(any()) } doAnswer { invocation ->
+                on { resolve(any(), any()) } doAnswer { invocation ->
                     when (val include = invocation.arguments[0] as Include) {
                         is FileInclude -> include.path
                         is GitInclude -> pathForGitInclude(include.repo, include.ref, include.path)
                     }
                 }
 
-                on { rootPathFor(any()) } doAnswer { invocation ->
+                on { rootPathFor(any(), any()) } doAnswer { invocation ->
                     val repositoryReference = invocation.arguments[0] as GitRepositoryReference
 
                     pathForGitInclude(repositoryReference.remote, repositoryReference.ref, "")
@@ -109,7 +110,7 @@ object ConfigurationLoaderSpec : Spek({
 
         val logger by createLoggerForEachTest()
         val testFileName = "/theTestFile.yml"
-        val loader by createForEachTest { ConfigurationLoader(includeResolver, pathResolverFactory, telemetrySessionBuilder, logger) }
+        val loader by createForEachTest { ConfigurationLoader(includeResolver, pathResolverFactory, telemetrySessionBuilder, gitRepositoryCacheNotificationListener, logger) }
 
         fun createFile(path: Path, contents: String) {
             val directory = path.parent
@@ -125,13 +126,13 @@ object ConfigurationLoaderSpec : Spek({
             val filePath = fileSystem.getPath(path)
             createFile(filePath, config)
 
-            return loader.loadConfig(filePath)
+            return loader.loadConfig(filePath, gitRepositoryCacheNotificationListener)
         }
 
         fun loadConfiguration(files: Map<Path, String>, rootConfig: Path): ConfigurationLoadResult {
             files.forEach { (path, contents) -> createFile(path, contents) }
 
-            return loader.loadConfig(rootConfig)
+            return loader.loadConfig(rootConfig, gitRepositoryCacheNotificationListener)
         }
 
         fun Suite.itReportsTelemetryAboutTheConfigurationFile(containerCount: Int = 0, taskCount: Int = 0, configVariableCount: Int = 0, fileIncludeCount: Int = 0, gitIncludeCount: Int = 0) {
@@ -2324,7 +2325,7 @@ object ConfigurationLoaderSpec : Spek({
 
         on("loading a configuration file that references another configuration file from a Git repository that cannot be cloned") {
             beforeEachTest {
-                whenever(includeResolver.resolve(GitInclude("https://myrepo.com/bundles/bundle.git", "v1.2.3", "1.yml"))).doThrow(GitException("Something went wrong."))
+                whenever(includeResolver.resolve(GitInclude("https://myrepo.com/bundles/bundle.git", "v1.2.3", "1.yml"), gitRepositoryCacheNotificationListener)).doThrow(GitException("Something went wrong."))
             }
 
             val rootConfigPath by createForEachTest { fileSystem.getPath("/project/batect.yml") }

@@ -59,11 +59,11 @@ object GitRepositoryCacheSpec : Spek({
             }
         }
 
-        val listener by createForEachTest { mock<GitRepositoryCacheNotificationListener>() }
         val currentTime = ZonedDateTime.of(2020, 7, 5, 1, 2, 3, 456789012, ZoneOffset.UTC)
-        val cache by createForEachTest { GitRepositoryCache(paths, gitClient, versionInfo, listener, { currentTime }) }
+        val cache by createForEachTest { GitRepositoryCache(paths, gitClient, versionInfo, { currentTime }) }
 
         describe("ensuring a repository is cached") {
+            val listener by createForEachTest { mock<GitRepositoryCacheNotificationListener>() }
             val repo = GitRepositoryReference("https://github.com/me/my-bundle.git", "my-tag")
             val expectedWorkingCopyDirectory by createForEachTest { fileSystem.getPath("/some/.batect/dir/incl/${repo.cacheKey}") }
             val expectedInfoFile by createForEachTest { fileSystem.getPath("/some/.batect/dir/incl/${repo.cacheKey}.json") }
@@ -168,7 +168,7 @@ object GitRepositoryCacheSpec : Spek({
             }
 
             given("neither the repository folder nor the info file are present") {
-                val cachedRepo by runForEachTest { cache.ensureCached(repo) }
+                val cachedRepo by runForEachTest { cache.ensureCached(repo, listener) }
 
                 itClonesTheRepository()
                 itReturnsThePathToTheWorkingCopy { cachedRepo }
@@ -178,7 +178,7 @@ object GitRepositoryCacheSpec : Spek({
             given("the repository folder is present but the info file is not") {
                 beforeEachTest { createWorkingCopy() }
 
-                val cachedRepo by runForEachTest { cache.ensureCached(repo) }
+                val cachedRepo by runForEachTest { cache.ensureCached(repo, listener) }
 
                 itDoesNotCloneTheRepository()
                 itReturnsThePathToTheWorkingCopy { cachedRepo }
@@ -188,7 +188,7 @@ object GitRepositoryCacheSpec : Spek({
             given("the info file is present but the repository folder is not") {
                 beforeEachTest { createExistingInfoFile() }
 
-                val cachedRepo by runForEachTest { cache.ensureCached(repo) }
+                val cachedRepo by runForEachTest { cache.ensureCached(repo, listener) }
 
                 itClonesTheRepository()
                 itReturnsThePathToTheWorkingCopy { cachedRepo }
@@ -201,7 +201,7 @@ object GitRepositoryCacheSpec : Spek({
                     createExistingInfoFile()
                 }
 
-                val cachedRepo by runForEachTest { cache.ensureCached(repo) }
+                val cachedRepo by runForEachTest { cache.ensureCached(repo, listener) }
 
                 itDoesNotCloneTheRepository()
                 itReturnsThePathToTheWorkingCopy { cachedRepo }

@@ -222,7 +222,8 @@ class CommandLineOptionsParser(
         environmentVariableDefaultValueProviderFactory.create("BATECT_ENABLE_TELEMETRY", null, ValueConverters.invertingBoolean)
     )
 
-    private val generateShellTabCompletion: KnownShell? by valueOption(hiddenOptionsGroup, "generate-completion-script", "Generate shell tab completion script for given shell.", ValueConverters.enum<KnownShell>(), showInHelp = false)
+    private val generateShellTabCompletionScript: KnownShell? by valueOption(hiddenOptionsGroup, "generate-completion-script", "Generate shell tab completion script for given shell.", ValueConverters.enum<KnownShell>(), showInHelp = false)
+    private val generateShellTabCompletionTaskInformation: KnownShell? by valueOption(hiddenOptionsGroup, "generate-completion-task-info", "Generate shell tab completion task information for given shell.", ValueConverters.enum<KnownShell>(), showInHelp = false)
 
     fun parse(args: Iterable<String>): CommandLineOptionsParsingResult {
         when (val result = optionParser.parseOptions(args)) {
@@ -236,7 +237,17 @@ class CommandLineOptionsParser(
             return CommandLineOptionsParsingResult.Failed("Fancy output mode cannot be used when color output has been disabled.")
         }
 
-        if (showHelp || showVersionInfo || listTasks || runUpgrade || runCleanup || permanentlyDisableTelemetry || permanentlyEnableTelemetry || generateShellTabCompletion != null) {
+        if (
+            showHelp ||
+            showVersionInfo ||
+            listTasks ||
+            runUpgrade ||
+            runCleanup ||
+            permanentlyDisableTelemetry ||
+            permanentlyEnableTelemetry ||
+            generateShellTabCompletionScript != null ||
+            generateShellTabCompletionTaskInformation != null
+        ) {
             return CommandLineOptionsParsingResult.Succeeded(createOptionsObject(null, emptyList()))
         }
 
@@ -305,7 +316,8 @@ class CommandLineOptionsParser(
         skipPrerequisites = skipPrerequisites,
         disableTelemetry = disableTelemetry,
         enableBuildKit = enableBuildKit,
-        generateShellTabCompletion = generateShellTabCompletion
+        generateShellTabCompletionScript = generateShellTabCompletionScript,
+        generateShellTabCompletionTaskInformation = generateShellTabCompletionTaskInformation
     )
 }
 

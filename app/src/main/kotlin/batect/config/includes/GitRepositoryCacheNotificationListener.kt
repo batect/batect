@@ -20,11 +20,16 @@ import batect.ui.Console
 import batect.ui.OutputStyle
 import batect.ui.text.Text
 
-class GitRepositoryCacheNotificationListener(
+interface GitRepositoryCacheNotificationListener {
+    fun onCloning(repo: GitRepositoryReference)
+    fun onCloneComplete()
+}
+
+class DefaultGitRepositoryCacheNotificationListener(
     private val console: Console,
     private val outputStyle: OutputStyle?
-) {
-    fun onCloning(repo: GitRepositoryReference) {
+) : GitRepositoryCacheNotificationListener {
+    override fun onCloning(repo: GitRepositoryReference) {
         if (outputStyle == OutputStyle.Quiet) {
             return
         }
@@ -32,11 +37,16 @@ class GitRepositoryCacheNotificationListener(
         console.println(Text.white(Text("Cloning ") + Text.bold(repo.remote) + Text(" ") + Text.bold(repo.ref) + Text("...")))
     }
 
-    fun onCloneComplete() {
+    override fun onCloneComplete() {
         if (outputStyle == OutputStyle.Quiet) {
             return
         }
 
         console.println()
     }
+}
+
+object SilentGitRepositoryCacheNotificationListener : GitRepositoryCacheNotificationListener {
+    override fun onCloning(repo: GitRepositoryReference) {}
+    override fun onCloneComplete() {}
 }

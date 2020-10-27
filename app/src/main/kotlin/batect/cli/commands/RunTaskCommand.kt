@@ -26,10 +26,8 @@ import batect.ui.OutputStyle
 import batect.updates.UpdateNotifier
 import org.kodein.di.DirectDI
 import org.kodein.di.instance
-import java.nio.file.Path
 
 class RunTaskCommand(
-    private val configFile: Path,
     private val commandLineOptions: CommandLineOptions,
     private val configLoader: ConfigurationLoader,
     private val updateNotifier: UpdateNotifier,
@@ -47,7 +45,7 @@ class RunTaskCommand(
     }
 
     private fun loadConfig(): Configuration {
-        val configFromFile = configLoader.loadConfig(configFile).configuration
+        val configFromFile = configLoader.loadConfig(commandLineOptions.configurationFileName).configuration
         val overrides = commandLineOptions.imageOverrides.mapValues { PullImage(it.value) }
 
         return configFromFile.applyImageOverrides(overrides)

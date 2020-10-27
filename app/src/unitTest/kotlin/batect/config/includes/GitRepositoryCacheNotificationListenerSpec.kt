@@ -33,7 +33,7 @@ object GitRepositoryCacheNotificationListenerSpec : Spek({
 
         given("quiet output is not being used") {
             val outputStyle = OutputStyle.Simple
-            val listener by createForEachTest { GitRepositoryCacheNotificationListener(console, outputStyle) }
+            val listener by createForEachTest { DefaultGitRepositoryCacheNotificationListener(console, outputStyle) }
 
             describe("when a repository is being cloned") {
                 val repo = GitRepositoryReference("https://myrepo.com/bundles/bundle.git", "v1.2.3")
@@ -56,7 +56,7 @@ object GitRepositoryCacheNotificationListenerSpec : Spek({
 
         given("quiet output is being used") {
             val outputStyle = OutputStyle.Quiet
-            val listener by createForEachTest { GitRepositoryCacheNotificationListener(console, outputStyle) }
+            val listener by createForEachTest { DefaultGitRepositoryCacheNotificationListener(console, outputStyle) }
 
             describe("when a repository is being cloned") {
                 val repo = GitRepositoryReference("https://myrepo.com/bundles/bundle.git", "v1.2.3")

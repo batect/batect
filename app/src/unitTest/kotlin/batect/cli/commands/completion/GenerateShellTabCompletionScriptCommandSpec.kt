@@ -43,7 +43,7 @@ import java.io.PrintStream
 // This class is tested primarily by the tests in the app/src/completionTest directory.
 object GenerateShellTabCompletionScriptCommandSpec : Spek({
     describe("a 'generate shell tab completion script' command") {
-        val commandLineOptions = CommandLineOptions(generateShellTabCompletion = KnownShell.Fish)
+        val commandLineOptions = CommandLineOptions(generateShellTabCompletionScript = KnownShell.Fish)
 
         val option1 by createForEachTest { createMockOption() }
         val option2 by createForEachTest { createMockOption() }

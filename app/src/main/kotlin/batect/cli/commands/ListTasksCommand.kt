@@ -22,16 +22,14 @@ import batect.config.Task
 import batect.config.io.ConfigurationLoader
 import batect.ui.OutputStyle
 import java.io.PrintStream
-import java.nio.file.Path
 
 class ListTasksCommand(
-    val configFile: Path,
     val configLoader: ConfigurationLoader,
     val commandLineOptions: CommandLineOptions,
     val outputStream: PrintStream
 ) : Command {
     override fun run(): Int {
-        val config = configLoader.loadConfig(configFile).configuration
+        val config = configLoader.loadConfig(commandLineOptions.configurationFileName).configuration
 
         when (commandLineOptions.requestedOutputStyle) {
             OutputStyle.Quiet -> printMachineReadableFormat(config)

@@ -48,9 +48,14 @@ object ListTasksCommandSpec : Spek({
         val fileSystem = Jimfs.newFileSystem(com.google.common.jimfs.Configuration.unix())
         val configFilePath = fileSystem.getPath("config.yml")
         val configLoader by createForEachTest { mock<ConfigurationLoader>() }
-        val commandLineOptions by createForEachTest { mock<CommandLineOptions>() }
+        val commandLineOptions by createForEachTest {
+            mock<CommandLineOptions> {
+                on { configurationFileName } doReturn configFilePath
+            }
+        }
+
         val output by createForEachTest { ByteArrayOutputStream() }
-        val command by createForEachTest { ListTasksCommand(configFilePath, configLoader, commandLineOptions, PrintStream(output)) }
+        val command by createForEachTest { ListTasksCommand(configLoader, commandLineOptions, PrintStream(output)) }
 
         fun Suite.whenNotRunningWithQuietOutputModeItProducesOutput(expectedOutput: String) {
             describe("when not running in quiet output mode") {

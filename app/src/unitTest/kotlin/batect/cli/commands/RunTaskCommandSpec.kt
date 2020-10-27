@@ -22,6 +22,7 @@ import batect.config.Container
 import batect.config.ContainerMap
 import batect.config.PullImage
 import batect.config.TaskMap
+import batect.config.io.ConfigurationLoadResult
 import batect.config.io.ConfigurationLoader
 import batect.execution.SessionRunner
 import batect.ioc.SessionKodeinFactory
@@ -61,7 +62,7 @@ object RunTaskCommandSpec : Spek({
 
             val configLoader by createForEachTest {
                 mock<ConfigurationLoader> {
-                    on { loadConfig(configFile) } doReturn config
+                    on { loadConfig(configFile) } doReturn ConfigurationLoadResult(config, emptySet())
                 }
             }
 

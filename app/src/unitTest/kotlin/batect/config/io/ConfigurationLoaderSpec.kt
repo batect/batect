@@ -100,8 +100,8 @@ object ConfigurationLoaderSpec : Spek({
         @Suppress("UNCHECKED_CAST")
         val telemetrySessionBuilder by createForEachTest {
             mock<TelemetrySessionBuilder> {
-                on { addSpan<Configuration>(any(), any()) } doAnswer { invocation ->
-                    val process = invocation.arguments[1] as ((TelemetrySpanBuilder) -> Configuration)
+                on { addSpan<ConfigurationLoadResult>(any(), any()) } doAnswer { invocation ->
+                    val process = invocation.arguments[1] as ((TelemetrySpanBuilder) -> ConfigurationLoadResult)
                     process(telemetrySpanBuilder)
                 }
             }
@@ -121,14 +121,14 @@ object ConfigurationLoaderSpec : Spek({
             Files.write(path, contents.toByteArray())
         }
 
-        fun loadConfiguration(config: String, path: String = testFileName): Configuration {
+        fun loadConfiguration(config: String, path: String = testFileName): ConfigurationLoadResult {
             val filePath = fileSystem.getPath(path)
             createFile(filePath, config)
 
             return loader.loadConfig(filePath)
         }
 
-        fun loadConfiguration(files: Map<Path, String>, rootConfig: Path): Configuration {
+        fun loadConfiguration(files: Map<Path, String>, rootConfig: Path): ConfigurationLoadResult {
             files.forEach { (path, contents) -> createFile(path, contents) }
 
             return loader.loadConfig(rootConfig)
@@ -180,10 +180,14 @@ object ConfigurationLoaderSpec : Spek({
 
             on("loading that file from a directory in the root directory") {
                 val path = "/project/config.yml"
-                val config by runForEachTest { loadConfiguration(configString, path) }
+                val loadResult by runForEachTest { loadConfiguration(configString, path) }
 
                 it("should use the parent directory's name as the project name") {
-                    assertThat(config.projectName, equalTo("project"))
+                    assertThat(loadResult.configuration.projectName, equalTo("project"))
+                }
+
+                it("reports that only the project file was loaded") {
+                    assertThat(loadResult.pathsLoaded, equalTo(setOf(fileSystem.getPath(path))))
                 }
 
                 itReportsTelemetryAboutTheConfigurationFile(taskCount = 1)
@@ -191,7 +195,7 @@ object ConfigurationLoaderSpec : Spek({
 
             on("loading that file from a subdirectory") {
                 val path = "/code/project/config.yml"
-                val config by runForEachTest { loadConfiguration(configString, path) }
+                val config by runForEachTest { loadConfiguration(configString, path).configuration }
 
                 it("should use the parent directory's name as the project name") {
                     assertThat(config.projectName, equalTo("project"))
@@ -200,7 +204,7 @@ object ConfigurationLoaderSpec : Spek({
 
             on("loading that file from a directory containing uppercase letters") {
                 val path = "/code/PROject/config.yml"
-                val config by runForEachTest { loadConfiguration(configString, path) }
+                val config by runForEachTest { loadConfiguration(configString, path).configuration }
 
                 it("should use the lowercase version of the parent directory's name as the project name") {
                     assertThat(config.projectName, equalTo("project"))
@@ -217,7 +221,7 @@ object ConfigurationLoaderSpec : Spek({
         }
 
         on("loading a valid configuration file with no containers or tasks defined") {
-            val config by runForEachTest { loadConfiguration("project_name: the_cool_project") }
+            val config by runForEachTest { loadConfiguration("project_name: the_cool_project").configuration }
 
             it("should return a populated configuration object with the project name specified") {
                 assertThat(config.projectName, equalTo("the_cool_project"))
@@ -249,7 +253,7 @@ object ConfigurationLoaderSpec : Spek({
                 |      working_directory: /some/dir
                 """.trimMargin()
 
-            val config by runForEachTest { loadConfiguration(configString) }
+            val config by runForEachTest { loadConfiguration(configString).configuration }
 
             it("should load the project name") {
                 assertThat(config.projectName, equalTo("the_cool_project"))
@@ -297,7 +301,7 @@ object ConfigurationLoaderSpec : Spek({
                 |      container: build-env
                 """.trimMargin()
 
-            val config by runForEachTest { loadConfiguration(configString) }
+            val config by runForEachTest { loadConfiguration(configString).configuration }
 
             it("should load the project name") {
                 assertThat(config.projectName, equalTo("the_cool_project"))
@@ -334,7 +338,7 @@ object ConfigurationLoaderSpec : Spek({
                 |      container: build-env
                 """.trimMargin()
 
-            val config by runForEachTest { loadConfiguration(configString) }
+            val config by runForEachTest { loadConfiguration(configString).configuration }
 
             it("should load the project name") {
                 assertThat(config.projectName, equalTo("the_cool_project"))
@@ -373,7 +377,7 @@ object ConfigurationLoaderSpec : Spek({
                 |      - dependency-2
                 """.trimMargin()
 
-            val config by runForEachTest { loadConfiguration(configString) }
+            val config by runForEachTest { loadConfiguration(configString).configuration }
 
             it("should load the project name") {
                 assertThat(config.projectName, equalTo("the_cool_project"))
@@ -428,7 +432,7 @@ object ConfigurationLoaderSpec : Spek({
                 |      - another-task
                 """.trimMargin()
 
-            val config by runForEachTest { loadConfiguration(configString) }
+            val config by runForEachTest { loadConfiguration(configString).configuration }
 
             it("should load the project name") {
                 assertThat(config.projectName, equalTo("the_cool_project"))
@@ -478,7 +482,7 @@ object ConfigurationLoaderSpec : Spek({
                     |    build_directory: container-1-build-dir
                     """.trimMargin()
 
-            val config by runForEachTest { loadConfiguration(configString) }
+            val config by runForEachTest { loadConfiguration(configString).configuration }
 
             it("should load the project name") {
                 assertThat(config.projectName, equalTo("the_cool_project"))
@@ -506,7 +510,7 @@ object ConfigurationLoaderSpec : Spek({
                     |    image: some-image:1.2.3
                     """.trimMargin()
 
-            val config by runForEachTest { loadConfiguration(configString) }
+            val config by runForEachTest { loadConfiguration(configString).configuration }
 
             it("should load the project name") {
                 assertThat(config.projectName, equalTo("the_cool_project"))
@@ -585,7 +589,7 @@ object ConfigurationLoaderSpec : Spek({
                     |      home_directory: /home/something
                     """.trimMargin()
 
-            val config by runForEachTest { loadConfiguration(configString) }
+            val config by runForEachTest { loadConfiguration(configString).configuration }
 
             it("should load the project name") {
                 assertThat(config.projectName, equalTo("the_cool_project"))
@@ -646,7 +650,7 @@ object ConfigurationLoaderSpec : Spek({
                     |        options: ro
                     """.trimMargin()
 
-            val config by runForEachTest { loadConfiguration(configString) }
+            val config by runForEachTest { loadConfiguration(configString).configuration }
 
             it("should load the project name") {
                 assertThat(config.projectName, equalTo("the_cool_project"))
@@ -688,7 +692,7 @@ object ConfigurationLoaderSpec : Spek({
                     |        container: 3456
                     """.trimMargin()
 
-            val config by runForEachTest { loadConfiguration(configString) }
+            val config by runForEachTest { loadConfiguration(configString).configuration }
 
             it("should load the project name") {
                 assertThat(config.projectName, equalTo("the_cool_project"))
@@ -719,7 +723,7 @@ object ConfigurationLoaderSpec : Spek({
                     |      - container-2
                     """.trimMargin()
 
-            val config by runForEachTest { loadConfiguration(configString) }
+            val config by runForEachTest { loadConfiguration(configString).configuration }
 
             it("should load the project name") {
                 assertThat(config.projectName, equalTo("the_cool_project"))
@@ -762,7 +766,7 @@ object ConfigurationLoaderSpec : Spek({
                     |  my-config-var: {}
                     """.trimMargin()
 
-            val config by runForEachTest { loadConfiguration(configString) }
+            val config by runForEachTest { loadConfiguration(configString).configuration }
 
             it("should load the config variable specified") {
                 val configVariable = config.configVariables.getValue("my-config-var")
@@ -782,7 +786,7 @@ object ConfigurationLoaderSpec : Spek({
                     |    default: my-default-value
                     """.trimMargin()
 
-            val config by runForEachTest { loadConfiguration(configString) }
+            val config by runForEachTest { loadConfiguration(configString).configuration }
 
             it("should load the config variable specified") {
                 val configVariable = config.configVariables.getValue("my-config-var")
@@ -834,7 +838,7 @@ object ConfigurationLoaderSpec : Spek({
                 |project_name: the_cool_project
                 """.trimMargin()
 
-            val config by runForEachTest { loadConfiguration(configString) }
+            val config by runForEachTest { loadConfiguration(configString).configuration }
 
             it("should ignore the comment") {
                 assertThat(config.projectName, equalTo("the_cool_project"))
@@ -842,7 +846,7 @@ object ConfigurationLoaderSpec : Spek({
         }
 
         on("loading a configuration file with an end-of-line comment") {
-            val config by runForEachTest { loadConfiguration("project_name: the_cool_project # This is a comment") }
+            val config by runForEachTest { loadConfiguration("project_name: the_cool_project # This is a comment").configuration }
 
             it("should ignore the comment") {
                 assertThat(config.projectName, equalTo("the_cool_project"))
@@ -1287,7 +1291,7 @@ object ConfigurationLoaderSpec : Spek({
                 project_name: *name
             """.trimIndent()
 
-            val config by runForEachTest { loadConfiguration(configString) }
+            val config by runForEachTest { loadConfiguration(configString).configuration }
 
             it("should return a populated configuration object with the extension value used where referenced") {
                 assertThat(config.projectName, equalTo("the_cool_project"))
@@ -1382,7 +1386,8 @@ object ConfigurationLoaderSpec : Spek({
                 )
             }
 
-            val config by runForEachTest { loadConfiguration(files, rootConfigPath) }
+            val loadResult by runForEachTest { loadConfiguration(files, rootConfigPath) }
+            val config by runForEachTest { loadResult.configuration }
 
             it("should merge the tasks from the referenced files") {
                 assertThat(config.tasks, equalTo(TaskMap(Task("task-1", TaskRunConfiguration("container-1")))))
@@ -1398,6 +1403,20 @@ object ConfigurationLoaderSpec : Spek({
 
             it("should infer the project name based on the root configuration file's directory") {
                 assertThat(config.projectName, equalTo("project"))
+            }
+
+            it("should return the set of all files loaded") {
+                assertThat(
+                    loadResult.pathsLoaded,
+                    equalTo(
+                        setOf(
+                            rootConfigPath,
+                            fileSystem.getPath("/project/1.yml"),
+                            fileSystem.getPath("/project/2.yml"),
+                            fileSystem.getPath("/project/3.yml"),
+                        )
+                    )
+                )
             }
 
             itReportsTelemetryAboutTheConfigurationFile(taskCount = 1, containerCount = 1, configVariableCount = 1, fileIncludeCount = 3)
@@ -1428,7 +1447,7 @@ object ConfigurationLoaderSpec : Spek({
                 )
             }
 
-            val config by runForEachTest { loadConfiguration(files, rootConfigPath) }
+            val config by runForEachTest { loadConfiguration(files, rootConfigPath).configuration }
 
             it("should merge the tasks from the referenced files") {
                 assertThat(config.tasks, equalTo(TaskMap(Task("task-1", TaskRunConfiguration("container-1")))))
@@ -1474,7 +1493,7 @@ object ConfigurationLoaderSpec : Spek({
                 )
             }
 
-            val config by runForEachTest { loadConfiguration(files, rootConfigPath) }
+            val config by runForEachTest { loadConfiguration(files, rootConfigPath).configuration }
 
             it("should merge the tasks from the referenced files") {
                 assertThat(config.tasks, equalTo(TaskMap(Task("task-1", TaskRunConfiguration("container-1")))))
@@ -1527,7 +1546,7 @@ object ConfigurationLoaderSpec : Spek({
                 )
             }
 
-            val config by runForEachTest { loadConfiguration(files, rootConfigPath) }
+            val config by runForEachTest { loadConfiguration(files, rootConfigPath).configuration }
 
             it("should merge the tasks from the referenced file with the tasks in the root configuration file") {
                 assertThat(
@@ -1587,7 +1606,7 @@ object ConfigurationLoaderSpec : Spek({
                 )
             }
 
-            val config by runForEachTest { loadConfiguration(files, rootConfigPath) }
+            val config by runForEachTest { loadConfiguration(files, rootConfigPath).configuration }
 
             it("should use the provided project name") {
                 assertThat(config.projectName, equalTo("some_project"))
@@ -1634,7 +1653,7 @@ object ConfigurationLoaderSpec : Spek({
                 )
             }
 
-            val config by runForEachTest { loadConfiguration(files, rootConfigPath) }
+            val config by runForEachTest { loadConfiguration(files, rootConfigPath).configuration }
 
             it("should load and merge the configuration from both files without error") {
                 assertThat(
@@ -1746,7 +1765,7 @@ object ConfigurationLoaderSpec : Spek({
                 )
             }
 
-            val config by runForEachTest { loadConfiguration(files, rootConfigPath) }
+            val config by runForEachTest { loadConfiguration(files, rootConfigPath).configuration }
 
             it("should resolve paths in the included file relative to the included file, not the root file") {
                 assertThat(
@@ -1792,7 +1811,8 @@ object ConfigurationLoaderSpec : Spek({
                 )
             }
 
-            val config by runForEachTest { loadConfiguration(files, rootConfigPath) }
+            val loadResult by runForEachTest { loadConfiguration(files, rootConfigPath) }
+            val config by runForEachTest { loadResult.configuration }
 
             it("should merge the tasks from the referenced files") {
                 assertThat(config.tasks, equalTo(TaskMap(Task("task-1", TaskRunConfiguration("container-1")))))
@@ -1808,6 +1828,18 @@ object ConfigurationLoaderSpec : Spek({
 
             it("should infer the project name based on the root configuration file's directory") {
                 assertThat(config.projectName, equalTo("project"))
+            }
+
+            it("should report all of the files that were loaded") {
+                assertThat(
+                    loadResult.pathsLoaded,
+                    equalTo(
+                        setOf(
+                            rootConfigPath,
+                            pathForGitInclude("https://myrepo.com/bundles/bundle.git", "v1.2.3", "1.yml"),
+                        )
+                    )
+                )
             }
 
             itReportsTelemetryAboutTheConfigurationFile(taskCount = 1, containerCount = 1, configVariableCount = 1, gitIncludeCount = 1)
@@ -1845,7 +1877,7 @@ object ConfigurationLoaderSpec : Spek({
                 )
             }
 
-            val config by runForEachTest { loadConfiguration(files, rootConfigPath) }
+            val config by runForEachTest { loadConfiguration(files, rootConfigPath).configuration }
 
             it("should merge the tasks from the referenced files") {
                 assertThat(config.tasks, equalTo(TaskMap(Task("task-1", TaskRunConfiguration("container-1")))))
@@ -1901,7 +1933,7 @@ object ConfigurationLoaderSpec : Spek({
                 )
             }
 
-            val config by runForEachTest { loadConfiguration(files, rootConfigPath) }
+            val config by runForEachTest { loadConfiguration(files, rootConfigPath).configuration }
 
             it("should merge the tasks from the referenced files") {
                 assertThat(config.tasks, equalTo(TaskMap(Task("task-1", TaskRunConfiguration("container-1")))))

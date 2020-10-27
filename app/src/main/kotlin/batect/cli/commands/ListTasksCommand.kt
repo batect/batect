@@ -31,7 +31,7 @@ class ListTasksCommand(
     val outputStream: PrintStream
 ) : Command {
     override fun run(): Int {
-        val config = configLoader.loadConfig(configFile)
+        val config = configLoader.loadConfig(configFile).configuration
 
         when (commandLineOptions.requestedOutputStyle) {
             OutputStyle.Quiet -> printMachineReadableFormat(config)

@@ -47,7 +47,7 @@ class RunTaskCommand(
     }
 
     private fun loadConfig(): Configuration {
-        val configFromFile = configLoader.loadConfig(configFile)
+        val configFromFile = configLoader.loadConfig(configFile).configuration
         val overrides = commandLineOptions.imageOverrides.mapValues { PullImage(it.value) }
 
         return configFromFile.applyImageOverrides(overrides)

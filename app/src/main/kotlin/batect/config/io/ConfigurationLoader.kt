@@ -57,7 +57,7 @@ class ConfigurationLoader(
     private val telemetrySessionBuilder: TelemetrySessionBuilder,
     private val logger: Logger
 ) {
-    fun loadConfig(rootConfigFilePath: Path): Configuration {
+    fun loadConfig(rootConfigFilePath: Path): ConfigurationLoadResult {
         return telemetrySessionBuilder.addSpan("LoadConfiguration") { span ->
             val absolutePathToRootConfigFile = rootConfigFilePath.toAbsolutePath()
 
@@ -76,6 +76,7 @@ class ConfigurationLoader(
             }
 
             val rootConfigFile = loadConfigFile(absolutePathToRootConfigFile, null)
+            val pathsLoaded = mutableSetOf(absolutePathToRootConfigFile)
             val filesLoaded = mutableMapOf<Include, ConfigurationFile>(FileInclude(absolutePathToRootConfigFile) to rootConfigFile)
             val remainingIncludesToLoad = mutableSetOf<Include>()
             remainingIncludesToLoad += rootConfigFile.includes
@@ -83,6 +84,8 @@ class ConfigurationLoader(
             while (remainingIncludesToLoad.isNotEmpty()) {
                 val includeToLoad = remainingIncludesToLoad.first()
                 val pathToLoad = includeResolver.resolve(includeToLoad)
+                pathsLoaded.add(pathToLoad)
+
                 val file = loadConfigFile(pathToLoad, includeToLoad)
                 checkForProjectName(file, includeToLoad)
 
@@ -106,7 +109,7 @@ class ConfigurationLoader(
             span.addAttribute("fileIncludeCount", filesLoaded.keys.count { it is FileInclude } - 1)
             span.addAttribute("gitIncludeCount", filesLoaded.keys.count { it is GitInclude })
 
-            config
+            ConfigurationLoadResult(config, pathsLoaded)
         }
     }
 
@@ -276,3 +279,8 @@ class ConfigurationLoader(
 private fun LogMessageBuilder.data(key: String, value: Configuration) = this.data(key, value, Configuration.serializer())
 private fun LogMessageBuilder.data(key: String, value: ConfigurationFile) = this.data(key, value, ConfigurationFile.serializer())
 private fun LogMessageBuilder.data(key: String, value: Include) = this.data(key, value, IncludeConfigSerializer)
+
+data class ConfigurationLoadResult(
+    val configuration: Configuration,
+    val pathsLoaded: Set<Path>
+)

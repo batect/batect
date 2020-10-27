@@ -22,6 +22,7 @@ import batect.config.ContainerMap
 import batect.config.Task
 import batect.config.TaskMap
 import batect.config.TaskRunConfiguration
+import batect.config.io.ConfigurationLoadResult
 import batect.config.io.ConfigurationLoader
 import batect.os.Command
 import batect.testutils.createForEachTest
@@ -89,7 +90,7 @@ object ListTasksCommandSpec : Spek({
             val task3 = Task("another-task-with-a-description", taskRunConfig, "do the thing")
             val config = Configuration("the_project", TaskMap(task1, task2, task3), ContainerMap())
 
-            beforeEachTest { whenever(configLoader.loadConfig(configFilePath)).doReturn(config) }
+            beforeEachTest { whenever(configLoader.loadConfig(configFilePath)).doReturn(ConfigurationLoadResult(config, emptySet())) }
 
             describe("when the configuration file can be loaded") {
                 whenNotRunningWithQuietOutputModeItProducesOutput(
@@ -119,7 +120,7 @@ object ListTasksCommandSpec : Spek({
             val task3 = Task("another-task-with-a-description", taskRunConfig, "do the thing", group = "Build tasks")
             val config = Configuration("the_project", TaskMap(task1, task2, task3), ContainerMap())
 
-            beforeEachTest { whenever(configLoader.loadConfig(configFilePath)).doReturn(config) }
+            beforeEachTest { whenever(configLoader.loadConfig(configFilePath)).doReturn(ConfigurationLoadResult(config, emptySet())) }
 
             describe("when the configuration file can be loaded") {
                 whenNotRunningWithQuietOutputModeItProducesOutput(
@@ -149,7 +150,7 @@ object ListTasksCommandSpec : Spek({
             val task3 = Task("another-task-with-a-description", taskRunConfig, "do the thing", group = "Build tasks")
             val config = Configuration("the_project", TaskMap(task1, task2, task3), ContainerMap())
 
-            beforeEachTest { whenever(configLoader.loadConfig(configFilePath)).doReturn(config) }
+            beforeEachTest { whenever(configLoader.loadConfig(configFilePath)).doReturn(ConfigurationLoadResult(config, emptySet())) }
 
             describe("when the configuration file can be loaded") {
                 whenNotRunningWithQuietOutputModeItProducesOutput(
@@ -181,7 +182,7 @@ object ListTasksCommandSpec : Spek({
             val task3 = Task("another-task-with-a-description", taskRunConfig, "do the thing", group = "Build tasks")
             val config = Configuration("the_project", TaskMap(task1, task2, task3), ContainerMap())
 
-            beforeEachTest { whenever(configLoader.loadConfig(configFilePath)).doReturn(config) }
+            beforeEachTest { whenever(configLoader.loadConfig(configFilePath)).doReturn(ConfigurationLoadResult(config, emptySet())) }
 
             describe("when the configuration file can be loaded") {
                 whenNotRunningWithQuietOutputModeItProducesOutput(

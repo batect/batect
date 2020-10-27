@@ -29,6 +29,7 @@ import batect.telemetry.TelemetrySessionBuilder
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.runForEachTest
+import batect.testutils.withPlatformSpecificLineSeparator
 import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockitokotlin2.doReturn
@@ -110,7 +111,7 @@ object GenerateShellTabCompletionTaskInformationCommandSpec : Spek({
                         |second-task
                         |third-task
                         |
-                        """.trimMargin()
+                        """.trimMargin().withPlatformSpecificLineSeparator()
                     )
                 )
             }

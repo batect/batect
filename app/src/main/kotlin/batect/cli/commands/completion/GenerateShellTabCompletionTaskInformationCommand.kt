@@ -57,10 +57,10 @@ class GenerateShellTabCompletionTaskInformationCommand(
     }
 
     private fun generate(loadResult: ConfigurationLoadResult) {
-        outputStream.println("---FILES---")
+        outputStream.println("### FILES ###")
         loadResult.pathsLoaded.sorted().forEach { printPathLine(it) }
 
-        outputStream.println("---TASKS---")
+        outputStream.println("### TASKS ###")
         loadResult.configuration.tasks.keys.sorted().forEach { outputStream.println(it) }
 
         outputStream.flush()

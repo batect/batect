@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 
+import os.path
 import subprocess
 import unittest
 
@@ -11,7 +12,7 @@ class FishCompletionTests(unittest.TestCase):
 
     def test_option_completion(self):
         results = self.run_completions_for("./batect -", "/app/bin")
-        self.assertEqual(results, [
+        self.assertEqual([
             "--cache-type",
             "--clean",
             "--config-file",
@@ -49,7 +50,7 @@ class FishCompletionTests(unittest.TestCase):
             "-T",
             "-f",
             "-o",
-        ])
+        ], results)
 
     def test_single_use_flag_completion(self):
         results = self.run_completions_for("./batect --list-tasks -", "/app/bin")
@@ -62,7 +63,15 @@ class FishCompletionTests(unittest.TestCase):
 
     def test_enum_option_completion(self):
         results = self.run_completions_for("./batect --output=", "/app/bin")
-        self.assertEqual(results, ["--output=all", "--output=fancy", "--output=quiet", "--output=simple"])
+        self.assertEqual(["--output=all", "--output=fancy", "--output=quiet", "--output=simple"], results)
+
+    def test_task_name_completion_standard_file_location(self):
+        results = self.run_completions_for("/app/bin/batect tas", self.directory_for_test_case("simple-config"))
+        self.assertEqual(["task-1", "task-2"], results)
+
+    def test_task_name_completion_invalid_project(self):
+        results = self.run_completions_for("/app/bin/batect tas", self.directory_for_test_case("invalid-config"))
+        self.assertEqual([], results)
 
     def test_completion_after_task_name(self):
         batect_results = self.run_completions_for("./batect my-task -- ls -", "/app/bin")
@@ -90,6 +99,11 @@ class FishCompletionTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0)
 
         return result.stdout
+
+    def directory_for_test_case(self, test_case):
+        tests_dir = os.path.dirname(os.path.realpath(__file__))
+
+        return os.path.abspath(os.path.join(tests_dir, "test-cases", test_case))
 
 
 if __name__ == '__main__':

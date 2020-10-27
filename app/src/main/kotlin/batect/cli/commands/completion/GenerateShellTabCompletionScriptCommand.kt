@@ -22,6 +22,7 @@ import batect.cli.commands.Command
 import batect.os.HostEnvironmentVariables
 import batect.telemetry.AttributeValue
 import batect.telemetry.TelemetrySessionBuilder
+import java.io.InputStreamReader
 import java.io.PrintStream
 
 // This class is tested primarily by the tests in the app/src/completionTest directory.
@@ -57,25 +58,19 @@ class GenerateShellTabCompletionScriptCommand(
     private fun emitCompletionScript() {
         val registerAs = environmentVariables["BATECT_COMPLETION_PROXY_REGISTER_AS"] ?: throw IllegalArgumentException("'BATECT_COMPLETION_PROXY_REGISTER_AS' environment variable not set.")
 
-        emitPostTaskArgumentsHandler(registerAs)
+        emitTaskNameHandler(registerAs)
         emitOptions(registerAs)
 
         outputStream.flush()
     }
 
-    private fun emitPostTaskArgumentsHandler(registerAs: String) {
-        outputStream.println(
-            """
-                function __batect_completion_${registerAs}_post_task_argument_handler
-                    set -l tokens (commandline -opc) (commandline -ct)
-                    set -l index (contains -i -- -- (commandline -opc))
-                    set -e tokens[1..${'$'}index]
-                    complete -C"${'$'}tokens"
-                end
-
-                complete -c $registerAs --condition "contains -- -- (commandline -opc)" -a "(__batect_completion_${registerAs}_post_task_argument_handler)"
-            """.trimIndent()
-        )
+    private fun emitTaskNameHandler(registerAs: String) {
+        val classLoader = javaClass.classLoader
+        classLoader.getResourceAsStream("batect/completion.fish").use { stream ->
+            InputStreamReader(stream!!, Charsets.UTF_8).use {
+                outputStream.print(it.readText().replace("PLACEHOLDER_REGISTER_AS", registerAs))
+            }
+        }
     }
 
     private fun emitOptions(registerAs: String) {

@@ -101,11 +101,11 @@ object GenerateShellTabCompletionTaskInformationCommandSpec : Spek({
                     output.toString(),
                     equalTo(
                         """
-                        |---FILES---
+                        |### FILES ###
                         |5eb9480d37ff7490f465d5fad3b425fe4a4c65b46fd4eef160cb1b644df7f1e8  /another/file.yml
                         |6ca13d52ca70c883e0f0bb101e425a89e8624de51db2d2392593af6a84118090  /my-project/batect.yml
                         |8f61ad5cfa0c471c8cbf810ea285cb1e5f9c2c5e5e5e4f58a3229667703e1587  /some/other/file.yml
-                        |---TASKS---
+                        |### TASKS ###
                         |first-task
                         |fourth-task
                         |second-task

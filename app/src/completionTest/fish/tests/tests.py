@@ -69,6 +69,16 @@ class FishCompletionTests(unittest.TestCase):
         results = self.run_completions_for("/app/bin/batect tas", self.directory_for_test_case("simple-config"))
         self.assertEqual(["task-1", "task-2"], results)
 
+    def test_task_name_completion_custom_file_location(self):
+        flags = ["--config-file=", "--config-file ", "-f ", "-f="]
+
+        for flag in flags:
+            with self.subTest(flag=flag):
+                command_line = "/app/bin/batect {}../simple-config/batect.yml tas".format(flag)
+                results = self.run_completions_for(command_line, self.directory_for_test_case("invalid-config"))
+
+                self.assertEqual(["task-1", "task-2"], results)
+
     def test_task_name_completion_invalid_project(self):
         results = self.run_completions_for("/app/bin/batect tas", self.directory_for_test_case("invalid-config"))
         self.assertEqual([], results)

@@ -1,6 +1,33 @@
+function __batect_completion_PLACEHOLDER_REGISTER_AS_config_file_path
+    set -l config_file_path batect.yml
+    set -l tokens (commandline -opc) (commandline -ct)
+
+    argparse --ignore-unknown 'f/config-file=' -- $tokens
+
+    if test -n "$_flag_f"
+        if test (string sub --length 1 "$_flag_f") = "="
+            set _flag_f (string sub --start 2 "$_flag_f")
+        end
+
+        set config_file_path $_flag_f
+    end
+
+    if test -f $config_file_path
+        realpath $config_file_path
+    else
+        echo $config_file_path
+    end
+end
+
 function __batect_completion_PLACEHOLDER_REGISTER_AS_task_names
+    set -l config_file_path (__batect_completion_PLACEHOLDER_REGISTER_AS_config_file_path)
+
+    if test ! -f $config_file_path
+        return
+    end
+
     set -l error_output_path (mktemp)
-    set -l output ($BATECT_COMPLETION_PROXY_WRAPPER_PATH --generate-completion-task-info=fish 2>$error_output_path)
+    set -l output ($BATECT_COMPLETION_PROXY_WRAPPER_PATH --generate-completion-task-info=fish --config-file=$config_file_path 2>$error_output_path)
     set -l command_status $status
     rm -f $error_output_path
 

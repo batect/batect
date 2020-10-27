@@ -1,0 +1,10 @@
+project_name: my-project
+
+tasks:
+  task-1:
+    run:
+      container: doesnt-exist
+
+  task-2:
+    run:
+      container: doesnt-exist

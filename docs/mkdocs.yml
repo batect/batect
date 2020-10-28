@@ -46,6 +46,7 @@ markdown_extensions:
   - pymdownx.emoji:
       emoji_index: !!python/name:materialx.emoji.twemoji
       emoji_generator: !!python/name:materialx.emoji.to_svg
+  - pymdownx.keys
   - pymdownx.superfences
 
 nav:
@@ -74,6 +75,7 @@ nav:
     - Node.js: "tools/Node.md"
     - Ruby: "tools/Ruby.md"
     - Seq: "tools/Seq.md"
+    - Shell tab completion: "tools/Shells.md"
 
   - Working with CI systems:
     - General: "tools/CIGeneral.md"

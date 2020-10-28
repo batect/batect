@@ -6,6 +6,10 @@
 
     If you are not running the most recent version, run `./batect --help` to see what options are available in your version.
 
+## Shell tab completion
+
+See the [shell tab completion section](tools/Shells.md) for information on supported shells and installation instructions.
+
 ## Run a task
 
 Run a task by running `./batect <task-name>`. For example, to run `the-task`, run `./batect the-task`.

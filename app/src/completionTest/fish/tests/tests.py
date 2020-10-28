@@ -69,6 +69,10 @@ class FishCompletionTests(unittest.TestCase):
         results = self.run_completions_for("./batect --config-var=SOME_OPTION=some-value -", "/app/bin")
         self.assertIn("--config-var", results)
 
+    def test_partial_option_completion(self):
+        results = self.run_completions_for("./batect --conf", "/app/bin")
+        self.assertIn("--config-file", results)
+
     def test_enum_option_completion(self):
         results = self.run_completions_for("./batect --output=", "/app/bin")
         self.assertEqual(["--output=all", "--output=fancy", "--output=quiet", "--output=simple"], results)

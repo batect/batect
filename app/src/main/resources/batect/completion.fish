@@ -15,7 +15,7 @@ function __batect_completion_PLACEHOLDER_REGISTER_AS_config_file_path
     set -l config_file_path batect.yml
     set -l tokens (commandline -opc) (commandline -ct)
 
-    argparse --ignore-unknown 'f/config-file=' -- $tokens
+    argparse --ignore-unknown 'f/config-file=' -- $tokens 2>/dev/null
 
     if test -n "$_flag_f"
         if test (string sub --length 1 "$_flag_f") = "="

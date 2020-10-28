@@ -1,0 +1,7 @@
+tasks:
+  task-1:
+    run:
+      container: doesnt-exist
+
+include:
+  - other-file.yml

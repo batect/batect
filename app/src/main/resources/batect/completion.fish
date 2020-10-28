@@ -42,6 +42,15 @@ function __batect_completion_PLACEHOLDER_REGISTER_AS_need_to_refresh_cache --arg
     set -l task_delimiter_index (math (contains --index '### TASKS ###' $cache) - 1)
     set -l files_with_hashes $cache[$files_delimiter_index..$task_delimiter_index]
 
+    for file_with_hash in $files_with_hashes
+        set -l file_delimiter_index (math (contains --index ' ' (string split '' $file_with_hash)) + 2)
+        set -l file (string sub --start $file_delimiter_index $file_with_hash)
+
+        if test ! -f "$file"
+            return 0
+        end
+    end
+
     if string collect $files_with_hashes | __batect_completion_PLACEHOLDER_REGISTER_AS_sha256 -c -s -
         return 1
     else

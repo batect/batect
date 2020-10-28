@@ -118,9 +118,9 @@ class FishCompletionTests(unittest.TestCase):
 
     def test_completion_twice_project_file_modified(self):
         test_directory = tempfile.mkdtemp()
-        original_config_file = self.directory_for_test_case("simple-config")
+        original_config_directory = self.directory_for_test_case("simple-config")
         test_config_file = os.path.join(test_directory, "batect.yml")
-        shutil.copy(os.path.join(original_config_file, "batect.yml"), test_config_file)
+        shutil.copy(os.path.join(original_config_directory, "batect.yml"), test_config_file)
 
         output = self.run_two_fish_commands(
             'complete -C"/app/bin/batect tas"',
@@ -130,6 +130,39 @@ class FishCompletionTests(unittest.TestCase):
 
         self.assertEqual(output["first"], ["task-1", "task-2"])
         self.assertEqual(output["second"], ["task-2", "task-3"])
+
+    def test_completion_twice_include_file_modified(self):
+        test_directory = self.set_up_test_directory_with_include()
+
+        output = self.run_two_fish_commands(
+            'complete -C"/app/bin/batect tas"',
+            'sed -i"" "s/task-2/task-3/g" other-file.yml && complete -C"/app/bin/batect tas"',
+            test_directory,
+        )
+
+        self.assertEqual(output["first"], ["task-1", "task-2"])
+        self.assertEqual(output["second"], ["task-1", "task-3"])
+
+    def test_completion_twice_include_file_deleted(self):
+        test_directory = self.set_up_test_directory_with_include()
+
+        output = self.run_two_fish_commands(
+            'complete -C"/app/bin/batect tas"',
+            'rm other-file.yml && mv without-include.yml batect.yml && complete -C"/app/bin/batect tas"',
+            test_directory,
+        )
+
+        self.assertEqual(output["first"], ["task-1", "task-2"])
+        self.assertEqual(output["second"], ["task-1"])
+
+    def set_up_test_directory_with_include(self):
+        test_directory = tempfile.mkdtemp()
+        original_config_directory = self.directory_for_test_case("with-include")
+        shutil.copy(os.path.join(original_config_directory, "batect.yml"), os.path.join(test_directory, "batect.yml"))
+        shutil.copy(os.path.join(original_config_directory, "other-file.yml"), os.path.join(test_directory, "other-file.yml"))
+        shutil.copy(os.path.join(original_config_directory, "without-include.yml"), os.path.join(test_directory, "without-include.yml"))
+
+        return test_directory
 
     def run_completions_for(self, input, working_directory):
         stdout = self.run_fish_command('complete -C"{}"'.format(input), working_directory)
@@ -157,7 +190,7 @@ class FishCompletionTests(unittest.TestCase):
         stdout = self.run_fish_command('{} && echo "---DIVIDER---" && {}'.format(first_command, second_command), working_directory).splitlines()
         divider_line = stdout.index("---DIVIDER---")
         first_output = sorted(stdout[0:divider_line])
-        second_output = sorted(stdout[divider_line + 1:])
+        second_output =(stdout[divider_line + 1:])
 
         return {"first": first_output, "second": second_output}
 

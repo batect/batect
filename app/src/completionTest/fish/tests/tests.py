@@ -107,14 +107,14 @@ class FishCompletionTests(unittest.TestCase):
         self.assertEqual(batect_results, system_results)
 
     def test_completion_twice_no_modifications(self):
-        test_directory = self.directory_for_test_case("simple-config")
-        stdout = self.run_fish_command('complete -C"/app/bin/batect tas" && echo "---DIVIDER---" && complete -C"/app/bin/batect tas"', test_directory).splitlines()
-        divider_line = stdout.index("---DIVIDER---")
-        first_output = sorted(stdout[0:divider_line])
-        second_output = sorted(stdout[divider_line + 1:])
+        output = self.run_two_fish_commands(
+            'complete -C"/app/bin/batect tas"',
+            'complete -C"/app/bin/batect tas"',
+            self.directory_for_test_case("simple-config"),
+        )
 
-        self.assertEqual(first_output, ["task-1", "task-2"])
-        self.assertEqual(second_output, ["task-1", "task-2"])
+        self.assertEqual(output["first"], ["task-1", "task-2"])
+        self.assertEqual(output["second"], ["task-1", "task-2"])
 
     def test_completion_twice_project_file_modified(self):
         test_directory = tempfile.mkdtemp()
@@ -122,13 +122,14 @@ class FishCompletionTests(unittest.TestCase):
         test_config_file = os.path.join(test_directory, "batect.yml")
         shutil.copy(os.path.join(original_config_file, "batect.yml"), test_config_file)
 
-        stdout = self.run_fish_command('complete -C"/app/bin/batect tas" && sed -i"" "s/task-1/task-3/g" batect.yml && echo "---DIVIDER---" && complete -C"/app/bin/batect tas"', test_directory).splitlines()
-        divider_line = stdout.index("---DIVIDER---")
-        first_output = sorted(stdout[0:divider_line])
-        second_output = sorted(stdout[divider_line + 1:])
+        output = self.run_two_fish_commands(
+            'complete -C"/app/bin/batect tas"',
+            'sed -i"" "s/task-1/task-3/g" batect.yml && complete -C"/app/bin/batect tas"',
+            test_directory,
+        )
 
-        self.assertEqual(first_output, ["task-1", "task-2"])
-        self.assertEqual(second_output, ["task-2", "task-3"])
+        self.assertEqual(output["first"], ["task-1", "task-2"])
+        self.assertEqual(output["second"], ["task-2", "task-3"])
 
     def run_completions_for(self, input, working_directory):
         stdout = self.run_fish_command('complete -C"{}"'.format(input), working_directory)
@@ -151,6 +152,14 @@ class FishCompletionTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0)
 
         return result.stdout
+
+    def run_two_fish_commands(self, first_command, second_command, working_directory):
+        stdout = self.run_fish_command('{} && echo "---DIVIDER---" && {}'.format(first_command, second_command), working_directory).splitlines()
+        divider_line = stdout.index("---DIVIDER---")
+        first_output = sorted(stdout[0:divider_line])
+        second_output = sorted(stdout[divider_line + 1:])
+
+        return {"first": first_output, "second": second_output}
 
     def directory_for_test_case(self, test_case):
         tests_dir = os.path.dirname(os.path.realpath(__file__))

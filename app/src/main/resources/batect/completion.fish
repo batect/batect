@@ -1,3 +1,16 @@
+function __batect_completion_PLACEHOLDER_REGISTER_AS_sha256
+    if test (uname) = "Darwin"
+        shasum -a 256 $argv
+    else
+        sha256sum $argv
+    end
+end
+
+function __batect_completion_PLACEHOLDER_REGISTER_AS_cache_path --argument-names config_file_path
+    set -l config_file_path_hash (echo "$config_file_path" | __batect_completion_PLACEHOLDER_REGISTER_AS_sha256 - | cut -d' ' -f1)
+    echo "$HOME/.batect/completion/fish-v1/$config_file_path_hash"
+end
+
 function __batect_completion_PLACEHOLDER_REGISTER_AS_config_file_path
     set -l config_file_path batect.yml
     set -l tokens (commandline -opc) (commandline -ct)
@@ -19,6 +32,32 @@ function __batect_completion_PLACEHOLDER_REGISTER_AS_config_file_path
     end
 end
 
+function __batect_completion_PLACEHOLDER_REGISTER_AS_need_to_refresh_cache --argument-names config_file_path cache_path
+    if test ! -f $cache_path
+        return 0
+    end
+
+    set -l cache (cat $cache_path)
+    set -l files_delimiter_index (math (contains --index '### FILES ###' $cache) + 1)
+    set -l task_delimiter_index (math (contains --index '### TASKS ###' $cache) - 1)
+    set -l files_with_hashes $cache[$files_delimiter_index..$task_delimiter_index]
+
+    if string collect $files_with_hashes | __batect_completion_PLACEHOLDER_REGISTER_AS_sha256 -c -s -
+        return 1
+    else
+        return 0
+    end
+end
+
+function __batect_completion_PLACEHOLDER_REGISTER_AS_refresh_cache --argument-names config_file_path cache_path
+    if ! __batect_completion_PLACEHOLDER_REGISTER_AS_need_to_refresh_cache $config_file_path $cache_path
+        return
+    end
+
+    mkdir -p (dirname $cache_path)
+    $BATECT_COMPLETION_PROXY_WRAPPER_PATH --generate-completion-task-info=fish --config-file=$config_file_path >"$cache_path" 2>/dev/null
+end
+
 function __batect_completion_PLACEHOLDER_REGISTER_AS_task_names
     set -l config_file_path (__batect_completion_PLACEHOLDER_REGISTER_AS_config_file_path)
 
@@ -26,15 +65,10 @@ function __batect_completion_PLACEHOLDER_REGISTER_AS_task_names
         return
     end
 
-    set -l error_output_path (mktemp)
-    set -l output ($BATECT_COMPLETION_PROXY_WRAPPER_PATH --generate-completion-task-info=fish --config-file=$config_file_path 2>$error_output_path)
-    set -l command_status $status
-    rm -f $error_output_path
+    set -l cache_path (__batect_completion_PLACEHOLDER_REGISTER_AS_cache_path $config_file_path)
+    __batect_completion_PLACEHOLDER_REGISTER_AS_refresh_cache $config_file_path $cache_path
 
-    if test $command_status -ne 0
-        return
-    end
-
+    set -l output (cat $cache_path)
     set -l task_delimiter_index (math (contains --index '### TASKS ###' $output) + 1)
     set -l tasks $output[$task_delimiter_index..-1]
 

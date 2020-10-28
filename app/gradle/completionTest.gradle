@@ -52,6 +52,7 @@ tasks.register("testFishCompletion", Exec) {
     def upToDateFile = getTemporaryDir().toPath().resolve("lastRun")
 
     inputs.files fileTree(dir: "$fishDir", include: '**/*')
+    inputs.files installShadowDist
     outputs.file upToDateFile
 
     dependsOn buildFishCompletionTestEnvironmentImage

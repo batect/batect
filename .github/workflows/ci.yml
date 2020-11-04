@@ -10,7 +10,7 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v2.3.3
+        uses: actions/checkout@v2.3.4
         with:
           fetch-depth: 0
       - name: Validate Gradle wrapper
@@ -26,7 +26,7 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v2.3.3
+        uses: actions/checkout@v2.3.4
         with:
           fetch-depth: 0
 
@@ -92,7 +92,7 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v2.3.3
+        uses: actions/checkout@v2.3.4
         with:
           fetch-depth: 0
 
@@ -161,7 +161,7 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v2.3.3
+        uses: actions/checkout@v2.3.4
         with:
           fetch-depth: 0
 
@@ -194,7 +194,7 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v2.3.3
+        uses: actions/checkout@v2.3.4
         with:
           fetch-depth: 0
 
@@ -227,7 +227,7 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v2.3.3
+        uses: actions/checkout@v2.3.4
         with:
           fetch-depth: 0
 
@@ -286,7 +286,7 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v2.3.3
+        uses: actions/checkout@v2.3.4
         with:
           fetch-depth: 0
 
@@ -341,7 +341,7 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v2.3.3
+        uses: actions/checkout@v2.3.4
         with:
           fetch-depth: 0
 
@@ -390,7 +390,7 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v2.3.3
+        uses: actions/checkout@v2.3.4
         with:
           fetch-depth: 0
 

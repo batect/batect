@@ -65,9 +65,6 @@ sealed class Expression(open val originalExpression: String) {
             }
         }
 
-        private fun invalidExpressionException(source: String, message: String): Exception =
-            IllegalArgumentException("Invalid expression '$source': $message")
-
         private fun readEnvironmentVariable(source: String, startIndex: Int): ParseResult =
             readVariable(source, startIndex, "environment", true) { name, default, originalExpression ->
                 EnvironmentVariableReference(name, default, originalExpression)
@@ -80,7 +77,7 @@ sealed class Expression(open val originalExpression: String) {
 
         private fun readVariable(source: String, startIndex: Int, type: String, supportsDefaults: Boolean, creator: (String, String?, String) -> Expression): ParseResult {
             if (startIndex == source.lastIndex) {
-                throw invalidExpressionException(source, "invalid $type variable reference: '${source[startIndex]}' at column ${startIndex + 1} must be followed by a variable name")
+                throw InvalidExpressionException(source, "invalid $type variable reference: '${source[startIndex]}' at column ${startIndex + 1} must be followed by a variable name")
             }
 
             val hasBraces = source[startIndex + 1] == '{'
@@ -122,7 +119,7 @@ sealed class Expression(open val originalExpression: String) {
                 null
             } else {
                 if (currentIndex == source.lastIndex || source[currentIndex + 1] != '-') {
-                    throw invalidExpressionException(source, "invalid $type variable reference: ':' at column ${currentIndex + 1} must be immediately followed by '-'")
+                    throw InvalidExpressionException(source, "invalid $type variable reference: ':' at column ${currentIndex + 1} must be immediately followed by '-'")
                 }
 
                 currentIndex += 2
@@ -137,7 +134,7 @@ sealed class Expression(open val originalExpression: String) {
                         }
                         '\\' -> {
                             if (currentIndex == source.lastIndex) {
-                                throw invalidExpressionException(source, "invalid $type variable reference: '\\' at column ${currentIndex + 1} must be immediately followed by a character to escape")
+                                throw InvalidExpressionException(source, "invalid $type variable reference: '\\' at column ${currentIndex + 1} must be immediately followed by a character to escape")
                             }
 
                             currentIndex++
@@ -152,13 +149,13 @@ sealed class Expression(open val originalExpression: String) {
             }
 
             if (hasBraces && !haveSeenClosingBrace) {
-                throw invalidExpressionException(source, "invalid $type variable reference: '{' at column ${startIndex + 2} must be followed by a closing '}'")
+                throw InvalidExpressionException(source, "invalid $type variable reference: '{' at column ${startIndex + 2} must be followed by a closing '}'")
             }
 
             val variableName = variableNameBuilder.toString()
 
             if (variableName.isEmpty()) {
-                throw invalidExpressionException(source, "invalid $type variable reference: '${source.substring(startIndex, currentIndex + 1)}' at column ${startIndex + 1} does not contain a variable name")
+                throw InvalidExpressionException(source, "invalid $type variable reference: '${source.substring(startIndex, currentIndex + 1)}' at column ${startIndex + 1} does not contain a variable name")
             }
 
             val originalExpression = source.substring(startIndex, min(currentIndex + 1, source.lastIndex + 1))
@@ -178,7 +175,7 @@ sealed class Expression(open val originalExpression: String) {
                     }
                     '\\' -> {
                         if (index == source.lastIndex) {
-                            throw invalidExpressionException(source, "invalid escape sequence: '\\' at column ${index + 1} must be immediately followed by a character to escape")
+                            throw InvalidExpressionException(source, "invalid escape sequence: '\\' at column ${index + 1} must be immediately followed by a character to escape")
                         }
 
                         index++
@@ -216,7 +213,7 @@ sealed class Expression(open val originalExpression: String) {
                 input.endStructure(deserializationDescriptor)
 
                 return result
-            } catch (e: IllegalArgumentException) {
+            } catch (e: InvalidExpressionException) {
                 if (decoder is YamlInput) {
                     throw ConfigurationException(e.message ?: "", decoder.node, e)
                 } else {
@@ -329,3 +326,4 @@ data class ConcatenatedExpression(val expressions: Iterable<Expression>, overrid
 }
 
 class ExpressionEvaluationException(message: String) : RuntimeException(message)
+class InvalidExpressionException(val source: String, val detail: String) : IllegalArgumentException("Invalid expression '$source': $detail")

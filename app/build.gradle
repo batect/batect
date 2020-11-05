@@ -15,14 +15,14 @@
 */
 
 plugins {
-    id 'com.github.johnrengelman.shadow' version '6.1.0'
-    id 'batect-kotlin'
-    id 'application'
+    id "com.github.johnrengelman.shadow" version "6.1.0"
+    id "batect-kotlin"
+    id "application"
 }
 
-applicationName = 'batect'
-archivesBaseName = 'batect'
-mainClassName = 'batect.ApplicationKt'
+applicationName = "batect"
+archivesBaseName = "batect"
+mainClassName = "batect.ApplicationKt"
 
 repositories {
     mavenCentral()
@@ -34,56 +34,56 @@ dependencies {
     implementation platform("com.squareup.okhttp3:okhttp-bom:4.9.0")
     implementation platform("org.jetbrains.kotlin:kotlin-bom")
 
-    implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.0.1'
-    implementation 'org.kodein.di:kodein-di:7.1.0'
-    implementation 'com.squareup.okio:okio:2.9.0'
-    implementation 'com.squareup.okhttp3:okhttp'
-    implementation 'com.github.jnr:jnr-posix:3.0.57'
-    implementation 'com.charleskorn.kaml:kaml:0.25.0'
-    implementation 'com.hypirion:io:0.3.1'
-    implementation 'org.bouncycastle:bcpkix-jdk15on:1.66'
-    implementation 'org.graylog.repackaged:os-platform-finder:1.2.3'
+    implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.0.1"
+    implementation "org.kodein.di:kodein-di:7.1.0"
+    implementation "com.squareup.okio:okio:2.9.0"
+    implementation "com.squareup.okhttp3:okhttp"
+    implementation "com.github.jnr:jnr-posix:3.0.57"
+    implementation "com.charleskorn.kaml:kaml:0.25.0"
+    implementation "com.hypirion:io:0.3.1"
+    implementation "org.bouncycastle:bcpkix-jdk15on:1.66"
+    implementation "org.graylog.repackaged:os-platform-finder:1.2.3"
 
-    implementation project(':libs:docker-client')
-    implementation project(':libs:git-client')
-    implementation project(':libs:io')
-    implementation project(':libs:logging')
-    implementation project(':libs:primitives')
-    implementation project(':libs:os')
-    implementation project(':libs:telemetry')
+    implementation project(":libs:docker-client")
+    implementation project(":libs:git-client")
+    implementation project(":libs:io")
+    implementation project(":libs:logging")
+    implementation project(":libs:primitives")
+    implementation project(":libs:os")
+    implementation project(":libs:telemetry")
 
-    testImplementation 'org.araqnid:hamkrest-json:1.1.2'
-    testImplementation 'com.google.jimfs:jimfs:1.1'
-    testImplementation project(':libs:test-utils')
-    testImplementation project(':libs:logging-test-utils')
+    testImplementation "org.araqnid:hamkrest-json:1.1.2"
+    testImplementation "com.google.jimfs:jimfs:1.1"
+    testImplementation project(":libs:test-utils")
+    testImplementation project(":libs:logging-test-utils")
 }
 
 tasks.named("check").configure {
-    dependsOn ':libs:check'
+    dependsOn ":libs:check"
 }
 
 checkUnitTestLayout {
     ignoreFileNameCheck = fileTree(
-        dir: 'src/unitTest/kotlin',
+        dir: "src/unitTest/kotlin",
         includes: [
-            'batect/cli/commands/FakeDockerConnectivity.kt',
-            'batect/testutils/**',
-            'batect/config/ExceptionMatchers.kt'
+            "batect/cli/commands/FakeDockerConnectivity.kt",
+            "batect/testutils/**",
+            "batect/config/ExceptionMatchers.kt"
         ]
     )
 
     ignoreMissingMainFile = fileTree(
-        dir: 'src/unitTest/kotlin',
+        dir: "src/unitTest/kotlin",
         includes: [
-            'batect/execution/model/steps/*.kt',
-            'batect/execution/model/events/*.kt',
+            "batect/execution/model/steps/*.kt",
+            "batect/execution/model/events/*.kt",
         ]
     )
 }
 
-apply from: 'gradle/completionTest.gradle'
-apply from: 'gradle/journeyTest.gradle'
-apply from: 'gradle/performanceTest.gradle'
-apply from: 'gradle/profiling.gradle'
-apply from: 'gradle/shadow.gradle'
-apply from: 'gradle/versionInfo.gradle'
+apply from: "gradle/completionTest.gradle"
+apply from: "gradle/journeyTest.gradle"
+apply from: "gradle/performanceTest.gradle"
+apply from: "gradle/profiling.gradle"
+apply from: "gradle/shadow.gradle"
+apply from: "gradle/versionInfo.gradle"

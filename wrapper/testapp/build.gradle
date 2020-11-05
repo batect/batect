@@ -15,22 +15,22 @@
 */
 
 plugins {
-    id 'com.diffplug.spotless'
+    id "com.diffplug.spotless"
 }
 
-apply plugin: 'java'
-apply plugin: 'application'
+apply plugin: "java"
+apply plugin: "application"
 
-mainClassName = 'testapp.Application'
+mainClassName = "testapp.Application"
 
 jar {
     manifest {
         attributes(
-            'Main-Class': mainClassName
+            "Main-Class": mainClassName
         )
     }
 
-    archiveFileName = 'testapp.jar'
+    archiveFileName = "testapp.jar"
 }
 
 sourceCompatibility = JavaVersion.VERSION_1_8

@@ -15,9 +15,9 @@
 */
 
 plugins {
-    id 'batect-kotlin'
+    id "batect-kotlin"
 }
 
 dependencies {
-    implementation project(':libs:os')
+    implementation project(":libs:os")
 }

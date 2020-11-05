@@ -32,8 +32,8 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.11.3'
-        classpath 'com.github.java-json-tools:json-schema-validator:2.2.14'
+        classpath "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.11.3"
+        classpath "com.github.java-json-tools:json-schema-validator:2.2.14"
     }
 }
 
@@ -66,7 +66,7 @@ boolean validateFileAgainstSchema(File fileToValidate, JsonSchema schema) {
         return report.success
 
     } catch (e) {
-        logger.error('Error: {}: could not validate file due to exception: {}', fileToValidate, e)
+        logger.error("Error: {}: could not validate file due to exception: {}", fileToValidate, e)
 
         return false
     }
@@ -88,13 +88,13 @@ void printReport(ProcessingReport report, File sourceFile) {
 }
 
 tasks.register("validateSampleFilesAgainstSchema") {
-    description 'Checks that all sample configuration files are acceptable according to the schema.'
-    group 'Verification'
+    description "Checks that all sample configuration files are acceptable according to the schema."
+    group "Verification"
 
     def schemaFile = new File("$projectDir/configSchema.json")
     def configFiles =
-        fileTree(dir: "${rootProject.projectDir}/app/src/journeyTest/resources", include: '**/*.yml', exclude: '**/batect.local.yml') +
-        fileTree(dir: "$projectDir/tests", include: '**/*.yml')
+        fileTree(dir: "${rootProject.projectDir}/app/src/journeyTest/resources", include: "**/*.yml", exclude: "**/batect.local.yml") +
+        fileTree(dir: "$projectDir/tests", include: "**/*.yml")
 
     inputs.file schemaFile
     inputs.files configFiles
@@ -126,8 +126,8 @@ tasks.register("validateSampleFilesAgainstSchema") {
 }
 
 tasks.register("check") {
-    description 'Runs all checks.'
-    group 'Verification'
+    description "Runs all checks."
+    group "Verification"
 
     dependsOn validateSampleFilesAgainstSchema
 }

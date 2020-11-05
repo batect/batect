@@ -24,16 +24,16 @@ buildscript {
     }
 
     dependencies {
-        classpath 'commons-codec:commons-codec:1.15'
+        classpath "commons-codec:commons-codec:1.15"
     }
 }
 
-def powershellTemplateFile = project.file 'src/template.ps1'
-def batchTemplateFile = project.file 'src/template.cmd'
+def powershellTemplateFile = project.file "src/template.ps1"
+def batchTemplateFile = project.file "src/template.cmd"
 
 tasks.register("build") {
-    description 'Build the wrapper script.'
-    group 'Build'
+    description "Build the wrapper script."
+    group "Build"
 
     def scriptDir = getBuildDir().toPath().resolve("scripts")
     def scriptFile = scriptDir.resolve(rootProject.name + ".cmd")
@@ -53,8 +53,8 @@ tasks.register("build") {
             .replace("CHECKSUM-GOES-HERE", hash)
 
         def escapedPowershellScript = powershellScript
-            .replace('|', '^|')
-            .replace('%', '%%')
+            .replace("|", "^|")
+            .replace("%", "%%")
             .split("\r\n")
             .join("^\r\n\r\n")
 
@@ -67,29 +67,29 @@ tasks.register("build") {
 }
 
 tasks.register("copyTestJar", Copy) {
-    description 'Copies the test application JAR into place for use during the wrapper script tests.'
-    group 'Build'
+    description "Copies the test application JAR into place for use during the wrapper script tests."
+    group "Build"
 
     from project(":wrapper:testapp").getTasksByName("jar", false)
     into "test"
 }
 
 tasks.register("test", Exec) {
-    description 'Runs the unit tests.'
-    group 'Verification'
+    description "Runs the unit tests."
+    group "Verification"
 
     def upToDateFile = getTemporaryDir().toPath().resolve("lastRun")
 
     inputs.files build
     inputs.files copyTestJar
-    inputs.files fileTree(dir: 'test', include: '**/*')
+    inputs.files fileTree(dir: "test", include: "**/*")
     inputs.property("version", { version.toString() })
     outputs.file upToDateFile
 
-    def executableName = Os.isFamily(Os.FAMILY_WINDOWS) ? 'python' : 'python3'
+    def executableName = Os.isFamily(Os.FAMILY_WINDOWS) ? "python" : "python3"
 
-    commandLine executableName, './test/tests.py'
-    environment 'BATECT_VERSION', version.toString()
+    commandLine executableName, "./test/tests.py"
+    environment "BATECT_VERSION", version.toString()
 
     doLast {
         // Based on https://stackoverflow.com/questions/1406473/simulate-touch-command-with-java
@@ -98,8 +98,8 @@ tasks.register("test", Exec) {
 }
 
 tasks.register("check") {
-    description 'Runs all checks.'
-    group 'Verification'
+    description "Runs all checks."
+    group "Verification"
 
     dependsOn test
     dependsOn build

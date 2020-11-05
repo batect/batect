@@ -15,13 +15,13 @@
 */
 
 plugins {
-    id 'batect-kotlin'
+    id "batect-kotlin"
 }
 
 dependencies {
-    implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.0.1'
-    implementation 'com.github.jnr:jnr-posix:3.0.57'
+    implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.0.1"
+    implementation "com.github.jnr:jnr-posix:3.0.57"
 
-    testImplementation 'com.google.jimfs:jimfs:1.1'
-    testImplementation project(':libs:test-utils')
+    testImplementation "com.google.jimfs:jimfs:1.1"
+    testImplementation project(":libs:test-utils")
 }

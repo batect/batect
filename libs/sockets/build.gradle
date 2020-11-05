@@ -15,25 +15,25 @@
 */
 
 plugins {
-    id 'batect-kotlin'
+    id "batect-kotlin"
 }
 
 dependencies {
     implementation platform("com.squareup.okhttp3:okhttp-bom:4.9.0")
 
-    implementation 'com.github.jnr:jnr-unixsocket:0.32'
-    implementation 'com.squareup.okhttp3:okhttp'
+    implementation "com.github.jnr:jnr-unixsocket:0.32"
+    implementation "com.squareup.okhttp3:okhttp"
 
-    implementation project(':libs:os')
+    implementation project(":libs:os")
 
-    testImplementation project(':libs:test-utils')
+    testImplementation project(":libs:test-utils")
 }
 
 checkUnitTestLayout {
     ignoreFileNameCheck = fileTree(
-        dir: 'src/unitTest/kotlin',
+        dir: "src/unitTest/kotlin",
         includes: [
-            'batect/sockets/namedpipes/NamedPipeTestServer.kt',
+            "batect/sockets/namedpipes/NamedPipeTestServer.kt",
         ]
     )
 }

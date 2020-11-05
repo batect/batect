@@ -18,6 +18,6 @@ def libsCheckTask = tasks.register("check")
 
 subprojects { project ->
     afterEvaluate {
-        libsCheckTask.configure { dependsOn(project.tasks.named('check')) }
+        libsCheckTask.configure { dependsOn(project.tasks.named("check")) }
     }
 }

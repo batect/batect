@@ -15,8 +15,8 @@
 */
 
 tasks.register("build", Copy) {
-    description 'Build the wrapper scripts.'
-    group 'Build'
+    description "Build the wrapper scripts."
+    group "Build"
 
     from project("unix").getTasksByName("build", false)
     from project("windows").getTasksByName("build", false)

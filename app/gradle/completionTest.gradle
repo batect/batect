@@ -18,12 +18,12 @@ sourceSets {
     completionTest {}
 }
 
-def testEnvironmentImageName = 'batect-completion-fish-test-env'
-def fishDir = project.file('src/completionTest/fish').absolutePath
+def testEnvironmentImageName = "batect-completion-fish-test-env"
+def fishDir = project.file("src/completionTest/fish").absolutePath
 
 tasks.register("buildFishCompletionTestEnvironmentImage", Exec) {
-    description 'Build the Docker image used as a test environment.'
-    group 'Verification'
+    description "Build the Docker image used as a test environment."
+    group "Verification"
 
     def imageDirectory = project.file "$fishDir/env"
     inputs.dir imageDirectory
@@ -32,10 +32,10 @@ tasks.register("buildFishCompletionTestEnvironmentImage", Exec) {
     errorOutput = standardOutput
     ignoreExitValue = true
 
-    environment 'DOCKER_BUILDKIT', '1'
+    environment "DOCKER_BUILDKIT", "1"
 
-    commandLine 'docker', 'build',
-        '-t', testEnvironmentImageName,
+    commandLine "docker", "build",
+        "-t", testEnvironmentImageName,
         imageDirectory
 
     doLast {
@@ -46,24 +46,24 @@ tasks.register("buildFishCompletionTestEnvironmentImage", Exec) {
 }
 
 tasks.register("testFishCompletion", Exec) {
-    description 'Runs the tests for the Fish shell tab completion.'
-    group 'Verification'
+    description "Runs the tests for the Fish shell tab completion."
+    group "Verification"
 
     def upToDateFile = getTemporaryDir().toPath().resolve("lastRun")
 
-    inputs.files fileTree(dir: "$fishDir", include: '**/*')
+    inputs.files fileTree(dir: "$fishDir", include: "**/*")
     inputs.files installShadowDist
     outputs.file upToDateFile
 
     dependsOn buildFishCompletionTestEnvironmentImage
     dependsOn installShadowDist
 
-    commandLine 'docker', 'run', '--rm', '-t',
-        '-v', "$fishDir/tests:/tests",
-        '-v', "$buildDir/install/app-shadow:/app",
-        '-w', "/tests",
-        '-e', "BATECT_ENABLE_TELEMETRY=false",
-        testEnvironmentImageName, './tests.py'
+    commandLine "docker", "run", "--rm", "-t",
+        "-v", "$fishDir/tests:/tests",
+        "-v", "$buildDir/install/app-shadow:/app",
+        "-w", "/tests",
+        "-e", "BATECT_ENABLE_TELEMETRY=false",
+        testEnvironmentImageName, "./tests.py"
 
     doLast {
         // Based on https://stackoverflow.com/questions/1406473/simulate-touch-command-with-java

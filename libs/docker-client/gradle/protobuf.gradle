@@ -17,29 +17,29 @@
 import java.nio.file.FileSystems
 
 def protosDir = project.buildDir.toPath().resolve("protos")
-def buildKitVersion = 'v0.7.2'
-def protobufVersion = '3.13.0'
+def buildKitVersion = "v0.7.2"
+def protobufVersion = "3.13.0"
 
 def protos = [
-    'github.com/moby/buildkit/api/services/control/control.proto': buildKitVersion,
-    'github.com/moby/buildkit/solver/pb/ops.proto': buildKitVersion,
-    'github.com/moby/buildkit/api/types/worker.proto': buildKitVersion,
-    'github.com/gogo/protobuf/gogoproto/gogo.proto': 'v1.3.1'
+    "github.com/moby/buildkit/api/services/control/control.proto": buildKitVersion,
+    "github.com/moby/buildkit/solver/pb/ops.proto"               : buildKitVersion,
+    "github.com/moby/buildkit/api/types/worker.proto"            : buildKitVersion,
+    "github.com/gogo/protobuf/gogoproto/gogo.proto"              : "v1.3.1"
 ]
 
 task downloadProtos() {
     def sourceDestinationPairs = [:]
 
-    protos.forEach {path, version ->
-        if (!path.startsWith('github.com')) {
+    protos.forEach { path, version ->
+        if (!path.startsWith("github.com")) {
             throw RuntimeException("Protobuf path $path is not from github.com")
         }
 
-        def sourceSegments = path.split('/')
-        def sourceRepo = sourceSegments.drop(1).take(2).join('/')
-        def sourcePath = sourceSegments.drop(3).join('/')
+        def sourceSegments = path.split("/")
+        def sourceRepo = sourceSegments.drop(1).take(2).join("/")
+        def sourcePath = sourceSegments.drop(3).join("/")
         def sourceUrl = "https://raw.githubusercontent.com/$sourceRepo/$version/$sourcePath"
-        def destinationPath = protosDir.resolve("github.com/$sourceRepo/$sourcePath".replace('/', FileSystems.default.separator)).toString()
+        def destinationPath = protosDir.resolve("github.com/$sourceRepo/$sourcePath".replace("/", FileSystems.default.separator)).toString()
 
         sourceDestinationPairs[sourceUrl] = destinationPath
     }

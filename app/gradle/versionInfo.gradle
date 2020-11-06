@@ -29,7 +29,7 @@ String getBuildDate() {
 
 String versionInfoFileContents() {
     kotlinLicenseHeader +
-    """ |package batect
+        """ |package batect
         |
         |import batect.logging.LogMessageBuilder
         |import batect.primitives.ApplicationVersionInfoProvider
@@ -54,8 +54,8 @@ String versionInfoFileContents() {
 def versionInfoFile = Paths.get("$projectDir/src/main/kotlin/batect/VersionInfo.kt").toFile()
 
 tasks.register("generateVersionInfoFile") {
-    description 'Generates the version info file that is compiled into the application.'
-    group 'Build'
+    description "Generates the version info file that is compiled into the application."
+    group "Build"
 
     inputs.property("version", { rootProject.simpleVersion })
     inputs.property("gitCommitHash", { rootProject.gitCommitHash })
@@ -74,8 +74,8 @@ tasks.named("compileKotlin").configure {
 }
 
 tasks.register("cleanVersionInfo", Delete) {
-    description 'Removes the generated version info file.'
-    group 'Other'
+    description "Removes the generated version info file."
+    group "Other"
 
     delete versionInfoFile
 }

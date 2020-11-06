@@ -27,7 +27,7 @@ String runProcess(String... args) {
     def output = process.inputStream.getText()
 
     if (exitCode != 0) {
-        throw new RuntimeException("'${args.join(" ")}' failed with exit code $exitCode. Output was: $output")
+        throw new RuntimeException("\"${args.join(" ")}\" failed with exit code $exitCode. Output was: $output")
     }
 
     return output.trim()

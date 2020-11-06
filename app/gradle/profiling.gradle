@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-// Use this like this: ./gradlew profileApp --args='-f ./src/journeyTest/resources/simple-task-using-image/batect.yml --list-tasks'
+// Use this like this: ./gradlew profileApp --args="-f ./src/journeyTest/resources/simple-task-using-image/batect.yml --list-tasks"
 // Note that this is configured for macOS, for Linux change the agentpath argument below.
 tasks.register("profileApp", JavaExec) {
     dependsOn jar
@@ -22,6 +22,6 @@ tasks.register("profileApp", JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
     main = project.mainClassName
 
-    // To enable memory instrumentation, add 'alloceach=1' below.
+    // To enable memory instrumentation, add "alloceach=1" below.
     jvmArgs = ["-agentpath:/Applications/YourKit-Java-Profiler-2018.04.app/Contents/Resources/bin/mac/libyjpagent.jnilib=tracing,monitors,onexit=snapshot,sessionname=batect,snapshot_name_format={sessionname}-{datetime}"]
 }

@@ -27,8 +27,8 @@ configurations {
 }
 
 tasks.register("integrationTest", Test) {
-    description 'Runs the integration tests.'
-    group 'Verification'
+    description "Runs the integration tests."
+    group "Verification"
     testClassesDirs = sourceSets.integrationTest.output.classesDirs
     classpath = sourceSets.integrationTest.runtimeClasspath
 
@@ -46,5 +46,5 @@ tasks.named("integrationTestClasses").configure {
 }
 
 dependencies {
-    integrationTestImplementation 'org.graylog.repackaged:os-platform-finder:1.2.3'
+    integrationTestImplementation "org.graylog.repackaged:os-platform-finder:1.2.3"
 }

@@ -27,13 +27,13 @@ configurations {
 }
 
 dependencies {
-    journeyTestImplementation 'ch.tutteli.atrium:atrium-fluent-en_GB:0.12.0'
+    journeyTestImplementation "ch.tutteli.atrium:atrium-fluent-en_GB:0.12.0"
 }
 
 abstract class JourneyTest extends Test {}
 
 tasks.withType(JourneyTest).configureEach {
-    group 'Verification'
+    group "Verification"
     testClassesDirs = sourceSets.journeyTest.output.classesDirs
     classpath = sourceSets.journeyTest.runtimeClasspath
 
@@ -42,14 +42,14 @@ tasks.withType(JourneyTest).configureEach {
 
     inputs.files installShadowDist
 
-    environment 'BATECT_ENABLE_TELEMETRY', 'false'
+    environment "BATECT_ENABLE_TELEMETRY", "false"
 }
 
-def windowsTests = 'batect/journeytests/windowscontainers/**'
-def cleanupTests = 'batect/journeytests/cleanup/**'
+def windowsTests = "batect/journeytests/windowscontainers/**"
+def cleanupTests = "batect/journeytests/cleanup/**"
 
 tasks.register("journeyTestWindowsContainers", JourneyTest) {
-    description 'Runs the journey tests for Windows containers.'
+    description "Runs the journey tests for Windows containers."
 
     include windowsTests
 
@@ -57,7 +57,7 @@ tasks.register("journeyTestWindowsContainers", JourneyTest) {
 }
 
 tasks.register("journeyTestLinuxContainersParallelisable", JourneyTest) {
-    description 'Runs the journey tests for Linux containers that can run in parallel.'
+    description "Runs the journey tests for Linux containers that can run in parallel."
 
     exclude windowsTests
     exclude cleanupTests
@@ -68,7 +68,7 @@ tasks.register("journeyTestLinuxContainersParallelisable", JourneyTest) {
 }
 
 tasks.register("journeyTestLinuxContainersNonParallelisable", JourneyTest) {
-    description 'Runs the journey tests for Linux containers that cannot run in parallel.'
+    description "Runs the journey tests for Linux containers that cannot run in parallel."
 
     include cleanupTests
 
@@ -76,16 +76,16 @@ tasks.register("journeyTestLinuxContainersNonParallelisable", JourneyTest) {
 }
 
 tasks.register("journeyTestLinuxContainers") {
-    description 'Runs the journey tests for Linux containers.'
-    group 'Verification'
+    description "Runs the journey tests for Linux containers."
+    group "Verification"
 
     dependsOn journeyTestLinuxContainersParallelisable
     dependsOn journeyTestLinuxContainersNonParallelisable
 }
 
 tasks.register("journeyTest") {
-    description 'Runs the journey tests.'
-    group 'Verification'
+    description "Runs the journey tests."
+    group "Verification"
 
     dependsOn journeyTestWindowsContainers
     dependsOn journeyTestLinuxContainers
@@ -93,9 +93,9 @@ tasks.register("journeyTest") {
 
 checkJourneyTestNaming {
     ignoreFileNameCheck = fileTree(
-        dir: 'src/journeyTest/kotlin',
-        includes: [
-            'batect/journeytests/testutils/**',
-        ]
+            dir: "src/journeyTest/kotlin",
+            includes: [
+                    "batect/journeytests/testutils/**",
+            ]
     )
 }

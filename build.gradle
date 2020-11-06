@@ -15,11 +15,11 @@
 */
 
 plugins {
-    id 'com.diffplug.spotless'
-    id 'com.github.ben-manes.versions' version '0.34.0'
-    id 'org.ajoberstar.reckon' version '0.13.0'
-    id 'org.jetbrains.kotlin.jvm' apply false
-    id 'org.jetbrains.kotlin.plugin.serialization' apply false
+    id "com.diffplug.spotless"
+    id "com.github.ben-manes.versions" version "0.34.0"
+    id "org.ajoberstar.reckon" version "0.13.0"
+    id "org.jetbrains.kotlin.jvm" apply false
+    id "org.jetbrains.kotlin.plugin.serialization" apply false
 }
 
 apply from: "$rootDir/gradle/spotless.gradle"
@@ -28,8 +28,8 @@ apply from: "$rootDir/gradle/utilities.gradle"
 apply from: "$rootDir/gradle/versioning.gradle"
 
 tasks.register("assembleRelease", Copy) {
-    description 'Prepares files for release.'
-    group 'Distribution'
+    description "Prepares files for release."
+    group "Distribution"
 
     from project("app").getTasksByName("shadowJar", false)
     from project("wrapper").getTasksByName("build", false)

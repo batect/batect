@@ -15,23 +15,23 @@
 */
 
 plugins {
-    id 'batect-kotlin'
+    id "batect-kotlin"
 }
 
 dependencies {
     implementation platform("com.squareup.okhttp3:okhttp-bom:4.9.0")
 
-    implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.0.1'
-    implementation 'com.squareup.okhttp3:okhttp'
+    implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.0.1"
+    implementation "com.squareup.okhttp3:okhttp"
 
-    implementation project(':libs:io')
-    implementation project(':libs:logging')
-    implementation project(':libs:os')
-    implementation project(':libs:primitives')
+    implementation project(":libs:io")
+    implementation project(":libs:logging")
+    implementation project(":libs:os")
+    implementation project(":libs:primitives")
 
-    testImplementation 'org.araqnid:hamkrest-json:1.1.2'
-    testImplementation 'com.google.jimfs:jimfs:1.1'
+    testImplementation "org.araqnid:hamkrest-json:1.1.2"
+    testImplementation "com.google.jimfs:jimfs:1.1"
 
-    testImplementation project(':libs:logging-test-utils')
-    testImplementation project(':libs:test-utils')
+    testImplementation project(":libs:logging-test-utils")
+    testImplementation project(":libs:test-utils")
 }

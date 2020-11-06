@@ -15,14 +15,14 @@
 */
 
 plugins {
-    id 'batect-kotlin'
+    id "batect-kotlin"
 }
 
-apply from: 'gradle/integrationTest.gradle'
+apply from: "gradle/integrationTest.gradle"
 
 dependencies {
-    implementation project(':libs:logging')
-    implementation project(':libs:os')
+    implementation project(":libs:logging")
+    implementation project(":libs:os")
 
-    testImplementation project(':libs:test-utils')
+    testImplementation project(":libs:test-utils")
 }

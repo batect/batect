@@ -1,4 +1,4 @@
-FROM nginx:1.19.3
+FROM nginx:1.19.4
 
 COPY health-check.sh /tools/
 

@@ -29,7 +29,7 @@ dependencies {
     implementation "com.github.oshi:oshi-core:4.0.0"
     implementation "org.jetbrains.kotlin:kotlin-gradle-plugin:1.4.10"
     implementation "org.jetbrains.kotlin:kotlin-serialization:1.4.10"
-    implementation "com.diffplug.spotless:spotless-plugin-gradle:5.8.0"
+    implementation "com.diffplug.spotless:spotless-plugin-gradle:5.8.1"
 }
 
 gradlePlugin {

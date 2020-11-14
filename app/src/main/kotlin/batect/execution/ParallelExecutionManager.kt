@@ -46,6 +46,7 @@ class ParallelExecutionManager(
     private val taskStepRunner: TaskStepRunner,
     private val stateMachine: TaskStateMachine,
     private val telemetrySessionBuilder: TelemetrySessionBuilder,
+    private val maximumLevelOfParallelism: Int?,
     private val logger: Logger
 ) : TaskEventSink {
     private val threadPool = createThreadPool()
@@ -92,7 +93,7 @@ class ParallelExecutionManager(
     private fun startNewWorkIfPossible() {
         synchronized(startNewWorkLockObject) {
             try {
-                while (true) {
+                while (canRunMoreSteps()) {
                     val stepsStillRunning = runningSteps.isNotEmpty()
                     val step = stateMachine.popNextStep(stepsStillRunning) ?: break
 
@@ -111,6 +112,16 @@ class ParallelExecutionManager(
                 }
             }
         }
+    }
+
+    private fun canRunMoreSteps(): Boolean {
+        if (maximumLevelOfParallelism == null) {
+            return true
+        }
+
+        val stepsThatCountAgainstParallelismCap = runningSteps.count { it.countsAgainstParallelismCap }
+
+        return stepsThatCountAgainstParallelismCap < maximumLevelOfParallelism
     }
 
     private fun runStep(step: TaskStep, threadPool: ThreadPoolExecutor) {

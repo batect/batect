@@ -31,11 +31,14 @@ import batect.logging.ContainerNameOnlySerializer
 import batect.logging.LogMessageBuilder
 import batect.logging.PathSerializer
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import kotlinx.serialization.UseSerializers
 import java.nio.file.Path
 
 @Serializable
-sealed class TaskStep
+sealed class TaskStep(
+    @Transient val countsAgainstParallelismCap: Boolean = true
+)
 
 @Serializable
 data class BuildImageStep(val container: Container) : TaskStep()
@@ -58,7 +61,7 @@ data class CreateContainerStep(
 ) : TaskStep()
 
 @Serializable
-data class RunContainerStep(val container: Container, val dockerContainer: DockerContainer) : TaskStep()
+data class RunContainerStep(val container: Container, val dockerContainer: DockerContainer) : TaskStep(countsAgainstParallelismCap = false)
 
 @Serializable
 data class RunContainerSetupCommandsStep(

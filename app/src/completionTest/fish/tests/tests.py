@@ -39,6 +39,7 @@ class FishCompletionTests(unittest.TestCase):
             "--linux-cache-init-image",
             "--list-tasks",
             "--log-file",
+            "--max-parallelism",
             "--no-cleanup",
             "--no-cleanup-after-failure",
             "--no-cleanup-after-success",

@@ -16,9 +16,17 @@
 
 package batect.testutils
 
+import batect.config.Container
+import batect.docker.DockerContainer
 import batect.docker.DockerNetwork
 import batect.execution.model.steps.DeleteTaskNetworkStep
+import batect.execution.model.steps.RunContainerStep
 import batect.execution.model.steps.TaskStep
 import batect.utils.generateId
 
-fun createMockTaskStep(): TaskStep = DeleteTaskNetworkStep(DockerNetwork(generateId(10)))
+fun createMockTaskStep(countsAgainstParallelismCap: Boolean = true): TaskStep =
+    if (countsAgainstParallelismCap) {
+        DeleteTaskNetworkStep(DockerNetwork(generateId(10)))
+    } else {
+        RunContainerStep(Container(generateId(10), imageSourceDoesNotMatter()), DockerContainer(generateId(10)))
+    }

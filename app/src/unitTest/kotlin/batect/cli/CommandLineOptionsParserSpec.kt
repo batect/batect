@@ -250,6 +250,7 @@ object CommandLineOptionsParserSpec : Spek({
             listOf("--enable-buildkit", "some-task") to defaultCommandLineOptions.copy(enableBuildKit = true, taskName = "some-task"),
             listOf("--generate-completion-script=fish") to defaultCommandLineOptions.copy(generateShellTabCompletionScript = KnownShell.Fish),
             listOf("--generate-completion-task-info=fish") to defaultCommandLineOptions.copy(generateShellTabCompletionTaskInformation = KnownShell.Fish),
+            listOf("--max-parallelism=3", "some-task") to defaultCommandLineOptions.copy(maximumLevelOfParallelism = 3, taskName = "some-task"),
         ).forEach { (args, expectedResult) ->
             given("the arguments $args") {
                 on("parsing the command line") {

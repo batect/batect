@@ -219,6 +219,10 @@ object EnvironmentTelemetryCollectorSpec : Spek({
                                     verify(telemetrySessionBuilder).addAttribute("skippingPrerequisites", false)
                                 }
 
+                                it("reports that no maximum level of parallelism is set") {
+                                    verify(telemetrySessionBuilder).addAttribute("maximumLevelOfParallelism", null as Int?)
+                                }
+
                                 it("reports that no CI system was detected") {
                                     verify(telemetrySessionBuilder).addAttribute("suspectRunningOnCI", false)
                                     verify(telemetrySessionBuilder).addAttribute("suspectedCISystem", null as String?)
@@ -272,7 +276,8 @@ object EnvironmentTelemetryCollectorSpec : Spek({
                             dockerUseTLS = true,
                             dockerVerifyTLS = true,
                             existingNetworkToUse = "some-network",
-                            skipPrerequisites = true
+                            skipPrerequisites = true,
+                            maximumLevelOfParallelism = 3
                         )
 
                         val environmentCollector by createEnvironmentCollector(hostEnvironmentVariables, commandLineOptions)
@@ -341,6 +346,10 @@ object EnvironmentTelemetryCollectorSpec : Spek({
 
                         it("reports that prerequisites are being skipped") {
                             verify(telemetrySessionBuilder).addAttribute("skippingPrerequisites", true)
+                        }
+
+                        it("reports the configured maximum level of parallelism") {
+                            verify(telemetrySessionBuilder).addAttribute("maximumLevelOfParallelism", 3)
                         }
                     }
                 }

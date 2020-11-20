@@ -84,7 +84,7 @@ class UnixNativeMethods(
             val errno = posix.errno().toLong()
 
             if (errno == 0L) {
-                throw RuntimeException("User with UID $uid does not exist.")
+                return uid.toString()
             }
 
             throw UnixNativeMethodException(posix::getpwuid.name, Errno.valueOf(errno))
@@ -101,7 +101,7 @@ class UnixNativeMethods(
             val errno = posix.errno().toLong()
 
             if (errno == 0L) {
-                throw RuntimeException("Group with GID $gid does not exist.")
+                return gid.toString()
             }
 
             throw UnixNativeMethodException(posix::getgrgid.name, Errno.valueOf(errno))

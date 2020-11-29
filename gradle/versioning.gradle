@@ -28,7 +28,7 @@ tasks.register("validateVersionMatchesTag") {
         }
 
         if (gitTag != project.version.toString()) {
-            throw new Exception("The tag for this commit is \"$gitTag\", but the project version is set to \"$project.version\".")
+            throw new Exception("The tag for this commit is '$gitTag', but the project version is set to '$project.version'.")
         }
     }
 }

@@ -74,6 +74,7 @@ class EnvironmentTelemetryCollector(
         telemetrySessionBuilder.addAttribute("verifyingTLSForDockerConnection", commandLineOptions.dockerVerifyTLS)
         telemetrySessionBuilder.addAttribute("usingExistingDockerNetwork", commandLineOptions.existingNetworkToUse != null)
         telemetrySessionBuilder.addAttribute("skippingPrerequisites", commandLineOptions.skipPrerequisites)
+        telemetrySessionBuilder.addAttribute("maximumLevelOfParallelism", commandLineOptions.maximumLevelOfParallelism)
     }
 
     private fun addConsoleAttributes() {

@@ -133,6 +133,19 @@ Example:
 ./batect --use-network=my-existing-network the-task
 ```
 
+### Limit parallelism <small>(`--max-parallelism`)</small>
+
+By default, batect will try to run all setup and cleanup steps in parallel. On some machines, this can lead to timeouts and other issues.
+Use this option to limit the number of setup or cleanup steps to run in parallel.
+
+Note that this does not limit the number of containers that can run in parallel.
+
+Example:
+
+```shell
+./batect --max-parallelism=4 the-task
+```
+
 ## See a list of available tasks <small>(`--list-tasks` or `-T`)</small>
 
 batect can produce a short summary of all tasks in the current configuration file along with their

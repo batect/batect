@@ -75,6 +75,7 @@ class CommandLineOptionsParser(
     private val disablePortMappings: Boolean by flagOption(executionOptionsGroup, "disable-ports", "Disable binding of ports on the host.")
     private val existingNetworkToUse: String? by valueOption(executionOptionsGroup, "use-network", "Existing Docker network to use for all tasks. If not set, a new network is created for each task.")
     private val skipPrerequisites: Boolean by flagOption(executionOptionsGroup, "skip-prerequisites", "Don't run prerequisites for the named task.")
+    private val maximumLevelOfParallelism: Int? by valueOption(executionOptionsGroup, "max-parallelism", "Maximum number of setup or cleanup steps to run in parallel when running a task", ValueConverters.positiveInteger)
 
     private val configurationFileName: Path by valueOption(
         executionOptionsGroup,
@@ -317,7 +318,8 @@ class CommandLineOptionsParser(
         disableTelemetry = disableTelemetry,
         enableBuildKit = enableBuildKit,
         generateShellTabCompletionScript = generateShellTabCompletionScript,
-        generateShellTabCompletionTaskInformation = generateShellTabCompletionTaskInformation
+        generateShellTabCompletionTaskInformation = generateShellTabCompletionTaskInformation,
+        maximumLevelOfParallelism = maximumLevelOfParallelism
     )
 }
 

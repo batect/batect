@@ -153,35 +153,69 @@ object UnixNativeMethodsSpec : Spek({
         }
 
         describe("getting the current user and group information") {
-            val userInfo = mock<Passwd> {
-                on { loginName } doReturn "awesome-user"
+            describe("when the user and group exist") {
+                val userInfo = mock<Passwd> {
+                    on { loginName } doReturn "awesome-user"
+                }
+
+                val groupInfo = mock<Group> {
+                    on { name } doReturn "awesome-group"
+                }
+
+                beforeEachTest {
+                    whenever(posix.geteuid()).doReturn(123)
+                    whenever(posix.getpwuid(123)).doReturn(userInfo)
+                    whenever(posix.getegid()).doReturn(456)
+                    whenever(posix.getgrgid(456)).doReturn(groupInfo)
+                }
+
+                it("returns the user ID reported by the system API") {
+                    assertThat(nativeMethods.getUserId(), equalTo(123))
+                }
+
+                it("returns the user name reported by the system API") {
+                    assertThat(nativeMethods.getUserName(), equalTo("awesome-user"))
+                }
+
+                it("returns the group ID reported by the system API") {
+                    assertThat(nativeMethods.getGroupId(), equalTo(456))
+                }
+
+                it("returns the group name reported by the system API") {
+                    assertThat(nativeMethods.getGroupName(), equalTo("awesome-group"))
+                }
             }
 
-            val groupInfo = mock<Group> {
-                on { name } doReturn "awesome-group"
+            describe("when the user does not exist") {
+                beforeEachTest {
+                    whenever(posix.geteuid()).doReturn(123)
+                    whenever(posix.getpwuid(123)).doReturn(null)
+                    whenever(posix.errno()).doReturn(0)
+                }
+
+                it("returns the user ID reported by the system API") {
+                    assertThat(nativeMethods.getUserId(), equalTo(123))
+                }
+
+                it("returns the user ID as the user name") {
+                    assertThat(nativeMethods.getUserName(), equalTo("123"))
+                }
             }
 
-            beforeEachTest {
-                whenever(posix.geteuid()).doReturn(123)
-                whenever(posix.getpwuid(123)).doReturn(userInfo)
-                whenever(posix.getegid()).doReturn(456)
-                whenever(posix.getgrgid(456)).doReturn(groupInfo)
-            }
+            describe("when the group does not exist") {
+                beforeEachTest {
+                    whenever(posix.getegid()).doReturn(456)
+                    whenever(posix.getgrgid(456)).doReturn(null)
+                    whenever(posix.errno()).doReturn(0)
+                }
 
-            it("returns the user ID reported by the system API") {
-                assertThat(nativeMethods.getUserId(), equalTo(123))
-            }
+                it("returns the group ID reported by the system API") {
+                    assertThat(nativeMethods.getGroupId(), equalTo(456))
+                }
 
-            it("returns the user name reported by the system API") {
-                assertThat(nativeMethods.getUserName(), equalTo("awesome-user"))
-            }
-
-            it("returns the group ID reported by the system API") {
-                assertThat(nativeMethods.getGroupId(), equalTo(456))
-            }
-
-            it("returns the group name reported by the system API") {
-                assertThat(nativeMethods.getGroupName(), equalTo("awesome-group"))
+                it("returns the group ID as the group name") {
+                    assertThat(nativeMethods.getGroupName(), equalTo("456"))
+                }
             }
         }
     }

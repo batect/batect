@@ -76,7 +76,7 @@ class ContainersAPI(
             .url(url)
             .build()
 
-        clientWithTimeout(60, TimeUnit.SECONDS).newCall(request).execute().use { response ->
+        clientWithTimeout(90, TimeUnit.SECONDS).newCall(request).execute().use { response ->
             checkForFailure(response) { error ->
                 logger.error {
                     message("Container creation failed.")
@@ -214,7 +214,7 @@ class ContainersAPI(
             .url(url)
             .build()
 
-        clientWithTimeout(30, TimeUnit.SECONDS).newCall(request).execute().use { response ->
+        clientWithTimeout(60, TimeUnit.SECONDS).newCall(request).execute().use { response ->
             checkForFailure(response) { error ->
                 logger.error {
                     message("Could not remove container.")

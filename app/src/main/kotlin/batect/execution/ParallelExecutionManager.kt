@@ -28,6 +28,7 @@ import batect.primitives.CancellationException
 import batect.telemetry.TelemetrySessionBuilder
 import batect.telemetry.addUnhandledExceptionEvent
 import batect.ui.EventLogger
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.LinkedBlockingQueue
@@ -45,12 +46,13 @@ class ParallelExecutionManager(
     private val taskStepRunner: TaskStepRunner,
     private val stateMachine: TaskStateMachine,
     private val telemetrySessionBuilder: TelemetrySessionBuilder,
+    private val maximumLevelOfParallelism: Int?,
     private val logger: Logger
 ) : TaskEventSink {
     private val threadPool = createThreadPool()
     private val startNewWorkLockObject = Object()
     private val finishedSignal = CountDownLatch(1)
-    private var runningSteps = 0
+    private val runningSteps = ConcurrentHashMap.newKeySet<TaskStep>()
 
     fun run() {
         startNewWorkIfPossible()
@@ -75,7 +77,7 @@ class ParallelExecutionManager(
                     postEvent(ExecutionFailedEvent(t.toString()))
                 }
 
-                afterStepFinished()
+                startNewWorkIfPossible()
             }
         }
 
@@ -88,22 +90,13 @@ class ParallelExecutionManager(
         }
     }
 
-    private fun startNewWorkIfPossible(justCompletedStep: Boolean = false) {
+    private fun startNewWorkIfPossible() {
         synchronized(startNewWorkLockObject) {
-            if (justCompletedStep) {
-                runningSteps--
-            }
-
             try {
-                while (true) {
-                    val stepsStillRunning = runningSteps > 0
-                    val step = stateMachine.popNextStep(stepsStillRunning)
+                while (canRunMoreSteps()) {
+                    val stepsStillRunning = runningSteps.isNotEmpty()
+                    val step = stateMachine.popNextStep(stepsStillRunning) ?: break
 
-                    if (step == null) {
-                        break
-                    }
-
-                    runningSteps++
                     runStep(step, threadPool)
                 }
             } catch (e: Throwable) {
@@ -114,14 +107,26 @@ class ParallelExecutionManager(
 
                 throw e
             } finally {
-                if (runningSteps == 0) {
+                if (runningSteps.isEmpty()) {
                     finishedSignal.countDown()
                 }
             }
         }
     }
 
+    private fun canRunMoreSteps(): Boolean {
+        if (maximumLevelOfParallelism == null) {
+            return true
+        }
+
+        val stepsThatCountAgainstParallelismCap = runningSteps.count { it.countsAgainstParallelismCap }
+
+        return stepsThatCountAgainstParallelismCap < maximumLevelOfParallelism
+    }
+
     private fun runStep(step: TaskStep, threadPool: ThreadPoolExecutor) {
+        runningSteps.add(step)
+
         threadPool.execute {
             try {
                 logger.info {
@@ -151,6 +156,8 @@ class ParallelExecutionManager(
                         postEvent(ExecutionFailedEvent("During execution of step of kind '${step::class.simpleName}': " + t.toString()))
                     }
                 }
+            } finally {
+                runningSteps.remove(step)
             }
         }
     }
@@ -161,9 +168,5 @@ class ParallelExecutionManager(
             exception(ex)
             data("step", step)
         }
-    }
-
-    private fun afterStepFinished() {
-        startNewWorkIfPossible(justCompletedStep = true)
     }
 }

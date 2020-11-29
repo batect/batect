@@ -1,0 +1,20 @@
+project_name: container-with-dependency-chain-test
+
+containers:
+  build-env:
+    build_directory: build-env
+    dependencies:
+      - server-1
+      - server-2
+
+  server-1:
+    build_directory: server-1
+
+  server-2:
+    build_directory: server-2
+
+tasks:
+  the-task:
+    run:
+      container: build-env
+      command: "sh -c 'echo Status code for first request: $(curl --fail --silent --show-error -o /dev/null -w \"%{http_code}\" http://server-1/index.html) && echo Status code for second request: $(curl --fail --silent --show-error -o /dev/null -w \"%{http_code}\" http://server-2/index.html)'"

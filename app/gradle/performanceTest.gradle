@@ -29,9 +29,9 @@ tasks.register("versionPerformanceScenario", PerformanceTestScenario) {
 }
 
 def outputOptions = [
-    '--output=simple': 'Simple',
-    '--output=quiet': 'Quiet',
-    '--output=fancy': 'Fancy'
+    "--output=simple": "Simple",
+    "--output=quiet" : "Quiet",
+    "--output=fancy" : "Fancy"
 ]
 
 outputOptions.each { option, name ->

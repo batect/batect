@@ -17,8 +17,8 @@
 apply from: "$rootDir/gradle/utilities.gradle"
 
 tasks.register("validateVersionMatchesTag") {
-    description 'Validates that the version currently configured in Gradle matches the current Git commit tag.'
-    group 'Verification'
+    description "Validates that the version currently configured in Gradle matches the current Git commit tag."
+    group "Verification"
 
     doLast {
         def gitTag = runProcess("git", "describe", "--dirty", "--candidates=0")
@@ -34,8 +34,8 @@ tasks.register("validateVersionMatchesTag") {
 }
 
 tasks.register("validateIsReleaseBuild") {
-    description 'Validates that the current build is a release build.'
-    group 'Verification'
+    description "Validates that the current build is a release build."
+    group "Verification"
 
     doLast {
         if (!isReleaseBuild()) {
@@ -45,8 +45,8 @@ tasks.register("validateIsReleaseBuild") {
 }
 
 tasks.register("validateRelease") {
-    description 'Validates that the current commit is ready to be released.'
-    group 'Verification'
+    description "Validates that the current commit is ready to be released."
+    group "Verification"
 
     dependsOn validateVersionMatchesTag
     dependsOn validateIsReleaseBuild
@@ -54,15 +54,15 @@ tasks.register("validateRelease") {
 
 reckon {
     scopeFromProp()
-    stageFromProp('dev', 'final')
+    stageFromProp("dev", "final")
 }
 
 String getCurrentGitCommitHash() {
-    return runProcess('git', 'describe', '--always', '--dirty', '--exclude', '*', '--abbrev=0')
+    return runProcess("git", "describe", "--always", "--dirty", "--exclude", "*", "--abbrev=0")
 }
 
 String getCurrentGitCommitHumanDate() {
-    return runProcess('git', 'show', '-s', '--format=%ci', 'HEAD')
+    return runProcess("git", "show", "-s", "--format=%ci", "HEAD")
 }
 
 boolean isReleaseBuild() {

@@ -31,11 +31,11 @@ ext.licenseText = """
 """
 
 spotless {
-    format 'misc', {
+    format "misc", {
         target fileTree(
-            dir: '.',
-            include: ['**/*.gradle', '**/*.md', '**/.gitignore', '**/*.yaml', '**/*.yml', '**/*.sh', '**/Dockerfile', '**/*.py', '**/*.json', '**/*.ps1', '**/*.cmd'],
-            excludes: ['**/node_modules/*', '**/build/*']
+            dir: ".",
+            include: ["**/*.gradle", "**/*.md", "**/.gitignore", "**/*.yaml", "**/*.yml", "**/*.sh", "**/Dockerfile", "**/*.py", "**/*.json", "**/*.ps1", "**/*.cmd"],
+            excludes: ["**/node_modules/*", "**/build/*"]
         )
 
         trimTrailingWhitespace()
@@ -43,25 +43,28 @@ spotless {
         endWithNewline()
     }
 
-    format 'gradle', {
-        target '**/*.gradle'
+    format "gradle", {
+        target "**/*.gradle"
 
         // Check what values are really required with: find . -name '*.gradle' -type f -exec sed -n 17p {} \; | cut -d' ' -f1 | sort | uniq
         licenseHeader "/*$licenseText*/\n\n", "(//|apply|def|ext|import|plugins|rootProject|sourceSets|tasks|buildscript)"
     }
 
-    format 'groovy', {
-        target '**/*.groovy'
+    format "groovy", {
+        target "**/*.groovy"
 
         licenseHeader "/*$licenseText*/\n\n", "package"
     }
 
     kotlinGradle {
-        target '*.gradle.kts'
+        target "*.gradle.kts"
 
         ktlint("0.39.0")
 
-        // Check what values are really required with: find . -name '*.gradle.kts' -type f -exec sed -n 17p {} \; | cut -d' ' -f1 | sort | uniq
+        // Check what values are really required with: find . -name '*.gradle.kts' -type f -exec sed -n 17p \{]} \; | cut -d' ' -f1 | sort | uniq
+        // TODO: This confuses spotless plugin for settings.gradle.kts -- is
+        //       this a spotless issue, or does this configuration need more
+        //       specificity?
         licenseHeader "/*$licenseText*/\n\n", "(import)"
     }
 }

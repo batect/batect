@@ -15,8 +15,9 @@
 */
 
 plugins {
-    id "java-gradle-plugin"
-    id "groovy"
+    id("java-gradle-plugin")
+    id("groovy")
+    kotlin("jvm") version "1.4.20"
 }
 
 repositories {
@@ -24,17 +25,19 @@ repositories {
 }
 
 dependencies {
-    implementation localGroovy()
-    implementation gradleApi()
-    implementation "com.github.oshi:oshi-core:4.0.0"
-    implementation "org.jetbrains.kotlin:kotlin-gradle-plugin:1.4.20"
-    implementation "org.jetbrains.kotlin:kotlin-serialization:1.4.20"
-    implementation "com.diffplug.spotless:spotless-plugin-gradle:5.8.2"
+    implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
+    implementation(localGroovy())
+    implementation(gradleApi())
+    implementation("org.jetbrains.kotlin:kotlin-gradle-plugin")
+    implementation("org.jetbrains.kotlin:kotlin-serialization")
+    implementation("com.github.oshi:oshi-core:4.0.0")
+    implementation("com.diffplug.spotless:spotless-plugin-gradle:5.8.2")
+    implementation("com.google.cloud:google-cloud-storage:1.113.1")
 }
 
 gradlePlugin {
     plugins {
-        batectKotlinPlugins {
+        create("batectKotlinPlugins") {
             id = "batect-kotlin"
             implementationClass = "batect.buildtools.KotlinPlugin"
         }

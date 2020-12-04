@@ -14,6 +14,7 @@
    limitations under the License.
 */
 
+import batect.buildtools.GoogleCloudStorageUpload
 import com.google.auth.oauth2.GoogleCredentials
 import com.google.cloud.storage.BlobId
 import com.google.cloud.storage.BlobInfo
@@ -68,38 +69,14 @@ val generateUpdateInfoFile = tasks.register("generateUpdateInfoFile") {
     }
 }
 
-tasks.register("uploadUpdateInfoFile") {
+tasks.register<GoogleCloudStorageUpload>("uploadUpdateInfoFile") {
     description = "Uploads update information file to publicly-accessible location."
     group = "Distribution"
 
     dependsOn(generateUpdateInfoFile)
-    inputs.file(updateInfoFile)
-    outputs.upToDateWhen { false }
 
-    doLast {
-        val environmentVariableName = "GCP_SERVICE_ACCOUNT_KEY"
-        val serviceAccountKey = System.getenv(environmentVariableName)
-
-        if (serviceAccountKey == null) {
-            throw RuntimeException("'$environmentVariableName' environment variable not set.")
-        }
-
-        val credentials = GoogleCredentials
-            .fromStream(ByteArrayInputStream(serviceAccountKey.toByteArray(Charsets.UTF_8)))
-            .createScoped(listOf("https://www.googleapis.com/auth/cloud-platform"))
-
-        val storage = StorageOptions.newBuilder()
-            .setProjectId("batect-updates-prod")
-            .setCredentials(credentials)
-            .build()
-            .getService()
-
-        val blobId = BlobId.of("batect-updates-prod-public", "v1/latest.json")
-        val blobInfo = BlobInfo.newBuilder(blobId)
-            .setCacheControl("public, max-age=300")
-            .setContentType("application/json")
-            .build()
-
-        storage.create(blobInfo, Files.readAllBytes(updateInfoFile.toPath()))
-    }
+    sourceFile.set(updateInfoFile)
+    projectId.set("batect-updates-prod")
+    bucket.set("batect-updates-prod-public")
+    destinationPath.set("v1/latest.json")
 }

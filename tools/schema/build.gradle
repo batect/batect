@@ -16,6 +16,7 @@
 
 // This is all based on https://github.com/sylvainlaurent/yaml-json-validator-maven-plugin.
 
+import batect.buildtools.GoogleCloudStorageUpload
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
@@ -39,9 +40,9 @@ buildscript {
 
 JsonSchema loadSchema(File schemaFile) {
     LoadingConfiguration loadingConfiguration = LoadingConfiguration.newBuilder()
-        .dereferencing(Dereferencing.INLINE).freeze();
+        .dereferencing(Dereferencing.INLINE).freeze()
     JsonSchemaFactory factory = JsonSchemaFactory.newBuilder()
-        .setLoadingConfiguration(loadingConfiguration).freeze();
+        .setLoadingConfiguration(loadingConfiguration).freeze()
 
     JsonNode schema = new ObjectMapper().readTree(schemaFile)
 
@@ -130,4 +131,14 @@ tasks.register("check") {
     group "Verification"
 
     dependsOn validateSampleFilesAgainstSchema
+}
+
+tasks.register("uploadConfigSchema", GoogleCloudStorageUpload) {
+    description = "Uploads config schema file to publicly-accessible location."
+    group = "Distribution"
+
+    sourceFile = file("configSchema.json")
+    projectId = "batect-ide-integration-prod"
+    bucket = "batect-ide-integration-prod-public"
+    destinationPath = "v1/configSchema.json"
 }

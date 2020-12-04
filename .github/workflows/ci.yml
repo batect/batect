@@ -461,7 +461,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload update information to bucket
-        run: ./gradlew uploadUpdateInfoFile
+      - name: Upload update information and config schema to bucket
+        run: ./gradlew uploadUpdateInfoFile uploadConfigSchema
         env:
           GCP_SERVICE_ACCOUNT_KEY: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}

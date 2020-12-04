@@ -13,7 +13,9 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import java.nio.file.Files
+import java.util.zip.GZIPOutputStream
 
 abstract class GoogleCloudStorageUpload : DefaultTask() {
     @get:PathSensitive(PathSensitivity.NONE)
@@ -52,8 +54,16 @@ abstract class GoogleCloudStorageUpload : DefaultTask() {
         val blobInfo = BlobInfo.newBuilder(blobId)
             .setCacheControl("public, max-age=300")
             .setContentType("application/json")
+            .setContentEncoding("gzip")
             .build()
 
-        storage.create(blobInfo, Files.readAllBytes(sourceFile.get().asFile.toPath()))
+        val buffer = ByteArrayOutputStream()
+
+        GZIPOutputStream(buffer).use { gzipStream ->
+            val sourceFileBytes = Files.readAllBytes(sourceFile.get().asFile.toPath())
+            gzipStream.write(sourceFileBytes)
+            gzipStream.finish()
+            storage.create(blobInfo, buffer.toByteArray())
+        }
     }
 }

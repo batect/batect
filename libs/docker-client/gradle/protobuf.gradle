@@ -18,7 +18,7 @@ import java.nio.file.FileSystems
 
 def protosDir = project.buildDir.toPath().resolve("protos")
 def buildKitVersion = "v0.7.2"
-def protobufVersion = "3.13.0"
+def protobufVersion = "3.14.0"
 
 def protos = [
     "github.com/moby/buildkit/api/services/control/control.proto": buildKitVersion,

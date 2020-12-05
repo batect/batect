@@ -17,7 +17,7 @@
         ".gradle$"
       ],
       "matchStrings": [
-        "ktlint\\(\"(?<currentValue>.*?)\"\\)"
+        "ktlint\\(\"(?<currentValue>[\\d.]*?)\"\\)"
       ],
       "datasourceTemplate": "maven",
       "depNameTemplate": "com.pinterest:ktlint"
@@ -32,6 +32,16 @@
         "testImplementation '(?<depName>.*?):(?<currentValue>[\\d.]*?)'"
       ],
       "datasourceTemplate": "maven"
+    },
+    {
+      "fileMatch": [
+        "KotlinPlugin.groovy$"
+      ],
+      "matchStrings": [
+        "jacoco {\\s+toolVersion = '(?<currentValue>[\\d.]*?)'"
+      ],
+      "datasourceTemplate": "maven",
+      "depNameTemplate": "org.jacoco:jacoco"
     }
   ]
 }

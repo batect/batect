@@ -21,6 +21,17 @@
       ],
       "datasourceTemplate": "maven",
       "depNameTemplate": "com.pinterest:ktlint"
+    },
+    {
+      "fileMatch": [
+        "KotlinPlugin.groovy$"
+      ],
+      "matchStrings": [
+        "testCommonImplementation '(?<depName>.*?):(?<currentValue>[\\d.]*?)'",
+        "testCommonRuntimeOnly '(?<depName>.*?):(?<currentValue>[\\d.]*?)'",
+        "testImplementation '(?<depName>.*?):(?<currentValue>[\\d.]*?)'"
+      ],
+      "datasourceTemplate": "maven"
     }
   ]
 }

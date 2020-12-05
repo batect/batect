@@ -9,5 +9,18 @@
   ],
   "automerge": true,
   "labels": ["is:dependency-update"],
-  "rebaseWhen": "behind-base-branch"
+  "rebaseWhen": "behind-base-branch",
+  "regexManagers": [
+    {
+      "fileMatch": [
+        ".groovy$",
+        ".gradle$"
+      ],
+      "matchStrings": [
+        "ktlint\\(\"(?<currentValue>.*?)\"\\)"
+      ],
+      "datasourceTemplate": "maven",
+      "depNameTemplate": "com.pinterest:ktlint"
+    }
+  ]
 }

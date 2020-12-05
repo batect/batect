@@ -2,10 +2,6 @@ version: "{build}"
 image: Visual Studio 2019
 skip_tags: true
 
-init:
-  - ps: if ($env:APPVEYOR_REPO_NAME -eq "batect/batect" -and $env:APPVEYOR_REPO_BRANCH -match '^dependabot/docker/.*/alpine-.*$') { echo "Skipping unnecessary Dependabot PR branch build"; Exit-AppveyorBuild }
-  - ps: if ($env:APPVEYOR_PULL_REQUEST_NUMBER -gt 0 -and $env:APPVEYOR_REPO_NAME -eq "batect/batect" -and $env:APPVEYOR_REPO_BRANCH -eq "master" -and $env:APPVEYOR_PULL_REQUEST_HEAD_REPO_NAME -eq "batect/batect" -and $env:APPVEYOR_PULL_REQUEST_HEAD_REPO_BRANCH -match '^dependabot/docker/.*/alpine-.*$') { echo "Skipping unnecessary Dependabot PR merge build"; Exit-AppveyorBuild }
-
 environment:
   GRADLE_OPTS: "-Dorg.gradle.internal.launcher.welcomeMessageEnabled=false"
   GRADLE_USER_HOME: "C:\\gradle"

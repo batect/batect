@@ -54,6 +54,7 @@ containers:
       retries: 1
       interval: 2s
       start_period: 5s
+      timeout: 10s
       command: exit 0
     run_as_current_user:
       enabled: true

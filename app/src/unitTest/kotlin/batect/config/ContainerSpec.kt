@@ -177,6 +177,7 @@ object ContainerSpec : Spek({
                   interval: 2s
                   retries: 10
                   start_period: 1s
+                  timeout: 4s
                   command: exit 0
                 run_as_current_user:
                   enabled: true
@@ -252,7 +253,7 @@ object ContainerSpec : Spek({
                         )
                     )
                     assertThat(result.portMappings, equalTo(setOf(PortMapping(1234, 5678), PortMapping(9012, 3456))))
-                    assertThat(result.healthCheckConfig, equalTo(HealthCheckConfig(Duration.ofSeconds(2), 10, Duration.ofSeconds(1), "exit 0")))
+                    assertThat(result.healthCheckConfig, equalTo(HealthCheckConfig(Duration.ofSeconds(2), 10, Duration.ofSeconds(1), Duration.ofSeconds(4), "exit 0")))
                     assertThat(result.runAsCurrentUserConfig, equalTo(RunAsCurrentUserConfig.RunAsCurrentUser("/home/something")))
                     assertThat(result.privileged, equalTo(true))
                     assertThat(result.enableInitProcess, equalTo(true))

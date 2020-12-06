@@ -45,7 +45,7 @@ object ContainerCreationRequestSpec : Spek({
                 ),
                 setOf(DockerDeviceMount("/dev/local", "/dev/container", "rw")),
                 setOf(DockerPortMapping(123, 456, "udp"), DockerPortMapping(DockerPortRange(1000, 1001), DockerPortRange(2000, 2001), "my-protocol")),
-                HealthCheckConfig(Duration.ofNanos(555), 12, Duration.ofNanos(333), "exit 0"),
+                HealthCheckConfig(Duration.ofNanos(555), 12, Duration.ofNanos(333), Duration.ofNanos(888), "exit 0"),
                 UserAndGroup(789, 222),
                 privileged = true,
                 init = true,
@@ -130,7 +130,8 @@ object ContainerCreationRequestSpec : Spek({
                             |       "Test": ["CMD-SHELL", "exit 0"],
                             |       "Interval": 555,
                             |       "Retries": 12,
-                            |       "StartPeriod": 333
+                            |       "StartPeriod": 333,
+                            |       "Timeout": 888
                             |   },
                             |   "NetworkingConfig": {
                             |       "EndpointsConfig": {
@@ -208,6 +209,7 @@ object ContainerCreationRequestSpec : Spek({
                             |    "interval": "555ns",
                             |    "retries": 12,
                             |    "startPeriod": "333ns",
+                            |    "timeout": "888ns",
                             |    "command": "exit 0"
                             |  },
                             |  "userAndGroup": { "userId": 789, "groupId": 222 },
@@ -288,7 +290,8 @@ object ContainerCreationRequestSpec : Spek({
                             |       "Test": [],
                             |       "Interval": 0,
                             |       "Retries": 0,
-                            |       "StartPeriod": 0
+                            |       "StartPeriod": 0,
+                            |       "Timeout": 0
                             |   },
                             |   "NetworkingConfig": {
                             |       "EndpointsConfig": {

@@ -30,5 +30,6 @@ data class HealthCheckConfig(
     val interval: Duration? = null,
     val retries: Int? = null,
     val startPeriod: Duration? = null,
+    val timeout: Duration? = null,
     val command: String? = null
 )

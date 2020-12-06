@@ -104,6 +104,7 @@ data class ContainerCreationRequest(
                 put("Interval", (healthCheckConfig.interval?.toNanos() ?: 0))
                 put("Retries", (healthCheckConfig.retries ?: 0))
                 put("StartPeriod", (healthCheckConfig.startPeriod?.toNanos() ?: 0))
+                put("Timeout", (healthCheckConfig.timeout?.toNanos() ?: 0))
             }
 
             putJsonObject("NetworkingConfig") {

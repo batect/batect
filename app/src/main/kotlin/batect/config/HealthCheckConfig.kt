@@ -27,7 +27,8 @@ data class HealthCheckConfig(
     @Serializable(with = DurationSerializer::class) val interval: Duration? = null,
     val retries: Int? = null,
     @SerialName("start_period") @Serializable(with = DurationSerializer::class) val startPeriod: Duration? = null,
+    @Serializable(with = DurationSerializer::class) val timeout: Duration? = null,
     val command: String? = null
 ) {
-    fun toDockerHealthCheckConfig() = HealthCheckConfig(interval, retries, startPeriod, command)
+    fun toDockerHealthCheckConfig() = HealthCheckConfig(interval, retries, startPeriod, timeout, command)
 }

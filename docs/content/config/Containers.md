@@ -350,10 +350,17 @@ and if the check succeeds during this time, the container is immediately conside
 
 Accepts values such as `2s` (two seconds) or `1m` (one minute).
 
+### `timeout`
+The time to wait before timing out a single health check command invocation.
+
+Accepts values such as `2s` (two seconds) or `1m` (one minute).
+
 ### Example
 
 The following configuration uses a fictional `is-healthy` command every two seconds to determine if the container is healthy.
 After an initial three second waiting period, the container will be declared unhealthy if it fails the health check five more times.
+
+A single invocation of `is-healthy` will also be considered failed if it does not return within one second.
 
 ```yaml
 containers:
@@ -363,6 +370,7 @@ containers:
       interval: 2s
       retries: 5
       start_period: 3s
+      timeout: 1s
 ```
 
 ## `image`

@@ -17,5 +17,5 @@
 package batect.execution
 
 object CacheInitialisationImage {
-    val linuxDefault = "batect/batect-cache-init-image@sha256:9940b0dfbdfc6f6d38bceee4274fa4efe60f5171c8382d26ee6ff7936270bbb4"
+    val linuxDefault = "batect/batect-cache-init-image@sha256:23cab852703c5ee31245a45ed221bc51a9ffb0a9858aac5042b1299278c83ad5"
 }

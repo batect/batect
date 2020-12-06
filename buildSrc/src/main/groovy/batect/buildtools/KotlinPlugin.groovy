@@ -149,7 +149,7 @@ class KotlinPlugin implements Plugin<Project> {
 
         project.dependencies {
             // We don't use mockito directly, but mockito-kotlin does refer to it, so override it to get the latest version.
-            testImplementation 'org.mockito:mockito-core:3.3.3'
+            testImplementation 'org.mockito:mockito-core:3.6.28'
             testImplementation 'com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0'
         }
     }

@@ -17,7 +17,6 @@
 rootProject.name = "batect"
 
 include ":app"
-include ":docs"
 include ":libs"
 include ":libs:docker-client"
 include ":libs:git-client"

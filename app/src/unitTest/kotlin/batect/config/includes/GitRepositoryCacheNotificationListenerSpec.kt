@@ -48,7 +48,7 @@ object GitRepositoryCacheNotificationListenerSpec : Spek({
             describe("when a repository has been cloned") {
                 beforeEachTest { listener.onCloneComplete() }
 
-                it("prints a blank line to the console to separate any output from Git from any further output from batect") {
+                it("prints a blank line to the console to separate any output from Git from any further output from Batect") {
                     verify(console).println()
                 }
             }
@@ -71,7 +71,7 @@ object GitRepositoryCacheNotificationListenerSpec : Spek({
             describe("when a repository has been cloned") {
                 beforeEachTest { listener.onCloneComplete() }
 
-                it("prints a blank line to the console to separate any output from Git from any further output from batect") {
+                it("prints a blank line to the console to separate any output from Git from any further output from Batect") {
                     verifyZeroInteractions(console)
                 }
             }

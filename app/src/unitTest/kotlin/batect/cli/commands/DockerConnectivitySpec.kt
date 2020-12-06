@@ -193,7 +193,7 @@ object DockerConnectivitySpec : Spek({
         given("the connectivity check fails") {
             val checkResult = DockerConnectivityCheckResult.Failed("Something went wrong.")
 
-            itDoesNotRunTheTaskAndFailsWithError(checkResult, "Docker is not installed, not running or not compatible with batect: Something went wrong.")
+            itDoesNotRunTheTaskAndFailsWithError(checkResult, "Docker is not installed, not running or not compatible with Batect: Something went wrong.")
         }
     }
 })

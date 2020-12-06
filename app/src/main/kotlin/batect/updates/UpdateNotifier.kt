@@ -84,7 +84,7 @@ class UpdateNotifier(
 
         if (updateInfo.version > versionInfo.version) {
             logger.info {
-                message("Current version of batect is older than cached latest available version.")
+                message("Current version of Batect is older than cached latest available version.")
                 data("currentVersion", versionInfo.version)
                 data("availableVersion", versionInfo.version)
             }
@@ -97,13 +97,13 @@ class UpdateNotifier(
                 )
             )
 
-            console.println("Version ${updateInfo.version} of batect is now available (you have ${versionInfo.version}).")
+            console.println("Version ${updateInfo.version} of Batect is now available (you have ${versionInfo.version}).")
             console.println("To upgrade to the latest version, run './batect --${CommandLineOptionsParser.upgradeFlagName}'.")
             console.println("For more information, visit ${updateInfo.url}.")
             console.println()
         } else {
             logger.info {
-                message("Current version of batect matches cached latest available version.")
+                message("Current version of Batect matches cached latest available version.")
                 data("currentVersion", versionInfo.version)
             }
         }

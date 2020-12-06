@@ -78,7 +78,7 @@ object UpgradeCommandSpec : Spek({
                 }
 
                 it("prints an appropriate error message") {
-                    verify(errorConsole).println(Text.red("batect was started without using the wrapper script and so cannot upgrade it."))
+                    verify(errorConsole).println(Text.red("Batect was started without using the wrapper script and so cannot upgrade it."))
                 }
             }
         }
@@ -258,11 +258,11 @@ object UpgradeCommandSpec : Spek({
                                 assertThat(exitCode, equalTo(0))
                             }
 
-                            it("prints status information to the console as it performs the upgrade, including a message indicating that batect is already up to date") {
+                            it("prints status information to the console as it performs the upgrade, including a message indicating that Batect is already up to date") {
                                 inOrder(updateInfoDownloader, console) {
                                     verify(console).println("Downloading latest update information...")
                                     verify(updateInfoDownloader).getLatestVersionInfo()
-                                    verify(console).println("The current version of batect (1.2.3) is already up to date.")
+                                    verify(console).println("The current version of Batect (1.2.3) is already up to date.")
                                 }
                             }
                         }
@@ -281,11 +281,11 @@ object UpgradeCommandSpec : Spek({
                                 assertThat(exitCode, equalTo(0))
                             }
 
-                            it("prints status information to the console as it performs the upgrade, including a message indicating that batect is already up to date") {
+                            it("prints status information to the console as it performs the upgrade, including a message indicating that Batect is already up to date") {
                                 inOrder(updateInfoDownloader, console) {
                                     verify(console).println("Downloading latest update information...")
                                     verify(updateInfoDownloader).getLatestVersionInfo()
-                                    verify(console).println("The current version of batect (1.2.4) is already up to date.")
+                                    verify(console).println("The current version of Batect (1.2.4) is already up to date.")
                                 }
                             }
                         }
@@ -317,7 +317,7 @@ object UpgradeCommandSpec : Spek({
                                     verify(console).println("Downloading latest update information...")
                                     verify(updateInfoDownloader).getLatestVersionInfo()
                                     verify(console).println("Current version is 1.2.1, latest version is 1.2.3.")
-                                    verify(errorConsole).println(Text.red("A newer version of batect (1.2.3) is available, but the upgrade cannot be performed automatically."))
+                                    verify(errorConsole).println(Text.red("A newer version of Batect (1.2.3) is available, but the upgrade cannot be performed automatically."))
                                     verify(errorConsole).println(Text.red("Visit https://batect.com/release-notes/1.2.2 for more information."))
                                 }
                             }
@@ -337,11 +337,11 @@ object UpgradeCommandSpec : Spek({
                                 assertThat(exitCode, equalTo(0))
                             }
 
-                            it("prints status information to the console as it performs the upgrade, including a message indicating that batect is already up to date") {
+                            it("prints status information to the console as it performs the upgrade, including a message indicating that Batect is already up to date") {
                                 inOrder(updateInfoDownloader, console) {
                                     verify(console).println("Downloading latest update information...")
                                     verify(updateInfoDownloader).getLatestVersionInfo()
-                                    verify(console).println("The current version of batect (1.2.3) is already up to date.")
+                                    verify(console).println("The current version of Batect (1.2.3) is already up to date.")
                                 }
                             }
                         }
@@ -360,11 +360,11 @@ object UpgradeCommandSpec : Spek({
                                 assertThat(exitCode, equalTo(0))
                             }
 
-                            it("prints status information to the console as it performs the upgrade, including a message indicating that batect is already up to date") {
+                            it("prints status information to the console as it performs the upgrade, including a message indicating that Batect is already up to date") {
                                 inOrder(updateInfoDownloader, console) {
                                     verify(console).println("Downloading latest update information...")
                                     verify(updateInfoDownloader).getLatestVersionInfo()
-                                    verify(console).println("The current version of batect (1.2.4) is already up to date.")
+                                    verify(console).println("The current version of Batect (1.2.4) is already up to date.")
                                 }
                             }
                         }

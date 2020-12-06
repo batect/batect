@@ -33,7 +33,7 @@ class VersionInfoCommand(
     private val updateNotifier: UpdateNotifier
 ) : Command {
     override fun run(): Int {
-        outputStream.println("batect version:    ${versionInfo.version}")
+        outputStream.println("Batect version:    ${versionInfo.version}")
         outputStream.println("Built:             ${versionInfo.buildDate}")
         outputStream.println("Built from commit: ${versionInfo.gitCommitHash} (commit date: ${versionInfo.gitCommitDate})")
         outputStream.println("JVM version:       ${systemInfo.jvmVersion}")

@@ -30,7 +30,7 @@ import org.spekframework.spek2.style.specification.describe
 
 // What's the point of this test?
 // We assume that the unit tests are enough to ensure that the upgrade process works correctly.
-// (If that changes in the future, we could start batect with the wrapper, point it at a fake download
+// (If that changes in the future, we could start Batect with the wrapper, point it at a fake download
 // server and test that the upgrade works correctly.)
 // This test just ensures that Kodein is configured correctly for the upgrade command, which can't be (easily)
 // checked with a unit test.
@@ -41,7 +41,7 @@ object UpgradeJourneyTest : Spek({
             val result by runBeforeGroup { runner.runApplication(listOf("--upgrade")) }
 
             it("prints a message indicating that the upgrade can only be performed if the wrapper script is used") {
-                assert(result).output().contains("batect was started without using the wrapper script and so cannot upgrade it.")
+                assert(result).output().contains("Batect was started without using the wrapper script and so cannot upgrade it.")
             }
 
             it("returns a non-zero exit code") {

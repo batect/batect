@@ -65,7 +65,7 @@ object DontCleanupAfterSuccessJourneyTest : Spek({
         on("running that task with the '--no-cleanup-on-success' option") {
             val result by runBeforeGroup { runner.runApplication(listOf("--no-cleanup-after-success", "--no-color", "do-stuff")) }
             val commandsRegex = """For container build-env, view its output by running '(?<logsCommand>docker logs (?<id>.*))', or run a command in the container with '(.*)'\.""".toRegex()
-            val cleanupRegex = """Once you have finished using the containers, clean up all temporary resources created by batect by running:$platformLineSeparator(?<command>(.|$platformLineSeparator)+)$platformLineSeparator""".toRegex()
+            val cleanupRegex = """Once you have finished using the containers, clean up all temporary resources created by Batect by running:$platformLineSeparator(?<command>(.|$platformLineSeparator)+)$platformLineSeparator""".toRegex()
 
             beforeGroup {
                 val cleanupCommand = cleanupRegex.find(result.output)?.groups?.get("command")?.value

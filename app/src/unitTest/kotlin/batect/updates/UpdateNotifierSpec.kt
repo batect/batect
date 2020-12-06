@@ -167,7 +167,7 @@ object UpdateNotifierSpec : Spek({
 
                         it("prints a message to the console") {
                             inOrder(console) {
-                                verify(console).println("Version 0.3 of batect is now available (you have 0.2).")
+                                verify(console).println("Version 0.3 of Batect is now available (you have 0.2).")
                                 verify(console).println("To upgrade to the latest version, run './batect --upgrade'.")
                                 verify(console).println("For more information, visit https://something.com/batect/0.3.")
                                 verify(console).println()
@@ -233,7 +233,7 @@ object UpdateNotifierSpec : Spek({
 
                         it("prints a message to the console") {
                             inOrder(console) {
-                                verify(console).println("Version 0.3 of batect is now available (you have 0.2).")
+                                verify(console).println("Version 0.3 of Batect is now available (you have 0.2).")
                                 verify(console).println("To upgrade to the latest version, run './batect --upgrade'.")
                                 verify(console).println("For more information, visit https://something.com/batect/0.3.")
                                 verify(console).println()

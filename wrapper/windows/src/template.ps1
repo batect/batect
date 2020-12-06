@@ -36,7 +36,7 @@ function haveVersionCachedLocally() {
 }
 
 function download() {
-    Write-Output "Downloading batect version $Version from $DownloadUrl..."
+    Write-Output "Downloading Batect version $Version from $DownloadUrl..."
 
     createCacheDir
 
@@ -63,7 +63,7 @@ function checkChecksum() {
     $localChecksum = (Get-FileHash -Algorithm 'SHA256' $JarPath).Hash.ToLower()
 
     if ($localChecksum -ne $expectedChecksum) {
-        Write-Host -ForegroundColor Red "The downloaded version of batect does not have the expected checksum. Delete '$JarPath' and then re-run this script to download it again."
+        Write-Host -ForegroundColor Red "The downloaded version of Batect does not have the expected checksum. Delete '$JarPath' and then re-run this script to download it again."
         exit 1
     }
 }
@@ -128,7 +128,7 @@ function checkJavaVersion([System.Management.Automation.CommandInfo]$java) {
     }
 
     if (-not ($versionInfo -match "64\-[bB]it")) {
-        Write-Host -ForegroundColor Red "The version of Java that is available on your PATH is a 32-bit version, but batect requires a 64-bit Java runtime."
+        Write-Host -ForegroundColor Red "The version of Java that is available on your PATH is a 32-bit version, but Batect requires a 64-bit Java runtime."
         Write-Host -ForegroundColor Red "If you have a 64-bit version of Java installed, please make sure your PATH is set correctly."
         exit 1
     }

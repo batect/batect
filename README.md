@@ -1,4 +1,4 @@
-# batect
+# Batect
 [![Build Status](https://github.com/batect/batect/workflows/CI/badge.svg)](https://github.com/batect/batect/actions?query=workflow%3ACI+branch%3Amaster)
 [![Coverage](https://img.shields.io/codecov/c/github/batect/batect.svg)](https://codecov.io/gh/batect/batect)
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/2698/badge)](https://bestpractices.coreinfrastructure.org/projects/2698)
@@ -7,23 +7,23 @@
 
 **b**uild **a**nd **t**esting **e**nvironments as **c**ode **t**ool
 
-batect allows you to define your development tasks (building, running, testing, linting and more) in terms of one or more
+Batect allows you to define your development tasks (building, running, testing, linting and more) in terms of one or more
 Docker containers, run those tasks quickly and consistently everywhere, and easily share them with your team.
 
-batect is:
+Batect is:
 
 * :rocket: **fast**: Tasks start quickly due to parallelisation, run quickly thanks to caching, and clean up reliably every time - we've
   seen 17% quicker execution than Docker Compose.
 
 * :relieved: **easy to use**: Easily share your development tasks with your whole team, and free them from manual setup of build tools and dependencies
   for tasks like running your app locally or integration testing. And no installation is required either - just drop the script in your
-  project and batect takes care of the rest.
+  project and Batect takes care of the rest.
 
-* :sparkles: **consistent**: batect uses Docker to create a clean, isolated environment every time you run a task, freeing you from "works on my machine"
+* :sparkles: **consistent**: Batect uses Docker to create a clean, isolated environment every time you run a task, freeing you from "works on my machine"
   issues - including on CI. And you can easily share tasks between projects with bundles.
 
-* :white_check_mark: **versatile**: Anything that can run in a Docker container can be run with batect - builds, unit testing, integration testing, linting,
-  local environments, deployments; frontend, backend or somewhere in between, batect can do it all.
+* :white_check_mark: **versatile**: Anything that can run in a Docker container can be run with Batect - builds, unit testing, integration testing, linting,
+  local environments, deployments; frontend, backend or somewhere in between, Batect can do it all.
 
 [![asciicast](https://asciinema.org/a/714gRQsQW1VDHQMuWzwRuAdU4.svg)](https://asciinema.org/a/714gRQsQW1VDHQMuWzwRuAdU4)
 
@@ -38,7 +38,7 @@ containers:
 
 tasks:
   say-hello:
-    description: Say hello to the nice person reading the batect README
+    description: Say hello to the nice person reading the Batect README
     run:
       container: my-container
       command: echo 'Hello world!'
@@ -61,10 +61,10 @@ Get a list of available tasks with `./batect --list-tasks`:
 ```
 $ ./batect --list-tasks
 Available tasks:
-- say-hello: Say hello to the nice person reading the batect README
+- say-hello: Say hello to the nice person reading the Batect README
 ```
 
-Take a look at the [sample projects](https://batect.dev/SampleProjects.html) for more examples.
+Take a look at the [sample projects](https://batect.dev/docs/getting-started/sample-projects/) for more examples.
 
 ## Getting started
 
@@ -74,43 +74,43 @@ Take a look at the [sample projects](https://batect.dev/SampleProjects.html) for
     Note that you only need the scripts - you don't need to download `batect.jar`.
 
     The `batect` and `batect.cmd` scripts are designed to be committed alongside your project, and not installed globally. Committing
-    them alongside your code improves consistency within your team, as everyone uses the same version of batect. They will
-    automatically pull down the correct version of batect for your operating system.
+    them alongside your code improves consistency within your team, as everyone uses the same version of Batect. They will
+    automatically pull down the correct version of Batect for your operating system.
 
 2. If you're on Linux or macOS, make sure the script is executable: run `chmod +x batect`.
 
 3. Create your `batect.yml` to define your tasks and the environments they run in:
-    * Take a look at the [sample projects](https://batect.dev/SampleProjects.html) for inspiration
-    * Dive straight into [the configuration file reference](https://batect.dev/config/Overview.html)
-    * Follow the [getting started tutorial](https://batect.dev/GettingStarted.html)
-    * Or, if you're using another tool already and want to switch to batect,
+    * Take a look at the [sample projects](https://batect.dev/docs/getting-started/sample-projects/) for inspiration
+    * Dive straight into [the configuration file reference](https://batect.dev/docs/reference/config)
+    * Follow the [getting started tutorial](https://batect.dev/docs/getting-started/tutorial)
+    * Or, if you're using another tool already and want to switch to Batect,
       [batectify](https://batectify.enchanting.dev/) by [@ineffyble](https://github.com/ineffyble) can convert files from
-      other tools to batect's format
+      other tools to Batect's format
 
 ## Requirements
 
-batect requires Docker 18.03.1 or newer, Java 8 or newer (although this requirement will be removed before v1.0), and:
+Batect requires Docker 18.03.1 or newer, Java 8 or newer (although this requirement will be removed before v1.0), and:
 
 * On Linux and macOS: Bash and `curl`
 * On Windows: Windows 10 / Windows Server 2016 or later
 
-batect supports both Linux and Windows containers.
+Batect supports both Linux and Windows containers.
 
 A 64-bit version of Java is required on Windows.
 
 ## Under the hood
 
-Take a look at [the task lifecycle](https://batect.dev/TaskLifecycle.html) to understand how batect executes tasks.
+Take a look at [the task lifecycle](https://batect.dev/docs/concepts/task-lifecycle) to understand how Batect executes tasks.
 
 ## Documentation
 
 All documentation is available on [the documentation site](https://batect.dev). Highlights include:
 
-* [Introduction](https://batect.dev)
-* [Getting started guide](https://batect.dev/GettingStarted.html)
-* [Configuration file reference](https://batect.dev/config/Overview.html)
-* [Sample projects](https://batect.dev/SampleProjects.html)
-* [Comparison with other tools](https://batect.dev/Comparison.html)
+* [Introduction](https://batect.dev/docs/)
+* [Getting started tutorial](https://batect.dev/docs/getting-started/tutorial)
+* [Configuration file reference](https://batect.dev/docs/reference/config)
+* [Sample projects](https://batect.dev/docs/getting-started/sample-projects)
+* [Comparison with other tools](https://batect.dev/docs/getting-started/comparison)
 
 ## Presentations
 
@@ -124,7 +124,7 @@ All documentation is available on [the documentation site](https://batect.dev). 
 
 ## Support and community
 
-There's a batect community on [Spectrum](https://spectrum.chat/batect/) - anyone is welcome to join.
+There's a Batect community on [Spectrum](https://spectrum.chat/batect/) - anyone is welcome to join.
 
 ## Feedback
 

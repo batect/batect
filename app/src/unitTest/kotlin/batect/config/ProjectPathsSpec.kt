@@ -37,14 +37,14 @@ object ProjectPathsSpec : Spek({
             }
         }
 
-        on("getting the project batect directory") {
+        on("getting the project Batect directory") {
             it("returns the absolute path to '.batect' in the project root directory") {
                 assertThat(paths.batectDirectory, equalTo(fileSystem.getPath("/work/some-dir/.batect")))
             }
         }
 
         on("getting the project cache directory") {
-            it("returns the absolute path to 'caches' in the project batect directory") {
+            it("returns the absolute path to 'caches' in the project Batect directory") {
                 assertThat(paths.cacheDirectory, equalTo(fileSystem.getPath("/work/some-dir/.batect/caches")))
             }
         }

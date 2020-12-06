@@ -3,8 +3,8 @@
 {
     set -euo pipefail
 
-    # This file is part of batect.
-    # Do not modify this file, it will be overwritten next time you upgrade batect.
+    # This file is part of Batect.
+    # Do not modify this file. It will be overwritten next time you upgrade Batect.
     # You should commit this file to version control alongside the rest of your project. It should not be installed globally.
     # For more information, visit https://github.com/batect/batect.
 
@@ -44,7 +44,7 @@
         if [[ $QUIET_DOWNLOAD == 'true' ]]; then
             curl --silent --fail --show-error --location --output "$temp_file" "$DOWNLOAD_URL"
         else
-            echo "Downloading batect version $VERSION from $DOWNLOAD_URL..."
+            echo "Downloading Batect version $VERSION from $DOWNLOAD_URL..."
             curl -# --fail --show-error --location --output "$temp_file" "$DOWNLOAD_URL"
         fi
 
@@ -55,7 +55,7 @@
         local_checksum=$(getLocalChecksum)
 
         if [[ "$local_checksum" != "$CHECKSUM" ]]; then
-            echo "The downloaded version of batect does not have the expected checksum. Delete '$JAR_PATH' and then re-run this script to download it again."
+            echo "The downloaded version of Batect does not have the expected checksum. Delete '$JAR_PATH' and then re-run this script to download it again."
             exit 1
         fi
     }

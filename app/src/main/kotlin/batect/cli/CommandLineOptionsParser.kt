@@ -52,7 +52,7 @@ class CommandLineOptionsParser(
         const val permanentlyEnableTelemetryFlagName = "permanently-enable-telemetry"
         const val enableBuildKitFlagName = "enable-buildkit"
         const val enableBuildKitEnvironmentVariableName = "DOCKER_BUILDKIT"
-        const val helpBlurb = "For documentation and further information on batect, visit https://github.com/batect/batect."
+        const val helpBlurb = "For documentation and further information on Batect, visit https://github.com/batect/batect."
     }
 
     private val cacheOptionsGroup = OptionGroup("Cache management options")
@@ -64,14 +64,14 @@ class CommandLineOptionsParser(
     private val hiddenOptionsGroup = OptionGroup("Hidden options")
 
     private val showHelp: Boolean by flagOption(helpOptionsGroup, "help", "Show this help information and exit.")
-    private val showVersionInfo: Boolean by flagOption(helpOptionsGroup, "version", "Show batect version information and exit.")
-    private val runUpgrade: Boolean by flagOption(helpOptionsGroup, upgradeFlagName, "Upgrade batect to the latest available version.")
+    private val showVersionInfo: Boolean by flagOption(helpOptionsGroup, "version", "Show Batect version information and exit.")
+    private val runUpgrade: Boolean by flagOption(helpOptionsGroup, upgradeFlagName, "Upgrade Batect to the latest available version.")
     private val listTasks: Boolean by flagOption(helpOptionsGroup, "list-tasks", "List available tasks and exit.", 'T')
     private val runCleanup: Boolean by flagOption(cacheOptionsGroup, "clean", "Cleanup caches created on previous runs and exit.")
 
-    private val disableColorOutput: Boolean by flagOption(outputOptionsGroup, "no-color", "Disable colored output from batect. Does not affect task command output. Implies --output=simple unless overridden.")
-    private val disableUpdateNotification: Boolean by flagOption(executionOptionsGroup, "no-update-notification", "Disable checking for updates to batect and notifying you when a new version is available.")
-    private val disableWrapperCacheCleanup: Boolean by flagOption(executionOptionsGroup, "no-wrapper-cache-cleanup", "Disable cleaning up downloaded versions of batect that have not been used recently.")
+    private val disableColorOutput: Boolean by flagOption(outputOptionsGroup, "no-color", "Disable colored output from Batect. Does not affect task command output. Implies --output=simple unless overridden.")
+    private val disableUpdateNotification: Boolean by flagOption(executionOptionsGroup, "no-update-notification", "Disable checking for updates to Batect and notifying you when a new version is available.")
+    private val disableWrapperCacheCleanup: Boolean by flagOption(executionOptionsGroup, "no-wrapper-cache-cleanup", "Disable cleaning up downloaded versions of Batect that have not been used recently.")
     private val disablePortMappings: Boolean by flagOption(executionOptionsGroup, "disable-ports", "Disable binding of ports on the host.")
     private val existingNetworkToUse: String? by valueOption(executionOptionsGroup, "use-network", "Existing Docker network to use for all tasks. If not set, a new network is created for each task.")
     private val skipPrerequisites: Boolean by flagOption(executionOptionsGroup, "skip-prerequisites", "Don't run prerequisites for the named task.")
@@ -112,14 +112,14 @@ class CommandLineOptionsParser(
     private val logFileName: Path? by valueOption(
         helpOptionsGroup,
         "log-file",
-        "Write internal batect logs to file.",
+        "Write internal Batect logs to file.",
         ValueConverters.pathToFile(pathResolverFactory)
     )
 
     private val requestedOutputStyle: OutputStyle? by valueOption<OutputStyle?, OutputStyle>(
         outputOptionsGroup,
         "output",
-        "Force a particular style of output from batect. Does not affect task command output. Valid values are: fancy (default value if your console supports this), simple (no updating text), all (interleaved output from all containers) or quiet (only error messages).",
+        "Force a particular style of output from Batect. Does not affect task command output. Valid values are: fancy (default value if your console supports this), simple (no updating text), all (interleaved output from all containers) or quiet (only error messages).",
         null,
         ValueConverters.enum(),
         'o'

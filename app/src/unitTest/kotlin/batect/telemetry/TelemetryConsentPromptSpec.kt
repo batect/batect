@@ -81,13 +81,13 @@ object TelemetryConsentPromptSpec : Spek({
                     verify(configurationStore, never()).saveConfiguration(any())
                 }
 
-                it("prints a message asking the user to make a decision and configure batect appropriately") {
+                it("prints a message asking the user to make a decision and configure Batect appropriately") {
                     inOrder(console) {
-                        verify(console).println("batect can collect anonymous environment, usage and performance information.")
-                        verify(console).println("This information does not include personal or sensitive information, and is used only to help improve batect.")
-                        verify(console).println("More information is available at https://batect.dev/Privacy.html, including details of what information is collected and a formal privacy policy.")
+                        verify(console).println("Batect can collect anonymous environment, usage and performance information.")
+                        verify(console).println("This information does not include personal or sensitive information, and is used only to help improve Batect.")
+                        verify(console).println("More information is available at https://batect.dev/privacy, including details of what information is collected and a formal privacy policy.")
                         verify(console).println()
-                        verify(console).println("It looks like batect is running in a non-interactive session, so it can't ask for permission to collect and report this information. To suppress this message:")
+                        verify(console).println("It looks like Batect is running in a non-interactive session, so it can't ask for permission to collect and report this information. To suppress this message:")
                         verify(console).println("* To allow collection of data, set the BATECT_ENABLE_TELEMETRY environment variable to 'true', or run './batect --permanently-enable-telemetry'.")
                         verify(console).println("* To prevent collection of data, set the BATECT_ENABLE_TELEMETRY environment variable to 'false', or run './batect --permanently-disable-telemetry'.")
                         verify(console).println()
@@ -102,11 +102,11 @@ object TelemetryConsentPromptSpec : Spek({
 
                 it("prints a message asking the user to make a decision and prompts them for their answer") {
                     inOrder(console, prompt) {
-                        verify(console).println("batect can collect anonymous environment, usage and performance information.")
-                        verify(console).println("This information does not include personal or sensitive information, and is used only to help improve batect.")
-                        verify(console).println("More information is available at https://batect.dev/Privacy.html, including details of what information is collected and a formal privacy policy.")
+                        verify(console).println("Batect can collect anonymous environment, usage and performance information.")
+                        verify(console).println("This information does not include personal or sensitive information, and is used only to help improve Batect.")
+                        verify(console).println("More information is available at https://batect.dev/privacy, including details of what information is collected and a formal privacy policy.")
                         verify(console).println()
-                        verify(prompt).askYesNoQuestion("Is it OK for batect to collect this information?")
+                        verify(prompt).askYesNoQuestion("Is it OK for Batect to collect this information?")
                         verify(console).println()
                     }
                 }

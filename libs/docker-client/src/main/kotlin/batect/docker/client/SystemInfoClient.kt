@@ -79,13 +79,13 @@ class SystemInfoClient(
             if (Version.parse(versionInfo.apiVersion).compareTo(Version.parse(minimumDockerAPIVersion), VersionComparisonMode.DockerStyle) < 0) {
                 telemetrySessionBuilder.addEvent("IncompatibleDockerVersion", mapOf("dockerVersion" to AttributeValue(versionInfo.version.toString())))
 
-                return DockerConnectivityCheckResult.Failed("batect requires Docker $minimumDockerVersion or later, but version ${versionInfo.version} is installed.")
+                return DockerConnectivityCheckResult.Failed("Batect requires Docker $minimumDockerVersion or later, but version ${versionInfo.version} is installed.")
             }
 
             val containerType = DockerContainerType.values().singleOrNull { it.name.equals(versionInfo.operatingSystem, ignoreCase = true) }
 
             if (containerType == null) {
-                return DockerConnectivityCheckResult.Failed("batect requires Docker to be running in Linux or Windows containers mode.")
+                return DockerConnectivityCheckResult.Failed("Batect requires Docker to be running in Linux or Windows containers mode.")
             }
 
             return DockerConnectivityCheckResult.Succeeded(containerType, versionInfo.version, pingResponse.builderVersion, versionInfo.experimental)

@@ -33,7 +33,7 @@ class WrapperScriptTests(unittest.TestCase):
         result = self.run_script(["arg1", "arg 2"])
         output = result.stdout
 
-        self.assertIn("Downloading batect", output)
+        self.assertIn("Downloading Batect", output)
         self.assertIn("BATECT_WRAPPER_SCRIPT_DIR is: {}\\\n".format(self.get_script_dir()), output)
         self.assertIn("BATECT_WRAPPER_CACHE_DIR is: {}\n".format(self.cache_dir), output)
         self.assertIn("HOSTNAME is: {}\n".format(os.environ['COMPUTERNAME']), output)
@@ -44,7 +44,7 @@ class WrapperScriptTests(unittest.TestCase):
     def test_second_run(self):
         first_result = self.run_script(["arg 1", "arg 2"])
         first_output = first_result.stdout
-        self.assertIn("Downloading batect", first_output)
+        self.assertIn("Downloading Batect", first_output)
         self.assertIn("BATECT_WRAPPER_SCRIPT_DIR is: {}\\\n".format(self.get_script_dir()), first_output)
         self.assertIn("BATECT_WRAPPER_CACHE_DIR is: {}\n".format(self.cache_dir), first_output)
         self.assertIn("BATECT_WRAPPER_DID_DOWNLOAD is: true\n", first_output)
@@ -54,7 +54,7 @@ class WrapperScriptTests(unittest.TestCase):
 
         second_result = self.run_script(["arg 3", "arg 4"])
         second_output = second_result.stdout
-        self.assertNotIn("Downloading batect", second_output)
+        self.assertNotIn("Downloading Batect", second_output)
         self.assertIn("BATECT_WRAPPER_SCRIPT_DIR is: {}\\\n".format(self.get_script_dir()), second_output)
         self.assertIn("BATECT_WRAPPER_CACHE_DIR is: {}\n".format(self.cache_dir), second_output)
         self.assertIn("BATECT_WRAPPER_DID_DOWNLOAD is: false\n", second_output)
@@ -89,7 +89,7 @@ class WrapperScriptTests(unittest.TestCase):
     def test_download_fails(self):
         result = self.run_script(["arg 1", "arg 2"], download_url=self.download_url("does-not-exist"))
 
-        self.assertIn("Downloading batect", result.stdout)
+        self.assertIn("Downloading Batect", result.stdout)
         self.assertRegex(result.stdout, "(\(404\) Not Found|404 \(File not found\))")
         self.assertNotIn("WARNING: you should never see this", result.stdout)
         self.assertNotEqual(result.returncode, 0)
@@ -118,7 +118,7 @@ class WrapperScriptTests(unittest.TestCase):
 
         result = self.run_script([], path=path_dir)
 
-        self.assertIn("The version of Java that is available on your PATH is a 32-bit version, but batect requires a 64-bit Java runtime.\n" +
+        self.assertIn("The version of Java that is available on your PATH is a 32-bit version, but Batect requires a 64-bit Java runtime.\n" +
                       "If you have a 64-bit version of Java installed, please make sure your PATH is set correctly.", result.stdout)
 
         self.assertNotIn("The application has started.", result.stdout)
@@ -162,7 +162,7 @@ class WrapperScriptTests(unittest.TestCase):
         result = self.run_script([])
         output = result.stdout
 
-        self.assertIn("Downloading batect", output)
+        self.assertIn("Downloading Batect", output)
         self.assertIn("BATECT_WRAPPER_SCRIPT_DIR is: {}\\\n".format(self.get_script_dir()), output)
         self.assertIn("BATECT_WRAPPER_CACHE_DIR is: {}\n".format(self.cache_dir), output)
         self.assertIn("HOSTNAME is: {}\n".format(os.environ['COMPUTERNAME']), output)
@@ -174,7 +174,7 @@ class WrapperScriptTests(unittest.TestCase):
         result = self.run_script(["arg1"])
         output = result.stdout
 
-        self.assertIn("Downloading batect", output)
+        self.assertIn("Downloading Batect", output)
         self.assertIn("BATECT_WRAPPER_SCRIPT_DIR is: {}\\\n".format(self.get_script_dir()), output)
         self.assertIn("BATECT_WRAPPER_CACHE_DIR is: {}\n".format(self.cache_dir), output)
         self.assertIn("HOSTNAME is: {}\n".format(os.environ['COMPUTERNAME']), output)
@@ -186,7 +186,7 @@ class WrapperScriptTests(unittest.TestCase):
         result = self.run_script([], download_url=self.download_url("fakes/brokenapp.txt"))
         output = result.stdout
 
-        self.assertRegex(output, "The downloaded version of batect does not have the expected checksum. Delete '.*' and then re-run this script to download it again.")
+        self.assertRegex(output, "The downloaded version of Batect does not have the expected checksum. Delete '.*' and then re-run this script to download it again.")
         self.assertNotIn("The Java application has started.", output)
         self.assertNotEqual(result.returncode, 0)
 
@@ -198,7 +198,7 @@ class WrapperScriptTests(unittest.TestCase):
         result_after_corruption = self.run_script([])
         output = result_after_corruption.stdout
 
-        self.assertRegex(output, "The downloaded version of batect does not have the expected checksum. Delete '.*' and then re-run this script to download it again.")
+        self.assertRegex(output, "The downloaded version of Batect does not have the expected checksum. Delete '.*' and then re-run this script to download it again.")
         self.assertNotIn("The Java application has started.", output)
         self.assertNotEqual(result_after_corruption.returncode, 0)
 

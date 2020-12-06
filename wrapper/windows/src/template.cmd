@@ -1,6 +1,6 @@
 @echo off
-rem This file is part of batect.
-rem Do not modify this file, it will be overwritten next time you upgrade batect.
+rem This file is part of Batect.
+rem Do not modify this file. It will be overwritten next time you upgrade Batect.
 rem You should commit this file to version control alongside the rest of your project. It should not be installed globally.
 rem For more information, visit https://github.com/batect/batect.
 
@@ -40,4 +40,4 @@ powershell.exe -ExecutionPolicy Bypass -NoLogo -NoProfile -File "%ps1Path%" %* &
 
 rem What's this for?
 rem This is so the tests for the wrapper has a way to ensure that the line above terminates the script correctly.
-echo WARNING: you should never see this, and if you do, then batect's wrapper script has a bug
+echo WARNING: you should never see this, and if you do, then Batect's wrapper script has a bug

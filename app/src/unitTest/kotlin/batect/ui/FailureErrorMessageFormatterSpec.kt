@@ -290,7 +290,7 @@ object FailureErrorMessageFormatterSpec : Spek({
                                         Text("For container ") + Text.bold("http-server") + Text(", view its output by running '") + Text.bold("docker logs http-server-container-name") +
                                         Text("', or run a command in the container with '") + Text.bold("docker exec -it http-server-container-name <command>") + Text("'.\n") +
                                         Text("\n") +
-                                        Text("$cleanupPhrase, clean up all temporary resources created by batect by running:\n") +
+                                        Text("$cleanupPhrase, clean up all temporary resources created by Batect by running:\n") +
                                         Text.bold("docker network rm some-network")
 
                                     it("returns an appropriate message") {
@@ -312,7 +312,7 @@ object FailureErrorMessageFormatterSpec : Spek({
                                             Text("For container ") + Text.bold("http-server") + Text(", view its output by running '") + Text.bold("docker logs http-server-container-name") +
                                             Text("', or run a command in the container with '") + Text.bold("docker exec -it http-server-container-name <command>") + Text("'.\n") +
                                             Text("\n") +
-                                            Text("$cleanupPhrase, clean up all temporary resources created by batect by running:\n") +
+                                            Text("$cleanupPhrase, clean up all temporary resources created by Batect by running:\n") +
                                             Text.bold("docker rm some-container\n") +
                                             Text.bold("docker network rm some-network")
 
@@ -340,7 +340,7 @@ object FailureErrorMessageFormatterSpec : Spek({
                                         Text("For container ") + Text.bold("http-server") + Text(", view its output by running '") + Text.bold("docker logs http-server-container-name") +
                                         Text("', or run a command in the container with '") + Text.bold("docker start http-server-container-name; docker exec -it http-server-container-name <command>") + Text("'.\n") +
                                         Text("\n") +
-                                        Text("$cleanupPhrase, clean up all temporary resources created by batect by running:\n") +
+                                        Text("$cleanupPhrase, clean up all temporary resources created by Batect by running:\n") +
                                         Text.bold("docker network rm some-network")
 
                                     it("returns an appropriate message that includes how to start the container") {
@@ -369,7 +369,7 @@ object FailureErrorMessageFormatterSpec : Spek({
                                         Text("For container ") + Text.bold("http-server") + Text(", view its output by running '") + Text.bold("docker logs http-server-container-name") +
                                         Text("', or run a command in the container with '") + Text.bold("docker start http-server-container-name; docker exec -it http-server-container-name <command>") + Text("'.\n") +
                                         Text("\n") +
-                                        Text("$cleanupPhrase, clean up all temporary resources created by batect by running:\n") +
+                                        Text("$cleanupPhrase, clean up all temporary resources created by Batect by running:\n") +
                                         Text.bold("docker network rm some-network")
 
                                     it("returns an appropriate message that includes how to restart the exited container") {
@@ -418,7 +418,7 @@ object FailureErrorMessageFormatterSpec : Spek({
                                         Text("For container ") + Text.bold("http-server") + Text(", view its output by running '") + Text.bold("docker logs http-server-container-name") +
                                         Text("', or run a command in the container with '") + Text.bold("docker exec -it http-server-container-name <command>") + Text("'.\n") +
                                         Text("\n") +
-                                        Text("$cleanupPhrase, clean up all temporary resources created by batect by running:\n") +
+                                        Text("$cleanupPhrase, clean up all temporary resources created by Batect by running:\n") +
                                         Text.bold("docker network rm some-network")
 
                                 it("returns an appropriate message") {
@@ -442,7 +442,7 @@ object FailureErrorMessageFormatterSpec : Spek({
                                         Text("For container ") + Text.bold("http-server") + Text(", view its output by running '") + Text.bold("docker logs http-server-container-name") +
                                         Text("', or run a command in the container with '") + Text.bold("docker exec -it http-server-container-name <command>") + Text("'.\n") +
                                         Text("\n") +
-                                        Text("$cleanupPhrase, clean up all temporary resources created by batect by running:\n") +
+                                        Text("$cleanupPhrase, clean up all temporary resources created by Batect by running:\n") +
                                         Text.bold("docker rm some-container\n") +
                                         Text.bold("docker network rm some-network")
 
@@ -478,7 +478,7 @@ object FailureErrorMessageFormatterSpec : Spek({
 
                 on("formatting the message") {
                     val message = formatter.formatManualCleanupMessageAfterCleanupFailure(cleanupCommands)
-                    val expectedMessage = Text.red("Clean up has failed, and batect cannot guarantee that all temporary resources created have been completely cleaned up.\n") +
+                    val expectedMessage = Text.red("Clean up has failed, and Batect cannot guarantee that all temporary resources created have been completely cleaned up.\n") +
                         Text("You may need to run the following command to clean up any remaining resources:\n") +
                         Text.bold("docker network rm some-network")
 
@@ -497,7 +497,7 @@ object FailureErrorMessageFormatterSpec : Spek({
 
                 on("formatting the message") {
                     val message = formatter.formatManualCleanupMessageAfterCleanupFailure(cleanupCommands)
-                    val expectedMessage = Text.red("Clean up has failed, and batect cannot guarantee that all temporary resources created have been completely cleaned up.\n") +
+                    val expectedMessage = Text.red("Clean up has failed, and Batect cannot guarantee that all temporary resources created have been completely cleaned up.\n") +
                         Text("You may need to run some or all of the following commands to clean up any remaining resources:\n") +
                         Text.bold("rm -rf /tmp/the-thing\n") +
                         Text.bold("docker rm some-container\n") +

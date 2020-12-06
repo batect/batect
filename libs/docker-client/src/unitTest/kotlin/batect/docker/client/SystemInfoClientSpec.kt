@@ -108,7 +108,7 @@ object SystemInfoClientSpec : Spek({
                             val result by runForEachTest { client.checkConnectivity() }
 
                             it("returns failure") {
-                                assertThat(result, equalTo(DockerConnectivityCheckResult.Failed("batect requires Docker 18.03.1 or later, but version 1.2.3 is installed.")))
+                                assertThat(result, equalTo(DockerConnectivityCheckResult.Failed("Batect requires Docker 18.03.1 or later, but version 1.2.3 is installed.")))
                             }
 
                             it("reports the version incompatibility in telemetry") {
@@ -140,7 +140,7 @@ object SystemInfoClientSpec : Spek({
                         }
 
                         it("returns success") {
-                            assertThat(client.checkConnectivity(), equalTo(DockerConnectivityCheckResult.Failed("batect requires Docker to be running in Linux or Windows containers mode.")))
+                            assertThat(client.checkConnectivity(), equalTo(DockerConnectivityCheckResult.Failed("Batect requires Docker to be running in Linux or Windows containers mode.")))
                         }
                     }
                 }

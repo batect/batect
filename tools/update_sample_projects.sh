@@ -26,7 +26,7 @@ function getLatestVersion {
 
 function updateProject {
     project_name=$1
-    commit_message="Update batect to $2."
+    commit_message="Update Batect to $2."
     project_dir="$(cd "$SCRIPT_DIR/../../$project_name" && pwd)"
 
     {

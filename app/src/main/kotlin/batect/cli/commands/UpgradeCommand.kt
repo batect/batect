@@ -51,10 +51,10 @@ class UpgradeCommand(
 
         if (wrapperScriptDir == null) {
             logger.error {
-                message("batect was started without using the wrapper script and so cannot upgrade it.")
+                message("Batect was started without using the wrapper script and so cannot upgrade it.")
             }
 
-            errorConsole.println(Text.red("batect was started without using the wrapper script and so cannot upgrade it."))
+            errorConsole.println(Text.red("Batect was started without using the wrapper script and so cannot upgrade it."))
             return -1
         }
 
@@ -66,19 +66,19 @@ class UpgradeCommand(
 
         if (versionInfo.version >= updateInfo.version) {
             logger.info {
-                message("Current version of batect is already up to date.")
+                message("Current version of Batect is already up to date.")
                 data("currentVersion", versionInfo.version)
                 data("latestVersion", updateInfo.version)
             }
 
-            console.println("The current version of batect (${versionInfo.version}) is already up to date.")
+            console.println("The current version of Batect (${versionInfo.version}) is already up to date.")
             return 0
         }
 
         console.println("Current version is ${versionInfo.version}, latest version is ${updateInfo.version}.")
 
         if (updateInfo.scripts.isEmpty()) {
-            errorConsole.println(Text.red("A newer version of batect (${updateInfo.version}) is available, but the upgrade cannot be performed automatically."))
+            errorConsole.println(Text.red("A newer version of Batect (${updateInfo.version}) is available, but the upgrade cannot be performed automatically."))
             errorConsole.println(Text.red("Visit ${updateInfo.url} for more information."))
             return -1
         }

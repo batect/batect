@@ -117,7 +117,7 @@ class FailureErrorMessageFormatter(private val runOptions: RunOptions, systemInf
         return Text.red(Text("As the task was run with ") + Text.bold("--$argumentName") + Text(" or ") + Text.bold("--${CommandLineOptionsParser.disableCleanupFlagName}") + Text(", the created containers will not be cleaned up.$newLine")) +
             containerMessages +
             Text(newLine) +
-            Text("$cleanupPhrase, clean up all temporary resources created by batect by running:$newLine") +
+            Text("$cleanupPhrase, clean up all temporary resources created by Batect by running:$newLine") +
             Text.bold(formattedCommands)
     }
 
@@ -148,7 +148,7 @@ class FailureErrorMessageFormatter(private val runOptions: RunOptions, systemInf
 
         val formattedCommands = cleanupCommands.joinToString(newLine)
 
-        return Text.red("Clean up has failed, and batect cannot guarantee that all temporary resources created have been completely cleaned up.$newLine") +
+        return Text.red("Clean up has failed, and Batect cannot guarantee that all temporary resources created have been completely cleaned up.$newLine") +
             Text(instruction) + Text(newLine) +
             Text.bold(formattedCommands)
     }

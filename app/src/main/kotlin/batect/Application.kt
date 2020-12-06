@@ -63,7 +63,7 @@ class Application(override val directDI: DirectDI) : DirectDIAware {
 
     fun run(args: Iterable<String>): Int {
         if (!systemInfo.isSupportedOperatingSystem) {
-            errorStream.println("batect only supports Linux, macOS and Windows.")
+            errorStream.println("Batect only supports Linux, macOS and Windows.")
             return -1
         }
 

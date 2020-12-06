@@ -34,7 +34,7 @@ object VersionInfoJourneyTest : Spek({
             val result = runner.runApplication(listOf("--version"))
 
             it("prints some version info") {
-                assert(result).output().contains("batect version:")
+                assert(result).output().contains("Batect version:")
                 assert(result).output().contains("Built:")
                 assert(result).output().contains("JVM version:")
                 assert(result).output().contains("OS version:")

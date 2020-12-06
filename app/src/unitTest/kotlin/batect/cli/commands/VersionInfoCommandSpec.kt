@@ -70,7 +70,7 @@ object VersionInfoCommandSpec : Spek({
                     output,
                     equalTo(
                         """
-                        |batect version:    1.2.3
+                        |Batect version:    1.2.3
                         |Built:             THE BUILD DATE
                         |Built from commit: THE BUILD COMMIT (commit date: COMMIT DATE)
                         |JVM version:       THE JVM VERSION
@@ -78,7 +78,7 @@ object VersionInfoCommandSpec : Spek({
                         |Docker version:    (DOCKER VERSION INFO)
                         |Git version:       (GIT VERSION INFO)
                         |
-                        |For documentation and further information on batect, visit https://github.com/batect/batect.
+                        |For documentation and further information on Batect, visit https://github.com/batect/batect.
                         |
                         |
                         """.trimMargin().withPlatformSpecificLineSeparator()

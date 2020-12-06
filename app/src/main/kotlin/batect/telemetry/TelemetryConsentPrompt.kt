@@ -45,16 +45,16 @@ class TelemetryConsentPrompt(
             return
         }
 
-        console.println("batect can collect anonymous environment, usage and performance information.")
-        console.println("This information does not include personal or sensitive information, and is used only to help improve batect.")
-        console.println("More information is available at https://batect.dev/Privacy.html, including details of what information is collected and a formal privacy policy.")
+        console.println("Batect can collect anonymous environment, usage and performance information.")
+        console.println("This information does not include personal or sensitive information, and is used only to help improve Batect.")
+        console.println("More information is available at https://batect.dev/privacy, including details of what information is collected and a formal privacy policy.")
         console.println()
 
         if (consoleInfo.stdinIsTTY && !ciEnvironmentDetector.detect().suspectRunningOnCI) {
             promptForResponse()
             console.println()
         } else {
-            console.println("It looks like batect is running in a non-interactive session, so it can't ask for permission to collect and report this information. To suppress this message:")
+            console.println("It looks like Batect is running in a non-interactive session, so it can't ask for permission to collect and report this information. To suppress this message:")
             console.println("* To allow collection of data, set the BATECT_ENABLE_TELEMETRY environment variable to 'true', or run './batect --${CommandLineOptionsParser.permanentlyEnableTelemetryFlagName}'.")
             console.println("* To prevent collection of data, set the BATECT_ENABLE_TELEMETRY environment variable to 'false', or run './batect --${CommandLineOptionsParser.permanentlyDisableTelemetryFlagName}'.")
             console.println()
@@ -64,7 +64,7 @@ class TelemetryConsentPrompt(
     }
 
     private fun promptForResponse() {
-        val consentState = when (prompt.askYesNoQuestion("Is it OK for batect to collect this information?")) {
+        val consentState = when (prompt.askYesNoQuestion("Is it OK for Batect to collect this information?")) {
             YesNoAnswer.Yes -> ConsentState.TelemetryAllowed
             YesNoAnswer.No -> ConsentState.TelemetryDisabled
         }

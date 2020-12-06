@@ -1,4 +1,4 @@
-# batect roadmap
+# Batect roadmap
 
 This file reflects my current plans. Something being listed here does not guarantee that I will implement it soon (or even ever),
 and, similarly, just because something isn't here doesn't mean I won't ever implement it.
@@ -60,8 +60,8 @@ If there's something you're really keen to see, pull requests are always welcome
     * how to run something when the container starts, regardless of the task's command line (eg. `ENTRYPOINT` with shell script and `exec`, similar to the example in [the docs](https://docs.docker.com/engine/reference/builder/#entrypoint))
   * importance of idempotency
   * add note about increasing default CPU and memory limits when using Docker on macOS
-  * how to introduce batect to an existing project
-  * how to use batect as the basis for a pipeline made up of reusable building blocks
+  * how to introduce Batect to an existing project
+  * how to use Batect as the basis for a pipeline made up of reusable building blocks
   * expand comparison with other tools to cover Cage and Toast
   * expand comparison to cover multi-stage builds
 * switch to coroutines for parallel execution?
@@ -70,14 +70,14 @@ If there's something you're really keen to see, pull requests are always welcome
   * Move common stuff when parsing a string or object (eg. port mapping or volume mount) out to a common class
   * Move common stuff when reading a list out to a common class (DependencySetDeserializer and PrerequisiteListDeserializer)
 * security scanning for Docker images in tests and sample projects
-* use batect to build batect (self-hosting)
+* use Batect to build Batect (self-hosting)
 * tool to visualise execution on a timeline
   * tab to show configuration as parsed
 * switch to [MockK](https://github.com/oleksiyp/mockk) - Kotlin specific library with clearer upgrade path to Kotlin/Native
   * remove MockMaker resource file
 * add running integration tests against Minikube to CI - can't currently easily be done as Travis doesn't support nested virtualisation and bare-metal minikube doesn't set up its own Docker daemon like it does when running in a VM
 * move to Kotlin/Native
-  * Why? Don't want to require users to install a JVM to use batect, also want to remove as much overhead as possible
+  * Why? Don't want to require users to install a JVM to use Batect, also want to remove as much overhead as possible
 
 #### Things that would have to be changed when moving to Kotlin/Native
 * file I/O and path resolution logic
@@ -101,7 +101,7 @@ If there's something you're really keen to see, pull requests are always welcome
 * add dependency relationship between containers and tasks (eg. running the app container requires running the build first - removes the need to specify
   build task as a prerequisite on every task that starts the app)
 * some way to check for outdated base images (eg. using `postgres:10.0` and suggests updating to `postgres:10.5`)
-  * maybe contribute support for batect to Dependabot or Renovate? ![good first issue](https://img.shields.io/badge/-good%20first%20issue-green)
+  * maybe contribute support for Batect to Dependabot or Renovate? ![good first issue](https://img.shields.io/badge/-good%20first%20issue-green)
 * make the last mile easier: pushing images and deploying applications
 * init containers: containers that must start, run and complete before a container can start (eg. populating a database with data)
 * some way to handle secrets easily

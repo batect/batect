@@ -1,6 +1,6 @@
 # Contribution Guide
 
-Welcome and thanks for your interest in helping improve batect!
+Welcome and thanks for your interest in helping improve Batect!
 
 This guide is a work in progress. If there is some information that you'd like to see below,
 please [submit an issue](https://github.com/batect/batect/issues/new).
@@ -14,8 +14,8 @@ It's entirely up to you, do whatever you're most interested in. Some suggestions
 * take a look at the [roadmap](https://github.com/batect/batect/blob/master/ROADMAP.md),
   especially those tagged with ![good first issue](https://img.shields.io/badge/-good%20first%20issue-green)
 * improve the [documentation](https://batect.dev/) - add further examples or tips and tricks, clarify sections or even just fix typos
-* create a [sample project](https://batect.dev/SampleProjects.html) for a language or framework that doesn't already have one
-* share your experiences using batect with others so that they can learn from you - for example, write a blog post or present a talk
+* create a [sample project](https://batect.dev/docs/getting-started/sample-projects) for a language or framework that doesn't already have one
+* share your experiences using Batect with others so that they can learn from you - for example, write a blog post or present a talk
 
 If you'd like some pointers with how to go about implementing a feature or fixing an issue, please feel free to comment on the relevant
 issue, or start a conversation on [the Spectrum chat group](http://spectrum.chat/batect).
@@ -24,7 +24,7 @@ issue, or start a conversation on [the Spectrum chat group](http://spectrum.chat
 
 * JDK (version 8 or higher)
 * Git (version 2.17.0 or higher)
-* Docker (any version compatible with batect)
+* Docker (any version compatible with Batect)
 
 ## Dev tooling
 
@@ -137,7 +137,7 @@ Steps 3ii, 3iii and 3iv above are all executed using the task execution model. T
 * [**Event logger**](app/src/main/kotlin/batect/ui): presents the state of the startup and cleanup phases to the user based on the steps that have started and the
   events that have occurred. (Output from running the main task container itself is not sent through the event logger and is presented to the user directly.)
 
-## Creating a batect-compatible Windows VM
+## Creating a Batect-compatible Windows VM
 
 Running Docker on Windows on a virtual machine requires running Windows on hardware that supports nested virtualisation.
 

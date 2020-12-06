@@ -66,7 +66,7 @@ class DockerConnectivity(
     }
 
     private fun handleFailedConnectivityCheck(connectivityCheckResult: DockerConnectivityCheckResult.Failed): Int {
-        return error("Docker is not installed, not running or not compatible with batect: ${connectivityCheckResult.message}")
+        return error("Docker is not installed, not running or not compatible with Batect: ${connectivityCheckResult.message}")
     }
 
     private fun error(message: String): Int {

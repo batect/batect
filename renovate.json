@@ -42,6 +42,25 @@
       ],
       "datasourceTemplate": "maven",
       "depNameTemplate": "org.jacoco:jacoco"
+    },
+    {
+      "fileMatch": [
+        "protobuf.gradle$"
+      ],
+      "matchStrings": [
+        "def buildKitVersion = \"(?<currentValue>[v\\\\d.]*?)\""
+      ],
+      "datasourceTemplate": "github-releases",
+      "depNameTemplate": "moby/buildkit"
+    },
+    {
+      "fileMatch": [
+        "protobuf.gradle$"
+      ],
+      "matchStrings": [
+        "\"github.com/(?<depName>[a-z]+/[a-z]+?)/(.*).proto\"\\s+:\\s+\"(?<currentValue>[v\\\\d.]*?)\""
+      ],
+      "datasourceTemplate": "github-releases"
     }
   ]
 }

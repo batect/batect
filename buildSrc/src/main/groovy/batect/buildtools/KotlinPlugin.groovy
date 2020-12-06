@@ -59,7 +59,7 @@ class KotlinPlugin implements Plugin<Project> {
 
         project.spotless {
             kotlin {
-                ktlint("0.39.0")
+                ktlint("0.40.0")
 
                 licenseHeader kotlinLicenseHeader
 

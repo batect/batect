@@ -48,7 +48,7 @@
         "protobuf.gradle$"
       ],
       "matchStrings": [
-        "def buildKitVersion = \"v(?<currentValue>[\\\\d.]*?)\""
+        "def buildKitVersion = \"v(?<currentValue>[\\d.]*?)\""
       ],
       "datasourceTemplate": "github-releases",
       "depNameTemplate": "moby/buildkit"
@@ -58,7 +58,7 @@
         "protobuf.gradle$"
       ],
       "matchStrings": [
-        "\"github.com/(?<depName>[a-z]+/[a-z]+?)/(.*).proto\"\\s+:\\s+\"v(?<currentValue>[\\\\d.]*?)\""
+        "\"github.com/(?<depName>[a-z]+/[a-z]+?)/(.*).proto\"\\s+:\\s+\"v(?<currentValue>[\\d.]*?)\""
       ],
       "datasourceTemplate": "github-releases"
     }

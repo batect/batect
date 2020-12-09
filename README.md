@@ -3,7 +3,7 @@
 [![Coverage](https://img.shields.io/codecov/c/github/batect/batect.svg)](https://codecov.io/gh/batect/batect)
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/2698/badge)](https://bestpractices.coreinfrastructure.org/projects/2698)
 [![License](https://img.shields.io/github/license/batect/batect.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Chat](https://img.shields.io/badge/chat-on%20spectrum-brightgreen.svg)](https://spectrum.chat/batect)
+[![Chat](https://img.shields.io/badge/chat-on%20GitHub%20Discussions-brightgreen.svg)](https://github.com/batect/batect/discussions)
 
 **b**uild **a**nd **t**esting **e**nvironments as **c**ode **t**ool
 
@@ -124,7 +124,7 @@ All documentation is available on [the documentation site](https://batect.dev). 
 
 ## Support and community
 
-There's a Batect community on [Spectrum](https://spectrum.chat/batect/) - anyone is welcome to join.
+We use [GitHub Discussions](https://github.com/batect/batect/discussions) for community support and Q&A.
 
 ## Feedback
 

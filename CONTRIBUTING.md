@@ -18,7 +18,7 @@ It's entirely up to you, do whatever you're most interested in. Some suggestions
 * share your experiences using Batect with others so that they can learn from you - for example, write a blog post or present a talk
 
 If you'd like some pointers with how to go about implementing a feature or fixing an issue, please feel free to comment on the relevant
-issue, or start a conversation on [the Spectrum chat group](http://spectrum.chat/batect).
+issue, or start a conversation in [Discussions](https://github.com/batect/batect/discussions).
 
 ## Prerequisites
 

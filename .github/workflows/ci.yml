@@ -230,10 +230,10 @@ jobs:
     strategy:
       matrix:
         include:
-          - docker_version: 19.03.14~3-0~ubuntu-bionic # Temporary override due to breaking changes in 20.04
+          - docker_version: 5:19.03.14~3-0~ubuntu-bionic # Temporary override due to breaking changes in 20.04
             enable_buildkit: false
 
-          - docker_version: 19.03.14~3-0~ubuntu-bionic # Temporary override due to breaking changes in 20.04
+          - docker_version: 5:19.03.14~3-0~ubuntu-bionic # Temporary override due to breaking changes in 20.04
             enable_buildkit: true
 
           - docker_version: 18.03.1~ce~3-0~ubuntu
@@ -285,7 +285,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - docker_version: 19.03.14~3-0~ubuntu-bionic # Temporary override due to breaking changes in 20.04
+          - docker_version: 5:19.03.14~3-0~ubuntu-bionic # Temporary override due to breaking changes in 20.04
             connection_type: Unix socket
             test_options: ""
 
@@ -293,7 +293,7 @@ jobs:
             connection_type: Unix socket
             test_options: "-PskipBuildKitTests"
 
-          - docker_version: 19.03.14~3-0~ubuntu-bionic # Temporary override due to breaking changes in 20.04
+          - docker_version: 5:19.03.14~3-0~ubuntu-bionic # Temporary override due to breaking changes in 20.04
             connection_type: TLS over TCP
             test_options: ""
 

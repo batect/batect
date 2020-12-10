@@ -1,17 +1,17 @@
 containers:
   container-a:
-    image: alpine:3.11.3
+    image: alpine:3.12.1
     dependencies:
       - container-b
       - container-c
 
   container-b:
-    image: alpine:3.11.3
+    image: alpine:3.12.1
     # See https://stackoverflow.com/a/21882119/1668119 for an explanation of this - we need something that immediately responds to a SIGTERM by quitting (sh and wait don't do this).
     command: sh -c "trap 'trap - TERM; kill -s TERM -$$' TERM; tail -f /dev/null & wait"
 
   container-c:
-    image: alpine:3.11.3
+    image: alpine:3.12.1
     # See https://stackoverflow.com/a/21882119/1668119 for an explanation of this - we need something that immediately responds to a SIGTERM by quitting (sh and wait don't do this).
     command: sh -c "trap 'trap - TERM; kill -s TERM -$$' TERM; tail -f /dev/null & wait"
 

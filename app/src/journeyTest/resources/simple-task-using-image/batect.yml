@@ -2,7 +2,7 @@ project_name: simple-task-using-image-test
 
 containers:
   build-env:
-    image: alpine:3.11.3
+    image: alpine:3.12.1
 
 tasks:
   the-task:

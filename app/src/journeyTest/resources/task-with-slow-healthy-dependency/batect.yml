@@ -2,7 +2,7 @@ project_name: task-with-slow-healthy-dependency-test
 
 containers:
   build-env:
-    image: alpine:3.11.3
+    image: alpine:3.12.1
 
   dependency:
     build_directory: dependency

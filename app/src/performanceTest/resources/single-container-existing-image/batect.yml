@@ -1,6 +1,6 @@
 containers:
   test-env:
-    image: alpine:3.7
+    image: alpine:3.7.0
 
 tasks:
   the-task:

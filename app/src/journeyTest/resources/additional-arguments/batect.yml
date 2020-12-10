@@ -2,7 +2,7 @@ project_name: additional-arguments-test
 
 containers:
   build-env:
-    image: alpine:3.6
+    image: alpine:3.6.0
 
 tasks:
   the-task:

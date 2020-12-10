@@ -10,6 +10,12 @@
   "automerge": true,
   "labels": ["is:dependency-update"],
   "rebaseWhen": "behind-base-branch",
+  "batect": {
+    "fileMatch": [
+      "(^|/)batect(-bundle)?\\.yml$",
+      "/app/src/journeyTest/resources/.*\\.yml"
+    ]
+  },
   "regexManagers": [
     {
       "fileMatch": [

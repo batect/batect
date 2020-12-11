@@ -2,7 +2,7 @@ project_name: container-with-capability
 
 containers:
   the-container:
-    image: alpine:3.12.1
+    image: alpine:3.12.2
     capabilities_to_add:
       - NET_ADMIN
     volumes:

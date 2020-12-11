@@ -2,7 +2,7 @@ project_name: task-with-prerequisite-test
 
 containers:
   build-env:
-    image: alpine:3.12.1
+    image: alpine:3.12.2
 
 tasks:
   build:

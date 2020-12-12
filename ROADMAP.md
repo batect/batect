@@ -101,7 +101,8 @@ If there's something you're really keen to see, pull requests are always welcome
 * add dependency relationship between containers and tasks (eg. running the app container requires running the build first - removes the need to specify
   build task as a prerequisite on every task that starts the app)
 * some way to check for outdated base images (eg. using `postgres:10.0` and suggests updating to `postgres:10.5`)
-  * maybe contribute support for Batect to Dependabot or Renovate? ![good first issue](https://img.shields.io/badge/-good%20first%20issue-green)
+  * [already added to Renovate](https://github.com/renovatebot/renovate/issues/7891)
+  * contribute support for Batect to Dependabot ![good first issue](https://img.shields.io/badge/-good%20first%20issue-green)
 * make the last mile easier: pushing images and deploying applications
 * init containers: containers that must start, run and complete before a container can start (eg. populating a database with data)
 * some way to handle secrets easily

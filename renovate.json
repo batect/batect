@@ -67,6 +67,15 @@
         "\"github.com/(?<depName>[a-z]+/[a-z]+?)/(.*).proto\"\\s+:\\s+\"(?<currentValue>v[\\d.]*?)\""
       ],
       "datasourceTemplate": "github-releases"
+    },
+    {
+      "fileMatch": ["(^|/)Dockerfile$"],
+      "matchStrings": [
+        "(?:RUN apk (?:add --no-cache|--no-cache add)\\s+|\\\\\\s+)(?<depName>[a-zA-Z0-9-]+)(=|==)(?<currentValue>[a-zA-Z0-9-._]+)"
+      ],
+      "versioningTemplate": "loose",
+      "datasourceTemplate": "repology",
+      "lookupNameTemplate": "alpine_3_12/{{depName}}"
     }
   ]
 }

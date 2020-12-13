@@ -5,6 +5,7 @@ import shutil
 import subprocess
 import tempfile
 import unittest
+import uuid
 
 
 class FishCompletionTests(unittest.TestCase):
@@ -106,6 +107,10 @@ class FishCompletionTests(unittest.TestCase):
         results = self.run_completions_for("/app/bin/batect tas", self.directory_for_test_case("invalid-config"))
         self.assertEqual([], results)
 
+    def test_task_name_completion_invalid_inferred_project_name(self):
+        results = self.run_completions_for("/app/bin/batect tas", self.set_up_test_directory_with_invalid_inferred_project_name())
+        self.assertEqual([], results)
+
     def test_completion_after_task_name(self):
         batect_results = self.run_completions_for("./batect my-task -- ls -", "/app/bin")
         system_results = self.run_completions_for("ls -", "/app/bin")
@@ -122,7 +127,7 @@ class FishCompletionTests(unittest.TestCase):
         self.assertEqual(output["second"], ["task-1", "task-2"])
 
     def test_completion_twice_project_file_modified(self):
-        test_directory = tempfile.mkdtemp()
+        test_directory = self.generate_test_directory()
         original_config_directory = self.directory_for_test_case("simple-config")
         test_config_file = os.path.join(test_directory, "batect.yml")
         shutil.copy(os.path.join(original_config_directory, "batect.yml"), test_config_file)
@@ -161,11 +166,26 @@ class FishCompletionTests(unittest.TestCase):
         self.assertEqual(output["second"], ["task-1"])
 
     def set_up_test_directory_with_include(self):
-        test_directory = tempfile.mkdtemp()
+        test_directory = self.generate_test_directory()
         original_config_directory = self.directory_for_test_case("with-include")
         shutil.copy(os.path.join(original_config_directory, "batect.yml"), os.path.join(test_directory, "batect.yml"))
         shutil.copy(os.path.join(original_config_directory, "other-file.yml"), os.path.join(test_directory, "other-file.yml"))
         shutil.copy(os.path.join(original_config_directory, "without-include.yml"), os.path.join(test_directory, "without-include.yml"))
+
+        return test_directory
+
+    def set_up_test_directory_with_invalid_inferred_project_name(self):
+        test_directory = self.generate_test_directory("_")
+        original_config_directory = self.directory_for_test_case("simple-config")
+        shutil.copy(os.path.join(original_config_directory, "batect.yml"), os.path.join(test_directory, "batect.yml"))
+
+        return test_directory
+
+    # Why not just use tempfile.mkdtemp()? mkdtemp generates paths with a random assortment of characters, and these could include
+    # directory names that start or end with dashes or underscores, which aren't valid inferred project names.
+    def generate_test_directory(self, suffix=""):
+        test_directory = os.path.join(tempfile.gettempdir(), str(uuid.uuid4()) + suffix)
+        os.makedirs(test_directory)
 
         return test_directory
 

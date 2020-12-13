@@ -65,6 +65,10 @@ function __batect_completion_PLACEHOLDER_REGISTER_AS_refresh_cache --argument-na
 
     mkdir -p (dirname $cache_path)
     $BATECT_COMPLETION_PROXY_WRAPPER_PATH --generate-completion-task-info=fish --config-file=$config_file_path >"$cache_path" 2>/dev/null
+
+    if test $status -ne 0
+        rm -f "$cache_path"
+    end
 end
 
 function __batect_completion_PLACEHOLDER_REGISTER_AS_task_names
@@ -76,6 +80,11 @@ function __batect_completion_PLACEHOLDER_REGISTER_AS_task_names
 
     set -l cache_path (__batect_completion_PLACEHOLDER_REGISTER_AS_cache_path $config_file_path)
     __batect_completion_PLACEHOLDER_REGISTER_AS_refresh_cache $config_file_path $cache_path
+
+    if test ! -f $cache_path
+        # We couldn't generate completion task information. Give up.
+        return
+    end
 
     set -l output (cat $cache_path)
     set -l task_delimiter_index (math (contains --index '### TASKS ###' $output) + 1)

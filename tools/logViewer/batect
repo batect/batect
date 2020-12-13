@@ -3,20 +3,31 @@
 {
     set -euo pipefail
 
-    VERSION="0.27.1"
-    DOWNLOAD_URL=${BATECT_DOWNLOAD_URL:-"https://github.com/batect/batect/releases/download/0.27.1/batect-0.27.1.jar"}
+    # This file is part of Batect.
+    # Do not modify this file. It will be overwritten next time you upgrade Batect.
+    # You should commit this file to version control alongside the rest of your project. It should not be installed globally.
+    # For more information, visit https://github.com/batect/batect.
 
-    ROOT_CACHE_DIR=${BATECT_CACHE_DIR:-"$HOME/.batect/cache"}
-    CACHE_DIR="$ROOT_CACHE_DIR/$VERSION"
-    JAR_PATH="$CACHE_DIR/batect-$VERSION.jar"
+    VERSION="0.64.0"
+    CHECKSUM="${BATECT_DOWNLOAD_CHECKSUM:-7c7969d05ab8f751cbed24c462fac7e49deb732de4de70bcbfb660c23757e0f0}"
+    DOWNLOAD_URL_ROOT=${BATECT_DOWNLOAD_URL_ROOT:-"https://dl.bintray.com/batect/batect"}
+    DOWNLOAD_URL=${BATECT_DOWNLOAD_URL:-"$DOWNLOAD_URL_ROOT/$VERSION/bin/batect-$VERSION.jar"}
+    QUIET_DOWNLOAD=${BATECT_QUIET_DOWNLOAD:-false}
 
-    SCRIPT_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}")"
+    BATECT_WRAPPER_CACHE_DIR=${BATECT_CACHE_DIR:-"$HOME/.batect/cache"}
+    VERSION_CACHE_DIR="$BATECT_WRAPPER_CACHE_DIR/$VERSION"
+    JAR_PATH="$VERSION_CACHE_DIR/batect-$VERSION.jar"
+    BATECT_WRAPPER_DID_DOWNLOAD=false
+
+    SCRIPT_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
     function main() {
         if ! haveVersionCachedLocally; then
             download
+            BATECT_WRAPPER_DID_DOWNLOAD=true
         fi
 
+        checkChecksum
         runApplication "$@"
     }
 
@@ -27,11 +38,34 @@
     function download() {
         checkForCurl
 
-        echo "Downloading batect version $VERSION from $DOWNLOAD_URL..."
-        mkdir -p "$CACHE_DIR"
+        mkdir -p "$VERSION_CACHE_DIR"
         temp_file=$(mktemp)
-        curl -# --fail --show-error --location --output "$temp_file" "$DOWNLOAD_URL"
+
+        if [[ $QUIET_DOWNLOAD == 'true' ]]; then
+            curl --silent --fail --show-error --location --output "$temp_file" "$DOWNLOAD_URL"
+        else
+            echo "Downloading Batect version $VERSION from $DOWNLOAD_URL..."
+            curl -# --fail --show-error --location --output "$temp_file" "$DOWNLOAD_URL"
+        fi
+
         mv "$temp_file" "$JAR_PATH"
+    }
+
+    function checkChecksum() {
+        local_checksum=$(getLocalChecksum)
+
+        if [[ "$local_checksum" != "$CHECKSUM" ]]; then
+            echo "The downloaded version of Batect does not have the expected checksum. Delete '$JAR_PATH' and then re-run this script to download it again."
+            exit 1
+        fi
+    }
+
+    function getLocalChecksum() {
+        if [[ "$(uname)" == "Darwin" ]]; then
+            shasum -a 256 "$JAR_PATH" | cut -d' ' -f1
+        else
+            sha256sum "$JAR_PATH" | cut -d' ' -f1
+        fi
     }
 
     function runApplication() {
@@ -46,8 +80,11 @@
             JAVA_OPTS=""
         fi
 
-        BATECT_WRAPPER_SCRIPT_PATH="$SCRIPT_PATH" \
+        BATECT_WRAPPER_SCRIPT_DIR="$SCRIPT_PATH" \
+        BATECT_WRAPPER_CACHE_DIR="$BATECT_WRAPPER_CACHE_DIR" \
+        BATECT_WRAPPER_DID_DOWNLOAD="$BATECT_WRAPPER_DID_DOWNLOAD" \
         HOSTNAME="$HOSTNAME" \
+        exec \
             java \
             -Djava.net.useSystemProxies=true \
             $JAVA_OPTS \
@@ -58,14 +95,14 @@
     function checkForCurl() {
         if ! hash curl 2>/dev/null; then
             echo "curl is not installed or not on your PATH. Please install it and try again." >&2
-            exit -1
+            exit 1
         fi
     }
 
     function checkForJava() {
         if ! hash java 2>/dev/null; then
             echo "Java is not installed or not on your PATH. Please install it and try again." >&2
-            exit -1
+            exit 1
         fi
 
         java_version=$(getJavaVersion)
@@ -75,7 +112,7 @@
         if (( java_version_major < 1 || ( java_version_major == 1 && java_version_minor <= 7 ) )); then
             echo "The version of Java that is available on your PATH is version $java_version, but version 1.8 or greater is required."
             echo "If you have a newer version of Java installed, please make sure your PATH is set correctly."
-            exit -1
+            exit 1
         fi
     }
 

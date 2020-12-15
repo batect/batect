@@ -21,7 +21,7 @@ plugins {
 dependencies {
     implementation platform("com.squareup.okhttp3:okhttp-bom:4.9.0")
 
-    implementation "org.spekframework.spek2:spek-dsl-jvm:2.0.14"
+    implementation "org.spekframework.spek2:spek-dsl-jvm:2.0.15"
     implementation "com.natpryce:hamkrest:1.8.0.1"
     implementation "com.google.jimfs:jimfs:1.1"
     implementation "com.github.jnr:jnr-posix:3.1.4"

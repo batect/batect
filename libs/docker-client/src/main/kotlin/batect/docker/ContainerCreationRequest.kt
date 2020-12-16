@@ -49,6 +49,12 @@ data class ContainerCreationRequest(
     val logDriver: String,
     val logOptions: Map<String, String>
 ) {
+    init {
+        if (hostname.length > 63) {
+            throw ContainerCreationFailedException("The hostname '$hostname' is more than 63 characters long.")
+        }
+    }
+
     fun toJson(): String {
         return buildJsonObject {
             put("AttachStdin", attachStdin)

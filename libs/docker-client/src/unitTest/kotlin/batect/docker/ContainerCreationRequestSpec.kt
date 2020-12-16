@@ -16,9 +16,12 @@
 
 package batect.docker
 
+import batect.testutils.doesNotThrow
 import batect.testutils.given
 import batect.testutils.on
+import batect.testutils.withMessage
 import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.throws
 import kotlinx.serialization.json.Json
 import org.araqnid.hamkrest.json.equivalentTo
 import org.spekframework.spek2.Spek
@@ -309,5 +312,47 @@ object ContainerCreationRequestSpec : Spek({
                 }
             }
         }
+
+        given("a request with a hostname that is exactly 63 characters long") {
+            it("does not throw an exception") {
+                assertThat({ createRequestWithHostname("abcdefghij1234567890abcdefghij1234567890abcdefghij1234567890abc") }, doesNotThrow())
+            }
+        }
+
+        given("a request with a hostname that is longer than 63 characters") {
+            it("throws an appropriate exception") {
+                assertThat(
+                    { createRequestWithHostname("abcdefghij1234567890abcdefghij1234567890abcdefghij1234567890abcD") },
+                    throws<ContainerCreationFailedException>(withMessage("The hostname 'abcdefghij1234567890abcdefghij1234567890abcdefghij1234567890abcD' is more than 63 characters long."))
+                )
+            }
+        }
     }
 })
+
+private fun createRequestWithHostname(hostname: String): ContainerCreationRequest =
+    ContainerCreationRequest(
+        hostname,
+        DockerImage("abc123"),
+        DockerNetwork("def456"),
+        emptyList(),
+        emptyList(),
+        hostname,
+        emptySet(),
+        emptyMap(),
+        emptyMap(),
+        null,
+        emptySet(),
+        emptySet(),
+        emptySet(),
+        HealthCheckConfig(),
+        null,
+        false,
+        false,
+        emptySet(),
+        emptySet(),
+        false,
+        false,
+        "json-file",
+        emptyMap()
+    )

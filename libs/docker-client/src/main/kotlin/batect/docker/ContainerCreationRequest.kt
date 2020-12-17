@@ -50,8 +50,8 @@ data class ContainerCreationRequest(
     val logOptions: Map<String, String>
 ) {
     init {
-        if (hostname.length > 63) {
-            throw ContainerCreationFailedException("The hostname '$hostname' is more than 63 characters long.")
+        if (hostname.length > maximumHostNameLength) {
+            throw ContainerCreationFailedException("The hostname '$hostname' is more than $maximumHostNameLength characters long.")
         }
     }
 

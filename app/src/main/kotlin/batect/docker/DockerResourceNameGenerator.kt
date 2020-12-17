@@ -24,7 +24,24 @@ class DockerResourceNameGenerator(
     private val config: Configuration
 ) {
     fun generateNameFor(container: Container): String = generateNameFor(container.name)
-    fun generateNameFor(name: String): String = "${config.projectName}-$name-$suffix"
+
+    fun generateNameFor(name: String, limitTo: Int? = null): String {
+        val length = config.projectName.length + name.length + suffix.length + 2
+
+        val charactersToTruncate = if (limitTo == null || length <= limitTo) {
+            0
+        } else {
+            length - limitTo
+        }
+
+        if (charactersToTruncate >= config.projectName.length) {
+            throw IllegalArgumentException("Can't generate name for '$name' because it would exceed the desired limit of $limitTo characters.")
+        }
+
+        val truncatedProjectName = config.projectName.dropLast(charactersToTruncate)
+
+        return "$truncatedProjectName-$name-$suffix"
+    }
 
     private val suffix = generateId(6)
 }

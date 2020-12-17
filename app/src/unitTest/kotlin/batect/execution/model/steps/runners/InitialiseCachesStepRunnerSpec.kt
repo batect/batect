@@ -34,6 +34,7 @@ import batect.docker.UserAndGroup
 import batect.docker.client.ContainersClient
 import batect.docker.client.DockerContainerType
 import batect.docker.client.ImagesClient
+import batect.docker.maximumHostNameLength
 import batect.execution.ContainerDependencyGraph
 import batect.execution.RunAsCurrentUserConfigurationProvider
 import batect.execution.VolumeMountResolver
@@ -82,7 +83,7 @@ object InitialiseCachesStepRunnerSpec : Spek({
         val containerName = "batect-cache-init-abc123"
         val containerNameGenerator by createForEachTest {
             mock<DockerResourceNameGenerator> {
-                on { generateNameFor("batect-cache-init") } doReturn containerName
+                on { generateNameFor("batect-cache-init", limitTo = maximumHostNameLength) } doReturn containerName
             }
         }
 

@@ -31,6 +31,7 @@ import batect.docker.UserAndGroup
 import batect.docker.client.ContainersClient
 import batect.docker.client.DockerContainerType
 import batect.docker.client.ImagesClient
+import batect.docker.maximumHostNameLength
 import batect.execution.ContainerDependencyGraph
 import batect.execution.RunAsCurrentUserConfigurationProvider
 import batect.execution.VolumeMountResolver
@@ -118,7 +119,7 @@ class InitialiseCachesStepRunner(
 
     private fun containerCreationRequest(volumes: Map<DockerVolumeMountSource.Volume, UserAndGroup?>): ContainerCreationRequest {
         val image = pullImage()
-        val containerName = resourceNameGenerator.generateNameFor("batect-cache-init")
+        val containerName = resourceNameGenerator.generateNameFor("batect-cache-init", limitTo = maximumHostNameLength)
         val mounts = mutableSetOf<DockerVolumeMount>()
         val configs = mutableSetOf<CacheConfig>()
 

@@ -118,15 +118,16 @@ class ImagesAPI(
 
         imageTags.forEach { url.addQueryParameter("t", it) }
 
+        val requestBuilder = Request.Builder()
+            .post(ImageBuildContextRequestBody(context))
+
         when (builderVersion) {
-            BuilderVersion.Legacy -> { /* Nothing to do. */ }
+            BuilderVersion.Legacy -> requestBuilder.addRegistryCredentialsForBuild(registryCredentials)
             BuilderVersion.BuildKit -> url.addQueryParameter("version", "2")
         }
 
-        return Request.Builder()
-            .post(ImageBuildContextRequestBody(context))
+        return requestBuilder
             .url(url.build())
-            .addRegistryCredentialsForBuild(registryCredentials)
             .build()
     }
 

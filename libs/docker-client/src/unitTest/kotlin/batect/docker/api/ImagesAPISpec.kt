@@ -134,7 +134,7 @@ object ImagesAPISpec : Spek({
             val expectedLegacyBuilderUrl = expectedUrl and doesNotHaveQueryParameter("version")
 
             val base64EncodedJSONCredentials = "eyJyZWdpc3RyeS5jb20iOnsiaWRlbnRpdHl0b2tlbiI6InNvbWVfdG9rZW4ifX0="
-            val expectedHeadersForAuthentication = Headers.Builder().set("X-Registry-Config", base64EncodedJSONCredentials).build()
+            val expectedHeadersForLegacyAuthentication = Headers.Builder().set("X-Registry-Config", base64EncodedJSONCredentials).build()
             val cancellationContext by createForEachTest { mock<CancellationContext>() }
 
             val successEvents = listOf(
@@ -149,7 +149,7 @@ object ImagesAPISpec : Spek({
 
             given("the build succeeds") {
                 given("the legacy builder is requested") {
-                    val call by createForEachTest { clientWithLongTimeout.mock("POST", expectedLegacyBuilderUrl, daemonBuildResponse, 200, expectedHeadersForAuthentication) }
+                    val call by createForEachTest { clientWithLongTimeout.mock("POST", expectedLegacyBuilderUrl, daemonBuildResponse, 200, expectedHeadersForLegacyAuthentication) }
                     val output by createForEachTest { ByteArrayOutputStream() }
                     val eventsReceiver by createForEachTest { BuildEventsReceiver() }
 
@@ -197,7 +197,8 @@ object ImagesAPISpec : Spek({
 
                 given("BuildKit is requested") {
                     val expectedBuildKitUrl = expectedUrl and hasQueryParameter("version", "2")
-                    val call by createForEachTest { clientWithLongTimeout.mock("POST", expectedBuildKitUrl, daemonBuildResponse, 200, expectedHeadersForAuthentication) }
+                    val expectedBuildKitHeaders = Headers.Builder().build()
+                    val call by createForEachTest { clientWithLongTimeout.mock("POST", expectedBuildKitUrl, daemonBuildResponse, 200, expectedBuildKitHeaders) }
 
                     runForEachTest { api.build(context, buildArgs, dockerfilePath, imageTags, pullImage, registryCredentials, null, BuilderVersion.BuildKit, cancellationContext, {}) }
 
@@ -217,7 +218,7 @@ object ImagesAPISpec : Spek({
                     hasPath("/v1.37/build") and
                     hasQueryParameter("pull", "1")
 
-                val call by createForEachTest { clientWithLongTimeout.mock("POST", expectedUrlWithRePullingEnabled, daemonBuildResponse, 200, expectedHeadersForAuthentication) }
+                val call by createForEachTest { clientWithLongTimeout.mock("POST", expectedUrlWithRePullingEnabled, daemonBuildResponse, 200, expectedHeadersForLegacyAuthentication) }
 
                 beforeEachTest {
                     buildResponseBody.outputToStream = successOutput
@@ -253,7 +254,7 @@ object ImagesAPISpec : Spek({
                     hasPath("/v1.37/build") and
                     hasQueryParameter("buildargs", """{}""")
 
-                val call by createForEachTest { clientWithLongTimeout.mock("POST", expectedUrlWithNoBuildArgs, daemonBuildResponse, 200, expectedHeadersForAuthentication) }
+                val call by createForEachTest { clientWithLongTimeout.mock("POST", expectedUrlWithNoBuildArgs, daemonBuildResponse, 200, expectedHeadersForLegacyAuthentication) }
 
                 beforeEachTest {
                     buildResponseBody.outputToStream = successOutput
@@ -269,7 +270,7 @@ object ImagesAPISpec : Spek({
 
             on("the build failing immediately") {
                 beforeEachTest {
-                    clientWithLongTimeout.mock("POST", expectedLegacyBuilderUrl, errorResponse, 418, expectedHeadersForAuthentication)
+                    clientWithLongTimeout.mock("POST", expectedLegacyBuilderUrl, errorResponse, 418, expectedHeadersForLegacyAuthentication)
                 }
 
                 it("throws an appropriate exception") {
@@ -286,7 +287,7 @@ object ImagesAPISpec : Spek({
                 val output by createForEachTest { ByteArrayOutputStream() }
 
                 beforeEachTest {
-                    clientWithLongTimeout.mock("POST", expectedLegacyBuilderUrl, daemonBuildResponse, 200, expectedHeadersForAuthentication)
+                    clientWithLongTimeout.mock("POST", expectedLegacyBuilderUrl, daemonBuildResponse, 200, expectedHeadersForLegacyAuthentication)
 
                     buildResponseBody.outputToStream = "This is some output from the build process.\nThis is some more output from the build process.\n"
                     buildResponseBody.eventsToPost = listOf(
@@ -326,7 +327,7 @@ object ImagesAPISpec : Spek({
 
             on("the build process never sending an output line with the built image ID") {
                 beforeEachTest {
-                    clientWithLongTimeout.mock("POST", expectedLegacyBuilderUrl, daemonBuildResponse, 200, expectedHeadersForAuthentication)
+                    clientWithLongTimeout.mock("POST", expectedLegacyBuilderUrl, daemonBuildResponse, 200, expectedHeadersForLegacyAuthentication)
 
                     buildResponseBody.eventsToPost = listOf(
                         BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(0, "FROM nginx:1.13.0"))),

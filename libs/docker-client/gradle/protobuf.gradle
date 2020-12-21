@@ -63,6 +63,9 @@ task downloadProtos() {
     }
 }
 
+// The Wire plugin fails to initialise if the directory doesn't exist at configuration time.
+protosDir.toFile().mkdirs()
+
 wire.sourcePath {
     srcDir protosDir.toString()
 }

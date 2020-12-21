@@ -29,6 +29,7 @@ import batect.docker.build.BuildProgress
 import batect.docker.build.DockerfileParser
 import batect.docker.build.ImageBuildContext
 import batect.docker.build.ImageBuildContextFactory
+import batect.docker.build.LegacyBuilderConfig
 import batect.docker.pull.ImagePullProgress
 import batect.docker.pull.ImagePullProgressReporter
 import batect.docker.pull.RegistryCredentials
@@ -117,13 +118,23 @@ object ImagesClientSpec : Spek({
 
                     on("a successful build") {
                         val image = DockerImage("some-image-id")
-                        beforeEachTest { whenever(api.build(any(), any(), any(), any(), any(), any(), any(), any(), any(), any())).doReturn(image) }
+                        beforeEachTest { whenever(api.build(any(), any(), any(), any(), any(), any(), any(), any(), any())).doReturn(image) }
 
                         val onStatusUpdate = fun(_: BuildProgress) {}
                         val result by runForEachTest { client.build(buildDirectory, buildArgs, dockerfilePath, pathResolutionContext, imageTags, forcePull, outputSink, BuilderVersion.Legacy, cancellationContext, onStatusUpdate) }
 
                         it("builds the image") {
-                            verify(api).build(eq(context), eq(buildArgs), eq(dockerfilePath), eq(imageTags), eq(forcePull), eq(setOf(image1Credentials, image2Credentials)), eq(outputSink), eq(BuilderVersion.Legacy), eq(cancellationContext), eq(onStatusUpdate))
+                            verify(api).build(
+                                eq(context),
+                                eq(buildArgs),
+                                eq(dockerfilePath),
+                                eq(imageTags),
+                                eq(forcePull),
+                                eq(outputSink),
+                                eq(LegacyBuilderConfig(setOf(image1Credentials, image2Credentials))),
+                                eq(cancellationContext),
+                                eq(onStatusUpdate)
+                            )
                         }
 
                         it("returns the built image") {

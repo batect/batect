@@ -23,9 +23,11 @@ import batect.docker.ImagePullFailedException
 import batect.docker.ImageReference
 import batect.docker.api.BuilderVersion
 import batect.docker.api.ImagesAPI
+import batect.docker.build.BuildKitConfig
 import batect.docker.build.BuildProgress
 import batect.docker.build.DockerfileParser
 import batect.docker.build.ImageBuildContextFactory
+import batect.docker.build.LegacyBuilderConfig
 import batect.docker.data
 import batect.docker.pull.ImagePullProgress
 import batect.docker.pull.ImagePullProgressReporter
@@ -80,9 +82,8 @@ class ImagesClient(
             }
 
             val context = imageBuildContextFactory.createFromDirectory(buildDirectory, dockerfilePath)
-            val baseImageNames = dockerfileParser.extractBaseImageNames(resolvedDockerfilePath)
-            val credentials = baseImageNames.mapNotNull { credentialsProvider.getCredentials(it) }.toSet()
-            val image = api.build(context, buildArgs, dockerfilePath, imageTags, forcePull, credentials, outputSink, builderVersion, cancellationContext, onProgressUpdate)
+            val builderConfig = createBuilderConfig(builderVersion, resolvedDockerfilePath)
+            val image = api.build(context, buildArgs, dockerfilePath, imageTags, forcePull, outputSink, builderConfig, cancellationContext, onProgressUpdate)
 
             logger.info {
                 message("Image build succeeded.")
@@ -93,6 +94,16 @@ class ImagesClient(
         } catch (e: DockerRegistryCredentialsException) {
             throw ImageBuildFailedException("Could not build image: ${e.message}", e)
         }
+    }
+
+    private fun createBuilderConfig(builderVersion: BuilderVersion, resolvedDockerfilePath: Path) = when (builderVersion) {
+        BuilderVersion.Legacy -> {
+            val baseImageNames = dockerfileParser.extractBaseImageNames(resolvedDockerfilePath)
+            val credentials = baseImageNames.mapNotNull { credentialsProvider.getCredentials(it) }.toSet()
+
+            LegacyBuilderConfig(credentials)
+        }
+        BuilderVersion.BuildKit -> BuildKitConfig
     }
 
     fun pull(

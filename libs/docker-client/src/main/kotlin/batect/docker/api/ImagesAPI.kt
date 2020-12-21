@@ -25,11 +25,14 @@ import batect.docker.Json
 import batect.docker.Tee
 import batect.docker.build.BuildComplete
 import batect.docker.build.BuildError
+import batect.docker.build.BuildKitConfig
 import batect.docker.build.BuildKitImageBuildResponseBody
 import batect.docker.build.BuildProgress
+import batect.docker.build.BuilderConfig
 import batect.docker.build.ImageBuildContext
 import batect.docker.build.ImageBuildContextRequestBody
 import batect.docker.build.ImageBuildResponseBody
+import batect.docker.build.LegacyBuilderConfig
 import batect.docker.build.LegacyImageBuildResponseBody
 import batect.docker.pull.RegistryCredentials
 import batect.docker.toJsonObject
@@ -62,9 +65,8 @@ class ImagesAPI(
         dockerfilePath: String,
         imageTags: Set<String>,
         forcePull: Boolean,
-        registryCredentials: Set<RegistryCredentials>,
         outputSink: Sink?,
-        builderVersion: BuilderVersion,
+        builderConfig: BuilderConfig,
         cancellationContext: CancellationContext,
         onProgressUpdate: (BuildProgress) -> Unit
     ): DockerImage {
@@ -76,7 +78,7 @@ class ImagesAPI(
             data("forcePull", forcePull)
         }
 
-        val request = createBuildRequest(context, buildArgs, dockerfilePath, imageTags, forcePull, registryCredentials, builderVersion)
+        val request = createBuildRequest(context, buildArgs, dockerfilePath, imageTags, forcePull, builderConfig)
 
         clientWithNoTimeout()
             .newCall(request)
@@ -90,7 +92,7 @@ class ImagesAPI(
                     throw ImageBuildFailedException("Building image failed: ${error.message}")
                 }
 
-                val image = processBuildResponse(response, outputSink, builderVersion, onProgressUpdate)
+                val image = processBuildResponse(response, outputSink, builderConfig.builderVersion, onProgressUpdate)
 
                 logger.info {
                     message("Image built.")
@@ -107,8 +109,7 @@ class ImagesAPI(
         dockerfilePath: String,
         imageTags: Set<String>,
         forcePull: Boolean,
-        registryCredentials: Set<RegistryCredentials>,
-        builderVersion: BuilderVersion
+        builderConfig: BuilderConfig
     ): Request {
         val url = baseUrl.newBuilder()
             .addPathSegment("build")
@@ -121,9 +122,9 @@ class ImagesAPI(
         val requestBuilder = Request.Builder()
             .post(ImageBuildContextRequestBody(context))
 
-        when (builderVersion) {
-            BuilderVersion.Legacy -> requestBuilder.addRegistryCredentialsForBuild(registryCredentials)
-            BuilderVersion.BuildKit -> url.addQueryParameter("version", "2")
+        when (builderConfig) {
+            is LegacyBuilderConfig -> requestBuilder.addRegistryCredentialsForBuild(builderConfig.registryCredentials)
+            is BuildKitConfig -> url.addQueryParameter("version", "2")
         }
 
         return requestBuilder

@@ -22,17 +22,16 @@ import batect.docker.DownloadOperation
 import batect.docker.ImageBuildFailedException
 import batect.docker.humaniseBytes
 import batect.primitives.mapToSet
-import com.google.protobuf.Timestamp
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import moby.buildkit.v1.ControlOuterClass.StatusResponse
-import moby.buildkit.v1.ControlOuterClass.Vertex
-import moby.buildkit.v1.ControlOuterClass.VertexLog
-import moby.buildkit.v1.ControlOuterClass.VertexStatus
+import moby.buildkit.v1.StatusResponse
+import moby.buildkit.v1.Vertex
+import moby.buildkit.v1.VertexLog
+import moby.buildkit.v1.VertexStatus
 import okio.BufferedSink
 import okio.ByteString.Companion.decodeBase64
 import okio.Sink
@@ -115,7 +114,7 @@ class BuildKitImageBuildResponseBody : ImageBuildResponseBody {
             throw DockerException("Image build trace message does not contain valid Base64-encoded data in 'aux' field: $json")
         }
 
-        val status = StatusResponse.parseFrom(auxBytes.toByteArray())
+        val status = StatusResponse.ADAPTER.decode(auxBytes)
         writeStatusUpdate(status, outputBuffer)
         postProgressEventIfRequired(status, eventCallback)
     }
@@ -124,10 +123,10 @@ class BuildKitImageBuildResponseBody : ImageBuildResponseBody {
         status: StatusResponse,
         outputBuffer: BufferedSink
     ) {
-        val remainingLogs = status.logsList.toMutableList()
-        val remainingCompletedStatuses = status.statusesList.toMutableList()
+        val remainingLogs = status.logs.toMutableList()
+        val remainingCompletedStatuses = status.statuses.toMutableList()
 
-        status.vertexesList.forEach { vertex ->
+        status.vertexes.forEach { vertex ->
             val vertexLogs = remainingLogs.filter { it.vertex == vertex.digest }
             remainingLogs.removeAll(vertexLogs)
 
@@ -147,7 +146,7 @@ class BuildKitImageBuildResponseBody : ImageBuildResponseBody {
         statuses: List<VertexStatus>,
         outputBuffer: BufferedSink
     ) {
-        if (!vertex.hasStarted()) {
+        if (vertex.started == null) {
             if (logs.isNotEmpty()) {
                 throw RuntimeException("Expected vertex that has not started to not have any logs.")
             }
@@ -162,21 +161,21 @@ class BuildKitImageBuildResponseBody : ImageBuildResponseBody {
         val isNewVertex = !startedVertices.keys.contains(vertex.digest)
 
         if (isNewVertex) {
-            vertex.inputsList.forEach { writeCompletedVertexIfPending(it, outputBuffer) }
+            vertex.inputs.forEach { writeCompletedVertexIfPending(it, outputBuffer) }
 
             if (vertex.isBulkheadVertex) {
                 writeAllPendingCompletedVertices(outputBuffer)
             }
 
             val stepNumber = startedVertices.size + 1
-            startedVertices[vertex.digest] = VertexInfo(vertex.started.toInstant(), stepNumber, vertex.name, emptyMap())
+            startedVertices[vertex.digest] = VertexInfo(vertex.started, stepNumber, vertex.name, emptyMap())
             writeTransitionTo(vertex.digest, outputBuffer)
         }
 
         writeLogs(logs, outputBuffer)
         writeStatuses(statuses, outputBuffer)
 
-        if (vertex.hasCompleted()) {
+        if (vertex.completed != null) {
             handleCompletedVertexUpdate(vertex, outputBuffer)
         }
     }
@@ -201,8 +200,8 @@ class BuildKitImageBuildResponseBody : ImageBuildResponseBody {
         logs.forEach { log ->
             val outstandingOutputForVertex = outstandingOutput.getOrPut(log.vertex, ::StringBuilder)
             val vertex = startedVertices.getValue(log.vertex)
-            val timestamp = Duration.between(vertex.started, log.timestamp.toInstant())
-            val message = log.msg.toString(Charsets.UTF_8)
+            val timestamp = Duration.between(vertex.started, log.timestamp)
+            val message = log.msg.string(Charsets.UTF_8)
             var startIndex = 0
 
             while (true) {
@@ -232,7 +231,7 @@ class BuildKitImageBuildResponseBody : ImageBuildResponseBody {
     }
 
     private fun writeStatus(status: VertexStatus, outputBuffer: BufferedSink) {
-        if (status.hasCompleted()) {
+        if (status.completed != null) {
             writeCompletedStatus(status, outputBuffer)
         } else {
             writePossibleNewStatus(status, outputBuffer)
@@ -240,7 +239,7 @@ class BuildKitImageBuildResponseBody : ImageBuildResponseBody {
     }
 
     private fun writeCompletedStatus(status: VertexStatus, outputBuffer: BufferedSink) {
-        val layerDigest = status.id.substringAfter("extracting ")
+        val layerDigest = status.ID.substringAfter("extracting ")
         val currentOperation = startedVertices[status.vertex]?.layers?.get(layerDigest)?.currentOperation
 
         if (status.name == "done" && currentOperation != null && currentOperation >= DownloadOperation.Downloading) {
@@ -256,7 +255,7 @@ class BuildKitImageBuildResponseBody : ImageBuildResponseBody {
     }
 
     private fun writePossibleNewStatus(status: VertexStatus, outputBuffer: BufferedSink) {
-        val layerDigest = status.id.substringAfter("extracting ")
+        val layerDigest = status.ID.substringAfter("extracting ")
         val currentOperation = startedVertices[status.vertex]?.layers?.get(layerDigest)?.currentOperation
 
         if (status.name == "downloading" && currentOperation != DownloadOperation.Downloading) {
@@ -273,7 +272,7 @@ class BuildKitImageBuildResponseBody : ImageBuildResponseBody {
     }
 
     private fun handleCompletedVertexUpdate(vertex: Vertex, outputBuffer: BufferedSink) {
-        if (vertex.canTrustCompletedStatus || !vertex.error.isNullOrEmpty()) {
+        if (vertex.canTrustCompletedStatus || vertex.error.isNotEmpty()) {
             writeCompletedVertexImmediately(vertex, outputBuffer)
         } else {
             // Why not just write 'DONE' as soon as we see the vertex is completed? See note at the start of this file.
@@ -295,7 +294,7 @@ class BuildKitImageBuildResponseBody : ImageBuildResponseBody {
         val stepNumber = startedVertices.getValue(vertex.digest).stepNumber
 
         val description = when {
-            !vertex.error.isNullOrEmpty() -> "ERROR: ${vertex.error}"
+            vertex.error.isNotEmpty() -> "ERROR: ${vertex.error}"
             vertex.cached -> "CACHED"
             else -> "DONE"
         }
@@ -314,22 +313,22 @@ class BuildKitImageBuildResponseBody : ImageBuildResponseBody {
         }
 
         val stepNumber = startedVertices.getValue(vertex.digest).stepNumber
-        val timestamp = Duration.between(vertex.started.toInstant(), vertex.completed.toInstant())
+        val timestamp = Duration.between(vertex.started, vertex.completed)
 
         writeLogLine(stepNumber, timestamp, outstandingOutputForVertex.toString(), outputBuffer)
         outstandingOutputForVertex.clear()
     }
 
     private fun postProgressEventIfRequired(statusResponse: StatusResponse, eventCallback: ImageBuildEventCallback) {
-        statusResponse.vertexesList.forEach { vertex ->
-            if (vertex.hasCompleted()) {
+        statusResponse.vertexes.forEach { vertex ->
+            if (vertex.completed != null) {
                 activeVertices.remove(vertex.digest)
-            } else if (vertex.hasStarted()) {
+            } else if (vertex.started != null) {
                 activeVertices.add(vertex.digest)
             }
         }
 
-        statusResponse.statusesList.forEach { status ->
+        statusResponse.statuses.forEach { status ->
             startedVertices.compute(status.vertex) { _, vertex ->
                 if (vertex == null) {
                     throw DockerException("Received status update for vertex ${status.vertex} but the vertex hasn't started.")
@@ -364,10 +363,6 @@ class BuildKitImageBuildResponseBody : ImageBuildResponseBody {
 
     private fun BufferedSink.writeString(text: String) {
         this.writeString(text, Charsets.UTF_8)
-    }
-
-    private fun Timestamp.toInstant(): Instant {
-        return Instant.ofEpochSecond(this.seconds, this.nanos.toLong())
     }
 
     private fun Duration.toShortString(): String {
@@ -418,35 +413,35 @@ class BuildKitImageBuildResponseBody : ImageBuildResponseBody {
 
             when (status.name) {
                 "downloading" -> {
-                    val newLayers = layers + (status.id to LayerInfo(DownloadOperation.Downloading, status.current, status.total))
+                    val newLayers = layers + (status.ID to LayerInfo(DownloadOperation.Downloading, status.current, status.total))
                     return copy(layers = newLayers)
                 }
                 "extract" -> {
-                    val digest = status.id.substringAfter("extracting ")
+                    val digest = status.ID.substringAfter("extracting ")
                     val oldLayer = layers[digest]
                     val totalBytes = oldLayer?.totalBytes ?: 0
-                    val completedBytes = if (status.hasCompleted()) totalBytes else 0
-                    val operation = if (status.hasCompleted()) DownloadOperation.PullComplete else DownloadOperation.Extracting
+                    val completedBytes = if (status.completed != null) totalBytes else 0
+                    val operation = if (status.completed != null) DownloadOperation.PullComplete else DownloadOperation.Extracting
                     val newLayers = layers + (digest to LayerInfo(operation, completedBytes, totalBytes))
 
                     return copy(layers = newLayers)
                 }
                 "done" -> {
-                    val currentOperation = layers[status.id]?.currentOperation
+                    val currentOperation = layers[status.ID]?.currentOperation
 
-                    when {
+                    return when {
                         currentOperation == null -> {
                             // Layer was cached.
-                            val newLayers = layers + (status.id to LayerInfo(DownloadOperation.PullComplete, status.current, status.total))
-                            return copy(layers = newLayers)
+                            val newLayers = layers + (status.ID to LayerInfo(DownloadOperation.PullComplete, status.current, status.total))
+                            copy(layers = newLayers)
                         }
                         currentOperation > DownloadOperation.DownloadComplete -> {
                             // We've already marked the layer as extracting (eg. because the extracting status arrived first).
-                            return this
+                            this
                         }
                         else -> {
-                            val newLayers = layers + (status.id to LayerInfo(DownloadOperation.DownloadComplete, status.current, status.total))
-                            return copy(layers = newLayers)
+                            val newLayers = layers + (status.ID to LayerInfo(DownloadOperation.DownloadComplete, status.current, status.total))
+                            copy(layers = newLayers)
                         }
                     }
                 }

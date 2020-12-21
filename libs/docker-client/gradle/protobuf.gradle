@@ -16,9 +16,10 @@
 
 import java.nio.file.FileSystems
 
+apply plugin: 'com.squareup.wire'
+
 def protosDir = project.buildDir.toPath().resolve("protos")
 def buildKitVersion = "v0.8.1"
-def protobufVersion = "3.14.0"
 
 def protos = [
     "github.com/moby/buildkit/api/services/control/control.proto": buildKitVersion,
@@ -62,27 +63,19 @@ task downloadProtos() {
     }
 }
 
-sourceSets {
-    main {
-        proto {
-            srcDir protosDir
-        }
-    }
+wire.sourcePath {
+    srcDir protosDir.toString()
 }
 
-protobuf {
-    protoc {
-        artifact = "com.google.protobuf:protoc:$protobufVersion"
-    }
-}
+wire.root('moby.buildkit.v1.StatusResponse')
 
-dependencies {
-    protobuf "com.google.protobuf:protobuf-java:$protobufVersion"
-    implementation "com.google.protobuf:protobuf-java:$protobufVersion"
+wire.kotlin {
+    rpcCallStyle = 'blocking'
+    rpcRole = 'server'
 }
 
 afterEvaluate {
-    tasks.named("generateProto").configure {
+    tasks.named("generateMainProtos").configure {
         dependsOn downloadProtos
     }
 }

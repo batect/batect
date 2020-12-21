@@ -20,7 +20,8 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class BuildKitSession(
-    val id: String,
+    val sessionId: String,
+    val buildId: String,
     val name: String,
     val sharedKey: String
 )

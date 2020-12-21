@@ -45,7 +45,7 @@ class SessionsAPI(
             .url(url)
             .header("Connection", "Upgrade")
             .header("Upgrade", "h2c")
-            .header("X-Docker-Expose-Session-Uuid", session.id)
+            .header("X-Docker-Expose-Session-Uuid", session.sessionId)
             .header("X-Docker-Expose-Session-Name", session.name)
             .header("X-Docker-Expose-Session-Sharedkey", session.sharedKey)
             .build()

@@ -18,6 +18,7 @@ package batect.docker.api
 
 import batect.docker.DockerException
 import batect.docker.DockerHttpConfig
+import batect.docker.build.BuildKitSession
 import batect.docker.run.ConnectionHijacker
 import batect.os.SystemInfo
 import batect.testutils.createForEachTest

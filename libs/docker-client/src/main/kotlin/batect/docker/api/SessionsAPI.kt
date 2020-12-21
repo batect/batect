@@ -18,11 +18,11 @@ package batect.docker.api
 
 import batect.docker.DockerException
 import batect.docker.DockerHttpConfig
+import batect.docker.build.BuildKitSession
 import batect.docker.run.ConnectionHijacker
 import batect.logging.LogMessageBuilder
 import batect.logging.Logger
 import batect.os.SystemInfo
-import kotlinx.serialization.Serializable
 import okhttp3.Request
 import java.net.Socket
 
@@ -74,13 +74,6 @@ class SessionsAPI(
 
     private fun LogMessageBuilder.data(key: String, value: BuildKitSession) = data(key, value, BuildKitSession.serializer())
 }
-
-@Serializable
-data class BuildKitSession(
-    val id: String,
-    val name: String,
-    val sharedKey: String
-)
 
 data class SessionConnection(val socket: Socket) : AutoCloseable {
     override fun close() {

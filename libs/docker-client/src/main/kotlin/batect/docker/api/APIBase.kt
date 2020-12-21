@@ -23,6 +23,7 @@ import batect.logging.Logger
 import batect.os.SystemInfo
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import okhttp3.ConnectionPool
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Response
@@ -68,6 +69,9 @@ abstract class APIBase(
 
         errorHandler(DockerAPIError(response.code, message))
     }
+
+    protected fun OkHttpClient.Builder.connectionPoolWithNoEviction() = connectionPool(ConnectionPool(5, Long.MAX_VALUE, TimeUnit.NANOSECONDS))
+    protected fun OkHttpClient.Builder.withNoReadTimeout() = readTimeout(0, TimeUnit.NANOSECONDS)
 
     protected fun String.correctLineEndings(): String = this.replace("\n", systemInfo.lineSeparator)
 }

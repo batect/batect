@@ -21,12 +21,14 @@ import okhttp3.Response
 import okhttp3.internal.connection.RealConnection
 import okio.BufferedSink
 import okio.BufferedSource
+import java.net.Socket
 import kotlin.reflect.full.declaredMemberProperties
 import kotlin.reflect.jvm.isAccessible
 
 class ConnectionHijacker : Interceptor {
     var source: BufferedSource? = null
     var sink: BufferedSink? = null
+    var socket: Socket? = null
 
     // HACK: There's no clean way to get the underlying streams for a connection with OkHttp, so we
     // have to reach into the connection and get them. This could change in a future version of OkHttp.
@@ -37,6 +39,7 @@ class ConnectionHijacker : Interceptor {
 
         sink = connection.sink
         source = connection.source
+        socket = connection.socket()
 
         return chain.proceed(chain.request())
     }

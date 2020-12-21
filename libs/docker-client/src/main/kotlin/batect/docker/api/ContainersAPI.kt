@@ -44,7 +44,6 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.long
-import okhttp3.ConnectionPool
 import okhttp3.HttpUrl
 import okhttp3.Request
 import okio.BufferedSource
@@ -354,8 +353,8 @@ class ContainersAPI(
         val hijacker = hijackerFactory()
 
         val client = httpConfig.client.newBuilder()
-            .readTimeout(0, TimeUnit.NANOSECONDS)
-            .connectionPool(ConnectionPool(5, Long.MAX_VALUE, TimeUnit.NANOSECONDS))
+            .withNoReadTimeout()
+            .connectionPoolWithNoEviction()
             .addNetworkInterceptor(hijacker)
             .build()
 
@@ -400,8 +399,8 @@ class ContainersAPI(
         val hijacker = hijackerFactory()
 
         val client = httpConfig.client.newBuilder()
-            .readTimeout(0, TimeUnit.NANOSECONDS)
-            .connectionPool(ConnectionPool(5, Long.MAX_VALUE, TimeUnit.NANOSECONDS))
+            .withNoReadTimeout()
+            .connectionPoolWithNoEviction()
             .addNetworkInterceptor(hijacker)
             .build()
 

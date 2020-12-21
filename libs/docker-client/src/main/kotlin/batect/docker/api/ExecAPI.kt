@@ -112,7 +112,7 @@ class ExecAPI(
         val hijacker = hijackerFactory()
 
         val client = httpConfig.client.newBuilder()
-            .readTimeout(0, TimeUnit.NANOSECONDS)
+            .withNoReadTimeout()
             .connectionPool(ConnectionPool(5, Long.MAX_VALUE, TimeUnit.NANOSECONDS))
             .addNetworkInterceptor(hijacker)
             .build()

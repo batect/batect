@@ -35,6 +35,8 @@ tasks.register("integrationTest", Test) {
     systemProperty "skipBuildKitTests", project.properties.containsKey("skipBuildKitTests")
 
     mustRunAfter test
+
+    outputs.upToDateWhen { false }
 }
 
 tasks.named("check").configure {

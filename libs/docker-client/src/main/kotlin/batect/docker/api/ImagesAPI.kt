@@ -26,14 +26,14 @@ import batect.docker.Tee
 import batect.docker.build.BuildComplete
 import batect.docker.build.BuildError
 import batect.docker.build.BuildKitConfig
-import batect.docker.build.BuildKitImageBuildResponseBody
 import batect.docker.build.BuildProgress
 import batect.docker.build.BuilderConfig
 import batect.docker.build.ImageBuildContext
 import batect.docker.build.ImageBuildContextRequestBody
 import batect.docker.build.ImageBuildResponseBody
 import batect.docker.build.LegacyBuilderConfig
-import batect.docker.build.LegacyImageBuildResponseBody
+import batect.docker.build.buildkit.BuildKitImageBuildResponseBody
+import batect.docker.build.legacy.LegacyImageBuildResponseBody
 import batect.docker.pull.RegistryCredentials
 import batect.docker.toJsonObject
 import batect.logging.LogMessageBuilder

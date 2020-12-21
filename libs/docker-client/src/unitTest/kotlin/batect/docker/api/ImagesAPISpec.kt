@@ -26,7 +26,6 @@ import batect.docker.build.ActiveImageBuildStep
 import batect.docker.build.BuildComplete
 import batect.docker.build.BuildError
 import batect.docker.build.BuildKitConfig
-import batect.docker.build.BuildKitSession
 import batect.docker.build.BuildProgress
 import batect.docker.build.ImageBuildContext
 import batect.docker.build.ImageBuildContextEntry
@@ -35,6 +34,7 @@ import batect.docker.build.ImageBuildEvent
 import batect.docker.build.ImageBuildEventCallback
 import batect.docker.build.ImageBuildResponseBody
 import batect.docker.build.LegacyBuilderConfig
+import batect.docker.build.buildkit.BuildKitSession
 import batect.docker.pull.RegistryCredentials
 import batect.docker.pull.TokenRegistryCredentials
 import batect.os.SystemInfo

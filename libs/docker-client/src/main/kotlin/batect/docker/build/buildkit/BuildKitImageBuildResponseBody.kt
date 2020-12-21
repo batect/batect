@@ -14,12 +14,18 @@
    limitations under the License.
 */
 
-package batect.docker.build
+package batect.docker.build.buildkit
 
 import batect.docker.DockerException
 import batect.docker.DockerImage
 import batect.docker.DownloadOperation
 import batect.docker.ImageBuildFailedException
+import batect.docker.build.ActiveImageBuildStep
+import batect.docker.build.BuildComplete
+import batect.docker.build.BuildError
+import batect.docker.build.BuildProgress
+import batect.docker.build.ImageBuildEventCallback
+import batect.docker.build.ImageBuildResponseBody
 import batect.docker.humaniseBytes
 import batect.primitives.mapToSet
 import kotlinx.serialization.SerializationException

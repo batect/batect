@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package batect.docker.build
+package batect.docker.build.buildkit
 
 import batect.docker.api.SessionStreams
 import okhttp3.internal.concurrent.TaskRunner

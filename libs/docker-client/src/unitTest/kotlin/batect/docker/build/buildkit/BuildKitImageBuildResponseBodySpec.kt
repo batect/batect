@@ -14,11 +14,17 @@
    limitations under the License.
 */
 
-package batect.docker.build
+package batect.docker.build.buildkit
 
 import batect.docker.DockerImage
 import batect.docker.DownloadOperation
 import batect.docker.ImageBuildFailedException
+import batect.docker.build.ActiveImageBuildStep
+import batect.docker.build.BuildComplete
+import batect.docker.build.BuildError
+import batect.docker.build.BuildProgress
+import batect.docker.build.ImageBuildEvent
+import batect.docker.build.ImageBuildEventCallback
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given

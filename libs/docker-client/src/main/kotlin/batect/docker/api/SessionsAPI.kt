@@ -18,7 +18,7 @@ package batect.docker.api
 
 import batect.docker.DockerException
 import batect.docker.DockerHttpConfig
-import batect.docker.build.BuildKitSession
+import batect.docker.build.buildkit.BuildKitSession
 import batect.docker.run.ConnectionHijacker
 import batect.logging.LogMessageBuilder
 import batect.logging.Logger

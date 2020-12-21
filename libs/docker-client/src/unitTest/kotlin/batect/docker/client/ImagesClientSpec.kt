@@ -28,13 +28,13 @@ import batect.docker.api.ImagesAPI
 import batect.docker.api.SessionStreams
 import batect.docker.api.SessionsAPI
 import batect.docker.build.BuildKitConfig
-import batect.docker.build.BuildKitSession
-import batect.docker.build.BuildKitSessionFactory
 import batect.docker.build.BuildProgress
 import batect.docker.build.DockerfileParser
 import batect.docker.build.ImageBuildContext
 import batect.docker.build.ImageBuildContextFactory
 import batect.docker.build.LegacyBuilderConfig
+import batect.docker.build.buildkit.BuildKitSession
+import batect.docker.build.buildkit.BuildKitSessionFactory
 import batect.docker.pull.ImagePullProgress
 import batect.docker.pull.ImagePullProgressReporter
 import batect.docker.pull.RegistryCredentials

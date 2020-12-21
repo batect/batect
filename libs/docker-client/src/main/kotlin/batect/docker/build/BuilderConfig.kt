@@ -17,6 +17,7 @@
 package batect.docker.build
 
 import batect.docker.api.BuilderVersion
+import batect.docker.build.buildkit.BuildKitSession
 import batect.docker.pull.RegistryCredentials
 
 sealed class BuilderConfig(val builderVersion: BuilderVersion)

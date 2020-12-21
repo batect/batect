@@ -26,7 +26,8 @@ def protos = [
     "github.com/moby/buildkit/api/types/worker.proto"            : buildKitVersion,
     "github.com/moby/buildkit/session/auth/auth.proto"           : buildKitVersion,
     "github.com/moby/buildkit/solver/pb/ops.proto"               : buildKitVersion,
-    "github.com/gogo/protobuf/gogoproto/gogo.proto"              : "v1.3.1"
+    "github.com/gogo/protobuf/gogoproto/gogo.proto"              : "v1.3.1",
+    "github.com/grpc/grpc-proto/grpc/health/v1/health.proto"     : "92099ce"
 ]
 
 task downloadProtos() {
@@ -71,6 +72,8 @@ wire.sourcePath {
 }
 
 wire.root('moby.buildkit.v1.StatusResponse')
+wire.root('moby.filesync.v1.Auth')
+wire.root('grpc.health.v1.Health')
 
 wire.kotlin {
     rpcCallStyle = 'blocking'

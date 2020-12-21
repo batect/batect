@@ -24,6 +24,8 @@ import batect.logging.LogMessageBuilder
 import batect.logging.Logger
 import batect.os.SystemInfo
 import okhttp3.Request
+import okio.BufferedSink
+import okio.BufferedSource
 import java.net.Socket
 
 class SessionsAPI(
@@ -32,9 +34,9 @@ class SessionsAPI(
     logger: Logger,
     private val hijackerFactory: () -> ConnectionHijacker = ::ConnectionHijacker
 ) : APIBase(httpConfig, systemInfo, logger) {
-    fun start(session: BuildKitSession): SessionConnection {
+    fun create(session: BuildKitSession): SessionStreams {
         logger.info {
-            message("Starting session.")
+            message("Creating session.")
             data("session", session)
         }
 
@@ -62,21 +64,18 @@ class SessionsAPI(
 
         checkForFailure(response) { error ->
             logger.error {
-                message("Starting session failed.")
+                message("Creating session failed.")
                 data("error", error)
             }
 
-            throw DockerException("Starting session failed: ${error.message}")
+            throw DockerException("Creating session failed: ${error.message}")
         }
 
-        return SessionConnection(hijacker.socket!!)
+        return SessionStreams(hijacker.socket!!, hijacker.source!!, hijacker.sink!!)
     }
 
-    private fun LogMessageBuilder.data(key: String, value: BuildKitSession) = data(key, value, BuildKitSession.serializer())
+    private fun LogMessageBuilder.data(key: String, value: BuildKitSession) = data(key, mapOf("sessionId" to value.sessionId, "buildId" to value.buildId, "name" to value.name))
 }
 
-data class SessionConnection(val socket: Socket) : AutoCloseable {
-    override fun close() {
-        socket.close()
-    }
-}
+// BuildKitSession is responsible for closing the socket, source and sink.
+data class SessionStreams(val socket: Socket, val source: BufferedSource, val sink: BufferedSink)

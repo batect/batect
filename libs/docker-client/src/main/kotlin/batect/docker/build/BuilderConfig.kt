@@ -22,4 +22,4 @@ import batect.docker.pull.RegistryCredentials
 sealed class BuilderConfig(val builderVersion: BuilderVersion)
 
 data class LegacyBuilderConfig(val registryCredentials: Set<RegistryCredentials>) : BuilderConfig(BuilderVersion.Legacy)
-object BuildKitConfig : BuilderConfig(BuilderVersion.BuildKit)
+data class BuildKitConfig(val session: BuildKitSession) : BuilderConfig(BuilderVersion.BuildKit)

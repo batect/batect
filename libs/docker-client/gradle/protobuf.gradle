@@ -22,8 +22,9 @@ def protobufVersion = "3.14.0"
 
 def protos = [
     "github.com/moby/buildkit/api/services/control/control.proto": buildKitVersion,
-    "github.com/moby/buildkit/solver/pb/ops.proto"               : buildKitVersion,
     "github.com/moby/buildkit/api/types/worker.proto"            : buildKitVersion,
+    "github.com/moby/buildkit/session/auth/auth.proto"           : buildKitVersion,
+    "github.com/moby/buildkit/solver/pb/ops.proto"               : buildKitVersion,
     "github.com/gogo/protobuf/gogoproto/gogo.proto"              : "v1.3.1"
 ]
 

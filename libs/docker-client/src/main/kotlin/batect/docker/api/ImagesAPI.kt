@@ -124,7 +124,11 @@ class ImagesAPI(
 
         when (builderConfig) {
             is LegacyBuilderConfig -> requestBuilder.addRegistryCredentialsForBuild(builderConfig.registryCredentials)
-            is BuildKitConfig -> url.addQueryParameter("version", "2")
+            is BuildKitConfig ->
+                url
+                    .addQueryParameter("version", "2")
+                    .addQueryParameter("session", builderConfig.session.sessionId)
+                    .addQueryParameter("buildid", builderConfig.session.buildId)
         }
 
         return requestBuilder

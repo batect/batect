@@ -26,6 +26,7 @@ import batect.docker.build.ActiveImageBuildStep
 import batect.docker.build.BuildComplete
 import batect.docker.build.BuildError
 import batect.docker.build.BuildKitConfig
+import batect.docker.build.BuildKitSession
 import batect.docker.build.BuildProgress
 import batect.docker.build.ImageBuildContext
 import batect.docker.build.ImageBuildContextEntry
@@ -198,11 +199,22 @@ object ImagesAPISpec : Spek({
                 }
 
                 given("BuildKit is requested") {
-                    val expectedBuildKitUrl = expectedUrl and hasQueryParameter("version", "2")
+                    val session = BuildKitSession(
+                        "session-123",
+                        "build-123",
+                        "name-123",
+                        "key-123"
+                    )
+
+                    val expectedBuildKitUrl = expectedUrl and hasQueryParameter("version", "2") and
+                        hasQueryParameter("session", session.sessionId) and
+                        hasQueryParameter("buildid", session.buildId)
+
                     val expectedBuildKitHeaders = Headers.Builder().build()
+
                     val call by createForEachTest { clientWithLongTimeout.mock("POST", expectedBuildKitUrl, daemonBuildResponse, 200, expectedBuildKitHeaders) }
 
-                    runForEachTest { api.build(context, buildArgs, dockerfilePath, imageTags, pullImage, null, BuildKitConfig, cancellationContext, {}) }
+                    runForEachTest { api.build(context, buildArgs, dockerfilePath, imageTags, pullImage, null, BuildKitConfig(session), cancellationContext, {}) }
 
                     it("sends a request to the Docker daemon to build the image with the expected URL") {
                         verify(call).execute()

@@ -46,8 +46,10 @@ import batect.docker.api.ContainersAPI
 import batect.docker.api.ExecAPI
 import batect.docker.api.ImagesAPI
 import batect.docker.api.NetworksAPI
+import batect.docker.api.SessionsAPI
 import batect.docker.api.SystemInfoAPI
 import batect.docker.api.VolumesAPI
+import batect.docker.build.BuildKitSessionFactory
 import batect.docker.build.DockerIgnoreParser
 import batect.docker.build.DockerfileParser
 import batect.docker.build.ImageBuildContextFactory
@@ -177,6 +179,7 @@ private val dockerModule = DI.Module("docker") {
     import(dockerApiModule)
     import(dockerClientModule)
 
+    bind<BuildKitSessionFactory>() with singleton { BuildKitSessionFactory(instance()) }
     bind<ContainerIOStreamer>() with singleton { ContainerIOStreamer() }
     bind<ContainerTTYManager>() with singletonWithLogger { logger -> ContainerTTYManager(instance(), instance(), logger) }
     bind<ContainerWaiter>() with singleton { ContainerWaiter(instance()) }
@@ -204,6 +207,7 @@ private val dockerApiModule = DI.Module("docker.api") {
     bind<ExecAPI>() with singletonWithLogger { logger -> ExecAPI(instance(), instance(), logger) }
     bind<ImagesAPI>() with singletonWithLogger { logger -> ImagesAPI(instance(), instance(), logger) }
     bind<NetworksAPI>() with singletonWithLogger { logger -> NetworksAPI(instance(), instance(), logger) }
+    bind<SessionsAPI>() with singletonWithLogger { logger -> SessionsAPI(instance(), instance(), logger) }
     bind<SystemInfoAPI>() with singletonWithLogger { logger -> SystemInfoAPI(instance(), instance(), logger) }
     bind<VolumesAPI>() with singletonWithLogger { logger -> VolumesAPI(instance(), instance(), logger) }
 }
@@ -211,7 +215,7 @@ private val dockerApiModule = DI.Module("docker.api") {
 private val dockerClientModule = DI.Module("docker.client") {
     bind<ContainersClient>() with singletonWithLogger { logger -> ContainersClient(instance(), instance(), instance(), instance(), instance(), logger) }
     bind<ExecClient>() with singletonWithLogger { logger -> ExecClient(instance(), instance(), logger) }
-    bind<ImagesClient>() with singletonWithLogger { logger -> ImagesClient(instance(), instance(), instance(), instance(), logger) }
+    bind<ImagesClient>() with singletonWithLogger { logger -> ImagesClient(instance(), instance(), instance(), instance(), instance(), instance(), logger) }
     bind<NetworksClient>() with singleton { NetworksClient(instance()) }
     bind<SystemInfoClient>() with singletonWithLogger { logger -> SystemInfoClient(instance(), instance(), logger) }
     bind<VolumesClient>() with singleton { VolumesClient(instance()) }

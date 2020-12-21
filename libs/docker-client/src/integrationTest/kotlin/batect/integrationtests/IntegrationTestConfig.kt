@@ -23,8 +23,10 @@ import batect.docker.api.ContainersAPI
 import batect.docker.api.ExecAPI
 import batect.docker.api.ImagesAPI
 import batect.docker.api.NetworksAPI
+import batect.docker.api.SessionsAPI
 import batect.docker.api.SystemInfoAPI
 import batect.docker.api.VolumesAPI
+import batect.docker.build.BuildKitSessionFactory
 import batect.docker.build.DockerIgnoreParser
 import batect.docker.build.DockerfileParser
 import batect.docker.build.ImageBuildContextFactory
@@ -77,6 +79,7 @@ fun createClient(posix: POSIX = POSIXFactory.getNativePOSIX(), nativeMethods: Na
     val execAPI = ExecAPI(httpConfig, systemInfo, logger)
     val imagesAPI = ImagesAPI(httpConfig, systemInfo, logger)
     val networksAPI = NetworksAPI(httpConfig, systemInfo, logger)
+    val sessionsAPI = SessionsAPI(httpConfig, systemInfo, logger)
     val systemInfoAPI = SystemInfoAPI(httpConfig, systemInfo, logger)
     val volumesAPI = VolumesAPI(httpConfig, systemInfo, logger)
     val consoleInfo = ConsoleInfo(nativeMethods, systemInfo, HostEnvironmentVariables.current, logger)
@@ -91,10 +94,11 @@ fun createClient(posix: POSIX = POSIXFactory.getNativePOSIX(), nativeMethods: Na
     val signalListener = SignalListener(posix)
     val consoleDimensions = ConsoleDimensions(nativeMethods, signalListener, logger)
     val ttyManager = ContainerTTYManager(containersAPI, consoleDimensions, logger)
+    val buildKitSessionFactory = BuildKitSessionFactory(systemInfo)
 
     val containersClient = ContainersClient(containersAPI, consoleManager, waiter, streamer, ttyManager, logger)
     val execClient = ExecClient(execAPI, streamer, logger)
-    val imagesClient = ImagesClient(imagesAPI, credentialsProvider, imageBuildContextFactory, dockerfileParser, logger)
+    val imagesClient = ImagesClient(imagesAPI, sessionsAPI, credentialsProvider, imageBuildContextFactory, dockerfileParser, buildKitSessionFactory, logger)
     val networksClient = NetworksClient(networksAPI)
     val systemInfoClient = SystemInfoClient(systemInfoAPI, mock(), logger)
     val volumesClient = VolumesClient(volumesAPI)

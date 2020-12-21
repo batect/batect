@@ -25,6 +25,11 @@ import batect.docker.ImageReference
 import batect.docker.Json
 import batect.docker.api.BuilderVersion
 import batect.docker.api.ImagesAPI
+import batect.docker.api.SessionStreams
+import batect.docker.api.SessionsAPI
+import batect.docker.build.BuildKitConfig
+import batect.docker.build.BuildKitSession
+import batect.docker.build.BuildKitSessionFactory
 import batect.docker.build.BuildProgress
 import batect.docker.build.DockerfileParser
 import batect.docker.build.ImageBuildContext
@@ -52,6 +57,7 @@ import com.natpryce.hamkrest.throws
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.eq
+import com.nhaarman.mockitokotlin2.inOrder
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.verify
@@ -65,14 +71,16 @@ import java.nio.file.Files
 
 object ImagesClientSpec : Spek({
     describe("a Docker images client") {
-        val api by createForEachTest { mock<ImagesAPI>() }
+        val imagesAPI by createForEachTest { mock<ImagesAPI>() }
+        val sessionsAPI by createForEachTest { mock<SessionsAPI>() }
         val credentialsProvider by createForEachTest { mock<RegistryCredentialsProvider>() }
         val imageBuildContextFactory by createForEachTest { mock<ImageBuildContextFactory>() }
         val dockerfileParser by createForEachTest { mock<DockerfileParser>() }
+        val buildKitSessionFactory by createForEachTest { mock<BuildKitSessionFactory>() }
         val logger by createLoggerForEachTestWithoutCustomSerializers()
         val imageProgressReporter by createForEachTest { mock<ImagePullProgressReporter>() }
         val imageProgressReporterFactory = { imageProgressReporter }
-        val client by createForEachTest { ImagesClient(api, credentialsProvider, imageBuildContextFactory, dockerfileParser, logger, imageProgressReporterFactory) }
+        val client by createForEachTest { ImagesClient(imagesAPI, sessionsAPI, credentialsProvider, imageBuildContextFactory, dockerfileParser, buildKitSessionFactory, logger, imageProgressReporterFactory) }
 
         describe("building an image") {
             val fileSystem by createForEachTest { Jimfs.newFileSystem(Configuration.unix()) }
@@ -116,15 +124,16 @@ object ImagesClientSpec : Spek({
                         whenever(credentialsProvider.getCredentials(ImageReference("some-other-image:2.3.4"))).doReturn(image2Credentials)
                     }
 
-                    on("a successful build") {
-                        val image = DockerImage("some-image-id")
-                        beforeEachTest { whenever(api.build(any(), any(), any(), any(), any(), any(), any(), any(), any())).doReturn(image) }
+                    val image = DockerImage("some-image-id")
+                    beforeEachTest { whenever(imagesAPI.build(any(), any(), any(), any(), any(), any(), any(), any(), any())).doReturn(image) }
 
-                        val onStatusUpdate = fun(_: BuildProgress) {}
+                    val onStatusUpdate = fun(_: BuildProgress) {}
+
+                    given("the legacy builder is being used") {
                         val result by runForEachTest { client.build(buildDirectory, buildArgs, dockerfilePath, pathResolutionContext, imageTags, forcePull, outputSink, BuilderVersion.Legacy, cancellationContext, onStatusUpdate) }
 
                         it("builds the image") {
-                            verify(api).build(
+                            verify(imagesAPI).build(
                                 eq(context),
                                 eq(buildArgs),
                                 eq(dockerfilePath),
@@ -135,6 +144,51 @@ object ImagesClientSpec : Spek({
                                 eq(cancellationContext),
                                 eq(onStatusUpdate)
                             )
+                        }
+
+                        it("does not start a session") {
+                            verify(sessionsAPI, never()).create(any())
+                        }
+
+                        it("returns the built image") {
+                            assertThat(result, equalTo(image))
+                        }
+                    }
+
+                    given("BuildKit is being used") {
+                        val buildKitSession by createForEachTest { mock<BuildKitSession>() }
+                        beforeEachTest { whenever(buildKitSessionFactory.create(buildDirectory)).thenReturn(buildKitSession) }
+
+                        val sessionStreams by createForEachTest { mock<SessionStreams>() }
+                        beforeEachTest { whenever(sessionsAPI.create(buildKitSession)).thenReturn(sessionStreams) }
+
+                        val result by runForEachTest { client.build(buildDirectory, buildArgs, dockerfilePath, pathResolutionContext, imageTags, forcePull, outputSink, BuilderVersion.BuildKit, cancellationContext, onStatusUpdate) }
+
+                        it("builds the image") {
+                            verify(imagesAPI).build(
+                                eq(context),
+                                eq(buildArgs),
+                                eq(dockerfilePath),
+                                eq(imageTags),
+                                eq(forcePull),
+                                eq(outputSink),
+                                eq(BuildKitConfig(buildKitSession)),
+                                eq(cancellationContext),
+                                eq(onStatusUpdate)
+                            )
+                        }
+
+                        it("creates the session") {
+                            verify(sessionsAPI).create(buildKitSession)
+                        }
+
+                        it("starts the session before building the image, then closes the session") {
+                            inOrder(sessionsAPI, imagesAPI, buildKitSession) {
+                                verify(sessionsAPI).create(any())
+                                verify(buildKitSession).start(sessionStreams)
+                                verify(imagesAPI).build(any(), any(), any(), any(), any(), any(), any(), any(), any())
+                                verify(buildKitSession).close()
+                            }
                         }
 
                         it("returns the built image") {
@@ -203,7 +257,7 @@ object ImagesClientSpec : Spek({
 
                 given("the image does not exist locally") {
                     beforeEachTest {
-                        whenever(api.hasImage(ImageReference("some-image"))).thenReturn(false)
+                        whenever(imagesAPI.hasImage(ImageReference("some-image"))).thenReturn(false)
                     }
 
                     given("getting credentials for the image succeeds") {
@@ -221,7 +275,7 @@ object ImagesClientSpec : Spek({
                                 whenever(imageProgressReporter.processProgressUpdate(firstProgressUpdate)).thenReturn(ImagePullProgress(DownloadOperation.Downloading, 10, 20))
                                 whenever(imageProgressReporter.processProgressUpdate(secondProgressUpdate)).thenReturn(null)
 
-                                whenever(api.pull(any(), any(), any(), any())).then { invocation ->
+                                whenever(imagesAPI.pull(any(), any(), any(), any())).then { invocation ->
                                     @Suppress("UNCHECKED_CAST")
                                     val onProgressUpdate = invocation.arguments[3] as (JsonObject) -> Unit
                                     onProgressUpdate(firstProgressUpdate)
@@ -235,7 +289,7 @@ object ImagesClientSpec : Spek({
                             val image by runForEachTest { client.pull("some-image", forcePull, cancellationContext) { progressUpdatesReceived.add(it) } }
 
                             it("calls the Docker API to pull the image") {
-                                verify(api).pull(eq(ImageReference("some-image")), eq(credentials), eq(cancellationContext), any())
+                                verify(imagesAPI).pull(eq(ImageReference("some-image")), eq(credentials), eq(cancellationContext), any())
                             }
 
                             it("sends notifications for all relevant progress updates") {
@@ -270,12 +324,12 @@ object ImagesClientSpec : Spek({
                 }
 
                 on("when the image already exists locally") {
-                    beforeEachTest { whenever(api.hasImage(ImageReference("some-image"))).thenReturn(true) }
+                    beforeEachTest { whenever(imagesAPI.hasImage(ImageReference("some-image"))).thenReturn(true) }
 
                     val image by runForEachTest { client.pull("some-image", forcePull, cancellationContext, {}) }
 
                     it("does not call the Docker API to pull the image again") {
-                        verify(api, never()).pull(any(), any(), any(), any())
+                        verify(imagesAPI, never()).pull(any(), any(), any(), any())
                     }
 
                     it("returns the Docker image") {
@@ -298,7 +352,7 @@ object ImagesClientSpec : Spek({
                         val image by runForEachTest { client.pull("some-image", forcePull, cancellationContext, {}) }
 
                         it("calls the Docker API to pull the image") {
-                            verify(api).pull(eq(ImageReference("some-image")), eq(credentials), eq(cancellationContext), any())
+                            verify(imagesAPI).pull(eq(ImageReference("some-image")), eq(credentials), eq(cancellationContext), any())
                         }
 
                         it("returns the Docker image") {
@@ -306,7 +360,7 @@ object ImagesClientSpec : Spek({
                         }
 
                         it("does not call the Docker API to check if the image has already been pulled") {
-                            verify(api, never()).hasImage(any())
+                            verify(imagesAPI, never()).hasImage(any())
                         }
                     }
                 }

@@ -17,16 +17,25 @@
 package batect.docker.build.buildkit.services
 
 import com.squareup.wire.MessageSink
+import com.squareup.wire.WireRpc
 import io.grpc.health.v1.HealthBlockingServer
 import io.grpc.health.v1.HealthCheckRequest
 import io.grpc.health.v1.HealthCheckResponse
+import kotlin.reflect.KFunction
+import kotlin.reflect.full.findAnnotation
 
-class HealthService : HealthBlockingServer {
+class HealthService : HealthBlockingServer, ServiceWithEndpointMetadata {
     override fun Check(request: HealthCheckRequest): HealthCheckResponse {
         return HealthCheckResponse(HealthCheckResponse.ServingStatus.SERVING)
     }
 
     override fun Watch(request: HealthCheckRequest, response: MessageSink<HealthCheckResponse>) {
         throw UnsupportedOperationException("Watch() not supported")
+    }
+
+    override fun getEndpoints(): Map<String, Endpoint<*, *>> {
+        return mapOf(
+            HealthBlockingServer::Check.path to Endpoint(::Check, HealthCheckRequest.ADAPTER, HealthCheckResponse.ADAPTER)
+        )
     }
 }

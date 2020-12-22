@@ -19,10 +19,13 @@ package batect.docker.build.buildkit
 import batect.docker.build.buildkit.services.Endpoint
 import batect.docker.build.buildkit.services.ServiceWithEndpointMetadata
 import batect.docker.build.buildkit.services.UnsupportedGrpcMethodException
+import batect.logging.LogMessageBuilder
 import batect.logging.Logger
-import com.squareup.wire.ProtoAdapter
 import com.squareup.wire.internal.GrpcMessageSink
 import com.squareup.wire.internal.GrpcMessageSource
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.builtins.MapSerializer
+import kotlinx.serialization.builtins.serializer
 import okhttp3.Headers
 import okhttp3.internal.http2.ErrorCode
 import okhttp3.internal.http2.Header
@@ -40,21 +43,40 @@ class GrpcListener(
 ) : Http2Connection.Listener() {
     private val endpoints: Map<String, Endpoint<*, *>> = services.flatMap { it.getEndpoints().entries }.associate { it.toPair() }
 
-    private val Class<*>.protoAdapter: ProtoAdapter<*>
-        get() = declaredFields.single { it.name == "ADAPTER" }.get(null) as ProtoAdapter<*>
-
     override fun onStream(stream: Http2Stream) {
         val headers = stream.takeHeaders()
 
-        // println("Stream ${stream.id} received request:")
-        // println(headers)
+        logger.info {
+            message("Received request")
+            data("streamId", stream.id)
+            data("sessionId", sessionId)
+            data("headers", headers.toMultimap())
+        }
 
-        if (headers[Header.TARGET_METHOD_UTF8] != "POST") {
+        val method = headers[Header.TARGET_METHOD_UTF8]
+
+        if (method != "POST") {
+            logger.warn {
+                message("Request has unexpected HTTP method, returning error")
+                data("streamId", stream.id)
+                data("sessionId", sessionId)
+                data("method", method)
+            }
+
             stream.sendHttpError(HttpStatus.MethodNotAllowed)
             return
         }
 
-        if (headers["content-type"] != grpcContentType) {
+        val contentType = headers["content-type"]
+
+        if (contentType != grpcContentType) {
+            logger.warn {
+                message("Request has unexpected content type, returning error")
+                data("streamId", stream.id)
+                data("sessionId", sessionId)
+                data("contentType", contentType)
+            }
+
             stream.sendHttpError(HttpStatus.UnsupportedMediaType)
             return
         }
@@ -63,6 +85,13 @@ class GrpcListener(
         val endpoint = endpoints[path]
 
         if (endpoint == null) {
+            logger.warn {
+                message("Request is for an unknown endpoint, returning error")
+                data("streamId", stream.id)
+                data("sessionId", sessionId)
+                data("path", path)
+            }
+
             stream.sendGrpcError(GrpcStatus.Unimplemented)
             return
         }
@@ -84,14 +113,34 @@ class GrpcListener(
             messageSink.write(response)
 
             stream.sendResponseTrailers(GrpcStatus.OK)
+
+            logger.warn {
+                message("Request processed successfully")
+                data("streamId", stream.id)
+                data("sessionId", sessionId)
+            }
         } catch (e: UnsupportedGrpcMethodException) {
-            // TODO: logging
+            logger.warn {
+                message("Endpoint handler threw ${UnsupportedGrpcMethodException::class.simpleName}, returning error")
+                data("streamId", stream.id)
+                data("sessionId", sessionId)
+                exception(e)
+            }
+
             stream.sendResponseTrailers(GrpcStatus.Unimplemented)
         } catch (t: Throwable) {
-            // TODO: logging
+            logger.error {
+                message("Endpoint handler threw exception, returning error")
+                data("streamId", stream.id)
+                data("sessionId", sessionId)
+                exception(t)
+            }
+
             stream.sendResponseTrailers(GrpcStatus.Unknown)
         }
     }
+
+    private fun LogMessageBuilder.data(key: String, value: Map<String, List<String>>) = data(key, value, MapSerializer(String.serializer(), ListSerializer(String.serializer())))
 
     private companion object {
         const val identityEncoding = "identity"

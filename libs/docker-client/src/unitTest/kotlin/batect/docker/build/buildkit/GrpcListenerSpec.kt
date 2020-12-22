@@ -76,7 +76,9 @@ object GrpcListenerSpec : Spek({
                         Header(":status", "200"),
                         Header("content-type", "application/grpc"),
                         Header("grpc-status", code.toString())
-                    ), true, true
+                    ),
+                    true,
+                    true
                 )
             }
 
@@ -154,7 +156,9 @@ object GrpcListenerSpec : Spek({
                                             Header(":status", "200"),
                                             Header("grpc-encoding", "identity"),
                                             Header("content-type", "application/grpc")
-                                        ), false, true
+                                        ),
+                                        false,
+                                        true
                                     )
                                 }
 

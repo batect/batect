@@ -17,7 +17,6 @@
 package batect.docker.build.buildkit.services
 
 import com.squareup.wire.ProtoAdapter
-import com.squareup.wire.Service
 import com.squareup.wire.WireRpc
 import kotlin.reflect.KFunction
 import kotlin.reflect.full.findAnnotation

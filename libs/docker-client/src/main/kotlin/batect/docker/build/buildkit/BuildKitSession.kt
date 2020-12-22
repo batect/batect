@@ -20,14 +20,7 @@ import batect.docker.api.SessionStreams
 import batect.docker.build.buildkit.services.HealthService
 import okhttp3.internal.concurrent.TaskRunner
 import okhttp3.internal.http2.Http2Connection
-import okhttp3.internal.http2.Http2Stream
-import okhttp3.internal.notify
 import okhttp3.internal.peerName
-import okhttp3.internal.threadFactory
-import okio.buffer
-import java.util.concurrent.SynchronousQueue
-import java.util.concurrent.ThreadPoolExecutor
-import java.util.concurrent.TimeUnit
 
 class BuildKitSession(
     val sessionId: String,

@@ -99,7 +99,7 @@ object SessionsAPISpec : Spek({
                 whenever(httpClient.newBuilder()).doReturn(clientBuilder)
             }
 
-            val session = BuildKitSession("session-id-123", "build-id-123", "session-name-123", "session-shared-key-123")
+            val session = BuildKitSession("session-id-123", "build-id-123", "session-name-123", "session-shared-key-123", mock())
             val expectedUrl = "$dockerBaseUrl/v1.37/session"
             val expectedHeaders = Headers.Builder()
                 .add("Connection", "Upgrade")

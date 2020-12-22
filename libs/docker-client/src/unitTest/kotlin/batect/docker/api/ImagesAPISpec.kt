@@ -203,7 +203,8 @@ object ImagesAPISpec : Spek({
                         "session-123",
                         "build-123",
                         "name-123",
-                        "key-123"
+                        "key-123",
+                        mock()
                     )
 
                     val expectedBuildKitUrl = expectedUrl and hasQueryParameter("version", "2") and

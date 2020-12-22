@@ -16,13 +16,19 @@
 
 package batect.docker.build.buildkit
 
+import batect.docker.build.buildkit.services.HealthService
+import batect.logging.LoggerFactory
 import batect.os.SystemInfo
 import okio.Buffer
 import java.nio.file.Files
 import java.nio.file.Path
 import java.security.SecureRandom
 
-class BuildKitSessionFactory(private val systemInfo: SystemInfo) {
+class BuildKitSessionFactory(
+    private val systemInfo: SystemInfo,
+    private val healthService: HealthService,
+    private val loggerFactory: LoggerFactory
+) {
     private val random = SecureRandom()
     private val nodeId by lazy { getOrCreateNodeID() }
 
@@ -41,11 +47,15 @@ class BuildKitSessionFactory(private val systemInfo: SystemInfo) {
     }
 
     fun create(buildDirectory: Path): BuildKitSession {
+        val sessionId = generateBase36Id(25)
+        val listener = GrpcListener(sessionId, setOf(healthService), loggerFactory.createLoggerForClass(GrpcListener::class))
+
         return BuildKitSession(
-            generateBase36Id(25),
+            sessionId,
             guaranteeNonNumeric { generateHexId(64) },
             buildDirectory.fileName.toString(),
-            generateSharedKey(buildDirectory)
+            generateSharedKey(buildDirectory),
+            listener
         )
     }
 

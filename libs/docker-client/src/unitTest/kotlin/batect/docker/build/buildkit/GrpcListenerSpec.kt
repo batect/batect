@@ -22,6 +22,7 @@ import batect.docker.build.buildkit.services.UnsupportedGrpcMethodException
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given
+import batect.testutils.logging.createLoggerForEachTestWithoutCustomSerializers
 import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.anyOrNull
@@ -49,7 +50,8 @@ import java.io.ByteArrayOutputStream
 object GrpcListenerSpec : Spek({
     describe("a gRPC listener") {
         val service by createForEachTest { MockHealthService() }
-        val listener by createForEachTest { GrpcListener(setOf(service)) }
+        val logger by createLoggerForEachTestWithoutCustomSerializers()
+        val listener by createForEachTest { GrpcListener("session-123", setOf(service), logger) }
         val stream by createForEachTest { mock<Http2Stream>() }
 
         fun Suite.itImmediatelyRespondsWithHttpError(code: Int, message: String) {

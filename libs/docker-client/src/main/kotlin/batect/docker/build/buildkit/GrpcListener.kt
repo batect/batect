@@ -19,6 +19,7 @@ package batect.docker.build.buildkit
 import batect.docker.build.buildkit.services.Endpoint
 import batect.docker.build.buildkit.services.ServiceWithEndpointMetadata
 import batect.docker.build.buildkit.services.UnsupportedGrpcMethodException
+import batect.logging.Logger
 import com.squareup.wire.ProtoAdapter
 import com.squareup.wire.internal.GrpcMessageSink
 import com.squareup.wire.internal.GrpcMessageSource
@@ -32,7 +33,11 @@ import okio.buffer
 // This was inspired by Wire's mockwebserver GrpcDispatcher.
 // https://github.com/grpc/grpc/blob/master/doc/PROTOCOL-HTTP2.md and https://github.com/grpc/grpc/blob/master/doc/statuscodes.md
 // are also useful references.
-class GrpcListener(val services: Set<ServiceWithEndpointMetadata>) : Http2Connection.Listener() {
+class GrpcListener(
+    val sessionId: String,
+    val services: Set<ServiceWithEndpointMetadata>,
+    val logger: Logger
+) : Http2Connection.Listener() {
     private val endpoints: Map<String, Endpoint<*, *>> = services.flatMap { it.getEndpoints().entries }.associate { it.toPair() }
 
     private val Class<*>.protoAdapter: ProtoAdapter<*>

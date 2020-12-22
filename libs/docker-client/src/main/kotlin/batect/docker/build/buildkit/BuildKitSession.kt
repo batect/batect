@@ -17,7 +17,6 @@
 package batect.docker.build.buildkit
 
 import batect.docker.api.SessionStreams
-import batect.docker.build.buildkit.services.HealthService
 import okhttp3.internal.concurrent.TaskRunner
 import okhttp3.internal.http2.Http2Connection
 import okhttp3.internal.peerName
@@ -26,7 +25,8 @@ class BuildKitSession(
     val sessionId: String,
     val buildId: String,
     val name: String,
-    val sharedKey: String
+    val sharedKey: String,
+    val grpcListener: GrpcListener
 ) : AutoCloseable {
     private lateinit var connection: Http2Connection
 
@@ -37,13 +37,11 @@ class BuildKitSession(
 
         streams.socket.soTimeout = 0
 
-        val listener = GrpcListener(setOf(HealthService()))
-
         // TODO: replace this TaskRunner with a standard TaskRunner backend + a threadFactory that sets Thread.setUncaughtExceptionHandler
 
         val connection = Http2Connection.Builder(false, TaskRunner.INSTANCE)
             .socket(streams.socket, streams.socket.peerName(), streams.source, streams.sink)
-            .listener(listener)
+            .listener(grpcListener)
             .build()
 
         connection.start()

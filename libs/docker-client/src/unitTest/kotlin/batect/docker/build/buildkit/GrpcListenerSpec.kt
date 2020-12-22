@@ -23,6 +23,7 @@ import batect.testutils.equalTo
 import batect.testutils.given
 import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockitokotlin2.any
+import com.nhaarman.mockitokotlin2.anyOrNull
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.never
@@ -33,7 +34,6 @@ import io.grpc.health.v1.HealthBlockingServer
 import io.grpc.health.v1.HealthCheckRequest
 import io.grpc.health.v1.HealthCheckResponse
 import okhttp3.Headers
-import okhttp3.internal.http2.ErrorCode
 import okhttp3.internal.http2.Header
 import okhttp3.internal.http2.Http2Stream
 import okio.ByteString.Companion.toByteString
@@ -64,8 +64,8 @@ object GrpcListenerSpec : Spek({
                 verify(stream, never()).enqueueTrailers(any())
             }
 
-            it("closes the stream with no error") {
-                verify(stream).close(ErrorCode.NO_ERROR, null)
+            it("does not close the stream") {
+                verify(stream, never()).close(any(), anyOrNull())
             }
         }
 
@@ -88,8 +88,8 @@ object GrpcListenerSpec : Spek({
                 verify(stream, never()).enqueueTrailers(any())
             }
 
-            it("closes the stream with no error") {
-                verify(stream).close(ErrorCode.NO_ERROR, null)
+            it("does not close the stream") {
+                verify(stream, never()).close(any(), anyOrNull())
             }
         }
 
@@ -167,11 +167,11 @@ object GrpcListenerSpec : Spek({
                                 }
 
                                 it("writes the gRPC status code as a trailer") {
-                                    verify(stream).enqueueTrailers(Headers.headersOf("grpc-status", "0"))
+                                    verify(stream).writeHeaders(listOf(Header("grpc-status", "0")), true, true)
                                 }
 
-                                it("closes the stream with no error") {
-                                    verify(stream).close(ErrorCode.NO_ERROR, null)
+                                it("does not close the stream") {
+                                    verify(stream, never()).close(any(), anyOrNull())
                                 }
                             }
                         }

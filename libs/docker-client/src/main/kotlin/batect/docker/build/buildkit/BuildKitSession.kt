@@ -16,10 +16,13 @@
 
 package batect.docker.build.buildkit
 
+import batect.docker.ImageBuildFailedException
 import batect.docker.api.SessionStreams
 import okhttp3.internal.concurrent.TaskRunner
 import okhttp3.internal.http2.Http2Connection
 import okhttp3.internal.peerName
+import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.ThreadFactory
 
 class BuildKitSession(
     val sessionId: String,
@@ -29,6 +32,7 @@ class BuildKitSession(
     val grpcListener: GrpcListener
 ) : AutoCloseable {
     private lateinit var connection: Http2Connection
+    private val exceptions = ConcurrentLinkedQueue<Throwable>()
 
     fun start(streams: SessionStreams) {
         if (::connection.isInitialized) {
@@ -37,9 +41,7 @@ class BuildKitSession(
 
         streams.socket.soTimeout = 0
 
-        // TODO: replace this TaskRunner with a standard TaskRunner backend + a threadFactory that sets Thread.setUncaughtExceptionHandler
-
-        val connection = Http2Connection.Builder(false, TaskRunner.INSTANCE)
+        val connection = Http2Connection.Builder(false, TaskRunner(TaskRunner.RealBackend(threadFactory)))
             .socket(streams.socket, streams.socket.peerName(), streams.source, streams.sink)
             .listener(grpcListener)
             .build()
@@ -47,9 +49,31 @@ class BuildKitSession(
         connection.start()
     }
 
+    private val threadFactory: ThreadFactory = ThreadFactory { runnable ->
+        Thread(runnable, "BuildKit session $sessionId").apply {
+            isDaemon = true
+            uncaughtExceptionHandler = Thread.UncaughtExceptionHandler { _, e ->
+                exceptions.add(e)
+            }
+        }
+    }
+
     override fun close() {
         if (::connection.isInitialized) {
             connection.close()
+        }
+
+        if (exceptions.any()) {
+            val builder = StringBuilder()
+
+            builder.appendLine("${exceptions.size} exception(s) thrown during image build:")
+
+            exceptions.forEachIndexed() { i, e ->
+                builder.appendLine("Exception #${i + 1}: ${e.stackTraceToString()}")
+                builder.appendLine()
+            }
+
+            throw ImageBuildFailedException(builder.toString())
         }
     }
 }

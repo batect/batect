@@ -88,9 +88,14 @@ class ImagesClient(
 
             val context = imageBuildContextFactory.createFromDirectory(buildDirectory, dockerfilePath)
             val builderConfig = createBuilderConfig(builderVersion, buildDirectory, resolvedDockerfilePath)
+            val session = startSession(builderConfig)
 
-            val image = runSession(builderConfig).use {
+            // Why not use a use() block here? use() suppresses any exceptions thrown by close() if an exception has already been thrown, but we want to allow them to bubble up so that
+            // any exceptions from other threads can be propagated by BuildKitSession.close().
+            val image = try {
                 imagesAPI.build(context, buildArgs, dockerfilePath, imageTags, forcePull, outputSink, builderConfig, cancellationContext, onProgressUpdate)
+            } finally {
+                session.close()
             }
 
             logger.info {
@@ -114,7 +119,7 @@ class ImagesClient(
         BuilderVersion.BuildKit -> BuildKitConfig(buildKitSessionFactory.create(buildDirectory))
     }
 
-    private fun runSession(builderConfig: BuilderConfig): AutoCloseable = when (builderConfig) {
+    private fun startSession(builderConfig: BuilderConfig): AutoCloseable = when (builderConfig) {
         is LegacyBuilderConfig -> AutoCloseable {
             // Nothing to do.
         }

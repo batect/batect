@@ -151,15 +151,15 @@ object ImagesAPISpec : Spek({
             val successOutput = "This is some output from the build process."
 
             given("the build succeeds") {
+                beforeEachTest {
+                    buildResponseBody.outputToStream = successOutput
+                    buildResponseBody.eventsToPost = successEvents
+                }
+
                 given("the legacy builder is requested") {
                     val call by createForEachTest { clientWithLongTimeout.mock("POST", expectedLegacyBuilderUrl, daemonBuildResponse, 200, expectedHeadersForLegacyAuthentication) }
                     val output by createForEachTest { ByteArrayOutputStream() }
                     val eventsReceiver by createForEachTest { BuildEventsReceiver() }
-
-                    beforeEachTest {
-                        buildResponseBody.outputToStream = successOutput
-                        buildResponseBody.eventsToPost = successEvents
-                    }
 
                     val image by runForEachTest {
                         api.build(context, buildArgs, dockerfilePath, imageTags, pullImage, output.sink(), LegacyBuilderConfig(registryCredentials), cancellationContext, eventsReceiver::onProgressUpdate)

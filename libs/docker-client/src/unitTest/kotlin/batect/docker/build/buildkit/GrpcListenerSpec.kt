@@ -18,6 +18,7 @@ package batect.docker.build.buildkit
 
 import batect.docker.build.buildkit.services.Endpoint
 import batect.docker.build.buildkit.services.ServiceWithEndpointMetadata
+import batect.docker.build.buildkit.services.UnsupportedGrpcMethodException
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given
@@ -95,6 +96,26 @@ object GrpcListenerSpec : Spek({
             }
         }
 
+        fun Suite.itRespondsWithHTTPHeaders() {
+            it("responds with a HTTP 200 status code and content headers") {
+                verify(stream).writeHeaders(
+                    listOf(
+                        Header(":status", "200"),
+                        Header("grpc-encoding", "identity"),
+                        Header("content-type", "application/grpc")
+                    ),
+                    false,
+                    true
+                )
+            }
+        }
+
+        fun Suite.itRespondsWithGrpcStatusCode(code: Int, message: String) {
+            it("writes the gRPC $message status code as a trailer") {
+                verify(stream).writeHeaders(listOf(Header("grpc-status", code.toString())), true, true)
+            }
+        }
+
         describe("handling incoming requests") {
             given("the request is a HTTP POST") {
                 given("the request has the gRPC content type") {
@@ -152,17 +173,7 @@ object GrpcListenerSpec : Spek({
 
                                 beforeEachTest { listener.onStream(stream) }
 
-                                it("responds with a HTTP 200") {
-                                    verify(stream).writeHeaders(
-                                        listOf(
-                                            Header(":status", "200"),
-                                            Header("grpc-encoding", "identity"),
-                                            Header("content-type", "application/grpc")
-                                        ),
-                                        false,
-                                        true
-                                    )
-                                }
+                                itRespondsWithHTTPHeaders()
 
                                 it("calls the service with the decoded request body") {
                                     assertThat(service.requestReceived, equalTo(testCase.expectedRequestBody))
@@ -172,9 +183,7 @@ object GrpcListenerSpec : Spek({
                                     assertThat(bodyWritten.toByteArray().toByteString(), equalTo(testCase.expectedResponseBytes.toByteString()))
                                 }
 
-                                it("writes the gRPC status code as a trailer") {
-                                    verify(stream).writeHeaders(listOf(Header("grpc-status", "0")), true, true)
-                                }
+                                itRespondsWithGrpcStatusCode(0, "OK")
 
                                 it("does not close the stream") {
                                     verify(stream, never()).close(any(), anyOrNull())
@@ -182,31 +191,32 @@ object GrpcListenerSpec : Spek({
                             }
                         }
 
-                        given("the service throws an exception") {
+                        given("the service throws an UnsupportedGrpcMethodException") {
                             beforeEachTest {
                                 whenever(stream.takeHeaders()).doReturn(headersForRequest("/grpc.health.v1.Health/Check"))
                                 whenever(stream.getSource()).doReturn(ByteArrayInputStream(emptyRequestBody).source())
 
-                                service.throwException = true
+                                service.exceptionToThrow = UnsupportedGrpcMethodException("/grpc.health.v1.Health/Blah")
                             }
 
                             beforeEachTest { listener.onStream(stream) }
 
-                            it("responds with a HTTP 200") {
-                                verify(stream).writeHeaders(
-                                    listOf(
-                                        Header(":status", "200"),
-                                        Header("grpc-encoding", "identity"),
-                                        Header("content-type", "application/grpc")
-                                    ),
-                                    false,
-                                    true
-                                )
+                            itRespondsWithHTTPHeaders()
+                            itRespondsWithGrpcStatusCode(12, "unimplemented error")
+                        }
+
+                        given("the service throws another kind of exception") {
+                            beforeEachTest {
+                                whenever(stream.takeHeaders()).doReturn(headersForRequest("/grpc.health.v1.Health/Check"))
+                                whenever(stream.getSource()).doReturn(ByteArrayInputStream(emptyRequestBody).source())
+
+                                service.exceptionToThrow = RuntimeException("Something went wrong.")
                             }
 
-                            it("writes the gRPC unknown error status code as a trailer") {
-                                verify(stream).writeHeaders(listOf(Header("grpc-status", "2")), true, true)
-                            }
+                            beforeEachTest { listener.onStream(stream) }
+
+                            itRespondsWithHTTPHeaders()
+                            itRespondsWithGrpcStatusCode(2, "unknown error")
                         }
                     }
 
@@ -257,11 +267,11 @@ private class MockHealthService : HealthBlockingServer, ServiceWithEndpointMetad
         private set
 
     var responseToSend: HealthCheckResponse = HealthCheckResponse()
-    var throwException: Boolean = false
+    var exceptionToThrow: Exception? = null
 
     override fun Check(request: HealthCheckRequest): HealthCheckResponse {
-        if (throwException) {
-            throw RuntimeException("Something went wrong in ${MockHealthService::class.simpleName}")
+        if (exceptionToThrow != null) {
+            throw exceptionToThrow!!
         }
 
         requestReceived = request

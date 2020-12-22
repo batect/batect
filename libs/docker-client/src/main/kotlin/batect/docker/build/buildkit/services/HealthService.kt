@@ -27,7 +27,7 @@ class HealthService : HealthBlockingServer, ServiceWithEndpointMetadata {
     }
 
     override fun Watch(request: HealthCheckRequest, response: MessageSink<HealthCheckResponse>) {
-        throw UnsupportedOperationException("Watch() not supported")
+        throw UnsupportedGrpcMethodException(HealthBlockingServer::Watch.path)
     }
 
     override fun getEndpoints(): Map<String, Endpoint<*, *>> {

@@ -18,6 +18,7 @@ package batect.docker.build.buildkit
 
 import batect.docker.build.buildkit.services.Endpoint
 import batect.docker.build.buildkit.services.ServiceWithEndpointMetadata
+import batect.docker.build.buildkit.services.UnsupportedGrpcMethodException
 import com.squareup.wire.ProtoAdapter
 import com.squareup.wire.internal.GrpcMessageSink
 import com.squareup.wire.internal.GrpcMessageSource
@@ -78,6 +79,9 @@ class GrpcListener(val services: Set<ServiceWithEndpointMetadata>) : Http2Connec
             messageSink.write(response)
 
             stream.sendResponseTrailers(GrpcStatus.OK)
+        } catch (e: UnsupportedGrpcMethodException) {
+            // TODO: logging
+            stream.sendResponseTrailers(GrpcStatus.Unimplemented)
         } catch (t: Throwable) {
             // TODO: logging
             stream.sendResponseTrailers(GrpcStatus.Unknown)

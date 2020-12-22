@@ -107,17 +107,19 @@ object GrpcListenerSpec : Spek({
                             val responseBody: HealthCheckResponse
                         )
 
+                        val emptyRequestBody = byteArrayOf(0x00, 0x00, 0x00, 0x00, 0x00)
+
                         setOf(
                             TestCase(
                                 "an empty request body and empty response body",
-                                byteArrayOf(0x00, 0x00, 0x00, 0x00, 0x00),
+                                emptyRequestBody,
                                 HealthCheckRequest(),
                                 byteArrayOf(0x00, 0x00, 0x00, 0x00, 0x00),
                                 HealthCheckResponse()
                             ),
                             TestCase(
                                 "an empty request body and non-empty response body",
-                                byteArrayOf(0x00, 0x00, 0x00, 0x00, 0x00),
+                                emptyRequestBody,
                                 HealthCheckRequest(),
                                 byteArrayOf(0x00, 0x00, 0x00, 0x00, 0x02, 0x08, 0x01),
                                 HealthCheckResponse(HealthCheckResponse.ServingStatus.SERVING)
@@ -179,6 +181,33 @@ object GrpcListenerSpec : Spek({
                                 }
                             }
                         }
+
+                        given("the service throws an exception") {
+                            beforeEachTest {
+                                whenever(stream.takeHeaders()).doReturn(headersForRequest("/grpc.health.v1.Health/Check"))
+                                whenever(stream.getSource()).doReturn(ByteArrayInputStream(emptyRequestBody).source())
+
+                                service.throwException = true
+                            }
+
+                            beforeEachTest { listener.onStream(stream) }
+
+                            it("responds with a HTTP 200") {
+                                verify(stream).writeHeaders(
+                                    listOf(
+                                        Header(":status", "200"),
+                                        Header("grpc-encoding", "identity"),
+                                        Header("content-type", "application/grpc")
+                                    ),
+                                    false,
+                                    true
+                                )
+                            }
+
+                            it("writes the gRPC unknown error status code as a trailer") {
+                                verify(stream).writeHeaders(listOf(Header("grpc-status", "2")), true, true)
+                            }
+                        }
                     }
 
                     given("the request is for an unknown service or method") {
@@ -211,9 +240,6 @@ object GrpcListenerSpec : Spek({
                 itImmediatelyRespondsWithHttpError(405, "method not allowed")
             }
         }
-
-        // TODO: Service throws exception
-
     }
 })
 
@@ -231,8 +257,13 @@ private class MockHealthService : HealthBlockingServer, ServiceWithEndpointMetad
         private set
 
     var responseToSend: HealthCheckResponse = HealthCheckResponse()
+    var throwException: Boolean = false
 
     override fun Check(request: HealthCheckRequest): HealthCheckResponse {
+        if (throwException) {
+            throw RuntimeException("Something went wrong in ${MockHealthService::class.simpleName}")
+        }
+
         requestReceived = request
         return responseToSend
     }

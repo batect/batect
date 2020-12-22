@@ -65,18 +65,23 @@ class GrpcListener(val services: Set<ServiceWithEndpointMetadata>) : Http2Connec
     }
 
     private fun <RequestType : Any, ResponseType : Any> executeCall(endpoint: Endpoint<RequestType, ResponseType>, headers: Headers, stream: Http2Stream) {
-        val source = GrpcMessageSource(stream.getSource().buffer(), endpoint.requestAdaptor, headers[grpcEncoding])
-        val request = source.readExactlyOneAndClose()
-        val response = endpoint.method.invoke(request)
-
         stream.sendResponseHeaders()
 
-        // Important: don't call close() on GrpcMessageSink: it closes the underlying stream, causing writing the trailers
-        // to silently fail later on.
-        val messageSink = GrpcMessageSink(stream.getSink().buffer(), endpoint.responseAdaptor, null, identityEncoding)
-        messageSink.write(response)
+        try {
+            val source = GrpcMessageSource(stream.getSource().buffer(), endpoint.requestAdaptor, headers[grpcEncoding])
+            val request = source.readExactlyOneAndClose()
+            val response = endpoint.method.invoke(request)
 
-        stream.sendResponseTrailers(GrpcStatus.OK)
+            // Important: don't call close() on GrpcMessageSink: it closes the underlying stream, causing writing the trailers
+            // to silently fail later on.
+            val messageSink = GrpcMessageSink(stream.getSink().buffer(), endpoint.responseAdaptor, null, identityEncoding)
+            messageSink.write(response)
+
+            stream.sendResponseTrailers(GrpcStatus.OK)
+        } catch (t: Throwable) {
+            // TODO: logging
+            stream.sendResponseTrailers(GrpcStatus.Unknown)
+        }
     }
 
     private companion object {
@@ -131,5 +136,6 @@ private enum class HttpStatus(val code: Int) {
 
 private enum class GrpcStatus(val code: Int) {
     OK(0),
-    Unimplemented(12)
+    Unknown(2),
+    Unimplemented(12),
 }

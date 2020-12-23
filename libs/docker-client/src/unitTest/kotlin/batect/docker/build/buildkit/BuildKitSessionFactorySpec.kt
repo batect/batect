@@ -21,6 +21,7 @@ import batect.docker.build.buildkit.services.HealthService
 import batect.logging.Logger
 import batect.logging.LoggerFactory
 import batect.os.SystemInfo
+import batect.telemetry.TelemetrySessionBuilder
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given
@@ -53,6 +54,7 @@ object BuildKitSessionFactorySpec : Spek({
 
         val healthService by createForEachTest { mock<HealthService>() }
         val authService by createForEachTest { mock<AuthService>() }
+        val telemetrySessionBuilder by createForEachTest { mock<TelemetrySessionBuilder>() }
         val listenerLogger by createForEachTest { mock<Logger>() }
         val loggerFactory by createForEachTest {
             mock<LoggerFactory> {
@@ -60,7 +62,7 @@ object BuildKitSessionFactorySpec : Spek({
             }
         }
 
-        val factory by createForEachTest { BuildKitSessionFactory(systemInfo, healthService, authService, loggerFactory) }
+        val factory by createForEachTest { BuildKitSessionFactory(systemInfo, healthService, authService, telemetrySessionBuilder, loggerFactory) }
 
         val dockerConfigDirectory by createForEachTest { fileSystem.getPath("/my/home/.docker") }
         val buildNodeIdFile by createForEachTest { fileSystem.getPath("/my/home/.docker/.buildNodeID") }
@@ -78,12 +80,16 @@ object BuildKitSessionFactorySpec : Spek({
                 assertThat(accessor().name, equalTo("project"))
             }
 
+            it("passes the telemetry session builder to the session") {
+                assertThat(accessor().telemetrySessionBuilder, equalTo(telemetrySessionBuilder))
+            }
+
             it("creates a gRPC listener with the session's session ID, the auth service, the health service and a logger") {
                 assertThat(
                     accessor().grpcListener,
                     has(GrpcListener::sessionId, equalTo(accessor().sessionId)) and
-                        has(GrpcListener::logger, equalTo(listenerLogger)) and
-                        has(GrpcListener::services, equalTo(setOf(healthService, authService)))
+                        has(GrpcListener::services, equalTo(setOf(healthService, authService))) and
+                        has(GrpcListener::logger, equalTo(listenerLogger))
                 )
             }
         }

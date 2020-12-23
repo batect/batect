@@ -32,6 +32,7 @@ import okhttp3.internal.http2.Header
 import okhttp3.internal.http2.Http2Connection
 import okhttp3.internal.http2.Http2Stream
 import okio.buffer
+import java.util.concurrent.ConcurrentLinkedQueue
 
 // This was inspired by Wire's mockwebserver GrpcDispatcher.
 // https://github.com/grpc/grpc/blob/master/doc/PROTOCOL-HTTP2.md and https://github.com/grpc/grpc/blob/master/doc/statuscodes.md
@@ -42,6 +43,10 @@ class GrpcListener(
     val logger: Logger
 ) : Http2Connection.Listener() {
     private val endpoints: Map<String, Endpoint<*, *>> = services.flatMap { it.getEndpoints().entries }.associate { it.toPair() }
+
+    private val exceptionsCollector = ConcurrentLinkedQueue<Throwable>()
+    val exceptionsThrownDuringProcessing: List<Throwable>
+        get() = exceptionsCollector.toList()
 
     override fun onStream(stream: Http2Stream) {
         val headers = stream.takeHeaders()
@@ -137,6 +142,8 @@ class GrpcListener(
             }
 
             stream.sendResponseTrailers(GrpcStatus.Unknown, t.javaClass.name)
+
+            exceptionsCollector.add(t)
         }
     }
 

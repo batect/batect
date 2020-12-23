@@ -204,6 +204,7 @@ object ImagesAPISpec : Spek({
                         "build-123",
                         "name-123",
                         "key-123",
+                        mock(),
                         mock()
                     )
 

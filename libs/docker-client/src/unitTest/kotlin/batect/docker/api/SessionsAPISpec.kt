@@ -113,7 +113,7 @@ object SessionsAPISpec : Spek({
                 }
             }
 
-            val session by createForEachTest { BuildKitSession("session-id-123", "build-id-123", "session-name-123", "session-shared-key-123", grpcListener) }
+            val session by createForEachTest { BuildKitSession("session-id-123", "build-id-123", "session-name-123", "session-shared-key-123", grpcListener, mock()) }
             val expectedUrl = "$dockerBaseUrl/v1.37/session"
             val expectedHeaders = Headers.Builder()
                 .add("Connection", "Upgrade")

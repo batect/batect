@@ -227,6 +227,10 @@ object GrpcListenerSpec : Spek({
 
                             itRespondsWithHTTPHeaders()
                             itRespondsWithGrpcStatusCode(2, "unknown error", "java.lang.RuntimeException")
+
+                            it("reports the exception") {
+                                assertThat(listener.exceptionsThrownDuringProcessing, equalTo(listOf(service.exceptionToThrow)))
+                            }
                         }
                     }
 

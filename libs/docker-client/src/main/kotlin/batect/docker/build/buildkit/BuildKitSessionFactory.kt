@@ -20,6 +20,7 @@ import batect.docker.build.buildkit.services.AuthService
 import batect.docker.build.buildkit.services.HealthService
 import batect.logging.LoggerFactory
 import batect.os.SystemInfo
+import batect.telemetry.TelemetrySessionBuilder
 import okio.Buffer
 import java.nio.file.Files
 import java.nio.file.Path
@@ -29,6 +30,7 @@ class BuildKitSessionFactory(
     private val systemInfo: SystemInfo,
     private val healthService: HealthService,
     private val authService: AuthService,
+    private val telemetrySessionBuilder: TelemetrySessionBuilder,
     private val loggerFactory: LoggerFactory
 ) {
     private val random = SecureRandom()
@@ -45,7 +47,8 @@ class BuildKitSessionFactory(
             guaranteeNonNumeric { generateHexId(64) },
             buildDirectory.fileName.toString(),
             generateSharedKey(buildDirectory),
-            listener
+            listener,
+            telemetrySessionBuilder
         )
     }
 

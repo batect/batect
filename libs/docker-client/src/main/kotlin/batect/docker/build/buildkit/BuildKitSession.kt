@@ -18,6 +18,8 @@ package batect.docker.build.buildkit
 
 import batect.docker.ImageBuildFailedException
 import batect.docker.api.SessionStreams
+import batect.telemetry.TelemetrySessionBuilder
+import batect.telemetry.addUnhandledExceptionEvent
 import okhttp3.internal.concurrent.TaskRunner
 import okhttp3.internal.http2.Http2Connection
 import okhttp3.internal.peerName
@@ -29,7 +31,8 @@ class BuildKitSession(
     val buildId: String,
     val name: String,
     val sharedKey: String,
-    val grpcListener: GrpcListener
+    val grpcListener: GrpcListener,
+    val telemetrySessionBuilder: TelemetrySessionBuilder
 ) : AutoCloseable {
     private lateinit var connection: Http2Connection
     private val exceptions = ConcurrentLinkedQueue<Throwable>()
@@ -63,12 +66,16 @@ class BuildKitSession(
             connection.close()
         }
 
+        grpcListener.exceptionsThrownDuringProcessing.forEach { exceptions.add(it) }
+
         if (exceptions.any()) {
             val builder = StringBuilder()
 
             builder.appendLine("${exceptions.size} exception(s) thrown during image build:")
 
             exceptions.forEachIndexed() { i, e ->
+                telemetrySessionBuilder.addUnhandledExceptionEvent(e, true)
+
                 builder.appendLine("Exception #${i + 1}: ${e.stackTraceToString()}")
                 builder.appendLine()
             }

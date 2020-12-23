@@ -19,6 +19,8 @@ package batect.docker.api
 import batect.docker.DockerException
 import batect.docker.DockerHttpConfig
 import batect.docker.build.buildkit.BuildKitSession
+import batect.docker.build.buildkit.GrpcListener
+import batect.docker.build.buildkit.services.ServiceWithEndpointMetadata
 import batect.docker.run.ConnectionHijacker
 import batect.os.SystemInfo
 import batect.testutils.createForEachTest
@@ -99,14 +101,28 @@ object SessionsAPISpec : Spek({
                 whenever(httpClient.newBuilder()).doReturn(clientBuilder)
             }
 
-            val session = BuildKitSession("session-id-123", "build-id-123", "session-name-123", "session-shared-key-123", mock())
+            val service by createForEachTest {
+                mock<ServiceWithEndpointMetadata>() {
+                    on { getEndpoints() } doReturn mapOf("/my.v1.Service/SomeMethod" to mock(), "/my.v1.Service/SomeOtherMethod" to mock())
+                }
+            }
+
+            val grpcListener by createForEachTest {
+                mock<GrpcListener>() {
+                    on { services } doReturn setOf(service)
+                }
+            }
+
+            val session by createForEachTest { BuildKitSession("session-id-123", "build-id-123", "session-name-123", "session-shared-key-123", grpcListener) }
             val expectedUrl = "$dockerBaseUrl/v1.37/session"
             val expectedHeaders = Headers.Builder()
                 .add("Connection", "Upgrade")
                 .add("Upgrade", "h2c")
-                .add("X-Docker-Expose-Session-Uuid", session.sessionId)
-                .add("X-Docker-Expose-Session-Name", session.name)
-                .add("X-Docker-Expose-Session-Sharedkey", session.sharedKey)
+                .add("X-Docker-Expose-Session-Uuid", "session-id-123")
+                .add("X-Docker-Expose-Session-Name", "session-name-123")
+                .add("X-Docker-Expose-Session-Sharedkey", "session-shared-key-123")
+                .add("X-Docker-Expose-Session-Grpc-Method", "/my.v1.Service/SomeMethod")
+                .add("X-Docker-Expose-Session-Grpc-Method", "/my.v1.Service/SomeOtherMethod")
                 .build()
 
             given("creating the session succeeds") {

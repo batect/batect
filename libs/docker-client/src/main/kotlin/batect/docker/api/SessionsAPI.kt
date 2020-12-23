@@ -42,7 +42,7 @@ class SessionsAPI(
 
         val url = baseUrl.newBuilder().addPathSegment("session").build()
 
-        val request = Request.Builder()
+        val requestBuilder = Request.Builder()
             .post(emptyRequestBody())
             .url(url)
             .header("Connection", "Upgrade")
@@ -50,7 +50,12 @@ class SessionsAPI(
             .header("X-Docker-Expose-Session-Uuid", session.sessionId)
             .header("X-Docker-Expose-Session-Name", session.name)
             .header("X-Docker-Expose-Session-Sharedkey", session.sharedKey)
-            .build()
+
+        session.grpcListener.services.forEach { service ->
+            service.getEndpoints().keys.forEach { requestBuilder.addHeader("X-Docker-Expose-Session-Grpc-Method", it) }
+        }
+
+        val request = requestBuilder.build()
 
         val hijacker = hijackerFactory()
 

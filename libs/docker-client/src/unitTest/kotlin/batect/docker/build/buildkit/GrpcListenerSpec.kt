@@ -72,13 +72,14 @@ object GrpcListenerSpec : Spek({
             }
         }
 
-        fun Suite.itImmediatelyRespondsWithGrpcError(code: Int, message: String) {
-            it("immediately responds with a gRPC $code ($message)") {
+        fun Suite.itImmediatelyRespondsWithGrpcError(code: Int, codeDescription: String, message: String) {
+            it("immediately responds with a gRPC $code ($codeDescription)") {
                 verify(stream).writeHeaders(
                     listOf(
                         Header(":status", "200"),
                         Header("content-type", "application/grpc"),
-                        Header("grpc-status", code.toString())
+                        Header("grpc-status", code.toString()),
+                        Header("grpc-message", message)
                     ),
                     true,
                     true
@@ -112,9 +113,16 @@ object GrpcListenerSpec : Spek({
             }
         }
 
-        fun Suite.itRespondsWithGrpcStatusCode(code: Int, message: String) {
-            it("writes the gRPC $message status code as a trailer") {
-                verify(stream).writeHeaders(listOf(Header("grpc-status", code.toString())), true, true)
+        fun Suite.itRespondsWithGrpcStatusCode(code: Int, codeDescription: String, message: String) {
+            it("writes the gRPC $codeDescription status code as a trailer") {
+                verify(stream).writeHeaders(
+                    listOf(
+                        Header("grpc-status", code.toString()),
+                        Header("grpc-message", message)
+                    ),
+                    true,
+                    true
+                )
             }
         }
 
@@ -185,7 +193,7 @@ object GrpcListenerSpec : Spek({
                                     assertThat(bodyWritten.toByteArray().toByteString(), equalTo(testCase.expectedResponseBytes.toByteString()))
                                 }
 
-                                itRespondsWithGrpcStatusCode(0, "OK")
+                                itRespondsWithGrpcStatusCode(0, "OK", "OK")
 
                                 it("does not close the stream") {
                                     verify(stream, never()).close(any(), anyOrNull())
@@ -204,7 +212,7 @@ object GrpcListenerSpec : Spek({
                             beforeEachTest { listener.onStream(stream) }
 
                             itRespondsWithHTTPHeaders()
-                            itRespondsWithGrpcStatusCode(12, "unimplemented error")
+                            itRespondsWithGrpcStatusCode(12, "unimplemented error", "Service does not support this method")
                         }
 
                         given("the service throws another kind of exception") {
@@ -218,7 +226,7 @@ object GrpcListenerSpec : Spek({
                             beforeEachTest { listener.onStream(stream) }
 
                             itRespondsWithHTTPHeaders()
-                            itRespondsWithGrpcStatusCode(2, "unknown error")
+                            itRespondsWithGrpcStatusCode(2, "unknown error", "java.lang.RuntimeException")
                         }
                     }
 
@@ -226,7 +234,7 @@ object GrpcListenerSpec : Spek({
                         beforeEachTest { whenever(stream.takeHeaders()).doReturn(headersForRequest("/grpc.health.v1.Health/SomethingElse")) }
                         beforeEachTest { listener.onStream(stream) }
 
-                        itImmediatelyRespondsWithGrpcError(12, "unimplemented")
+                        itImmediatelyRespondsWithGrpcError(12, "unimplemented", "No handler for this service or method")
                     }
                 }
 

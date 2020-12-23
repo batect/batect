@@ -53,6 +53,7 @@ import batect.docker.build.DockerIgnoreParser
 import batect.docker.build.DockerfileParser
 import batect.docker.build.ImageBuildContextFactory
 import batect.docker.build.buildkit.BuildKitSessionFactory
+import batect.docker.build.buildkit.services.AuthService
 import batect.docker.build.buildkit.services.HealthService
 import batect.docker.client.ContainersClient
 import batect.docker.client.DockerClient
@@ -211,7 +212,8 @@ private val dockerApiModule = DI.Module("docker.api") {
 }
 
 private val dockerBuildModule = DI.Module("docker.build") {
-    bind<BuildKitSessionFactory>() with singleton { BuildKitSessionFactory(instance(), instance(), instance()) }
+    bind<AuthService>() with singletonWithLogger { logger -> AuthService(instance(), logger) }
+    bind<BuildKitSessionFactory>() with singleton { BuildKitSessionFactory(instance(), instance(), instance(), instance()) }
     bind<DockerfileParser>() with singleton { DockerfileParser() }
     bind<DockerIgnoreParser>() with singleton { DockerIgnoreParser() }
     bind<HealthService>() with singleton { HealthService() }

@@ -21,12 +21,10 @@ import batect.docker.ImageReference
 class RegistryCredentialsProvider(
     private val configurationFile: RegistryCredentialsConfigurationFile
 ) {
-    fun getCredentials(imageReference: ImageReference): RegistryCredentials? {
-        val source = configurationFile.getCredentialsForRegistry(imageReference.registryIndex)
+    fun getCredentials(imageReference: ImageReference): RegistryCredentials? = getCredentials(imageReference.registryIndex)
 
-        if (source == null) {
-            return null
-        }
+    fun getCredentials(registry: String): RegistryCredentials? {
+        val source = configurationFile.getCredentialsForRegistry(registry) ?: return null
 
         return source.load()
     }

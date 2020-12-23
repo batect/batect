@@ -16,6 +16,7 @@
 
 package batect.docker.build.buildkit
 
+import batect.docker.build.buildkit.services.AuthService
 import batect.docker.build.buildkit.services.HealthService
 import batect.logging.Logger
 import batect.logging.LoggerFactory
@@ -51,6 +52,7 @@ object BuildKitSessionFactorySpec : Spek({
         }
 
         val healthService by createForEachTest { mock<HealthService>() }
+        val authService by createForEachTest { mock<AuthService>() }
         val listenerLogger by createForEachTest { mock<Logger>() }
         val loggerFactory by createForEachTest {
             mock<LoggerFactory> {
@@ -58,7 +60,7 @@ object BuildKitSessionFactorySpec : Spek({
             }
         }
 
-        val factory by createForEachTest { BuildKitSessionFactory(systemInfo, healthService, loggerFactory) }
+        val factory by createForEachTest { BuildKitSessionFactory(systemInfo, healthService, authService, loggerFactory) }
 
         val dockerConfigDirectory by createForEachTest { fileSystem.getPath("/my/home/.docker") }
         val buildNodeIdFile by createForEachTest { fileSystem.getPath("/my/home/.docker/.buildNodeID") }
@@ -76,12 +78,12 @@ object BuildKitSessionFactorySpec : Spek({
                 assertThat(accessor().name, equalTo("project"))
             }
 
-            it("creates a gRPC listener with the session's session ID, the health service and a logger") {
+            it("creates a gRPC listener with the session's session ID, the auth service, the health service and a logger") {
                 assertThat(
                     accessor().grpcListener,
                     has(GrpcListener::sessionId, equalTo(accessor().sessionId)) and
                         has(GrpcListener::logger, equalTo(listenerLogger)) and
-                        has(GrpcListener::services, equalTo(setOf(healthService)))
+                        has(GrpcListener::services, equalTo(setOf(healthService, authService)))
                 )
             }
         }

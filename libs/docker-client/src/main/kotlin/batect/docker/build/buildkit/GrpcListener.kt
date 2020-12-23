@@ -92,7 +92,7 @@ class GrpcListener(
                 data("path", path)
             }
 
-            stream.sendGrpcError(GrpcStatus.Unimplemented)
+            stream.sendGrpcError(GrpcStatus.Unimplemented, "No handler for this service or method")
             return
         }
 
@@ -127,7 +127,7 @@ class GrpcListener(
                 exception(e)
             }
 
-            stream.sendResponseTrailers(GrpcStatus.Unimplemented)
+            stream.sendResponseTrailers(GrpcStatus.Unimplemented, "Service does not support this method")
         } catch (t: Throwable) {
             logger.error {
                 message("Endpoint handler threw exception, returning error")
@@ -136,7 +136,7 @@ class GrpcListener(
                 exception(t)
             }
 
-            stream.sendResponseTrailers(GrpcStatus.Unknown)
+            stream.sendResponseTrailers(GrpcStatus.Unknown, t.javaClass.name)
         }
     }
 
@@ -162,19 +162,21 @@ class GrpcListener(
             writeHeaders(responseHeaders, false, true)
         }
 
-        private fun Http2Stream.sendResponseTrailers(status: GrpcStatus) {
+        private fun Http2Stream.sendResponseTrailers(status: GrpcStatus, message: String = status.name) {
             val responseHeaders = listOf(
-                Header("grpc-status", status.code.toString())
+                Header("grpc-status", status.code.toString()),
+                Header("grpc-message", message)
             )
 
             writeHeaders(responseHeaders, true, true)
         }
 
-        private fun Http2Stream.sendGrpcError(status: GrpcStatus) {
+        private fun Http2Stream.sendGrpcError(status: GrpcStatus, message: String) {
             val responseHeaders = listOf(
                 Header(Header.RESPONSE_STATUS_UTF8, "200"),
                 Header("content-type", grpcContentType),
-                Header("grpc-status", status.code.toString())
+                Header("grpc-status", status.code.toString()),
+                Header("grpc-message", message)
             )
 
             writeHeaders(responseHeaders, true, true)

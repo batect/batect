@@ -380,10 +380,10 @@ class BuildKitImageBuildResponseBody : ImageBuildResponseBody {
     // Vertices that don't properly declare their inputs, but depend on every vertex that has already started.
     // These trigger us to immediately write any pending completed vertices.
     private val Vertex.isBulkheadVertex: Boolean
-        get() = this.name == "exporting to image"
+        get() = this.name == "exporting to image" || this.name.startsWith("[internal] load metadata for ")
 
     private val Vertex.canTrustCompletedStatus: Boolean
-        get() = this.name == "exporting to image" || this.name == "copy /context /" || this.name.startsWith("[internal] load metadata for ")
+        get() = this.name == "exporting to image" || this.name == "copy /context /" || this.name.startsWith("[internal] load metadata for ") || this.name.startsWith("resolve image config  for ")
 
     private data class VertexInfo(val started: Instant, val stepNumber: Int, val name: String, val layers: Map<String, LayerInfo>) {
         val stepIndex = stepNumber - 1

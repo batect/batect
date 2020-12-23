@@ -9,7 +9,7 @@ set -euo pipefail
 # cat <decoded file> | protoc --encode  moby.buildkit.v1.StatusResponse --proto_path libs/docker-client/build/protos github.com/moby/buildkit/api/services/control/control.proto | base64
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROTOS_DIR="$(cd "$SCRIPT_DIR/../../../../../../build/protos" && pwd)"
+PROTOS_DIR="$(cd "$SCRIPT_DIR/../../../../../../../build/protos" && pwd)"
 
 LINE=0
 

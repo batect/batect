@@ -975,6 +975,88 @@ object BuildKitImageBuildResponseBodySpec : Spek({
             }
         }
 
+        given("a response with trace messages for a build with a non-default syntax") {
+            /*
+                Example:
+
+                # syntax=docker/dockerfile:1.1-experimental
+                FROM alpine:3.12.3
+
+                HEALTHCHECK --interval=0.1s CMD echo -n "Hello from the healthcheck"
+             */
+
+            val input = """
+                {"id":"moby.buildkit.trace","aux":"Cm8KR3NoYTI1NjoxNjk5NjcwZjQ4ZWYyNDExNWQ0MjRiMzRkYjY3ODA4NmNhNzVjYjQwOTY3M2ZiYjIzYmQwZDU1OGFhNGY5YjRhGiRbaW50ZXJuYWxdIGxvYWQgcmVtb3RlIGJ1aWxkIGNvbnRleHQ="}
+                {"id":"moby.buildkit.trace","aux":"Cn0KR3NoYTI1NjoxNjk5NjcwZjQ4ZWYyNDExNWQ0MjRiMzRkYjY3ODA4NmNhNzVjYjQwOTY3M2ZiYjIzYmQwZDU1OGFhNGY5YjRhGiRbaW50ZXJuYWxdIGxvYWQgcmVtb3RlIGJ1aWxkIGNvbnRleHQqDAismov/BRDkw4+BAg=="}
+                {"id":"moby.buildkit.trace","aux":"CosBCkdzaGEyNTY6MTY5OTY3MGY0OGVmMjQxMTVkNDI0YjM0ZGI2NzgwODZjYTc1Y2I0MDk2NzNmYmIyM2JkMGQ1NThhYTRmOWI0YRokW2ludGVybmFsXSBsb2FkIHJlbW90ZSBidWlsZCBjb250ZXh0KgwIrJqL/wUQ5MOPgQIyDAismov/BRDE3OaNAg=="}
+                {"id":"moby.buildkit.trace","aux":"CosBCkdzaGEyNTY6MTY5OTY3MGY0OGVmMjQxMTVkNDI0YjM0ZGI2NzgwODZjYTc1Y2I0MDk2NzNmYmIyM2JkMGQ1NThhYTRmOWI0YRokW2ludGVybmFsXSBsb2FkIHJlbW90ZSBidWlsZCBjb250ZXh0KgwIrJqL/wUQ/L+hjgIyDAismov/BRCI6KOOAg=="}
+                {"id":"moby.buildkit.trace","aux":"CqMBCkdzaGEyNTY6YmZjYzk3ZDU4MTU4OWEzMjM3ZTU4NmQyOWFiNTU4ODlkMzNjYzNmNGFiNzM2YjA3MTE5MGJjZjI4MTY2MzUzZBJHc2hhMjU2OjE2OTk2NzBmNDhlZjI0MTE1ZDQyNGIzNGRiNjc4MDg2Y2E3NWNiNDA5NjczZmJiMjNiZDBkNTU4YWE0ZjliNGEaD2NvcHkgL2NvbnRleHQgLw=="}
+                {"id":"moby.buildkit.trace","aux":"CrEBCkdzaGEyNTY6YmZjYzk3ZDU4MTU4OWEzMjM3ZTU4NmQyOWFiNTU4ODlkMzNjYzNmNGFiNzM2YjA3MTE5MGJjZjI4MTY2MzUzZBJHc2hhMjU2OjE2OTk2NzBmNDhlZjI0MTE1ZDQyNGIzNGRiNjc4MDg2Y2E3NWNiNDA5NjczZmJiMjNiZDBkNTU4YWE0ZjliNGEaD2NvcHkgL2NvbnRleHQgLyoMCKyai/8FENyPtJ0C"}
+                {"id":"moby.buildkit.trace","aux":"Cr8BCkdzaGEyNTY6YmZjYzk3ZDU4MTU4OWEzMjM3ZTU4NmQyOWFiNTU4ODlkMzNjYzNmNGFiNzM2YjA3MTE5MGJjZjI4MTY2MzUzZBJHc2hhMjU2OjE2OTk2NzBmNDhlZjI0MTE1ZDQyNGIzNGRiNjc4MDg2Y2E3NWNiNDA5NjczZmJiMjNiZDBkNTU4YWE0ZjliNGEaD2NvcHkgL2NvbnRleHQgLyoMCKyai/8FENyPtJ0CMgwIrJqL/wUQhNPO6AI="}
+                {"id":"moby.buildkit.trace","aux":"Cp4BCkdzaGEyNTY6NWUwNDlhMTM4ZThkNGNmMmU3OWE5ZGEyNGNjYzRkOTVmZGVjZGRlYTIyYjhlODMzYzZlY2ViOTQxZDVlYmZjMxpFcmVzb2x2ZSBpbWFnZSBjb25maWcgZm9yIGRvY2tlci5pby9kb2NrZXIvZG9ja2VyZmlsZToxLjEtZXhwZXJpbWVudGFsKgwIrJqL/wUQ2IyrlwM="}
+                {"id":"moby.buildkit.trace","aux":"CqwBCkdzaGEyNTY6NWUwNDlhMTM4ZThkNGNmMmU3OWE5ZGEyNGNjYzRkOTVmZGVjZGRlYTIyYjhlODMzYzZlY2ViOTQxZDVlYmZjMxpFcmVzb2x2ZSBpbWFnZSBjb25maWcgZm9yIGRvY2tlci5pby9kb2NrZXIvZG9ja2VyZmlsZToxLjEtZXhwZXJpbWVudGFsKgwIrJqL/wUQ2IyrlwMyDAivmov/BRC0lPvkAQ=="}
+                {"id":"moby.buildkit.trace","aux":"Cs8BCkdzaGEyNTY6ZTE0MTk3YWJlNzIzZTgwNWFjZGY5ZDcyNWFhY2E0NWIzYjEzZDQ5MWQ4ZjUyMjY1ODdhYWQzZDMxMGU2YjVmMRqDAWRvY2tlci1pbWFnZTovL2RvY2tlci5pby9kb2NrZXIvZG9ja2VyZmlsZToxLjEtZXhwZXJpbWVudGFsQHNoYTI1NjpkZTg1YjJmM2EzZThhMmY3ZmU0OGU4ZTg0YTY1ZjZmZGQ1Y2Q1MTgzYWZhNjQxMmZmZjljYWE2ODcxNjQ5YzQ0"}
+                {"id":"moby.buildkit.trace","aux":"Ct0BCkdzaGEyNTY6ZTE0MTk3YWJlNzIzZTgwNWFjZGY5ZDcyNWFhY2E0NWIzYjEzZDQ5MWQ4ZjUyMjY1ODdhYWQzZDMxMGU2YjVmMRqDAWRvY2tlci1pbWFnZTovL2RvY2tlci5pby9kb2NrZXIvZG9ja2VyZmlsZToxLjEtZXhwZXJpbWVudGFsQHNoYTI1NjpkZTg1YjJmM2EzZThhMmY3ZmU0OGU4ZTg0YTY1ZjZmZGQ1Y2Q1MTgzYWZhNjQxMmZmZjljYWE2ODcxNjQ5YzQ0KgwIr5qL/wUQhPG95QE="}
+                {"id":"moby.buildkit.trace","aux":"CusBCkdzaGEyNTY6ZTE0MTk3YWJlNzIzZTgwNWFjZGY5ZDcyNWFhY2E0NWIzYjEzZDQ5MWQ4ZjUyMjY1ODdhYWQzZDMxMGU2YjVmMRqDAWRvY2tlci1pbWFnZTovL2RvY2tlci5pby9kb2NrZXIvZG9ja2VyZmlsZToxLjEtZXhwZXJpbWVudGFsQHNoYTI1NjpkZTg1YjJmM2EzZThhMmY3ZmU0OGU4ZTg0YTY1ZjZmZGQ1Y2Q1MTgzYWZhNjQxMmZmZjljYWE2ODcxNjQ5YzQ0KgwIr5qL/wUQhPG95QEyDAivmov/BRD8zd3lAQ=="}
+                {"id":"moby.buildkit.trace","aux":"Cu0BCkdzaGEyNTY6ZTE0MTk3YWJlNzIzZTgwNWFjZGY5ZDcyNWFhY2E0NWIzYjEzZDQ5MWQ4ZjUyMjY1ODdhYWQzZDMxMGU2YjVmMRqDAWRvY2tlci1pbWFnZTovL2RvY2tlci5pby9kb2NrZXIvZG9ja2VyZmlsZToxLjEtZXhwZXJpbWVudGFsQHNoYTI1NjpkZTg1YjJmM2EzZThhMmY3ZmU0OGU4ZTg0YTY1ZjZmZGQ1Y2Q1MTgzYWZhNjQxMmZmZjljYWE2ODcxNjQ5YzQ0IAEqDAivmov/BRCY6v3lATIMCK+ai/8FEJjegeYB"}
+                {"id":"moby.buildkit.trace","aux":"CpUBCkdzaGEyNTY6YmU5ZGE5M2YzOTdkMjRlODc5ZTc1NmM0ZGM5MTBhNjllOGQwNmI2ZjhjODdlMjhjNTg4ZTcwZTZiMGExNjQwYho8W2ludGVybmFsXSBsb2FkIG1ldGFkYXRhIGZvciBkb2NrZXIuaW8vbGlicmFyeS9hbHBpbmU6My4xMi4zKgwIr5qL/wUQ/I+HzgI="}
+                {"id":"moby.buildkit.trace","aux":"CqMBCkdzaGEyNTY6YmU5ZGE5M2YzOTdkMjRlODc5ZTc1NmM0ZGM5MTBhNjllOGQwNmI2ZjhjODdlMjhjNTg4ZTcwZTZiMGExNjQwYho8W2ludGVybmFsXSBsb2FkIG1ldGFkYXRhIGZvciBkb2NrZXIuaW8vbGlicmFyeS9hbHBpbmU6My4xMi4zKgwIr5qL/wUQ/I+HzgIyDAiymov/BRDgl5qjAQ=="}
+                {"id":"moby.buildkit.trace","aux":"Cr0BCkdzaGEyNTY6NjVlNGRmNGRmYjVjYzk4NjVjMjg0NGExZTgwMzczMmNiYjFmZmQ0YjBjOWUzYzg2NDY3MTNkMTg0NzE5MzIxNBpyWzEvMV0gRlJPTSBkb2NrZXIuaW8vbGlicmFyeS9hbHBpbmU6My4xMi4zQHNoYTI1NjozYzc0OTdiZjBjN2FmOTM0MjgyNDJkNjE3NmU4Zjc5MDVmMjIwMWQ4ZmM1ODYxZjQ1YmU3YTM0NmI1ZjIzNDM2"}
+                {"id":"moby.buildkit.trace","aux":"CssBCkdzaGEyNTY6NjVlNGRmNGRmYjVjYzk4NjVjMjg0NGExZTgwMzczMmNiYjFmZmQ0YjBjOWUzYzg2NDY3MTNkMTg0NzE5MzIxNBpyWzEvMV0gRlJPTSBkb2NrZXIuaW8vbGlicmFyeS9hbHBpbmU6My4xMi4zQHNoYTI1NjozYzc0OTdiZjBjN2FmOTM0MjgyNDJkNjE3NmU4Zjc5MDVmMjIwMWQ4ZmM1ODYxZjQ1YmU3YTM0NmI1ZjIzNDM2KgwIspqL/wUQzMrWvQE="}
+                {"id":"moby.buildkit.trace","aux":"CtkBCkdzaGEyNTY6NjVlNGRmNGRmYjVjYzk4NjVjMjg0NGExZTgwMzczMmNiYjFmZmQ0YjBjOWUzYzg2NDY3MTNkMTg0NzE5MzIxNBpyWzEvMV0gRlJPTSBkb2NrZXIuaW8vbGlicmFyeS9hbHBpbmU6My4xMi4zQHNoYTI1NjozYzc0OTdiZjBjN2FmOTM0MjgyNDJkNjE3NmU4Zjc5MDVmMjIwMWQ4ZmM1ODYxZjQ1YmU3YTM0NmI1ZjIzNDM2KgwIspqL/wUQzMrWvQEyDAiymov/BRCo9OW9AQ=="}
+                {"id":"moby.buildkit.trace","aux":"CssBCkdzaGEyNTY6NjVlNGRmNGRmYjVjYzk4NjVjMjg0NGExZTgwMzczMmNiYjFmZmQ0YjBjOWUzYzg2NDY3MTNkMTg0NzE5MzIxNBpyWzEvMV0gRlJPTSBkb2NrZXIuaW8vbGlicmFyeS9hbHBpbmU6My4xMi4zQHNoYTI1NjozYzc0OTdiZjBjN2FmOTM0MjgyNDJkNjE3NmU4Zjc5MDVmMjIwMWQ4ZmM1ODYxZjQ1YmU3YTM0NmI1ZjIzNDM2KgwIspqL/wUQ1L/vvQE="}
+                {"id":"moby.buildkit.trace","aux":"EtYBCm9yZXNvbHZlIGRvY2tlci5pby9saWJyYXJ5L2FscGluZTozLjEyLjNAc2hhMjU2OjNjNzQ5N2JmMGM3YWY5MzQyODI0MmQ2MTc2ZThmNzkwNWYyMjAxZDhmYzU4NjFmNDViZTdhMzQ2YjVmMjM0MzYSR3NoYTI1Njo2NWU0ZGY0ZGZiNWNjOTg2NWMyODQ0YTFlODAzNzMyY2JiMWZmZDRiMGM5ZTNjODY0NjcxM2QxODQ3MTkzMjE0MgwIspqL/wUQhJ71vQE6DAiymov/BRDQwvS9AQ=="}
+                {"id":"moby.buildkit.trace","aux":"EuQBCm9yZXNvbHZlIGRvY2tlci5pby9saWJyYXJ5L2FscGluZTozLjEyLjNAc2hhMjU2OjNjNzQ5N2JmMGM3YWY5MzQyODI0MmQ2MTc2ZThmNzkwNWYyMjAxZDhmYzU4NjFmNDViZTdhMzQ2YjVmMjM0MzYSR3NoYTI1Njo2NWU0ZGY0ZGZiNWNjOTg2NWMyODQ0YTFlODAzNzMyY2JiMWZmZDRiMGM5ZTNjODY0NjcxM2QxODQ3MTkzMjE0MgwIspqL/wUQ+M6SwAE6DAiymov/BRDQwvS9AUIMCLKai/8FEIjukcAB"}
+                {"id":"moby.buildkit.trace","aux":"CtkBCkdzaGEyNTY6NjVlNGRmNGRmYjVjYzk4NjVjMjg0NGExZTgwMzczMmNiYjFmZmQ0YjBjOWUzYzg2NDY3MTNkMTg0NzE5MzIxNBpyWzEvMV0gRlJPTSBkb2NrZXIuaW8vbGlicmFyeS9hbHBpbmU6My4xMi4zQHNoYTI1NjozYzc0OTdiZjBjN2FmOTM0MjgyNDJkNjE3NmU4Zjc5MDVmMjIwMWQ4ZmM1ODYxZjQ1YmU3YTM0NmI1ZjIzNDM2KgwIspqL/wUQ1L/vvQEyDAiymov/BRCImJ3AAQ=="}
+                {"id":"moby.buildkit.trace","aux":"CtsBCkdzaGEyNTY6NjVlNGRmNGRmYjVjYzk4NjVjMjg0NGExZTgwMzczMmNiYjFmZmQ0YjBjOWUzYzg2NDY3MTNkMTg0NzE5MzIxNBpyWzEvMV0gRlJPTSBkb2NrZXIuaW8vbGlicmFyeS9hbHBpbmU6My4xMi4zQHNoYTI1NjozYzc0OTdiZjBjN2FmOTM0MjgyNDJkNjE3NmU4Zjc5MDVmMjIwMWQ4ZmM1ODYxZjQ1YmU3YTM0NmI1ZjIzNDM2IAEqDAiymov/BRCcyLrAATIMCLKai/8FEJCRvcAB"}
+                {"id":"moby.buildkit.trace","aux":"CmsKR3NoYTI1NjplOGM2MTNlMDdiMGI3ZmYzMzg5M2I2OTRmNzc1OWExMGQ0MmUxODBmMmI0ZGMzNDlmYjU3ZGM2YjcxZGNhYjAwGhJleHBvcnRpbmcgdG8gaW1hZ2UqDAiymov/BRDk3d3AARKFAQoQZXhwb3J0aW5nIGxheWVycxJHc2hhMjU2OmU4YzYxM2UwN2IwYjdmZjMzODkzYjY5NGY3NzU5YTEwZDQyZTE4MGYyYjRkYzM0OWZiNTdkYzZiNzFkY2FiMDAyDAiymov/BRCAr+TAAToMCLKai/8FEMSy4cABQgwIspqL/wUQjMfjwAE="}
+                {"id":"moby.buildkit.trace","aux":"ErwBClV3cml0aW5nIGltYWdlIHNoYTI1NjpkMGU4MzcyNTBhMTEyNWUxY2M2NmM0MTU4NmIyODM3MDIwOGIyYzRiNDc5NTZmZjI4OTMyNzllNTA0M2U0MDEwEkdzaGEyNTY6ZThjNjEzZTA3YjBiN2ZmMzM4OTNiNjk0Zjc3NTlhMTBkNDJlMTgwZjJiNGRjMzQ5ZmI1N2RjNmI3MWRjYWIwMDIMCLKai/8FEIDp8sABOgwIspqL/wUQxP/xwAE="}
+                {"id":"moby.image.id","aux":{"ID":"sha256:d0e837250a1125e1cc66c41586b28370208b2c4b47956ff2893279e5043e4010"}}
+                {"id":"moby.buildkit.trace","aux":"CnkKR3NoYTI1NjplOGM2MTNlMDdiMGI3ZmYzMzg5M2I2OTRmNzc1OWExMGQ0MmUxODBmMmI0ZGMzNDlmYjU3ZGM2YjcxZGNhYjAwGhJleHBvcnRpbmcgdG8gaW1hZ2UqDAiymov/BRDk3d3AATIMCLKai/8FELC+3MIBEsoBClV3cml0aW5nIGltYWdlIHNoYTI1NjpkMGU4MzcyNTBhMTEyNWUxY2M2NmM0MTU4NmIyODM3MDIwOGIyYzRiNDc5NTZmZjI4OTMyNzllNTA0M2U0MDEwEkdzaGEyNTY6ZThjNjEzZTA3YjBiN2ZmMzM4OTNiNjk0Zjc3NTlhMTBkNDJlMTgwZjJiNGRjMzQ5ZmI1N2RjNmI3MWRjYWIwMDIMCLKai/8FEMDW1cIBOgwIspqL/wUQxP/xwAFCDAiymov/BRD06dTCARK4AQpDbmFtaW5nIHRvIGRvY2tlci5pby9saWJyYXJ5L2JhdGVjdC1pbnRlZ3JhdGlvbi10ZXN0cy1pbWFnZS1idWlsZGtpdBJHc2hhMjU2OmU4YzYxM2UwN2IwYjdmZjMzODkzYjY5NGY3NzU5YTEwZDQyZTE4MGYyYjRkYzM0OWZiNTdkYzZiNzFkY2FiMDAyDAiymov/BRCozNvCAToMCLKai/8FEPjL2MIBQgwIspqL/wUQ5O3awgE="}
+                {"stream":"Successfully tagged batect-integration-tests-image-buildkit:latest\n"}
+            """.trimIndent()
+
+            beforeEachTest {
+                body.readFrom(StringReader(input), outputStream, eventCallback)
+            }
+
+            it("streams output showing the progression of the build") {
+                assertThat(
+                    output.toString(),
+                    equalTo(
+                        """
+                        |#1 [internal] load remote build context
+                        |#1 DONE
+                        |
+                        |#2 copy /context /
+                        |#2 DONE
+                        |
+                        |#3 resolve image config for docker.io/docker/dockerfile:1.1-experimental
+                        |#3 DONE
+                        |
+                        |#4 docker-image://docker.io/docker/dockerfile:1.1-experimental@sha256:de85b2f3a3e8a2f7fe48e8e84a65f6fdd5cd5183afa6412fff9caa6871649c44
+                        |#4 CACHED
+                        |
+                        |#5 [internal] load metadata for docker.io/library/alpine:3.12.3
+                        |#5 DONE
+                        |
+                        |#6 [1/1] FROM docker.io/library/alpine:3.12.3@sha256:3c7497bf0c7af93428242d6176e8f7905f2201d8fc5861f45be7a346b5f23436
+                        |#6 resolve docker.io/library/alpine:3.12.3@sha256:3c7497bf0c7af93428242d6176e8f7905f2201d8fc5861f45be7a346b5f23436: done
+                        |#6 CACHED
+                        |
+                        |#7 exporting to image
+                        |#7 exporting layers: done
+                        |#7 writing image sha256:d0e837250a1125e1cc66c41586b28370208b2c4b47956ff2893279e5043e4010: done
+                        |#7 naming to docker.io/library/batect-integration-tests-image-buildkit: done
+                        |#7 DONE
+                        |
+                        |
+                        """.trimMargin()
+                    )
+                )
+            }
+        }
+
         mapOf(
             "\n" to """""""",
             "{\n" to """"{""""

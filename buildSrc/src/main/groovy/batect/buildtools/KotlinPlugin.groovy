@@ -68,6 +68,7 @@ class KotlinPlugin implements Plugin<Project> {
                 endWithNewline()
 
                 targetExclude('build/**')
+                targetExclude('src/generated/**')
             }
         }
 

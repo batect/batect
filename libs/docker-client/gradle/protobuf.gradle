@@ -78,6 +78,7 @@ wire.root('grpc.health.v1.Health')
 wire.kotlin {
     rpcCallStyle = 'blocking'
     rpcRole = 'server'
+    out = 'src/generated/protos'
 }
 
 afterEvaluate {

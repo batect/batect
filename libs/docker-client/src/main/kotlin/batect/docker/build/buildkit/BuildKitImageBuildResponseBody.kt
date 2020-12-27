@@ -383,7 +383,7 @@ class BuildKitImageBuildResponseBody : ImageBuildResponseBody {
         get() = this.name == "exporting to image" || this.name.startsWith("[internal] load metadata for ")
 
     private val Vertex.canTrustCompletedStatus: Boolean
-        get() = this.name == "exporting to image" || this.name == "copy /context /" || this.name.startsWith("[internal] load metadata for ") || this.name.startsWith("resolve image config  for ")
+        get() = this.name == "exporting to image" || this.name == "copy /context /" || this.name.startsWith("[internal] load metadata for ") || this.name.startsWith("resolve image config for ")
 
     private data class VertexInfo(val started: Instant, val stepNumber: Int, val name: String, val layers: Map<String, LayerInfo>) {
         val stepIndex = stepNumber - 1

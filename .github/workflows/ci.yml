@@ -342,6 +342,7 @@ jobs:
       - build-windows
       - build-linux
       - wrapper-test-linux
+      - completion-test-linux
       - journey-test-linux
       - integration-test-linux
     if: github.event_name == 'push' && contains(github.ref, 'refs/tags/') && github.repository == 'batect/batect'

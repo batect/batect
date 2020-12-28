@@ -16,6 +16,7 @@
 
 package batect.docker.build.buildkit.services
 
+import batect.docker.build.ImageBuildOutputSink
 import batect.docker.pull.PasswordRegistryCredentials
 import batect.docker.pull.RegistryCredentialsProvider
 import batect.docker.pull.TokenRegistryCredentials
@@ -33,6 +34,7 @@ import moby.filesync.v1.VerifyTokenAuthorityResponse
 // This is based on github.com/moby/buildkit/session/auth/authprovider/authprovider.go.
 class AuthService(
     private val credentialsProvider: RegistryCredentialsProvider,
+    private val outputSink: ImageBuildOutputSink,
     private val logger: Logger
 ) : AuthBlockingServer, ServiceWithEndpointMetadata {
     override fun GetTokenAuthority(request: GetTokenAuthorityRequest): GetTokenAuthorityResponse {
@@ -50,10 +52,19 @@ class AuthService(
             data("registryToLoad", registry)
         }
 
-        return when (val creds = credentialsProvider.getCredentials(registry)) {
+        val creds = credentialsProvider.getCredentials(registry)
+
+        if (creds == null) {
+            outputSink.use { buffer -> buffer.writeUtf8("## [auth] daemon requested credentials for ${request.Host}, but none are available\n") }
+
+            return CredentialsResponse()
+        }
+
+        outputSink.use { buffer -> buffer.writeUtf8("## [auth] daemon requested credentials for ${request.Host}\n") }
+
+        return when (creds) {
             is PasswordRegistryCredentials -> CredentialsResponse(Username = creds.username, Secret = creds.password)
             is TokenRegistryCredentials -> CredentialsResponse(Secret = creds.identityToken)
-            null -> CredentialsResponse()
         }
     }
 

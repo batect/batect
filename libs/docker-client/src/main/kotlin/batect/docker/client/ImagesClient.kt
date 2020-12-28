@@ -88,13 +88,14 @@ class ImagesClient(
             }
 
             val context = imageBuildContextFactory.createFromDirectory(buildDirectory, dockerfilePath)
-            val builderConfig = createBuilderConfig(builderVersion, buildDirectory, resolvedDockerfilePath)
+            val imageBuildOutputSink = ImageBuildOutputSink(outputSink)
+            val builderConfig = createBuilderConfig(builderVersion, buildDirectory, resolvedDockerfilePath, imageBuildOutputSink)
             val session = startSession(builderConfig)
 
             // Why not use a use() block here? use() suppresses any exceptions thrown by close() if an exception has already been thrown, but we want to allow them to bubble up so that
             // any exceptions from other threads can be propagated by BuildKitSession.close().
             val image = try {
-                imagesAPI.build(context, buildArgs, dockerfilePath, imageTags, forcePull, ImageBuildOutputSink(outputSink), builderConfig, cancellationContext, onProgressUpdate)
+                imagesAPI.build(context, buildArgs, dockerfilePath, imageTags, forcePull, imageBuildOutputSink, builderConfig, cancellationContext, onProgressUpdate)
             } finally {
                 session.close()
             }
@@ -110,14 +111,19 @@ class ImagesClient(
         }
     }
 
-    private fun createBuilderConfig(builderVersion: BuilderVersion, buildDirectory: Path, resolvedDockerfilePath: Path): BuilderConfig = when (builderVersion) {
+    private fun createBuilderConfig(
+        builderVersion: BuilderVersion,
+        buildDirectory: Path,
+        resolvedDockerfilePath: Path,
+        imageBuildOutputSink: ImageBuildOutputSink
+    ): BuilderConfig = when (builderVersion) {
         BuilderVersion.Legacy -> {
             val baseImageNames = dockerfileParser.extractBaseImageNames(resolvedDockerfilePath)
             val credentials = baseImageNames.mapNotNull { credentialsProvider.getCredentials(it) }.toSet()
 
             LegacyBuilderConfig(credentials)
         }
-        BuilderVersion.BuildKit -> BuildKitConfig(buildKitSessionFactory.create(buildDirectory))
+        BuilderVersion.BuildKit -> BuildKitConfig(buildKitSessionFactory.create(buildDirectory, imageBuildOutputSink))
     }
 
     private fun startSession(builderConfig: BuilderConfig): AutoCloseable = when (builderConfig) {

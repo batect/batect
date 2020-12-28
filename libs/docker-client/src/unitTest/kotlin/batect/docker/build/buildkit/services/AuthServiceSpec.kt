@@ -16,6 +16,7 @@
 
 package batect.docker.build.buildkit.services
 
+import batect.docker.build.ImageBuildOutputSink
 import batect.docker.pull.PasswordRegistryCredentials
 import batect.docker.pull.RegistryCredentialsProvider
 import batect.docker.pull.TokenRegistryCredentials
@@ -37,8 +38,9 @@ import org.spekframework.spek2.style.specification.describe
 object AuthServiceSpec : Spek({
     describe("a authentication service") {
         val credentialsProvider by createForEachTest { mock<RegistryCredentialsProvider>() }
+        val outputSink by createForEachTest { ImageBuildOutputSink(null) }
         val logger by createLoggerForEachTestWithoutCustomSerializers()
-        val service by createForEachTest { AuthService(credentialsProvider, logger) }
+        val service by createForEachTest { AuthService(credentialsProvider, outputSink, logger) }
 
         describe("when getting the token authority") {
             it("throws an unimplemented exception") {
@@ -59,6 +61,10 @@ object AuthServiceSpec : Spek({
                         it("returns the username and password for the registry") {
                             assertThat(response, equalTo(CredentialsResponse(Username = "my-username", Secret = "my-password")))
                         }
+
+                        it("prints a message indicating that credentials were accessed") {
+                            assertThat(outputSink.outputSoFar, equalTo("## [auth] daemon requested credentials for us-central1-docker.pkg.dev\n"))
+                        }
                     }
 
                     given("the credentials are a token") {
@@ -68,6 +74,10 @@ object AuthServiceSpec : Spek({
 
                         it("returns the token for the registry") {
                             assertThat(response, equalTo(CredentialsResponse(Secret = "my-token")))
+                        }
+
+                        it("prints a message indicating that credentials were accessed") {
+                            assertThat(outputSink.outputSoFar, equalTo("## [auth] daemon requested credentials for us-central1-docker.pkg.dev\n"))
                         }
                     }
                 }
@@ -79,6 +89,10 @@ object AuthServiceSpec : Spek({
 
                     it("returns an empty response") {
                         assertThat(response, equalTo(CredentialsResponse()))
+                    }
+
+                    it("prints a message indicating that credentials were accessed") {
+                        assertThat(outputSink.outputSoFar, equalTo("## [auth] daemon requested credentials for us-central1-docker.pkg.dev, but none are available\n"))
                     }
                 }
             }
@@ -92,6 +106,10 @@ object AuthServiceSpec : Spek({
 
                 it("returns the credentials for the 'https://index.docker.io/v1/' registry") {
                     assertThat(response, equalTo(CredentialsResponse(Secret = "my-docker-token")))
+                }
+
+                it("prints a message indicating that credentials were accessed") {
+                    assertThat(outputSink.outputSoFar, equalTo("## [auth] daemon requested credentials for registry-1.docker.io\n"))
                 }
             }
         }

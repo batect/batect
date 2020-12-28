@@ -158,7 +158,7 @@ object ImagesClientSpec : Spek({
 
                     given("BuildKit is being used") {
                         val buildKitSession by createForEachTest { mock<BuildKitSession>() }
-                        beforeEachTest { whenever(buildKitSessionFactory.create(buildDirectory)).thenReturn(buildKitSession) }
+                        beforeEachTest { whenever(buildKitSessionFactory.create(eq(buildDirectory), argThat { destinationSink == outputSink })).thenReturn(buildKitSession) }
 
                         val sessionStreams by createForEachTest { mock<SessionStreams>() }
                         beforeEachTest { whenever(sessionsAPI.create(buildKitSession)).thenReturn(sessionStreams) }

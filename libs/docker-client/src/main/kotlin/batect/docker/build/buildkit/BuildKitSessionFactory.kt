@@ -16,8 +16,11 @@
 
 package batect.docker.build.buildkit
 
+import batect.docker.build.ImageBuildOutputSink
 import batect.docker.build.buildkit.services.AuthService
 import batect.docker.build.buildkit.services.HealthService
+import batect.docker.build.buildkit.services.ServiceWithEndpointMetadata
+import batect.docker.pull.RegistryCredentialsProvider
 import batect.logging.LoggerFactory
 import batect.os.SystemInfo
 import batect.telemetry.TelemetrySessionBuilder
@@ -29,16 +32,16 @@ import java.security.SecureRandom
 class BuildKitSessionFactory(
     private val systemInfo: SystemInfo,
     private val healthService: HealthService,
-    private val authService: AuthService,
+    private val credentialsProvider: RegistryCredentialsProvider,
     private val telemetrySessionBuilder: TelemetrySessionBuilder,
     private val loggerFactory: LoggerFactory
 ) {
     private val random = SecureRandom()
     private val nodeId by lazy { getOrCreateNodeID() }
 
-    fun create(buildDirectory: Path): BuildKitSession {
+    fun create(buildDirectory: Path, outputSink: ImageBuildOutputSink): BuildKitSession {
         val sessionId = generateBase36Id(25)
-        val services = setOf(healthService, authService)
+        val services = createServices(outputSink)
         val listenerLogger = loggerFactory.createLoggerForClass(GrpcListener::class)
         val listener = GrpcListener(sessionId, services, listenerLogger)
 
@@ -51,6 +54,12 @@ class BuildKitSessionFactory(
             telemetrySessionBuilder
         )
     }
+
+    private fun createServices(outputSink: ImageBuildOutputSink): Set<ServiceWithEndpointMetadata> =
+        setOf(
+            healthService,
+            AuthService(credentialsProvider, outputSink, loggerFactory.createLoggerForClass(AuthService::class))
+        )
 
     private fun generateSharedKey(buildDirectory: Path): String {
         val buffer = Buffer()

@@ -16,20 +16,25 @@
 
 package batect.docker.build.buildkit
 
+import batect.docker.build.ImageBuildOutputSink
 import batect.docker.build.buildkit.services.AuthService
 import batect.docker.build.buildkit.services.HealthService
+import batect.docker.build.buildkit.services.ServiceWithEndpointMetadata
+import batect.docker.pull.RegistryCredentialsProvider
 import batect.logging.Logger
 import batect.logging.LoggerFactory
 import batect.os.SystemInfo
 import batect.telemetry.TelemetrySessionBuilder
 import batect.testutils.createForEachTest
-import batect.testutils.equalTo
 import batect.testutils.given
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.and
+import com.natpryce.hamkrest.anyElement
 import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
+import com.natpryce.hamkrest.isA
 import com.natpryce.hamkrest.matches
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
@@ -46,6 +51,8 @@ object BuildKitSessionFactorySpec : Spek({
         val homeDirectory by createForEachTest { fileSystem.getPath("/my/home") }
         beforeEachTest { Files.createDirectories(homeDirectory) }
 
+        val outputSink by createForEachTest { mock<ImageBuildOutputSink>() }
+
         val systemInfo by createForEachTest {
             mock<SystemInfo> {
                 on { this.homeDirectory } doReturn homeDirectory
@@ -53,16 +60,18 @@ object BuildKitSessionFactorySpec : Spek({
         }
 
         val healthService by createForEachTest { mock<HealthService>() }
-        val authService by createForEachTest { mock<AuthService>() }
+        val credentialsProvider by createForEachTest { mock<RegistryCredentialsProvider>() }
         val telemetrySessionBuilder by createForEachTest { mock<TelemetrySessionBuilder>() }
         val listenerLogger by createForEachTest { mock<Logger>() }
+        val authServiceLogger by createForEachTest { mock<Logger>() }
         val loggerFactory by createForEachTest {
             mock<LoggerFactory> {
                 on { createLoggerForClass(GrpcListener::class) } doReturn listenerLogger
+                on { createLoggerForClass(AuthService::class) } doReturn authServiceLogger
             }
         }
 
-        val factory by createForEachTest { BuildKitSessionFactory(systemInfo, healthService, authService, telemetrySessionBuilder, loggerFactory) }
+        val factory by createForEachTest { BuildKitSessionFactory(systemInfo, healthService, credentialsProvider, telemetrySessionBuilder, loggerFactory) }
 
         val dockerConfigDirectory by createForEachTest { fileSystem.getPath("/my/home/.docker") }
         val buildNodeIdFile by createForEachTest { fileSystem.getPath("/my/home/.docker/.buildNodeID") }
@@ -88,7 +97,7 @@ object BuildKitSessionFactorySpec : Spek({
                 assertThat(
                     accessor().grpcListener,
                     has(GrpcListener::sessionId, equalTo(accessor().sessionId)) and
-                        has(GrpcListener::services, equalTo(setOf(healthService, authService))) and
+                        has(GrpcListener::services, anyElement<ServiceWithEndpointMetadata>(equalTo(healthService)) and anyElement(isA<AuthService>())) and
                         has(GrpcListener::logger, equalTo(listenerLogger))
                 )
             }
@@ -122,7 +131,7 @@ object BuildKitSessionFactorySpec : Spek({
                 given("the build node ID file exists") {
                     beforeEachTest { Files.write(buildNodeIdFile, "012345678901234567890123456789012345678901234567890123456789abcd".toByteArray(Charsets.UTF_8)) }
 
-                    val session by createForEachTest { factory.create(buildDirectory) }
+                    val session by createForEachTest { factory.create(buildDirectory, outputSink) }
 
                     itGeneratesAValidSession { session }
 
@@ -132,7 +141,7 @@ object BuildKitSessionFactorySpec : Spek({
                 }
 
                 given("the build node ID file does not exist") {
-                    val session by createForEachTest { factory.create(buildDirectory) }
+                    val session by createForEachTest { factory.create(buildDirectory, outputSink) }
 
                     itGeneratesAValidSession { session }
                     itGeneratesAndStoresAValidSharedKey { session }
@@ -140,7 +149,7 @@ object BuildKitSessionFactorySpec : Spek({
             }
 
             given("the Docker config directory does not exist") {
-                val session by createForEachTest { factory.create(buildDirectory) }
+                val session by createForEachTest { factory.create(buildDirectory, outputSink) }
 
                 itGeneratesAValidSession { session }
                 itGeneratesAndStoresAValidSharedKey { session }

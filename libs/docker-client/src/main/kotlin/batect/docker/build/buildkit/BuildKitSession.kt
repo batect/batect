@@ -22,7 +22,6 @@ import batect.telemetry.TelemetrySessionBuilder
 import batect.telemetry.addUnhandledExceptionEvent
 import okhttp3.internal.concurrent.TaskRunner
 import okhttp3.internal.http2.Http2Connection
-import okhttp3.internal.peerName
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.ThreadFactory
 
@@ -45,7 +44,7 @@ class BuildKitSession(
         streams.socket.soTimeout = 0
 
         val connection = Http2Connection.Builder(false, TaskRunner(TaskRunner.RealBackend(threadFactory)))
-            .socket(streams.socket, streams.socket.peerName(), streams.source, streams.sink)
+            .socket(streams.socket, "BuildKit image build (session $sessionId)", streams.source, streams.sink)
             .listener(grpcListener)
             .build()
 

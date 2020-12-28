@@ -25,6 +25,7 @@ import batect.docker.build.BuildComplete
 import batect.docker.build.BuildError
 import batect.docker.build.BuildProgress
 import batect.docker.build.ImageBuildEventCallback
+import batect.docker.build.ImageBuildOutputSink
 import batect.docker.build.ImageBuildResponseBody
 import batect.docker.humaniseBytes
 import batect.primitives.mapToSet
@@ -40,8 +41,6 @@ import moby.buildkit.v1.VertexLog
 import moby.buildkit.v1.VertexStatus
 import okio.BufferedSink
 import okio.ByteString.Companion.decodeBase64
-import okio.Sink
-import okio.buffer
 import java.io.Reader
 import java.time.Duration
 import java.time.Instant
@@ -61,15 +60,15 @@ class BuildKitImageBuildResponseBody : ImageBuildResponseBody {
     private var lastProgressUpdate: BuildProgress? = null
     private val outstandingOutput = mutableMapOf<String, StringBuilder>()
 
-    override fun readFrom(stream: Reader, outputStream: Sink, eventCallback: ImageBuildEventCallback) {
-        val outputBuffer = outputStream.buffer()
+    override fun readFrom(stream: Reader, outputSink: ImageBuildOutputSink, eventCallback: ImageBuildEventCallback) {
+        stream.forEachLine { line ->
+            outputSink.use { outputBuffer ->
+                decodeLine(line, outputBuffer, eventCallback)
+            }
+        }
 
-        try {
-            stream.forEachLine { line -> decodeLine(line, outputBuffer, eventCallback) }
-
+        outputSink.use { outputBuffer ->
             writeAllPendingCompletedVertices(outputBuffer)
-        } finally {
-            outputBuffer.flush()
         }
     }
 

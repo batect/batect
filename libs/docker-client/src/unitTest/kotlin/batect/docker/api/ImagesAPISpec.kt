@@ -32,6 +32,7 @@ import batect.docker.build.ImageBuildContextEntry
 import batect.docker.build.ImageBuildContextRequestBody
 import batect.docker.build.ImageBuildEvent
 import batect.docker.build.ImageBuildEventCallback
+import batect.docker.build.ImageBuildOutputSink
 import batect.docker.build.ImageBuildResponseBody
 import batect.docker.build.LegacyBuilderConfig
 import batect.docker.build.buildkit.BuildKitSession
@@ -65,12 +66,8 @@ import kotlinx.serialization.json.jsonObject
 import okhttp3.Headers
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
-import okio.Sink
-import okio.buffer
-import okio.sink
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.io.ByteArrayOutputStream
 import java.io.Reader
 import java.nio.file.Paths
 
@@ -148,21 +145,19 @@ object ImagesAPISpec : Spek({
             )
 
             val successProgressEvents = successEvents.dropLast(1)
-            val successOutput = "This is some output from the build process."
 
             given("the build succeeds") {
                 beforeEachTest {
-                    buildResponseBody.outputToStream = successOutput
                     buildResponseBody.eventsToPost = successEvents
                 }
 
                 given("the legacy builder is requested") {
                     val call by createForEachTest { clientWithLongTimeout.mock("POST", expectedLegacyBuilderUrl, daemonBuildResponse, 200, expectedHeadersForLegacyAuthentication) }
-                    val output by createForEachTest { ByteArrayOutputStream() }
+                    val output by createForEachTest { ImageBuildOutputSink(null) }
                     val eventsReceiver by createForEachTest { BuildEventsReceiver() }
 
                     val image by runForEachTest {
-                        api.build(context, buildArgs, dockerfilePath, imageTags, pullImage, output.sink(), LegacyBuilderConfig(registryCredentials), cancellationContext, eventsReceiver::onProgressUpdate)
+                        api.build(context, buildArgs, dockerfilePath, imageTags, pullImage, output, LegacyBuilderConfig(registryCredentials), cancellationContext, eventsReceiver::onProgressUpdate)
                     }
 
                     it("sends a request to the Docker daemon to build the image") {
@@ -189,8 +184,8 @@ object ImagesAPISpec : Spek({
                         assertThat(image, equalTo(DockerImage("sha256:24125bbc6cbe08f530e97c81ee461357fa3ba56f4d7693d7895ec86671cf3540")))
                     }
 
-                    it("writes all output from the build process to the provided output stream") {
-                        assertThat(output.toString(), equalTo(successOutput))
+                    it("passes the provided output sink to the builder response body") {
+                        assertThat(buildResponseBody.invokedWithOutputSink, equalTo(output))
                     }
 
                     it("creates a legacy builder response body") {
@@ -216,7 +211,7 @@ object ImagesAPISpec : Spek({
 
                     val call by createForEachTest { clientWithLongTimeout.mock("POST", expectedBuildKitUrl, daemonBuildResponse, 200, expectedBuildKitHeaders) }
 
-                    runForEachTest { api.build(context, buildArgs, dockerfilePath, imageTags, pullImage, null, BuildKitConfig(session), cancellationContext, {}) }
+                    runForEachTest { api.build(context, buildArgs, dockerfilePath, imageTags, pullImage, ImageBuildOutputSink(null), BuildKitConfig(session), cancellationContext, {}) }
 
                     it("sends a request to the Docker daemon to build the image with the expected URL") {
                         verify(call).execute()
@@ -237,11 +232,10 @@ object ImagesAPISpec : Spek({
                 val call by createForEachTest { clientWithLongTimeout.mock("POST", expectedUrlWithRePullingEnabled, daemonBuildResponse, 200, expectedHeadersForLegacyAuthentication) }
 
                 beforeEachTest {
-                    buildResponseBody.outputToStream = successOutput
                     buildResponseBody.eventsToPost = successEvents
                 }
 
-                beforeEachTest { api.build(context, emptyMap(), dockerfilePath, imageTags, true, null, LegacyBuilderConfig(registryCredentials), cancellationContext, {}) }
+                beforeEachTest { api.build(context, emptyMap(), dockerfilePath, imageTags, true, ImageBuildOutputSink(null), LegacyBuilderConfig(registryCredentials), cancellationContext, {}) }
 
                 it("sends a request to the Docker daemon to build the image with re-pulling all images enabled") {
                     verify(call).execute()
@@ -253,11 +247,10 @@ object ImagesAPISpec : Spek({
                 val call by createForEachTest { clientWithLongTimeout.mock("POST", expectedLegacyBuilderUrl, daemonBuildResponse, 200, expectedHeadersForNoAuthentication) }
 
                 beforeEachTest {
-                    buildResponseBody.outputToStream = successOutput
                     buildResponseBody.eventsToPost = successEvents
                 }
 
-                beforeEachTest { api.build(context, buildArgs, dockerfilePath, imageTags, pullImage, null, LegacyBuilderConfig(emptySet()), cancellationContext, {}) }
+                beforeEachTest { api.build(context, buildArgs, dockerfilePath, imageTags, pullImage, ImageBuildOutputSink(null), LegacyBuilderConfig(emptySet()), cancellationContext, {}) }
 
                 it("sends a request to the Docker daemon to build the image with no authentication header") {
                     verify(call).execute()
@@ -273,11 +266,10 @@ object ImagesAPISpec : Spek({
                 val call by createForEachTest { clientWithLongTimeout.mock("POST", expectedUrlWithNoBuildArgs, daemonBuildResponse, 200, expectedHeadersForLegacyAuthentication) }
 
                 beforeEachTest {
-                    buildResponseBody.outputToStream = successOutput
                     buildResponseBody.eventsToPost = successEvents
                 }
 
-                beforeEachTest { api.build(context, emptyMap(), dockerfilePath, imageTags, pullImage, null, LegacyBuilderConfig(registryCredentials), cancellationContext, {}) }
+                beforeEachTest { api.build(context, emptyMap(), dockerfilePath, imageTags, pullImage, ImageBuildOutputSink(null), LegacyBuilderConfig(registryCredentials), cancellationContext, {}) }
 
                 it("sends a request to the Docker daemon to build the image with an empty set of build args") {
                     verify(call).execute()
@@ -291,7 +283,7 @@ object ImagesAPISpec : Spek({
 
                 it("throws an appropriate exception") {
                     assertThat(
-                        { api.build(context, buildArgs, dockerfilePath, imageTags, pullImage, null, LegacyBuilderConfig(registryCredentials), cancellationContext, {}) },
+                        { api.build(context, buildArgs, dockerfilePath, imageTags, pullImage, ImageBuildOutputSink(null), LegacyBuilderConfig(registryCredentials), cancellationContext, {}) },
                         throws<ImageBuildFailedException>(
                             withMessage("Building image failed: $errorMessageWithCorrectLineEndings")
                         )
@@ -300,7 +292,7 @@ object ImagesAPISpec : Spek({
             }
 
             on("the build failing during the build process") {
-                val output by createForEachTest { ByteArrayOutputStream() }
+                val output by createForEachTest { ImageBuildOutputSink(null) }
 
                 beforeEachTest {
                     clientWithLongTimeout.mock("POST", expectedLegacyBuilderUrl, daemonBuildResponse, 200, expectedHeadersForLegacyAuthentication)
@@ -315,27 +307,13 @@ object ImagesAPISpec : Spek({
 
                 it("throws an appropriate exception with all line endings corrected for the host system") {
                     assertThat(
-                        { api.build(context, buildArgs, dockerfilePath, imageTags, pullImage, output.sink(), LegacyBuilderConfig(registryCredentials), cancellationContext, {}) },
+                        { api.build(context, buildArgs, dockerfilePath, imageTags, pullImage, output, LegacyBuilderConfig(registryCredentials), cancellationContext, {}) },
                         throws<ImageBuildFailedException>(
                             withMessage(
                                 "Building image failed: The command '/bin/sh -c exit 1' returned a non-zero code: 1. Output from build process was:SYSTEM_LINE_SEPARATOR" +
                                     "This is some output from the build process.SYSTEM_LINE_SEPARATOR" +
                                     "This is some more output from the build process."
                             )
-                        )
-                    )
-                }
-
-                it("writes all output from the build process to the output stream") {
-                    try { api.build(context, buildArgs, dockerfilePath, imageTags, pullImage, output.sink(), LegacyBuilderConfig(registryCredentials), cancellationContext, {}) } catch (_: Throwable) {}
-                    assertThat(
-                        output.toString(),
-                        equalTo(
-                            """
-                                |This is some output from the build process.
-                                |This is some more output from the build process.
-                                |
-                            """.trimMargin()
                         )
                     )
                 }
@@ -352,7 +330,7 @@ object ImagesAPISpec : Spek({
 
                 it("throws an appropriate exception") {
                     assertThat(
-                        { api.build(context, buildArgs, dockerfilePath, imageTags, pullImage, null, LegacyBuilderConfig(registryCredentials), cancellationContext, {}) },
+                        { api.build(context, buildArgs, dockerfilePath, imageTags, pullImage, ImageBuildOutputSink(null), LegacyBuilderConfig(registryCredentials), cancellationContext, {}) },
                         throws<ImageBuildFailedException>(
                             withMessage("Building image failed: daemon never sent built image ID.")
                         )
@@ -556,11 +534,16 @@ private class MockImageBuildResponseBody() : ImageBuildResponseBody {
     var outputToStream: String = ""
     var eventsToPost: List<ImageBuildEvent> = emptyList()
     lateinit var builderVersion: BuilderVersion
+    lateinit var invokedWithOutputSink: ImageBuildOutputSink
 
-    override fun readFrom(stream: Reader, outputStream: Sink, eventCallback: ImageBuildEventCallback) {
+    override fun readFrom(stream: Reader, outputSink: ImageBuildOutputSink, eventCallback: ImageBuildEventCallback) {
+        invokedWithOutputSink = outputSink
+
         assertThat(stream.readText(), equalTo(daemonBuildResponse))
 
-        outputStream.buffer().writeString(outputToStream, Charsets.UTF_8).flush()
+        outputSink.use { outputStream ->
+            outputStream.writeString(outputToStream, Charsets.UTF_8).flush()
+        }
 
         eventsToPost.forEach(eventCallback)
     }

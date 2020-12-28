@@ -25,6 +25,7 @@ import batect.docker.build.BuildError
 import batect.docker.build.BuildProgress
 import batect.docker.build.ImageBuildEvent
 import batect.docker.build.ImageBuildEventCallback
+import batect.docker.build.ImageBuildOutputSink
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given
@@ -33,16 +34,13 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.isEmpty
 import com.natpryce.hamkrest.isEmptyString
 import com.natpryce.hamkrest.throws
-import okio.sink
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.io.ByteArrayOutputStream
 import java.io.StringReader
 
 object LegacyImageBuildResponseBodySpec : Spek({
     describe("a legacy image build response body") {
-        val output by createForEachTest { ByteArrayOutputStream() }
-        val outputStream by createForEachTest { output.sink() }
+        val outputSink by createForEachTest { ImageBuildOutputSink(null) }
         val eventsPosted by createForEachTest { mutableListOf<ImageBuildEvent>() }
         val eventCallback: ImageBuildEventCallback = { e -> eventsPosted.add(e) }
         val body by createForEachTest { LegacyImageBuildResponseBody() }
@@ -51,7 +49,7 @@ object LegacyImageBuildResponseBodySpec : Spek({
             val input = ""
 
             beforeEachTest {
-                body.readFrom(StringReader(input), outputStream, eventCallback)
+                body.readFrom(StringReader(input), outputSink, eventCallback)
             }
 
             it("posts no events") {
@@ -59,7 +57,7 @@ object LegacyImageBuildResponseBodySpec : Spek({
             }
 
             it("produces no output") {
-                assertThat(output.toString(), isEmptyString)
+                assertThat(outputSink.outputSoFar, isEmptyString)
             }
         }
 
@@ -69,7 +67,7 @@ object LegacyImageBuildResponseBodySpec : Spek({
             """.trimIndent()
 
             beforeEachTest {
-                body.readFrom(StringReader(input), outputStream, eventCallback)
+                body.readFrom(StringReader(input), outputSink, eventCallback)
             }
 
             it("posts no events") {
@@ -77,7 +75,7 @@ object LegacyImageBuildResponseBodySpec : Spek({
             }
 
             it("streams the output message to the output stream") {
-                assertThat(output.toString(), equalTo(" ---x 817f2d3d51ec\n"))
+                assertThat(outputSink.outputSoFar, equalTo(" ---x 817f2d3d51ec\n"))
             }
         }
 
@@ -88,7 +86,7 @@ object LegacyImageBuildResponseBodySpec : Spek({
             """.trimIndent()
 
             beforeEachTest {
-                body.readFrom(StringReader(input), outputStream, eventCallback)
+                body.readFrom(StringReader(input), outputSink, eventCallback)
             }
 
             it("posts a step starting event") {
@@ -103,7 +101,7 @@ object LegacyImageBuildResponseBodySpec : Spek({
             }
 
             it("streams the output message to the output stream") {
-                assertThat(output.toString(), equalTo("Step 1/2 : FROM postgres:13.0\n"))
+                assertThat(outputSink.outputSoFar, equalTo("Step 1/2 : FROM postgres:13.0\n"))
             }
         }
 
@@ -116,7 +114,7 @@ object LegacyImageBuildResponseBodySpec : Spek({
             """.trimIndent()
 
             beforeEachTest {
-                body.readFrom(StringReader(input), outputStream, eventCallback)
+                body.readFrom(StringReader(input), outputSink, eventCallback)
             }
 
             it("posts a step starting event when each step starts, and a step complete event when each step finishes") {
@@ -133,7 +131,7 @@ object LegacyImageBuildResponseBodySpec : Spek({
 
             it("streams the output messages to the output stream") {
                 assertThat(
-                    output.toString(),
+                    outputSink.outputSoFar,
                     equalTo(
                         """
                             |Step 1/2 : FROM postgres:13.0
@@ -151,7 +149,7 @@ object LegacyImageBuildResponseBodySpec : Spek({
             """.trimIndent()
 
             beforeEachTest {
-                body.readFrom(StringReader(input), outputStream, eventCallback)
+                body.readFrom(StringReader(input), outputSink, eventCallback)
             }
 
             it("posts a build complete event") {
@@ -166,7 +164,7 @@ object LegacyImageBuildResponseBodySpec : Spek({
             }
 
             it("produces no output") {
-                assertThat(output.toString(), isEmptyString)
+                assertThat(outputSink.outputSoFar, isEmptyString)
             }
         }
 
@@ -180,7 +178,7 @@ object LegacyImageBuildResponseBodySpec : Spek({
             """.trimIndent()
 
             beforeEachTest {
-                body.readFrom(StringReader(input), outputStream, eventCallback)
+                body.readFrom(StringReader(input), outputSink, eventCallback)
             }
 
             it("posts a step starting event when each step starts, a step complete event when each step finishes, and a build complete event when the image ID is provided") {
@@ -205,7 +203,7 @@ object LegacyImageBuildResponseBodySpec : Spek({
             """.trimIndent()
 
             beforeEachTest {
-                body.readFrom(StringReader(input), outputStream, eventCallback)
+                body.readFrom(StringReader(input), outputSink, eventCallback)
             }
 
             it("posts a step progress event") {
@@ -222,7 +220,7 @@ object LegacyImageBuildResponseBodySpec : Spek({
 
             it("produces no output for the download") {
                 assertThat(
-                    output.toString(),
+                    outputSink.outputSoFar,
                     equalTo(
                         """
                             |Step 2/2 : ADD http://httpbin.org/get test.txt
@@ -241,7 +239,7 @@ object LegacyImageBuildResponseBodySpec : Spek({
             """.trimIndent()
 
             beforeEachTest {
-                body.readFrom(StringReader(input), outputStream, eventCallback)
+                body.readFrom(StringReader(input), outputSink, eventCallback)
             }
 
             it("posts a step progress event") {
@@ -296,7 +294,7 @@ object LegacyImageBuildResponseBodySpec : Spek({
             """.trimIndent()
 
             beforeEachTest {
-                body.readFrom(StringReader(input), outputStream, eventCallback)
+                body.readFrom(StringReader(input), outputSink, eventCallback)
             }
 
             it("posts progress events as the download is performed") {
@@ -334,7 +332,7 @@ object LegacyImageBuildResponseBodySpec : Spek({
 
             it("produces no output for the download") {
                 assertThat(
-                    output.toString(),
+                    outputSink.outputSoFar,
                     equalTo(
                         """
                             |Step 1/2 : FROM postgres:13.0
@@ -357,7 +355,7 @@ object LegacyImageBuildResponseBodySpec : Spek({
             """.trimIndent()
 
             beforeEachTest {
-                body.readFrom(StringReader(input), outputStream, eventCallback)
+                body.readFrom(StringReader(input), outputSink, eventCallback)
             }
 
             it("posts progress events as the download is performed") {
@@ -377,7 +375,7 @@ object LegacyImageBuildResponseBodySpec : Spek({
 
             it("produces no output for the download") {
                 assertThat(
-                    output.toString(),
+                    outputSink.outputSoFar,
                     equalTo(
                         """
                             |Step 1/2 : FROM postgres:13.0
@@ -395,7 +393,7 @@ object LegacyImageBuildResponseBodySpec : Spek({
             """.trimIndent()
 
             beforeEachTest {
-                body.readFrom(StringReader(input), outputStream, eventCallback)
+                body.readFrom(StringReader(input), outputSink, eventCallback)
             }
 
             it("posts a build error event") {
@@ -410,7 +408,7 @@ object LegacyImageBuildResponseBodySpec : Spek({
             }
 
             it("streams the error message to the output stream") {
-                assertThat(output.toString(), equalTo("The command '/bin/sh -c exit 1' returned a non-zero code: 1"))
+                assertThat(outputSink.outputSoFar, equalTo("The command '/bin/sh -c exit 1' returned a non-zero code: 1"))
             }
         }
 
@@ -421,7 +419,7 @@ object LegacyImageBuildResponseBodySpec : Spek({
             given("a response with the malformed input $description") {
                 it("throws an appropriate exception") {
                     assertThat(
-                        { body.readFrom(StringReader(input), outputStream, eventCallback) },
+                        { body.readFrom(StringReader(input), outputSink, eventCallback) },
                         throws<ImageBuildFailedException>(withMessage("Received malformed response from Docker daemon during build: $description"))
                     )
                 }

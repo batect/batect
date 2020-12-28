@@ -22,7 +22,6 @@ import batect.docker.ImageBuildFailedException
 import batect.docker.ImagePullFailedException
 import batect.docker.ImageReference
 import batect.docker.Json
-import batect.docker.Tee
 import batect.docker.build.BuildComplete
 import batect.docker.build.BuildError
 import batect.docker.build.BuildKitConfig
@@ -30,6 +29,7 @@ import batect.docker.build.BuildProgress
 import batect.docker.build.BuilderConfig
 import batect.docker.build.ImageBuildContext
 import batect.docker.build.ImageBuildContextRequestBody
+import batect.docker.build.ImageBuildOutputSink
 import batect.docker.build.ImageBuildResponseBody
 import batect.docker.build.LegacyBuilderConfig
 import batect.docker.build.buildkit.BuildKitImageBuildResponseBody
@@ -48,9 +48,6 @@ import kotlinx.serialization.json.jsonPrimitive
 import okhttp3.HttpUrl
 import okhttp3.Request
 import okhttp3.Response
-import okio.Sink
-import okio.sink
-import java.io.ByteArrayOutputStream
 import java.util.Base64
 
 class ImagesAPI(
@@ -65,7 +62,7 @@ class ImagesAPI(
         dockerfilePath: String,
         imageTags: Set<String>,
         forcePull: Boolean,
-        outputSink: Sink?,
+        outputSink: ImageBuildOutputSink,
         builderConfig: BuilderConfig,
         cancellationContext: CancellationContext,
         onProgressUpdate: (BuildProgress) -> Unit
@@ -151,28 +148,23 @@ class ImagesAPI(
         return this
     }
 
-    private fun processBuildResponse(response: Response, outputStream: Sink?, builderVersion: BuilderVersion, onProgressUpdate: (BuildProgress) -> Unit): DockerImage {
+    private fun processBuildResponse(response: Response, outputSink: ImageBuildOutputSink, builderVersion: BuilderVersion, onProgressUpdate: (BuildProgress) -> Unit): DockerImage {
         var builtImage: DockerImage? = null
-        val outputBuffer = ByteArrayOutputStream()
-        val sink = if (outputStream == null) { outputBuffer.sink() } else { Tee(outputBuffer.sink(), outputStream) }
+        val body = buildResponseBodyFactory(builderVersion)
 
-        sink.use {
-            val body = buildResponseBodyFactory(builderVersion)
-
-            body.readFrom(response.body!!.charStream(), sink) { event ->
-                when (event) {
-                    is BuildProgress -> onProgressUpdate(event)
-                    is BuildError -> throw ImageBuildFailedException("Building image failed: ${event.message}. Output from build process was:" + systemInfo.lineSeparator + outputBuffer.toString().trim().correctLineEndings())
-                    is BuildComplete -> builtImage = event.image
-                }
+        body.readFrom(response.body!!.charStream(), outputSink) { event ->
+            when (event) {
+                is BuildProgress -> onProgressUpdate(event)
+                is BuildError -> throw ImageBuildFailedException("Building image failed: ${event.message}. Output from build process was:" + systemInfo.lineSeparator + outputSink.outputSoFar.trim().correctLineEndings())
+                is BuildComplete -> builtImage = event.image
             }
-
-            if (builtImage == null) {
-                throw ImageBuildFailedException("Building image failed: daemon never sent built image ID.")
-            }
-
-            return builtImage!!
         }
+
+        if (builtImage == null) {
+            throw ImageBuildFailedException("Building image failed: daemon never sent built image ID.")
+        }
+
+        return builtImage!!
     }
 
     fun pull(

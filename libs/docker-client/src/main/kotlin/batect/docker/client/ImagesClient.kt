@@ -29,6 +29,7 @@ import batect.docker.build.BuildProgress
 import batect.docker.build.BuilderConfig
 import batect.docker.build.DockerfileParser
 import batect.docker.build.ImageBuildContextFactory
+import batect.docker.build.ImageBuildOutputSink
 import batect.docker.build.LegacyBuilderConfig
 import batect.docker.build.buildkit.BuildKitSessionFactory
 import batect.docker.data
@@ -93,7 +94,7 @@ class ImagesClient(
             // Why not use a use() block here? use() suppresses any exceptions thrown by close() if an exception has already been thrown, but we want to allow them to bubble up so that
             // any exceptions from other threads can be propagated by BuildKitSession.close().
             val image = try {
-                imagesAPI.build(context, buildArgs, dockerfilePath, imageTags, forcePull, outputSink, builderConfig, cancellationContext, onProgressUpdate)
+                imagesAPI.build(context, buildArgs, dockerfilePath, imageTags, forcePull, ImageBuildOutputSink(outputSink), builderConfig, cancellationContext, onProgressUpdate)
             } finally {
                 session.close()
             }

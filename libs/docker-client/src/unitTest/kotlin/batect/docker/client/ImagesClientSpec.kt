@@ -55,6 +55,7 @@ import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.throws
 import com.nhaarman.mockitokotlin2.any
+import com.nhaarman.mockitokotlin2.argThat
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.inOrder
@@ -139,7 +140,7 @@ object ImagesClientSpec : Spek({
                                 eq(dockerfilePath),
                                 eq(imageTags),
                                 eq(forcePull),
-                                eq(outputSink),
+                                argThat { destinationSink == outputSink },
                                 eq(LegacyBuilderConfig(setOf(image1Credentials, image2Credentials))),
                                 eq(cancellationContext),
                                 eq(onStatusUpdate)
@@ -171,7 +172,7 @@ object ImagesClientSpec : Spek({
                                 eq(dockerfilePath),
                                 eq(imageTags),
                                 eq(forcePull),
-                                eq(outputSink),
+                                argThat { destinationSink == outputSink },
                                 eq(BuildKitConfig(buildKitSession)),
                                 eq(cancellationContext),
                                 eq(onStatusUpdate)

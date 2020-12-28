@@ -25,6 +25,7 @@ import batect.docker.build.BuildError
 import batect.docker.build.BuildProgress
 import batect.docker.build.ImageBuildEvent
 import batect.docker.build.ImageBuildEventCallback
+import batect.docker.build.ImageBuildOutputSink
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given
@@ -33,16 +34,13 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.isEmpty
 import com.natpryce.hamkrest.isEmptyString
 import com.natpryce.hamkrest.throws
-import okio.sink
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.io.ByteArrayOutputStream
 import java.io.StringReader
 
 object BuildKitImageBuildResponseBodySpec : Spek({
     describe("a BuildKit image build response body") {
-        val output by createForEachTest { ByteArrayOutputStream() }
-        val outputStream by createForEachTest { output.sink() }
+        val outputSink by createForEachTest { ImageBuildOutputSink(null) }
         val eventsPosted by createForEachTest { mutableListOf<ImageBuildEvent>() }
         val eventCallback: ImageBuildEventCallback = { e -> eventsPosted.add(e) }
         val body by createForEachTest { BuildKitImageBuildResponseBody() }
@@ -51,7 +49,7 @@ object BuildKitImageBuildResponseBodySpec : Spek({
             val input = ""
 
             beforeEachTest {
-                body.readFrom(StringReader(input), outputStream, eventCallback)
+                body.readFrom(StringReader(input), outputSink, eventCallback)
             }
 
             it("posts no events") {
@@ -59,7 +57,7 @@ object BuildKitImageBuildResponseBodySpec : Spek({
             }
 
             it("produces no output") {
-                assertThat(output.toString(), isEmptyString)
+                assertThat(outputSink.outputSoFar, isEmptyString)
             }
         }
 
@@ -69,7 +67,7 @@ object BuildKitImageBuildResponseBodySpec : Spek({
             """.trimIndent()
 
             beforeEachTest {
-                body.readFrom(StringReader(input), outputStream, eventCallback)
+                body.readFrom(StringReader(input), outputSink, eventCallback)
             }
 
             it("posts a build error event") {
@@ -85,7 +83,7 @@ object BuildKitImageBuildResponseBodySpec : Spek({
 
             it("produces no output") {
                 // We don't need to write anything to the output - error output comes from status updates.
-                assertThat(output.toString(), isEmptyString)
+                assertThat(outputSink.outputSoFar, isEmptyString)
             }
         }
 
@@ -95,7 +93,7 @@ object BuildKitImageBuildResponseBodySpec : Spek({
             """.trimIndent()
 
             beforeEachTest {
-                body.readFrom(StringReader(input), outputStream, eventCallback)
+                body.readFrom(StringReader(input), outputSink, eventCallback)
             }
 
             it("posts a build complete event") {
@@ -110,7 +108,7 @@ object BuildKitImageBuildResponseBodySpec : Spek({
             }
 
             it("produces no output") {
-                assertThat(output.toString(), isEmptyString)
+                assertThat(outputSink.outputSoFar, isEmptyString)
             }
         }
 
@@ -139,7 +137,7 @@ object BuildKitImageBuildResponseBodySpec : Spek({
             """.trimIndent()
 
             beforeEachTest {
-                body.readFrom(StringReader(input), outputStream, eventCallback)
+                body.readFrom(StringReader(input), outputSink, eventCallback)
             }
 
             it("posts build status messages as the build progresses") {
@@ -160,7 +158,7 @@ object BuildKitImageBuildResponseBodySpec : Spek({
 
             it("streams output showing the progression of the build") {
                 assertThat(
-                    output.toString(),
+                    outputSink.outputSoFar,
                     equalTo(
                         """
                         |#1 [internal] load remote build context
@@ -209,7 +207,7 @@ object BuildKitImageBuildResponseBodySpec : Spek({
             """.trimIndent()
 
             beforeEachTest {
-                body.readFrom(StringReader(input), outputStream, eventCallback)
+                body.readFrom(StringReader(input), outputSink, eventCallback)
             }
 
             it("posts build status messages as the build progresses") {
@@ -231,7 +229,7 @@ object BuildKitImageBuildResponseBodySpec : Spek({
 
             it("streams output showing the progression of the build") {
                 assertThat(
-                    output.toString(),
+                    outputSink.outputSoFar,
                     equalTo(
                         """
                         |#1 [internal] load remote build context
@@ -269,12 +267,12 @@ object BuildKitImageBuildResponseBodySpec : Spek({
             """.trimIndent()
 
             beforeEachTest {
-                body.readFrom(StringReader(input), outputStream, eventCallback)
+                body.readFrom(StringReader(input), outputSink, eventCallback)
             }
 
             it("prefixes each line of the output") {
                 assertThat(
-                    output.toString(),
+                    outputSink.outputSoFar,
                     equalTo(
                         """
                         |#1 [2/2] RUN sh -c 'echo "hello" && echo "world"'
@@ -298,12 +296,12 @@ object BuildKitImageBuildResponseBodySpec : Spek({
             """.trimIndent()
 
             beforeEachTest {
-                body.readFrom(StringReader(input), outputStream, eventCallback)
+                body.readFrom(StringReader(input), outputSink, eventCallback)
             }
 
             it("waits to receive any further output for that line before writing it, printing any remaining output before the task is marked as done") {
                 assertThat(
-                    output.toString(),
+                    outputSink.outputSoFar,
                     equalTo(
                         """
                         |#1 [2/2] RUN sh -c 'echo "hello" && echo -n "world" && echo "more" && echo -n "from the next line"'
@@ -327,12 +325,12 @@ object BuildKitImageBuildResponseBodySpec : Spek({
             """.trimIndent()
 
             beforeEachTest {
-                body.readFrom(StringReader(input), outputStream, eventCallback)
+                body.readFrom(StringReader(input), outputSink, eventCallback)
             }
 
             it("prints the output before reporting that the task is done") {
                 assertThat(
-                    output.toString(),
+                    outputSink.outputSoFar,
                     equalTo(
                         """
                         |#1 [2/2] RUN echo -n "hello"
@@ -355,12 +353,12 @@ object BuildKitImageBuildResponseBodySpec : Spek({
             """.trimIndent()
 
             beforeEachTest {
-                body.readFrom(StringReader(input), outputStream, eventCallback)
+                body.readFrom(StringReader(input), outputSink, eventCallback)
             }
 
             it("waits to receive any further output for that line before writing it, printing any remaining output before the task is marked as done") {
                 assertThat(
-                    output.toString(),
+                    outputSink.outputSoFar,
                     equalTo(
                         """
                         |#1 [2/2] RUN sh -c 'echo "hello" && echo -n "world" && echo "more" && echo -n "from the next line"'
@@ -393,7 +391,7 @@ object BuildKitImageBuildResponseBodySpec : Spek({
             """.trimIndent()
 
             beforeEachTest {
-                body.readFrom(StringReader(input), outputStream, eventCallback)
+                body.readFrom(StringReader(input), outputSink, eventCallback)
             }
 
             it("posts build status messages as the build progresses") {
@@ -415,7 +413,7 @@ object BuildKitImageBuildResponseBodySpec : Spek({
 
             it("correctly prefixes each line of the output, labelling and ending each block of output") {
                 assertThat(
-                    output.toString(),
+                    outputSink.outputSoFar,
                     equalTo(
                         """
                         |#1 [first 1/2] FROM docker.io/library/alpine:3.12.0
@@ -468,7 +466,7 @@ object BuildKitImageBuildResponseBodySpec : Spek({
             """.trimIndent()
 
             beforeEachTest {
-                body.readFrom(StringReader(input), outputStream, eventCallback)
+                body.readFrom(StringReader(input), outputSink, eventCallback)
             }
 
             it("posts build status messages as the build progresses") {
@@ -490,7 +488,7 @@ object BuildKitImageBuildResponseBodySpec : Spek({
 
             it("streams output showing the progression of the build") {
                 assertThat(
-                    output.toString(),
+                    outputSink.outputSoFar,
                     equalTo(
                         """
                         |#1 https://github.com/batect/batect/releases/download/0.59.0/batect-0.59.0.jar
@@ -539,7 +537,7 @@ object BuildKitImageBuildResponseBodySpec : Spek({
             """.trimIndent()
 
             beforeEachTest {
-                body.readFrom(StringReader(input), outputStream, eventCallback)
+                body.readFrom(StringReader(input), outputSink, eventCallback)
             }
 
             it("posts build status messages as the build progresses") {
@@ -564,7 +562,7 @@ object BuildKitImageBuildResponseBodySpec : Spek({
 
             it("streams output showing the progression of the build") {
                 assertThat(
-                    output.toString(),
+                    outputSink.outputSoFar,
                     equalTo(
                         """
                         |#1 [internal] load metadata for docker.io/library/alpine:3.10.0
@@ -638,7 +636,7 @@ object BuildKitImageBuildResponseBodySpec : Spek({
             """.trimIndent()
 
             beforeEachTest {
-                body.readFrom(StringReader(input), outputStream, eventCallback)
+                body.readFrom(StringReader(input), outputSink, eventCallback)
             }
 
             it("posts build status messages as the build progresses") {
@@ -703,7 +701,7 @@ object BuildKitImageBuildResponseBodySpec : Spek({
 
             it("streams output showing the progression of the build") {
                 assertThat(
-                    output.toString(),
+                    outputSink.outputSoFar,
                     equalTo(
                         """
                         |#1 [internal] load metadata for gcr.io/distroless/java@sha256:28ec552405a92ed1a3767b81aaece5c48bd1b89dfb5f3c144b0e4cea4dd5ffa4
@@ -777,7 +775,7 @@ object BuildKitImageBuildResponseBodySpec : Spek({
             """.trimIndent()
 
             beforeEachTest {
-                body.readFrom(StringReader(input), outputStream, eventCallback)
+                body.readFrom(StringReader(input), outputSink, eventCallback)
             }
 
             it("posts build status messages as the build progresses") {
@@ -904,7 +902,7 @@ object BuildKitImageBuildResponseBodySpec : Spek({
 
             it("streams output showing the progression of the build") {
                 assertThat(
-                    output.toString(),
+                    outputSink.outputSoFar,
                     equalTo(
                         """
                         |#1 [internal] load metadata for gcr.io/distroless/static@sha256:d0f414c64bdb0ceebea651b14ad5be9a281a7a1d67751f9de419316390239b62
@@ -1017,12 +1015,12 @@ object BuildKitImageBuildResponseBodySpec : Spek({
             """.trimIndent()
 
             beforeEachTest {
-                body.readFrom(StringReader(input), outputStream, eventCallback)
+                body.readFrom(StringReader(input), outputSink, eventCallback)
             }
 
             it("streams output showing the progression of the build") {
                 assertThat(
-                    output.toString(),
+                    outputSink.outputSoFar,
                     equalTo(
                         """
                         |#1 [internal] load remote build context
@@ -1064,7 +1062,7 @@ object BuildKitImageBuildResponseBodySpec : Spek({
             given("a response with the malformed input $description") {
                 it("throws an appropriate exception") {
                     assertThat(
-                        { body.readFrom(StringReader(input), outputStream, eventCallback) },
+                        { body.readFrom(StringReader(input), outputSink, eventCallback) },
                         throws<ImageBuildFailedException>(withMessage("Received malformed response from Docker daemon during build: $description"))
                     )
                 }

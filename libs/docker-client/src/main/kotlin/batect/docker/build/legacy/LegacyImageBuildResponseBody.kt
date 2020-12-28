@@ -24,6 +24,7 @@ import batect.docker.build.BuildComplete
 import batect.docker.build.BuildError
 import batect.docker.build.BuildProgress
 import batect.docker.build.ImageBuildEventCallback
+import batect.docker.build.ImageBuildOutputSink
 import batect.docker.build.ImageBuildResponseBody
 import batect.docker.pull.ImagePullProgressReporter
 import kotlinx.serialization.SerializationException
@@ -34,8 +35,6 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.long
 import okio.BufferedSink
-import okio.Sink
-import okio.buffer
 import java.io.Reader
 
 class LegacyImageBuildResponseBody : ImageBuildResponseBody {
@@ -43,12 +42,15 @@ class LegacyImageBuildResponseBody : ImageBuildResponseBody {
     private var lastStepName: String? = null
     private var imagePullProgressReporter: ImagePullProgressReporter? = null
 
-    override fun readFrom(stream: Reader, outputStream: Sink, eventCallback: ImageBuildEventCallback) {
-        val outputBuffer = outputStream.buffer()
+    override fun readFrom(stream: Reader, outputSink: ImageBuildOutputSink, eventCallback: ImageBuildEventCallback) {
         lastStepIndex = null
         lastStepName = null
 
-        stream.forEachLine { line -> decodeLine(line, outputBuffer, eventCallback) }
+        stream.forEachLine { line ->
+            outputSink.use { outputBuffer ->
+                decodeLine(line, outputBuffer, eventCallback)
+            }
+        }
     }
 
     private fun decodeLine(line: String, outputBuffer: BufferedSink, eventCallback: ImageBuildEventCallback) {

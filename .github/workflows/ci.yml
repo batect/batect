@@ -391,6 +391,7 @@ jobs:
     name: "Publish release"
     needs:
       - validate-gradle-wrapper
+      - validate-generated-code
       - build-windows
       - build-linux
       - wrapper-test-linux

@@ -16,15 +16,18 @@
 
 import java.nio.file.FileSystems
 
+apply plugin: 'com.squareup.wire'
+
 def protosDir = project.buildDir.toPath().resolve("protos")
 def buildKitVersion = "v0.8.1"
-def protobufVersion = "3.14.0"
 
 def protos = [
     "github.com/moby/buildkit/api/services/control/control.proto": buildKitVersion,
-    "github.com/moby/buildkit/solver/pb/ops.proto"               : buildKitVersion,
     "github.com/moby/buildkit/api/types/worker.proto"            : buildKitVersion,
-    "github.com/gogo/protobuf/gogoproto/gogo.proto"              : "v1.3.1"
+    "github.com/moby/buildkit/session/auth/auth.proto"           : buildKitVersion,
+    "github.com/moby/buildkit/solver/pb/ops.proto"               : buildKitVersion,
+    "github.com/gogo/protobuf/gogoproto/gogo.proto"              : "v1.3.1",
+    "github.com/grpc/grpc-proto/grpc/health/v1/health.proto"     : "92099ce"
 ]
 
 task downloadProtos() {
@@ -61,27 +64,25 @@ task downloadProtos() {
     }
 }
 
-sourceSets {
-    main {
-        proto {
-            srcDir protosDir
-        }
-    }
+// The Wire plugin fails to initialise if the directory doesn't exist at configuration time.
+protosDir.toFile().mkdirs()
+
+wire.sourcePath {
+    srcDir protosDir.toString()
 }
 
-protobuf {
-    protoc {
-        artifact = "com.google.protobuf:protoc:$protobufVersion"
-    }
-}
+wire.root('moby.buildkit.v1.StatusResponse')
+wire.root('moby.filesync.v1.Auth')
+wire.root('grpc.health.v1.Health')
 
-dependencies {
-    protobuf "com.google.protobuf:protobuf-java:$protobufVersion"
-    implementation "com.google.protobuf:protobuf-java:$protobufVersion"
+wire.kotlin {
+    rpcCallStyle = 'blocking'
+    rpcRole = 'server'
+    out = 'src/generated/protos'
 }
 
 afterEvaluate {
-    tasks.named("generateProto").configure {
+    tasks.named("generateMainProtos").configure {
         dependsOn downloadProtos
     }
 }

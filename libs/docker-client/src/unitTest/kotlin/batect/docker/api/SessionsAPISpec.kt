@@ -18,7 +18,9 @@ package batect.docker.api
 
 import batect.docker.DockerException
 import batect.docker.DockerHttpConfig
-import batect.docker.build.BuildKitSession
+import batect.docker.build.buildkit.BuildKitSession
+import batect.docker.build.buildkit.GrpcListener
+import batect.docker.build.buildkit.services.ServiceWithEndpointMetadata
 import batect.docker.run.ConnectionHijacker
 import batect.os.SystemInfo
 import batect.testutils.createForEachTest
@@ -43,6 +45,8 @@ import okhttp3.Headers
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Response
+import okio.BufferedSink
+import okio.BufferedSource
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.net.Socket
@@ -72,8 +76,10 @@ object SessionsAPISpec : Spek({
         val errorResponse = """{"message": "Something went wrong.\nMore details on next line."}"""
         val errorMessageWithCorrectLineEndings = "Something went wrong.SYSTEM_LINE_SEPARATORMore details on next line."
 
-        describe("starting a session") {
+        describe("creating a session") {
             val socket by createForEachTest { mock<Socket>() }
+            val sink by createForEachTest { mock<BufferedSink>() }
+            val source by createForEachTest { mock<BufferedSource>() }
             val attachHttpClient by createForEachTest { mock<OkHttpClient>() }
 
             val clientBuilder by createForEachTest {
@@ -82,6 +88,8 @@ object SessionsAPISpec : Spek({
                     on { connectionPool(any()) } doReturn mock
                     on { addNetworkInterceptor(hijacker) } doAnswer {
                         whenever(hijacker.socket).doReturn(socket)
+                        whenever(hijacker.sink).doReturn(sink)
+                        whenever(hijacker.source).doReturn(source)
 
                         mock
                     }
@@ -93,27 +101,41 @@ object SessionsAPISpec : Spek({
                 whenever(httpClient.newBuilder()).doReturn(clientBuilder)
             }
 
-            val session = BuildKitSession("session-id-123", "build-id-123", "session-name-123", "session-shared-key-123")
+            val service by createForEachTest {
+                mock<ServiceWithEndpointMetadata>() {
+                    on { getEndpoints() } doReturn mapOf("/my.v1.Service/SomeMethod" to mock(), "/my.v1.Service/SomeOtherMethod" to mock())
+                }
+            }
+
+            val grpcListener by createForEachTest {
+                mock<GrpcListener>() {
+                    on { services } doReturn setOf(service)
+                }
+            }
+
+            val session by createForEachTest { BuildKitSession("session-id-123", "build-id-123", "session-name-123", "session-shared-key-123", grpcListener, mock()) }
             val expectedUrl = "$dockerBaseUrl/v1.37/session"
             val expectedHeaders = Headers.Builder()
                 .add("Connection", "Upgrade")
                 .add("Upgrade", "h2c")
-                .add("X-Docker-Expose-Session-Uuid", session.sessionId)
-                .add("X-Docker-Expose-Session-Name", session.name)
-                .add("X-Docker-Expose-Session-Sharedkey", session.sharedKey)
+                .add("X-Docker-Expose-Session-Uuid", "session-id-123")
+                .add("X-Docker-Expose-Session-Name", "session-name-123")
+                .add("X-Docker-Expose-Session-Sharedkey", "session-shared-key-123")
+                .add("X-Docker-Expose-Session-Grpc-Method", "/my.v1.Service/SomeMethod")
+                .add("X-Docker-Expose-Session-Grpc-Method", "/my.v1.Service/SomeOtherMethod")
                 .build()
 
-            given("starting the session succeeds") {
+            given("creating the session succeeds") {
                 val response = mock<Response> {
                     on { code } doReturn 101
                 }
 
                 beforeEachTest { attachHttpClient.mock("POST", expectedUrl, response, expectedHeaders) }
 
-                val streams by runForEachTest { api.start(session) }
+                val streams by runForEachTest { api.create(session) }
 
                 it("returns the stream from the underlying connection") {
-                    assertThat(streams, equalTo(SessionConnection(socket)))
+                    assertThat(streams, equalTo(SessionStreams(socket, source, sink)))
                 }
 
                 it("does not close the underlying connection") {
@@ -129,11 +151,11 @@ object SessionsAPISpec : Spek({
                 }
             }
 
-            given("starting the session fails") {
+            given("creating the session fails") {
                 beforeEachTest { attachHttpClient.mockPost(expectedUrl, errorResponse, 418, expectedHeaders) }
 
                 it("raises an appropriate exception") {
-                    assertThat({ api.start(session) }, throws<DockerException>(withMessage("Starting session failed: $errorMessageWithCorrectLineEndings")))
+                    assertThat({ api.create(session) }, throws<DockerException>(withMessage("Creating session failed: $errorMessageWithCorrectLineEndings")))
                 }
             }
         }

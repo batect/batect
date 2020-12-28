@@ -23,11 +23,15 @@ import batect.docker.api.ContainersAPI
 import batect.docker.api.ExecAPI
 import batect.docker.api.ImagesAPI
 import batect.docker.api.NetworksAPI
+import batect.docker.api.SessionsAPI
 import batect.docker.api.SystemInfoAPI
 import batect.docker.api.VolumesAPI
 import batect.docker.build.DockerIgnoreParser
 import batect.docker.build.DockerfileParser
 import batect.docker.build.ImageBuildContextFactory
+import batect.docker.build.buildkit.BuildKitSessionFactory
+import batect.docker.build.buildkit.services.AuthService
+import batect.docker.build.buildkit.services.HealthService
 import batect.docker.client.ContainersClient
 import batect.docker.client.DockerClient
 import batect.docker.client.ExecClient
@@ -41,6 +45,7 @@ import batect.docker.run.ContainerIOStreamer
 import batect.docker.run.ContainerTTYManager
 import batect.docker.run.ContainerWaiter
 import batect.logging.Logger
+import batect.logging.LoggerFactory
 import batect.os.ConsoleDimensions
 import batect.os.ConsoleInfo
 import batect.os.ConsoleManager
@@ -54,6 +59,8 @@ import batect.os.unix.UnixConsoleManager
 import batect.os.unix.UnixNativeMethods
 import batect.os.windows.WindowsConsoleManager
 import batect.os.windows.WindowsNativeMethods
+import com.nhaarman.mockitokotlin2.any
+import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import jnr.ffi.Platform
 import jnr.posix.POSIX
@@ -68,6 +75,10 @@ val testImagesDirectory: Path = Paths.get("src", "integrationTest", "resources",
 
 fun createClient(posix: POSIX = POSIXFactory.getNativePOSIX(), nativeMethods: NativeMethods = getNativeMethodsForPlatform(posix)): DockerClient {
     val logger = mock<Logger>()
+    val loggerFactory = mock<LoggerFactory> {
+        on { createLoggerForClass(any()) } doReturn logger
+    }
+
     val processRunner = ProcessRunner(logger)
     val systemInfo = SystemInfo(nativeMethods, FileSystems.getDefault(), OS.getOs())
     val dockerHost = getDockerHost(systemInfo)
@@ -77,6 +88,7 @@ fun createClient(posix: POSIX = POSIXFactory.getNativePOSIX(), nativeMethods: Na
     val execAPI = ExecAPI(httpConfig, systemInfo, logger)
     val imagesAPI = ImagesAPI(httpConfig, systemInfo, logger)
     val networksAPI = NetworksAPI(httpConfig, systemInfo, logger)
+    val sessionsAPI = SessionsAPI(httpConfig, systemInfo, logger)
     val systemInfoAPI = SystemInfoAPI(httpConfig, systemInfo, logger)
     val volumesAPI = VolumesAPI(httpConfig, systemInfo, logger)
     val consoleInfo = ConsoleInfo(nativeMethods, systemInfo, HostEnvironmentVariables.current, logger)
@@ -91,10 +103,12 @@ fun createClient(posix: POSIX = POSIXFactory.getNativePOSIX(), nativeMethods: Na
     val signalListener = SignalListener(posix)
     val consoleDimensions = ConsoleDimensions(nativeMethods, signalListener, logger)
     val ttyManager = ContainerTTYManager(containersAPI, consoleDimensions, logger)
+    val authService = AuthService(credentialsProvider, logger)
+    val buildKitSessionFactory = BuildKitSessionFactory(systemInfo, HealthService(), authService, mock(), loggerFactory)
 
     val containersClient = ContainersClient(containersAPI, consoleManager, waiter, streamer, ttyManager, logger)
     val execClient = ExecClient(execAPI, streamer, logger)
-    val imagesClient = ImagesClient(imagesAPI, credentialsProvider, imageBuildContextFactory, dockerfileParser, logger)
+    val imagesClient = ImagesClient(imagesAPI, sessionsAPI, credentialsProvider, imageBuildContextFactory, dockerfileParser, buildKitSessionFactory, logger)
     val networksClient = NetworksClient(networksAPI)
     val systemInfoClient = SystemInfoClient(systemInfoAPI, mock(), logger)
     val volumesClient = VolumesClient(volumesAPI)

@@ -14,17 +14,51 @@
    limitations under the License.
 */
 
-package batect.docker.build
+package batect.docker.build.buildkit
 
+import batect.docker.build.buildkit.services.AuthService
+import batect.docker.build.buildkit.services.HealthService
+import batect.logging.LoggerFactory
 import batect.os.SystemInfo
+import batect.telemetry.TelemetrySessionBuilder
 import okio.Buffer
 import java.nio.file.Files
 import java.nio.file.Path
 import java.security.SecureRandom
 
-class BuildKitSessionFactory(private val systemInfo: SystemInfo) {
+class BuildKitSessionFactory(
+    private val systemInfo: SystemInfo,
+    private val healthService: HealthService,
+    private val authService: AuthService,
+    private val telemetrySessionBuilder: TelemetrySessionBuilder,
+    private val loggerFactory: LoggerFactory
+) {
     private val random = SecureRandom()
     private val nodeId by lazy { getOrCreateNodeID() }
+
+    fun create(buildDirectory: Path): BuildKitSession {
+        val sessionId = generateBase36Id(25)
+        val services = setOf(healthService, authService)
+        val listenerLogger = loggerFactory.createLoggerForClass(GrpcListener::class)
+        val listener = GrpcListener(sessionId, services, listenerLogger)
+
+        return BuildKitSession(
+            sessionId,
+            guaranteeNonNumeric { generateHexId(64) },
+            buildDirectory.fileName.toString(),
+            generateSharedKey(buildDirectory),
+            listener,
+            telemetrySessionBuilder
+        )
+    }
+
+    private fun generateSharedKey(buildDirectory: Path): String {
+        val buffer = Buffer()
+        buffer.writeUtf8(nodeId)
+        buffer.writeUtf8(":")
+        buffer.writeUtf8(buildDirectory.toString())
+        return buffer.sha256().hex()
+    }
 
     private fun getOrCreateNodeID(): String {
         val dockerDirectory = systemInfo.homeDirectory.resolve(".docker")
@@ -38,23 +72,6 @@ class BuildKitSessionFactory(private val systemInfo: SystemInfo) {
         }
 
         return Files.readAllBytes(buildNodeFilePath).toString(Charsets.UTF_8)
-    }
-
-    fun create(buildDirectory: Path): BuildKitSession {
-        return BuildKitSession(
-            generateBase36Id(25),
-            guaranteeNonNumeric { generateHexId(64) },
-            buildDirectory.fileName.toString(),
-            generateSharedKey(buildDirectory)
-        )
-    }
-
-    private fun generateSharedKey(buildDirectory: Path): String {
-        val buffer = Buffer()
-        buffer.writeUtf8(nodeId)
-        buffer.writeUtf8(":")
-        buffer.writeUtf8(buildDirectory.toString())
-        return buffer.sha256().hex()
     }
 
     private val base36: List<Char> = ('a'..'z') + ('0'..'9')

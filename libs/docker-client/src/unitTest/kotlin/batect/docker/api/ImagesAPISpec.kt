@@ -34,6 +34,7 @@ import batect.docker.build.ImageBuildEvent
 import batect.docker.build.ImageBuildEventCallback
 import batect.docker.build.ImageBuildResponseBody
 import batect.docker.build.LegacyBuilderConfig
+import batect.docker.build.buildkit.BuildKitSession
 import batect.docker.pull.RegistryCredentials
 import batect.docker.pull.TokenRegistryCredentials
 import batect.os.SystemInfo
@@ -150,15 +151,15 @@ object ImagesAPISpec : Spek({
             val successOutput = "This is some output from the build process."
 
             given("the build succeeds") {
+                beforeEachTest {
+                    buildResponseBody.outputToStream = successOutput
+                    buildResponseBody.eventsToPost = successEvents
+                }
+
                 given("the legacy builder is requested") {
                     val call by createForEachTest { clientWithLongTimeout.mock("POST", expectedLegacyBuilderUrl, daemonBuildResponse, 200, expectedHeadersForLegacyAuthentication) }
                     val output by createForEachTest { ByteArrayOutputStream() }
                     val eventsReceiver by createForEachTest { BuildEventsReceiver() }
-
-                    beforeEachTest {
-                        buildResponseBody.outputToStream = successOutput
-                        buildResponseBody.eventsToPost = successEvents
-                    }
 
                     val image by runForEachTest {
                         api.build(context, buildArgs, dockerfilePath, imageTags, pullImage, output.sink(), LegacyBuilderConfig(registryCredentials), cancellationContext, eventsReceiver::onProgressUpdate)
@@ -198,11 +199,24 @@ object ImagesAPISpec : Spek({
                 }
 
                 given("BuildKit is requested") {
-                    val expectedBuildKitUrl = expectedUrl and hasQueryParameter("version", "2")
+                    val session = BuildKitSession(
+                        "session-123",
+                        "build-123",
+                        "name-123",
+                        "key-123",
+                        mock(),
+                        mock()
+                    )
+
+                    val expectedBuildKitUrl = expectedUrl and hasQueryParameter("version", "2") and
+                        hasQueryParameter("session", session.sessionId) and
+                        hasQueryParameter("buildid", session.buildId)
+
                     val expectedBuildKitHeaders = Headers.Builder().build()
+
                     val call by createForEachTest { clientWithLongTimeout.mock("POST", expectedBuildKitUrl, daemonBuildResponse, 200, expectedBuildKitHeaders) }
 
-                    runForEachTest { api.build(context, buildArgs, dockerfilePath, imageTags, pullImage, null, BuildKitConfig, cancellationContext, {}) }
+                    runForEachTest { api.build(context, buildArgs, dockerfilePath, imageTags, pullImage, null, BuildKitConfig(session), cancellationContext, {}) }
 
                     it("sends a request to the Docker daemon to build the image with the expected URL") {
                         verify(call).execute()

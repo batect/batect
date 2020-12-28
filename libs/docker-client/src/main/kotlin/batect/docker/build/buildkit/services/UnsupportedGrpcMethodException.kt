@@ -14,14 +14,6 @@
    limitations under the License.
 */
 
-package batect.docker.build
+package batect.docker.build.buildkit.services
 
-import kotlinx.serialization.Serializable
-
-@Serializable
-data class BuildKitSession(
-    val sessionId: String,
-    val buildId: String,
-    val name: String,
-    val sharedKey: String
-)
+class UnsupportedGrpcMethodException(val method: String) : RuntimeException("$method is not supported.")

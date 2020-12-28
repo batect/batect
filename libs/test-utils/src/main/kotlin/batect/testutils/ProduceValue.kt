@@ -20,7 +20,7 @@ import org.spekframework.spek2.dsl.LifecycleAware
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
 
-private fun <T : Any> LifecycleAware.produceNonNullValueForEachTest(description: String, scope: ValueScope, creator: () -> T): ReadOnlyProperty<Any?, T> {
+private fun <T : Any> LifecycleAware.produceNonNullValueForEachTest(description: String, scope: ValueScope, creator: () -> T, throwImmediately: Boolean = false): ReadOnlyProperty<Any?, T> {
     val property = object : ReadOnlyProperty<Any?, T> {
         private var value: T? = null
         private var exceptionThrown: Throwable? = null
@@ -32,6 +32,10 @@ private fun <T : Any> LifecycleAware.produceNonNullValueForEachTest(description:
             } catch (t: Throwable) {
                 value = null
                 exceptionThrown = t
+
+                if (throwImmediately) {
+                    throw t
+                }
             }
         }
 
@@ -61,7 +65,7 @@ private fun <T : Any> LifecycleAware.produceNonNullValueForEachTest(description:
 }
 
 // FIXME: Ideally we would combine this with the function above but I can't find a way to make it null-safe in both cases.
-private fun <T : Any?> LifecycleAware.produceNullableValueForEachTest(description: String, scope: ValueScope, creator: () -> T?): ReadOnlyProperty<Any?, T?> {
+private fun <T : Any?> LifecycleAware.produceNullableValueForEachTest(description: String, scope: ValueScope, creator: () -> T?, throwImmediately: Boolean = false): ReadOnlyProperty<Any?, T?> {
     val property = object : ReadOnlyProperty<Any?, T?> {
         private var valueInitialised = false
         private var value: T? = null
@@ -76,6 +80,10 @@ private fun <T : Any?> LifecycleAware.produceNullableValueForEachTest(descriptio
                 value = null
                 valueInitialised = false
                 exceptionThrown = t
+
+                if (throwImmediately) {
+                    throw t
+                }
             }
         }
 
@@ -110,8 +118,8 @@ private enum class ValueScope(val beforeEachFunctionName: String) {
 }
 
 fun <T : Any> LifecycleAware.createForEachTest(creator: () -> T): ReadOnlyProperty<Any?, T> = produceNonNullValueForEachTest("createForEachTest", ValueScope.EachTest, creator)
-fun <T : Any> LifecycleAware.runForEachTest(creator: () -> T): ReadOnlyProperty<Any?, T> = produceNonNullValueForEachTest("runForEachTest", ValueScope.EachTest, creator)
-fun <T : Any?> LifecycleAware.runNullableForEachTest(creator: () -> T?): ReadOnlyProperty<Any?, T?> = produceNullableValueForEachTest("runNullableForEachTest", ValueScope.EachTest, creator)
+fun <T : Any> LifecycleAware.runForEachTest(creator: () -> T): ReadOnlyProperty<Any?, T> = produceNonNullValueForEachTest("runForEachTest", ValueScope.EachTest, creator, true)
+fun <T : Any?> LifecycleAware.runNullableForEachTest(creator: () -> T?): ReadOnlyProperty<Any?, T?> = produceNullableValueForEachTest("runNullableForEachTest", ValueScope.EachTest, creator, true)
 
 fun <T : Any> LifecycleAware.createForGroup(creator: () -> T): ReadOnlyProperty<Any?, T> = produceNonNullValueForEachTest("createForGroup", ValueScope.Group, creator)
-fun <T : Any> LifecycleAware.runBeforeGroup(creator: () -> T): ReadOnlyProperty<Any?, T> = produceNonNullValueForEachTest("runBeforeGroup", ValueScope.Group, creator)
+fun <T : Any> LifecycleAware.runBeforeGroup(creator: () -> T): ReadOnlyProperty<Any?, T> = produceNonNullValueForEachTest("runBeforeGroup", ValueScope.Group, creator, true)

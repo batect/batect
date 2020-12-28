@@ -19,8 +19,8 @@ install:
 build_script:
   - ps: ./ci/Enable-LinuxContainers.ps1
   - docker version
-  - ./gradlew :libs:docker-client:integrationTest
-  - ./gradlew journeyTest
+  - ./gradlew :libs:docker-client:integrationTest --exclude-task=generateMainProtos # This is temporarily disabled on Windows due to https://github.com/square/wire/issues/1325
+  - ./gradlew journeyTest --exclude-task=generateMainProtos # This is temporarily disabled on Windows due to https://github.com/square/wire/issues/1325
 
 after_test:
   - ./gradlew --stop

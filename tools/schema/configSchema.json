@@ -144,6 +144,11 @@
             "Always",
             "IfNotPresent"
           ]
+        },
+        "shm_size": {
+
+          "type": "string",
+          "pattern": "^\\d+\\s*[mkg]?b?$"
         }
       },
       "oneOf": [

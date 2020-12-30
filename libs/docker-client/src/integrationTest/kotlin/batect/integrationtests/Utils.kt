@@ -59,7 +59,8 @@ fun creationRequestForContainer(
         useTTY = useTTY,
         attachStdin = true,
         logDriver = "json-file",
-        logOptions = emptyMap()
+        logOptions = emptyMap(),
+        null
     )
 }
 

@@ -144,7 +144,8 @@ object ConfigurationSpec : Spek({
                     mapOf("some-host" to "1.2.3.4"),
                     listOf(SetupCommand(Command.parse("some-command"), "/some/dir")),
                     "the-log-driver",
-                    mapOf("option-1" to "value-1")
+                    mapOf("option-1" to "value-1"),
+                    BinarySize.of(2, BinaryUnit.Megabyte)
                 )
 
                 val configuration = Configuration("the-project", TaskMap(), ContainerMap(container))
@@ -213,7 +214,8 @@ object ConfigurationSpec : Spek({
                                         ],
                                         "log_driver": "the-log-driver",
                                         "log_options": { "option-1": "value-1" },
-                                        "image_pull_policy": "Always"
+                                        "image_pull_policy": "Always",
+                                        "shm_size": 2097152
                                     }
                                 },
                                 "config_variables": {}
@@ -284,7 +286,8 @@ object ConfigurationSpec : Spek({
                                         "setup_commands": [],
                                         "log_driver": "json-file",
                                         "log_options": {},
-                                        "image_pull_policy": "IfNotPresent"
+                                        "image_pull_policy": "IfNotPresent",
+                                        "shm_size": null
                                     }
                                 },
                                 "config_variables": {}

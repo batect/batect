@@ -17,6 +17,8 @@
 package batect.docker
 
 import batect.cli.CommandLineOptions
+import batect.config.BinarySize
+import batect.config.BinaryUnit
 import batect.config.Container
 import batect.config.DeviceMount
 import batect.config.HealthCheckConfig
@@ -83,7 +85,8 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                     additionalHostnames = setOf("some-alias"),
                     additionalHosts = mapOf("does.not.exist" to "1.2.3.4"),
                     logDriver = "the-log-driver",
-                    logOptions = mapOf("option-1" to "value-1")
+                    logOptions = mapOf("option-1" to "value-1"),
+                    shmSize = BinarySize.of(2, BinaryUnit.Megabyte)
                 )
 
                 val userAndGroup = UserAndGroup(123, 456)
@@ -190,6 +193,10 @@ object DockerContainerCreationRequestFactorySpec : Spek({
 
                 it("populates the log options with the value from the container") {
                     assertThat(request.logOptions, equalTo(container.logOptions))
+                }
+
+                it("populates the shm size with the value from the container") {
+                    assertThat(request.shmSize, equalTo(container.shmSize!!.bytes))
                 }
             }
         }

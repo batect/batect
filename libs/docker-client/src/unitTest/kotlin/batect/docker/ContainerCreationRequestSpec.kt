@@ -57,7 +57,8 @@ object ContainerCreationRequestSpec : Spek({
                 useTTY = true,
                 attachStdin = false,
                 logDriver = "some-log-driver",
-                logOptions = mapOf("option-1" to "value-1")
+                logOptions = mapOf("option-1" to "value-1"),
+                shmSize = 123
             )
 
             on("converting it to JSON for submission to the Docker API") {
@@ -127,7 +128,8 @@ object ContainerCreationRequestSpec : Spek({
                             |       "CapAdd": ["NET_ADMIN", "KILL"],
                             |       "CapDrop": ["AUDIT_READ", "CHOWN"],
                             |       "LogConfig": { "Type": "some-log-driver", "Config": { "option-1": "value-1" } },
-                            |       "ExtraHosts": [ "does.not.exist.com:1.2.3.4", "other.com:5.6.7.8" ]
+                            |       "ExtraHosts": [ "does.not.exist.com:1.2.3.4", "other.com:5.6.7.8" ],
+                            |       "ShmSize": 123
                             |   },
                             |   "Healthcheck": {
                             |       "Test": ["CMD-SHELL", "exit 0"],
@@ -223,7 +225,8 @@ object ContainerCreationRequestSpec : Spek({
                             |  "useTTY": true,
                             |  "attachStdin": false,
                             |  "logDriver": "some-log-driver",
-                            |  "logOptions": { "option-1": "value-1" }
+                            |  "logOptions": { "option-1": "value-1" },
+                            |  "shmSize": 123
                             |}
                             """.trimMargin()
                         )
@@ -256,7 +259,8 @@ object ContainerCreationRequestSpec : Spek({
                 useTTY = false,
                 attachStdin = false,
                 logDriver = "json-file",
-                logOptions = emptyMap()
+                logOptions = emptyMap(),
+                shmSize = null
             )
 
             on("converting it to JSON for submission to the Docker API") {
@@ -354,5 +358,6 @@ private fun createRequestWithHostname(hostname: String): ContainerCreationReques
         false,
         false,
         "json-file",
-        emptyMap()
+        emptyMap(),
+        null
     )

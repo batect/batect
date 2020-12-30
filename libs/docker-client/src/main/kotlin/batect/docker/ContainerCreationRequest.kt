@@ -47,7 +47,8 @@ data class ContainerCreationRequest(
     val useTTY: Boolean,
     val attachStdin: Boolean,
     val logDriver: String,
-    val logOptions: Map<String, String>
+    val logOptions: Map<String, String>,
+    val shmSize: Long?
 ) {
     init {
         if (hostname.length > maximumHostNameLength) {
@@ -98,6 +99,10 @@ data class ContainerCreationRequest(
                     put("Config", logOptions.toJsonObject())
                 }
                 put("ExtraHosts", formatExtraHosts())
+
+                if (shmSize != null) {
+                    put("ShmSize", shmSize)
+                }
             }
 
             putJsonObject("Healthcheck") {

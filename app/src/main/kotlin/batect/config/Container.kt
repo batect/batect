@@ -63,7 +63,8 @@ data class Container(
     val additionalHosts: Map<String, String> = emptyMap(),
     val setupCommands: List<SetupCommand> = emptyList(),
     val logDriver: String = defaultLogDriver,
-    val logOptions: Map<String, String> = emptyMap()
+    val logOptions: Map<String, String> = emptyMap(),
+    val shmSize: BinarySize? = null
 ) {
     @OptIn(ExperimentalSerializationApi::class)
     companion object : KSerializer<Container> {
@@ -93,6 +94,7 @@ data class Container(
         private const val logDriverFieldName = "log_driver"
         private const val logOptionsFieldName = "log_options"
         private const val imagePullPolicyFieldName = "image_pull_policy"
+        private const val shmSizeFieldName = "shm_size"
 
         override val descriptor: SerialDescriptor = buildClassSerialDescriptor("Container") {
             element(buildDirectoryFieldName, String.serializer().descriptor, isOptional = true)
@@ -119,6 +121,7 @@ data class Container(
             element(logDriverFieldName, String.serializer().descriptor, isOptional = true)
             element(logOptionsFieldName, MapSerializer(String.serializer(), String.serializer()).descriptor, isOptional = true)
             element(imagePullPolicyFieldName, ImagePullPolicy.serializer().descriptor, isOptional = true)
+            element(shmSizeFieldName, BinarySize.serializer().descriptor, isOptional = true)
         }
 
         private val buildDirectoryFieldIndex = descriptor.getElementIndex(buildDirectoryFieldName)
@@ -145,6 +148,7 @@ data class Container(
         private val logDriverFieldIndex = descriptor.getElementIndex(logDriverFieldName)
         private val logOptionsFieldIndex = descriptor.getElementIndex(logOptionsFieldName)
         private val imagePullPolicyFieldIndex = descriptor.getElementIndex(imagePullPolicyFieldName)
+        private val shmSizeFieldIndex = descriptor.getElementIndex(shmSizeFieldName)
 
         override fun deserialize(decoder: Decoder): Container {
             val input = decoder.beginStructure(descriptor) as YamlInput
@@ -177,6 +181,7 @@ data class Container(
             var logDriver = defaultLogDriver
             var logOptions = emptyMap<String, String>()
             var imagePullPolicy = ImagePullPolicy.IfNotPresent
+            var shmSize: BinarySize? = null
 
             loop@ while (true) {
                 when (val i = input.decodeElementIndex(descriptor)) {
@@ -205,6 +210,7 @@ data class Container(
                     logDriverFieldIndex -> logDriver = input.decodeStringElement(descriptor, i)
                     logOptionsFieldIndex -> logOptions = input.decodeSerializableElement(descriptor, i, MapSerializer(String.serializer(), String.serializer()))
                     imagePullPolicyFieldIndex -> imagePullPolicy = input.decodeSerializableElement(descriptor, i, ImagePullPolicy.serializer())
+                    shmSizeFieldIndex -> shmSize = input.decodeSerializableElement(descriptor, i, BinarySize.serializer())
 
                     else -> throw SerializationException("Unknown index $i")
                 }
@@ -231,7 +237,8 @@ data class Container(
                 additionalHosts,
                 setupCommands,
                 logDriver,
-                logOptions
+                logOptions,
+                shmSize
             )
         }
 
@@ -303,6 +310,7 @@ data class Container(
             output.encodeSerializableElement(descriptor, setupCommandsFieldIndex, ListSerializer(SetupCommand.serializer()), value.setupCommands)
             output.encodeStringElement(descriptor, logDriverFieldIndex, value.logDriver)
             output.encodeSerializableElement(descriptor, logOptionsFieldIndex, MapSerializer(String.serializer(), String.serializer()), value.logOptions)
+            output.encodeSerializableElement(descriptor, shmSizeFieldIndex, BinarySize.serializer().nullable, value.shmSize)
 
             output.endStructure(descriptor)
         }

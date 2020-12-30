@@ -65,7 +65,8 @@ class DockerContainerCreationRequestFactory(
             useTTY,
             attachStdin,
             container.logDriver,
-            container.logOptions
+            container.logOptions,
+            container.shmSize?.bytes
         )
     }
 }

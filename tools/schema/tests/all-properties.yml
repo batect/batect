@@ -150,6 +150,7 @@ containers:
     log_options:
       option-1: value-1
     image_pull_policy: Always
+    shm_size: 123b
 
   with-build-dir:
     build_directory: test

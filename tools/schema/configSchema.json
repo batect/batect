@@ -146,7 +146,7 @@
           ]
         },
         "shm_size": {
-
+          "description": "Size of /dev/shm (shared memory for IPC) for the container",
           "type": "string",
           "pattern": "^\\d+\\s*[mkg]?b?$"
         }

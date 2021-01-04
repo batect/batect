@@ -18,14 +18,14 @@ sourceSets {
     completionTest {}
 }
 
-def testEnvironmentImageName = "batect-completion-fish-test-env"
-def fishDir = project.file("src/completionTest/fish").absolutePath
+def testEnvironmentImageName = "batect-completion-test-env"
+def completionTestDir = project.file("src/completionTest").absolutePath
 
-tasks.register("buildFishCompletionTestEnvironmentImage", Exec) {
+tasks.register("buildCompletionTestEnvironmentImage", Exec) {
     description "Build the Docker image used as a test environment."
     group "Verification"
 
-    def imageDirectory = project.file "$fishDir/env"
+    def imageDirectory = project.file "$completionTestDir/env"
     inputs.dir imageDirectory
 
     standardOutput = new ByteArrayOutputStream()
@@ -45,21 +45,21 @@ tasks.register("buildFishCompletionTestEnvironmentImage", Exec) {
     }
 }
 
-tasks.register("testFishCompletion", Exec) {
-    description "Runs the tests for the Fish shell tab completion."
+tasks.register("completionTest", Exec) {
+    description "Runs shell tab completion tests."
     group "Verification"
 
     def upToDateFile = getTemporaryDir().toPath().resolve("lastRun")
 
-    inputs.files fileTree(dir: "$fishDir", include: "**/*")
+    inputs.files fileTree(dir: "$completionTestDir", include: "**/*")
     inputs.files installShadowDist
     outputs.file upToDateFile
 
-    dependsOn buildFishCompletionTestEnvironmentImage
+    dependsOn buildCompletionTestEnvironmentImage
     dependsOn installShadowDist
 
     commandLine "docker", "run", "--rm", "-t",
-        "-v", "$fishDir/tests:/tests",
+        "-v", "$completionTestDir/tests:/tests",
         "-v", "$buildDir/install/app-shadow:/app",
         "-w", "/tests",
         "-e", "BATECT_ENABLE_TELEMETRY=false",
@@ -69,8 +69,4 @@ tasks.register("testFishCompletion", Exec) {
         // Based on https://stackoverflow.com/questions/1406473/simulate-touch-command-with-java
         upToDateFile.text = System.currentTimeMillis()
     }
-}
-
-tasks.register("completionTest") {
-    dependsOn testFishCompletion
 }

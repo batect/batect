@@ -19,7 +19,8 @@ RUN curl --location --fail --show-error https://raw.githubusercontent.com/batect
     -o /root/.zshrc
 
 RUN curl --location --fail --show-error https://raw.githubusercontent.com/batect/zsh-completion/$ZSH_COMPLETION_COMMIT_SHA/.batect/test-env/complete.zsh \
-    -o /usr/local/bin/complete.zsh
+      -o /usr/local/bin/complete.zsh && \
+    chmod +x /usr/local/bin/complete.zsh
 
 RUN curl --location --fail --show-error https://raw.githubusercontent.com/batect/zsh-completion/$ZSH_COMPLETION_COMMIT_SHA/completions/_batect \
     -o /usr/share/zsh/site-functions/_batect

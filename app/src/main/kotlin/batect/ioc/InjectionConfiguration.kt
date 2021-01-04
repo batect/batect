@@ -30,6 +30,7 @@ import batect.cli.commands.RunTaskCommand
 import batect.cli.commands.UpgradeCommand
 import batect.cli.commands.VersionInfoCommand
 import batect.cli.commands.completion.FishShellTabCompletionLineGenerator
+import batect.cli.commands.completion.FishShellTabCompletionScriptGenerator
 import batect.cli.commands.completion.GenerateShellTabCompletionScriptCommand
 import batect.cli.commands.completion.GenerateShellTabCompletionTaskInformationCommand
 import batect.config.ProjectPaths
@@ -150,15 +151,15 @@ val rootModule = DI.Module("root") {
 }
 
 private val cliModule = DI.Module("cli") {
-    bind<CommandFactory>() with singleton { CommandFactory() }
-
     bind<BackgroundTaskManager>() with singleton { BackgroundTaskManager(instance(), instance(), instance()) }
     bind<CleanupCachesCommand>() with singleton { CleanupCachesCommand(instance(), instance(), instance(), instance(StreamType.Output)) }
+    bind<CommandFactory>() with singleton { CommandFactory() }
     bind<DisableTelemetryCommand>() with singleton { DisableTelemetryCommand(instance(), instance(), instance(StreamType.Output)) }
     bind<DockerConnectivity>() with singleton { DockerConnectivity(instance(), instance(), instance(StreamType.Error), instance()) }
     bind<EnableTelemetryCommand>() with singleton { EnableTelemetryCommand(instance(), instance(StreamType.Output)) }
     bind<GenerateShellTabCompletionScriptCommand>() with singleton { GenerateShellTabCompletionScriptCommand(instance(), instance(), instance(), instance(StreamType.Output), instance(), instance()) }
     bind<GenerateShellTabCompletionTaskInformationCommand>() with singleton { GenerateShellTabCompletionTaskInformationCommand(instance(), instance(StreamType.Output), instance(), instance(), instance()) }
+    bind<FishShellTabCompletionScriptGenerator>() with singleton { FishShellTabCompletionScriptGenerator(instance()) }
     bind<FishShellTabCompletionLineGenerator>() with singleton { FishShellTabCompletionLineGenerator() }
     bind<HelpCommand>() with singleton { HelpCommand(instance(), instance(StreamType.Output), instance()) }
     bind<ListTasksCommand>() with singleton { ListTasksCommand(instance(), instance(), instance(StreamType.Output)) }

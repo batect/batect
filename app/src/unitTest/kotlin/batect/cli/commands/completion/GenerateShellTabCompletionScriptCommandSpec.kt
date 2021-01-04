@@ -68,6 +68,7 @@ object GenerateShellTabCompletionScriptCommandSpec : Spek({
             }
         }
 
+        val fishGenerator by createForEachTest { FishShellTabCompletionScriptGenerator(lineGenerator) }
         val telemetrySessionBuilder by createForEachTest { mock<TelemetrySessionBuilder>() }
 
         given("the 'BATECT_COMPLETION_PROXY_REGISTER_AS' environment variable is set") {
@@ -78,7 +79,7 @@ object GenerateShellTabCompletionScriptCommandSpec : Spek({
                 )
             }
 
-            val command by createForEachTest { GenerateShellTabCompletionScriptCommand(commandLineOptions, commandLineOptionsParser, lineGenerator, PrintStream(outputStream), environmentVariables, telemetrySessionBuilder) }
+            val command by createForEachTest { GenerateShellTabCompletionScriptCommand(commandLineOptions, commandLineOptionsParser, fishGenerator, PrintStream(outputStream), environmentVariables, telemetrySessionBuilder) }
             val exitCode by runForEachTest { command.run() }
 
             it("returns a zero exit code") {
@@ -106,7 +107,7 @@ object GenerateShellTabCompletionScriptCommandSpec : Spek({
 
         given("the 'BATECT_COMPLETION_PROXY_REGISTER_AS' environment variable is not set") {
             val environmentVariables by createForEachTest { HostEnvironmentVariables() }
-            val command by createForEachTest { GenerateShellTabCompletionScriptCommand(commandLineOptions, commandLineOptionsParser, lineGenerator, PrintStream(outputStream), environmentVariables, telemetrySessionBuilder) }
+            val command by createForEachTest { GenerateShellTabCompletionScriptCommand(commandLineOptions, commandLineOptionsParser, fishGenerator, PrintStream(outputStream), environmentVariables, telemetrySessionBuilder) }
 
             it("throws an appropriate exception") {
                 assertThat({ command.run() }, throws(withMessage("'BATECT_COMPLETION_PROXY_REGISTER_AS' environment variable not set.")))

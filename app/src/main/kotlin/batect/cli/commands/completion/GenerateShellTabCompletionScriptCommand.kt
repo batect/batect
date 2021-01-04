@@ -20,25 +20,21 @@ import batect.cli.CommandLineOptions
 import batect.cli.CommandLineOptionsParser
 import batect.cli.commands.Command
 import batect.os.HostEnvironmentVariables
+import batect.primitives.filterToSet
 import batect.telemetry.AttributeValue
 import batect.telemetry.TelemetrySessionBuilder
-import java.io.InputStreamReader
 import java.io.PrintStream
 
 // This class is tested primarily by the tests in the app/src/completionTest directory.
 class GenerateShellTabCompletionScriptCommand(
     private val commandLineOptions: CommandLineOptions,
     private val optionsParser: CommandLineOptionsParser,
-    private val fishLineGenerator: FishShellTabCompletionLineGenerator,
+    private val fishGenerator: FishShellTabCompletionScriptGenerator,
     private val outputStream: PrintStream,
     private val environmentVariables: HostEnvironmentVariables,
     private val telemetrySessionBuilder: TelemetrySessionBuilder
 ) : Command {
     override fun run(): Int {
-        if (commandLineOptions.generateShellTabCompletionScript != KnownShell.Fish) {
-            throw IllegalArgumentException("Can only generate completions for Fish.")
-        }
-
         addTelemetryEvent()
         emitCompletionScript()
 
@@ -49,37 +45,29 @@ class GenerateShellTabCompletionScriptCommand(
         telemetrySessionBuilder.addEvent(
             "GeneratedShellTabCompletionScript",
             mapOf(
-                "shell" to AttributeValue(commandLineOptions.generateShellTabCompletionScript.toString()),
+                "shell" to AttributeValue(commandLineOptions.generateShellTabCompletionScript?.toString()),
                 "proxyCompletionScriptVersion" to AttributeValue(environmentVariables["BATECT_COMPLETION_PROXY_VERSION"])
             )
         )
     }
 
     private fun emitCompletionScript() {
-        val registerAs = environmentVariables["BATECT_COMPLETION_PROXY_REGISTER_AS"] ?: throw IllegalArgumentException("'BATECT_COMPLETION_PROXY_REGISTER_AS' environment variable not set.")
+        val generator = getGeneratorForShell()
+        val script = generator.generate(findOptionsToInclude(), getRegisterAs())
 
-        emitTaskNameHandler(registerAs)
-        emitOptions(registerAs)
-
+        outputStream.print(script)
         outputStream.flush()
     }
 
-    private fun emitTaskNameHandler(registerAs: String) {
-        val classLoader = javaClass.classLoader
-        classLoader.getResourceAsStream("batect/completion.fish").use { stream ->
-            InputStreamReader(stream!!, Charsets.UTF_8).use {
-                outputStream.print(it.readText().replace("PLACEHOLDER_REGISTER_AS", registerAs))
-            }
-        }
-    }
+    private fun findOptionsToInclude() = optionsParser.optionParser.getOptions()
+        .filterToSet { it.showInHelp }
 
-    private fun emitOptions(registerAs: String) {
-        optionsParser.optionParser.getOptions()
-            .filter { it.showInHelp }
-            .forEach { outputStream.println(fishLineGenerator.generate(it, registerAs)) }
-    }
-}
+    private fun getRegisterAs() =
+        environmentVariables["BATECT_COMPLETION_PROXY_REGISTER_AS"]
+            ?: throw IllegalArgumentException("'BATECT_COMPLETION_PROXY_REGISTER_AS' environment variable not set.")
 
-enum class KnownShell {
-    Fish
+    private fun getGeneratorForShell(): ShellTabCompletionScriptGenerator = when (commandLineOptions.generateShellTabCompletionScript) {
+        KnownShell.Fish -> fishGenerator
+        else -> throw IllegalArgumentException("Can only generate completions for Fish.")
+    }
 }

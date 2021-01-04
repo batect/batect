@@ -7,12 +7,10 @@ import tempfile
 import unittest
 import uuid
 
+from abc import ABC
 
-class FishCompletionTests(unittest.TestCase):
-    def __init__(self, methodName):
-        super().__init__(methodName)
-        self.maxDiff = None
 
+class CompletionTestBase(ABC):
     def setUp(self):
         cache_directory = os.path.expanduser(os.path.join("~", ".batect"))
 
@@ -117,9 +115,9 @@ class FishCompletionTests(unittest.TestCase):
         self.assertEqual(batect_results, system_results)
 
     def test_completion_twice_no_modifications(self):
-        output = self.run_two_fish_commands(
-            'complete -C"/app/bin/batect tas"',
-            'complete -C"/app/bin/batect tas"',
+        output = self.run_two_commands(
+            self.completion_command_for("/app/bin/batect tas"),
+            self.completion_command_for("/app/bin/batect tas"),
             self.directory_for_test_case("simple-config"),
         )
 
@@ -132,9 +130,9 @@ class FishCompletionTests(unittest.TestCase):
         test_config_file = os.path.join(test_directory, "batect.yml")
         shutil.copy(os.path.join(original_config_directory, "batect.yml"), test_config_file)
 
-        output = self.run_two_fish_commands(
-            'complete -C"/app/bin/batect tas"',
-            'sed -i"" "s/task-1/task-3/g" batect.yml && complete -C"/app/bin/batect tas"',
+        output = self.run_two_commands(
+            self.completion_command_for("/app/bin/batect tas"),
+            'sed -i"" "s/task-1/task-3/g" batect.yml && ' + self.completion_command_for("/app/bin/batect tas"),
             test_directory,
         )
 
@@ -144,9 +142,9 @@ class FishCompletionTests(unittest.TestCase):
     def test_completion_twice_include_file_modified(self):
         test_directory = self.set_up_test_directory_with_include()
 
-        output = self.run_two_fish_commands(
-            'complete -C"/app/bin/batect tas"',
-            'sed -i"" "s/task-2/task-3/g" other-file.yml && complete -C"/app/bin/batect tas"',
+        output = self.run_two_commands(
+            self.completion_command_for("/app/bin/batect tas"),
+            'sed -i"" "s/task-2/task-3/g" other-file.yml && ' + self.completion_command_for("/app/bin/batect tas"),
             test_directory,
         )
 
@@ -156,9 +154,9 @@ class FishCompletionTests(unittest.TestCase):
     def test_completion_twice_include_file_deleted(self):
         test_directory = self.set_up_test_directory_with_include()
 
-        output = self.run_two_fish_commands(
-            'complete -C"/app/bin/batect tas"',
-            'rm other-file.yml && mv without-include.yml batect.yml && complete -C"/app/bin/batect tas"',
+        output = self.run_two_commands(
+            self.completion_command_for("/app/bin/batect tas"),
+            'rm other-file.yml && mv without-include.yml batect.yml && ' + self.completion_command_for("/app/bin/batect tas"),
             test_directory,
         )
 
@@ -190,12 +188,28 @@ class FishCompletionTests(unittest.TestCase):
         return test_directory
 
     def run_completions_for(self, input, working_directory):
-        stdout = self.run_fish_command('complete -C"{}"'.format(input), working_directory)
+        stdout = self.run_command_in_shell(self.completion_command_for(input), working_directory)
 
         return sorted(stdout.splitlines())
 
-    def run_fish_command(self, command, working_directory):
-        command_line = ["fish", "--private", "--command", command]
+    def completion_command_for(self, input) -> str:
+        pass
+
+    def run_two_commands(self, first_command, second_command, working_directory):
+        stdout = self.run_command_in_shell('{} && echo "---DIVIDER---" && {}'.format(first_command, second_command), working_directory).splitlines()
+        divider_line = stdout.index("---DIVIDER---")
+        first_output = sorted(stdout[0:divider_line])
+        second_output =(stdout[divider_line + 1:])
+
+        return {"first": first_output, "second": second_output}
+
+    def directory_for_test_case(self, test_case):
+        tests_dir = os.path.dirname(os.path.realpath(__file__))
+
+        return os.path.abspath(os.path.join(tests_dir, "test-cases", test_case))
+
+    def run_command_in_shell(self, command, working_directory):
+        command_line = self.shell_command_for(command)
 
         result = subprocess.run(
             command_line,
@@ -211,18 +225,20 @@ class FishCompletionTests(unittest.TestCase):
 
         return result.stdout
 
-    def run_two_fish_commands(self, first_command, second_command, working_directory):
-        stdout = self.run_fish_command('{} && echo "---DIVIDER---" && {}'.format(first_command, second_command), working_directory).splitlines()
-        divider_line = stdout.index("---DIVIDER---")
-        first_output = sorted(stdout[0:divider_line])
-        second_output =(stdout[divider_line + 1:])
+    def shell_command_for(self, command):
+        pass
 
-        return {"first": first_output, "second": second_output}
 
-    def directory_for_test_case(self, test_case):
-        tests_dir = os.path.dirname(os.path.realpath(__file__))
+class FishCompletionTests(CompletionTestBase, unittest.TestCase):
+    def __init__(self, methodName):
+        super().__init__(methodName)
+        self.maxDiff = None
 
-        return os.path.abspath(os.path.join(tests_dir, "test-cases", test_case))
+    def completion_command_for(self, input) -> str:
+        return 'complete -C"{}"'.format(input)
+
+    def shell_command_for(self, command):
+        return ["fish", "--private", "--command", command]
 
 
 if __name__ == '__main__':

@@ -47,9 +47,10 @@ object GenerateShellTabCompletionScriptCommandSpec : Spek({
 
         val option1 by createForEachTest { createMockOption() }
         val option2 by createForEachTest { createMockOption() }
+        val hiddenOption by createForEachTest { createMockOption(isVisible = false) }
         val parser by createForEachTest {
             mock<OptionParser> {
-                on { getOptions() } doReturn setOf(option1, option2)
+                on { getOptions() } doReturn setOf(option1, option2, hiddenOption)
             }
         }
         val commandLineOptionsParser by createForEachTest {
@@ -63,6 +64,7 @@ object GenerateShellTabCompletionScriptCommandSpec : Spek({
             mock<FishShellTabCompletionLineGenerator> {
                 on { generate(option1, "batect-1.2.3") } doReturn "completion-line-option-1"
                 on { generate(option2, "batect-1.2.3") } doReturn "completion-line-option-2"
+                on { generate(hiddenOption, "batect-1.2.3") } doReturn "completion-line-hidden-option"
             }
         }
 
@@ -87,6 +89,10 @@ object GenerateShellTabCompletionScriptCommandSpec : Spek({
                 assertThat(outputStream.toString().lines(), hasElement("completion-line-option-1") and hasElement("completion-line-option-2"))
             }
 
+            it("does not emit completion lines for hidden options") {
+                assertThat(outputStream.toString().lines(), !hasElement("completion-line-hidden-option"))
+            }
+
             it("records an event in telemetry with the shell name and proxy completion script version") {
                 verify(telemetrySessionBuilder).addEvent(
                     "GeneratedShellTabCompletionScript",
@@ -109,6 +115,6 @@ object GenerateShellTabCompletionScriptCommandSpec : Spek({
     }
 })
 
-private fun createMockOption(): OptionDefinition = mock {
-    on { showInHelp } doReturn true
+private fun createMockOption(isVisible: Boolean = true): OptionDefinition = mock {
+    on { showInHelp } doReturn isVisible
 }

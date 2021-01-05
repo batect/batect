@@ -30,7 +30,7 @@ dependencies {
     implementation project(":libs:primitives")
 
     testImplementation "org.araqnid:hamkrest-json:1.1.2"
-    testImplementation "com.google.jimfs:jimfs:1.1"
+    testImplementation "com.google.jimfs:jimfs:1.2"
 
     testImplementation project(":libs:logging-test-utils")
     testImplementation project(":libs:test-utils")

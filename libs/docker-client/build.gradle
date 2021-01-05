@@ -44,7 +44,7 @@ dependencies {
     implementation project(":libs:telemetry")
     implementation project(":libs:primitives")
 
-    testImplementation "com.google.jimfs:jimfs:1.1"
+    testImplementation "com.google.jimfs:jimfs:1.2"
     testImplementation "org.araqnid:hamkrest-json:1.1.2"
 
     testImplementation project(":libs:logging-test-utils")

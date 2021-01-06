@@ -92,7 +92,7 @@ jobs:
         run: ./gradlew --parallel -DgenerateCoverage=true app:check libs:git-client:integrationTest jacocoTestReport --exclude-task=generateMainProtos # This is temporarily disabled on Windows due to https://github.com/square/wire/issues/1325
 
       - name: Upload coverage to codecov.io
-        uses: codecov/codecov-action@v1.2.0
+        uses: codecov/codecov-action@v1.2.1
         with:
           flags: windows
 
@@ -158,7 +158,7 @@ jobs:
         run: unset JAVA_TOOL_OPTIONS && ./gradlew --parallel -DgenerateCoverage=true check libs:git-client:integrationTest jacocoTestReport -x wrapper:unix:check -x wrapper:windows:check
 
       - name: Upload coverage to codecov.io
-        uses: codecov/codecov-action@v1.2.0
+        uses: codecov/codecov-action@v1.2.1
         with:
           flags: linux
 

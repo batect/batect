@@ -50,7 +50,7 @@ class ParallelExecutionManager(
     private val logger: Logger
 ) : TaskEventSink {
     private val threadPool = createThreadPool()
-    private val startNewWorkLockObject = Object()
+    private val workManagementLock = Object()
     private val finishedSignal = CountDownLatch(1)
     private val runningSteps = ConcurrentHashMap.newKeySet<TaskStep>()
 
@@ -58,8 +58,14 @@ class ParallelExecutionManager(
         startNewWorkIfPossible()
 
         finishedSignal.await()
+
+        logger.info { message("Shutting down thread pool.") }
         threadPool.shutdown()
+
+        logger.info { message("Waiting for thread pool to terminate.") }
         threadPool.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS)
+
+        logger.info { message("Thread pool terminated.") }
     }
 
     private fun createThreadPool() =
@@ -91,7 +97,7 @@ class ParallelExecutionManager(
     }
 
     private fun startNewWorkIfPossible() {
-        synchronized(startNewWorkLockObject) {
+        synchronized(workManagementLock) {
             try {
                 while (canRunMoreSteps()) {
                     val stepsStillRunning = runningSteps.isNotEmpty()
@@ -105,9 +111,16 @@ class ParallelExecutionManager(
                     exception(e)
                 }
 
+                telemetrySessionBuilder.addUnhandledExceptionEvent(e, isUserFacing = true)
+                eventLogger.postEvent(ExecutionFailedEvent("Could not schedule new work: $e"))
+
                 throw e
             } finally {
                 if (runningSteps.isEmpty()) {
+                    logger.info {
+                        message("No running steps, signalling execution manager to stop.")
+                    }
+
                     finishedSignal.countDown()
                 }
             }
@@ -157,7 +170,9 @@ class ParallelExecutionManager(
                     }
                 }
             } finally {
-                runningSteps.remove(step)
+                synchronized(workManagementLock) {
+                    runningSteps.remove(step)
+                }
             }
         }
     }

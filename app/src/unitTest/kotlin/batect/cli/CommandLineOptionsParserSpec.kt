@@ -82,7 +82,15 @@ object CommandLineOptionsParserSpec : Spek({
                 val result = CommandLineOptionsParser(pathResolverFactory, environmentVariableDefaultValueProviderFactory, dockerHttpConfigDefaults, systemInfo).parse(emptyList())
 
                 it("returns an error message") {
-                    assertThat(result, equalTo(CommandLineOptionsParsingResult.Failed("No task name provided. (Run './batect --list-tasks' for a list of all tasks in this project, or './batect --help' for help.)")))
+                    assertThat(
+                        result,
+                        equalTo(
+                            CommandLineOptionsParsingResult.Failed(
+                                "No task name provided. Re-run Batect and provide a task name, for example, './batect build'.\n" +
+                                    "Run './batect --list-tasks' for a list of all tasks in this project, or './batect --help' for help."
+                            )
+                        )
+                    )
                 }
             }
         }
@@ -115,8 +123,9 @@ object CommandLineOptionsParserSpec : Spek({
                         result,
                         equalTo(
                             CommandLineOptionsParsingResult.Failed(
-                                "Too many arguments provided. The first extra argument is 'some-extra-arg'.\n" +
-                                    "To pass additional arguments to the task command, prefix them with '--', for example, './batect my-task -- --extra-option-1 --extra-option-2 value'."
+                                "Too many arguments provided. The task name must be the last argument, with all Batect options appearing before the task name.\n" +
+                                    "'some-task' was selected as the task name, and the first extra argument is 'some-extra-arg'.\n" +
+                                    "To pass additional arguments to the task command, separate them from the task name with '--', for example, './batect my-task -- --log-level debug'."
                             )
                         )
                     )
@@ -173,8 +182,9 @@ object CommandLineOptionsParserSpec : Spek({
                         result,
                         equalTo(
                             CommandLineOptionsParsingResult.Failed(
-                                "Too many arguments provided. The first extra argument is 'some-extra-arg'.\n" +
-                                    "To pass additional arguments to the task command, prefix them with '--', for example, './batect my-task -- --extra-option-1 --extra-option-2 value'."
+                                "Too many arguments provided. The task name must be the last argument, with all Batect options appearing before the task name.\n" +
+                                    "'some-task' was selected as the task name, and the first extra argument is 'some-extra-arg'.\n" +
+                                    "To pass additional arguments to the task command, separate them from the task name with '--', for example, './batect my-task -- --log-level debug'."
                             )
                         )
                     )

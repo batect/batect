@@ -99,7 +99,7 @@ object InterleavedEventLoggerSpec : Spek({
                 }
 
                 it("prints a message to the output") {
-                    verify(output).printForContainer(container1, TextRun(Text.white("Image built.")))
+                    verify(output).printForContainer(container1, Text.white("Batect | ") + Text("Image built."))
                 }
             }
 
@@ -110,8 +110,8 @@ object InterleavedEventLoggerSpec : Spek({
                 }
 
                 it("prints a message to the output for each container that uses that pulled image") {
-                    verify(output).printForContainer(container2, Text.white(Text("Pulled ") + Text.bold("another-image") + Text(".")))
-                    verify(output).printForContainer(container3, Text.white(Text("Pulled ") + Text.bold("another-image") + Text(".")))
+                    verify(output).printForContainer(container2, Text.white("Batect | ") + Text("Pulled ") + Text.bold("another-image") + Text("."))
+                    verify(output).printForContainer(container3, Text.white("Batect | ") + Text("Pulled ") + Text.bold("another-image") + Text("."))
                 }
             }
 
@@ -134,7 +134,7 @@ object InterleavedEventLoggerSpec : Spek({
                     }
 
                     it("prints a message to the output") {
-                        verify(output).printForContainer(container1, TextRun(Text.white("Container started.")))
+                        verify(output).printForContainer(container1, Text.white("Batect | ") + Text("Container started."))
                     }
                 }
             }
@@ -146,7 +146,7 @@ object InterleavedEventLoggerSpec : Spek({
                 }
 
                 it("prints a message to the output") {
-                    verify(output).printForContainer(container1, TextRun(Text.white("Container became healthy.")))
+                    verify(output).printForContainer(container1, Text.white("Batect | ") + Text("Container became healthy."))
                 }
             }
 
@@ -157,7 +157,7 @@ object InterleavedEventLoggerSpec : Spek({
                 }
 
                 it("prints a message to the output") {
-                    verify(output).printForContainer(container1, TextRun(Text.white("Container stopped.")))
+                    verify(output).printForContainer(container1, Text.white("Batect | ") + Text("Container stopped."))
                 }
             }
 
@@ -168,7 +168,7 @@ object InterleavedEventLoggerSpec : Spek({
                 }
 
                 it("prints a message to the output") {
-                    verify(output).printForContainer(container1, Text.white(Text("Running setup command ") + Text.bold("do-the-thing") + Text(" (3 of 4)...")))
+                    verify(output).printForContainer(container1, Text.white("Batect | ") + Text("Running setup command ") + Text.bold("do-the-thing") + Text(" (3 of 4)..."))
                 }
             }
 
@@ -179,7 +179,7 @@ object InterleavedEventLoggerSpec : Spek({
                 }
 
                 it("prints a message to the output") {
-                    verify(output).printForContainer(container1, TextRun(Text.white("Container has completed all setup commands.")))
+                    verify(output).printForContainer(container1, Text.white("Batect | ") + Text("Container has completed all setup commands."))
                 }
             }
 
@@ -191,7 +191,7 @@ object InterleavedEventLoggerSpec : Spek({
                     }
 
                     it("prints a message to the output") {
-                        verify(output).printForContainer(container1, TextRun(Text.white("Building image...")))
+                        verify(output).printForContainer(container1, Text.white("Batect | ") + Text("Building image..."))
                     }
                 }
 
@@ -202,8 +202,8 @@ object InterleavedEventLoggerSpec : Spek({
                     }
 
                     it("prints a message to the output for each container that used that pulled image") {
-                        verify(output).printForContainer(container2, Text.white(Text("Pulling ") + Text.bold("another-image") + Text("...")))
-                        verify(output).printForContainer(container3, Text.white(Text("Pulling ") + Text.bold("another-image") + Text("...")))
+                        verify(output).printForContainer(container2, Text.white("Batect | ") + Text("Pulling ") + Text.bold("another-image") + Text("..."))
+                        verify(output).printForContainer(container3, Text.white("Batect | ") + Text("Pulling ") + Text.bold("another-image") + Text("..."))
                     }
                 }
 
@@ -215,7 +215,7 @@ object InterleavedEventLoggerSpec : Spek({
                         }
 
                         it("prints a message to the output without mentioning a command") {
-                            verify(output).printForContainer(taskContainer, TextRun(Text.white("Running...")))
+                            verify(output).printForContainer(taskContainer, Text.white("Batect | ") + Text("Running..."))
                         }
                     }
 
@@ -230,7 +230,7 @@ object InterleavedEventLoggerSpec : Spek({
                             }
 
                             it("prints a message to the output without mentioning a command") {
-                                verify(output).printForContainer(taskContainer, TextRun(Text.white("Running...")))
+                                verify(output).printForContainer(taskContainer, Text.white("Batect | ") + Text("Running..."))
                             }
                         }
 
@@ -244,7 +244,7 @@ object InterleavedEventLoggerSpec : Spek({
                             }
 
                             it("prints a message to the output including the original command") {
-                                verify(output).printForContainer(taskContainer, Text.white(Text("Running ") + Text.bold("do-stuff.sh") + Text("...")))
+                                verify(output).printForContainer(taskContainer, Text.white("Batect | ") + Text("Running ") + Text.bold("do-stuff.sh") + Text("..."))
                             }
                         }
                     }
@@ -258,7 +258,7 @@ object InterleavedEventLoggerSpec : Spek({
                             beforeEachTest { logger.postEvent(StepStartingEvent(cleanupStep)) }
 
                             it("prints that clean up has started") {
-                                verify(output).printForTask(TextRun(Text.white("Cleaning up...")))
+                                verify(output).printForTask(Text.white("Batect | ") + Text("Cleaning up..."))
                             }
                         }
                     }
@@ -273,7 +273,7 @@ object InterleavedEventLoggerSpec : Spek({
                             beforeEachTest { logger.postEvent(StepStartingEvent(cleanupStep)) }
 
                             it("only prints one message to the output") {
-                                verify(output, times(1)).printForTask(TextRun(Text.white("Cleaning up...")))
+                                verify(output, times(1)).printForTask(Text.white("Batect | ") + Text("Cleaning up..."))
                             }
                         }
                     }
@@ -294,13 +294,17 @@ object InterleavedEventLoggerSpec : Spek({
                         ).forEach { (description, event, container) ->
                             on("when a '$description' event is posted") {
                                 beforeEachTest {
-                                    whenever(failureErrorMessageFormatter.formatErrorMessage(event)).doReturn(TextRun("Something went wrong."))
+                                    whenever(failureErrorMessageFormatter.formatErrorMessage(event)).doReturn(TextRun("Something went wrong.\nAnother line."))
 
                                     logger.postEvent(event)
                                 }
 
                                 it("prints the message to the output for that container") {
-                                    verify(output).printErrorForContainer(container, TextRun("Something went wrong."))
+                                    verify(output).printErrorForContainer(
+                                        container,
+                                        Text.white("Batect | ") + TextRun("Something went wrong.") + Text("\n") +
+                                            Text.white("Batect | ") + TextRun("Another line.")
+                                    )
                                 }
                             }
                         }
@@ -309,13 +313,16 @@ object InterleavedEventLoggerSpec : Spek({
                             val event = ImagePullFailedEvent(container2And3ImageSource, "Couldn't pull the image.")
 
                             beforeEachTest {
-                                whenever(failureErrorMessageFormatter.formatErrorMessage(event)).doReturn(TextRun("Something went wrong."))
+                                whenever(failureErrorMessageFormatter.formatErrorMessage(event)).doReturn(TextRun("Something went wrong.\nAnother line."))
 
                                 logger.postEvent(event)
                             }
 
                             it("prints the message to the output for the task") {
-                                verify(output).printErrorForTask(TextRun("Something went wrong."))
+                                verify(output).printErrorForTask(
+                                    Text.white("Batect | ") + TextRun("Something went wrong.") + Text("\n") +
+                                        Text.white("Batect | ") + TextRun("Another line.")
+                                )
                             }
                         }
                     }
@@ -331,13 +338,16 @@ object InterleavedEventLoggerSpec : Spek({
                         ).forEach { (description, event) ->
                             on("when a '$description' event is posted") {
                                 beforeEachTest {
-                                    whenever(failureErrorMessageFormatter.formatErrorMessage(event)).doReturn(TextRun("Something went wrong."))
+                                    whenever(failureErrorMessageFormatter.formatErrorMessage(event)).doReturn(TextRun("Something went wrong.\nAnother line."))
 
                                     logger.postEvent(event)
                                 }
 
                                 it("prints the message to the output") {
-                                    verify(output).printErrorForTask(TextRun("Something went wrong."))
+                                    verify(output).printErrorForTask(
+                                        Text.white("Batect | ") + TextRun("Something went wrong.") + Text("\n") +
+                                            Text.white("Batect | ") + TextRun("Another line.")
+                                    )
                                 }
                             }
                         }
@@ -361,7 +371,7 @@ object InterleavedEventLoggerSpec : Spek({
             beforeEachTest { logger.onTaskStarting("some-task") }
 
             it("prints a message to the output") {
-                verify(output).printForTask(Text.white(Text("Running ") + Text.bold("some-task") + Text("...")))
+                verify(output).printForTask(Text.white("Batect | ") + Text("Running ") + Text.bold("some-task") + Text("..."))
             }
         }
 
@@ -369,17 +379,20 @@ object InterleavedEventLoggerSpec : Spek({
             beforeEachTest { logger.onTaskFinished("some-task", 234, Duration.ofMillis(2500)) }
 
             it("prints a message to the output") {
-                verify(output).printForTask(Text.white(Text.bold("some-task") + Text(" finished with exit code 234 in 2.5s.")))
+                verify(output).printForTask(Text.white("Batect | ") + Text.bold("some-task") + Text(" finished with exit code 234 in 2.5s."))
             }
         }
 
         on("when the task finishes with cleanup disabled") {
-            val cleanupInstructions = TextRun("Some instructions")
+            val cleanupInstructions = TextRun("Some instructions\nAnother line")
             beforeEachTest { logger.onTaskFinishedWithCleanupDisabled(cleanupInstructions) }
 
-            it("prints the cleanup instructions") {
+            it("prints the cleanup instructions, prefixing each line of the instructions") {
                 inOrder(output) {
-                    verify(output).printErrorForTask(cleanupInstructions)
+                    verify(output).printErrorForTask(
+                        Text.white("Batect | ") + Text("Some instructions") + Text("\n") +
+                            Text.white("Batect | ") + Text("Another line")
+                    )
                 }
             }
         }
@@ -391,7 +404,7 @@ object InterleavedEventLoggerSpec : Spek({
 
                     it("prints a message to the output") {
                         inOrder(output) {
-                            verify(output).printErrorForTask(Text.red(Text("The task ") + Text.bold("some-task") + Text(" failed. See above for details.")))
+                            verify(output).printErrorForTask(Text.white("Batect | ") + Text.red(Text("The task ") + Text.bold("some-task") + Text(" failed. See above for details.")))
                         }
                     }
                 }
@@ -399,11 +412,16 @@ object InterleavedEventLoggerSpec : Spek({
 
             given("there are some cleanup instructions") {
                 on("when logging that the task has failed") {
-                    beforeEachTest { logger.onTaskFailed("some-task", TextRun("Do this to clean up.")) }
+                    beforeEachTest { logger.onTaskFailed("some-task", TextRun("Do this to clean up.\nAnother line")) }
 
-                    it("prints a message to the output, including the instructions") {
+                    it("prints a message to the output, including the instructions, prefixing each line of the instructions") {
                         inOrder(output) {
-                            verify(output).printErrorForTask(TextRun("Do this to clean up.") + Text("\n\n") + Text.red(Text("The task ") + Text.bold("some-task") + Text(" failed. See above for details.")))
+                            verify(output).printErrorForTask(
+                                Text.white("Batect | ") + TextRun("Do this to clean up.") + Text("\n") +
+                                    Text.white("Batect | ") + TextRun("Another line") + Text("\n") +
+                                    Text.white("Batect | ") + Text("\n") +
+                                    Text.white("Batect | ") + Text.red(Text("The task ") + Text.bold("some-task") + Text(" failed. See above for details."))
+                            )
                         }
                     }
                 }

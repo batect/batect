@@ -53,6 +53,7 @@ import batect.ui.containerio.ContainerIOStreamingOptions
 import batect.ui.humanise
 import batect.ui.text.Text
 import batect.ui.text.TextRun
+import batect.ui.text.join
 import java.time.Duration
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
@@ -65,26 +66,27 @@ class InterleavedEventLogger(
 ) : EventLogger {
     private val haveStartedCleanup = AtomicBoolean(false)
     private val commands = ConcurrentHashMap<Container, Command>()
+    private val batectPrefix = Text.white("Batect | ")
 
     override fun onTaskStarting(taskName: String) {
-        output.printForTask(Text.white(Text("Running ") + Text.bold(taskName) + Text("...")))
+        output.printForTask(batectPrefix + Text("Running ") + Text.bold(taskName) + Text("..."))
     }
 
     override fun onTaskFinished(taskName: String, exitCode: Long, duration: Duration) {
-        output.printForTask(Text.white(Text.bold(taskName) + Text(" finished with exit code $exitCode in ${duration.humanise()}.")))
+        output.printForTask(batectPrefix + Text.bold(taskName) + Text(" finished with exit code $exitCode in ${duration.humanise()}."))
     }
 
     override fun onTaskFinishedWithCleanupDisabled(manualCleanupInstructions: TextRun) {
-        output.printErrorForTask(manualCleanupInstructions)
+        output.printErrorForTask(manualCleanupInstructions.prefixAllLines())
     }
 
     override fun onTaskFailed(taskName: String, manualCleanupInstructions: TextRun) {
         val message = Text.red(Text("The task ") + Text.bold(taskName) + Text(" failed. See above for details."))
 
         if (manualCleanupInstructions != TextRun()) {
-            output.printErrorForTask(manualCleanupInstructions + Text("\n\n") + message)
+            output.printErrorForTask((manualCleanupInstructions + Text("\n\n") + message).prefixAllLines())
         } else {
-            output.printErrorForTask(message)
+            output.printErrorForTask(message.prefixAllLines())
         }
     }
 
@@ -105,15 +107,15 @@ class InterleavedEventLogger(
     }
 
     private fun onContainerBecameHealthyEvent(event: ContainerBecameHealthyEvent) {
-        output.printForContainer(event.container, TextRun(Text.white("Container became healthy.")))
+        output.printForContainer(event.container, batectPrefix + Text("Container became healthy."))
     }
 
     private fun onImageBuilt(event: ImageBuiltEvent) {
-        output.printForContainer(event.container, TextRun(Text.white("Image built.")))
+        output.printForContainer(event.container, batectPrefix + Text("Image built."))
     }
 
     private fun onImagePulled(event: ImagePulledEvent) {
-        val text = Text.white(Text("Pulled ") + Text.bold(event.source.imageName) + Text("."))
+        val text = batectPrefix + Text("Pulled ") + Text.bold(event.source.imageName) + Text(".")
 
         containers
             .filter { it.imageSource == event.source }
@@ -122,20 +124,20 @@ class InterleavedEventLogger(
 
     private fun onContainerStarted(event: ContainerStartedEvent) {
         if (event.container != taskContainer) {
-            output.printForContainer(event.container, TextRun(Text.white("Container started.")))
+            output.printForContainer(event.container, batectPrefix + Text("Container started."))
         }
     }
 
     private fun onContainerStoppedEvent(event: ContainerStoppedEvent) {
-        output.printForContainer(event.container, TextRun(Text.white("Container stopped.")))
+        output.printForContainer(event.container, batectPrefix + Text("Container stopped."))
     }
 
     private fun onRunningSetupCommandEvent(event: RunningSetupCommandEvent) {
-        output.printForContainer(event.container, Text.white(Text("Running setup command ") + Text.bold(event.command.command.originalCommand) + Text(" (${event.commandIndex + 1} of ${event.container.setupCommands.size})...")))
+        output.printForContainer(event.container, batectPrefix + Text("Running setup command ") + Text.bold(event.command.command.originalCommand) + Text(" (${event.commandIndex + 1} of ${event.container.setupCommands.size})..."))
     }
 
     private fun onSetupCommandsCompletedEvent(event: SetupCommandsCompletedEvent) {
-        output.printForContainer(event.container, TextRun(Text.white("Container has completed all setup commands.")))
+        output.printForContainer(event.container, batectPrefix + Text("Container has completed all setup commands."))
     }
 
     private fun onStepStarting(event: StepStartingEvent) {
@@ -149,11 +151,11 @@ class InterleavedEventLogger(
     }
 
     private fun onBuildImageStepStarting(step: BuildImageStep) {
-        output.printForContainer(step.container, TextRun(Text.white("Building image...")))
+        output.printForContainer(step.container, batectPrefix + Text("Building image..."))
     }
 
     private fun onPullImageStepStarting(step: PullImageStep) {
-        val text = Text.white(Text("Pulling ") + Text.bold(step.source.imageName) + Text("..."))
+        val text = batectPrefix + Text("Pulling ") + Text.bold(step.source.imageName) + Text("...")
 
         containers
             .filter { it.imageSource == step.source }
@@ -164,9 +166,9 @@ class InterleavedEventLogger(
         val command = commands.getOrDefault(step.container, null)
 
         if (command != null) {
-            output.printForContainer(step.container, Text.white(Text("Running ") + Text.bold(command.originalCommand) + Text("...")))
+            output.printForContainer(step.container, batectPrefix + Text("Running ") + Text.bold(command.originalCommand) + Text("..."))
         } else {
-            output.printForContainer(step.container, TextRun(Text.white("Running...")))
+            output.printForContainer(step.container, batectPrefix + Text("Running..."))
         }
     }
 
@@ -183,7 +185,7 @@ class InterleavedEventLogger(
             return
         }
 
-        output.printForTask(TextRun(Text.white("Cleaning up...")))
+        output.printForTask(batectPrefix + Text("Cleaning up..."))
     }
 
     private fun onTaskFailed(event: TaskFailedEvent) {
@@ -215,10 +217,14 @@ class InterleavedEventLogger(
     }
 
     private fun printErrorForContainer(container: Container, event: TaskFailedEvent) {
-        output.printErrorForContainer(container, failureErrorMessageFormatter.formatErrorMessage(event))
+        output.printErrorForContainer(container, failureErrorMessageFormatter.formatErrorMessage(event).prefixAllLines())
     }
 
     private fun printErrorForTask(event: TaskFailedEvent) {
-        output.printErrorForTask(failureErrorMessageFormatter.formatErrorMessage(event))
+        output.printErrorForTask(failureErrorMessageFormatter.formatErrorMessage(event).prefixAllLines())
     }
+
+    private fun TextRun.prefixAllLines(): TextRun = this.lines
+        .map { line -> batectPrefix + line }
+        .join(TextRun("\n"))
 }

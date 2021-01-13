@@ -128,4 +128,10 @@ data class TextRun(val text: List<Text>) {
     private fun Iterable<Text>.withoutEmptyElements(): Iterable<Text> = this.filter { it.content.isNotEmpty() }
 }
 
-fun Iterable<TextRun>.join(): TextRun = this.fold(TextRun()) { acc, current -> acc + current }
+fun Iterable<TextRun>.join(separator: TextRun? = null): TextRun = this.fold(TextRun()) { acc, current ->
+    if (acc.text.isNotEmpty() && separator != null) {
+        acc + separator + current
+    } else {
+        acc + current
+    }
+}

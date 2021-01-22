@@ -31,7 +31,7 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-gradle-plugin")
     implementation("org.jetbrains.kotlin:kotlin-serialization")
     implementation("com.github.oshi:oshi-core:4.0.0")
-    implementation("com.diffplug.spotless:spotless-plugin-gradle:5.8.2")
+    implementation("com.diffplug.spotless:spotless-plugin-gradle:5.9.0")
     implementation("com.google.cloud:google-cloud-storage:1.113.1")
 }
 

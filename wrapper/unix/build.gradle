@@ -23,7 +23,7 @@ buildscript {
     }
 
     dependencies {
-        classpath "commons-codec:commons-codec:1.15"
+        classpath "commons-codec:commons-codec:$commonsCodecVersion"
     }
 }
 

@@ -16,8 +16,8 @@
 
 plugins {
     id "com.diffplug.spotless"
-    id "com.github.ben-manes.versions" version "0.36.0"
-    id "org.ajoberstar.reckon" version "0.13.0"
+    id "com.github.ben-manes.versions"
+    id "org.ajoberstar.reckon"
     id "org.jetbrains.kotlin.jvm" apply false
     id "org.jetbrains.kotlin.plugin.serialization" apply false
 }
@@ -37,5 +37,6 @@ tasks.register("assembleRelease", Copy) {
 }
 
 wrapper {
-    distributionType = Wrapper.DistributionType.ALL
+    gradleVersion = "$gradleWrapperVersion"
+    distributionType = "ALL"
 }

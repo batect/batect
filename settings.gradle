@@ -14,6 +14,14 @@
    limitations under the License.
 */
 
+// TODO: Spotless does *not* like the pluginManagement block!
+pluginManagement {
+    plugins {
+        id "com.github.ben-manes.versions" version "$versionsPluginVersion"
+        id "org.ajoberstar.reckon" version "$reckonPluginVersion"
+    }
+}
+
 rootProject.name = "batect"
 
 include ":app"

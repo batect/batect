@@ -19,15 +19,15 @@ plugins {
 }
 
 dependencies {
-    implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.0.1"
-    implementation "com.github.jnr:jnr-posix:3.1.4"
-    implementation "org.graylog.repackaged:os-platform-finder:1.2.3"
+    implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion"
+    implementation "com.github.jnr:jnr-posix:$jnrPosixVersion"
+    implementation "org.graylog.repackaged:os-platform-finder:$osPlatformFinderVersion"
 
     implementation project(":libs:logging")
     implementation project(":libs:primitives")
 
-    testImplementation "com.google.jimfs:jimfs:1.2"
-    testImplementation "org.araqnid:hamkrest-json:1.1.2"
+    testImplementation "com.google.jimfs:jimfs:$jimfsVersion"
+    testImplementation "org.araqnid:hamkrest-json:$hamkrestJsonVersion"
     testImplementation project(":libs:test-utils")
     testImplementation project(":libs:logging-test-utils")
 }

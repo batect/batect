@@ -71,7 +71,10 @@
     function runApplication() {
         checkForJava
 
-        java_version=$(getJavaVersion)
+        java_version_info=$(getJavaVersionInfo)
+        checkJavaVersion "$java_version_info"
+
+        java_version=$(extractJavaVersion "$java_version_info")
         java_version_major=$(extractJavaMajorVersion "$java_version")
 
         if (( java_version_major >= 9 )); then
@@ -111,8 +114,11 @@
             echo "Java is not installed or not on your PATH. Please install it and try again." >&2
             exit 1
         fi
+    }
 
-        java_version=$(getJavaVersion)
+    function checkJavaVersion() {
+        java_version_info="$1"
+        java_version=$(extractJavaVersion "$java_version_info")
         java_version_major=$(extractJavaMajorVersion "$java_version")
         java_version_minor=$(extractJavaMinorVersion "$java_version")
 
@@ -121,10 +127,20 @@
             echo "If you have a newer version of Java installed, please make sure your PATH is set correctly."
             exit 1
         fi
+
+        if ! javaIs64Bit "$java_version_info"; then
+            echo "The version of Java that is available on your PATH is a 32-bit version, but Batect requires a 64-bit Java runtime."
+            echo "If you have a 64-bit version of Java installed, please make sure your PATH is set correctly."
+            exit 1
+        fi
     }
 
-    function getJavaVersion() {
-        java -version 2>&1 | grep version | sed -En ';s/.* version "([0-9]+)(\.([0-9]+))?.*".*/\1.\3/p;'
+    function getJavaVersionInfo() {
+        java -version 2>&1
+    }
+
+    function extractJavaVersion() {
+        echo "$1" | grep version | sed -En ';s/.* version "([0-9]+)(\.([0-9]+))?.*".*/\1.\3/p;'
     }
 
     function extractJavaMajorVersion() {
@@ -138,6 +154,10 @@
         java_version_minor="${java_version#*.}"
 
         echo "${java_version_minor:-0}"
+    }
+
+    function javaIs64Bit() {
+        echo "$1" | grep -q '64-[Bb]it'
     }
 
     main "$@"

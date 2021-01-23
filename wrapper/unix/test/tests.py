@@ -131,6 +131,16 @@ class WrapperScriptTests(unittest.TestCase):
 
         self.assertNotEqual(result.returncode, 0)
 
+    def test_32bit_java(self):
+        path_dir = self.create_limited_path_for_specific_java("fake-32-bit")
+
+        result = self.run_script([], path=path_dir)
+
+        self.assertIn("The version of Java that is available on your PATH is a 32-bit version, but Batect requires a 64-bit Java runtime.\n" +
+                      "If you have a 64-bit version of Java installed, please make sure your PATH is set correctly.", result.stdout.decode())
+
+        self.assertNotEqual(result.returncode, 0)
+
     def test_supported_java(self):
         for version in ["8", "9", "10", "11"]:
             with self.subTest(java_version=version):
@@ -182,10 +192,13 @@ class WrapperScriptTests(unittest.TestCase):
             f.truncate(10)
 
     def create_limited_path_for_specific_java_version(self, java_version):
+        return self.create_limited_path_for_specific_java("java-{}-openjdk-amd64".format(java_version))
+
+    def create_limited_path_for_specific_java(self, java_name):
         return self.create_limited_path(self.minimum_script_dependencies +
                                         [
                                             "/usr/bin/curl",
-                                            "/usr/lib/jvm/java-{}-openjdk-amd64/bin/java".format(java_version),
+                                            "/usr/lib/jvm/{}/bin/java".format(java_name),
                                         ])
 
     def create_limited_path(self, executables):

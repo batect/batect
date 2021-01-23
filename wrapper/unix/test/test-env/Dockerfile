@@ -21,3 +21,5 @@ RUN curl --show-error --retry 3 --retry-connrefused https://download.oracle.com/
     cd /usr/lib/jvm && tar xzf /tmp/openjdk-10.0.1_linux-x64_bin.tar.gz && \
     mv /usr/lib/jvm/jdk-10.0.1 /usr/lib/jvm/java-10-openjdk-amd64 && \
     rm /tmp/openjdk-10.0.1_linux-x64_bin.tar.gz
+
+COPY java-32-bit /usr/lib/jvm/fake-32-bit/bin/java

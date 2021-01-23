@@ -116,6 +116,7 @@ tasks.register("test", Exec) {
 
     inputs.files fileTree(dir: "test", include: "**/*")
     inputs.files copyTestJar
+    inputs.files templateFile
     outputs.file upToDateFile
 
     dependsOn buildTestEnvironmentImage

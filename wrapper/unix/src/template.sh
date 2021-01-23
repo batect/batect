@@ -83,7 +83,7 @@
             JAVA_OPTS=()
         fi
 
-        if [[ "$(uname -o)" == "Msys" ]] && hash winpty 2>/dev/null; then
+        if [[ "$(uname -o 2>&1)" == "Msys" ]] && hash winpty 2>/dev/null; then
             GIT_BASH_PTY_WORKAROUND=(winpty)
         else
             GIT_BASH_PTY_WORKAROUND=()

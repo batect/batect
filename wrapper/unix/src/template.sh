@@ -78,15 +78,15 @@
         java_version_major=$(extractJavaMajorVersion "$java_version")
 
         if (( java_version_major >= 9 )); then
-            JAVA_OPTS="--add-opens java.base/sun.nio.ch=ALL-UNNAMED --add-opens java.base/java.io=ALL-UNNAMED"
+            JAVA_OPTS=(--add-opens java.base/sun.nio.ch=ALL-UNNAMED --add-opens java.base/java.io=ALL-UNNAMED)
         else
-            JAVA_OPTS=""
+            JAVA_OPTS=()
         fi
 
         if [[ "$(uname -o)" == "Msys" ]] && hash winpty 2>/dev/null; then
-            GIT_BASH_PTY_WORKAROUND="winpty"
+            GIT_BASH_PTY_WORKAROUND=(winpty)
         else
-            GIT_BASH_PTY_WORKAROUND=""
+            GIT_BASH_PTY_WORKAROUND=()
         fi
 
         BATECT_WRAPPER_SCRIPT_DIR="$SCRIPT_PATH" \
@@ -94,10 +94,10 @@
         BATECT_WRAPPER_DID_DOWNLOAD="$BATECT_WRAPPER_DID_DOWNLOAD" \
         HOSTNAME="$HOSTNAME" \
         exec \
-            $GIT_BASH_PTY_WORKAROUND \
+            "${GIT_BASH_PTY_WORKAROUND[@]}" \
             java \
             -Djava.net.useSystemProxies=true \
-            $JAVA_OPTS \
+            "${JAVA_OPTS[@]}" \
             -jar "$JAR_PATH" \
             "$@"
     }

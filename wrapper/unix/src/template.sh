@@ -80,11 +80,18 @@
             JAVA_OPTS=""
         fi
 
+        if [[ "$(uname -o)" == "Msys" ]] && hash winpty 2>/dev/null; then
+            GIT_BASH_PTY_WORKAROUND="winpty"
+        else
+            GIT_BASH_PTY_WORKAROUND=""
+        fi
+
         BATECT_WRAPPER_SCRIPT_DIR="$SCRIPT_PATH" \
         BATECT_WRAPPER_CACHE_DIR="$BATECT_WRAPPER_CACHE_DIR" \
         BATECT_WRAPPER_DID_DOWNLOAD="$BATECT_WRAPPER_DID_DOWNLOAD" \
         HOSTNAME="$HOSTNAME" \
         exec \
+            $GIT_BASH_PTY_WORKAROUND \
             java \
             -Djava.net.useSystemProxies=true \
             $JAVA_OPTS \

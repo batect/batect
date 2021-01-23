@@ -28,10 +28,9 @@ import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.runForEachTest
 import batect.testutils.withMessage
-import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.hasElement
 import com.natpryce.hamkrest.throws
+import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
@@ -53,6 +52,7 @@ object GenerateShellTabCompletionScriptCommandSpec : Spek({
                 on { getOptions() } doReturn setOf(option1, option2, hiddenOption)
             }
         }
+
         val commandLineOptionsParser by createForEachTest {
             mock<CommandLineOptionsParser> {
                 on { optionParser } doReturn parser
@@ -60,15 +60,13 @@ object GenerateShellTabCompletionScriptCommandSpec : Spek({
         }
 
         val outputStream by createForEachTest { ByteArrayOutputStream() }
-        val lineGenerator by createForEachTest {
-            mock<FishShellTabCompletionLineGenerator> {
-                on { generate(option1, "batect-1.2.3") } doReturn "completion-line-option-1"
-                on { generate(option2, "batect-1.2.3") } doReturn "completion-line-option-2"
-                on { generate(hiddenOption, "batect-1.2.3") } doReturn "completion-line-hidden-option"
+
+        val fishGenerator by createForEachTest {
+            mock<FishShellTabCompletionScriptGenerator> {
+                on { generate(any(), any()) } doReturn "fish-shell-completion-script"
             }
         }
 
-        val fishGenerator by createForEachTest { FishShellTabCompletionScriptGenerator(lineGenerator) }
         val telemetrySessionBuilder by createForEachTest { mock<TelemetrySessionBuilder>() }
 
         given("the 'BATECT_COMPLETION_PROXY_REGISTER_AS' environment variable is set") {
@@ -86,12 +84,12 @@ object GenerateShellTabCompletionScriptCommandSpec : Spek({
                 assertThat(exitCode, equalTo(0))
             }
 
-            it("emits completion lines for each of the registered options") {
-                assertThat(outputStream.toString().lines(), hasElement("completion-line-option-1") and hasElement("completion-line-option-2"))
+            it("emits the completion script generated") {
+                assertThat(outputStream.toString(), equalTo("fish-shell-completion-script"))
             }
 
-            it("does not emit completion lines for hidden options") {
-                assertThat(outputStream.toString().lines(), !hasElement("completion-line-hidden-option"))
+            it("passes only the visible options to the completion script generator") {
+                verify(fishGenerator).generate(setOf(option1, option2), "batect-1.2.3")
             }
 
             it("records an event in telemetry with the shell name and proxy completion script version") {

@@ -16,11 +16,13 @@
 
 pluginManagement {
     val reckonPluginVersion: String by settings
+    val shadowPluginVersion: String by settings
     val versionsPluginVersion: String by settings
 
     plugins {
-        id("com.github.ben-manes.versions") version versionsPluginVersion
         id("org.ajoberstar.reckon") version reckonPluginVersion
+        id("com.github.johnrengelman.shadow") version shadowPluginVersion
+        id("com.github.ben-manes.versions") version versionsPluginVersion
     }
 }
 

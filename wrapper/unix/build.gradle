@@ -42,7 +42,7 @@ tasks.register("shellcheck", Exec) {
     commandLine "docker", "run", "--rm", "-t",
         "-v", "$projectDir:/code",
         "-w", "/code",
-        "koalaman/shellcheck:v0.7.0", templateFilePath
+        "koalaman/shellcheck:$shellcheckVersion", templateFilePath
 
     doLast {
         // Based on https://stackoverflow.com/questions/1406473/simulate-touch-command-with-java

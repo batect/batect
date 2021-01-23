@@ -65,6 +65,6 @@ spotless {
         // TODO: This confuses spotless plugin for settings.gradle.kts -- is
         //       this a spotless issue, or does this configuration need more
         //       specificity?
-        licenseHeader "/*$licenseText*/\n\n", "(val|import|pluginManagement)"
+        licenseHeader "/*$licenseText*/\n\n", "(val|import|pluginManagement|plugins)"
     }
 }

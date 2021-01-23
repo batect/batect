@@ -14,8 +14,6 @@
    limitations under the License.
 */
 
-val gradleWrapperVersion: String by project
-
 plugins {
     id("com.diffplug.spotless")
     id("com.github.ben-manes.versions")
@@ -40,7 +38,6 @@ tasks {
     }
 
     withType<Wrapper> {
-        gradleVersion = gradleWrapperVersion
         distributionType = Wrapper.DistributionType.ALL
     }
 }

@@ -38,4 +38,9 @@ tasks {
         from(project("wrapper").getTasksByName("build", false))
         into(getBuildDir().toPath().resolve("release"))
     }
+
+    withType<Wrapper> {
+        gradleVersion = gradleWrapperVersion
+        distributionType = Wrapper.DistributionType.ALL
+    }
 }

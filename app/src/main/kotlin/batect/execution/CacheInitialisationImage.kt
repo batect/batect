@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2021 Charles Korn.
+   Copyright 2017-2020 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -17,5 +17,5 @@
 package batect.execution
 
 object CacheInitialisationImage {
-    val linuxDefault = "batect/batect-cache-init-image@sha256:a72d2c78d515ebfd00787adaae89b87e54670e7821e0d2026913215412f87ff2"
+    val linuxDefault = "batect/batect-cache-init-image@sha256:c4a957a9f0dd27b87a218689d00fe1e3e699e96644dc6e78e0b7d83c855ce228"
 }

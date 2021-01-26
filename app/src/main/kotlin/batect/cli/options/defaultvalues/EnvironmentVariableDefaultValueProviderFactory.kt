@@ -16,6 +16,7 @@
 
 package batect.cli.options.defaultvalues
 
+import batect.cli.options.OptionValueSource
 import batect.cli.options.ValueConversionResult
 import batect.cli.options.ValueConverter
 import batect.os.HostEnvironmentVariables
@@ -49,6 +50,9 @@ class EnvironmentVariableDefaultValueProviderFactory(private val environment: Ho
 
         override val description: String
             get() = "Defaults to the value of the $name environment variable (which is currently $currentStateDescription)$fallbackDescription."
+
+        override val valueSource: OptionValueSource
+            get() = if (environment.containsKey(name)) OptionValueSource.Environment else OptionValueSource.Default
 
         private val fallbackDescription = if (fallback == null) {
             ""

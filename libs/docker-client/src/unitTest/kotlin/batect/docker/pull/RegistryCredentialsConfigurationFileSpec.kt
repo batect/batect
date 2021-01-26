@@ -31,20 +31,14 @@ import com.nhaarman.mockitokotlin2.mock
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.nio.file.Files
-import java.util.Properties
 
 object RegistryCredentialsConfigurationFileSpec : Spek({
     describe("a Docker registry credentials configuration file") {
-        val fileSystem by createForEachTest { Jimfs.newFileSystem(Configuration.unix()) }
         val processRunner by createForEachTest { mock<ProcessRunner>() }
-        val logger by createLoggerForEachTestWithoutCustomSerializers()
-
-        val properties = Properties()
-        properties.setProperty("user.home", "/home/some-user")
-
-        val configFile by createForEachTest { RegistryCredentialsConfigurationFile(fileSystem, processRunner, logger, properties) }
-
+        val fileSystem by createForEachTest { Jimfs.newFileSystem(Configuration.unix()) }
         val configurationFilePath by createForEachTest { fileSystem.getPath("/home/some-user/.docker/config.json") }
+        val logger by createLoggerForEachTestWithoutCustomSerializers()
+        val configFile by createForEachTest { RegistryCredentialsConfigurationFile(processRunner, configurationFilePath.parent, logger) }
 
         beforeEachTest {
             Files.createDirectories(configurationFilePath.parent)

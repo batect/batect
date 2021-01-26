@@ -187,7 +187,7 @@ private val dockerModule = DI.Module("docker") {
     bind<ContainerWaiter>() with singleton { ContainerWaiter(instance()) }
     bind<DockerHostNameResolver>() with singleton { DockerHostNameResolver(instance(), instance()) }
     bind<DockerHttpConfig>() with singleton { DockerHttpConfig(instance(), commandLineOptions().dockerHost, instance(), instance()) }
-    bind<RegistryCredentialsConfigurationFile>() with singletonWithLogger { logger -> RegistryCredentialsConfigurationFile(instance(), instance(), logger) }
+    bind<RegistryCredentialsConfigurationFile>() with singletonWithLogger { logger -> RegistryCredentialsConfigurationFile(instance(), commandLineOptions().dockerConfigDirectory, logger) }
     bind<RegistryCredentialsProvider>() with singleton { RegistryCredentialsProvider(instance()) }
 
     bind<DockerTLSConfig>() with singleton {

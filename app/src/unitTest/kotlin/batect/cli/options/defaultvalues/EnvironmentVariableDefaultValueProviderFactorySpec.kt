@@ -16,6 +16,7 @@
 
 package batect.cli.options.defaultvalues
 
+import batect.cli.options.OptionValueSource
 import batect.cli.options.ValueConversionResult
 import batect.cli.options.ValueConverters
 import batect.os.HostEnvironmentVariables
@@ -40,9 +41,13 @@ object EnvironmentVariableDefaultValueProviderFactorySpec : Spek({
                 it("returns the value of the environment variable") {
                     assertThat(provider.value, equalTo(PossibleValue.Valid("some value")))
                 }
+
+                it("reports that the value came from the environment") {
+                    assertThat(provider.valueSource, equalTo(OptionValueSource.Environment))
+                }
             }
 
-            given("the value of the environment variable is able to be converted to the target type") {
+            given("the value of the environment variable is not able to be converted to the target type") {
                 @Suppress("UNUSED_PARAMETER")
                 fun converter(value: String): ValueConversionResult<String> {
                     return ValueConversionResult.ConversionFailed("something went wrong")
@@ -53,6 +58,10 @@ object EnvironmentVariableDefaultValueProviderFactorySpec : Spek({
                 it("returns the value of the environment variable") {
                     assertThat(provider.value, equalTo(PossibleValue.Invalid("The value of the SOME_VAR environment variable ('some value') is invalid: something went wrong")))
                 }
+
+                it("reports that the value came from the environment") {
+                    assertThat(provider.valueSource, equalTo(OptionValueSource.Environment))
+                }
             }
         }
 
@@ -61,6 +70,10 @@ object EnvironmentVariableDefaultValueProviderFactorySpec : Spek({
 
             it("returns the fallback value") {
                 assertThat(provider.value, equalTo(PossibleValue.Valid("the fallback value")))
+            }
+
+            it("reports that the value came from the environment") {
+                assertThat(provider.valueSource, equalTo(OptionValueSource.Default))
             }
         }
 

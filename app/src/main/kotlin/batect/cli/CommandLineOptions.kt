@@ -62,6 +62,7 @@ data class CommandLineOptions(
     val dockerTlsCACertificatePath: Path = Paths.get("set-to-default-value-in", "CommandLineOptionsParser"),
     val dockerTLSCertificatePath: Path = Paths.get("set-to-default-value-in", "CommandLineOptionsParser"),
     val dockerTLSKeyPath: Path = Paths.get("set-to-default-value-in", "CommandLineOptionsParser"),
+    val dockerConfigDirectory: Path = Paths.get("set-to-default-value-in", "CommandLineOptionsParser"),
     val cacheType: CacheType = CacheType.Volume,
     val linuxCacheInitImageName: String = CacheInitialisationImage.linuxDefault,
     val existingNetworkToUse: String? = null,

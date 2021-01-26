@@ -72,6 +72,7 @@ object CommandLineOptionsParserSpec : Spek({
         val defaultCommandLineOptions = CommandLineOptions(
             configVariablesSourceFile = fileSystem.getPath("/resolved/batect.local.yml"),
             dockerHost = defaultDockerHost,
+            dockerConfigDirectory = fileSystem.getPath("home-dir", ".docker"),
             dockerTlsCACertificatePath = fileSystem.getPath("home-dir", ".docker", "ca.pem"),
             dockerTLSCertificatePath = fileSystem.getPath("home-dir", ".docker", "cert.pem"),
             dockerTLSKeyPath = fileSystem.getPath("home-dir", ".docker", "key.pem")
@@ -242,7 +243,35 @@ object CommandLineOptionsParserSpec : Spek({
                 dockerTLSKeyPath = fileSystem.getPath("/resolved/some-cert-dir/key.pem"),
                 taskName = "some-task"
             ),
+            listOf("--docker-config=some-config-dir", "some-task") to defaultCommandLineOptions.copy(
+                dockerConfigDirectory = fileSystem.getPath("/resolved/some-config-dir"),
+                dockerTlsCACertificatePath = fileSystem.getPath("/resolved/some-config-dir/ca.pem"),
+                dockerTLSCertificatePath = fileSystem.getPath("/resolved/some-config-dir/cert.pem"),
+                dockerTLSKeyPath = fileSystem.getPath("/resolved/some-config-dir/key.pem"),
+                taskName = "some-task"
+            ),
+            listOf("--docker-cert-path=some-cert-dir", "--docker-config=some-config-dir", "some-task") to defaultCommandLineOptions.copy(
+                dockerConfigDirectory = fileSystem.getPath("/resolved/some-config-dir"),
+                dockerTlsCACertificatePath = fileSystem.getPath("/resolved/some-cert-dir/ca.pem"),
+                dockerTLSCertificatePath = fileSystem.getPath("/resolved/some-cert-dir/cert.pem"),
+                dockerTLSKeyPath = fileSystem.getPath("/resolved/some-cert-dir/key.pem"),
+                taskName = "some-task"
+            ),
             listOf("--docker-cert-path=some-cert-dir", "--docker-tls-ca-cert=some-ca-cert", "--docker-tls-cert=some-cert", "--docker-tls-key=some-key", "some-task") to defaultCommandLineOptions.copy(
+                dockerTlsCACertificatePath = fileSystem.getPath("/resolved/some-ca-cert"),
+                dockerTLSCertificatePath = fileSystem.getPath("/resolved/some-cert"),
+                dockerTLSKeyPath = fileSystem.getPath("/resolved/some-key"),
+                taskName = "some-task"
+            ),
+            listOf("--docker-config=some-config-dir", "--docker-tls-ca-cert=some-ca-cert", "--docker-tls-cert=some-cert", "--docker-tls-key=some-key", "some-task") to defaultCommandLineOptions.copy(
+                dockerConfigDirectory = fileSystem.getPath("/resolved/some-config-dir"),
+                dockerTlsCACertificatePath = fileSystem.getPath("/resolved/some-ca-cert"),
+                dockerTLSCertificatePath = fileSystem.getPath("/resolved/some-cert"),
+                dockerTLSKeyPath = fileSystem.getPath("/resolved/some-key"),
+                taskName = "some-task"
+            ),
+            listOf("--docker-cert-path=some-cert-dir", "--docker-config=some-config-dir", "--docker-tls-ca-cert=some-ca-cert", "--docker-tls-cert=some-cert", "--docker-tls-key=some-key", "some-task") to defaultCommandLineOptions.copy(
+                dockerConfigDirectory = fileSystem.getPath("/resolved/some-config-dir"),
                 dockerTlsCACertificatePath = fileSystem.getPath("/resolved/some-ca-cert"),
                 dockerTLSCertificatePath = fileSystem.getPath("/resolved/some-cert"),
                 dockerTLSKeyPath = fileSystem.getPath("/resolved/some-key"),

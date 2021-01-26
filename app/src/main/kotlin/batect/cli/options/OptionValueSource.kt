@@ -18,5 +18,6 @@ package batect.cli.options
 
 enum class OptionValueSource {
     Default,
+    Environment,
     CommandLine
 }

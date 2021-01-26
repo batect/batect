@@ -16,9 +16,14 @@
 
 package batect.cli.options.defaultvalues
 
+import batect.cli.options.OptionValueSource
+
 interface DefaultValueProvider<T> {
     val value: PossibleValue<T>
     val description: String
+
+    val valueSource: OptionValueSource
+        get() = OptionValueSource.Default
 }
 
 sealed class PossibleValue<V> {

@@ -21,17 +21,15 @@ import batect.logging.Logger
 import batect.os.ProcessRunner
 import kotlinx.serialization.Serializable
 import java.nio.charset.Charset
-import java.nio.file.FileSystem
 import java.nio.file.Files
-import java.util.Properties
+import java.nio.file.Path
 
 class RegistryCredentialsConfigurationFile(
-    fileSystem: FileSystem,
     private val processRunner: ProcessRunner,
+    configDirectory: Path,
     private val logger: Logger,
-    properties: Properties = System.getProperties()
 ) {
-    private val configFilePath = fileSystem.getPath(properties.getProperty("user.home"), ".docker", "config.json").toAbsolutePath()
+    private val configFilePath = configDirectory.resolve("config.json").toAbsolutePath()
     private val config by lazy { loadConfigFile() }
 
     private fun loadConfigFile(): DockerConfigFile {

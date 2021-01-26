@@ -11,7 +11,7 @@ It's entirely up to you, do whatever you're most interested in. Some suggestions
 
 * take a look at any open [issues](https://github.com/batect/batect/issues?q=is%3Aopen+is%3Aissue), especially those tagged with
   ['good first issue'](https://github.com/batect/batect/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)
-* take a look at the [roadmap](https://github.com/batect/batect/blob/master/ROADMAP.md),
+* take a look at the [roadmap](https://github.com/batect/batect/blob/main/ROADMAP.md),
   especially those tagged with ![good first issue](https://img.shields.io/badge/-good%20first%20issue-green)
 * improve the [documentation](https://batect.dev/) - add further examples or tips and tricks, clarify sections or even just fix typos
 * create a [sample project](https://batect.dev/docs/getting-started/sample-projects) for a language or framework that doesn't already have one

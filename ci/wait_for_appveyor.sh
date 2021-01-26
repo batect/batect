@@ -4,7 +4,7 @@ set -euo pipefail
 
 REPO_SLUG=${GITHUB_REPOSITORY}
 GIT_COMMIT=${GITHUB_SHA}
-GIT_BRANCH=master
+GIT_BRANCH=main
 
 function main() {
     URL="https://ci.appveyor.com/api/projects/$REPO_SLUG/history?recordsNumber=200&branch=$GIT_BRANCH"

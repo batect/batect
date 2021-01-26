@@ -2,7 +2,7 @@
 
 All modern shells (Bash, zsh, Fish and even PowerShell) support tab completion for an application's arguments. This saves users typing (eg. `git stat<tab>` completes to `git status`) and helps them find  the correct argument without having to wait for the application to run and fail (eg. is it `unitTest`, `unitTests` or `unit-test`?).
 
-batect does not currently support tab completion in any shell, and this has been requested by a number of users (see https://github.com/batect/batect/issues/116 and https://github.com/batect/batect/issues/466) and has been on the [roadmap](https://github.com/batect/batect/blob/master/ROADMAP.md) [since forever](https://github.com/batect/batect/commit/fce1890a444e8a963af3767aaa181dda14d7041f).
+batect does not currently support tab completion in any shell, and this has been requested by a number of users (see https://github.com/batect/batect/issues/116 and https://github.com/batect/batect/issues/466) and has been on the [roadmap](https://github.com/batect/batect/blob/main/ROADMAP.md) [since forever](https://github.com/batect/batect/commit/fce1890a444e8a963af3767aaa181dda14d7041f).
 
 batect's non-global installation presents some challenges to standard ways of providing tab completion, as a user could use different versions of batect (with different available command line options) simultaneously on different projects.
 

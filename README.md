@@ -1,5 +1,5 @@
 # Batect
-[![Build Status](https://github.com/batect/batect/workflows/CI/badge.svg)](https://github.com/batect/batect/actions?query=workflow%3ACI+branch%3Amaster)
+[![Build Status](https://github.com/batect/batect/workflows/CI/badge.svg)](https://github.com/batect/batect/actions?query=workflow%3ACI+branch%3Amain)
 [![Coverage](https://img.shields.io/codecov/c/github/batect/batect.svg)](https://codecov.io/gh/batect/batect)
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/2698/badge)](https://bestpractices.coreinfrastructure.org/projects/2698)
 [![License](https://img.shields.io/github/license/batect/batect.svg)](https://opensource.org/licenses/Apache-2.0)

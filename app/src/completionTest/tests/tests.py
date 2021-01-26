@@ -27,6 +27,7 @@ class CompletionTestBase(ABC):
             "--config-vars-file",
             "--disable-ports",
             "--docker-cert-path",
+            "--docker-config",
             "--docker-host",
             "--docker-tls",
             "--docker-tls-ca-cert",

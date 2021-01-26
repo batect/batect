@@ -2,6 +2,12 @@
 
 set -euo pipefail
 
+# Running 'ls' here works around an issue with Docker for Mac's gRPC file sharing implementation where the two
+# 'stat' invocations below return 'root' instead of the correct user.
+# Confirmed bug is present in Docker for Mac 3.1.0. Switching to legacy implementation resolves the issue.
+echo "Home directory contents:"
+ls -la $HOME
+
 echo "User: $(id -un)"
 echo "Group: $(id -gn)"
 echo "Home directory: $HOME"
@@ -15,4 +21,6 @@ else
 fi
 
 touch /output/created-file
+
+echo "/output contents:"
 ls -la /output

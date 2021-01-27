@@ -94,10 +94,10 @@
         BATECT_WRAPPER_DID_DOWNLOAD="$BATECT_WRAPPER_DID_DOWNLOAD" \
         HOSTNAME="$HOSTNAME" \
         exec \
-            "${GIT_BASH_PTY_WORKAROUND[@]}" \
+            ${GIT_BASH_PTY_WORKAROUND[@]+"${GIT_BASH_PTY_WORKAROUND[@]}"} \
             java \
             -Djava.net.useSystemProxies=true \
-            "${JAVA_OPTS[@]}" \
+            ${JAVA_OPTS[@]+"${JAVA_OPTS[@]}"} \
             -jar "$JAR_PATH" \
             "$@"
     }

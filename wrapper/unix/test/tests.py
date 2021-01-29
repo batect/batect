@@ -13,9 +13,9 @@ import unittest
 
 class WrapperScriptTests(unittest.TestCase):
     http_port = 8080
+    default_bash = "/usr/bin/bash"
 
     minimum_script_dependencies = [
-        "/usr/bin/bash",
         "/usr/bin/basename",
         "/usr/bin/cut",
         "/usr/bin/dirname",
@@ -28,6 +28,8 @@ class WrapperScriptTests(unittest.TestCase):
         "/usr/bin/sha256sum",
         "/usr/bin/uname",
     ]
+
+    minimum_script_dependencies_with_default_bash = minimum_script_dependencies + [default_bash]
 
     def setUp(self):
         self.start_server()
@@ -106,7 +108,7 @@ class WrapperScriptTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0)
 
     def test_no_curl(self):
-        path_dir = self.create_limited_path(self.minimum_script_dependencies)
+        path_dir = self.create_limited_path(self.minimum_script_dependencies_with_default_bash)
 
         result = self.run_script([], path=path_dir)
 
@@ -114,7 +116,7 @@ class WrapperScriptTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
 
     def test_no_java(self):
-        path_dir = self.create_limited_path(self.minimum_script_dependencies + ["/usr/bin/curl"])
+        path_dir = self.create_limited_path(self.minimum_script_dependencies_with_default_bash + ["/usr/bin/curl"])
 
         result = self.run_script([], path=path_dir)
 
@@ -159,6 +161,15 @@ class WrapperScriptTests(unittest.TestCase):
         self.assertIn("The Java application has started.", result.stdout.decode())
         self.assertEqual(result.returncode, 0)
 
+    # macOS ships with Bash 3.2, so we need to make sure the wrapper works with that.
+    def test_supported_java_with_old_bash(self):
+        path_dir = self.create_limited_path_for_specific_java_version("8", bash="/shells/bash-3.2/bin/bash")
+
+        result = self.run_script([], path=path_dir)
+
+        self.assertIn("The Java application has started.", result.stdout.decode())
+        self.assertEqual(result.returncode, 0)
+
     def test_non_zero_exit(self):
         result = self.run_script(["exit-non-zero"])
         output = result.stdout.decode()
@@ -191,12 +202,13 @@ class WrapperScriptTests(unittest.TestCase):
         with open(self.cache_dir + "/VERSION-GOES-HERE/batect-VERSION-GOES-HERE.jar", "a+") as f:
             f.truncate(10)
 
-    def create_limited_path_for_specific_java_version(self, java_version):
-        return self.create_limited_path_for_specific_java("java-{}-openjdk-amd64".format(java_version))
+    def create_limited_path_for_specific_java_version(self, java_version, bash=default_bash):
+        return self.create_limited_path_for_specific_java("java-{}-openjdk-amd64".format(java_version), bash)
 
-    def create_limited_path_for_specific_java(self, java_name):
+    def create_limited_path_for_specific_java(self, java_name, bash=default_bash):
         return self.create_limited_path(self.minimum_script_dependencies +
                                         [
+                                            bash,
                                             "/usr/bin/curl",
                                             "/usr/lib/jvm/{}/bin/java".format(java_name),
                                         ])

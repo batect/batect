@@ -33,6 +33,7 @@ import batect.cli.commands.completion.FishShellTabCompletionLineGenerator
 import batect.cli.commands.completion.FishShellTabCompletionScriptGenerator
 import batect.cli.commands.completion.GenerateShellTabCompletionScriptCommand
 import batect.cli.commands.completion.GenerateShellTabCompletionTaskInformationCommand
+import batect.cli.commands.completion.ZshShellTabCompletionScriptGenerator
 import batect.config.ProjectPaths
 import batect.config.includes.DefaultGitRepositoryCacheNotificationListener
 import batect.config.includes.GitRepositoryCache
@@ -157,7 +158,7 @@ private val cliModule = DI.Module("cli") {
     bind<DisableTelemetryCommand>() with singleton { DisableTelemetryCommand(instance(), instance(), instance(StreamType.Output)) }
     bind<DockerConnectivity>() with singleton { DockerConnectivity(instance(), instance(), instance(StreamType.Error), instance()) }
     bind<EnableTelemetryCommand>() with singleton { EnableTelemetryCommand(instance(), instance(StreamType.Output)) }
-    bind<GenerateShellTabCompletionScriptCommand>() with singleton { GenerateShellTabCompletionScriptCommand(instance(), instance(), instance(), instance(StreamType.Output), instance(), instance()) }
+    bind<GenerateShellTabCompletionScriptCommand>() with singleton { GenerateShellTabCompletionScriptCommand(instance(), instance(), instance(), instance(), instance(StreamType.Output), instance(), instance()) }
     bind<GenerateShellTabCompletionTaskInformationCommand>() with singleton { GenerateShellTabCompletionTaskInformationCommand(instance(), instance(StreamType.Output), instance(), instance(), instance()) }
     bind<FishShellTabCompletionScriptGenerator>() with singleton { FishShellTabCompletionScriptGenerator(instance()) }
     bind<FishShellTabCompletionLineGenerator>() with singleton { FishShellTabCompletionLineGenerator() }
@@ -166,6 +167,7 @@ private val cliModule = DI.Module("cli") {
     bind<RunTaskCommand>() with singleton { RunTaskCommand(instance(), instance(), instance(), instance(), instance()) }
     bind<UpgradeCommand>() with singletonWithLogger { logger -> UpgradeCommand(instance(), instance(), instance(), instance(), instance(StreamType.Output), instance(StreamType.Error), instance(), instance(), logger) }
     bind<VersionInfoCommand>() with singleton { VersionInfoCommand(instance(), instance(StreamType.Output), instance(), instance(), instance(), instance()) }
+    bind<ZshShellTabCompletionScriptGenerator>() with singleton { ZshShellTabCompletionScriptGenerator() }
 }
 
 private val configModule = DI.Module("config") {

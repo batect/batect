@@ -16,6 +16,16 @@
 
 package batect.cli.commands.completion
 
-enum class KnownShell {
-    Fish
+import batect.cli.options.OptionDefinition
+import java.io.InputStreamReader
+
+class ZshShellTabCompletionScriptGenerator : ShellTabCompletionScriptGenerator {
+    override fun generate(options: Set<OptionDefinition>, registerAs: String): String {
+        val classLoader = javaClass.classLoader
+        classLoader.getResourceAsStream("batect/completion.zsh").use { stream ->
+            InputStreamReader(stream!!, Charsets.UTF_8).use {
+                return it.readText().replace("PLACEHOLDER_REGISTER_AS", registerAs)
+            }
+        }
+    }
 }

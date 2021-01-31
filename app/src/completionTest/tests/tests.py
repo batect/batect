@@ -71,15 +71,11 @@ class CompletionTestBase(ABC):
         self.assertIn("--config-var", results)
 
     def test_partial_option_completion(self):
-        results = self.run_completions_for("./batect --conf", "/app/bin")
+        results = self.run_completions_for("./batect --config-", "/app/bin")
         self.assertIn("--config-file", results)
 
-    def test_enum_option_completion(self):
-        results = self.run_completions_for("./batect --output=", "/app/bin")
-        self.assertEqual(["--output=all", "--output=fancy", "--output=quiet", "--output=simple"], results)
-
     def test_task_name_completion_standard_file_location(self):
-        results = self.run_completions_for("/app/bin/batect tas", self.directory_for_test_case("simple-config"))
+        results = self.run_completions_for("/app/bin/batect task-", self.directory_for_test_case("simple-config"))
         self.assertEqual(["task-1", "task-2"], results)
 
     def test_task_name_completion_custom_file_location(self):
@@ -87,27 +83,41 @@ class CompletionTestBase(ABC):
 
         for flag in flags:
             with self.subTest(flag=flag):
-                command_line = "/app/bin/batect {}../simple-config/batect.yml tas".format(flag)
+                command_line = "/app/bin/batect {}../simple-config/batect.yml task-".format(flag)
                 results = self.run_completions_for(command_line, self.directory_for_test_case("invalid-config"))
 
                 self.assertEqual(["task-1", "task-2"], results)
 
-    def test_task_name_completion_custom_file_location_with_spaces(self):
+    def test_task_name_completion_custom_file_location_with_spaces_in_quotes(self):
         flags = ["--config-file=", "--config-file ", "-f ", "-f="]
 
         for flag in flags:
             with self.subTest(flag=flag):
-                command_line = "/app/bin/batect {}\\\"../directory with spaces/batect.yml\\\" tas".format(flag)
+                command_line = "/app/bin/batect {}\\\"../directory with spaces/batect.yml\\\" task-".format(flag)
                 results = self.run_completions_for(command_line, self.directory_for_test_case("invalid-config"))
 
                 self.assertEqual(["task-1", "task-2"], results)
 
+    def test_task_name_completion_custom_file_location_with_escaped_spaces(self):
+        flags = ["--config-file=", "--config-file ", "-f ", "-f="]
+
+        for flag in flags:
+            with self.subTest(flag=flag):
+                command_line = "/app/bin/batect {}../directory\\ with\\ spaces/batect.yml task-".format(flag)
+                results = self.run_completions_for(command_line, self.directory_for_test_case("invalid-config"))
+
+                self.assertEqual(["task-1", "task-2"], results)
+
+    def test_task_name_completion_custom_file_does_not_exist(self):
+        results = self.run_completions_for("/app/bin/batect --config-file=doesnotexist.yml task-", self.directory_for_test_case("simple-config"))
+        self.assertEqual([], results)
+
     def test_task_name_completion_invalid_project(self):
-        results = self.run_completions_for("/app/bin/batect tas", self.directory_for_test_case("invalid-config"))
+        results = self.run_completions_for("/app/bin/batect task-", self.directory_for_test_case("invalid-config"))
         self.assertEqual([], results)
 
     def test_task_name_completion_invalid_inferred_project_name(self):
-        results = self.run_completions_for("/app/bin/batect tas", self.set_up_test_directory_with_invalid_inferred_project_name())
+        results = self.run_completions_for("/app/bin/batect task-", self.set_up_test_directory_with_invalid_inferred_project_name())
         self.assertEqual([], results)
 
     def test_completion_after_task_name(self):
@@ -117,8 +127,8 @@ class CompletionTestBase(ABC):
 
     def test_completion_twice_no_modifications(self):
         output = self.run_two_commands(
-            self.completion_command_for("/app/bin/batect tas"),
-            self.completion_command_for("/app/bin/batect tas"),
+            self.completion_command_for("/app/bin/batect task-"),
+            self.completion_command_for("/app/bin/batect task-"),
             self.directory_for_test_case("simple-config"),
         )
 
@@ -132,8 +142,8 @@ class CompletionTestBase(ABC):
         shutil.copy(os.path.join(original_config_directory, "batect.yml"), test_config_file)
 
         output = self.run_two_commands(
-            self.completion_command_for("/app/bin/batect tas"),
-            'sed -i"" "s/task-1/task-3/g" batect.yml && ' + self.completion_command_for("/app/bin/batect tas"),
+            self.completion_command_for("/app/bin/batect task-"),
+            'sed -i"" "s/task-1/task-3/g" batect.yml && ' + self.completion_command_for("/app/bin/batect task-"),
             test_directory,
         )
 
@@ -144,8 +154,8 @@ class CompletionTestBase(ABC):
         test_directory = self.set_up_test_directory_with_include()
 
         output = self.run_two_commands(
-            self.completion_command_for("/app/bin/batect tas"),
-            'sed -i"" "s/task-2/task-3/g" other-file.yml && ' + self.completion_command_for("/app/bin/batect tas"),
+            self.completion_command_for("/app/bin/batect task-"),
+            'sed -i"" "s/task-2/task-3/g" other-file.yml && ' + self.completion_command_for("/app/bin/batect task-"),
             test_directory,
         )
 
@@ -156,8 +166,8 @@ class CompletionTestBase(ABC):
         test_directory = self.set_up_test_directory_with_include()
 
         output = self.run_two_commands(
-            self.completion_command_for("/app/bin/batect tas"),
-            'rm other-file.yml && mv without-include.yml batect.yml && ' + self.completion_command_for("/app/bin/batect tas"),
+            self.completion_command_for("/app/bin/batect task-"),
+            'rm other-file.yml && mv without-include.yml batect.yml && ' + self.completion_command_for("/app/bin/batect task-"),
             test_directory,
         )
 
@@ -240,6 +250,30 @@ class FishCompletionTests(CompletionTestBase, unittest.TestCase):
 
     def shell_command_for(self, command):
         return ["fish", "--private", "--command", command]
+
+    def test_enum_option_completion_after_equals(self):
+        results = self.run_completions_for("./batect --output=", "/app/bin")
+        self.assertEqual(["--output=all", "--output=fancy", "--output=quiet", "--output=simple"], results)
+
+
+class ZshCompletionTests(CompletionTestBase, unittest.TestCase):
+    def __init__(self, methodName):
+        super().__init__(methodName)
+        self.maxDiff = None
+
+    def completion_command_for(self, input) -> str:
+        return 'complete.zsh "{}"'.format(input)
+
+    def shell_command_for(self, command):
+        return ["zsh", "-c", command]
+
+    def test_enum_option_completion_after_equals(self):
+        results = self.run_completions_for("./batect --output=", "/app/bin")
+        self.assertEqual(["all", "fancy", "quiet", "simple"], results)
+
+    def test_enum_option_completion_after_space(self):
+        results = self.run_completions_for("./batect --output ", "/app/bin")
+        self.assertEqual(["all", "fancy", "quiet", "simple"], results)
 
 
 if __name__ == '__main__':

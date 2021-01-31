@@ -58,7 +58,7 @@ object GenerateShellTabCompletionTaskInformationCommandSpec : Spek({
         val includedFile1 by createForEachTest { fileSystem.getPath("/some/other/file.yml") }
         val includedFile2 by createForEachTest { fileSystem.getPath("/another/file.yml") }
 
-        val commandLineOptions by createForEachTest { CommandLineOptions(configurationFileName = configurationFileName, generateShellTabCompletionTaskInformation = KnownShell.Fish) }
+        val commandLineOptions by createForEachTest { CommandLineOptions(configurationFileName = configurationFileName, generateShellTabCompletionTaskInformation = Shell.Fish) }
         val configurationLoader by createForEachTest {
             mock<ConfigurationLoader> {
                 on { loadConfig(configurationFileName, SilentGitRepositoryCacheNotificationListener) } doReturn ConfigurationLoadResult(

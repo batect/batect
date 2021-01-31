@@ -16,7 +16,7 @@
 
 package batect.cli
 
-import batect.cli.commands.completion.KnownShell
+import batect.cli.commands.completion.Shell
 import batect.cli.options.OptionGroup
 import batect.cli.options.OptionParser
 import batect.cli.options.OptionParserContainer
@@ -233,8 +233,8 @@ class CommandLineOptionsParser(
         environmentVariableDefaultValueProviderFactory.create("BATECT_ENABLE_TELEMETRY", null, ValueConverters.invertingBoolean)
     )
 
-    private val generateShellTabCompletionScript: KnownShell? by valueOption(hiddenOptionsGroup, "generate-completion-script", "Generate shell tab completion script for given shell.", ValueConverters.enum<KnownShell>(), showInHelp = false)
-    private val generateShellTabCompletionTaskInformation: KnownShell? by valueOption(hiddenOptionsGroup, "generate-completion-task-info", "Generate shell tab completion task information for given shell.", ValueConverters.enum<KnownShell>(), showInHelp = false)
+    private val generateShellTabCompletionScript: Shell? by valueOption(hiddenOptionsGroup, "generate-completion-script", "Generate shell tab completion script for given shell.", ValueConverters.enum<Shell>(), showInHelp = false)
+    private val generateShellTabCompletionTaskInformation: Shell? by valueOption(hiddenOptionsGroup, "generate-completion-task-info", "Generate shell tab completion task information for given shell.", ValueConverters.enum<Shell>(), showInHelp = false)
 
     fun parse(args: Iterable<String>): CommandLineOptionsParsingResult {
         when (val result = optionParser.parseOptions(args)) {

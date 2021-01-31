@@ -13,7 +13,7 @@ RUN curl --location --fail --show-error https://raw.githubusercontent.com/batect
     -o /usr/share/fish/vendor_completions.d/batect.fish
 
 # zsh completion
-ARG ZSH_COMPLETION_COMMIT_SHA=0a0ad2fb18987096f4ba774dbb10898e0fc54781
+ARG ZSH_COMPLETION_COMMIT_SHA=3ae24fb9f0f4079a12fc8f4a7b50f17f1706ff40
 
 RUN curl --location --fail --show-error https://raw.githubusercontent.com/batect/zsh-completion/$ZSH_COMPLETION_COMMIT_SHA/.batect/test-env/zshrc \
     -o /root/.zshrc

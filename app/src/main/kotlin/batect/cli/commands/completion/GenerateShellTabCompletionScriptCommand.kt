@@ -30,6 +30,7 @@ class GenerateShellTabCompletionScriptCommand(
     private val commandLineOptions: CommandLineOptions,
     private val optionsParser: CommandLineOptionsParser,
     private val fishGenerator: FishShellTabCompletionScriptGenerator,
+    private val zshGenerator: ZshShellTabCompletionScriptGenerator,
     private val outputStream: PrintStream,
     private val environmentVariables: HostEnvironmentVariables,
     private val telemetrySessionBuilder: TelemetrySessionBuilder
@@ -67,7 +68,8 @@ class GenerateShellTabCompletionScriptCommand(
             ?: throw IllegalArgumentException("'BATECT_COMPLETION_PROXY_REGISTER_AS' environment variable not set.")
 
     private fun getGeneratorForShell(): ShellTabCompletionScriptGenerator = when (commandLineOptions.generateShellTabCompletionScript) {
-        KnownShell.Fish -> fishGenerator
-        else -> throw IllegalArgumentException("Can only generate completions for Fish.")
+        Shell.Fish -> fishGenerator
+        Shell.Zsh -> zshGenerator
+        else -> throw IllegalArgumentException("Can't generate completions for shell ${commandLineOptions.generateShellTabCompletionScript}")
     }
 }

@@ -16,7 +16,7 @@
 
 package batect.cli
 
-import batect.cli.commands.completion.KnownShell
+import batect.cli.commands.completion.Shell
 import batect.cli.options.defaultvalues.EnvironmentVariableDefaultValueProviderFactory
 import batect.docker.DockerHttpConfigDefaults
 import batect.execution.CacheType
@@ -287,8 +287,8 @@ object CommandLineOptionsParserSpec : Spek({
             listOf("--no-telemetry", "some-task") to defaultCommandLineOptions.copy(disableTelemetry = true, taskName = "some-task"),
             listOf("--disable-ports", "some-task") to defaultCommandLineOptions.copy(disablePortMappings = true, taskName = "some-task"),
             listOf("--enable-buildkit", "some-task") to defaultCommandLineOptions.copy(enableBuildKit = true, taskName = "some-task"),
-            listOf("--generate-completion-script=fish") to defaultCommandLineOptions.copy(generateShellTabCompletionScript = KnownShell.Fish),
-            listOf("--generate-completion-task-info=fish") to defaultCommandLineOptions.copy(generateShellTabCompletionTaskInformation = KnownShell.Fish),
+            listOf("--generate-completion-script=fish") to defaultCommandLineOptions.copy(generateShellTabCompletionScript = Shell.Fish),
+            listOf("--generate-completion-task-info=fish") to defaultCommandLineOptions.copy(generateShellTabCompletionTaskInformation = Shell.Fish),
             listOf("--max-parallelism=3", "some-task") to defaultCommandLineOptions.copy(maximumLevelOfParallelism = 3, taskName = "some-task"),
         ).forEach { (args, expectedResult) ->
             given("the arguments $args") {

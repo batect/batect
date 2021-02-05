@@ -96,10 +96,10 @@ class KotlinPlugin implements Plugin<Project> {
         }
 
         project.dependencies {
-            testCommonImplementation 'com.natpryce:hamkrest:1.7.0.3'
-            testCommonImplementation 'org.spekframework.spek2:spek-dsl-jvm:2.0.11'
-            testCommonRuntimeOnly 'org.spekframework.spek2:spek-runner-junit5:2.0.11'
-            testCommonRuntimeOnly 'org.junit.platform:junit-platform-engine:1.7.1'
+            testCommonImplementation "com.natpryce:hamkrest:${project.property("hamkrestVersion")}"
+            testCommonImplementation "org.spekframework.spek2:spek-dsl-jvm:${project.property("spekVersion")}"
+            testCommonRuntimeOnly "org.spekframework.spek2:spek-runner-junit5:${project.property("spekVersion")}"
+            testCommonRuntimeOnly "org.junit.platform:junit-platform-engine:${project.property("junitPlatformVersion")}"
         }
 
         project.tasks.withType(Test).configureEach {
@@ -150,8 +150,8 @@ class KotlinPlugin implements Plugin<Project> {
 
         project.dependencies {
             // We don't use mockito directly, but mockito-kotlin does refer to it, so override it to get the latest version.
-            testImplementation 'org.mockito:mockito-core:3.7.7'
-            testImplementation 'com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0'
+            testImplementation "org.mockito:mockito-core:${project.property("mockitoCoreVersion")}"
+            testImplementation "com.nhaarman.mockitokotlin2:mockito-kotlin:${project.property("mockitoKotlinVersion")}"
         }
     }
 

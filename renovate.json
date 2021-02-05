@@ -33,17 +33,6 @@
         "KotlinPlugin.groovy$"
       ],
       "matchStrings": [
-        "testCommonImplementation '(?<depName>.*?):(?<currentValue>[\\d.]*?)'",
-        "testCommonRuntimeOnly '(?<depName>.*?):(?<currentValue>[\\d.]*?)'",
-        "testImplementation '(?<depName>.*?):(?<currentValue>[\\d.]*?)'"
-      ],
-      "datasourceTemplate": "maven"
-    },
-    {
-      "fileMatch": [
-        "KotlinPlugin.groovy$"
-      ],
-      "matchStrings": [
         "jacoco {\\s+toolVersion = '(?<currentValue>[\\d.]*?)'"
       ],
       "datasourceTemplate": "maven",

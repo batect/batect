@@ -40,6 +40,10 @@ class KotlinPlugin implements Plugin<Project> {
         project.plugins.apply('org.jetbrains.kotlin.jvm')
         project.plugins.apply('org.jetbrains.kotlin.plugin.serialization')
 
+        project.dependencies {
+            implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
+        }
+
         project.sourceCompatibility = JavaVersion.VERSION_1_8
         project.targetCompatibility = JavaVersion.VERSION_1_8
 

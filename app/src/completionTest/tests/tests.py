@@ -210,7 +210,7 @@ class CompletionTestBase(ABC):
         stdout = self.run_command_in_shell('{} && echo "---DIVIDER---" && {}'.format(first_command, second_command), working_directory).splitlines()
         divider_line = stdout.index("---DIVIDER---")
         first_output = sorted(stdout[0:divider_line])
-        second_output =(stdout[divider_line + 1:])
+        second_output = (stdout[divider_line + 1:])
 
         return {"first": first_output, "second": second_output}
 

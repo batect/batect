@@ -23,6 +23,10 @@ PLACEHOLDER_REGISTER_AS() {
     # See https://github.com/zsh-users/zsh/blob/57a735f/Etc/completion-style-guide#L560.
     config_file_path="${(Q)${(Q)config_file_path}}"
 
+    if [[ -f "$config_file_path" ]]; then
+        config_file_path=$(realpath "$config_file_path")
+    fi
+
     case $state in
         (task_name)
             PLACEHOLDER_REGISTER_AS_task_names "$config_file_path" && return 0

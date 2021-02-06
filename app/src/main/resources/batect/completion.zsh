@@ -101,7 +101,7 @@ PLACEHOLDER_REGISTER_AS_need_to_refresh_cache() {
     local files
     files=$(echo "$hashes" | cut -d' ' -f3)
 
-    for file in $files ; do
+    echo "$files" | while read -r file; do
         if [[ ! -f "$file" ]]; then
             return 0
         fi

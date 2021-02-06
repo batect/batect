@@ -261,8 +261,6 @@ jobs:
 
   journey-test-linux:
     name: "Run journey tests (Linux, Docker ${{ matrix.docker_version }}, BuildKit enabled: ${{ matrix.enable_buildkit }})"
-    needs:
-      - build-linux
     runs-on: ubuntu-18.04
 
     strategy:
@@ -274,10 +272,10 @@ jobs:
           - docker_version: latest
             enable_buildkit: true
 
-          - docker_version: 5:19.03.14~3-0~ubuntu-bionic # Temporary override due to breaking changes in 20.04
+          - docker_version: 5:19.03.14~3-0~ubuntu-bionic # 20.04 introduced some breaking changes, this is the last version before 20.04
             enable_buildkit: false
 
-          - docker_version: 5:19.03.14~3-0~ubuntu-bionic # Temporary override due to breaking changes in 20.04
+          - docker_version: 5:19.03.14~3-0~ubuntu-bionic # 20.04 introduced some breaking changes, this is the last version before 20.04
             enable_buildkit: true
 
           - docker_version: 18.03.1~ce~3-0~ubuntu
@@ -311,7 +309,7 @@ jobs:
         uses: actions/cache@v2.1.4
         with:
           path: ~/.gradle/caches
-          key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle') }}
+          key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle') }}-journeytests
           restore-keys: gradle-packages-${{ runner.os }}
 
       - name: Install Docker
@@ -322,8 +320,6 @@ jobs:
 
   integration-test-linux:
     name: "Run integration tests (Linux, Docker ${{ matrix.docker_version }}, ${{ matrix.connection_type }})"
-    needs:
-      - build-linux
     runs-on: ubuntu-18.04
 
     strategy:
@@ -333,7 +329,7 @@ jobs:
             connection_type: Unix socket
             test_options: ""
 
-          - docker_version: 5:19.03.14~3-0~ubuntu-bionic # Temporary override due to breaking changes in 20.04
+          - docker_version: 5:19.03.14~3-0~ubuntu-bionic # 20.04 introduced some breaking changes, this is the last version before 20.04
             connection_type: Unix socket
             test_options: ""
 
@@ -345,7 +341,7 @@ jobs:
             connection_type: TLS over TCP
             test_options: ""
 
-          - docker_version: 5:19.03.14~3-0~ubuntu-bionic # Temporary override due to breaking changes in 20.04
+          - docker_version: 5:19.03.14~3-0~ubuntu-bionic # 20.04 introduced some breaking changes, this is the last version before 20.04
             connection_type: TLS over TCP
             test_options: ""
 
@@ -374,7 +370,7 @@ jobs:
         uses: actions/cache@v2.1.4
         with:
           path: ~/.gradle/caches
-          key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle') }}
+          key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle') }}-integrationtests
           restore-keys: gradle-packages-${{ runner.os }}
 
       - name: Install Docker

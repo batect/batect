@@ -19,12 +19,18 @@ package batect.cli.commands.completion
 import batect.cli.options.OptionDefinition
 import java.io.InputStreamReader
 
-class ZshShellTabCompletionScriptGenerator : ShellTabCompletionScriptGenerator {
+class ZshShellTabCompletionScriptGenerator(private val optionGenerator: ZshShellTabCompletionOptionGenerator) : ShellTabCompletionScriptGenerator {
     override fun generate(options: Set<OptionDefinition>, registerAs: String): String {
+        val optionDefinitions = options
+            .flatMap { optionGenerator.generate(it) }
+            .joinToString("\n") { "'$it'" }
+
         val classLoader = javaClass.classLoader
         classLoader.getResourceAsStream("batect/completion.zsh").use { stream ->
             InputStreamReader(stream!!, Charsets.UTF_8).use {
-                return it.readText().replace("PLACEHOLDER_REGISTER_AS", registerAs)
+                return it.readText()
+                    .replace("PLACEHOLDER_REGISTER_AS", registerAs)
+                    .replace("PLACEHOLDER_OPTION_DEFINITIONS", optionDefinitions)
             }
         }
     }

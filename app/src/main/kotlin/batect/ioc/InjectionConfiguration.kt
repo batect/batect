@@ -33,6 +33,7 @@ import batect.cli.commands.completion.FishShellTabCompletionLineGenerator
 import batect.cli.commands.completion.FishShellTabCompletionScriptGenerator
 import batect.cli.commands.completion.GenerateShellTabCompletionScriptCommand
 import batect.cli.commands.completion.GenerateShellTabCompletionTaskInformationCommand
+import batect.cli.commands.completion.ZshShellTabCompletionOptionGenerator
 import batect.cli.commands.completion.ZshShellTabCompletionScriptGenerator
 import batect.config.ProjectPaths
 import batect.config.includes.DefaultGitRepositoryCacheNotificationListener
@@ -167,7 +168,8 @@ private val cliModule = DI.Module("cli") {
     bind<RunTaskCommand>() with singleton { RunTaskCommand(instance(), instance(), instance(), instance(), instance()) }
     bind<UpgradeCommand>() with singletonWithLogger { logger -> UpgradeCommand(instance(), instance(), instance(), instance(), instance(StreamType.Output), instance(StreamType.Error), instance(), instance(), logger) }
     bind<VersionInfoCommand>() with singleton { VersionInfoCommand(instance(), instance(StreamType.Output), instance(), instance(), instance(), instance()) }
-    bind<ZshShellTabCompletionScriptGenerator>() with singleton { ZshShellTabCompletionScriptGenerator() }
+    bind<ZshShellTabCompletionOptionGenerator>() with singleton { ZshShellTabCompletionOptionGenerator() }
+    bind<ZshShellTabCompletionScriptGenerator>() with singleton { ZshShellTabCompletionScriptGenerator(instance()) }
 }
 
 private val configModule = DI.Module("config") {

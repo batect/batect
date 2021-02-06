@@ -16,10 +16,7 @@
 
 package batect.cli.options
 
-import batect.os.PathResolutionResult
 import batect.os.PathResolverFactory
-import batect.os.PathType
-import java.nio.file.Path
 import java.util.Locale
 
 object ValueConverters {
@@ -61,45 +58,15 @@ object ValueConverters {
         return EnumValueConverter<T>(valueMap)
     }
 
-    fun pathToFile(pathResolverFactory: PathResolverFactory, mustExist: Boolean = false): ValueConverter<Path> {
+    fun pathToFile(pathResolverFactory: PathResolverFactory, mustExist: Boolean = false): FilePathValueConverter {
         val resolver = pathResolverFactory.createResolverForCurrentDirectory()
 
-        return PathValueConverter { value ->
-            when (val result = resolver.resolve(value)) {
-                is PathResolutionResult.Resolved -> when (result.pathType) {
-                    PathType.File -> ValueConversionResult.ConversionSucceeded(result.absolutePath)
-                    PathType.DoesNotExist ->
-                        if (mustExist) {
-                            ValueConversionResult.ConversionFailed("The file '$value' (${result.resolutionDescription}) does not exist.")
-                        } else {
-                            ValueConversionResult.ConversionSucceeded(result.absolutePath)
-                        }
-                    PathType.Directory -> ValueConversionResult.ConversionFailed("The path '$value' (${result.resolutionDescription}) refers to a directory.")
-                    PathType.Other -> ValueConversionResult.ConversionFailed("The path '$value' (${result.resolutionDescription}) refers to something other than a file.")
-                }
-                is PathResolutionResult.InvalidPath -> ValueConversionResult.ConversionFailed("'$value' is not a valid path.")
-            }
-        }
+        return FilePathValueConverter(resolver, mustExist)
     }
 
-    fun pathToDirectory(pathResolverFactory: PathResolverFactory, mustExist: Boolean = false): ValueConverter<Path> {
+    fun pathToDirectory(pathResolverFactory: PathResolverFactory, mustExist: Boolean = false): DirectoryPathValueConverter {
         val resolver = pathResolverFactory.createResolverForCurrentDirectory()
 
-        return PathValueConverter { value ->
-            when (val result = resolver.resolve(value)) {
-                is PathResolutionResult.Resolved -> when (result.pathType) {
-                    PathType.File -> ValueConversionResult.ConversionFailed("The path '$value' (${result.resolutionDescription}) refers to a file.")
-                    PathType.DoesNotExist ->
-                        if (mustExist) {
-                            ValueConversionResult.ConversionFailed("The directory '$value' (${result.resolutionDescription}) does not exist.")
-                        } else {
-                            ValueConversionResult.ConversionSucceeded(result.absolutePath)
-                        }
-                    PathType.Directory -> ValueConversionResult.ConversionSucceeded(result.absolutePath)
-                    PathType.Other -> ValueConversionResult.ConversionFailed("The path '$value' (${result.resolutionDescription}) refers to something other than a directory.")
-                }
-                is PathResolutionResult.InvalidPath -> ValueConversionResult.ConversionFailed("'$value' is not a valid path.")
-            }
-        }
+        return DirectoryPathValueConverter(resolver, mustExist)
     }
 }

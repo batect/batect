@@ -55,7 +55,7 @@ jobs:
         run: if [ ! -z "$(git status --porcelain)" ]; then echo "Generated code changed. Do you need to run './gradlew generateMainProtos' ?"; git diff; exit 1; fi
 
   build-windows:
-    name: "Build and run journey tests (Windows)"
+    name: "Build (Windows)"
     runs-on: windows-2019
     env:
       # This is required because WSL installs a 'bash.exe' in C:\Windows\System32 that always takes precedence over anything in PATH
@@ -82,12 +82,58 @@ jobs:
           restore-keys: gradle-packages-${{ runner.os }}
 
       - name: Build and test
-        run: ./gradlew --parallel -DgenerateCoverage=true app:check libs:git-client:integrationTest jacocoTestReport --exclude-task=generateMainProtos # This is temporarily disabled on Windows due to https://github.com/square/wire/issues/1325
+        run: ./gradlew --parallel -DgenerateCoverage=true app:check jacocoTestReport --exclude-task=generateMainProtos # This is temporarily disabled on Windows due to https://github.com/square/wire/issues/1325
 
       - name: Upload coverage to codecov.io
         uses: codecov/codecov-action@v1.2.1
         with:
           flags: windows
+
+      - name: Stop Gradle daemon
+        run: ./gradlew --stop
+
+      - name: Clean up dependencies before caching
+        if: steps.cache-packages.outputs.cache-hit != 'true'
+        run: |
+          Remove-Item -ErrorAction SilentlyContinue          ~/.gradle/caches/modules-2/modules-2.lock
+          Remove-Item -ErrorAction SilentlyContinue -Recurse ~/.gradle/caches/*/plugin-resolution/
+          Remove-Item -ErrorAction SilentlyContinue -Recurse ~/.gradle/caches/*/scripts/
+          Remove-Item -ErrorAction SilentlyContinue -Recurse ~/.gradle/caches/*/scripts-remapped/
+          Remove-Item -ErrorAction SilentlyContinue -Recurse ~/.gradle/caches/*/fileHashes/
+          Remove-Item -ErrorAction SilentlyContinue          ~/.gradle/caches/*/fileContent/*.lock
+          Remove-Item -ErrorAction SilentlyContinue          ~/.gradle/caches/*/javaCompile/*.lock
+          Remove-Item -ErrorAction SilentlyContinue          ~/.gradle/caches/*/executionHistory/*.lock
+          Remove-Item -ErrorAction SilentlyContinue          ~/.gradle/caches/*/generated-gradle-jars/*.lock
+          Remove-Item -ErrorAction SilentlyContinue          ~/.gradle/caches/jars-*/*.lock
+          Remove-Item -ErrorAction SilentlyContinue          ~/.gradle/caches/journal-1/file-access.bin
+          Remove-Item -ErrorAction SilentlyContinue          ~/.gradle/caches/journal-1/*.lock
+
+  wrapper-test-windows:
+    name: "Run wrapper tests (Windows)"
+    runs-on: windows-2019
+    env:
+      # This is required because WSL installs a 'bash.exe' in C:\Windows\System32 that always takes precedence over anything in PATH
+      # See https://github.com/actions/virtual-environments/pull/1081#issuecomment-661220718.
+      BASH_PATH: C:\Program Files\Git\bin\bash.exe
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2.3.4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v1.4.3
+        with:
+          java-version: 1.8
+
+      - name: Cache packages
+        id: cache-packages
+        uses: actions/cache@v2.1.4
+        with:
+          path: ~/.gradle/caches
+          key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle') }}-wrappertests
+          restore-keys: gradle-packages-${{ runner.os }}
 
       - name: Run wrapper tests
         run: ./gradlew wrapper:windows:check --exclude-task=generateMainProtos # This is temporarily disabled on Windows due to https://github.com/square/wire/issues/1325
@@ -97,6 +143,107 @@ jobs:
 
       - name: Run journey tests (Windows containers)
         run: ./gradlew journeyTest -PwindowsContainers --exclude-task=generateMainProtos # This is temporarily disabled on Windows due to https://github.com/square/wire/issues/1325
+
+      - name: Stop Gradle daemon
+        run: ./gradlew --stop
+
+      - name: Clean up dependencies before caching
+        if: steps.cache-packages.outputs.cache-hit != 'true'
+        run: |
+          Remove-Item -ErrorAction SilentlyContinue          ~/.gradle/caches/modules-2/modules-2.lock
+          Remove-Item -ErrorAction SilentlyContinue -Recurse ~/.gradle/caches/*/plugin-resolution/
+          Remove-Item -ErrorAction SilentlyContinue -Recurse ~/.gradle/caches/*/scripts/
+          Remove-Item -ErrorAction SilentlyContinue -Recurse ~/.gradle/caches/*/scripts-remapped/
+          Remove-Item -ErrorAction SilentlyContinue -Recurse ~/.gradle/caches/*/fileHashes/
+          Remove-Item -ErrorAction SilentlyContinue          ~/.gradle/caches/*/fileContent/*.lock
+          Remove-Item -ErrorAction SilentlyContinue          ~/.gradle/caches/*/javaCompile/*.lock
+          Remove-Item -ErrorAction SilentlyContinue          ~/.gradle/caches/*/executionHistory/*.lock
+          Remove-Item -ErrorAction SilentlyContinue          ~/.gradle/caches/*/generated-gradle-jars/*.lock
+          Remove-Item -ErrorAction SilentlyContinue          ~/.gradle/caches/jars-*/*.lock
+          Remove-Item -ErrorAction SilentlyContinue          ~/.gradle/caches/journal-1/file-access.bin
+          Remove-Item -ErrorAction SilentlyContinue          ~/.gradle/caches/journal-1/*.lock
+
+  journey-test-windows:
+    name: "Run journey tests (Windows)"
+    runs-on: windows-2019
+    env:
+      # This is required because WSL installs a 'bash.exe' in C:\Windows\System32 that always takes precedence over anything in PATH
+      # See https://github.com/actions/virtual-environments/pull/1081#issuecomment-661220718.
+      BASH_PATH: C:\Program Files\Git\bin\bash.exe
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2.3.4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v1.4.3
+        with:
+          java-version: 1.8
+
+      - name: Cache packages
+        id: cache-packages
+        uses: actions/cache@v2.1.4
+        with:
+          path: ~/.gradle/caches
+          key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle') }}-journeytests
+          restore-keys: gradle-packages-${{ runner.os }}
+
+      - name: Print Docker version information
+        run: docker version
+
+      - name: Run journey tests (Windows containers)
+        run: ./gradlew journeyTest -PwindowsContainers --exclude-task=generateMainProtos # This is temporarily disabled on Windows due to https://github.com/square/wire/issues/1325
+
+      - name: Stop Gradle daemon
+        run: ./gradlew --stop
+
+      - name: Clean up dependencies before caching
+        if: steps.cache-packages.outputs.cache-hit != 'true'
+        run: |
+          Remove-Item -ErrorAction SilentlyContinue          ~/.gradle/caches/modules-2/modules-2.lock
+          Remove-Item -ErrorAction SilentlyContinue -Recurse ~/.gradle/caches/*/plugin-resolution/
+          Remove-Item -ErrorAction SilentlyContinue -Recurse ~/.gradle/caches/*/scripts/
+          Remove-Item -ErrorAction SilentlyContinue -Recurse ~/.gradle/caches/*/scripts-remapped/
+          Remove-Item -ErrorAction SilentlyContinue -Recurse ~/.gradle/caches/*/fileHashes/
+          Remove-Item -ErrorAction SilentlyContinue          ~/.gradle/caches/*/fileContent/*.lock
+          Remove-Item -ErrorAction SilentlyContinue          ~/.gradle/caches/*/javaCompile/*.lock
+          Remove-Item -ErrorAction SilentlyContinue          ~/.gradle/caches/*/executionHistory/*.lock
+          Remove-Item -ErrorAction SilentlyContinue          ~/.gradle/caches/*/generated-gradle-jars/*.lock
+          Remove-Item -ErrorAction SilentlyContinue          ~/.gradle/caches/jars-*/*.lock
+          Remove-Item -ErrorAction SilentlyContinue          ~/.gradle/caches/journal-1/file-access.bin
+          Remove-Item -ErrorAction SilentlyContinue          ~/.gradle/caches/journal-1/*.lock
+
+  integration-test-windows:
+    name: "Run integration tests (Windows)"
+    runs-on: windows-2019
+    env:
+      # This is required because WSL installs a 'bash.exe' in C:\Windows\System32 that always takes precedence over anything in PATH
+      # See https://github.com/actions/virtual-environments/pull/1081#issuecomment-661220718.
+      BASH_PATH: C:\Program Files\Git\bin\bash.exe
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2.3.4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v1.4.3
+        with:
+          java-version: 1.8
+
+      - name: Cache packages
+        id: cache-packages
+        uses: actions/cache@v2.1.4
+        with:
+          path: ~/.gradle/caches
+          key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle') }}-integrationtests
+          restore-keys: gradle-packages-${{ runner.os }}
+
+      - name: Run integration tests
+        run: ./gradlew --parallel libs:git-client:integrationTest --exclude-task=generateMainProtos # This is temporarily disabled on Windows due to https://github.com/square/wire/issues/1325
 
       - name: Stop Gradle daemon
         run: ./gradlew --stop
@@ -384,9 +531,12 @@ jobs:
       - build-windows
       - build-linux
       - wrapper-test-linux
+      - wrapper-test-windows
       - completion-test-linux
       - journey-test-linux
+      - journey-test-windows
       - integration-test-linux
+      - integration-test-windows
     if: github.event_name == 'push' && contains(github.ref, 'refs/tags/') && github.repository == 'batect/batect'
     runs-on: ubuntu-18.04
 

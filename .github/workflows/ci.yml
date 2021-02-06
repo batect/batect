@@ -73,13 +73,6 @@ jobs:
         with:
           java-version: 1.8
 
-      - name: Cache Gradle wrapper
-        uses: actions/cache@v2.1.4
-        with:
-          path: ~/.gradle/wrapper
-          key: gradle-wrapper-${{ runner.os }}-${{ hashFiles('gradle/wrapper/**/*') }}
-          restore-keys: gradle-wrapper-${{ runner.os }}
-
       - name: Cache packages
         id: cache-packages
         uses: actions/cache@v2.1.4

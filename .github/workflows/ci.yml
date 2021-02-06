@@ -138,12 +138,6 @@ jobs:
       - name: Run wrapper tests
         run: ./gradlew wrapper:windows:check --exclude-task=generateMainProtos # This is temporarily disabled on Windows due to https://github.com/square/wire/issues/1325
 
-      - name: Print Docker version information
-        run: docker version
-
-      - name: Run journey tests (Windows containers)
-        run: ./gradlew journeyTest -PwindowsContainers --exclude-task=generateMainProtos # This is temporarily disabled on Windows due to https://github.com/square/wire/issues/1325
-
       - name: Stop Gradle daemon
         run: ./gradlew --stop
 

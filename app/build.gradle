@@ -83,7 +83,6 @@ checkUnitTestLayout {
 
 apply from: "gradle/completionTest.gradle"
 apply from: "gradle/journeyTest.gradle"
-apply from: "gradle/performanceTest.gradle"
 apply from: "gradle/profiling.gradle"
 apply from: "gradle/shadow.gradle"
 apply from: "gradle/versionInfo.gradle"

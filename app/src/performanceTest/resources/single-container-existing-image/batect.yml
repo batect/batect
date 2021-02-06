@@ -1,9 +1,0 @@
-containers:
-  test-env:
-    image: alpine:3.12.3
-
-tasks:
-  the-task:
-    run:
-      container: test-env
-      command: echo "Hello, world!"

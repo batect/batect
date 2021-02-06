@@ -1,9 +1,0 @@
-containers:
-  test-env:
-    build_directory: containers/test-env
-
-tasks:
-  the-task:
-    run:
-      container: test-env
-      command: cat /message.txt

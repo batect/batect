@@ -2,7 +2,7 @@ project_name: working-directory-override
 
 containers:
   build-env:
-    image: alpine:3.12.3
+    image: alpine:3.13.1
     working_directory: /code
 
 tasks:

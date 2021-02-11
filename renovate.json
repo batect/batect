@@ -66,5 +66,12 @@
       "datasourceTemplate": "repology",
       "lookupNameTemplate": "alpine_3_12/{{depName}}"
     }
+  ],
+  "packageRules": [
+    {
+      "groupName": "Wire",
+      "matchPackagePatterns": ["^com\\.squareup\\.wire:"],
+      "matchDatasources": ["maven"],
+    }
   ]
 }

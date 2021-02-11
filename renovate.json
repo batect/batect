@@ -71,7 +71,7 @@
     {
       "groupName": "Wire",
       "matchPackagePatterns": ["^com\\.squareup\\.wire:"],
-      "matchDatasources": ["maven"],
+      "matchDatasources": ["maven"]
     }
   ]
 }

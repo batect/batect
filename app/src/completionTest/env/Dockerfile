@@ -1,11 +1,11 @@
 FROM alpine:3.13.1@sha256:08d6ca16c60fe7490c03d10dc339d9fd8ea67c6466dea8d558526b1330a85930
 
 RUN apk --no-cache add \
-    bash==5.0.17-r0 \
-    curl==7.69.1-r3 \
-    fish==3.1.2-r0 \
-    openjdk8-jre=8.252.09-r0 \
-    python3==3.8.5-r0 \
+    bash==5.1.0-r0 \
+    curl==7.74.0-r0 \
+    fish==3.1.2-r4 \
+    openjdk8-jre=8.272.10-r4 \
+    python3==3.8.7-r0 \
     zsh==5.8-r1
 
 # fish completion

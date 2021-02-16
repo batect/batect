@@ -4,7 +4,7 @@ RUN apk --no-cache add \
     bash==5.0.17-r0 \
     curl==7.69.1-r3 \
     fish==3.1.2-r0 \
-    openjdk8-jre=8.252.09-r0 \
+    openjdk8-jre=8.275.01-r0 \
     python3==3.8.5-r0 \
     zsh==5.8-r1
 

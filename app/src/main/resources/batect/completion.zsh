@@ -73,7 +73,7 @@ PLACEHOLDER_REGISTER_AS_cache_path() {
     local config_file_path_hash
     config_file_path_hash=$(echo "$config_file_path" | PLACEHOLDER_REGISTER_AS_sha256 - | cut -d' ' -f1)
 
-    echo "$HOME/.batect/completion/zsh-v1/$config_file_path_hash"
+    echo "$HOME/.batect/completion/zsh-v2/$config_file_path_hash"
 }
 
 PLACEHOLDER_REGISTER_AS_refresh_cache() {

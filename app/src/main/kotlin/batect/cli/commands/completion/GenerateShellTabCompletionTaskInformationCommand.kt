@@ -61,9 +61,17 @@ class GenerateShellTabCompletionTaskInformationCommand(
         loadResult.pathsLoaded.sorted().forEach { printPathLine(it) }
 
         outputStream.println("### TASKS ###")
-        loadResult.configuration.tasks.keys.sorted().forEach { outputStream.println(it) }
+        loadResult.configuration.tasks.keys
+            .sorted()
+            .map { escapeTaskName(it) }
+            .forEach { outputStream.println(it) }
 
         outputStream.flush()
+    }
+
+    private fun escapeTaskName(name: String) = when (commandLineOptions.generateShellTabCompletionTaskInformation) {
+        Shell.Zsh -> name.replace(":", "\\:")
+        else -> name
     }
 
     // Why this format? It matches the format used by sha256sum / shasum, which means we can check all files in one go in the completion script.

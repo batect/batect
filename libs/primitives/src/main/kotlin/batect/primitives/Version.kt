@@ -43,8 +43,7 @@ data class Version(val major: Int, val minor: Int, val patch: Int, val suffix: S
         suffix != "" && metadata != "" -> "$major.$minor.$patch-$suffix+$metadata"
         suffix != "" -> "$major.$minor.$patch-$suffix"
         metadata != "" -> "$major.$minor.$patch+$metadata"
-        patch != 0 -> "$major.$minor.$patch"
-        else -> "$major.$minor"
+        else -> "$major.$minor.$patch"
     }
 
     companion object : KSerializer<Version> {

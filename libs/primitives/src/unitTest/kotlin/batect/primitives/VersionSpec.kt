@@ -100,7 +100,7 @@ object VersionSpec : Spek({
                 val version = Version(1, 0, 0, "")
 
                 it("formats it in the format major.minor") {
-                    assertThat(version.toString(), equalTo("1.0"))
+                    assertThat(version.toString(), equalTo("1.0.0"))
                 }
             }
 
@@ -108,7 +108,7 @@ object VersionSpec : Spek({
                 val version = Version(1, 2, 0, "")
 
                 it("formats it in the format major.minor") {
-                    assertThat(version.toString(), equalTo("1.2"))
+                    assertThat(version.toString(), equalTo("1.2.0"))
                 }
             }
 

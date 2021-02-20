@@ -167,7 +167,7 @@ object UpdateNotifierSpec : Spek({
 
                         it("prints a message to the console") {
                             inOrder(console) {
-                                verify(console).println("Version 0.3 of Batect is now available (you have 0.2).")
+                                verify(console).println("Version 0.3.0 of Batect is now available (you have 0.2.0).")
                                 verify(console).println("To upgrade to the latest version, run './batect --upgrade'.")
                                 verify(console).println("For more information, visit https://something.com/batect/0.3.")
                                 verify(console).println()
@@ -178,8 +178,8 @@ object UpdateNotifierSpec : Spek({
                             verify(telemetrySessionBuilder).addEvent(
                                 "UpdateAvailableNotificationShown",
                                 mapOf(
-                                    "currentVersion" to AttributeValue("0.2"),
-                                    "newVersion" to AttributeValue("0.3")
+                                    "currentVersion" to AttributeValue("0.2.0"),
+                                    "newVersion" to AttributeValue("0.3.0")
                                 )
                             )
                         }
@@ -233,7 +233,7 @@ object UpdateNotifierSpec : Spek({
 
                         it("prints a message to the console") {
                             inOrder(console) {
-                                verify(console).println("Version 0.3 of Batect is now available (you have 0.2).")
+                                verify(console).println("Version 0.3.0 of Batect is now available (you have 0.2.0).")
                                 verify(console).println("To upgrade to the latest version, run './batect --upgrade'.")
                                 verify(console).println("For more information, visit https://something.com/batect/0.3.")
                                 verify(console).println()
@@ -248,8 +248,8 @@ object UpdateNotifierSpec : Spek({
                             verify(telemetrySessionBuilder).addEvent(
                                 "UpdateAvailableNotificationShown",
                                 mapOf(
-                                    "currentVersion" to AttributeValue("0.2"),
-                                    "newVersion" to AttributeValue("0.3")
+                                    "currentVersion" to AttributeValue("0.2.0"),
+                                    "newVersion" to AttributeValue("0.3.0")
                                 )
                             )
                         }

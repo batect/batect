@@ -2,7 +2,7 @@ project_name: task-with-environment-task
 
 containers:
   build-env:
-    image: alpine:3.13.1
+    image: alpine:3.13.2
 
 tasks:
   the-task:

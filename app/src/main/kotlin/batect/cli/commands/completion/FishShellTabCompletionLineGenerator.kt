@@ -36,6 +36,11 @@ class FishShellTabCompletionLineGenerator {
             builder.append(option.shortName)
         }
 
+        builder.append(" --description ")
+        builder.append("'")
+        builder.append(option.description.replace("'", "\\'"))
+        builder.append("'")
+
         if (option is ValueOption<*, *> && option.valueConverter is PathValueConverter) {
             builder.append(" --force-files")
         } else {

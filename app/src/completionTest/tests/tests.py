@@ -201,7 +201,7 @@ class CompletionTestBase(ABC):
     def run_completions_for(self, input, working_directory):
         stdout = self.run_command_in_shell(self.completion_command_for(input), working_directory)
 
-        return sorted(stdout.splitlines())
+        return sorted(self.post_process_generated_completions(stdout.splitlines()))
 
     def completion_command_for(self, input) -> str:
         pass
@@ -239,6 +239,9 @@ class CompletionTestBase(ABC):
     def shell_command_for(self, command):
         pass
 
+    def post_process_generated_completions(self, completions):
+        return completions
+
 
 class FishCompletionTests(CompletionTestBase, unittest.TestCase):
     def __init__(self, methodName):
@@ -254,6 +257,10 @@ class FishCompletionTests(CompletionTestBase, unittest.TestCase):
     def test_enum_option_completion_after_equals(self):
         results = self.run_completions_for("./batect --output=", "/app/bin")
         self.assertEqual(["--output=all", "--output=fancy", "--output=quiet", "--output=simple"], results)
+
+    def post_process_generated_completions(self, completions):
+        # Remove descriptions (which are given in the format '<option><tab><description>')
+        return map(lambda completion: completion.split('\t', 1)[0], completions)
 
 
 class ZshCompletionTests(CompletionTestBase, unittest.TestCase):

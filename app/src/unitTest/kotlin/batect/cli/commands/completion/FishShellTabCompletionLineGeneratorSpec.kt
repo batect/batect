@@ -39,18 +39,26 @@ object FishShellTabCompletionLineGeneratorSpec : Spek({
 
         given("a flag option") {
             given("it has only a long option") {
-                val option = FlagOption(optionGroup, "some-option", "Not important", StaticDefaultValueProvider(false), null)
+                val option = FlagOption(optionGroup, "some-option", "The option description", StaticDefaultValueProvider(false), null)
 
                 it("generates a completion line with only the long option") {
-                    assertThat(generator.generate(option, registerAs), equalTo("""complete -c $registerAs -l some-option --no-files --condition "not __fish_seen_argument -l some-option; and not __fish_seen_subcommand_from --""""))
+                    assertThat(generator.generate(option, registerAs), equalTo("""complete -c $registerAs -l some-option --description 'The option description' --no-files --condition "not __fish_seen_argument -l some-option; and not __fish_seen_subcommand_from --""""))
                 }
             }
 
             given("it has both a long and short option") {
-                val option = FlagOption(optionGroup, "some-option", "Not important", StaticDefaultValueProvider(false), 's')
+                val option = FlagOption(optionGroup, "some-option", "The option description", StaticDefaultValueProvider(false), 's')
 
                 it("generates a completion line with both forms of the option") {
-                    assertThat(generator.generate(option, registerAs), equalTo("""complete -c $registerAs -l some-option -o s --no-files --condition "not __fish_seen_argument -l some-option -o s; and not __fish_seen_subcommand_from --""""))
+                    assertThat(generator.generate(option, registerAs), equalTo("""complete -c $registerAs -l some-option -o s --description 'The option description' --no-files --condition "not __fish_seen_argument -l some-option -o s; and not __fish_seen_subcommand_from --""""))
+                }
+            }
+
+            given("it has a description with a single quote in it") {
+                val option = FlagOption(optionGroup, "some-option", "The option's description", StaticDefaultValueProvider(false), null)
+
+                it("escapes the single quote") {
+                    assertThat(generator.generate(option, registerAs), equalTo("""complete -c $registerAs -l some-option --description 'The option\'s description' --no-files --condition "not __fish_seen_argument -l some-option; and not __fish_seen_subcommand_from --""""))
                 }
             }
         }
@@ -58,44 +66,44 @@ object FishShellTabCompletionLineGeneratorSpec : Spek({
         given("a value option") {
             given("it accepts a string") {
                 given("it has only a long option") {
-                    val option = ValueOption(optionGroup, "some-option", "Not important", StaticDefaultValueProvider(""), ValueConverters.string)
+                    val option = ValueOption(optionGroup, "some-option", "The option description", StaticDefaultValueProvider(""), ValueConverters.string)
 
                     it("generates a completion line with only the long option, specifying that the option requires a value") {
-                        assertThat(generator.generate(option, registerAs), equalTo("""complete -c $registerAs -l some-option --no-files --condition "not __fish_seen_argument -l some-option; and not __fish_seen_subcommand_from --" --require-parameter"""))
+                        assertThat(generator.generate(option, registerAs), equalTo("""complete -c $registerAs -l some-option --description 'The option description' --no-files --condition "not __fish_seen_argument -l some-option; and not __fish_seen_subcommand_from --" --require-parameter"""))
                     }
                 }
 
                 given("it has both a long and short option") {
-                    val option = ValueOption(optionGroup, "some-option", "Not important", StaticDefaultValueProvider(""), ValueConverters.string, 's')
+                    val option = ValueOption(optionGroup, "some-option", "The option description", StaticDefaultValueProvider(""), ValueConverters.string, 's')
 
                     it("generates a completion line with both forms of the option") {
-                        assertThat(generator.generate(option, registerAs), equalTo("""complete -c $registerAs -l some-option -o s --no-files --condition "not __fish_seen_argument -l some-option -o s; and not __fish_seen_subcommand_from --" --require-parameter"""))
+                        assertThat(generator.generate(option, registerAs), equalTo("""complete -c $registerAs -l some-option -o s --description 'The option description' --no-files --condition "not __fish_seen_argument -l some-option -o s; and not __fish_seen_subcommand_from --" --require-parameter"""))
                     }
                 }
             }
 
             given("it accepts an enum") {
-                val option = ValueOption(optionGroup, "some-option", "Not important", StaticDefaultValueProvider(OutputStyle.Fancy), ValueConverters.enum())
+                val option = ValueOption(optionGroup, "some-option", "The option description", StaticDefaultValueProvider(OutputStyle.Fancy), ValueConverters.enum())
 
                 it("generates a completion line with the possible enum values") {
-                    assertThat(generator.generate(option, registerAs), equalTo("""complete -c $registerAs -l some-option --no-files --condition "not __fish_seen_argument -l some-option; and not __fish_seen_subcommand_from --" --require-parameter -a "all fancy quiet simple""""))
+                    assertThat(generator.generate(option, registerAs), equalTo("""complete -c $registerAs -l some-option --description 'The option description' --no-files --condition "not __fish_seen_argument -l some-option; and not __fish_seen_subcommand_from --" --require-parameter -a "all fancy quiet simple""""))
                 }
             }
 
             given("it accepts a file or directory") {
-                val option = ValueOption(optionGroup, "some-option", "Not important", StaticDefaultValueProvider(OutputStyle.Fancy), mock<PathValueConverter>())
+                val option = ValueOption(optionGroup, "some-option", "The option description", StaticDefaultValueProvider(OutputStyle.Fancy), mock<PathValueConverter>())
 
                 it("generates a completion line with the possible enum values") {
-                    assertThat(generator.generate(option, registerAs), equalTo("""complete -c $registerAs -l some-option --force-files --condition "not __fish_seen_argument -l some-option; and not __fish_seen_subcommand_from --" --require-parameter"""))
+                    assertThat(generator.generate(option, registerAs), equalTo("""complete -c $registerAs -l some-option --description 'The option description' --force-files --condition "not __fish_seen_argument -l some-option; and not __fish_seen_subcommand_from --" --require-parameter"""))
                 }
             }
         }
 
         given("a map option") {
-            val option = MapOption(optionGroup, "some-option", "Not important")
+            val option = MapOption(optionGroup, "some-option", "The option description")
 
             it("generates a completion line that does not restrict the number of times the option is given") {
-                assertThat(generator.generate(option, registerAs), equalTo("""complete -c $registerAs -l some-option --no-files --condition "not __fish_seen_subcommand_from --" --require-parameter"""))
+                assertThat(generator.generate(option, registerAs), equalTo("""complete -c $registerAs -l some-option --description 'The option description' --no-files --condition "not __fish_seen_subcommand_from --" --require-parameter"""))
             }
         }
     }

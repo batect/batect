@@ -46,11 +46,12 @@ object GenerateShellTabCompletionTaskInformationCommandSpec : Spek({
         val config = Configuration(
             "the-project",
             TaskMap(
-                Task("first-task", null),
-                Task("second-task", null),
-                Task("third-task", null),
-                Task("fourth-task", null),
-                Task("task:with:colons", null)
+                Task("first-task", null, description = "This is the first task"),
+                Task("second-task", null, description = "This task has: colons"),
+                Task("third-task", null, description = "This task has\nnew lines"),
+                Task("fourth-task", null, description = "This task has\t tabs"),
+                Task("task-with-no-description", null),
+                Task("task:with:colons", null, description = "A task")
             )
         )
 
@@ -98,6 +99,8 @@ object GenerateShellTabCompletionTaskInformationCommandSpec : Spek({
             // You can generate these hashes yourself with something like:
             // echo -n '<file content>' | sha256sum
             it("prints all loaded paths and all tasks in the project, both in alphabetical order, and with the SHA-256 hash of each file before each file's path") {
+                val tab = '\t'
+
                 assertThat(
                     output.toString(),
                     equalTo(
@@ -107,11 +110,12 @@ object GenerateShellTabCompletionTaskInformationCommandSpec : Spek({
                         |6ca13d52ca70c883e0f0bb101e425a89e8624de51db2d2392593af6a84118090  /my-project/batect.yml
                         |8f61ad5cfa0c471c8cbf810ea285cb1e5f9c2c5e5e5e4f58a3229667703e1587  /some/other/file.yml
                         |### TASKS ###
-                        |first-task
-                        |fourth-task
-                        |second-task
-                        |task:with:colons
-                        |third-task
+                        |first-task${tab}This is the first task
+                        |fourth-task${tab}This task has  tabs
+                        |second-task${tab}This task has: colons
+                        |task-with-no-description
+                        |task:with:colons${tab}A task
+                        |third-task${tab}This task has new lines
                         |
                         """.trimMargin().withPlatformSpecificLineSeparator()
                     )
@@ -150,11 +154,12 @@ object GenerateShellTabCompletionTaskInformationCommandSpec : Spek({
                         |6ca13d52ca70c883e0f0bb101e425a89e8624de51db2d2392593af6a84118090  /my-project/batect.yml
                         |8f61ad5cfa0c471c8cbf810ea285cb1e5f9c2c5e5e5e4f58a3229667703e1587  /some/other/file.yml
                         |### TASKS ###
-                        |first-task
-                        |fourth-task
-                        |second-task
-                        |task\:with\:colons
-                        |third-task
+                        |first-task:This is the first task
+                        |fourth-task:This task has  tabs
+                        |second-task:This task has: colons
+                        |task-with-no-description
+                        |task\:with\:colons:A task
+                        |third-task:This task has new lines
                         |
                         """.trimMargin().withPlatformSpecificLineSeparator()
                     )

@@ -8,7 +8,7 @@ end
 
 function __batect_completion_PLACEHOLDER_REGISTER_AS_cache_path --argument-names config_file_path
     set -l config_file_path_hash (echo "$config_file_path" | __batect_completion_PLACEHOLDER_REGISTER_AS_sha256 - | cut -d' ' -f1)
-    echo "$HOME/.batect/completion/fish-v1/$config_file_path_hash"
+    echo "$HOME/.batect/completion/fish-v2/$config_file_path_hash"
 end
 
 function __batect_completion_PLACEHOLDER_REGISTER_AS_config_file_path

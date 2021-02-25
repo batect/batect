@@ -55,7 +55,7 @@ PLACEHOLDER_REGISTER_AS_task_names() {
     local tasks
     tasks=("${(@f)$(PLACEHOLDER_REGISTER_AS_get_tasks_from_cache "$cache_path")}")
 
-    _describe -t tasks 'task' tasks && return 0
+    _describe -t 'tasks' 'task' tasks && return 0
 
     return 1
 }

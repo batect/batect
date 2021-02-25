@@ -18,6 +18,7 @@ package batect.cli.commands.completion
 
 import batect.cli.CommandLineOptions
 import batect.cli.commands.Command
+import batect.config.Task
 import batect.config.includes.SilentGitRepositoryCacheNotificationListener
 import batect.config.io.ConfigurationLoadResult
 import batect.config.io.ConfigurationLoader
@@ -61,17 +62,30 @@ class GenerateShellTabCompletionTaskInformationCommand(
         loadResult.pathsLoaded.sorted().forEach { printPathLine(it) }
 
         outputStream.println("### TASKS ###")
-        loadResult.configuration.tasks.keys
-            .sorted()
-            .map { escapeTaskName(it) }
+        loadResult.configuration.tasks
+            .sortedBy { it.name }
+            .map { formatTask(it) }
             .forEach { outputStream.println(it) }
 
         outputStream.flush()
     }
 
-    private fun escapeTaskName(name: String) = when (commandLineOptions.generateShellTabCompletionTaskInformation) {
-        Shell.Zsh -> name.replace(":", "\\:")
-        else -> name
+    private fun formatTask(task: Task) = when (commandLineOptions.generateShellTabCompletionTaskInformation!!) {
+        Shell.Zsh -> task.name.replace(":", "\\:") + formatTaskDescription(task.description, ":")
+        Shell.Fish -> task.name + formatTaskDescription(task.description, "\t")
+    }
+
+    private fun formatTaskDescription(description: String, separator: String): String {
+        if (description.isBlank()) {
+            return ""
+        }
+
+        val cleanDescription = description
+            .replace("\r\n", " ")
+            .replace("\n", " ")
+            .replace("\t", " ")
+
+        return "$separator$cleanDescription"
     }
 
     // Why this format? It matches the format used by sha256sum / shasum, which means we can check all files in one go in the completion script.

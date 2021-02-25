@@ -38,17 +38,19 @@ class ZshShellTabCompletionOptionGenerator {
 
     private val OptionDefinition.valueDefinition: String
         get() = when {
-            !acceptsValue -> ""
-            this is ValueOption<*, *> && this.valueConverter is EnumValueConverter<*> -> this.valueConverter.enumValueDefinition
-            this is ValueOption<*, *> && this.valueConverter is FilePathValueConverter -> "=:file name:_files"
-            this is ValueOption<*, *> && this.valueConverter is DirectoryPathValueConverter -> "=:directory name:_files -/"
-            else -> "=::( )"
+            !acceptsValue -> "[${this.escapedDescription}]"
+            this is ValueOption<*, *> && this.valueConverter is EnumValueConverter<*> -> enumValueDefinition(this, this.valueConverter)
+            this is ValueOption<*, *> && this.valueConverter is FilePathValueConverter -> "=[${this.escapedDescription}]:file name:_files"
+            this is ValueOption<*, *> && this.valueConverter is DirectoryPathValueConverter -> "=[${this.escapedDescription}]:directory name:_files -/"
+            else -> "=[${this.escapedDescription}]::( )"
         }
 
-    private val EnumValueConverter<*>.enumValueDefinition: String
-        get() {
-            val values = possibleValues.keys.sorted().joinToString(" ")
+    private fun enumValueDefinition(option: OptionDefinition, valueConverter: EnumValueConverter<*>): String {
+        val values = valueConverter.possibleValues.keys.sorted().joinToString(" ")
 
-            return "=:value:($values)"
-        }
+        return "=[${option.escapedDescription}]:value:($values)"
+    }
+
+    private val OptionDefinition.escapedDescription: String
+        get() = description.replace("'", "'\\''")
 }

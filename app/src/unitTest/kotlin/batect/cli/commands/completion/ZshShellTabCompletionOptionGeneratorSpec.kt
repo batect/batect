@@ -39,18 +39,26 @@ object ZshShellTabCompletionOptionGeneratorSpec : Spek({
 
         given("a flag option") {
             given("it has only a long option") {
-                val option = FlagOption(optionGroup, "some-option", "Not important", StaticDefaultValueProvider(false), null)
+                val option = FlagOption(optionGroup, "some-option", "The option description", StaticDefaultValueProvider(false), null)
 
                 it("generates a single completion line with only the long option") {
-                    assertThat(generator.generate(option), equalTo(setOf("--some-option")))
+                    assertThat(generator.generate(option), equalTo(setOf("--some-option[The option description]")))
                 }
             }
 
             given("it has both a long and short option") {
-                val option = FlagOption(optionGroup, "some-option", "Not important", StaticDefaultValueProvider(false), 's')
+                val option = FlagOption(optionGroup, "some-option", "The option description", StaticDefaultValueProvider(false), 's')
 
                 it("generates completion lines with both forms of the option") {
-                    assertThat(generator.generate(option), equalTo(setOf("(-s)--some-option", "(--some-option)-s")))
+                    assertThat(generator.generate(option), equalTo(setOf("(-s)--some-option[The option description]", "(--some-option)-s[The option description]")))
+                }
+            }
+
+            given("it has a description with a single quote in it") {
+                val option = FlagOption(optionGroup, "some-option", "The option's description", StaticDefaultValueProvider(false), null)
+
+                it("escapes the single quote") {
+                    assertThat(generator.generate(option), equalTo(setOf("--some-option[The option'\\''s description]")))
                 }
             }
         }
@@ -58,61 +66,61 @@ object ZshShellTabCompletionOptionGeneratorSpec : Spek({
         given("a value option") {
             given("it accepts a string") {
                 given("it has only a long option") {
-                    val option = ValueOption(optionGroup, "some-option", "Not important", StaticDefaultValueProvider(""), ValueConverters.string)
+                    val option = ValueOption(optionGroup, "some-option", "The option description", StaticDefaultValueProvider(""), ValueConverters.string)
 
                     it("generates a single completion line with only the long option, specifying that the option requires a value") {
-                        assertThat(generator.generate(option), equalTo(setOf("--some-option=::( )")))
+                        assertThat(generator.generate(option), equalTo(setOf("--some-option=[The option description]::( )")))
                     }
                 }
 
                 given("it has both a long and short option") {
-                    val option = ValueOption(optionGroup, "some-option", "Not important", StaticDefaultValueProvider(""), ValueConverters.string, 's')
+                    val option = ValueOption(optionGroup, "some-option", "The option description", StaticDefaultValueProvider(""), ValueConverters.string, 's')
 
                     it("generates completion lines with both forms of the option") {
-                        assertThat(generator.generate(option), equalTo(setOf("(-s)--some-option=::( )", "(--some-option)-s=::( )")))
+                        assertThat(generator.generate(option), equalTo(setOf("(-s)--some-option=[The option description]::( )", "(--some-option)-s=[The option description]::( )")))
                     }
                 }
             }
 
             given("it accepts an enum") {
-                val option = ValueOption(optionGroup, "some-option", "Not important", StaticDefaultValueProvider(OutputStyle.Fancy), ValueConverters.enum())
+                val option = ValueOption(optionGroup, "some-option", "The option description", StaticDefaultValueProvider(OutputStyle.Fancy), ValueConverters.enum())
 
                 it("generates a completion line with the possible enum values") {
-                    assertThat(generator.generate(option), equalTo(setOf("--some-option=:value:(all fancy quiet simple)")))
+                    assertThat(generator.generate(option), equalTo(setOf("--some-option=[The option description]:value:(all fancy quiet simple)")))
                 }
             }
 
             given("it accepts a file") {
-                val option = ValueOption(optionGroup, "some-option", "Not important", StaticDefaultValueProvider(OutputStyle.Fancy), mock<FilePathValueConverter>())
+                val option = ValueOption(optionGroup, "some-option", "The option description", StaticDefaultValueProvider(OutputStyle.Fancy), mock<FilePathValueConverter>())
 
                 it("generates a completion line specifying that the option takes a file") {
-                    assertThat(generator.generate(option), equalTo(setOf("--some-option=:file name:_files")))
+                    assertThat(generator.generate(option), equalTo(setOf("--some-option=[The option description]:file name:_files")))
                 }
             }
 
             given("it accepts a directory") {
-                val option = ValueOption(optionGroup, "some-option", "Not important", StaticDefaultValueProvider(OutputStyle.Fancy), mock<DirectoryPathValueConverter>())
+                val option = ValueOption(optionGroup, "some-option", "The option description", StaticDefaultValueProvider(OutputStyle.Fancy), mock<DirectoryPathValueConverter>())
 
                 it("generates a completion line specifying that the option takes a directory") {
-                    assertThat(generator.generate(option), equalTo(setOf("--some-option=:directory name:_files -/")))
+                    assertThat(generator.generate(option), equalTo(setOf("--some-option=[The option description]:directory name:_files -/")))
                 }
             }
         }
 
         given("a map option") {
             given("it has only a long option") {
-                val option = MapOption(optionGroup, "some-option", "Not important")
+                val option = MapOption(optionGroup, "some-option", "The option description")
 
                 it("generates a single completion line with only the long option, specifying that the option can be repeated") {
-                    assertThat(generator.generate(option), equalTo(setOf("*--some-option=::( )")))
+                    assertThat(generator.generate(option), equalTo(setOf("*--some-option=[The option description]::( )")))
                 }
             }
 
             given("it has both a long and short option") {
-                val option = MapOption(optionGroup, "some-option", "Not important", 's')
+                val option = MapOption(optionGroup, "some-option", "The option description", 's')
 
                 it("generates completion lines with both forms of the option") {
-                    assertThat(generator.generate(option), equalTo(setOf("(-s)*--some-option=::( )", "(--some-option)*-s=::( )")))
+                    assertThat(generator.generate(option), equalTo(setOf("(-s)*--some-option=[The option description]::( )", "(--some-option)*-s=[The option description]::( )")))
                 }
             }
         }

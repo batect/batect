@@ -19,7 +19,7 @@ import java.nio.file.FileSystems
 apply plugin: 'com.squareup.wire'
 
 def protosDir = project.buildDir.toPath().resolve("protos")
-def buildKitVersion = "v0.8.1"
+def buildKitVersion = "v0.8.2"
 
 def protos = [
     "github.com/moby/buildkit/api/services/control/control.proto": buildKitVersion,

@@ -109,7 +109,7 @@ class ContainersAPI(
             .url(urlForContainerOperation(container, "start"))
             .build()
 
-        clientWithTimeout(30, TimeUnit.SECONDS).newCall(request).execute().use { response ->
+        clientWithTimeout(60, TimeUnit.SECONDS).newCall(request).execute().use { response ->
             checkForFailure(response) { error ->
                 logger.error {
                     message("Starting container failed.")

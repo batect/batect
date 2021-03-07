@@ -1,0 +1,6 @@
+#! /usr/bin/env bash
+
+set -euo pipefail
+
+echo "The operation couldn’t be completed. Unable to locate a Java Runtime." >/dev/stderr
+exit 1

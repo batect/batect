@@ -111,9 +111,13 @@
 
     function checkForJava() {
         if ! hash java 2>/dev/null; then
-            echo "Java is not installed or not on your PATH. Please install it and try again." >&2
-            exit 1
+            showJavaNotInstalledError
         fi
+    }
+
+    function showJavaNotInstalledError() {
+        echo "Java is not installed or not on your PATH. Please install it and try again." >&2
+        exit 1
     }
 
     function checkJavaVersion() {
@@ -136,7 +140,7 @@
     }
 
     function getJavaVersionInfo() {
-        java -version 2>&1
+        java -version 2>&1 || showJavaNotInstalledError
     }
 
     function extractJavaVersion() {

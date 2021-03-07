@@ -143,6 +143,14 @@ class WrapperScriptTests(unittest.TestCase):
 
         self.assertNotEqual(result.returncode, 0)
 
+    def test_mac_placeholder_java(self):
+        path_dir = self.create_limited_path_for_specific_java("fake-mac-placeholder")
+
+        result = self.run_script([], path=path_dir)
+
+        self.assertIn("Java is not installed or not on your PATH. Please install it and try again.", result.stdout.decode())
+        self.assertNotEqual(result.returncode, 0)
+
     def test_supported_java(self):
         for version in ["8", "9", "10", "11"]:
             with self.subTest(java_version=version):

@@ -23,6 +23,7 @@ RUN curl --show-error --retry 3 --retry-connrefused https://download.oracle.com/
     rm /tmp/openjdk-10.0.1_linux-x64_bin.tar.gz
 
 COPY java-32-bit /usr/lib/jvm/fake-32-bit/bin/java
+COPY java-mac-placeholder /usr/lib/jvm/fake-mac-placeholder/bin/java
 
 RUN curl --show-error --retry 3 --retry-connrefused https://ftp.gnu.org/gnu/bash/bash-3.2.57.tar.gz --output /tmp/bash-3.2.57.tar.gz && \
     cd /tmp && tar xzf /tmp/bash-3.2.57.tar.gz && \

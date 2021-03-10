@@ -575,15 +575,6 @@ jobs:
       - name: Validate release
         run: ./gradlew --parallel validateRelease
 
-      - name: Download Bintray CLI
-        run: curl --location --fail "https://api.bintray.com/content/jfrog/jfrog-cli-go/1.39.0/jfrog-cli-linux-amd64/jfrog?bt_package=jfrog-cli-linux-amd64" | sudo tee /usr/local/bin/jfrog > /dev/null && sudo chmod +x /usr/local/bin/jfrog
-
-      - name: Upload release to Bintray
-        run: ./ci/create_bintray_release.sh
-        env:
-          BINTRAY_USER: ${{ secrets.BINTRAY_USER }}
-          BINTRAY_KEY: ${{ secrets.BINTRAY_KEY }}
-
       - name: Create GitHub release
         uses: softprops/action-gh-release@v1
         with:

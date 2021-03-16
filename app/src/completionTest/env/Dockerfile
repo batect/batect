@@ -5,7 +5,7 @@ RUN apk --no-cache add \
     curl==7.74.0-r1 \
     fish==3.1.2-r4 \
     openjdk8-jre=8.275.01-r0 \
-    python3==3.8.7-r1 \
+    python3==3.8.8-r0 \
     zsh==5.8-r1
 
 # fish completion

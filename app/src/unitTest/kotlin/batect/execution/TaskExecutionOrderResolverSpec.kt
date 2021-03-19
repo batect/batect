@@ -17,8 +17,8 @@
 package batect.execution
 
 import batect.cli.CommandLineOptions
-import batect.config.Configuration
 import batect.config.ContainerMap
+import batect.config.RawConfiguration
 import batect.config.Task
 import batect.config.TaskMap
 import batect.config.TaskRunConfiguration
@@ -57,14 +57,14 @@ object TaskExecutionOrderResolverSpec : Spek({
         given("skipping prerequisites is not enabled") {
             val commandLineOptions by createForEachTest { CommandLineOptions(skipPrerequisites = false) }
 
-            fun resolveExecutionOrder(config: Configuration, taskName: String): List<Task> {
+            fun resolveExecutionOrder(config: RawConfiguration, taskName: String): List<Task> {
                 val resolver = TaskExecutionOrderResolver(config, commandLineOptions, suggester, logger)
                 return resolver.resolveExecutionOrder(taskName)
             }
 
             on("resolving the execution order for a task that does not depend on any tasks") {
                 val task = Task("some-task", taskRunConfiguration)
-                val config = Configuration("some-project", TaskMap(task), ContainerMap())
+                val config = RawConfiguration("some-project", TaskMap(task), ContainerMap())
 
                 val executionOrder by runForEachTest { resolveExecutionOrder(config, task.name) }
 
@@ -86,7 +86,7 @@ object TaskExecutionOrderResolverSpec : Spek({
             }
 
             describe("resolving the execution order for a task that does not exist") {
-                val config = Configuration("some-project", TaskMap(), ContainerMap())
+                val config = RawConfiguration("some-project", TaskMap(), ContainerMap())
 
                 given("there are no suggested task name corrections") {
                     beforeEachTest { whenever(suggester.suggestCorrections(config, "some-task")).doReturn(emptyList()) }
@@ -147,7 +147,7 @@ object TaskExecutionOrderResolverSpec : Spek({
                     given(description) {
                         val dependencyTask = Task("dependency-task", taskRunConfiguration)
                         val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = listOf(prerequisiteSpec))
-                        val config = Configuration("some-project", TaskMap(mainTask, dependencyTask), ContainerMap())
+                        val config = RawConfiguration("some-project", TaskMap(mainTask, dependencyTask), ContainerMap())
 
                         val executionOrder by runForEachTest { resolveExecutionOrder(config, mainTask.name) }
 
@@ -179,7 +179,7 @@ object TaskExecutionOrderResolverSpec : Spek({
                     given(description) {
                         val dependencyTask = Task("dependency-task", taskRunConfiguration)
                         val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = listOf(prerequisiteSpec))
-                        val config = Configuration("some-project", TaskMap(mainTask, dependencyTask), ContainerMap())
+                        val config = RawConfiguration("some-project", TaskMap(mainTask, dependencyTask), ContainerMap())
 
                         val executionOrder by runForEachTest { resolveExecutionOrder(config, mainTask.name) }
 
@@ -204,7 +204,7 @@ object TaskExecutionOrderResolverSpec : Spek({
 
             describe("resolving the execution order for a task that has a dependency that does not exist") {
                 val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = listOf("dependency-task"))
-                val config = Configuration("some-project", TaskMap(mainTask), ContainerMap())
+                val config = RawConfiguration("some-project", TaskMap(mainTask), ContainerMap())
 
                 given("there are no suggested task name corrections") {
                     beforeEachTest { whenever(suggester.suggestCorrections(config, "dependency-task")).doReturn(emptyList()) }
@@ -263,7 +263,7 @@ object TaskExecutionOrderResolverSpec : Spek({
                         val dependencyTask1 = Task("dependency-task-1", taskRunConfiguration)
                         val dependencyTask2 = Task("dependency-task-2", taskRunConfiguration)
                         val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = prerequisites)
-                        val config = Configuration("some-project", TaskMap(mainTask, dependencyTask1, dependencyTask2), ContainerMap())
+                        val config = RawConfiguration("some-project", TaskMap(mainTask, dependencyTask1, dependencyTask2), ContainerMap())
 
                         val executionOrder by runForEachTest { resolveExecutionOrder(config, mainTask.name) }
 
@@ -286,7 +286,7 @@ object TaskExecutionOrderResolverSpec : Spek({
                     val dependencyTask1 = Task("dependency-task-1", taskRunConfiguration)
                     val dependencyTask2 = Task("dependency-task-2", taskRunConfiguration)
                     val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = listOf("dependency-task-*"))
-                    val config = Configuration("some-project", TaskMap(mainTask, dependencyTask2, dependencyTask1), ContainerMap())
+                    val config = RawConfiguration("some-project", TaskMap(mainTask, dependencyTask2, dependencyTask1), ContainerMap())
 
                     val executionOrder by runForEachTest { resolveExecutionOrder(config, mainTask.name) }
 
@@ -305,7 +305,7 @@ object TaskExecutionOrderResolverSpec : Spek({
                     val dependencyTask2 = Task("dependency-task-2", taskRunConfiguration)
                     val dependencyTask3 = Task("dependency-task-3", taskRunConfiguration)
                     val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = listOf("dependency-task-2", "dependency-task-*"))
-                    val config = Configuration("some-project", TaskMap(mainTask, dependencyTask2, dependencyTask1, dependencyTask3), ContainerMap())
+                    val config = RawConfiguration("some-project", TaskMap(mainTask, dependencyTask2, dependencyTask1, dependencyTask3), ContainerMap())
 
                     val executionOrder by runForEachTest { resolveExecutionOrder(config, mainTask.name) }
 
@@ -331,7 +331,7 @@ object TaskExecutionOrderResolverSpec : Spek({
 
             on("resolving the execution order for a task that depends on itself") {
                 val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = listOf("main-task"))
-                val config = Configuration("some-project", TaskMap(mainTask), ContainerMap())
+                val config = RawConfiguration("some-project", TaskMap(mainTask), ContainerMap())
 
                 it("throws an appropriate exception") {
                     assertThat(
@@ -345,7 +345,7 @@ object TaskExecutionOrderResolverSpec : Spek({
                 val dependencyTaskB = Task("dependency-task-b", taskRunConfiguration)
                 val dependencyTaskA = Task("dependency-task-a", taskRunConfiguration, prerequisiteTasks = listOf(dependencyTaskB.name))
                 val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = listOf(dependencyTaskA.name))
-                val config = Configuration("some-project", TaskMap(mainTask, dependencyTaskA, dependencyTaskB), ContainerMap())
+                val config = RawConfiguration("some-project", TaskMap(mainTask, dependencyTaskA, dependencyTaskB), ContainerMap())
 
                 val executionOrder by runForEachTest { resolveExecutionOrder(config, mainTask.name) }
 
@@ -362,7 +362,7 @@ object TaskExecutionOrderResolverSpec : Spek({
                 val dependencyTaskA = Task("dependency-task-a", taskRunConfiguration)
                 val dependencyTaskB = Task("dependency-task-b", taskRunConfiguration, prerequisiteTasks = listOf(dependencyTaskA.name))
                 val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = listOf(dependencyTaskA.name, dependencyTaskB.name))
-                val config = Configuration("some-project", TaskMap(mainTask, dependencyTaskA, dependencyTaskB), ContainerMap())
+                val config = RawConfiguration("some-project", TaskMap(mainTask, dependencyTaskA, dependencyTaskB), ContainerMap())
 
                 val executionOrder by runForEachTest { resolveExecutionOrder(config, mainTask.name) }
 
@@ -379,7 +379,7 @@ object TaskExecutionOrderResolverSpec : Spek({
                 val dependencyTaskA = Task("dependency-task-a", taskRunConfiguration)
                 val dependencyTaskB = Task("dependency-task-b", taskRunConfiguration, prerequisiteTasks = listOf(dependencyTaskA.name))
                 val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = listOf(dependencyTaskB.name, dependencyTaskA.name))
-                val config = Configuration("some-project", TaskMap(mainTask, dependencyTaskA, dependencyTaskB), ContainerMap())
+                val config = RawConfiguration("some-project", TaskMap(mainTask, dependencyTaskA, dependencyTaskB), ContainerMap())
 
                 val executionOrder by runForEachTest { resolveExecutionOrder(config, mainTask.name) }
 
@@ -400,7 +400,7 @@ object TaskExecutionOrderResolverSpec : Spek({
                 val takeABiteOfTheSandwichTask = Task("takeABiteOfTheSandwich", taskRunConfiguration, prerequisiteTasks = listOf("prepareTheTable"))
                 val eatTheSandwichTask = Task("eatTheSandwich", taskRunConfiguration, prerequisiteTasks = listOf("takeABiteOfTheSandwich"))
                 val sandwichHasBeenEatenTask = Task("sandwichHasBeenEaten", taskRunConfiguration, prerequisiteTasks = listOf("makeTheSandwich", "eatTheSandwich"))
-                val config = Configuration("some-project", TaskMap(getSandwichContentsTask, putContentsInBreadTask, prepareTheTableTask, makeTheSandwichTask, takeABiteOfTheSandwichTask, eatTheSandwichTask, sandwichHasBeenEatenTask), ContainerMap())
+                val config = RawConfiguration("some-project", TaskMap(getSandwichContentsTask, putContentsInBreadTask, prepareTheTableTask, makeTheSandwichTask, takeABiteOfTheSandwichTask, eatTheSandwichTask, sandwichHasBeenEatenTask), ContainerMap())
 
                 val executionOrder by runForEachTest { resolveExecutionOrder(config, sandwichHasBeenEatenTask.name) }
 
@@ -417,7 +417,7 @@ object TaskExecutionOrderResolverSpec : Spek({
             on("resolving the execution order for a task that depends on a second task that depends on the first task") {
                 val otherTask = Task("other-task", taskRunConfiguration, prerequisiteTasks = listOf("main-task"))
                 val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = listOf("other-task"))
-                val config = Configuration("some-project", TaskMap(mainTask, otherTask), ContainerMap())
+                val config = RawConfiguration("some-project", TaskMap(mainTask, otherTask), ContainerMap())
 
                 it("throws an appropriate exception") {
                     assertThat(
@@ -431,7 +431,7 @@ object TaskExecutionOrderResolverSpec : Spek({
                 val taskA = Task("task-A", taskRunConfiguration, prerequisiteTasks = listOf("task-B"))
                 val taskB = Task("task-B", taskRunConfiguration, prerequisiteTasks = listOf("main-task"))
                 val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = listOf("task-A"))
-                val config = Configuration("some-project", TaskMap(mainTask, taskA, taskB), ContainerMap())
+                val config = RawConfiguration("some-project", TaskMap(mainTask, taskA, taskB), ContainerMap())
 
                 it("throws an appropriate exception") {
                     assertThat(
@@ -445,7 +445,7 @@ object TaskExecutionOrderResolverSpec : Spek({
                 val taskA = Task("task-A", taskRunConfiguration, prerequisiteTasks = listOf("task-B"))
                 val taskB = Task("task-B", taskRunConfiguration, prerequisiteTasks = listOf("task-A"))
                 val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = listOf("task-A"))
-                val config = Configuration("some-project", TaskMap(mainTask, taskA, taskB), ContainerMap())
+                val config = RawConfiguration("some-project", TaskMap(mainTask, taskA, taskB), ContainerMap())
 
                 it("throws an appropriate exception") {
                     assertThat(
@@ -459,14 +459,14 @@ object TaskExecutionOrderResolverSpec : Spek({
         given("skipping prerequisites is enabled") {
             val commandLineOptions by createForEachTest { CommandLineOptions(skipPrerequisites = true) }
 
-            fun resolveExecutionOrder(config: Configuration, taskName: String): List<Task> {
+            fun resolveExecutionOrder(config: RawConfiguration, taskName: String): List<Task> {
                 val resolver = TaskExecutionOrderResolver(config, commandLineOptions, suggester, logger)
                 return resolver.resolveExecutionOrder(taskName)
             }
 
             on("resolving the execution order for a task that does not depend on any tasks") {
                 val task = Task("some-task", taskRunConfiguration)
-                val config = Configuration("some-project", TaskMap(task), ContainerMap())
+                val config = RawConfiguration("some-project", TaskMap(task), ContainerMap())
 
                 val executionOrder by runForEachTest { resolveExecutionOrder(config, task.name) }
 
@@ -491,7 +491,7 @@ object TaskExecutionOrderResolverSpec : Spek({
                 val dependencyTask1 = Task("dependency-task-1", taskRunConfiguration)
                 val dependencyTask2 = Task("dependency-task-2", taskRunConfiguration)
                 val mainTask = Task("main-task", taskRunConfiguration, prerequisiteTasks = listOf(dependencyTask1.name, dependencyTask2.name))
-                val config = Configuration("some-project", TaskMap(mainTask, dependencyTask1, dependencyTask2), ContainerMap())
+                val config = RawConfiguration("some-project", TaskMap(mainTask, dependencyTask1, dependencyTask2), ContainerMap())
 
                 val executionOrder by runForEachTest { resolveExecutionOrder(config, mainTask.name) }
 

@@ -34,8 +34,8 @@ import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.time.Duration
 
-object ConfigurationSpec : Spek({
-    describe("a set of configuration") {
+object RawConfigurationSpec : Spek({
+    describe("raw configuration loaded from disk") {
         describe("converting it to JSON for logging") {
             given("a single task") {
                 val task = Task(
@@ -66,9 +66,9 @@ object ConfigurationSpec : Spek({
                     )
                 )
 
-                val configuration = Configuration("the-project", TaskMap(task), ContainerMap())
+                val configuration = RawConfiguration("the-project", TaskMap(task), ContainerMap())
 
-                val json by createForEachTest { Json.forLogging.encodeToString(Configuration.serializer(), configuration) }
+                val json by createForEachTest { Json.forLogging.encodeToString(RawConfiguration.serializer(), configuration) }
 
                 it("serializes the configuration to the expected value") {
                     assertThat(
@@ -148,9 +148,9 @@ object ConfigurationSpec : Spek({
                     BinarySize.of(2, BinaryUnit.Megabyte)
                 )
 
-                val configuration = Configuration("the-project", TaskMap(), ContainerMap(container))
+                val configuration = RawConfiguration("the-project", TaskMap(), ContainerMap(container))
 
-                val json by createForEachTest { Json.forLogging.encodeToString(Configuration.serializer(), configuration) }
+                val json by createForEachTest { Json.forLogging.encodeToString(RawConfiguration.serializer(), configuration) }
 
                 it("serializes the configuration to the expected value") {
                     assertThat(
@@ -240,9 +240,9 @@ object ConfigurationSpec : Spek({
                     runAsCurrentUserConfig = RunAsCurrentUserConfig.RunAsDefaultContainerUser
                 )
 
-                val configuration = Configuration("the-project", TaskMap(), ContainerMap(container))
+                val configuration = RawConfiguration("the-project", TaskMap(), ContainerMap(container))
 
-                val json by createForEachTest { Json.forLogging.encodeToString(Configuration.serializer(), configuration) }
+                val json by createForEachTest { Json.forLogging.encodeToString(RawConfiguration.serializer(), configuration) }
 
                 it("serializes the configuration to the expected value") {
                     assertThat(
@@ -300,8 +300,8 @@ object ConfigurationSpec : Spek({
 
             given("a single config variable") {
                 val configVariable = ConfigVariableDefinition("some-variable", "Some description", "Some default")
-                val configuration = Configuration("the-project", TaskMap(), ContainerMap(), ConfigVariableMap(configVariable))
-                val json by createForEachTest { Json.forLogging.encodeToString(Configuration.serializer(), configuration) }
+                val configuration = RawConfiguration("the-project", TaskMap(), ContainerMap(), ConfigVariableMap(configVariable))
+                val json by createForEachTest { Json.forLogging.encodeToString(RawConfiguration.serializer(), configuration) }
 
                 it("serializes the configuration to the expected value") {
                     assertThat(
@@ -329,13 +329,13 @@ object ConfigurationSpec : Spek({
         describe("overriding image sources") {
             val container1 = Container("container-1", BuildImage(LiteralValue("some-build-dir"), pathResolutionContextDoesNotMatter()))
             val container2 = Container("container-2", PullImage("some-image"))
-            val originalConfig = createConfiguration(container1, container2)
+            val originalConfig = createRawConfiguration(container1, container2)
 
             given("no overrides") {
                 val overrides = emptyMap<String, ImageSource>()
 
                 it("returns the original configuration unmodified") {
-                    assertThat(originalConfig.applyImageOverrides(overrides), equalTo(originalConfig))
+                    assertThat(originalConfig.applyImageOverrides(overrides), equalTo(createTaskSpecialisedConfiguration(container1, container2)))
                 }
             }
 
@@ -343,7 +343,7 @@ object ConfigurationSpec : Spek({
                 val overrides = mapOf(container1.name to PullImage("another-image"))
 
                 it("returns a new configuration with the image for the given container overridden") {
-                    assertThat(originalConfig.applyImageOverrides(overrides), equalTo(createConfiguration(Container("container-1", PullImage("another-image")), container2)))
+                    assertThat(originalConfig.applyImageOverrides(overrides), equalTo(createTaskSpecialisedConfiguration(Container("container-1", PullImage("another-image")), container2)))
                 }
             }
 
@@ -354,7 +354,7 @@ object ConfigurationSpec : Spek({
                 )
 
                 it("returns a new configuration with the images for the given containers overridden") {
-                    assertThat(originalConfig.applyImageOverrides(overrides), equalTo(createConfiguration(Container("container-1", PullImage("another-image")), Container("container-2", PullImage("another-other-image")))))
+                    assertThat(originalConfig.applyImageOverrides(overrides), equalTo(createTaskSpecialisedConfiguration(Container("container-1", PullImage("another-image")), Container("container-2", PullImage("another-other-image")))))
                 }
             }
 
@@ -369,4 +369,5 @@ object ConfigurationSpec : Spek({
     }
 })
 
-private fun createConfiguration(vararg containers: Container): Configuration = Configuration("my_project", TaskMap(), ContainerMap(*containers))
+private fun createRawConfiguration(vararg containers: Container): RawConfiguration = RawConfiguration("my_project", TaskMap(), ContainerMap(*containers))
+private fun createTaskSpecialisedConfiguration(vararg containers: Container): TaskSpecialisedConfiguration = TaskSpecialisedConfiguration("my_project", TaskMap(), ContainerMap(*containers))

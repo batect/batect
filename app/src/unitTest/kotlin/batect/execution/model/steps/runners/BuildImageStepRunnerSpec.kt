@@ -18,7 +18,6 @@ package batect.execution.model.steps.runners
 
 import batect.cli.CommandLineOptions
 import batect.config.BuildImage
-import batect.config.Configuration
 import batect.config.Container
 import batect.config.EnvironmentVariableReference
 import batect.config.Expression
@@ -26,6 +25,7 @@ import batect.config.ExpressionEvaluationContext
 import batect.config.ExpressionEvaluationException
 import batect.config.ImagePullPolicy
 import batect.config.LiteralValue
+import batect.config.TaskSpecialisedConfiguration
 import batect.docker.DockerImage
 import batect.docker.ImageBuildFailedException
 import batect.docker.api.BuilderVersion
@@ -78,7 +78,7 @@ object BuildImageStepRunnerSpec : Spek({
         val outputSink by createForEachTest { mock<Sink>() }
         val builderVersion = BuilderVersion.BuildKit
 
-        val config = Configuration("some-project")
+        val config = TaskSpecialisedConfiguration("some-project")
         val imagesClient by createForEachTest { mock<ImagesClient>() }
         val proxyVariables = mapOf("SOME_PROXY_CONFIG" to "some_proxy", "SOME_OTHER_PROXY_CONFIG" to "some_other_value")
         val proxyEnvironmentVariablesProvider = mock<ProxyEnvironmentVariablesProvider> {

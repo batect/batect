@@ -16,8 +16,8 @@
 
 package batect.docker
 
-import batect.config.Configuration
 import batect.config.Container
+import batect.config.TaskSpecialisedConfiguration
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.withMessage
 import com.natpryce.hamkrest.and
@@ -32,7 +32,7 @@ import org.spekframework.spek2.style.specification.describe
 
 object DockerResourceNameGeneratorSpec : Spek({
     describe("a Docker resource name generator") {
-        val config = Configuration("my_project")
+        val config = TaskSpecialisedConfiguration("my_project")
         val generator = DockerResourceNameGenerator(config)
         val container1 = Container("container-1", imageSourceDoesNotMatter())
         val container2 = Container("container-2", imageSourceDoesNotMatter())
@@ -42,7 +42,7 @@ object DockerResourceNameGeneratorSpec : Spek({
         val nameForOtherContainer = generator.generateNameFor("batect-cache-init")
 
         it("returns the project and container's name with a random suffix") {
-            assertThat(nameForContainer1, matches("""^my_project-container\-1\-[a-z0-9]{6}$""".toRegex()))
+            assertThat(nameForContainer1, matches("""^my_project-container-1-[a-z0-9]{6}$""".toRegex()))
         }
 
         it("uses the same suffix for other containers named by the same instance") {

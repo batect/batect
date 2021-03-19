@@ -16,8 +16,8 @@
 
 package batect.execution
 
-import batect.config.Configuration
 import batect.config.ContainerMap
+import batect.config.RawConfiguration
 import batect.config.Task
 import batect.config.TaskMap
 import batect.config.TaskRunConfiguration
@@ -34,7 +34,7 @@ object TaskSuggesterSpec : Spek({
         val task1 = Task("task1", taskRunConfiguration)
         val task2 = Task("task1234", taskRunConfiguration)
         val task3 = Task("wacky-things", taskRunConfiguration)
-        val config = Configuration("the-project", TaskMap(task1, task2, task3), ContainerMap())
+        val config = RawConfiguration("the-project", TaskMap(task1, task2, task3), ContainerMap())
         val suggester = TaskSuggester()
 
         given("there are no close matches to the original task name") {

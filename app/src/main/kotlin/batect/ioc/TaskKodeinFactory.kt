@@ -16,8 +16,13 @@
 
 package batect.ioc
 
+import batect.config.ExpressionEvaluationContext
 import batect.config.Task
+import batect.config.TaskSpecialisedConfiguration
+import batect.config.TaskSpecialisedConfigurationFactory
+import batect.execution.ConfigVariablesProvider
 import batect.execution.RunOptions
+import batect.os.HostEnvironmentVariables
 import org.kodein.di.DirectDI
 import org.kodein.di.bind
 import org.kodein.di.direct
@@ -27,16 +32,26 @@ import org.kodein.di.singleton
 import org.kodein.di.subDI
 
 class TaskKodeinFactory(
-    private val baseKodein: DirectDI
+    private val baseKodein: DirectDI,
+    private val hostEnvironmentVariables: HostEnvironmentVariables,
+    private val configVariablesProvider: ConfigVariablesProvider,
+    private val taskSpecialisedConfigurationFactory: TaskSpecialisedConfigurationFactory
 ) {
-    fun create(task: Task, runOptions: RunOptions): TaskKodein = TaskKodein(
-        task,
-        subDI(baseKodein.di) {
-            bind<RunOptions>() with scoped(TaskScope).singleton { runOptions }
+    fun create(task: Task, runOptions: RunOptions): TaskKodein {
+        val taskSpecialisedConfiguration = taskSpecialisedConfigurationFactory.create()
+        val expressionEvaluationContext = ExpressionEvaluationContext(hostEnvironmentVariables, configVariablesProvider.build(taskSpecialisedConfiguration))
 
-            import(taskScopeModule)
-        }.direct.on(task)
-    )
+        return TaskKodein(
+            task,
+            subDI(baseKodein.di) {
+                bind<RunOptions>() with scoped(TaskScope).singleton { runOptions }
+                bind<TaskSpecialisedConfiguration>() with scoped(TaskScope).singleton { taskSpecialisedConfiguration }
+                bind<ExpressionEvaluationContext>() with scoped(TaskScope).singleton { expressionEvaluationContext }
+
+                import(taskScopeModule)
+            }.direct.on(task)
+        )
+    }
 }
 
 class TaskKodein(private val task: Task, kodein: DirectDI) : DirectDI by kodein, AutoCloseable {

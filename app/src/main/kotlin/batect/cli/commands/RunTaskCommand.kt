@@ -17,8 +17,7 @@
 package batect.cli.commands
 
 import batect.cli.CommandLineOptions
-import batect.config.Configuration
-import batect.config.PullImage
+import batect.config.RawConfiguration
 import batect.config.io.ConfigurationLoader
 import batect.execution.SessionRunner
 import batect.ioc.SessionKodeinFactory
@@ -36,19 +35,12 @@ class RunTaskCommand(
 ) : Command {
 
     override fun run(): Int {
-        val config = loadConfig()
+        val config = configLoader.loadConfig(commandLineOptions.configurationFileName).configuration
 
         return dockerConnectivity.checkAndRun { kodein ->
             runPreExecutionOperations()
             runFromConfig(kodein, config)
         }
-    }
-
-    private fun loadConfig(): Configuration {
-        val configFromFile = configLoader.loadConfig(commandLineOptions.configurationFileName).configuration
-        val overrides = commandLineOptions.imageOverrides.mapValues { PullImage(it.value) }
-
-        return configFromFile.applyImageOverrides(overrides)
     }
 
     private fun runPreExecutionOperations() {
@@ -59,7 +51,7 @@ class RunTaskCommand(
         backgroundTaskManager.startBackgroundTasks()
     }
 
-    private fun runFromConfig(kodein: DirectDI, config: Configuration): Int {
+    private fun runFromConfig(kodein: DirectDI, config: RawConfiguration): Int {
         val sessionKodeinFactory = kodein.instance<SessionKodeinFactory>()
         val sessionKodein = sessionKodeinFactory.create(config)
         val sessionRunner = sessionKodein.instance<SessionRunner>()

@@ -17,13 +17,13 @@
 package batect.execution
 
 import batect.cli.CommandLineOptions
-import batect.config.Configuration
+import batect.config.RawConfiguration
 import batect.config.Task
 import batect.logging.Logger
 import batect.utils.asHumanReadableList
 
 class TaskExecutionOrderResolver(
-    private val config: Configuration,
+    private val config: RawConfiguration,
     private val commandLineOptions: CommandLineOptions,
     private val suggester: TaskSuggester,
     private val logger: Logger

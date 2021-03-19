@@ -16,12 +16,12 @@
 
 package batect.execution
 
-import batect.config.Configuration
 import batect.config.Container
 import batect.config.ContainerMap
 import batect.config.Task
 import batect.config.TaskMap
 import batect.config.TaskRunConfiguration
+import batect.config.TaskSpecialisedConfiguration
 import batect.logging.Logger
 import batect.logging.Severity
 import batect.testutils.imageSourceDoesNotMatter
@@ -50,7 +50,7 @@ object ContainerDependencyGraphProviderSpec : Spek({
             val dependencyForTask = Container("dependencyForTask", imageSourceDoesNotMatter())
             val mainContainer = Container("mainContainer", imageSourceDoesNotMatter(), dependencies = setOf(dependencyForContainer.name))
             val task = Task("mainTask", TaskRunConfiguration(mainContainer.name), dependsOnContainers = setOf(dependencyForTask.name))
-            val config = Configuration("some_project", TaskMap(task), ContainerMap(mainContainer, dependencyForContainer, dependencyForTask))
+            val config = TaskSpecialisedConfiguration("some_project", TaskMap(task), ContainerMap(mainContainer, dependencyForContainer, dependencyForTask))
 
             provider.createGraph(config, task)
 

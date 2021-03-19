@@ -17,7 +17,7 @@
 package batect.cli.commands
 
 import batect.cli.CommandLineOptions
-import batect.config.Configuration
+import batect.config.RawConfiguration
 import batect.config.Task
 import batect.config.io.ConfigurationLoader
 import batect.ui.OutputStyle
@@ -39,7 +39,7 @@ class ListTasksCommand(
         return 0
     }
 
-    private fun printMachineReadableFormat(config: Configuration) {
+    private fun printMachineReadableFormat(config: RawConfiguration) {
         config.tasks
             .sortedBy { it.name }
             .forEach {
@@ -54,7 +54,7 @@ class ListTasksCommand(
             }
     }
 
-    private fun printHumanReadableFormat(config: Configuration) {
+    private fun printHumanReadableFormat(config: RawConfiguration) {
         val groups = config.tasks.groupBy { it.group }
         val allTasksHaveNoGroup = config.tasks.all { it: Task -> it.group == "" }
 

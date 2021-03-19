@@ -20,14 +20,15 @@ import batect.config.io.ConfigurationException
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+// Raw configuration loaded from configuration files after merging.
 @Serializable
-data class Configuration(
+data class RawConfiguration(
     @SerialName("project_name") val projectName: String,
     val tasks: TaskMap = TaskMap(),
     val containers: ContainerMap = ContainerMap(),
     @SerialName("config_variables") val configVariables: ConfigVariableMap = ConfigVariableMap()
 ) {
-    fun applyImageOverrides(overrides: Map<String, ImageSource>): Configuration {
+    fun applyImageOverrides(overrides: Map<String, ImageSource>): TaskSpecialisedConfiguration {
         val updatedContainers = overrides.entries.fold(containers.values) { updatedContainers, override ->
             val containerName = override.key
             val oldContainer = containers[containerName]
@@ -39,6 +40,6 @@ data class Configuration(
             updatedContainers - oldContainer + oldContainer.copy(imageSource = override.value)
         }
 
-        return this.copy(containers = ContainerMap(updatedContainers))
+        return TaskSpecialisedConfiguration(projectName, tasks, ContainerMap(updatedContainers), configVariables)
     }
 }

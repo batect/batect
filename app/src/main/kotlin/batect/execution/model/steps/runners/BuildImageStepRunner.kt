@@ -18,10 +18,10 @@ package batect.execution.model.steps.runners
 
 import batect.cli.CommandLineOptions
 import batect.config.BuildImage
-import batect.config.Configuration
 import batect.config.Expression
 import batect.config.ExpressionEvaluationContext
 import batect.config.ExpressionEvaluationException
+import batect.config.TaskSpecialisedConfiguration
 import batect.docker.ImageBuildFailedException
 import batect.docker.api.BuilderVersion
 import batect.docker.build.BuildProgress
@@ -42,7 +42,7 @@ import batect.ui.containerio.ContainerIOStreamingOptions
 import java.nio.file.Path
 
 class BuildImageStepRunner(
-    private val config: Configuration,
+    private val config: TaskSpecialisedConfiguration,
     private val imagesClient: ImagesClient,
     private val proxyEnvironmentVariablesProvider: ProxyEnvironmentVariablesProvider,
     private val pathResolverFactory: PathResolverFactory,

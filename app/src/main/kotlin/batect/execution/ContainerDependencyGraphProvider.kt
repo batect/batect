@@ -16,8 +16,8 @@
 
 package batect.execution
 
-import batect.config.Configuration
 import batect.config.Task
+import batect.config.TaskSpecialisedConfiguration
 import batect.logging.LogMessageBuilder
 import batect.logging.Logger
 import batect.primitives.mapToSet
@@ -30,7 +30,7 @@ class ContainerDependencyGraphProvider(
     private val entrypointResolver: ContainerEntrypointResolver,
     private val logger: Logger
 ) {
-    fun createGraph(config: Configuration, task: Task): ContainerDependencyGraph {
+    fun createGraph(config: TaskSpecialisedConfiguration, task: Task): ContainerDependencyGraph {
         val graph = ContainerDependencyGraph(config, task, commandResolver, entrypointResolver)
 
         logger.info {

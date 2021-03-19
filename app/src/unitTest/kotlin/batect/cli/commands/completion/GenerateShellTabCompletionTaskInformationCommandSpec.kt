@@ -17,7 +17,7 @@
 package batect.cli.commands.completion
 
 import batect.cli.CommandLineOptions
-import batect.config.Configuration
+import batect.config.RawConfiguration
 import batect.config.Task
 import batect.config.TaskMap
 import batect.config.includes.SilentGitRepositoryCacheNotificationListener
@@ -43,7 +43,7 @@ import java.nio.file.Files
 
 object GenerateShellTabCompletionTaskInformationCommandSpec : Spek({
     describe("a 'generate shell tab completion task information' command") {
-        val config = Configuration(
+        val config = RawConfiguration(
             "the-project",
             TaskMap(
                 Task("first-task", null, description = "This is the first task"),

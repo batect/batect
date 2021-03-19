@@ -16,11 +16,11 @@
 
 package batect.execution
 
-import batect.config.Configuration
+import batect.config.RawConfiguration
 import batect.utils.EditDistanceCalculator
 
 class TaskSuggester {
-    fun suggestCorrections(config: Configuration, originalTaskName: String): List<String> {
+    fun suggestCorrections(config: RawConfiguration, originalTaskName: String): List<String> {
         val taskNames = config.tasks.keys
         val distances = taskNames.associateWith { EditDistanceCalculator.calculateDistanceBetween(originalTaskName, it) }
 

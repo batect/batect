@@ -17,7 +17,6 @@
 package batect.config.io
 
 import batect.config.ConfigVariableMap
-import batect.config.Configuration
 import batect.config.ConfigurationFile
 import batect.config.ContainerMap
 import batect.config.FileInclude
@@ -25,6 +24,7 @@ import batect.config.GitInclude
 import batect.config.Include
 import batect.config.IncludeConfigSerializer
 import batect.config.NamedObjectMap
+import batect.config.RawConfiguration
 import batect.config.TaskMap
 import batect.config.includes.GitIncludePathResolutionContext
 import batect.config.includes.GitRepositoryCacheNotificationListener
@@ -98,7 +98,7 @@ class ConfigurationLoader(
             }
 
             val projectName = rootConfigFile.projectName ?: inferProjectName(absolutePathToRootConfigFile)
-            val config = Configuration(projectName, mergeTasks(filesLoaded), mergeContainers(filesLoaded), mergeConfigVariables(filesLoaded))
+            val config = RawConfiguration(projectName, mergeTasks(filesLoaded), mergeContainers(filesLoaded), mergeConfigVariables(filesLoaded))
 
             logger.info {
                 message("Configuration loaded.")
@@ -278,11 +278,11 @@ class ConfigurationLoader(
         )
 }
 
-private fun LogMessageBuilder.data(key: String, value: Configuration) = this.data(key, value, Configuration.serializer())
+private fun LogMessageBuilder.data(key: String, value: RawConfiguration) = this.data(key, value, RawConfiguration.serializer())
 private fun LogMessageBuilder.data(key: String, value: ConfigurationFile) = this.data(key, value, ConfigurationFile.serializer())
 private fun LogMessageBuilder.data(key: String, value: Include) = this.data(key, value, IncludeConfigSerializer)
 
 data class ConfigurationLoadResult(
-    val configuration: Configuration,
+    val configuration: RawConfiguration,
     val pathsLoaded: Set<Path>
 )

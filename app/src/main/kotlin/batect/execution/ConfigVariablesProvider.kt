@@ -17,8 +17,8 @@
 package batect.execution
 
 import batect.cli.CommandLineOptionsParser
-import batect.config.Configuration
 import batect.config.ProjectPaths
+import batect.config.TaskSpecialisedConfiguration
 import batect.config.io.ConfigurationException
 import batect.config.io.ConfigurationFileException
 import com.charleskorn.kaml.Yaml
@@ -39,7 +39,7 @@ class ConfigVariablesProvider(
     private val sourceFile: Path?,
     private val projectPaths: ProjectPaths
 ) {
-    fun build(config: Configuration): Map<String, String?> {
+    fun build(config: TaskSpecialisedConfiguration): Map<String, String?> {
         val defaults = defaultValues(config)
         val fromFile = loadFileValues(config)
 
@@ -52,10 +52,10 @@ class ConfigVariablesProvider(
         return defaults + fromFile + commandLineOverrides + builtIns
     }
 
-    private fun defaultValues(config: Configuration): Map<String, String?> =
+    private fun defaultValues(config: TaskSpecialisedConfiguration): Map<String, String?> =
         config.configVariables.associate { it.name to it.defaultValue }
 
-    private fun loadFileValues(config: Configuration): Map<String, String> {
+    private fun loadFileValues(config: TaskSpecialisedConfiguration): Map<String, String> {
         if (sourceFile == null) {
             return emptyMap()
         }
@@ -72,7 +72,7 @@ class ConfigVariablesProvider(
         }
     }
 
-    private fun validateCommandLineOverrides(config: Configuration) {
+    private fun validateCommandLineOverrides(config: TaskSpecialisedConfiguration) {
         commandLineOverrides.keys.forEach { name ->
             if (!config.configVariables.containsKey(name)) {
                 throw ConfigurationException("The config variable '$name' set with --${CommandLineOptionsParser.configVariableOptionName} has not been defined.")
@@ -80,7 +80,7 @@ class ConfigVariablesProvider(
         }
     }
 
-    private class ConfigVariableNameSerializer(private val config: Configuration, private val sourceFile: Path) : KSerializer<String> {
+    private class ConfigVariableNameSerializer(private val config: TaskSpecialisedConfiguration, private val sourceFile: Path) : KSerializer<String> {
         override val descriptor: SerialDescriptor = String.serializer().descriptor
 
         override fun serialize(encoder: Encoder, value: String) = encoder.encodeString(value)

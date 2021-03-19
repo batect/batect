@@ -18,8 +18,8 @@ package batect.execution
 
 import batect.config.ConfigVariableDefinition
 import batect.config.ConfigVariableMap
-import batect.config.Configuration
 import batect.config.ProjectPaths
+import batect.config.TaskSpecialisedConfiguration
 import batect.config.io.ConfigurationException
 import batect.config.io.ConfigurationFileException
 import batect.testutils.createForEachTest
@@ -191,8 +191,8 @@ object ConfigVariablesProviderSpec : Spek({
     }
 })
 
-private fun configWithVariables(vararg variables: ConfigVariableDefinition): Configuration =
-    Configuration("the_project", configVariables = ConfigVariableMap(*variables))
+private fun configWithVariables(vararg variables: ConfigVariableDefinition): TaskSpecialisedConfiguration =
+    TaskSpecialisedConfiguration("the_project", configVariables = ConfigVariableMap(*variables))
 
 private fun withLineNumber(lineNumber: Int): Matcher<ConfigurationFileException> =
     has(ConfigurationFileException::lineNumber, equalTo(lineNumber))

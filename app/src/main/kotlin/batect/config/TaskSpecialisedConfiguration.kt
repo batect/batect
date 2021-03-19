@@ -14,21 +14,16 @@
    limitations under the License.
 */
 
-package batect.ioc
+package batect.config
 
-import batect.config.RawConfiguration
-import org.kodein.di.DirectDI
-import org.kodein.di.bind
-import org.kodein.di.direct
-import org.kodein.di.instance
-import org.kodein.di.subDI
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
-class SessionKodeinFactory(
-    private val baseKodein: DirectDI
-) {
-    fun create(rawConfiguration: RawConfiguration): DirectDI = subDI(baseKodein.di) {
-        bind<RawConfiguration>() with instance(rawConfiguration)
-
-        import(sessionScopeModule)
-    }.direct
-}
+// RawConfiguration + any command line or task-specific overrides (eg. replaced images)
+@Serializable
+data class TaskSpecialisedConfiguration(
+    @SerialName("project_name") val projectName: String,
+    val tasks: TaskMap = TaskMap(),
+    val containers: ContainerMap = ContainerMap(),
+    @SerialName("config_variables") val configVariables: ConfigVariableMap = ConfigVariableMap()
+)

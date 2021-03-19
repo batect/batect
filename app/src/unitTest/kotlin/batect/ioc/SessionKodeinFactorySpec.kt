@@ -16,19 +16,13 @@
 
 package batect.ioc
 
-import batect.config.Configuration
-import batect.config.ExpressionEvaluationContext
-import batect.execution.ConfigVariablesProvider
-import batect.os.HostEnvironmentVariables
+import batect.config.RawConfiguration
 import batect.testutils.createForEachTest
 import batect.testutils.on
 import batect.testutils.runForEachTest
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
-import com.nhaarman.mockitokotlin2.any
-import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
-import com.nhaarman.mockitokotlin2.verify
 import org.kodein.di.DI
 import org.kodein.di.bind
 import org.kodein.di.instance
@@ -41,19 +35,10 @@ object SessionKodeinFactorySpec : Spek({
             bind<String>("some string") with instance("The string value")
         }
 
-        val configVariables = mapOf("SOME_VAR" to "some value")
-        val configVariablesProvider by createForEachTest {
-            mock<ConfigVariablesProvider> {
-                on { build(any()) } doReturn configVariables
-            }
-        }
-
-        val hostEnvironmentVariables = HostEnvironmentVariables()
-
-        val factory by createForEachTest { SessionKodeinFactory(baseKodein, hostEnvironmentVariables, configVariablesProvider) }
+        val factory by createForEachTest { SessionKodeinFactory(baseKodein) }
 
         on("creating a task Kodein context") {
-            val config by createForEachTest { mock<Configuration>() }
+            val config by createForEachTest { mock<RawConfiguration>() }
             val extendedKodein by runForEachTest { factory.create(config) }
 
             it("includes the configuration from the original instance") {
@@ -61,15 +46,7 @@ object SessionKodeinFactorySpec : Spek({
             }
 
             it("includes the configuration") {
-                assertThat(extendedKodein.instance<Configuration>(), equalTo(config))
-            }
-
-            it("builds the set of config variables") {
-                verify(configVariablesProvider).build(config)
-            }
-
-            it("includes the expression evaluation context") {
-                assertThat(extendedKodein.instance<ExpressionEvaluationContext>(), equalTo(ExpressionEvaluationContext(hostEnvironmentVariables, configVariables)))
+                assertThat(extendedKodein.instance<RawConfiguration>(), equalTo(config))
             }
         }
     }

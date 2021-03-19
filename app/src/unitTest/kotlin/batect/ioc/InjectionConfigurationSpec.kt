@@ -17,18 +17,18 @@
 package batect.ioc
 
 import batect.cli.CommandLineOptions
-import batect.config.Configuration
 import batect.config.Container
 import batect.config.ContainerMap
 import batect.config.PullImage
+import batect.config.RawConfiguration
 import batect.config.Task
 import batect.config.TaskMap
 import batect.config.TaskRunConfiguration
-import batect.os.HostEnvironmentVariables
 import batect.testutils.doesNotThrow
 import batect.testutils.on
 import com.natpryce.hamkrest.assertion.assertThat
 import com.nhaarman.mockitokotlin2.mock
+import org.kodein.di.instance
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.io.ByteArrayInputStream
@@ -39,13 +39,13 @@ object InjectionConfigurationSpec : Spek({
     describe("Kodein injection configuration") {
         val container = Container("the-container", PullImage("test-image"))
         val task = Task("the-task", TaskRunConfiguration(container.name))
-        val config = Configuration("project", TaskMap(task), ContainerMap(container))
+        val rawConfig = RawConfiguration("project", TaskMap(task), ContainerMap(container))
 
         val baseConfiguration = createKodeinConfiguration(PrintStream(ByteArrayOutputStream()), PrintStream(ByteArrayOutputStream()), ByteArrayInputStream(ByteArray(0)))
         val afterCommandLineOptions = CommandLineOptions(taskName = task.name).extend(baseConfiguration)
-        val inDockerDaemonContext = DockerConfigurationKodeinFactory(afterCommandLineOptions).create(mock(), mock())
-        val inSessionContext = SessionKodeinFactory(inDockerDaemonContext, HostEnvironmentVariables(), mock()).create(config)
-        val inTaskContext = TaskKodeinFactory(inSessionContext).create(task, mock())
+        val inDockerDaemonContext = afterCommandLineOptions.instance<DockerConfigurationKodeinFactory>().create(mock(), mock())
+        val inSessionContext = inDockerDaemonContext.instance<SessionKodeinFactory>().create(rawConfig)
+        val inTaskContext = inSessionContext.instance<TaskKodeinFactory>().create(task, mock())
 
         describe("each registered class") {
             inTaskContext.container.tree.bindings.keys.forEach { key ->

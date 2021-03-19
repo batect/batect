@@ -17,8 +17,8 @@
 package batect.cli.commands
 
 import batect.cli.CommandLineOptions
-import batect.config.Configuration
 import batect.config.ContainerMap
+import batect.config.RawConfiguration
 import batect.config.Task
 import batect.config.TaskMap
 import batect.config.TaskRunConfiguration
@@ -93,7 +93,7 @@ object ListTasksCommandSpec : Spek({
             val task1 = Task("first-task", taskRunConfig)
             val task2 = Task("other-task", taskRunConfig)
             val task3 = Task("another-task-with-a-description", taskRunConfig, "do the thing")
-            val config = Configuration("the_project", TaskMap(task1, task2, task3), ContainerMap())
+            val config = RawConfiguration("the_project", TaskMap(task1, task2, task3), ContainerMap())
 
             beforeEachTest { whenever(configLoader.loadConfig(configFilePath)).doReturn(ConfigurationLoadResult(config, emptySet())) }
 
@@ -123,7 +123,7 @@ object ListTasksCommandSpec : Spek({
             val task1 = Task("first-task", taskRunConfig, group = "Build tasks")
             val task2 = Task("other-task", taskRunConfig, group = "Build tasks")
             val task3 = Task("another-task-with-a-description", taskRunConfig, "do the thing", group = "Build tasks")
-            val config = Configuration("the_project", TaskMap(task1, task2, task3), ContainerMap())
+            val config = RawConfiguration("the_project", TaskMap(task1, task2, task3), ContainerMap())
 
             beforeEachTest { whenever(configLoader.loadConfig(configFilePath)).doReturn(ConfigurationLoadResult(config, emptySet())) }
 
@@ -153,7 +153,7 @@ object ListTasksCommandSpec : Spek({
             val task1 = Task("first-task", taskRunConfig, group = "Test tasks")
             val task2 = Task("other-task", taskRunConfig, group = "Build tasks")
             val task3 = Task("another-task-with-a-description", taskRunConfig, "do the thing", group = "Build tasks")
-            val config = Configuration("the_project", TaskMap(task1, task2, task3), ContainerMap())
+            val config = RawConfiguration("the_project", TaskMap(task1, task2, task3), ContainerMap())
 
             beforeEachTest { whenever(configLoader.loadConfig(configFilePath)).doReturn(ConfigurationLoadResult(config, emptySet())) }
 
@@ -185,7 +185,7 @@ object ListTasksCommandSpec : Spek({
             val task1 = Task("first-task", taskRunConfig, group = "")
             val task2 = Task("other-task", taskRunConfig, group = "Build tasks")
             val task3 = Task("another-task-with-a-description", taskRunConfig, "do the thing", group = "Build tasks")
-            val config = Configuration("the_project", TaskMap(task1, task2, task3), ContainerMap())
+            val config = RawConfiguration("the_project", TaskMap(task1, task2, task3), ContainerMap())
 
             beforeEachTest { whenever(configLoader.loadConfig(configFilePath)).doReturn(ConfigurationLoadResult(config, emptySet())) }
 

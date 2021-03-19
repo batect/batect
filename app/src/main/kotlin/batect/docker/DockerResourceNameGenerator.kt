@@ -16,12 +16,12 @@
 
 package batect.docker
 
-import batect.config.Configuration
 import batect.config.Container
+import batect.config.TaskSpecialisedConfiguration
 import batect.utils.generateId
 
 class DockerResourceNameGenerator(
-    private val config: Configuration
+    private val config: TaskSpecialisedConfiguration
 ) {
     fun generateNameFor(container: Container): String = generateNameFor(container.name)
 

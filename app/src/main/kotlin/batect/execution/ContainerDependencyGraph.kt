@@ -16,15 +16,15 @@
 
 package batect.execution
 
-import batect.config.Configuration
 import batect.config.Container
 import batect.config.Expression
 import batect.config.PortMapping
 import batect.config.Task
+import batect.config.TaskSpecialisedConfiguration
 import batect.primitives.mapToSet
 
 data class ContainerDependencyGraph(
-    private val config: Configuration,
+    private val config: TaskSpecialisedConfiguration,
     private val task: Task,
     private val commandResolver: ContainerCommandResolver,
     private val entrypointResolver: ContainerEntrypointResolver

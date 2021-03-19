@@ -16,13 +16,20 @@
 
 package batect.ioc
 
+import batect.config.ExpressionEvaluationContext
 import batect.config.Task
+import batect.config.TaskSpecialisedConfiguration
+import batect.config.TaskSpecialisedConfigurationFactory
+import batect.execution.ConfigVariablesProvider
 import batect.execution.RunOptions
+import batect.os.HostEnvironmentVariables
 import batect.testutils.createForEachTest
 import batect.testutils.on
 import batect.testutils.runForEachTest
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
+import com.nhaarman.mockitokotlin2.any
+import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import org.kodein.di.DI
 import org.kodein.di.bind
@@ -39,7 +46,22 @@ object TaskKodeinFactorySpec : Spek({
             bind<TaskReference>() with scoped(TaskScope).singleton { TaskReference(context) }
         }
 
-        val factory by createForEachTest { TaskKodeinFactory(baseKodein) }
+        val hostEnvironmentVariables = HostEnvironmentVariables()
+        val configVariables = mapOf("SOME_VAR" to "some value")
+        val configVariablesProvider by createForEachTest {
+            mock<ConfigVariablesProvider> {
+                on { build(any()) } doReturn configVariables
+            }
+        }
+
+        val taskSpecialisedConfig = TaskSpecialisedConfiguration("my-project")
+        val taskSpecialisedConfigurationFactory by createForEachTest {
+            mock<TaskSpecialisedConfigurationFactory> {
+                on { create() } doReturn taskSpecialisedConfig
+            }
+        }
+
+        val factory by createForEachTest { TaskKodeinFactory(baseKodein, hostEnvironmentVariables, configVariablesProvider, taskSpecialisedConfigurationFactory) }
 
         on("creating a task Kodein context") {
             val task by createForEachTest { mock<Task>() }
@@ -56,6 +78,14 @@ object TaskKodeinFactorySpec : Spek({
 
             it("sets the context correctly") {
                 assertThat(extendedKodein.instance<TaskReference>(), equalTo(TaskReference(task)))
+            }
+
+            it("includes the task-specialised configuration") {
+                assertThat(extendedKodein.instance<TaskSpecialisedConfiguration>(), equalTo(taskSpecialisedConfig))
+            }
+
+            it("includes the expression evaluation context") {
+                assertThat(extendedKodein.instance<ExpressionEvaluationContext>(), equalTo(ExpressionEvaluationContext(hostEnvironmentVariables, configVariables)))
             }
         }
     }

@@ -17,7 +17,6 @@
 package batect.execution.model.stages
 
 import batect.config.BuildImage
-import batect.config.Configuration
 import batect.config.Container
 import batect.config.ContainerMap
 import batect.config.LiteralValue
@@ -25,6 +24,7 @@ import batect.config.PullImage
 import batect.config.Task
 import batect.config.TaskMap
 import batect.config.TaskRunConfiguration
+import batect.config.TaskSpecialisedConfiguration
 import batect.docker.DockerContainer
 import batect.docker.DockerNetwork
 import batect.execution.ContainerCommandResolver
@@ -82,7 +82,7 @@ object CleanupStagePlannerSpec : Spek({
         val container1 = Container("container-1", BuildImage(LiteralValue("./container-1"), pathResolutionContextDoesNotMatter()))
         val container2 = Container("container-2", PullImage("image-2"), dependencies = setOf(container1.name))
         val taskContainer = Container(task.runConfiguration!!.container, BuildImage(LiteralValue("./task-container"), pathResolutionContextDoesNotMatter()), dependencies = setOf(container1.name, container2.name))
-        val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer, container1, container2))
+        val config = TaskSpecialisedConfiguration("the-project", TaskMap(task), ContainerMap(taskContainer, container1, container2))
         val graph = ContainerDependencyGraph(config, task, commandResolver, entrypointResolver)
         val events by createForEachTest { mutableSetOf<TaskEvent>() }
         val logger by createLoggerForEachTest()

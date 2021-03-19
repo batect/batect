@@ -17,10 +17,10 @@
 package batect.cli.commands
 
 import batect.cli.CommandLineOptions
-import batect.config.Configuration
 import batect.config.Container
 import batect.config.ContainerMap
 import batect.config.PullImage
+import batect.config.RawConfiguration
 import batect.config.TaskMap
 import batect.config.io.ConfigurationLoadResult
 import batect.config.io.ConfigurationLoader
@@ -53,12 +53,10 @@ object RunTaskCommandSpec : Spek({
             val fileSystem = Jimfs.newFileSystem(com.google.common.jimfs.Configuration.unix())
             val configFile = fileSystem.getPath("config.yml")
             val taskName = "the-task"
-            val config = Configuration("the_project", TaskMap(), ContainerMap(Container("the-container", PullImage("the-image"))))
-            val configWithImageOverrides = Configuration("the_project", TaskMap(), ContainerMap(Container("the-container", PullImage("the-new-image"))))
+            val config = RawConfiguration("the_project", TaskMap(), ContainerMap(Container("the-container", PullImage("the-image"))))
 
             val baseCommandLineOptions = CommandLineOptions(
                 configurationFileName = configFile,
-                imageOverrides = mapOf("the-container" to "the-new-image"),
                 taskName = taskName
             )
 
@@ -122,8 +120,8 @@ object RunTaskCommandSpec : Spek({
                     }
                 }
 
-                it("creates the session Kodein context with the configuration with image overrides applied") {
-                    verify(sessionKodeinFactory).create(configWithImageOverrides)
+                it("creates the session Kodein context with the raw configuration") {
+                    verify(sessionKodeinFactory).create(config)
                 }
             }
 

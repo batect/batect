@@ -16,7 +16,6 @@
 
 package batect.execution
 
-import batect.config.Configuration
 import batect.config.Container
 import batect.config.ContainerMap
 import batect.config.LiteralValue
@@ -25,6 +24,7 @@ import batect.config.Task
 import batect.config.TaskContainerCustomisation
 import batect.config.TaskMap
 import batect.config.TaskRunConfiguration
+import batect.config.TaskSpecialisedConfiguration
 import batect.os.Command
 import batect.testutils.given
 import batect.testutils.imageSourceDoesNotMatter
@@ -61,7 +61,7 @@ object ContainerDependencyGraphSpec : Spek({
 
         given("a task with only prerequisites") {
             val task = Task("the-task", runConfiguration = null)
-            val config = Configuration("the-project", TaskMap(task))
+            val config = TaskSpecialisedConfiguration("the-project", TaskMap(task))
 
             on("creating the dependency graph") {
                 it("throws an appropriate exception") {
@@ -75,7 +75,7 @@ object ContainerDependencyGraphSpec : Spek({
                 val container = Container("some-container", imageSourceDoesNotMatter(), command = Command.parse("some-container-command"), entrypoint = Command.parse("some-task-entrypoint"), workingDirectory = "task-working-dir-that-wont-be-used")
                 val runConfig = TaskRunConfiguration(container.name, Command.parse("some-command"), Command.parse("some-entrypoint"), mapOf("SOME_EXTRA_VALUE" to LiteralValue("the value")), setOf(PortMapping(123, 456)), "some-task-specific-working-dir")
                 val task = Task("the-task", runConfig, dependsOnContainers = emptySet())
-                val config = Configuration("the-project", TaskMap(task), ContainerMap(container))
+                val config = TaskSpecialisedConfiguration("the-project", TaskMap(task), ContainerMap(container))
                 val graph = ContainerDependencyGraph(config, task, commandResolver, entrypointResolver)
 
                 on("getting the task container node") {
@@ -131,7 +131,7 @@ object ContainerDependencyGraphSpec : Spek({
                 val container = Container("some-container", imageSourceDoesNotMatter(), command = Command.parse("some-container-command"), entrypoint = Command.parse("sh"), workingDirectory = "task-working-dir")
                 val runConfig = TaskRunConfiguration(container.name, Command.parse("some-command"), Command.parse("some-entrypoint"), mapOf("SOME_EXTRA_VALUE" to LiteralValue("the value")), setOf(PortMapping(123, 456)))
                 val task = Task("the-task", runConfig, dependsOnContainers = emptySet())
-                val config = Configuration("the-project", TaskMap(task), ContainerMap(container))
+                val config = TaskSpecialisedConfiguration("the-project", TaskMap(task), ContainerMap(container))
                 val graph = ContainerDependencyGraph(config, task, commandResolver, entrypointResolver)
 
                 on("getting the task container node") {
@@ -180,7 +180,7 @@ object ContainerDependencyGraphSpec : Spek({
                 val runConfig = TaskRunConfiguration(container.name)
                 val customisations = mapOf("some-other-container" to TaskContainerCustomisation(workingDirectory = "/work"))
                 val task = Task("the-task", runConfig, customisations = customisations)
-                val config = Configuration("the-project", TaskMap(task), ContainerMap(container))
+                val config = TaskSpecialisedConfiguration("the-project", TaskMap(task), ContainerMap(container))
 
                 on("creating the graph") {
                     it("throws an exception") {
@@ -193,7 +193,7 @@ object ContainerDependencyGraphSpec : Spek({
         given("a task that refers to a container that does not exist") {
             val runConfig = TaskRunConfiguration("some-non-existent-container", Command.parse("some-command"))
             val task = Task("the-task", runConfig, dependsOnContainers = emptySet())
-            val config = Configuration("the-project", TaskMap(task), ContainerMap())
+            val config = TaskSpecialisedConfiguration("the-project", TaskMap(task), ContainerMap())
 
             on("creating the graph") {
                 it("throws an exception") {
@@ -207,7 +207,7 @@ object ContainerDependencyGraphSpec : Spek({
             val dependencyContainer = Container("dependency-container", imageSourceDoesNotMatter(), command = Command.parse("dependency-command"), workingDirectory = "dependency-working-dir")
             val runConfig = TaskRunConfiguration(taskContainer.name, Command.parse("some-command"), Command.parse("some-entrypoint"), mapOf("SOME_EXTRA_VALUE" to LiteralValue("the value")), setOf(PortMapping(123, 456)), "some-task-specific-working-dir")
             val task = Task("the-task", runConfig, dependsOnContainers = setOf(dependencyContainer.name))
-            val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer, dependencyContainer))
+            val config = TaskSpecialisedConfiguration("the-project", TaskMap(task), ContainerMap(taskContainer, dependencyContainer))
             val graph = ContainerDependencyGraph(config, task, commandResolver, entrypointResolver)
 
             on("getting the task container node") {
@@ -300,7 +300,7 @@ object ContainerDependencyGraphSpec : Spek({
             )
 
             val task = Task("the-task", runConfig, dependsOnContainers = setOf(dependencyContainer.name), customisations = customisations)
-            val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer, dependencyContainer))
+            val config = TaskSpecialisedConfiguration("the-project", TaskMap(task), ContainerMap(taskContainer, dependencyContainer))
             val graph = ContainerDependencyGraph(config, task, commandResolver, entrypointResolver)
 
             on("getting the task container node") {
@@ -393,7 +393,7 @@ object ContainerDependencyGraphSpec : Spek({
             )
 
             val task = Task("the-task", runConfig, dependsOnContainers = setOf(dependencyContainer.name), customisations = customisations)
-            val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer, dependencyContainer))
+            val config = TaskSpecialisedConfiguration("the-project", TaskMap(task), ContainerMap(taskContainer, dependencyContainer))
             val graph = ContainerDependencyGraph(config, task, commandResolver, entrypointResolver)
 
             on("getting the dependency container node") {
@@ -420,7 +420,7 @@ object ContainerDependencyGraphSpec : Spek({
             val dependencyContainer3 = Container("dependency-container-3", imageSourceDoesNotMatter())
             val runConfig = TaskRunConfiguration(taskContainer.name, Command.parse("some-command"))
             val task = Task("the-task", runConfig, dependsOnContainers = setOf(dependencyContainer1.name, dependencyContainer2.name, dependencyContainer3.name))
-            val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer, dependencyContainer1, dependencyContainer2, dependencyContainer3))
+            val config = TaskSpecialisedConfiguration("the-project", TaskMap(task), ContainerMap(taskContainer, dependencyContainer1, dependencyContainer2, dependencyContainer3))
             val graph = ContainerDependencyGraph(config, task, commandResolver, entrypointResolver)
 
             on("getting the task container node") {
@@ -482,7 +482,7 @@ object ContainerDependencyGraphSpec : Spek({
             val taskContainer = Container("some-container", imageSourceDoesNotMatter())
             val runConfig = TaskRunConfiguration(taskContainer.name, Command.parse("some-command"))
             val task = Task("the-task", runConfig, dependsOnContainers = setOf("non-existent-dependency"))
-            val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer))
+            val config = TaskSpecialisedConfiguration("the-project", TaskMap(task), ContainerMap(taskContainer))
 
             on("creating the graph") {
                 it("throws an exception") {
@@ -495,7 +495,7 @@ object ContainerDependencyGraphSpec : Spek({
             val taskContainer = Container("some-container", imageSourceDoesNotMatter())
             val runConfig = TaskRunConfiguration(taskContainer.name, Command.parse("some-command"))
             val task = Task("the-task", runConfig, dependsOnContainers = setOf(taskContainer.name))
-            val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer))
+            val config = TaskSpecialisedConfiguration("the-project", TaskMap(task), ContainerMap(taskContainer))
 
             on("creating the graph") {
                 it("throws an exception") {
@@ -511,7 +511,7 @@ object ContainerDependencyGraphSpec : Spek({
             val taskContainer = Container("some-container", imageSourceDoesNotMatter(), dependencies = setOf(dependencyContainer1.name, dependencyContainer2.name, dependencyContainer3.name))
             val runConfig = TaskRunConfiguration(taskContainer.name, Command.parse("some-command"))
             val task = Task("the-task", runConfig)
-            val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer, dependencyContainer1, dependencyContainer2, dependencyContainer3))
+            val config = TaskSpecialisedConfiguration("the-project", TaskMap(task), ContainerMap(taskContainer, dependencyContainer1, dependencyContainer2, dependencyContainer3))
             val graph = ContainerDependencyGraph(config, task, commandResolver, entrypointResolver)
 
             on("getting the task container node") {
@@ -584,7 +584,7 @@ object ContainerDependencyGraphSpec : Spek({
             )
 
             val task = Task("the-task", runConfig, customisations = customisations)
-            val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer, dependencyContainer1, dependencyContainer2, dependencyContainer3))
+            val config = TaskSpecialisedConfiguration("the-project", TaskMap(task), ContainerMap(taskContainer, dependencyContainer1, dependencyContainer2, dependencyContainer3))
             val graph = ContainerDependencyGraph(config, task, commandResolver, entrypointResolver)
 
             on("getting the task container node") {
@@ -684,7 +684,7 @@ object ContainerDependencyGraphSpec : Spek({
             val taskContainer = Container("some-container", imageSourceDoesNotMatter(), dependencies = setOf(dependencyContainer2.name))
             val runConfig = TaskRunConfiguration(taskContainer.name, Command.parse("some-command"))
             val task = Task("the-task", runConfig)
-            val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer, dependencyContainer1, dependencyContainer2))
+            val config = TaskSpecialisedConfiguration("the-project", TaskMap(task), ContainerMap(taskContainer, dependencyContainer1, dependencyContainer2))
             val graph = ContainerDependencyGraph(config, task, commandResolver, entrypointResolver)
 
             on("getting the task container node") {
@@ -771,7 +771,7 @@ object ContainerDependencyGraphSpec : Spek({
             val taskContainer = Container("some-container", imageSourceDoesNotMatter(), dependencies = setOf(dependencyContainer1.name, dependencyContainer2.name))
             val runConfig = TaskRunConfiguration(taskContainer.name, Command.parse("some-command"))
             val task = Task("the-task", runConfig)
-            val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer, dependencyContainer1, dependencyContainer2, containerWithNoDependencies))
+            val config = TaskSpecialisedConfiguration("the-project", TaskMap(task), ContainerMap(taskContainer, dependencyContainer1, dependencyContainer2, containerWithNoDependencies))
             val graph = ContainerDependencyGraph(config, task, commandResolver, entrypointResolver)
 
             on("getting the task container node") {
@@ -859,7 +859,7 @@ object ContainerDependencyGraphSpec : Spek({
             val taskContainer = Container("some-container", imageSourceDoesNotMatter(), dependencies = setOf(containerB.name, containerA.name))
             val runConfig = TaskRunConfiguration(taskContainer.name, Command.parse("some-command"))
             val task = Task("the-task", runConfig)
-            val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer, containerB, containerA))
+            val config = TaskSpecialisedConfiguration("the-project", TaskMap(task), ContainerMap(taskContainer, containerB, containerA))
             val graph = ContainerDependencyGraph(config, task, commandResolver, entrypointResolver)
 
             on("getting the task container node") {
@@ -945,7 +945,7 @@ object ContainerDependencyGraphSpec : Spek({
             val taskContainer = Container("some-container", imageSourceDoesNotMatter())
             val runConfig = TaskRunConfiguration(taskContainer.name, Command.parse("some-command"))
             val task = Task("the-task", runConfig, dependsOnContainers = setOf(taskDependencyContainer.name))
-            val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer, taskDependencyContainer, otherDependencyContainer))
+            val config = TaskSpecialisedConfiguration("the-project", TaskMap(task), ContainerMap(taskContainer, taskDependencyContainer, otherDependencyContainer))
             val graph = ContainerDependencyGraph(config, task, commandResolver, entrypointResolver)
 
             on("getting the task container node") {
@@ -1030,7 +1030,7 @@ object ContainerDependencyGraphSpec : Spek({
             val taskContainer = Container("some-container", imageSourceDoesNotMatter(), dependencies = setOf(dependencyContainer.name))
             val runConfig = TaskRunConfiguration(taskContainer.name, Command.parse("some-command"))
             val task = Task("the-task", runConfig, dependsOnContainers = setOf(dependencyContainer.name))
-            val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer, dependencyContainer))
+            val config = TaskSpecialisedConfiguration("the-project", TaskMap(task), ContainerMap(taskContainer, dependencyContainer))
             val graph = ContainerDependencyGraph(config, task, commandResolver, entrypointResolver)
 
             on("getting the task container node") {
@@ -1090,7 +1090,7 @@ object ContainerDependencyGraphSpec : Spek({
             val taskContainer = Container("some-container", imageSourceDoesNotMatter(), dependencies = setOf("non-existent-container"))
             val runConfig = TaskRunConfiguration(taskContainer.name, Command.parse("some-command"))
             val task = Task("the-task", runConfig)
-            val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer))
+            val config = TaskSpecialisedConfiguration("the-project", TaskMap(task), ContainerMap(taskContainer))
 
             on("creating the graph") {
                 it("throws an exception") {
@@ -1104,7 +1104,7 @@ object ContainerDependencyGraphSpec : Spek({
             val taskContainer = Container("some-container", imageSourceDoesNotMatter(), dependencies = setOf(dependencyContainer.name))
             val runConfig = TaskRunConfiguration(taskContainer.name, Command.parse("some-command"))
             val task = Task("the-task", runConfig)
-            val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer, dependencyContainer))
+            val config = TaskSpecialisedConfiguration("the-project", TaskMap(task), ContainerMap(taskContainer, dependencyContainer))
 
             on("creating the graph") {
                 it("throws an exception") {
@@ -1117,7 +1117,7 @@ object ContainerDependencyGraphSpec : Spek({
             val taskContainer = Container("some-container", imageSourceDoesNotMatter(), dependencies = setOf("some-container"))
             val runConfig = TaskRunConfiguration(taskContainer.name, Command.parse("some-command"))
             val task = Task("the-task", runConfig)
-            val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer))
+            val config = TaskSpecialisedConfiguration("the-project", TaskMap(task), ContainerMap(taskContainer))
 
             on("creating the graph") {
                 it("throws an exception") {
@@ -1131,7 +1131,7 @@ object ContainerDependencyGraphSpec : Spek({
             val taskContainer = Container("some-container", imageSourceDoesNotMatter(), dependencies = setOf(dependencyContainer.name))
             val runConfig = TaskRunConfiguration(taskContainer.name, Command.parse("some-command"))
             val task = Task("the-task", runConfig)
-            val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer, dependencyContainer))
+            val config = TaskSpecialisedConfiguration("the-project", TaskMap(task), ContainerMap(taskContainer, dependencyContainer))
 
             on("creating the graph") {
                 it("throws an exception") {
@@ -1145,7 +1145,7 @@ object ContainerDependencyGraphSpec : Spek({
             val taskContainer = Container("container-a", imageSourceDoesNotMatter(), dependencies = setOf("container-b"))
             val runConfig = TaskRunConfiguration(taskContainer.name, Command.parse("some-command"))
             val task = Task("the-task", runConfig)
-            val config = Configuration("the-project", TaskMap(task), ContainerMap(taskContainer, dependencyContainer))
+            val config = TaskSpecialisedConfiguration("the-project", TaskMap(task), ContainerMap(taskContainer, dependencyContainer))
 
             on("creating the graph") {
                 it("throws an exception") {
@@ -1160,7 +1160,7 @@ object ContainerDependencyGraphSpec : Spek({
             val containerC = Container("container-c", imageSourceDoesNotMatter(), dependencies = setOf("container-a"))
             val runConfig = TaskRunConfiguration(containerA.name, Command.parse("some-command"))
             val task = Task("the-task", runConfig)
-            val config = Configuration("the-project", TaskMap(task), ContainerMap(containerA, containerB, containerC))
+            val config = TaskSpecialisedConfiguration("the-project", TaskMap(task), ContainerMap(containerA, containerB, containerC))
 
             on("creating the graph") {
                 it("throws an exception") {
@@ -1174,7 +1174,7 @@ object ContainerDependencyGraphSpec : Spek({
             val containerB = Container("container-b", imageSourceDoesNotMatter(), dependencies = setOf(containerA.name))
             val runConfig = TaskRunConfiguration(containerA.name, Command.parse("some-command"))
             val task = Task("the-task", runConfig, dependsOnContainers = setOf(containerB.name))
-            val config = Configuration("the-project", TaskMap(task), ContainerMap(containerA, containerB))
+            val config = TaskSpecialisedConfiguration("the-project", TaskMap(task), ContainerMap(containerA, containerB))
 
             on("creating the graph") {
                 it("throws an exception") {
@@ -1189,7 +1189,7 @@ object ContainerDependencyGraphSpec : Spek({
             val containerB = Container("container-b", imageSourceDoesNotMatter(), dependencies = setOf(containerC.name))
             val runConfig = TaskRunConfiguration(containerA.name, Command.parse("some-command"))
             val task = Task("the-task", runConfig, dependsOnContainers = setOf(containerB.name))
-            val config = Configuration("the-project", TaskMap(task), ContainerMap(containerA, containerB, containerC))
+            val config = TaskSpecialisedConfiguration("the-project", TaskMap(task), ContainerMap(containerA, containerB, containerC))
 
             on("creating the graph") {
                 it("throws an exception") {
@@ -1205,7 +1205,7 @@ object ContainerDependencyGraphSpec : Spek({
             val containerB = Container("container-b", imageSourceDoesNotMatter(), dependencies = setOf(containerC.name))
             val runConfig = TaskRunConfiguration(containerA.name, Command.parse("some-command"))
             val task = Task("the-task", runConfig, dependsOnContainers = setOf(containerB.name))
-            val config = Configuration("the-project", TaskMap(task), ContainerMap(containerA, containerB, containerC, containerD))
+            val config = TaskSpecialisedConfiguration("the-project", TaskMap(task), ContainerMap(containerA, containerB, containerC, containerD))
 
             on("creating the graph") {
                 it("throws an exception") {
@@ -1220,7 +1220,7 @@ object ContainerDependencyGraphSpec : Spek({
             val containerB = Container("container-b", imageSourceDoesNotMatter(), dependencies = setOf(containerC.name))
             val runConfig = TaskRunConfiguration(containerA.name, Command.parse("some-command"))
             val task = Task("the-task", runConfig, dependsOnContainers = setOf(containerB.name))
-            val config = Configuration("the-project", TaskMap(task), ContainerMap(containerA, containerB, containerC))
+            val config = TaskSpecialisedConfiguration("the-project", TaskMap(task), ContainerMap(containerA, containerB, containerC))
 
             on("creating the graph") {
                 it("throws an exception") {

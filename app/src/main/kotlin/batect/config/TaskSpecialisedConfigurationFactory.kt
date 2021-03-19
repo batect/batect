@@ -17,6 +17,7 @@
 package batect.config
 
 import batect.cli.CommandLineOptions
+import batect.config.io.ConfigurationException
 import batect.logging.Logger
 
 class TaskSpecialisedConfigurationFactory(
@@ -34,5 +35,20 @@ class TaskSpecialisedConfigurationFactory(
         }
 
         return taskSpecialisedConfiguration
+    }
+
+    private fun RawConfiguration.applyImageOverrides(overrides: Map<String, ImageSource>): TaskSpecialisedConfiguration {
+        val updatedContainers = overrides.entries.fold(containers.values) { updatedContainers, override ->
+            val containerName = override.key
+            val oldContainer = containers[containerName]
+
+            if (oldContainer == null) {
+                throw ConfigurationException("Cannot override image for container '${override.key}' because there is no container named '${override.key}' defined.")
+            }
+
+            updatedContainers - oldContainer + oldContainer.copy(imageSource = override.value)
+        }
+
+        return TaskSpecialisedConfiguration(projectName, tasks, ContainerMap(updatedContainers), configVariables)
     }
 }

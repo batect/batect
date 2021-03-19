@@ -16,19 +16,15 @@
 
 package batect.config
 
-import batect.config.io.ConfigurationException
 import batect.docker.Capability
 import batect.os.Command
 import batect.os.DefaultPathResolutionContext
 import batect.testutils.createForEachTest
-import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.osIndependentPath
 import batect.testutils.pathResolutionContextDoesNotMatter
-import batect.testutils.withMessage
 import batect.utils.Json
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.throws
 import org.araqnid.hamkrest.json.equivalentTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
@@ -325,49 +321,5 @@ object RawConfigurationSpec : Spek({
                 }
             }
         }
-
-        describe("overriding image sources") {
-            val container1 = Container("container-1", BuildImage(LiteralValue("some-build-dir"), pathResolutionContextDoesNotMatter()))
-            val container2 = Container("container-2", PullImage("some-image"))
-            val originalConfig = createRawConfiguration(container1, container2)
-
-            given("no overrides") {
-                val overrides = emptyMap<String, ImageSource>()
-
-                it("returns the original configuration unmodified") {
-                    assertThat(originalConfig.applyImageOverrides(overrides), equalTo(createTaskSpecialisedConfiguration(container1, container2)))
-                }
-            }
-
-            given("a single override") {
-                val overrides = mapOf(container1.name to PullImage("another-image"))
-
-                it("returns a new configuration with the image for the given container overridden") {
-                    assertThat(originalConfig.applyImageOverrides(overrides), equalTo(createTaskSpecialisedConfiguration(Container("container-1", PullImage("another-image")), container2)))
-                }
-            }
-
-            given("multiple overrides") {
-                val overrides = mapOf(
-                    container1.name to PullImage("another-image"),
-                    container2.name to PullImage("another-other-image")
-                )
-
-                it("returns a new configuration with the images for the given containers overridden") {
-                    assertThat(originalConfig.applyImageOverrides(overrides), equalTo(createTaskSpecialisedConfiguration(Container("container-1", PullImage("another-image")), Container("container-2", PullImage("another-other-image")))))
-                }
-            }
-
-            given("an override for a container that doesn't exist") {
-                val overrides = mapOf("another-container" to PullImage("another-image"))
-
-                it("throws an appropriate exception") {
-                    assertThat({ originalConfig.applyImageOverrides(overrides) }, throws<ConfigurationException>(withMessage("Cannot override image for container 'another-container' because there is no container named 'another-container' defined.")))
-                }
-            }
-        }
     }
 })
-
-private fun createRawConfiguration(vararg containers: Container): RawConfiguration = RawConfiguration("my_project", TaskMap(), ContainerMap(*containers))
-private fun createTaskSpecialisedConfiguration(vararg containers: Container): TaskSpecialisedConfiguration = TaskSpecialisedConfiguration("my_project", TaskMap(), ContainerMap(*containers))

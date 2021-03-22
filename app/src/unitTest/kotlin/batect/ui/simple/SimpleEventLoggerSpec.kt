@@ -23,8 +23,6 @@ import batect.config.PullImage
 import batect.config.SetupCommand
 import batect.docker.DockerContainer
 import batect.docker.DockerImage
-import batect.docker.DockerNetwork
-import batect.execution.ContainerRuntimeConfiguration
 import batect.execution.model.events.ContainerBecameHealthyEvent
 import batect.execution.model.events.ContainerStartedEvent
 import batect.execution.model.events.ImageBuiltEvent
@@ -35,7 +33,6 @@ import batect.execution.model.events.StepStartingEvent
 import batect.execution.model.events.TaskFailedEvent
 import batect.execution.model.steps.BuildImageStep
 import batect.execution.model.steps.CleanupStep
-import batect.execution.model.steps.CreateContainerStep
 import batect.execution.model.steps.PullImageStep
 import batect.execution.model.steps.RunContainerStep
 import batect.execution.model.steps.TaskStep
@@ -234,10 +231,12 @@ object SimpleEventLoggerSpec : Spek({
 
                 describe("when a 'run container' step is starting") {
                     describe("when the step will run the task container") {
-                        on("and no 'create container' step has been seen") {
+                        on("and that container does not have an explicit command") {
+                            val taskContainerWithoutCommand = taskContainer.copy(command = null)
+                            val loggerForContainerWithoutCommand by createForEachTest { SimpleEventLogger(setOf(taskContainerWithoutCommand), taskContainerWithoutCommand, failureErrorMessageFormatter, console, errorConsole, mock()) }
+
                             beforeEachTest {
-                                val step = RunContainerStep(taskContainer, DockerContainer("not-important"))
-                                logger.postEvent(StepStartingEvent(step))
+                                loggerForContainerWithoutCommand.postEvent(StepStartingEvent(RunContainerStep(taskContainerWithoutCommand, DockerContainer("not-important"))))
                             }
 
                             it("prints a message to the output without mentioning a command") {
@@ -245,34 +244,16 @@ object SimpleEventLoggerSpec : Spek({
                             }
                         }
 
-                        describe("and a 'create container' step has been seen") {
+                        on("and that step contained a command") {
+                            val taskContainerWithCommand = taskContainer.copy(command = Command.parse("do-stuff.sh"))
+                            val loggerForContainerWithCommand by createForEachTest { SimpleEventLogger(setOf(taskContainerWithCommand), taskContainerWithCommand, failureErrorMessageFormatter, console, errorConsole, mock()) }
 
-                            on("and that step did not contain a command") {
-                                beforeEachTest {
-                                    val createContainerStep = CreateContainerStep(taskContainer, ContainerRuntimeConfiguration.withCommand(null), DockerImage("some-image"), DockerNetwork("some-network"))
-                                    val runContainerStep = RunContainerStep(taskContainer, DockerContainer("not-important"))
-
-                                    logger.postEvent(StepStartingEvent(createContainerStep))
-                                    logger.postEvent(StepStartingEvent(runContainerStep))
-                                }
-
-                                it("prints a message to the output without mentioning a command") {
-                                    verify(console).println(Text.white(Text("Running ") + Text.bold("task-container") + Text("...")))
-                                }
+                            beforeEachTest {
+                                loggerForContainerWithCommand.postEvent(StepStartingEvent(RunContainerStep(taskContainerWithCommand, DockerContainer("not-important"))))
                             }
 
-                            on("and that step contained a command") {
-                                beforeEachTest {
-                                    val createContainerStep = CreateContainerStep(taskContainer, ContainerRuntimeConfiguration.withCommand(Command.parse("do-stuff.sh")), DockerImage("some-image"), DockerNetwork("some-network"))
-                                    val runContainerStep = RunContainerStep(taskContainer, DockerContainer("not-important"))
-
-                                    logger.postEvent(StepStartingEvent(createContainerStep))
-                                    logger.postEvent(StepStartingEvent(runContainerStep))
-                                }
-
-                                it("prints a message to the output including the original command") {
-                                    verify(console).println(Text.white(Text("Running ") + Text.bold("do-stuff.sh") + Text(" in ") + Text.bold("task-container") + Text("...")))
-                                }
+                            it("prints a message to the output including the original command") {
+                                verify(console).println(Text.white(Text("Running ") + Text.bold("do-stuff.sh") + Text(" in ") + Text.bold("task-container") + Text("...")))
                             }
                         }
                     }

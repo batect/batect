@@ -17,7 +17,6 @@
 package batect.execution.model.rules.run
 
 import batect.config.Container
-import batect.execution.ContainerRuntimeConfiguration
 import batect.execution.model.events.ContainerBecameHealthyEvent
 import batect.execution.model.events.ContainerCreatedEvent
 import batect.execution.model.events.TaskEvent
@@ -29,8 +28,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class RunContainerSetupCommandsStepRule(
-    @Serializable(with = ContainerNameOnlySerializer::class) val container: Container,
-    val config: ContainerRuntimeConfiguration
+    @Serializable(with = ContainerNameOnlySerializer::class) val container: Container
 ) : TaskStepRule() {
     override fun evaluate(pastEvents: Set<TaskEvent>): TaskStepRuleEvaluationResult {
         if (!containerHasBecomeHealthy(pastEvents)) {
@@ -39,7 +37,7 @@ data class RunContainerSetupCommandsStepRule(
 
         val dockerContainer = findDockerContainer(pastEvents)
 
-        return TaskStepRuleEvaluationResult.Ready(RunContainerSetupCommandsStep(container, config, dockerContainer))
+        return TaskStepRuleEvaluationResult.Ready(RunContainerSetupCommandsStep(container, dockerContainer))
     }
 
     private fun findDockerContainer(pastEvents: Set<TaskEvent>) =

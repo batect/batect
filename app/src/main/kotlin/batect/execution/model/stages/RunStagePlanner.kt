@@ -53,10 +53,10 @@ class RunStagePlanner(
 
     private fun executionStepsFor(node: ContainerDependencyGraphNode) = setOf(
         imageCreationRuleFor(node.container),
-        CreateContainerStepRule(node.container, node.config),
+        CreateContainerStepRule(node.container),
         RunContainerStepRule(node.container, node.dependsOnContainers),
         WaitForContainerToBecomeHealthyStepRule(node.container),
-        RunContainerSetupCommandsStepRule(node.container, node.config)
+        RunContainerSetupCommandsStepRule(node.container)
     )
 
     private fun imageCreationRuleFor(container: Container): TaskStepRule = when (container.imageSource) {

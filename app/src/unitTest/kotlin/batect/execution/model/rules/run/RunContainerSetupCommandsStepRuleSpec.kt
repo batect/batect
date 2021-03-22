@@ -17,16 +17,12 @@
 package batect.execution.model.rules.run
 
 import batect.config.Container
-import batect.config.LiteralValue
-import batect.config.PortMapping
 import batect.docker.DockerContainer
-import batect.execution.ContainerRuntimeConfiguration
 import batect.execution.model.events.ContainerBecameHealthyEvent
 import batect.execution.model.events.ContainerCreatedEvent
 import batect.execution.model.events.ContainerStartedEvent
 import batect.execution.model.rules.TaskStepRuleEvaluationResult
 import batect.execution.model.steps.RunContainerSetupCommandsStep
-import batect.os.Command
 import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.imageSourceDoesNotMatter
@@ -40,8 +36,7 @@ import org.spekframework.spek2.style.specification.describe
 object RunContainerSetupCommandsStepRuleSpec : Spek({
     describe("a run container setup commands step rule") {
         val container = Container("the-container", imageSourceDoesNotMatter())
-        val config = ContainerRuntimeConfiguration(Command.parse("blah"), Command.parse("entrypoint"), "/some/work/dir", mapOf("VAR" to LiteralValue("value")), setOf(PortMapping(123, 456)))
-        val rule = RunContainerSetupCommandsStepRule(container, config)
+        val rule = RunContainerSetupCommandsStepRule(container)
 
         given("the container has become healthy") {
             val dockerContainer = DockerContainer("some-container-id")
@@ -59,11 +54,7 @@ object RunContainerSetupCommandsStepRuleSpec : Spek({
                         result,
                         equalTo(
                             TaskStepRuleEvaluationResult.Ready(
-                                RunContainerSetupCommandsStep(
-                                    container,
-                                    config,
-                                    dockerContainer
-                                )
+                                RunContainerSetupCommandsStep(container, dockerContainer)
                             )
                         )
                     )
@@ -102,16 +93,7 @@ object RunContainerSetupCommandsStepRuleSpec : Spek({
                         """
                         |{
                         |   "type": "${rule::class.qualifiedName}",
-                        |   "container": "the-container",
-                        |   "config": {
-                        |       "command": ["blah"],
-                        |       "entrypoint": ["entrypoint"],
-                        |       "workingDirectory": "/some/work/dir",
-                        |       "additionalEnvironmentVariables": {
-                        |           "VAR": {"type":"LiteralValue", "value":"value"}
-                        |       },
-                        |       "additionalPortMappings": [{"local": "123", "container": "456", "protocol": "tcp"}]
-                        |   }
+                        |   "container": "the-container"
                         |}
                         """.trimMargin()
                     )

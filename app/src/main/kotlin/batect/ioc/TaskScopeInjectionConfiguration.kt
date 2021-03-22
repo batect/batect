@@ -19,7 +19,6 @@ package batect.ioc
 import batect.docker.DockerContainerCreationRequestFactory
 import batect.docker.DockerContainerEnvironmentVariableProvider
 import batect.docker.DockerResourceNameGenerator
-import batect.execution.ContainerCommandResolver
 import batect.execution.ContainerDependencyGraph
 import batect.execution.ContainerDependencyGraphProvider
 import batect.execution.ParallelExecutionManager
@@ -70,9 +69,8 @@ private val executionModule = DI.Module("Task scope: execution") {
 
     bind<CancellationContext>() with scoped(TaskScope).singleton { CancellationContext() }
     bind<CleanupStagePlanner>() with scoped(TaskScope).singletonWithLogger { logger -> CleanupStagePlanner(instance(), instance(), logger) }
-    bind<ContainerCommandResolver>() with scoped(TaskScope).singleton { ContainerCommandResolver(instance(), instance()) }
     bind<ContainerDependencyGraph>() with scoped(TaskScope).singleton { instance<ContainerDependencyGraphProvider>().createGraph(instance(), context) }
-    bind<ContainerDependencyGraphProvider>() with scoped(TaskScope).singletonWithLogger { logger -> ContainerDependencyGraphProvider(instance(), instance(), logger) }
+    bind<ContainerDependencyGraphProvider>() with scoped(TaskScope).singletonWithLogger { logger -> ContainerDependencyGraphProvider(logger) }
     bind<ParallelExecutionManager>() with scoped(TaskScope).singletonWithLogger { logger -> ParallelExecutionManager(instance(), instance(), instance(), instance(), commandLineOptions().maximumLevelOfParallelism, logger) }
     bind<RunStagePlanner>() with scoped(TaskScope).singletonWithLogger { logger -> RunStagePlanner(instance(), logger) }
     bind<TaskStateMachine>() with scoped(TaskScope).singletonWithLogger { logger -> TaskStateMachine(instance(), instance(), instance(), instance(), instance(), instance(), logger) }

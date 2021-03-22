@@ -38,7 +38,7 @@ class TaskKodeinFactory(
     private val taskSpecialisedConfigurationFactory: TaskSpecialisedConfigurationFactory
 ) {
     fun create(task: Task, runOptions: RunOptions): TaskKodein {
-        val taskSpecialisedConfiguration = taskSpecialisedConfigurationFactory.create()
+        val taskSpecialisedConfiguration = taskSpecialisedConfigurationFactory.create(task)
         val expressionEvaluationContext = ExpressionEvaluationContext(hostEnvironmentVariables, configVariablesProvider.build(taskSpecialisedConfiguration))
 
         return TaskKodein(

@@ -18,7 +18,6 @@ package batect.docker
 
 import batect.cli.CommandLineOptions
 import batect.config.Container
-import batect.execution.ContainerRuntimeConfiguration
 import batect.primitives.mapToSet
 
 class DockerContainerCreationRequestFactory(
@@ -30,7 +29,6 @@ class DockerContainerCreationRequestFactory(
         container: Container,
         image: DockerImage,
         network: DockerNetwork,
-        config: ContainerRuntimeConfiguration,
         volumeMounts: Set<DockerVolumeMount>,
         userAndGroup: UserAndGroup?,
         terminalType: String?,
@@ -40,19 +38,19 @@ class DockerContainerCreationRequestFactory(
         val portMappings = if (commandLineOptions.disablePortMappings)
             emptySet()
         else
-            (container.portMappings + config.additionalPortMappings).mapToSet { it.toDockerPortMapping() }
+            container.portMappings.mapToSet { it.toDockerPortMapping() }
 
         return ContainerCreationRequest(
             resourceNameGenerator.generateNameFor(container),
             image,
             network,
-            if (config.command != null) config.command.parsedCommand else emptyList(),
-            if (config.entrypoint != null) config.entrypoint.parsedCommand else emptyList(),
+            if (container.command != null) container.command.parsedCommand else emptyList(),
+            if (container.entrypoint != null) container.entrypoint.parsedCommand else emptyList(),
             container.name,
             container.additionalHostnames + container.name,
             container.additionalHosts,
-            environmentVariableProvider.environmentVariablesFor(container, config, terminalType),
-            config.workingDirectory,
+            environmentVariableProvider.environmentVariablesFor(container, terminalType),
+            container.workingDirectory,
             volumeMounts,
             container.deviceMounts.mapToSet { it.toDockerMount() },
             portMappings,

@@ -21,11 +21,9 @@ import batect.config.CacheMount
 import batect.config.Container
 import batect.config.LiteralValue
 import batect.config.LocalMount
-import batect.config.PortMapping
 import batect.config.PullImage
 import batect.docker.DockerImage
 import batect.docker.DockerNetwork
-import batect.execution.ContainerRuntimeConfiguration
 import batect.execution.model.events.CachesInitialisedEvent
 import batect.execution.model.events.ImageBuiltEvent
 import batect.execution.model.events.ImagePulledEvent
@@ -33,7 +31,6 @@ import batect.execution.model.events.TaskEvent
 import batect.execution.model.events.TaskNetworkReadyEvent
 import batect.execution.model.rules.TaskStepRuleEvaluationResult
 import batect.execution.model.steps.CreateContainerStep
-import batect.os.Command
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given
@@ -52,7 +49,6 @@ import org.spekframework.spek2.style.specification.describe
 object CreateContainerStepRuleSpec : Spek({
     describe("a create container step rule") {
         val events by createForEachTest { mutableSetOf<TaskEvent>() }
-        val config = ContainerRuntimeConfiguration(Command.parse("blah"), Command.parse("entrypoint"), "/some/work/dir", mapOf("VAR" to LiteralValue("value")), setOf(PortMapping(123, 456)))
 
         given("the container uses an existing image") {
             val imageName = "the-image"
@@ -60,7 +56,7 @@ object CreateContainerStepRuleSpec : Spek({
 
             given("the container has no cache mounts") {
                 val container = Container("the-container", imageSource, volumeMounts = setOf(LocalMount(LiteralValue("/some-local-path"), pathResolutionContextDoesNotMatter(), "/some-container-path")))
-                val rule = CreateContainerStepRule(container, config)
+                val rule = CreateContainerStepRule(container)
 
                 given("the task network is ready") {
                     val dockerNetwork = DockerNetwork("the-network")
@@ -78,7 +74,7 @@ object CreateContainerStepRuleSpec : Spek({
                             val result by runForEachTest { rule.evaluate(events) }
 
                             it("returns a 'create container' step") {
-                                assertThat(result, equalTo(TaskStepRuleEvaluationResult.Ready(CreateContainerStep(container, config, image, dockerNetwork))))
+                                assertThat(result, equalTo(TaskStepRuleEvaluationResult.Ready(CreateContainerStep(container, image, dockerNetwork))))
                             }
                         }
                     }
@@ -119,7 +115,7 @@ object CreateContainerStepRuleSpec : Spek({
 
             given("the container has a cache mount") {
                 val container = Container("the-container", imageSource, volumeMounts = setOf(CacheMount("some-cache", "/some-container-path")))
-                val rule = CreateContainerStepRule(container, config)
+                val rule = CreateContainerStepRule(container)
 
                 given("the task network is ready") {
                     val dockerNetwork = DockerNetwork("the-network")
@@ -139,7 +135,7 @@ object CreateContainerStepRuleSpec : Spek({
                             val result by runForEachTest { rule.evaluate(events) }
 
                             it("returns a 'create container' step") {
-                                assertThat(result, equalTo(TaskStepRuleEvaluationResult.Ready(CreateContainerStep(container, config, image, dockerNetwork))))
+                                assertThat(result, equalTo(TaskStepRuleEvaluationResult.Ready(CreateContainerStep(container, image, dockerNetwork))))
                             }
                         }
 
@@ -160,7 +156,7 @@ object CreateContainerStepRuleSpec : Spek({
         given("the container uses an image that must be built") {
             val source = BuildImage(LiteralValue("/some-image-directory"), pathResolutionContextDoesNotMatter())
             val container = Container("the-container", source)
-            val rule = CreateContainerStepRule(container, config)
+            val rule = CreateContainerStepRule(container)
 
             given("the task network is ready") {
                 val dockerNetwork = DockerNetwork("the-network")
@@ -178,7 +174,7 @@ object CreateContainerStepRuleSpec : Spek({
                         val result by runForEachTest { rule.evaluate(events) }
 
                         it("returns a 'create container' step") {
-                            assertThat(result, equalTo(TaskStepRuleEvaluationResult.Ready(CreateContainerStep(container, config, image, dockerNetwork))))
+                            assertThat(result, equalTo(TaskStepRuleEvaluationResult.Ready(CreateContainerStep(container, image, dockerNetwork))))
                         }
                     }
                 }
@@ -220,7 +216,7 @@ object CreateContainerStepRuleSpec : Spek({
 
         on("attaching it to a log message") {
             val container = Container("the-container", imageSourceDoesNotMatter())
-            val rule = CreateContainerStepRule(container, config)
+            val rule = CreateContainerStepRule(container)
 
             it("returns a machine-readable representation of itself") {
                 assertThat(
@@ -229,16 +225,7 @@ object CreateContainerStepRuleSpec : Spek({
                         """
                         |{
                         |   "type": "${rule::class.qualifiedName}",
-                        |   "container": "the-container",
-                        |   "config": {
-                        |       "command": ["blah"],
-                        |       "entrypoint": ["entrypoint"],
-                        |       "workingDirectory": "/some/work/dir",
-                        |       "additionalEnvironmentVariables": {
-                        |           "VAR": {"type":"LiteralValue", "value":"value"}
-                        |       },
-                        |       "additionalPortMappings": [{"local": "123", "container": "456", "protocol": "tcp"}]
-                        |   }
+                        |   "container": "the-container"
                         |}
                         """.trimMargin()
                     )

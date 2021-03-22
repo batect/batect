@@ -48,7 +48,6 @@ class CreateContainerStepRunner(
                 step.container,
                 step.image,
                 step.network,
-                step.config,
                 volumeMounts,
                 runAsCurrentUserConfiguration.userAndGroup,
                 ioStreamingOptions.terminalTypeForContainer(step.container),

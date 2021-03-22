@@ -43,10 +43,8 @@ import batect.execution.model.events.TemporaryFileDeletionFailedEvent
 import batect.execution.model.events.UserInterruptedExecutionEvent
 import batect.execution.model.steps.BuildImageStep
 import batect.execution.model.steps.CleanupStep
-import batect.execution.model.steps.CreateContainerStep
 import batect.execution.model.steps.PullImageStep
 import batect.execution.model.steps.RunContainerStep
-import batect.os.Command
 import batect.ui.EventLogger
 import batect.ui.FailureErrorMessageFormatter
 import batect.ui.containerio.ContainerIOStreamingOptions
@@ -55,7 +53,6 @@ import batect.ui.text.Text
 import batect.ui.text.TextRun
 import batect.ui.text.join
 import java.time.Duration
-import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 
 class InterleavedEventLogger(
@@ -65,7 +62,6 @@ class InterleavedEventLogger(
     val failureErrorMessageFormatter: FailureErrorMessageFormatter
 ) : EventLogger {
     private val haveStartedCleanup = AtomicBoolean(false)
-    private val commands = ConcurrentHashMap<Container, Command>()
     private val batectPrefix = Text.white("Batect | ")
 
     override fun onTaskStarting(taskName: String) {
@@ -145,7 +141,6 @@ class InterleavedEventLogger(
             is BuildImageStep -> onBuildImageStepStarting(event.step)
             is PullImageStep -> onPullImageStepStarting(event.step)
             is RunContainerStep -> onRunContainerStepStarting(event.step)
-            is CreateContainerStep -> onCreateContainerStepStarting(event.step)
             is CleanupStep -> onCleanupStepStarting()
         }
     }
@@ -163,18 +158,12 @@ class InterleavedEventLogger(
     }
 
     private fun onRunContainerStepStarting(step: RunContainerStep) {
-        val command = commands.getOrDefault(step.container, null)
+        val command = step.container.command
 
         if (command != null) {
             output.printForContainer(step.container, batectPrefix + Text("Running ") + Text.bold(command.originalCommand) + Text("..."))
         } else {
             output.printForContainer(step.container, batectPrefix + Text("Running..."))
-        }
-    }
-
-    private fun onCreateContainerStepStarting(step: CreateContainerStep) {
-        if (step.config.command != null) {
-            commands[step.container] = step.config.command
         }
     }
 

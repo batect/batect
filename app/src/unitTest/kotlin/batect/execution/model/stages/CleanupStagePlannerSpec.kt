@@ -27,9 +27,7 @@ import batect.config.TaskRunConfiguration
 import batect.config.TaskSpecialisedConfiguration
 import batect.docker.DockerContainer
 import batect.docker.DockerNetwork
-import batect.execution.ContainerCommandResolver
 import batect.execution.ContainerDependencyGraph
-import batect.execution.ContainerEntrypointResolver
 import batect.execution.model.events.ContainerCreatedEvent
 import batect.execution.model.events.ContainerStartedEvent
 import batect.execution.model.events.TaskEvent
@@ -42,7 +40,6 @@ import batect.execution.model.rules.cleanup.DeleteTemporaryDirectoryStepRule
 import batect.execution.model.rules.cleanup.DeleteTemporaryFileStepRule
 import batect.execution.model.rules.cleanup.RemoveContainerStepRule
 import batect.execution.model.rules.cleanup.StopContainerStepRule
-import batect.os.Command
 import batect.os.OperatingSystem
 import batect.os.SystemInfo
 import batect.testutils.createForEachTest
@@ -56,7 +53,6 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.hasElement
 import com.natpryce.hamkrest.hasSize
 import com.natpryce.hamkrest.isEmpty
-import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import org.spekframework.spek2.Spek
@@ -70,20 +66,12 @@ object CleanupStagePlannerSpec : Spek({
             on { operatingSystem } doReturn OperatingSystem.Other
         }
 
-        val commandResolver = mock<ContainerCommandResolver> {
-            on { resolveCommand(any(), any()) } doReturn Command.parse("do-stuff")
-        }
-
-        val entrypointResolver = mock<ContainerEntrypointResolver> {
-            on { resolveEntrypoint(any(), any()) } doReturn Command.parse("some-entrypoint")
-        }
-
         val task = Task("the-task", TaskRunConfiguration("task-container"))
         val container1 = Container("container-1", BuildImage(LiteralValue("./container-1"), pathResolutionContextDoesNotMatter()))
         val container2 = Container("container-2", PullImage("image-2"), dependencies = setOf(container1.name))
         val taskContainer = Container(task.runConfiguration!!.container, BuildImage(LiteralValue("./task-container"), pathResolutionContextDoesNotMatter()), dependencies = setOf(container1.name, container2.name))
         val config = TaskSpecialisedConfiguration("the-project", TaskMap(task), ContainerMap(taskContainer, container1, container2))
-        val graph = ContainerDependencyGraph(config, task, commandResolver, entrypointResolver)
+        val graph = ContainerDependencyGraph(config, task)
         val events by createForEachTest { mutableSetOf<TaskEvent>() }
         val logger by createLoggerForEachTest()
         val planner by createForEachTest { CleanupStagePlanner(graph, systemInfo, logger) }

@@ -33,7 +33,6 @@ import batect.testutils.logging.withSeverity
 import batect.testutils.on
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
-import com.nhaarman.mockitokotlin2.mock
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -41,9 +40,7 @@ object ContainerDependencyGraphProviderSpec : Spek({
     describe("a container dependency graph provider") {
         val logSink = InMemoryLogSink()
         val logger = Logger("some.source", logSink)
-        val commandResolver = mock<ContainerCommandResolver>()
-        val entrypointResolver = mock<ContainerEntrypointResolver>()
-        val provider = ContainerDependencyGraphProvider(commandResolver, entrypointResolver, logger)
+        val provider = ContainerDependencyGraphProvider(logger)
 
         on("creating a dependency graph") {
             val dependencyForContainer = Container("dependencyForContainer", imageSourceDoesNotMatter())

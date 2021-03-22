@@ -26,12 +26,10 @@ import kotlinx.serialization.builtins.SetSerializer
 import kotlinx.serialization.builtins.serializer
 
 class ContainerDependencyGraphProvider(
-    private val commandResolver: ContainerCommandResolver,
-    private val entrypointResolver: ContainerEntrypointResolver,
     private val logger: Logger
 ) {
     fun createGraph(config: TaskSpecialisedConfiguration, task: Task): ContainerDependencyGraph {
-        val graph = ContainerDependencyGraph(config, task, commandResolver, entrypointResolver)
+        val graph = ContainerDependencyGraph(config, task)
 
         logger.info {
             val dependenciesList = graph.allNodes

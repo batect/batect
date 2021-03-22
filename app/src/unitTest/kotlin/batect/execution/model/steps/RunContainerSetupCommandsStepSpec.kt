@@ -17,11 +17,7 @@
 package batect.execution.model.steps
 
 import batect.config.Container
-import batect.config.LiteralValue
-import batect.config.PortMapping
 import batect.docker.DockerContainer
-import batect.execution.ContainerRuntimeConfiguration
-import batect.os.Command
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.logRepresentationOf
 import batect.testutils.on
@@ -33,9 +29,8 @@ import org.spekframework.spek2.style.specification.describe
 object RunContainerSetupCommandsStepSpec : Spek({
     describe("a 'run container setup commands' step") {
         val container = Container("the-container", imageSourceDoesNotMatter())
-        val config = ContainerRuntimeConfiguration(Command.parse("blah"), Command.parse("entrypoint"), "/some/work/dir", mapOf("VAR" to LiteralValue("value")), setOf(PortMapping(123, 456)))
         val dockerContainer = DockerContainer("the-container-id")
-        val step = RunContainerSetupCommandsStep(container, config, dockerContainer)
+        val step = RunContainerSetupCommandsStep(container, dockerContainer)
 
         on("attaching it to a log message") {
             it("returns a machine-readable representation of itself") {
@@ -46,15 +41,6 @@ object RunContainerSetupCommandsStepSpec : Spek({
                         |{
                         |   "type": "${step::class.qualifiedName}",
                         |   "container": "the-container",
-                        |   "config": {
-                        |       "command": ["blah"],
-                        |       "entrypoint": ["entrypoint"],
-                        |       "workingDirectory": "/some/work/dir",
-                        |       "additionalEnvironmentVariables": {
-                        |           "VAR": {"type":"LiteralValue", "value":"value"}
-                        |       },
-                        |       "additionalPortMappings": [{"local": "123", "container": "456", "protocol": "tcp"}]
-                        |   },
                         |   "dockerContainer": {"id": "the-container-id", "name": null}
                         |}
                         """.trimMargin()

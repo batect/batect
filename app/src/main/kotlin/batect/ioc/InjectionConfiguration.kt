@@ -70,7 +70,6 @@ import batect.docker.run.ContainerIOStreamer
 import batect.docker.run.ContainerTTYManager
 import batect.docker.run.ContainerWaiter
 import batect.execution.ConfigVariablesProvider
-import batect.execution.ContainerEntrypointResolver
 import batect.execution.InterruptionTrap
 import batect.execution.TaskSuggester
 import batect.git.GitClient
@@ -247,7 +246,6 @@ private val iocModule = DI.Module("ioc") {
 
 private val executionModule = DI.Module("execution") {
     bind<ConfigVariablesProvider>() with singleton { ConfigVariablesProvider(commandLineOptions().configVariableOverrides, commandLineOptions().configVariablesSourceFile, instance()) }
-    bind<ContainerEntrypointResolver>() with singleton { ContainerEntrypointResolver() }
     bind<InterruptionTrap>() with singleton { InterruptionTrap(instance()) }
     bind<TaskSuggester>() with singleton { TaskSuggester() }
 }

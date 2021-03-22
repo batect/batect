@@ -26,7 +26,6 @@ import batect.config.PullImage
 import batect.docker.DockerContainer
 import batect.docker.DockerImage
 import batect.docker.DockerNetwork
-import batect.execution.ContainerRuntimeConfiguration
 import batect.logging.ContainerNameOnlySerializer
 import batect.logging.LogMessageBuilder
 import batect.logging.PathSerializer
@@ -55,7 +54,6 @@ object InitialiseCachesStep : TaskStep()
 @Serializable
 data class CreateContainerStep(
     val container: Container,
-    val config: ContainerRuntimeConfiguration,
     val image: DockerImage,
     val network: DockerNetwork
 ) : TaskStep()
@@ -66,7 +64,6 @@ data class RunContainerStep(val container: Container, val dockerContainer: Docke
 @Serializable
 data class RunContainerSetupCommandsStep(
     val container: Container,
-    val config: ContainerRuntimeConfiguration,
     val dockerContainer: DockerContainer
 ) : TaskStep()
 

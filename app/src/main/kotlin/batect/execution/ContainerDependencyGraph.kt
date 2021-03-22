@@ -17,17 +17,13 @@
 package batect.execution
 
 import batect.config.Container
-import batect.config.Expression
-import batect.config.PortMapping
 import batect.config.Task
 import batect.config.TaskSpecialisedConfiguration
 import batect.primitives.mapToSet
 
 data class ContainerDependencyGraph(
     private val config: TaskSpecialisedConfiguration,
-    private val task: Task,
-    private val commandResolver: ContainerCommandResolver,
-    private val entrypointResolver: ContainerEntrypointResolver
+    private val task: Task
 ) {
     private val runConfiguration = task.runConfiguration ?: throw IllegalArgumentException("Cannot create a container dependency graph for a task that only has prerequisites.")
     private val nodesMap = createNodes()
@@ -83,17 +79,8 @@ data class ContainerDependencyGraph(
 
             val dependencyNodes = resolveDependencies(dependencies, nodesAlreadyCreated, newPath)
 
-            val overrides = ContainerRuntimeConfiguration(
-                commandResolver.resolveCommand(container, task),
-                entrypointResolver.resolveEntrypoint(container, task),
-                workingDirectory(isRootNode, container),
-                additionalEnvironmentVariables(isRootNode, container),
-                additionalPortMappings(isRootNode, container)
-            )
-
             ContainerDependencyGraphNode(
                 container,
-                overrides,
                 isRootNode,
                 dependencyNodes,
                 this
@@ -150,26 +137,6 @@ data class ContainerDependencyGraph(
         val firstContainer = names.first()
         val otherContainers = names.drop(1)
         return "Container $firstContainer depends on " + otherContainers.joinToString(", which depends on ") + "."
-    }
-
-    private fun additionalEnvironmentVariables(isRootNode: Boolean, container: Container): Map<String, Expression> =
-        if (isRootNode) {
-            runConfiguration.additionalEnvironmentVariables
-        } else {
-            task.customisations[container.name]?.additionalEnvironmentVariables ?: emptyMap()
-        }
-
-    private fun additionalPortMappings(isRootNode: Boolean, container: Container): Set<PortMapping> =
-        if (isRootNode) {
-            runConfiguration.additionalPortMappings
-        } else {
-            task.customisations[container.name]?.additionalPortMappings ?: emptySet()
-        }
-
-    private fun workingDirectory(isRootNode: Boolean, container: Container): String? = if (isRootNode) {
-        runConfiguration.workingDiretory ?: container.workingDirectory
-    } else {
-        task.customisations[container.name]?.workingDirectory ?: container.workingDirectory
     }
 }
 

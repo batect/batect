@@ -22,7 +22,6 @@ import batect.config.Container
 import batect.config.PullImage
 import batect.docker.DockerImage
 import batect.docker.DockerNetwork
-import batect.execution.ContainerRuntimeConfiguration
 import batect.execution.model.events.CachesInitialisedEvent
 import batect.execution.model.events.ImageBuiltEvent
 import batect.execution.model.events.ImagePulledEvent
@@ -37,8 +36,7 @@ import kotlinx.serialization.Transient
 
 @Serializable
 data class CreateContainerStepRule(
-    @Serializable(with = ContainerNameOnlySerializer::class) val container: Container,
-    val config: ContainerRuntimeConfiguration
+    @Serializable(with = ContainerNameOnlySerializer::class) val container: Container
 ) : TaskStepRule() {
     @Transient
     private val needToWaitForCacheInitialisation = container.volumeMounts.any { it is CacheMount }
@@ -58,7 +56,6 @@ data class CreateContainerStepRule(
         return TaskStepRuleEvaluationResult.Ready(
             CreateContainerStep(
                 container,
-                config,
                 image,
                 network
             )

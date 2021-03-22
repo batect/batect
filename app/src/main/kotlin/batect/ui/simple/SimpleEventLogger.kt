@@ -30,11 +30,9 @@ import batect.execution.model.events.TaskEvent
 import batect.execution.model.events.TaskFailedEvent
 import batect.execution.model.steps.BuildImageStep
 import batect.execution.model.steps.CleanupStep
-import batect.execution.model.steps.CreateContainerStep
 import batect.execution.model.steps.PullImageStep
 import batect.execution.model.steps.RunContainerStep
 import batect.execution.model.steps.TaskStep
-import batect.os.Command
 import batect.ui.Console
 import batect.ui.EventLogger
 import batect.ui.FailureErrorMessageFormatter
@@ -52,7 +50,6 @@ class SimpleEventLogger(
     val errorConsole: Console,
     override val ioStreamingOptions: TaskContainerOnlyIOStreamingOptions
 ) : EventLogger {
-    private val commands = mutableMapOf<Container, Command?>()
     private var haveStartedCleanUp = false
     private val lock = Object()
 
@@ -81,7 +78,6 @@ class SimpleEventLogger(
             is BuildImageStep -> logImageBuildStarting(step.container)
             is PullImageStep -> logImagePullStarting(step.source)
             is RunContainerStep -> logContainerRunning(step.container)
-            is CreateContainerStep -> commands[step.container] = step.config.command
             is CleanupStep -> logCleanUpStarting()
         }
     }
@@ -104,15 +100,15 @@ class SimpleEventLogger(
 
     private fun logContainerRunning(container: Container) {
         if (container == taskContainer) {
-            logTaskContainerRunning(container, commands[container])
+            logTaskContainerRunning(container)
         } else {
             logDependencyContainerStarting(container)
         }
     }
 
-    private fun logTaskContainerRunning(container: Container, command: Command?) {
-        val commandText = if (command != null) {
-            Text.bold(command.originalCommand) + Text(" in ")
+    private fun logTaskContainerRunning(container: Container) {
+        val commandText = if (container.command != null) {
+            Text.bold(container.command.originalCommand) + Text(" in ")
         } else {
             TextRun()
         }

@@ -29,7 +29,6 @@ import batect.docker.DownloadOperation
 import batect.docker.build.ActiveImageBuildStep
 import batect.docker.build.BuildProgress
 import batect.docker.pull.ImagePullProgress
-import batect.execution.ContainerRuntimeConfiguration
 import batect.execution.model.events.CachesInitialisedEvent
 import batect.execution.model.events.ContainerBecameHealthyEvent
 import batect.execution.model.events.ContainerBecameReadyEvent
@@ -239,7 +238,7 @@ object ContainerStartupProgressLineSpec : Spek({
 
             describe("after receiving a 'creating container' notification") {
                 on("that notification being for this line's container") {
-                    val step = CreateContainerStep(container, ContainerRuntimeConfiguration.withCommand(Command.parse("some-command")), DockerImage("some-image"), DockerNetwork("some-network"))
+                    val step = CreateContainerStep(container, DockerImage("some-image"), DockerNetwork("some-network"))
                     beforeEachTest { line.onEventPosted(StepStartingEvent(step)) }
                     val output by runForEachTest { line.print() }
 
@@ -249,7 +248,7 @@ object ContainerStartupProgressLineSpec : Spek({
                 }
 
                 on("that notification being for another container") {
-                    val step = CreateContainerStep(otherContainer, ContainerRuntimeConfiguration.withCommand(Command.parse("some-command")), DockerImage("some-image"), DockerNetwork("some-network"))
+                    val step = CreateContainerStep(otherContainer, DockerImage("some-image"), DockerNetwork("some-network"))
                     beforeEachTest { line.onEventPosted(StepStartingEvent(step)) }
                     val output by runForEachTest { line.print() }
 
@@ -470,15 +469,13 @@ object ContainerStartupProgressLineSpec : Spek({
 
             describe("after receiving a 'running container' notification") {
                 describe("that notification being for this line's container") {
-                    val step = RunContainerStep(container, DockerContainer("some-id"))
-
                     describe("this line's container is the task container") {
-                        val taskContainerLine by createForEachTest { ContainerStartupProgressLine(container, setOf(dependencyA, dependencyB, dependencyC), true) }
-
                         on("and the container does not have a command specified in the configuration file") {
+                            val containerWithoutCommand = container.copy(command = null)
+                            val taskContainerLine by createForEachTest { ContainerStartupProgressLine(containerWithoutCommand, setOf(dependencyA, dependencyB, dependencyC), true) }
+
                             beforeEachTest {
-                                taskContainerLine.onEventPosted(StepStartingEvent(CreateContainerStep(container, ContainerRuntimeConfiguration.withCommand(null), DockerImage("some-image"), DockerNetwork("some-network"))))
-                                taskContainerLine.onEventPosted(StepStartingEvent(step))
+                                taskContainerLine.onEventPosted(StepStartingEvent(RunContainerStep(containerWithoutCommand, DockerContainer("some-id"))))
                             }
 
                             val output by runForEachTest { taskContainerLine.print() }
@@ -489,9 +486,11 @@ object ContainerStartupProgressLineSpec : Spek({
                         }
 
                         on("and the container has a command specified in the configuration file") {
+                            val containerWithCommand = container.copy(command = Command.parse("some-command"))
+                            val taskContainerLine by createForEachTest { ContainerStartupProgressLine(containerWithCommand, setOf(dependencyA, dependencyB, dependencyC), true) }
+
                             beforeEachTest {
-                                taskContainerLine.onEventPosted(StepStartingEvent(CreateContainerStep(container, ContainerRuntimeConfiguration.withCommand(Command.parse("some-command")), DockerImage("some-image"), DockerNetwork("some-network"))))
-                                taskContainerLine.onEventPosted(StepStartingEvent(step))
+                                taskContainerLine.onEventPosted(StepStartingEvent(RunContainerStep(containerWithCommand, DockerContainer("some-id"))))
                             }
 
                             val output by runForEachTest { taskContainerLine.print() }
@@ -502,9 +501,11 @@ object ContainerStartupProgressLineSpec : Spek({
                         }
 
                         on("and the container has a command specified in the configuration file that contains line breaks") {
+                            val containerWithCommand = container.copy(command = Command.parse("some-command\ndo-stuff"))
+                            val taskContainerLine by createForEachTest { ContainerStartupProgressLine(containerWithCommand, setOf(dependencyA, dependencyB, dependencyC), true) }
+
                             beforeEachTest {
-                                taskContainerLine.onEventPosted(StepStartingEvent(CreateContainerStep(container, ContainerRuntimeConfiguration.withCommand(Command.parse("some-command\ndo-stuff")), DockerImage("some-image"), DockerNetwork("some-network"))))
-                                taskContainerLine.onEventPosted(StepStartingEvent(step))
+                                taskContainerLine.onEventPosted(StepStartingEvent(RunContainerStep(containerWithCommand, DockerContainer("some-id"))))
                             }
 
                             val output by runForEachTest { taskContainerLine.print() }
@@ -513,23 +514,10 @@ object ContainerStartupProgressLineSpec : Spek({
                                 assertThat(output, equivalentTo(Text.white(Text.bold(containerName) + Text(": running ") + Text.bold("some-command do-stuff"))))
                             }
                         }
-
-                        on("and another container has a command specified in the configuration file") {
-                            beforeEachTest {
-                                taskContainerLine.onEventPosted(StepStartingEvent(CreateContainerStep(otherContainer, ContainerRuntimeConfiguration.withCommand(Command.parse("some-command")), DockerImage("some-image"), DockerNetwork("some-network"))))
-                                taskContainerLine.onEventPosted(StepStartingEvent(step))
-                            }
-
-                            val output by runForEachTest { taskContainerLine.print() }
-
-                            it("prints that the container has finished starting up") {
-                                assertThat(output, equivalentTo(Text.white(Text.bold(containerName) + Text(": running"))))
-                            }
-                        }
                     }
 
                     on("this line's container is not the task container") {
-                        beforeEachTest { line.onEventPosted(StepStartingEvent(step)) }
+                        beforeEachTest { line.onEventPosted(StepStartingEvent(RunContainerStep(container, DockerContainer("some-id")))) }
 
                         val output by runForEachTest { line.print() }
 

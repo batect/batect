@@ -20,7 +20,6 @@ import batect.config.Container
 
 data class ContainerDependencyGraphNode(
     val container: Container,
-    val config: ContainerRuntimeConfiguration,
     val isRootNode: Boolean,
     val dependsOn: Set<ContainerDependencyGraphNode>,
     val graph: ContainerDependencyGraph

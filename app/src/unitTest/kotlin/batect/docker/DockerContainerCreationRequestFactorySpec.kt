@@ -22,9 +22,7 @@ import batect.config.BinaryUnit
 import batect.config.Container
 import batect.config.DeviceMount
 import batect.config.HealthCheckConfig
-import batect.config.LiteralValue
 import batect.config.PortMapping
-import batect.execution.ContainerRuntimeConfiguration
 import batect.os.Command
 import batect.testutils.given
 import batect.testutils.imageSourceDoesNotMatter
@@ -48,11 +46,10 @@ object DockerContainerCreationRequestFactorySpec : Spek({
         val workingDirectory = "some-specific-working-directory"
         val terminalType = "some-term"
         val volumeMounts = setOf(DockerVolumeMount(DockerVolumeMountSource.LocalPath("local"), "remote", "mode"))
-        val additionalEnvironmentVariables = mapOf("SOME_VAR" to LiteralValue("some value"))
         val expectedEnvironmentVariables = mapOf("SOME_VAR" to "some resolved value")
 
         val environmentVariablesProvider = mock<DockerContainerEnvironmentVariableProvider> {
-            on { environmentVariablesFor(any(), any(), eq(terminalType)) } doReturn expectedEnvironmentVariables
+            on { environmentVariablesFor(any(), eq(terminalType)) } doReturn expectedEnvironmentVariables
         }
 
         val nameGenerator = mock<DockerResourceNameGenerator> {
@@ -65,16 +62,14 @@ object DockerContainerCreationRequestFactorySpec : Spek({
 
         val factory = DockerContainerCreationRequestFactory(environmentVariablesProvider, nameGenerator, commandLineOptions)
 
-        given("there are no additional port mappings") {
-            val additionalPortMappings = emptySet<PortMapping>()
-
-            on("creating the request") {
+        given("a container") {
+            on("creating a creation request") {
                 val container = Container(
                     "some-container",
                     imageSourceDoesNotMatter(),
-                    command = Command.parse("some-command-that-wont-be-used"),
-                    entrypoint = Command.parse("some-command-that-wont-be-used"),
-                    workingDirectory = "/some-work-dir",
+                    command = command,
+                    entrypoint = entrypoint,
+                    workingDirectory = workingDirectory,
                     deviceMounts = setOf(DeviceMount("/dev/local", "/dev/container", "options")),
                     portMappings = setOf(PortMapping(123, 456)),
                     healthCheckConfig = HealthCheckConfig(Duration.ofSeconds(2), 10, Duration.ofSeconds(5)),
@@ -90,12 +85,10 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                 )
 
                 val userAndGroup = UserAndGroup(123, 456)
-                val config = ContainerRuntimeConfiguration(command, entrypoint, workingDirectory, additionalEnvironmentVariables, additionalPortMappings)
                 val request = factory.create(
                     container,
                     image,
                     network,
-                    config,
                     volumeMounts,
                     userAndGroup,
                     terminalType,
@@ -201,45 +194,6 @@ object DockerContainerCreationRequestFactorySpec : Spek({
             }
         }
 
-        given("there are additional port mappings") {
-            val additionalPortMappings = setOf(
-                PortMapping(1000, 2000)
-            )
-
-            on("creating the request") {
-                val container = Container(
-                    "some-container",
-                    imageSourceDoesNotMatter(),
-                    portMappings = setOf(PortMapping(123, 456))
-                )
-
-                val config = ContainerRuntimeConfiguration(command, entrypoint, workingDirectory, additionalEnvironmentVariables, additionalPortMappings)
-                val request = factory.create(
-                    container,
-                    image,
-                    network,
-                    config,
-                    volumeMounts,
-                    null,
-                    terminalType,
-                    useTTY = false,
-                    attachStdin = false
-                )
-
-                it("populates the port mappings on the request with the combined set of port mappings from the container and the additional port mappings") {
-                    assertThat(
-                        request.portMappings,
-                        equalTo(
-                            setOf(
-                                DockerPortMapping(123, 456),
-                                DockerPortMapping(1000, 2000)
-                            )
-                        )
-                    )
-                }
-            }
-        }
-
         given("global port mappings are disabled") {
             val commandLineOptionsWithDisabledPorts = mock<CommandLineOptions> {
                 on { disablePortMappings } doReturn true
@@ -247,10 +201,6 @@ object DockerContainerCreationRequestFactorySpec : Spek({
 
             val newFactory = DockerContainerCreationRequestFactory(environmentVariablesProvider, nameGenerator, commandLineOptionsWithDisabledPorts)
 
-            val additionalPortMappings = setOf(
-                PortMapping(1000, 2000)
-            )
-
             on("creating the request") {
                 val container = Container(
                     "some-container",
@@ -258,8 +208,7 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                     portMappings = setOf(PortMapping(123, 456))
                 )
 
-                val config = ContainerRuntimeConfiguration(command, entrypoint, workingDirectory, additionalEnvironmentVariables, additionalPortMappings)
-                val request = newFactory.create(container, image, network, config, volumeMounts, null, terminalType, useTTY = false, attachStdin = false)
+                val request = newFactory.create(container, image, network, volumeMounts, null, terminalType, useTTY = false, attachStdin = false)
 
                 it("yields an empty port mapping") {
                     assertThat(request.portMappings, equalTo(emptySet()))
@@ -271,8 +220,7 @@ object DockerContainerCreationRequestFactorySpec : Spek({
             val container = Container("some-container", imageSourceDoesNotMatter(), command = null)
 
             on("creating the request") {
-                val config = ContainerRuntimeConfiguration(null, entrypoint, workingDirectory, emptyMap(), emptySet())
-                val request = factory.create(container, image, network, config, emptySet(), null, terminalType, false, false)
+                val request = factory.create(container, image, network, emptySet(), null, terminalType, false, false)
 
                 it("does not populate the command on the request") {
                     assertThat(request.command, equalTo(emptyList()))
@@ -284,8 +232,7 @@ object DockerContainerCreationRequestFactorySpec : Spek({
             val container = Container("some-container", imageSourceDoesNotMatter(), entrypoint = null)
 
             on("creating the request") {
-                val config = ContainerRuntimeConfiguration(command, null, workingDirectory, emptyMap(), emptySet())
-                val request = factory.create(container, image, network, config, emptySet(), null, terminalType, false, false)
+                val request = factory.create(container, image, network, emptySet(), null, terminalType, false, false)
 
                 it("does not populate the entrypoint on the request") {
                     assertThat(request.entrypoint, equalTo(emptyList()))

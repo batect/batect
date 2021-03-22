@@ -41,7 +41,6 @@ import batect.execution.model.steps.CreateContainerStep
 import batect.execution.model.steps.PullImageStep
 import batect.execution.model.steps.RunContainerStep
 import batect.execution.model.steps.TaskStep
-import batect.os.Command
 import batect.ui.text.Text
 import batect.ui.text.TextRun
 
@@ -59,7 +58,6 @@ data class ContainerStartupProgressLine(val container: Container, val dependenci
     private var isReady = false
     private var isHealthy = false
     private var isRunning = false
-    private var command: Command? = null
     private var networkIsReady = false
     private val needsCacheInitialisation = container.volumeMounts.any { it is CacheMount }
     private var cacheInitialised = false
@@ -144,11 +142,11 @@ data class ContainerStartupProgressLine(val container: Container, val dependenci
     }
 
     private fun descriptionWhenRunning(): TextRun {
-        if (command == null) {
+        if (container.command == null) {
             return TextRun("running")
         }
 
-        return Text("running ") + Text.bold(command!!.originalCommand.replace('\n', ' '))
+        return Text("running ") + Text.bold(container.command.originalCommand.replace('\n', ' '))
     }
 
     fun onEventPosted(event: TaskEvent) {
@@ -192,7 +190,6 @@ data class ContainerStartupProgressLine(val container: Container, val dependenci
     private fun onCreateContainerStepStarting(step: CreateContainerStep) {
         if (step.container == container) {
             isCreating = true
-            command = step.config.command
         }
     }
 

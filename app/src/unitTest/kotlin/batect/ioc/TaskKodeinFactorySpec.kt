@@ -54,17 +54,17 @@ object TaskKodeinFactorySpec : Spek({
             }
         }
 
+        val task by createForEachTest { mock<Task>() }
         val taskSpecialisedConfig = TaskSpecialisedConfiguration("my-project")
         val taskSpecialisedConfigurationFactory by createForEachTest {
             mock<TaskSpecialisedConfigurationFactory> {
-                on { create() } doReturn taskSpecialisedConfig
+                on { create(task) } doReturn taskSpecialisedConfig
             }
         }
 
         val factory by createForEachTest { TaskKodeinFactory(baseKodein, hostEnvironmentVariables, configVariablesProvider, taskSpecialisedConfigurationFactory) }
 
         on("creating a task Kodein context") {
-            val task by createForEachTest { mock<Task>() }
             val runOptions by createForEachTest { mock<RunOptions>() }
             val extendedKodein by runForEachTest { factory.create(task, runOptions) }
 

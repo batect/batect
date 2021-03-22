@@ -28,7 +28,6 @@ import batect.docker.DockerVolumeMount
 import batect.docker.DockerVolumeMountSource
 import batect.docker.UserAndGroup
 import batect.docker.client.ContainersClient
-import batect.execution.ContainerRuntimeConfiguration
 import batect.execution.RunAsCurrentUserConfiguration
 import batect.execution.RunAsCurrentUserConfigurationException
 import batect.execution.RunAsCurrentUserConfigurationProvider
@@ -58,8 +57,7 @@ object CreateContainerStepRunnerSpec : Spek({
         val image = DockerImage("some-image")
         val network = DockerNetwork("some-network")
 
-        val config = mock<ContainerRuntimeConfiguration>()
-        val step = CreateContainerStep(container, config, image, network)
+        val step = CreateContainerStep(container, image, network)
         val request = mock<ContainerCreationRequest>()
 
         val containersClient by createForEachTest { mock<ContainersClient>() }
@@ -88,7 +86,7 @@ object CreateContainerStepRunnerSpec : Spek({
 
         val creationRequestFactory by createForEachTest {
             mock<DockerContainerCreationRequestFactory> {
-                on { create(container, image, network, config, combinedMounts, runAsCurrentUserConfiguration.userAndGroup, "some-terminal", true, false) } doReturn request
+                on { create(container, image, network, combinedMounts, runAsCurrentUserConfiguration.userAndGroup, "some-terminal", true, false) } doReturn request
             }
         }
 

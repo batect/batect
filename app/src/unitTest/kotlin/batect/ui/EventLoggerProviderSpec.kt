@@ -65,7 +65,7 @@ object EventLoggerProviderSpec : Spek({
         val task = Task("the-task", TaskRunConfiguration("the-container"))
         val graph = mock<ContainerDependencyGraph> {
             on { allContainers } doReturn setOf(container1, container2)
-            on { taskContainerNode } doReturn ContainerDependencyGraphNode(taskContainer, mock(), true, emptySet(), mock())
+            on { taskContainerNode } doReturn ContainerDependencyGraphNode(taskContainer, true, emptySet(), mock())
         }
 
         val startupProgressDisplay = mock<StartupProgressDisplay>()

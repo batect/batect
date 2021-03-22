@@ -23,8 +23,6 @@ import batect.config.PullImage
 import batect.config.SetupCommand
 import batect.docker.DockerContainer
 import batect.docker.DockerImage
-import batect.docker.DockerNetwork
-import batect.execution.ContainerRuntimeConfiguration
 import batect.execution.model.events.ContainerBecameHealthyEvent
 import batect.execution.model.events.ContainerCreationFailedEvent
 import batect.execution.model.events.ContainerDidNotBecomeHealthyEvent
@@ -49,7 +47,6 @@ import batect.execution.model.events.TemporaryFileDeletionFailedEvent
 import batect.execution.model.events.UserInterruptedExecutionEvent
 import batect.execution.model.steps.BuildImageStep
 import batect.execution.model.steps.CleanupStep
-import batect.execution.model.steps.CreateContainerStep
 import batect.execution.model.steps.PullImageStep
 import batect.execution.model.steps.RunContainerStep
 import batect.execution.model.steps.TaskStep
@@ -221,30 +218,26 @@ object InterleavedEventLoggerSpec : Spek({
 
                     describe("and a 'create container' step has been seen") {
                         on("and that step did not contain a command") {
-                            beforeEachTest {
-                                val createContainerStep = CreateContainerStep(taskContainer, ContainerRuntimeConfiguration.withCommand(null), DockerImage("some-image"), DockerNetwork("some-network"))
-                                val runContainerStep = RunContainerStep(taskContainer, DockerContainer("not-important"))
+                            val containerWithoutCommand = taskContainer.copy(command = null)
 
-                                logger.postEvent(StepStartingEvent(createContainerStep))
-                                logger.postEvent(StepStartingEvent(runContainerStep))
+                            beforeEachTest {
+                                logger.postEvent(StepStartingEvent(RunContainerStep(containerWithoutCommand, DockerContainer("not-important"))))
                             }
 
                             it("prints a message to the output without mentioning a command") {
-                                verify(output).printForContainer(taskContainer, Text.white("Batect | ") + Text("Running..."))
+                                verify(output).printForContainer(containerWithoutCommand, Text.white("Batect | ") + Text("Running..."))
                             }
                         }
 
                         on("and that step contained a command") {
-                            beforeEachTest {
-                                val createContainerStep = CreateContainerStep(taskContainer, ContainerRuntimeConfiguration.withCommand(Command.parse("do-stuff.sh")), DockerImage("some-image"), DockerNetwork("some-network"))
-                                val runContainerStep = RunContainerStep(taskContainer, DockerContainer("not-important"))
+                            val containerWithCommand = taskContainer.copy(command = Command.parse("do-stuff.sh"))
 
-                                logger.postEvent(StepStartingEvent(createContainerStep))
-                                logger.postEvent(StepStartingEvent(runContainerStep))
+                            beforeEachTest {
+                                logger.postEvent(StepStartingEvent(RunContainerStep(containerWithCommand, DockerContainer("not-important"))))
                             }
 
                             it("prints a message to the output including the original command") {
-                                verify(output).printForContainer(taskContainer, Text.white("Batect | ") + Text("Running ") + Text.bold("do-stuff.sh") + Text("..."))
+                                verify(output).printForContainer(containerWithCommand, Text.white("Batect | ") + Text("Running ") + Text.bold("do-stuff.sh") + Text("..."))
                             }
                         }
                     }

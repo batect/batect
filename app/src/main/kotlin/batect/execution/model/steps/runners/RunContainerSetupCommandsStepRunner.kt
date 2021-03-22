@@ -43,12 +43,7 @@ class RunContainerSetupCommandsStepRunner(
             return
         }
 
-        val environmentVariables = environmentVariableProvider.environmentVariablesFor(
-            step.container,
-            step.config,
-            null
-        )
-
+        val environmentVariables = environmentVariableProvider.environmentVariablesFor(step.container, null)
         val userAndGroup = runAsCurrentUserConfigurationProvider.determineUserAndGroup(step.container)
 
         step.container.setupCommands.forEachIndexed { index, command ->

@@ -22,7 +22,6 @@ import batect.config.Expression
 import batect.config.ExpressionEvaluationContext
 import batect.config.ExpressionEvaluationException
 import batect.execution.ContainerDependencyGraph
-import batect.execution.ContainerRuntimeConfiguration
 import batect.primitives.mapToSet
 import batect.proxies.ProxyEnvironmentVariablesProvider
 
@@ -36,12 +35,11 @@ class DockerContainerEnvironmentVariableProvider(
 
     fun environmentVariablesFor(
         container: Container,
-        config: ContainerRuntimeConfiguration,
         terminalType: String?
     ): Map<String, String> =
         terminalEnvironmentVariablesFor(terminalType) +
             proxyEnvironmentVariables() +
-            substituteEnvironmentVariables(container.environment + config.additionalEnvironmentVariables)
+            substituteEnvironmentVariables(container.environment)
 
     private fun terminalEnvironmentVariablesFor(terminalType: String?): Map<String, String> = if (terminalType == null) {
         emptyMap()

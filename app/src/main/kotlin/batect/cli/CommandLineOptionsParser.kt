@@ -52,6 +52,7 @@ class CommandLineOptionsParser(
         const val permanentlyEnableTelemetryFlagName = "permanently-enable-telemetry"
         const val enableBuildKitFlagName = "enable-buildkit"
         const val enableBuildKitEnvironmentVariableName = "DOCKER_BUILDKIT"
+        const val imageTagsOptionName = "tag-image"
         const val helpBlurb = "For documentation and further information on Batect, visit https://github.com/batect/batect."
     }
 
@@ -111,7 +112,7 @@ class CommandLineOptionsParser(
 
     private val imageTags: Map<String, Set<String>> by multiValueMapOption(
         executionOptionsGroup,
-        "tag-image",
+        imageTagsOptionName,
         "Tag the image built by a container during task execution.",
         "<container>=<image>"
     )

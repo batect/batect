@@ -16,6 +16,7 @@
 
 package batect.execution
 
+import batect.config.Container
 import batect.config.Task
 import batect.ioc.TaskKodeinFactory
 import batect.logging.Logger
@@ -35,13 +36,13 @@ data class TaskRunner(
     private val telemetrySessionBuilder: TelemetrySessionBuilder,
     private val logger: Logger
 ) {
-    fun run(task: Task, runOptions: RunOptions): Int {
+    fun run(task: Task, runOptions: RunOptions): TaskRunResult {
         return telemetrySessionBuilder.addSpan("RunTask") { span ->
             runWithTelemetry(task, runOptions, span)
         }
     }
 
-    private fun runWithTelemetry(task: Task, runOptions: RunOptions, telemetrySpanBuilder: TelemetrySpanBuilder): Int {
+    private fun runWithTelemetry(task: Task, runOptions: RunOptions, telemetrySpanBuilder: TelemetrySpanBuilder): TaskRunResult {
         telemetrySpanBuilder.addAttribute("taskOnlyHasPrerequisites", task.runConfiguration == null)
 
         if (task.runConfiguration == null) {
@@ -52,7 +53,7 @@ data class TaskRunner(
 
             console.println(Text.white(Text("The task ") + Text.bold(task.name) + Text(" only defines prerequisite tasks, nothing more to do.")))
 
-            return 0
+            return TaskRunResult(0, emptySet())
         }
 
         logger.info {
@@ -86,14 +87,15 @@ data class TaskRunner(
             }
 
             val stateMachine = kodein.instance<TaskStateMachine>()
+            val containers = kodein.instance<ContainerDependencyGraph>().allContainers
 
             if (stateMachine.taskHasFailed) {
-                return onTaskFailed(eventLogger, task, stateMachine)
+                return TaskRunResult(onTaskFailed(eventLogger, task, stateMachine), containers)
             }
 
             val duration = Duration.between(startTime, finishTime)
 
-            return onTaskSucceeded(eventLogger, task, stateMachine, duration, runOptions)
+            return TaskRunResult(onTaskSucceeded(eventLogger, task, stateMachine, duration, runOptions), containers)
         }
     }
 
@@ -130,3 +132,5 @@ data class TaskRunner(
         }
     }
 }
+
+data class TaskRunResult(val exitCode: Int, val containers: Set<Container>)

@@ -17,6 +17,7 @@
 package batect.ioc
 
 import batect.config.TaskSpecialisedConfigurationFactory
+import batect.execution.ImageTaggingValidator
 import batect.execution.SessionRunner
 import batect.execution.TaskExecutionOrderResolver
 import batect.execution.TaskRunner
@@ -27,7 +28,8 @@ import org.kodein.di.instance
 import org.kodein.di.singleton
 
 val sessionScopeModule = DI.Module("Session scope: root") {
-    bind<SessionRunner>() with singleton { SessionRunner(instance(), instance(), instance(), instance(StreamType.Output), instance()) }
+    bind<ImageTaggingValidator>() with singleton { ImageTaggingValidator(instance()) }
+    bind<SessionRunner>() with singleton { SessionRunner(instance(), instance(), instance(), instance(StreamType.Output), instance(), instance()) }
     bind<TaskExecutionOrderResolver>() with singletonWithLogger { logger -> TaskExecutionOrderResolver(instance(), instance(), instance(), logger) }
     bind<TaskKodeinFactory>() with singleton { TaskKodeinFactory(directDI, instance(), instance(), instance()) }
     bind<TaskRunner>() with singletonWithLogger { logger -> TaskRunner(instance(), instance(), instance(StreamType.Output), instance(), logger) }

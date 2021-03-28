@@ -27,6 +27,7 @@ class SessionRunner(
     private val commandLineOptions: CommandLineOptions,
     private val taskRunner: TaskRunner,
     private val console: Console,
+    private val imageTaggingValidator: ImageTaggingValidator,
     private val telemetrySessionBuilder: TelemetrySessionBuilder
 ) {
     fun runTaskAndPrerequisites(taskName: String): Int {
@@ -50,12 +51,21 @@ class SessionRunner(
             }
         }
 
+        val untaggedImages = imageTaggingValidator.checkForUntaggedContainers()
+
+        if (untaggedImages.isNotEmpty()) {
+            throw UntaggedImagesException(untaggedImages)
+        }
+
         return 0
     }
 
     private fun runTask(task: Task, isMainTask: Boolean): Int {
         val runOptions = RunOptions(isMainTask, commandLineOptions)
+        val result = taskRunner.run(task, runOptions)
 
-        return taskRunner.run(task, runOptions)
+        imageTaggingValidator.notifyContainersUsed(result.containers)
+
+        return result.exitCode
     }
 }

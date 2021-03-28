@@ -35,6 +35,7 @@ import batect.ui.text.Text
 import batect.ui.text.TextRun
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
+import com.natpryce.hamkrest.isEmpty
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.argThat
 import com.nhaarman.mockitokotlin2.doAnswer
@@ -70,8 +71,8 @@ object TaskRunnerSpec : Spek({
         @Suppress("UNCHECKED_CAST")
         val telemetrySessionBuilder by createForEachTest {
             mock<TelemetrySessionBuilder> {
-                onGeneric { addSpan<Int>(any(), any()) } doAnswer { invocation ->
-                    val process = invocation.arguments[1] as ((TelemetrySpanBuilder) -> Int)
+                onGeneric { addSpan<TaskRunResult>(any(), any()) } doAnswer { invocation ->
+                    val process = invocation.arguments[1] as ((TelemetrySpanBuilder) -> TaskRunResult)
                     process(telemetrySpanBuilder)
                 }
             }
@@ -85,13 +86,19 @@ object TaskRunnerSpec : Spek({
                 val container = Container("some-container", imageSourceDoesNotMatter())
                 val runConfiguration = TaskRunConfiguration(container.name)
                 val task = Task("some-task", runConfiguration)
+                val containers = setOf(
+                    container,
+                    Container("some-other-container", imageSourceDoesNotMatter()),
+                    Container("some-third-container", imageSourceDoesNotMatter())
+                )
 
                 val eventLogger by createForEachTest { mock<EventLogger>() }
                 val stateMachine by createForEachTest { mock<TaskStateMachine>() }
                 val executionManager by createForEachTest { mock<ParallelExecutionManager>() }
+
                 val dependencyGraph by createForEachTest {
                     mock<ContainerDependencyGraph> {
-                        on { allContainers } doReturn setOf(container, Container("some-other-container", imageSourceDoesNotMatter()), Container("some-third-container", imageSourceDoesNotMatter()))
+                        on { allContainers } doReturn containers
                     }
                 }
 
@@ -118,7 +125,7 @@ object TaskRunnerSpec : Spek({
 
                     given("cleanup after success is enabled") {
                         on("running the task") {
-                            val exitCode by runForEachTest { taskRunner.run(task, runOptions) }
+                            val result by runForEachTest { taskRunner.run(task, runOptions) }
 
                             it("logs that the task is starting") {
                                 verify(eventLogger).onTaskStarting("some-task")
@@ -151,7 +158,11 @@ object TaskRunnerSpec : Spek({
                             }
 
                             it("returns the exit code from the task") {
-                                assertThat(exitCode, equalTo(100))
+                                assertThat(result.exitCode, equalTo(100))
+                            }
+
+                            it("returns all containers started as part of the task") {
+                                assertThat(result.containers, equalTo(containers))
                             }
 
                             it("does not write anything directly to the console") {
@@ -180,7 +191,7 @@ object TaskRunnerSpec : Spek({
                         }
 
                         on("running the task") {
-                            val exitCode by runForEachTest { taskRunner.run(task, runOptionsWithCleanupDisabled) }
+                            val result by runForEachTest { taskRunner.run(task, runOptionsWithCleanupDisabled) }
 
                             it("logs that the task finished after running the task, then logs the manual cleanup instructions") {
                                 inOrder(eventLogger, executionManager) {
@@ -191,7 +202,11 @@ object TaskRunnerSpec : Spek({
                             }
 
                             it("returns a non-zero exit code") {
-                                assertThat(exitCode, equalTo(-1))
+                                assertThat(result.exitCode, equalTo(-1))
+                            }
+
+                            it("returns all containers started as part of the task") {
+                                assertThat(result.containers, equalTo(containers))
                             }
                         }
                     }
@@ -204,7 +219,7 @@ object TaskRunnerSpec : Spek({
                     }
 
                     on("running the task") {
-                        val exitCode by runForEachTest { taskRunner.run(task, runOptions) }
+                        val result by runForEachTest { taskRunner.run(task, runOptions) }
 
                         it("logs that the task is starting") {
                             verify(eventLogger).onTaskStarting("some-task")
@@ -227,7 +242,11 @@ object TaskRunnerSpec : Spek({
                         }
 
                         it("returns a non-zero exit code") {
-                            assertThat(exitCode, !equalTo(0))
+                            assertThat(result.exitCode, !equalTo(0))
+                        }
+
+                        it("returns all containers started as part of the task") {
+                            assertThat(result.containers, equalTo(containers))
                         }
 
                         it("does not write anything directly to the console") {
@@ -241,10 +260,14 @@ object TaskRunnerSpec : Spek({
                 val task = Task("some-task", runConfiguration = null)
 
                 on("running the task") {
-                    val exitCode by runForEachTest { taskRunner.run(task, runOptions) }
+                    val result by runForEachTest { taskRunner.run(task, runOptions) }
 
                     it("returns a zero exit code") {
-                        assertThat(exitCode, equalTo(0))
+                        assertThat(result.exitCode, equalTo(0))
+                    }
+
+                    it("returns no containers started as part of the task") {
+                        assertThat(result.containers, isEmpty)
                     }
 
                     it("does not create a task Kodein instance") {

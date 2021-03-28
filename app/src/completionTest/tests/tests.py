@@ -53,6 +53,7 @@ class CompletionTestBase(ABC):
             "--permanently-disable-telemetry",
             "--permanently-enable-telemetry",
             "--skip-prerequisites",
+            "--tag-image",
             "--upgrade",
             "--use-network",
             "--version",

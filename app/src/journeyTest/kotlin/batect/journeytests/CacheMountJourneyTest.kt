@@ -17,7 +17,7 @@
 package batect.journeytests
 
 import batect.journeytests.testutils.ApplicationRunner
-import batect.journeytests.testutils.DockerUtils
+import batect.journeytests.testutils.Docker
 import batect.journeytests.testutils.exitCode
 import batect.journeytests.testutils.output
 import batect.os.deleteDirectoryContents
@@ -35,7 +35,7 @@ object CacheMountJourneyTest : Spek({
         val runner by createForGroup { ApplicationRunner("cache-mount") }
 
         beforeGroup {
-            DockerUtils.deleteCache("batect-cache-mount-journey-test-cache")
+            Docker.deleteCache("batect-cache-mount-journey-test-cache")
             deleteDirectoryContents(runner.testDirectory.resolve(".batect").resolve("caches").resolve("batect-cache-mount-journey-test-cache"))
         }
 

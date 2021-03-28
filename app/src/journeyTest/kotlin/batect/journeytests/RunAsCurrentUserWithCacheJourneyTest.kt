@@ -17,7 +17,7 @@
 package batect.journeytests
 
 import batect.journeytests.testutils.ApplicationRunner
-import batect.journeytests.testutils.DockerUtils
+import batect.journeytests.testutils.Docker
 import batect.journeytests.testutils.exitCode
 import batect.journeytests.testutils.output
 import batect.testutils.createForGroup
@@ -32,8 +32,8 @@ import org.spekframework.spek2.style.specification.describe
 object RunAsCurrentUserWithCacheJourneyTest : Spek({
     describe("a task with 'run as current user' enabled that uses cache mounts") {
         beforeGroup {
-            DockerUtils.deleteCache("run-as-current-user-with-cache-test-normal-cache")
-            DockerUtils.deleteCache("run-as-current-user-with-cache-test-nested-cache")
+            Docker.deleteCache("run-as-current-user-with-cache-test-normal-cache")
+            Docker.deleteCache("run-as-current-user-with-cache-test-nested-cache")
         }
 
         val runner by createForGroup { ApplicationRunner("run-as-current-user-with-cache") }

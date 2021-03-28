@@ -17,7 +17,7 @@
 package batect.journeytests.cleanup
 
 import batect.journeytests.testutils.ApplicationRunner
-import batect.journeytests.testutils.DockerUtils
+import batect.journeytests.testutils.Docker
 import batect.journeytests.testutils.exitCode
 import batect.journeytests.testutils.output
 import batect.testutils.createForGroup
@@ -39,8 +39,8 @@ object DontCleanupAfterSuccessJourneyTest : Spek({
     describe("a task with a prerequisite") {
         val runner by createForGroup { ApplicationRunner("task-with-prerequisite") }
         val cleanupCommands by createForGroup { mutableListOf<String>() }
-        val containersBeforeTest by runBeforeGroup { DockerUtils.getAllCreatedContainers() }
-        val networksBeforeTest by runBeforeGroup { DockerUtils.getAllNetworks() }
+        val containersBeforeTest by runBeforeGroup { Docker.getAllCreatedContainers() }
+        val networksBeforeTest by runBeforeGroup { Docker.getAllNetworks() }
 
         afterGroup {
             cleanupCommands.forEach {
@@ -53,11 +53,11 @@ object DontCleanupAfterSuccessJourneyTest : Spek({
                 assert(exitCode).toBe(0)
             }
 
-            val containersAfterTest = DockerUtils.getAllCreatedContainers()
+            val containersAfterTest = Docker.getAllCreatedContainers()
             val orphanedContainers = containersAfterTest - containersBeforeTest
             assert(orphanedContainers).isEmpty()
 
-            val networksAfterTest = DockerUtils.getAllNetworks()
+            val networksAfterTest = Docker.getAllNetworks()
             val orphanedNetworks = networksAfterTest - networksBeforeTest
             assert(orphanedNetworks).isEmpty()
         }

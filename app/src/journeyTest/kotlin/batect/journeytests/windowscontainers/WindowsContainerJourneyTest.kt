@@ -17,7 +17,7 @@
 package batect.journeytests.windowscontainers
 
 import batect.journeytests.testutils.ApplicationRunner
-import batect.journeytests.testutils.DockerUtils
+import batect.journeytests.testutils.Docker
 import batect.journeytests.testutils.exitCode
 import batect.journeytests.testutils.output
 import batect.testutils.createForGroup
@@ -35,8 +35,8 @@ object WindowsContainerJourneyTest : Spek({
         val runner by createForGroup { ApplicationRunner("windows-container") }
 
         on("running a task") {
-            val containersBeforeTest by runBeforeGroup { DockerUtils.getAllCreatedContainers() }
-            val networksBeforeTest by runBeforeGroup { DockerUtils.getAllNetworks() }
+            val containersBeforeTest by runBeforeGroup { Docker.getAllCreatedContainers() }
+            val networksBeforeTest by runBeforeGroup { Docker.getAllNetworks() }
             val result by runBeforeGroup { runner.runApplication(listOf("the-task")) }
 
             it("prints the output from that task") {
@@ -48,14 +48,14 @@ object WindowsContainerJourneyTest : Spek({
             }
 
             it("cleans up all containers it creates") {
-                val containersAfterTest = DockerUtils.getAllCreatedContainers()
+                val containersAfterTest = Docker.getAllCreatedContainers()
                 val potentiallyOrphanedContainers = containersAfterTest - containersBeforeTest
 
                 assert(potentiallyOrphanedContainers).isEmpty()
             }
 
             it("cleans up all networks it creates") {
-                val networksAfterTest = DockerUtils.getAllNetworks()
+                val networksAfterTest = Docker.getAllNetworks()
                 val potentiallyOrphanedNetworks = networksAfterTest - networksBeforeTest
 
                 assert(potentiallyOrphanedNetworks).isEmpty()

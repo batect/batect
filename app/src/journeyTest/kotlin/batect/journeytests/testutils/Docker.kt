@@ -18,7 +18,7 @@ package batect.journeytests.testutils
 
 import java.io.InputStreamReader
 
-object DockerUtils {
+object Docker {
     fun getAllCreatedContainers(): Set<String> {
         val commandLine = listOf("docker", "network", "ls", "--format", "{{.Name}} ({{.ID}})")
         val process = ProcessBuilder(commandLine)

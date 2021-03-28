@@ -17,7 +17,7 @@
 package batect.journeytests
 
 import batect.journeytests.testutils.ApplicationRunner
-import batect.journeytests.testutils.DockerUtils
+import batect.journeytests.testutils.Docker
 import batect.journeytests.testutils.exitCode
 import batect.journeytests.testutils.output
 import batect.testutils.createForGroup
@@ -35,7 +35,7 @@ object TagImageJourneyTest : Spek({
         val runner by createForGroup { ApplicationRunner("simple-task-using-dockerfile") }
 
         on("running that task") {
-            beforeGroup { DockerUtils.removeImageIfExists(imageTag) }
+            beforeGroup { Docker.removeImageIfExists(imageTag) }
 
             val result by runBeforeGroup { runner.runApplication(listOf("--tag-image", "build-env=$imageTag", "the-task")) }
 
@@ -48,7 +48,7 @@ object TagImageJourneyTest : Spek({
             }
 
             it("tags the image built during execution") {
-                assert(DockerUtils.getAllImages()).contains(imageTag)
+                assert(Docker.getAllImages()).contains(imageTag)
             }
         }
     }

@@ -255,6 +255,12 @@ class CommandLineOptionsParser(
             return CommandLineOptionsParsingResult.Failed("Fancy output mode cannot be used when color output has been disabled.")
         }
 
+        val taggedAndOverriddenImages = imageTags.keys.intersect(imageOverrides.keys)
+
+        if (taggedAndOverriddenImages.isNotEmpty()) {
+            return CommandLineOptionsParsingResult.Failed("Cannot both tag the built image for container '${taggedAndOverriddenImages.first()}' and also override the image for that container.")
+        }
+
         if (
             showHelp ||
             showVersionInfo ||

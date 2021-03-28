@@ -203,6 +203,16 @@ object CommandLineOptionsParserSpec : Spek({
             }
         }
 
+        given("--tag-image and --override-image are used for the same container") {
+            on("parsing the command line") {
+                val result = CommandLineOptionsParser(pathResolverFactory, environmentVariableDefaultValueProviderFactory, dockerHttpConfigDefaults, systemInfo).parse(listOf("--tag-image", "some-container=some-container:abc123", "--override-image", "some-container=some-other-container:abc123", "some-task"))
+
+                it("returns an error message") {
+                    assertThat(result, equalTo(CommandLineOptionsParsingResult.Failed("Cannot both tag the built image for container 'some-container' and also override the image for that container.")))
+                }
+            }
+        }
+
         mapOf(
             listOf("--help") to defaultCommandLineOptions.copy(showHelp = true),
             listOf("--help", "some-task") to defaultCommandLineOptions.copy(showHelp = true),
@@ -293,6 +303,7 @@ object CommandLineOptionsParserSpec : Spek({
             listOf("--tag-image", "some-container=some-container:abc123", "some-task") to defaultCommandLineOptions.copy(imageTags = mapOf("some-container" to setOf("some-container:abc123")), taskName = "some-task"),
             listOf("--tag-image", "some-container=some-container:abc123", "--tag-image", "some-container=some-other-container:abc123", "some-task") to defaultCommandLineOptions.copy(imageTags = mapOf("some-container" to setOf("some-container:abc123", "some-other-container:abc123")), taskName = "some-task"),
             listOf("--tag-image", "some-container=some-container:abc123", "--tag-image", "some-other-container=some-other-container:abc123", "some-task") to defaultCommandLineOptions.copy(imageTags = mapOf("some-container" to setOf("some-container:abc123"), "some-other-container" to setOf("some-other-container:abc123")), taskName = "some-task"),
+            listOf("--tag-image", "some-container=some-container:abc123", "--override-image", "some-other-container=some-other-container:abc123", "some-task") to defaultCommandLineOptions.copy(imageTags = mapOf("some-container" to setOf("some-container:abc123")), imageOverrides = mapOf("some-other-container" to "some-other-container:abc123"), taskName = "some-task"),
         ).forEach { (args, expectedResult) ->
             given("the arguments $args") {
                 on("parsing the command line") {

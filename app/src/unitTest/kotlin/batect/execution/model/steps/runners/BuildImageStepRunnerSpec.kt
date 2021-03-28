@@ -121,6 +121,7 @@ object BuildImageStepRunnerSpec : Spek({
 
         val expressionEvaluationContext = ExpressionEvaluationContext(HostEnvironmentVariables("SOME_ENV_VAR" to "some env var value"), emptyMap())
         val eventSink by createForEachTest { mock<TaskEventSink>() }
+        val commandLineOptions = CommandLineOptions(dontPropagateProxyEnvironmentVariables = false, imageTags = mapOf(container.name to setOf("some-extra-image-tag")))
 
         val runner by createForEachTest {
             BuildImageStepRunner(
@@ -131,7 +132,7 @@ object BuildImageStepRunnerSpec : Spek({
                 expressionEvaluationContext,
                 cancellationContext,
                 ioStreamingOptions,
-                CommandLineOptions(dontPropagateProxyEnvironmentVariables = false),
+                commandLineOptions,
                 builderVersion,
                 systemInfo,
                 telemetrySessionBuilder
@@ -164,8 +165,8 @@ object BuildImageStepRunnerSpec : Spek({
                         verify(imagesClient).build(eq(resolvedBuildDirectory), any(), eq(dockerfilePath), eq(pathResolutionContext), any(), any(), any(), any(), any(), any())
                     }
 
-                    it("generates a name for the image based on the project and container names") {
-                        verify(imagesClient).build(any(), any(), any(), any(), eq(setOf("some-project-some-container")), any(), any(), any(), any(), any())
+                    it("generates a tag for the image based on the project and container names, and includes any additional image tags provided on the command line") {
+                        verify(imagesClient).build(any(), any(), any(), any(), eq(setOf("some-project-some-container", "some-extra-image-tag")), any(), any(), any(), any(), any())
                     }
 
                     it("passes the output sink and cancellation context to the image build") {
@@ -275,7 +276,7 @@ object BuildImageStepRunnerSpec : Spek({
 
         on("when building the image fails") {
             beforeEachTest {
-                whenever(imagesClient.build(eq(resolvedBuildDirectory), any(), eq(dockerfilePath), eq(pathResolutionContext), eq(setOf("some-project-some-container")), eq(false), eq(outputSink), any(), eq(cancellationContext), any()))
+                whenever(imagesClient.build(any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
                     .thenThrow(ImageBuildFailedException("Something went wrong.\nMore details on this line."))
 
                 runner.run(step, eventSink)

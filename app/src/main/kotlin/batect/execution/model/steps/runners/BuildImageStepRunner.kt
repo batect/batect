@@ -62,6 +62,7 @@ class BuildImageStepRunner(
 
             val buildConfig = step.container.imageSource as BuildImage
             val buildArgs = buildTimeProxyEnvironmentVariablesForOptions() + substituteBuildArgs(buildConfig.buildArgs)
+            val imageTags = commandLineOptions.imageTags.getOrDefault(step.container.name, emptySet()) + imageTagFor(step)
 
             val image = telemetrySessionBuilder.addSpan("BuildImage") {
                 imagesClient.build(
@@ -69,7 +70,7 @@ class BuildImageStepRunner(
                     buildArgs,
                     buildConfig.dockerfilePath,
                     buildConfig.pathResolutionContext,
-                    setOf(imageTagFor(step)),
+                    imageTags,
                     buildConfig.imagePullPolicy.forciblyPull,
                     ioStreamingOptions.stdoutForImageBuild(step.container),
                     builderVersion,

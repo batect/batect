@@ -81,6 +81,44 @@ object DockerUtils {
         }
     }
 
+    fun removeImageIfExists(image: String) {
+        val commandLine = listOf("docker", "rmi", image)
+        val process = ProcessBuilder(commandLine)
+            .redirectErrorStream(true)
+            .start()
+
+        val output = InputStreamReader(process.inputStream).readText()
+        val exitCode = process.waitFor()
+
+        if (exitCode == 0) {
+            return
+        }
+
+        if (output.trim() == "Error: No such image: $image") {
+            return
+        }
+
+        throw Exception("Deleting image '$image' failed with exit code $exitCode. Output from Docker was: $output")
+    }
+
+    fun getAllImages(): Set<String> {
+        val commandLine = listOf("docker", "images", "--format", "{{ .Repository }}:{{ .Tag }}")
+        val process = ProcessBuilder(commandLine)
+            .redirectErrorStream(true)
+            .start()
+
+        val output = InputStreamReader(process.inputStream).readText()
+        val exitCode = process.waitFor()
+
+        if (exitCode != 0) {
+            throw Exception("Retrieving list of networks from Docker failed with exit code $exitCode. Output from Docker was: $output")
+        }
+
+        return output.split("\n")
+            .filterNot { it.isEmpty() }
+            .toSet()
+    }
+
     fun deleteCache(name: String) {
         getAllVolumes()
             .filter { it.startsWith("batect-cache-") && it.endsWith("-$name") }

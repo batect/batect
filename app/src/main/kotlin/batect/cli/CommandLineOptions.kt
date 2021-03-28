@@ -56,6 +56,7 @@ data class CommandLineOptions(
     val additionalTaskCommandArguments: Iterable<String> = emptyList(),
     val configVariableOverrides: Map<String, String> = emptyMap(),
     val imageOverrides: Map<String, String> = emptyMap(),
+    val imageTags: Map<String, Set<String>> = emptyMap(),
     val dockerHost: String = "tcp://set-to-default-value-in/CommandLineOptionsParser",
     val dockerUseTLS: Boolean = false,
     val dockerVerifyTLS: Boolean = false,

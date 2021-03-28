@@ -109,6 +109,13 @@ class CommandLineOptionsParser(
         "<container>=<image>"
     )
 
+    private val imageTags: Map<String, Set<String>> by multiValueMapOption(
+        executionOptionsGroup,
+        "tag-image",
+        "Tag the image built by a container during task execution.",
+        "<container>=<image>"
+    )
+
     private val logFileName: Path? by valueOption(
         helpOptionsGroup,
         "log-file",
@@ -306,6 +313,7 @@ class CommandLineOptionsParser(
         configurationFileName = configurationFileName,
         configVariablesSourceFile = configVariablesSourceFileName,
         imageOverrides = imageOverrides,
+        imageTags = imageTags,
         logFileName = logFileName,
         requestedOutputStyle = requestedOutputStyle,
         disableColorOutput = disableColorOutput,

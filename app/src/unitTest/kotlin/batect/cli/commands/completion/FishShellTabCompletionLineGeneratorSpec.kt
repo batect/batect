@@ -17,9 +17,9 @@
 package batect.cli.commands.completion
 
 import batect.cli.options.FlagOption
-import batect.cli.options.MapOption
 import batect.cli.options.OptionGroup
 import batect.cli.options.PathValueConverter
+import batect.cli.options.SingleValueMapOption
 import batect.cli.options.ValueConverters
 import batect.cli.options.ValueOption
 import batect.cli.options.defaultvalues.StaticDefaultValueProvider
@@ -100,7 +100,7 @@ object FishShellTabCompletionLineGeneratorSpec : Spek({
         }
 
         given("a map option") {
-            val option = MapOption(optionGroup, "some-option", "The option description")
+            val option = SingleValueMapOption(optionGroup, "some-option", "The option description")
 
             it("generates a completion line that does not restrict the number of times the option is given") {
                 assertThat(generator.generate(option, registerAs), equalTo("""complete -c $registerAs -l some-option --description 'The option description' --no-files --condition "not __fish_seen_subcommand_from --" --require-parameter"""))

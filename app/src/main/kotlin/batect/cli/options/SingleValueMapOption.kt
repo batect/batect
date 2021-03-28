@@ -19,7 +19,7 @@ package batect.cli.options
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
 
-class MapOption(
+class SingleValueMapOption(
     group: OptionGroup,
     longName: String,
     description: String,
@@ -33,8 +33,8 @@ class MapOption(
     override fun parseValue(args: Iterable<String>): OptionParsingResult {
         val arg = args.first()
         val argName = arg.substringBefore("=")
-
         val useNextArgumentForValue = !arg.contains("=")
+
         val argValue = if (useNextArgumentForValue) {
             if (args.count() == 1) return OptionParsingResult.InvalidOption("Option '$arg' requires a value to be provided, either in the form '$argName=<key>=<value>' or '$argName <key>=<value>'.")
             args.elementAt(1)
@@ -67,7 +67,7 @@ class MapOption(
         }
     }
 
-    operator fun provideDelegate(thisRef: OptionParserContainer, property: KProperty<*>): MapOption {
+    operator fun provideDelegate(thisRef: OptionParserContainer, property: KProperty<*>): SingleValueMapOption {
         thisRef.optionParser.addOption(this)
         return this
     }

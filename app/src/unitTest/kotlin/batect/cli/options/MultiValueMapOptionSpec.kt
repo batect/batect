@@ -26,13 +26,13 @@ import com.nhaarman.mockitokotlin2.mock
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
-object MapOptionSpec : Spek({
-    describe("a map option") {
+object MultiValueMapOptionSpec : Spek({
+    describe("a multi-value map option") {
         val group = OptionGroup("the group")
 
         describe("parsing") {
             given("an option with short and long names") {
-                val option by createForEachTest { MapOption(group, "option", "Some option.", 'o') }
+                val option by createForEachTest { MultiValueMapOption(group, "option", "Some option.", 'o') }
 
                 listOf("--option", "-o").forEach { format ->
                     on("parsing a list of arguments where the option is specified in the form '$format key=value'") {
@@ -43,7 +43,7 @@ object MapOptionSpec : Spek({
                         }
 
                         it("sets the option's value") {
-                            assertThat(option.getValue(mock(), mock()), equalTo(mapOf("key" to "value")))
+                            assertThat(option.getValue(mock(), mock()), equalTo(mapOf("key" to setOf("value"))))
                         }
 
                         it("reports that the value is from the command line") {
@@ -59,7 +59,7 @@ object MapOptionSpec : Spek({
                         }
 
                         it("sets the option's value") {
-                            assertThat(option.getValue(mock(), mock()), equalTo(mapOf("key" to "value")))
+                            assertThat(option.getValue(mock(), mock()), equalTo(mapOf("key" to setOf("value"))))
                         }
 
                         it("reports that the value is from the command line") {
@@ -109,15 +109,19 @@ object MapOptionSpec : Spek({
                             }
 
                             it("sets the option's value to include both key/value pairs") {
-                                assertThat(option.getValue(mock(), mock()), equalTo(mapOf("key" to "value", "other_key" to "other_value")))
+                                assertThat(option.getValue(mock(), mock()), equalTo(mapOf("key" to setOf("value"), "other_key" to setOf("other_value"))))
                             }
                         }
 
                         on("parsing a list of arguments where the option is given a second time with the same key") {
                             val result by runForEachTest { option.parse(listOf(format, "key=other_value")) }
 
-                            it("indicates that parsing failed") {
-                                assertThat(result, equalTo(OptionParsingResult.InvalidOption("Option '$format' does not allow duplicate values for the same key, but multiple values for 'key' have been given.")))
+                            it("indicates that parsing succeeded and that two arguments were consumed") {
+                                assertThat(result, equalTo(OptionParsingResult.ReadOption(2)))
+                            }
+
+                            it("sets the option's value to include values") {
+                                assertThat(option.getValue(mock(), mock()), equalTo(mapOf("key" to setOf("value", "other_value"))))
                             }
                         }
                     }
@@ -125,7 +129,7 @@ object MapOptionSpec : Spek({
             }
 
             on("not applying a value for the option") {
-                val option = MapOption(group, "option", "Some option.")
+                val option = MultiValueMapOption(group, "option", "Some option.")
 
                 it("returns an empty map") {
                     assertThat(option.getValue(mock(), mock()), equalTo(emptyMap()))
@@ -134,7 +138,7 @@ object MapOptionSpec : Spek({
         }
 
         describe("checking the default value applied to the option") {
-            val option by createForEachTest { MapOption(group, "option", "Some option.") }
+            val option by createForEachTest { MultiValueMapOption(group, "option", "Some option.") }
 
             given("the default value has not been overridden") {
                 on("checking the default value for the option") {
@@ -166,7 +170,7 @@ object MapOptionSpec : Spek({
         }
 
         describe("getting the help description for an option") {
-            val option = MapOption(group, "option", "Some option.")
+            val option = MultiValueMapOption(group, "option", "Some option.")
 
             it("returns the provided description") {
                 assertThat(option.descriptionForHelp, equalTo("Some option. Can be given multiple times."))

@@ -96,13 +96,13 @@ class CommandLineOptionsParser(
 
     private val configVariablesSourceFileName: Path? by configVariablesSourceFileNameOption
 
-    private val configVariableOverrides: Map<String, String> by mapOption(
+    private val configVariableOverrides: Map<String, String> by singleValueMapOption(
         executionOptionsGroup,
         configVariableOptionName,
         "Set a value for a config variable. Takes precedence over default values and values in file provided to ${configVariablesSourceFileNameOption.longOption}."
     )
 
-    private val imageOverrides: Map<String, String> by mapOption(
+    private val imageOverrides: Map<String, String> by singleValueMapOption(
         executionOptionsGroup,
         "override-image",
         "Override the image used by a container.",

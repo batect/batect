@@ -19,8 +19,8 @@ package batect.cli.commands.completion
 import batect.cli.options.DirectoryPathValueConverter
 import batect.cli.options.FilePathValueConverter
 import batect.cli.options.FlagOption
-import batect.cli.options.MapOption
 import batect.cli.options.OptionGroup
+import batect.cli.options.SingleValueMapOption
 import batect.cli.options.ValueConverters
 import batect.cli.options.ValueOption
 import batect.cli.options.defaultvalues.StaticDefaultValueProvider
@@ -109,7 +109,7 @@ object ZshShellTabCompletionOptionGeneratorSpec : Spek({
 
         given("a map option") {
             given("it has only a long option") {
-                val option = MapOption(optionGroup, "some-option", "The option description")
+                val option = SingleValueMapOption(optionGroup, "some-option", "The option description")
 
                 it("generates a single completion line with only the long option, specifying that the option can be repeated") {
                     assertThat(generator.generate(option), equalTo(setOf("*--some-option=[The option description]::( )")))
@@ -117,7 +117,7 @@ object ZshShellTabCompletionOptionGeneratorSpec : Spek({
             }
 
             given("it has both a long and short option") {
-                val option = MapOption(optionGroup, "some-option", "The option description", 's')
+                val option = SingleValueMapOption(optionGroup, "some-option", "The option description", 's')
 
                 it("generates completion lines with both forms of the option") {
                     assertThat(generator.generate(option), equalTo(setOf("(-s)*--some-option=[The option description]::( )", "(--some-option)*-s=[The option description]::( )")))

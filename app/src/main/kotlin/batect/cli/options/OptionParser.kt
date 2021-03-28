@@ -114,8 +114,8 @@ interface OptionParserContainer {
     fun tristateFlagOption(group: OptionGroup, longName: String, description: String, defaultValueProvider: DefaultValueProvider<Boolean?>, shortName: Char? = null) =
         TristateFlagOption(group, longName, description, defaultValueProvider, shortName)
 
-    fun mapOption(group: OptionGroup, longName: String, description: String, shortName: Char? = null) = MapOption(group, longName, description, shortName)
-    fun mapOption(group: OptionGroup, longName: String, description: String, valueFormatForHelp: String, shortName: Char? = null) = MapOption(group, longName, description, shortName, valueFormatForHelp)
+    fun singleValueMapOption(group: OptionGroup, longName: String, description: String, shortName: Char? = null) = SingleValueMapOption(group, longName, description, shortName)
+    fun singleValueMapOption(group: OptionGroup, longName: String, description: String, valueFormatForHelp: String, shortName: Char? = null) = SingleValueMapOption(group, longName, description, shortName, valueFormatForHelp)
 }
 
 sealed class OptionsParsingResult {

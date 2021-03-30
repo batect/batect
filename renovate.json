@@ -72,6 +72,11 @@
       "groupName": "Wire",
       "matchPackagePatterns": ["^com\\.squareup\\.wire:"],
       "matchDatasources": ["maven"]
+    },
+    {
+      "groupName": "Atrium",
+      "matchPackagePatterns": ["^ch\\.tutteli\\.atrium:"],
+      "matchDatasources": ["maven"]
     }
   ]
 }

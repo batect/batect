@@ -14,54 +14,90 @@
    limitations under the License.
 */
 
+import groovy.transform.EqualsAndHashCode
+
+import java.nio.charset.StandardCharsets
 import java.nio.file.FileSystems
+import java.nio.file.Files
+import java.nio.file.Path
 
 apply plugin: 'com.squareup.wire'
 
-def protosDir = project.buildDir.toPath().resolve("protos")
 def buildKitVersion = "v0.8.2"
 
-def protos = [
-    "github.com/moby/buildkit/api/services/control/control.proto": buildKitVersion,
-    "github.com/moby/buildkit/api/types/worker.proto"            : buildKitVersion,
-    "github.com/moby/buildkit/session/auth/auth.proto"           : buildKitVersion,
-    "github.com/moby/buildkit/session/filesync/filesync.proto"   : buildKitVersion,
-    "github.com/moby/buildkit/solver/pb/ops.proto"               : buildKitVersion,
-    "github.com/gogo/protobuf/gogoproto/gogo.proto"              : "v1.3.2",
-    "github.com/grpc/grpc-proto/grpc/health/v1/health.proto"     : "14b8f3e1181ed6fc484a033d3cbb912e7e7c6750",
-    "github.com/tonistiigi/fsutil/types/stat.proto"              : "0834f99b7b85462efb69b4f571a4fa3ca7da5ac9",
-    "github.com/tonistiigi/fsutil/types/wire.proto"              : "0834f99b7b85462efb69b4f571a4fa3ca7da5ac9"
-]
+@EqualsAndHashCode
+class ProtoDownloadSpec implements Serializable {
+    final String sourcePath
+    final String version
+    final String sourceUrl
+    final Closure<String> transform
 
-task downloadProtos() {
-    def sourceDestinationPairs = [:]
+    ProtoDownloadSpec(String sourcePath, String version, Closure<String> transform = null) {
+        this.sourcePath = sourcePath
+        this.version = version
+        this.transform = transform
 
-    protos.forEach { path, version ->
-        if (!path.startsWith("github.com")) {
+        if (!sourcePath.startsWith("github.com")) {
             throw RuntimeException("Protobuf path $path is not from github.com")
         }
 
-        def sourceSegments = path.split("/")
+        def sourceSegments = sourcePath.split("/")
         def sourceRepo = sourceSegments.drop(1).take(2).join("/")
-        def sourcePath = sourceSegments.drop(3).join("/")
-        def sourceUrl = "https://raw.githubusercontent.com/$sourceRepo/$version/$sourcePath"
-        def destinationPath = protosDir.resolve("github.com/$sourceRepo/$sourcePath".replace("/", FileSystems.default.separator)).toString()
-
-        sourceDestinationPairs[sourceUrl] = destinationPath
+        def filePath = sourceSegments.drop(3).join("/")
+        this.sourceUrl = "https://raw.githubusercontent.com/$sourceRepo/$version/$filePath"
     }
 
-    inputs.property("protos", { protos })
-    inputs.property("sourceDestinationPairs", { sourceDestinationPairs })
-    outputs.files(sourceDestinationPairs.values())
+    Path resolveDestination(Path protosDir) {
+        return protosDir.resolve(sourcePath.replace("/", FileSystems.default.separator))
+    }
+
+    private static void writeObject(ObjectOutputStream s) throws IOException {
+        s.defaultWriteObject();
+    }
+
+    private static void readObject(ObjectInputStream s) throws IOException {
+        s.defaultReadObject();
+    }
+}
+
+def replaceRelativeImportPathWithAbsolute = { String oldContent ->
+    oldContent.replace('import "stat.proto";', 'import "github.com/tonistiigi/fsutil/types/stat.proto";')
+}
+
+def protos = [
+    new ProtoDownloadSpec("github.com/moby/buildkit/api/services/control/control.proto", buildKitVersion),
+    new ProtoDownloadSpec("github.com/moby/buildkit/api/types/worker.proto"            , buildKitVersion),
+    new ProtoDownloadSpec("github.com/moby/buildkit/session/auth/auth.proto"           , buildKitVersion),
+    new ProtoDownloadSpec("github.com/moby/buildkit/session/filesync/filesync.proto"   , buildKitVersion),
+    new ProtoDownloadSpec("github.com/moby/buildkit/solver/pb/ops.proto"               , buildKitVersion),
+    new ProtoDownloadSpec("github.com/gogo/protobuf/gogoproto/gogo.proto"              , "v1.3.2"),
+    new ProtoDownloadSpec("github.com/grpc/grpc-proto/grpc/health/v1/health.proto"     , "14b8f3e1181ed6fc484a033d3cbb912e7e7c6750"),
+    new ProtoDownloadSpec("github.com/tonistiigi/fsutil/types/stat.proto"              , "0834f99b7b85462efb69b4f571a4fa3ca7da5ac9"),
+    new ProtoDownloadSpec("github.com/tonistiigi/fsutil/types/wire.proto"              , "0834f99b7b85462efb69b4f571a4fa3ca7da5ac9", replaceRelativeImportPathWithAbsolute)
+]
+
+def protosDir = project.buildDir.toPath().resolve("protos")
+
+task downloadProtos() {
+    inputs.property("sourceUrls", { protos.collect { it.sourceUrl } })
+    outputs.files({ protos.collect { it.resolveDestination(protosDir) } })
 
     doLast {
         protosDir.toFile().deleteDir()
 
-        sourceDestinationPairs.forEach { sourceUrl, destinationPath ->
+        protos.forEach { proto ->
+            def destination = proto.resolveDestination(protosDir)
+
             download {
-                src sourceUrl
-                dest destinationPath
+                src proto.sourceUrl
+                dest destination.toFile()
                 overwrite true
+            }
+
+            if (proto.transform != null) {
+                def oldContent = new String(Files.readAllBytes(destination))
+                def newContent = proto.transform.call(oldContent)
+                Files.write(destination, newContent.getBytes(StandardCharsets.UTF_8))
             }
         }
     }
@@ -69,11 +105,6 @@ task downloadProtos() {
 
 wire.sourcePath {
     srcDir protosDir.toString()
-}
-
-wire.protoPath {
-    // This is a workaround for the relative import path in wire.proto (https://github.com/tonistiigi/fsutil/blob/fde37e74a709b4e59154d6bca532f48cc706c905/types/wire.proto#L7)
-    srcDir "$protosDir/github.com/tonistiigi/fsutil/types"
 }
 
 wire.root('moby.buildkit.v1.StatusResponse')

@@ -23,8 +23,6 @@ import java.nio.file.Path
 
 apply plugin: 'com.squareup.wire'
 
-def buildKitVersion = "v0.8.2"
-
 @EqualsAndHashCode
 class ProtoDownloadSpec implements Serializable {
     final String sourcePath
@@ -59,6 +57,8 @@ class ProtoDownloadSpec implements Serializable {
         s.defaultReadObject();
     }
 }
+
+def buildKitVersion = "v0.8.2"
 
 def replaceRelativeImportPathWithAbsolute = { String oldContent ->
     oldContent.replace('import "stat.proto";', 'import "github.com/tonistiigi/fsutil/types/stat.proto";')

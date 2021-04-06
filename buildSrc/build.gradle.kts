@@ -17,7 +17,7 @@
 plugins {
     id("java-gradle-plugin")
     id("groovy")
-    kotlin("jvm") version "1.4.31"
+    kotlin("jvm") version "1.4.32"
 }
 
 repositories {
@@ -30,7 +30,6 @@ dependencies {
     implementation(gradleApi())
     implementation("org.jetbrains.kotlin:kotlin-gradle-plugin")
     implementation("org.jetbrains.kotlin:kotlin-serialization")
-    implementation("com.github.oshi:oshi-core:4.0.0")
     implementation("com.diffplug.spotless:spotless-plugin-gradle:5.9.0")
     implementation("com.google.cloud:google-cloud-storage:1.113.1")
 }

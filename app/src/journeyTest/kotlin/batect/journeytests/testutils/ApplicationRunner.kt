@@ -60,8 +60,13 @@ data class ApplicationRunner(val testName: String) {
             .single { it.fileName.toString().startsWith("batect-") && it.fileName.toString().endsWith(".jar") }
             .toAbsolutePath()
 
-        return listOf("java", "-jar", applicationPath.toString()) + arguments
+        val java9OrLaterOptions = if (runningOnJava9OrLater) listOf("--add-opens", "java.base/sun.nio.ch=ALL-UNNAMED", "--add-opens", "java.base/java.io=ALL-UNNAMED") else emptyList()
+
+        return listOf("java") + java9OrLaterOptions + "-jar" + applicationPath.toString() + arguments
     }
+
+    private val runningOnJava9OrLater: Boolean
+        get() = !System.getProperty("java.version").startsWith("1.")
 }
 
 data class ApplicationResult(

@@ -28,10 +28,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up JDK 1.8
-        uses: actions/setup-java@v1.4.3
+      - name: Set up JDK
+        uses: actions/setup-java@v2.0.0
         with:
-          java-version: 1.8
+          java-version: 11
+          distribution: adopt
 
       - name: Cache Gradle wrapper
         uses: actions/cache@v2.1.4
@@ -68,10 +69,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up JDK 1.8
-        uses: actions/setup-java@v1.4.3
+      - name: Set up JDK
+        uses: actions/setup-java@v2.0.0
         with:
-          java-version: 1.8
+          java-version: 11
+          distribution: adopt
 
       - name: Cache packages
         id: cache-packages
@@ -122,10 +124,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up JDK 1.8
-        uses: actions/setup-java@v1.4.3
+      - name: Set up JDK
+        uses: actions/setup-java@v2.0.0
         with:
-          java-version: 1.8
+          java-version: 11
+          distribution: adopt
 
       - name: Cache packages
         id: cache-packages
@@ -171,10 +174,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up JDK 1.8
-        uses: actions/setup-java@v1.4.3
+      - name: Set up JDK
+        uses: actions/setup-java@v2.0.0
         with:
-          java-version: 1.8
+          java-version: 11
+          distribution: adopt
 
       - name: Cache packages
         id: cache-packages
@@ -223,10 +227,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up JDK 1.8
-        uses: actions/setup-java@v1.4.3
+      - name: Set up JDK
+        uses: actions/setup-java@v2.0.0
         with:
-          java-version: 1.8
+          java-version: 11
+          distribution: adopt
 
       - name: Cache packages
         id: cache-packages
@@ -268,10 +273,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up JDK 1.8
-        uses: actions/setup-java@v1.4.3
+      - name: Set up JDK
+        uses: actions/setup-java@v2.0.0
         with:
-          java-version: 1.8
+          java-version: 11
+          distribution: adopt
 
       - name: Cache Gradle wrapper
         uses: actions/cache@v2.1.4
@@ -337,10 +343,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up JDK 1.8
-        uses: actions/setup-java@v1.4.3
+      - name: Set up JDK
+        uses: actions/setup-java@v2.0.0
         with:
-          java-version: 1.8
+          java-version: 11
+          distribution: adopt
 
       - name: Cache Gradle wrapper
         uses: actions/cache@v2.1.4
@@ -370,10 +377,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up JDK 1.8
-        uses: actions/setup-java@v1.4.3
+      - name: Set up JDK
+        uses: actions/setup-java@v2.0.0
         with:
-          java-version: 1.8
+          java-version: 11
+          distribution: adopt
 
       - name: Cache Gradle wrapper
         uses: actions/cache@v2.1.4
@@ -426,10 +434,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up JDK 1.8
-        uses: actions/setup-java@v1.4.3
+      - name: Set up JDK
+        uses: actions/setup-java@v2.0.0
         with:
-          java-version: 1.8
+          java-version: 11
+          distribution: adopt
 
       - name: Cache Gradle wrapper
         uses: actions/cache@v2.1.4
@@ -487,10 +496,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up JDK 1.8
-        uses: actions/setup-java@v1.4.3
+      - name: Set up JDK
+        uses: actions/setup-java@v2.0.0
         with:
-          java-version: 1.8
+          java-version: 11
+          distribution: adopt
 
       - name: Cache Gradle wrapper
         uses: actions/cache@v2.1.4
@@ -543,10 +553,11 @@ jobs:
       - name: Fix tag reference (workaround for https://github.com/actions/checkout/issues/290)
         run: git fetch -f origin ${{ github.ref }}:${{ github.ref }}
 
-      - name: Set up JDK 1.8
-        uses: actions/setup-java@v1.4.3
+      - name: Set up JDK
+        uses: actions/setup-java@v2.0.0
         with:
-          java-version: 1.8
+          java-version: 11
+          distribution: adopt
 
       - name: Cache Gradle wrapper
         uses: actions/cache@v2.1.4

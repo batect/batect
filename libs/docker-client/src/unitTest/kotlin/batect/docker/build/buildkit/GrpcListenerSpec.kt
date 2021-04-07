@@ -205,6 +205,7 @@ object GrpcListenerSpec : Spek({
                             beforeEachTest {
                                 whenever(stream.takeHeaders()).doReturn(headersForRequest("/grpc.health.v1.Health/Check"))
                                 whenever(stream.getSource()).doReturn(ByteArrayInputStream(emptyRequestBody).source())
+                                whenever(stream.getSink()).doReturn(ByteArrayOutputStream().sink())
 
                                 service.exceptionToThrow = UnsupportedGrpcMethodException("/grpc.health.v1.Health/Blah")
                             }
@@ -219,6 +220,7 @@ object GrpcListenerSpec : Spek({
                             beforeEachTest {
                                 whenever(stream.takeHeaders()).doReturn(headersForRequest("/grpc.health.v1.Health/Check"))
                                 whenever(stream.getSource()).doReturn(ByteArrayInputStream(emptyRequestBody).source())
+                                whenever(stream.getSink()).doReturn(ByteArrayOutputStream().sink())
 
                                 service.exceptionToThrow = RuntimeException("Something went wrong.")
                             }

@@ -18,6 +18,8 @@ package batect.docker.build.buildkit.services
 
 import com.squareup.wire.ProtoAdapter
 import com.squareup.wire.WireRpc
+import com.squareup.wire.internal.GrpcMessageSink
+import com.squareup.wire.internal.GrpcMessageSource
 import kotlin.reflect.KFunction
 import kotlin.reflect.full.findAnnotation
 
@@ -28,8 +30,23 @@ interface ServiceWithEndpointMetadata {
         get() = this.findAnnotation<WireRpc>()!!.path
 }
 
+typealias EndpointMethod<RequestType, ResponseType> = (GrpcMessageSource<RequestType>, GrpcMessageSink<ResponseType>) -> Unit
+
 class Endpoint<RequestType : Any, ResponseType : Any>(
-    val method: (RequestType) -> ResponseType,
+    val method: EndpointMethod<RequestType, ResponseType>,
     val requestAdaptor: ProtoAdapter<RequestType>,
     val responseAdaptor: ProtoAdapter<ResponseType>
-)
+) {
+    constructor(method: (RequestType) -> ResponseType, requestAdaptor: ProtoAdapter<RequestType>, responseAdaptor: ProtoAdapter<ResponseType>) :
+        this(nonSteamingMethodAdaptor(method), requestAdaptor, responseAdaptor)
+
+    companion object {
+        private fun <RequestType : Any, ResponseType : Any> nonSteamingMethodAdaptor(method: (RequestType) -> ResponseType): EndpointMethod<RequestType, ResponseType> {
+            return { source, sink ->
+                val request = source.readExactlyOneAndClose()
+                val response = method.invoke(request)
+                sink.write(response)
+            }
+        }
+    }
+}

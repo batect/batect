@@ -108,21 +108,19 @@ class GrpcListener(
         stream.sendResponseHeaders()
 
         try {
-            val source = GrpcMessageSource(stream.getSource().buffer(), endpoint.requestAdaptor, headers[grpcEncoding])
-            val request = source.readExactlyOneAndClose()
-            val response = endpoint.method.invoke(request)
+            GrpcMessageSource(stream.getSource().buffer(), endpoint.requestAdaptor, headers[grpcEncoding]).use { source ->
+                // Important: don't call close() on GrpcMessageSink: it closes the underlying stream, causing writing the trailers
+                // to silently fail later on.
+                val sink = GrpcMessageSink(stream.getSink().buffer(), endpoint.responseAdaptor, null, identityEncoding)
 
-            // Important: don't call close() on GrpcMessageSink: it closes the underlying stream, causing writing the trailers
-            // to silently fail later on.
-            val messageSink = GrpcMessageSink(stream.getSink().buffer(), endpoint.responseAdaptor, null, identityEncoding)
-            messageSink.write(response)
+                endpoint.method.invoke(source, sink)
+                stream.sendResponseTrailers(GrpcStatus.OK)
 
-            stream.sendResponseTrailers(GrpcStatus.OK)
-
-            logger.warn {
-                message("Request processed successfully")
-                data("streamId", stream.id)
-                data("sessionId", sessionId)
+                logger.warn {
+                    message("Request processed successfully")
+                    data("streamId", stream.id)
+                    data("sessionId", sessionId)
+                }
             }
         } catch (e: UnsupportedGrpcMethodException) {
             logger.warn {

@@ -72,6 +72,11 @@
       "matchDatasources": ["maven"]
     },
     {
+      "groupName": "Spek",
+      "matchPackagePatterns": ["^org\\.spekframework\\.spek2:"],
+      "matchDatasources": ["maven"]
+    },
+    {
       "groupName": "Kotlin",
       "matchManagers": ["gradle-lite"],
       "matchPackagePatterns": ["^org\\.jetbrains\\.kotlin\\."],

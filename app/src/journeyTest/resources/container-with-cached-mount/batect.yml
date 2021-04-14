@@ -2,7 +2,7 @@ project_name: container-with-cached-mount
 
 containers:
   build-env:
-    image: alpine:3.13.4
+    image: alpine:3.13.5
     volumes:
       - ./task.sh:/task.sh:cached
 

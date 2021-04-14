@@ -1,6 +1,6 @@
 containers:
   build-env:
-    image: alpine:3.13.4
+    image: alpine:3.13.5
     volumes:
       - local: <{batect.project_directory}/script.sh
         container: /script.sh

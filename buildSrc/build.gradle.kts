@@ -30,7 +30,7 @@ dependencies {
     implementation(gradleApi())
     implementation("org.jetbrains.kotlin:kotlin-gradle-plugin")
     implementation("org.jetbrains.kotlin:kotlin-serialization")
-    implementation("com.diffplug.spotless:spotless-plugin-gradle:5.12.1")
+    implementation("com.diffplug.spotless:spotless-plugin-gradle:5.12.2")
     implementation("com.google.cloud:google-cloud-storage:1.113.15")
 }
 

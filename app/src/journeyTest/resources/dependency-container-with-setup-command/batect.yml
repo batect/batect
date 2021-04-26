@@ -2,7 +2,7 @@ project_name: dependency-container-with-setup-command-test
 
 containers:
   server:
-    image: nginx:1.19.10
+    image: nginx:1.20.0
     setup_commands:
       - command: sh -c "echo 'This is some output from the task' > message.txt"
         working_directory: /usr/share/nginx/html

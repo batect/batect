@@ -27,6 +27,7 @@ import batect.testutils.runBeforeGroup
 import ch.tutteli.atrium.api.fluent.en_GB.contains
 import ch.tutteli.atrium.api.fluent.en_GB.containsNot
 import ch.tutteli.atrium.api.fluent.en_GB.containsRegex
+import ch.tutteli.atrium.api.fluent.en_GB.exactly
 import ch.tutteli.atrium.api.fluent.en_GB.isEmpty
 import ch.tutteli.atrium.api.fluent.en_GB.notToBe
 import ch.tutteli.atrium.api.fluent.en_GB.notToBeNull
@@ -121,7 +122,7 @@ object DontCleanupAfterDependencyStartupFailureJourneyTest : Spek({
                 assert(logsProcess.exitValue()).toBe(0)
 
                 val output = InputStreamReader(logsProcess.inputStream).readText().trim()
-                assert(output).toBe("This is some output from the HTTP server")
+                assert(output).contains("This is some output from the HTTP server\n")
             }
 
             it("exits with a non-zero code") {

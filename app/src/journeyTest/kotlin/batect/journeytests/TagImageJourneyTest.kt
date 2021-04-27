@@ -31,7 +31,7 @@ import org.spekframework.spek2.style.specification.describe
 
 object TagImageJourneyTest : Spek({
     describe("tagging a image built during a task") {
-        val imageTag = "${TagImageJourneyTest::class.simpleName!!.toLowerCase()}-test-image:abcd1234"
+        val imageTag = "${TagImageJourneyTest::class.simpleName!!.lowercase()}-test-image:abcd1234"
         val runner by createForGroup { ApplicationRunner("simple-task-using-dockerfile") }
 
         on("running that task") {

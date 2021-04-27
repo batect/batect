@@ -187,7 +187,7 @@ class ConfigurationLoader(
             throw ConfigurationFileException("No project name has been given explicitly, but the configuration file is in the root directory and so a project name cannot be inferred.", pathToRootConfigFile.toString())
         }
 
-        val inferredProjectName = projectDirectory.fileName.toString().toLowerCase()
+        val inferredProjectName = projectDirectory.fileName.toString().lowercase()
 
         if (!ImageNameValidator.isValidImageName(inferredProjectName)) {
             throw ConfigurationFileException(

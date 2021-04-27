@@ -94,7 +94,7 @@ object TextSpec : Spek({
                 ConsoleColor.Cyan to ::cyan,
                 ConsoleColor.White to ::white
             ).forEach { (color, producer) ->
-                val colorName = color.name.toLowerCase()
+                val colorName = color.name.lowercase()
 
                 on("creating $colorName text from a string") {
                     val text = producer("Some text")
@@ -115,7 +115,7 @@ object TextSpec : Spek({
                 ConsoleColor.Cyan to ::cyan,
                 ConsoleColor.White to ::white
             ).forEach { (color, producer) ->
-                val colorName = color.name.toLowerCase()
+                val colorName = color.name.lowercase()
 
                 on("creating $colorName text from a string") {
                     val text = producer(Text("Some text"))
@@ -136,7 +136,7 @@ object TextSpec : Spek({
                 ConsoleColor.Cyan to ::cyan,
                 ConsoleColor.White to ::white
             ).forEach { (color, producer) ->
-                val colorName = color.name.toLowerCase()
+                val colorName = color.name.lowercase()
                 val anotherColor = ConsoleColor.values().toList().filterNot { it == color }.first()
 
                 on("creating $colorName text from a series of unformatted text elements") {

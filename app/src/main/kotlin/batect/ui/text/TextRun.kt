@@ -43,7 +43,7 @@ data class TextRun(val text: List<Text>) {
             return TextRun()
         }
 
-        val length = this.text.sumBy { it.content.length }
+        val length = this.text.sumOf { it.content.length }
 
         if (length <= maxLength) {
             return this

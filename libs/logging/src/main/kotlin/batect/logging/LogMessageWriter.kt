@@ -26,7 +26,7 @@ class LogMessageWriter(val json: Json = Json.Default) {
         val json = buildJsonObject {
             put("@timestamp", json.encodeToJsonElement(ZonedDateTimeSerializer, message.timestamp))
             put("@message", message.message)
-            put("@severity", message.severity.toString().toLowerCase())
+            put("@severity", message.severity.toString().lowercase())
 
             message.additionalData.forEach { (key, value) ->
                 put(key, value.toJSON(json))

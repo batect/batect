@@ -142,7 +142,7 @@ class CommandLineOptionsParser(
         cacheOptionsGroup,
         "cache-type",
         "Storage mechanism to use for caches. Valid values are: 'volume' (use Docker volumes) or 'directory' (use directories mounted from the host). Ignored for Windows containers (directory mounts are always used).",
-        environmentVariableDefaultValueProviderFactory.create("BATECT_CACHE_TYPE", CacheType.Volume, CacheType.Volume.name.toLowerCase(), ValueConverters.enum()),
+        environmentVariableDefaultValueProviderFactory.create("BATECT_CACHE_TYPE", CacheType.Volume, CacheType.Volume.name.lowercase(), ValueConverters.enum()),
         ValueConverters.enum()
     )
 

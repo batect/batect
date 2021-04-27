@@ -36,7 +36,7 @@ class Prompt(
 
             val response = reader.readLine()
 
-            when (response.toLowerCase().trim()) {
+            when (response.lowercase().trim()) {
                 "y", "yes", "" -> return YesNoAnswer.Yes
                 "n", "no" -> return YesNoAnswer.No
             }

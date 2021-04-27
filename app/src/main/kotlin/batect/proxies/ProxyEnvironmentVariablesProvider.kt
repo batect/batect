@@ -31,7 +31,7 @@ class ProxyEnvironmentVariablesProvider(
 
     private val allPossibleEnvironmentVariableNames =
         lowercaseProxyEnvironmentVariableNames +
-            lowercaseProxyEnvironmentVariableNames.mapToSet { it.toUpperCase() }
+            lowercaseProxyEnvironmentVariableNames.mapToSet { it.uppercase() }
 
     fun getProxyEnvironmentVariables(extraNoProxyEntries: Set<String>): Map<String, String> {
         val variables = allPossibleEnvironmentVariableNames
@@ -69,12 +69,12 @@ class ProxyEnvironmentVariablesProvider(
             return this[key]
         }
 
-        if (this.containsKey(key.toUpperCase())) {
-            return this[key.toUpperCase()]
+        if (this.containsKey(key.uppercase())) {
+            return this[key.uppercase()]
         }
 
-        if (this.containsKey(key.toLowerCase())) {
-            return this[key.toLowerCase()]
+        if (this.containsKey(key.lowercase())) {
+            return this[key.lowercase()]
         }
 
         return null

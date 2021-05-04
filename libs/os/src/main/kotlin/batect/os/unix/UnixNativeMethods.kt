@@ -59,7 +59,7 @@ class UnixNativeMethods(
         if (result != 0) {
             val error = Errno.valueOf(posix.errno().toLong())
 
-            if (error == Errno.ENOTTY || error == Errno.ENODEV) {
+            if (error in setOf(Errno.ENOTTY, Errno.ENODEV, Errno.EOPNOTSUPP)) {
                 throw NoConsoleException()
             }
 

@@ -105,6 +105,16 @@ object UnixNativeMethodsSpec : Spek({
                         }
                     }
 
+                    given("it failed because stdin is redirected to a socket") {
+                        beforeEachTest {
+                            whenever(posix.errno()).thenReturn(Errno.EOPNOTSUPP.intValue())
+                        }
+
+                        it("throws an appropriate exception") {
+                            assertThat({ nativeMethods.getConsoleDimensions() }, throws<NoConsoleException>())
+                        }
+                    }
+
                     given("it failed for another reason") {
                         beforeEachTest {
                             whenever(posix.errno()).thenReturn(Errno.ENOENT.intValue())

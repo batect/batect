@@ -29,6 +29,7 @@ dependencies {
     implementation(localGroovy())
     implementation(gradleApi())
     implementation("org.jetbrains.kotlin:kotlin-gradle-plugin")
+    implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlin:kotlin-serialization")
     implementation("com.diffplug.spotless:spotless-plugin-gradle:5.12.4")
     implementation("com.google.cloud:google-cloud-storage:1.113.16")

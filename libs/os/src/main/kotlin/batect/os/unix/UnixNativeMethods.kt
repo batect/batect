@@ -20,6 +20,7 @@ import batect.os.Dimensions
 import batect.os.NativeMethods
 import batect.os.NoConsoleException
 import batect.os.UnixNativeMethodException
+import batect.primitives.mapToSet
 import jnr.constants.platform.Errno
 import jnr.ffi.LibraryLoader
 import jnr.ffi.Platform
@@ -59,7 +60,7 @@ class UnixNativeMethods(
         if (result != 0) {
             val error = Errno.valueOf(posix.errno().toLong())
 
-            if (error == Errno.ENOTTY || error == Errno.ENODEV || error == Errno.EOPNOTSUPP) {
+            if (error.longValue() in setOf(Errno.ENOTTY, Errno.ENODEV, Errno.EOPNOTSUPP).mapToSet { it.longValue() }) {
                 throw NoConsoleException()
             }
 

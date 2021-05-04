@@ -295,7 +295,7 @@ jobs:
           restore-keys: gradle-packages-${{ runner.os }}
 
       - name: Build and test
-        run: unset JAVA_TOOL_OPTIONS && ./gradlew --parallel -DgenerateCoverage=true check libs:git-client:integrationTest jacocoTestReport -x wrapper:unix:check -x wrapper:windows:check
+        run: unset JAVA_TOOL_OPTIONS && ./gradlew --parallel -DgenerateCoverage=true --stacktrace check libs:git-client:integrationTest jacocoTestReport -x wrapper:unix:check -x wrapper:windows:check
 
       - name: Upload coverage to codecov.io
         uses: codecov/codecov-action@v1.4.1

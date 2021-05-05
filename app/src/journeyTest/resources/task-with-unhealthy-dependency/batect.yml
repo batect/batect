@@ -6,6 +6,8 @@ containers:
 
   http-server:
     build_directory: http-server
+    environment:
+      NGINX_ENTRYPOINT_QUIET_LOGS: 1
 
 
 tasks:

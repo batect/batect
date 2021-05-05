@@ -310,7 +310,7 @@
     "environmentVariableList": {
       "type": "object",
       "additionalProperties": {
-        "type": "string"
+        "type": ["string", "number"]
       }
     },
     "buildArgList": {

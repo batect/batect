@@ -39,7 +39,7 @@ object BinarySizeSpec : Spek({
                 BinaryUnit.Megabyte to 2_097_152,
                 BinaryUnit.Gigabyte to 2_147_483_648
             ).forEach { (unit, expectedBytes) ->
-                given("an amount in ${unit.name.toLowerCase()}s") {
+                given("an amount in ${unit.name.lowercase()}s") {
                     it("correctly calculates the equivalent number of bytes") {
                         assertThat(BinarySize.of(2, unit).bytes, equalTo(expectedBytes))
                     }

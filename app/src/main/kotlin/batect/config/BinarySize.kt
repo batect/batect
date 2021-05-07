@@ -45,7 +45,7 @@ data class BinarySize(
             }
 
             val count = match.groups["count"]!!.value.toLong()
-            val unit = when (match.groups["unit"]!!.value.toLowerCase()) {
+            val unit = when (match.groups["unit"]!!.value.lowercase()) {
                 "" -> BinaryUnit.Byte
                 "k" -> BinaryUnit.Kilobyte
                 "m" -> BinaryUnit.Megabyte

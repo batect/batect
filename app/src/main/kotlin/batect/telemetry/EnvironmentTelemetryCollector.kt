@@ -60,7 +60,7 @@ class EnvironmentTelemetryCollector(
     private fun addCommandLineOptionAttributes() {
         telemetrySessionBuilder.addAttribute("usingNonDefaultConfigurationFileName", commandLineOptions.configurationFileName.fileName.toString() != "batect.yml")
         telemetrySessionBuilder.addAttribute("usingConfigVariablesFile", commandLineOptions.configVariablesSourceFile != null)
-        telemetrySessionBuilder.addAttribute("requestedOutputStyle", commandLineOptions.requestedOutputStyle?.toString()?.toLowerCase())
+        telemetrySessionBuilder.addAttribute("requestedOutputStyle", commandLineOptions.requestedOutputStyle?.toString()?.lowercase())
         telemetrySessionBuilder.addAttribute("colorOutputDisabled", commandLineOptions.disableColorOutput)
         telemetrySessionBuilder.addAttribute("updateNotificationsDisabled", commandLineOptions.disableUpdateNotification)
         telemetrySessionBuilder.addAttribute("wrapperCacheCleanupDisabled", commandLineOptions.disableWrapperCacheCleanup)

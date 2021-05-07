@@ -81,7 +81,7 @@ object ProxyEnvironmentVariablesProviderSpec : Spek({
         }
 
         listOf("http_proxy", "https_proxy", "ftp_proxy").forEach { lowercaseName ->
-            val uppercaseName = lowercaseName.toUpperCase()
+            val uppercaseName = lowercaseName.uppercase()
 
             given("the proxy-related environment variable '$lowercaseName' is defined") {
                 given("there are no additional 'don't proxy' entries") {

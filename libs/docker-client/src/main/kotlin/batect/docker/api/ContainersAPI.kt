@@ -519,7 +519,7 @@ class ContainersAPI(
         val buffer = StringBuffer()
 
         while (true) {
-            val possibleObjectEnd = this.indexOf('}'.toByte())
+            val possibleObjectEnd = this.indexOf('}'.code.toByte())
 
             if (possibleObjectEnd == -1L) {
                 buffer.append(this.readUtf8())

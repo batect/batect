@@ -211,7 +211,7 @@ object ParallelExecutionManagerSpec : Spek({
                                 CommonEvents.UnhandledException,
                                 mapOf(
                                     CommonAttributes.Exception to AttributeValue(exception),
-                                    CommonAttributes.ExceptionCaughtAt to AttributeValue("batect.execution.ParallelExecutionManager\$runStep$1.run"),
+                                    CommonAttributes.ExceptionCaughtAt to AttributeValue("batect.execution.ParallelExecutionManager.runStep\$lambda-3"),
                                     CommonAttributes.IsUserFacingException to AttributeValue(true)
                                 )
                             )

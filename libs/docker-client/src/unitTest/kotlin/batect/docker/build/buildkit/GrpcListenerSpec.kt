@@ -16,8 +16,6 @@
 
 package batect.docker.build.buildkit
 
-import batect.docker.build.buildkit.services.Endpoint
-import batect.docker.build.buildkit.services.ServiceWithEndpointMetadata
 import batect.docker.build.buildkit.services.UnsupportedGrpcMethodException
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
@@ -51,7 +49,7 @@ object GrpcListenerSpec : Spek({
     describe("a gRPC listener") {
         val service by createForEachTest { MockHealthService() }
         val logger by createLoggerForEachTestWithoutCustomSerializers()
-        val listener by createForEachTest { GrpcListener("session-123", setOf(service), logger) }
+        val listener by createForEachTest { GrpcListener("session-123", service.getEndpoints(), logger) }
         val stream by createForEachTest { mock<Http2Stream>() }
 
         fun Suite.itImmediatelyRespondsWithHttpError(code: Int, message: String) {
@@ -236,7 +234,14 @@ object GrpcListenerSpec : Spek({
                         }
                     }
 
-                    given("the request is for an unknown service or method") {
+                    given("the request is for an unknown service") {
+                        beforeEachTest { whenever(stream.takeHeaders()).doReturn(headersForRequest("/grpc.health.v1.OtherHealth/Check")) }
+                        beforeEachTest { listener.onStream(stream) }
+
+                        itImmediatelyRespondsWithGrpcError(12, "unimplemented", "No handler for this service or method")
+                    }
+
+                    given("the request is for an unknown method on a known service") {
                         beforeEachTest { whenever(stream.takeHeaders()).doReturn(headersForRequest("/grpc.health.v1.Health/SomethingElse")) }
                         beforeEachTest { listener.onStream(stream) }
 
@@ -278,7 +283,7 @@ private fun headersForRequest(path: String, method: String = "POST", contentType
         "content-type", contentType
     )
 
-private class MockHealthService : HealthBlockingServer, ServiceWithEndpointMetadata {
+private class MockHealthService : HealthBlockingServer {
     var requestReceived: HealthCheckRequest? = null
         private set
 
@@ -298,9 +303,9 @@ private class MockHealthService : HealthBlockingServer, ServiceWithEndpointMetad
         throw UnsupportedOperationException("Watch() not supported")
     }
 
-    override fun getEndpoints(): Map<String, Endpoint<*, *>> {
+    fun getEndpoints(): Map<String, GrpcEndpoint<*, *, *>> {
         return mapOf(
-            HealthBlockingServer::Check.path to Endpoint(::Check, HealthCheckRequest.ADAPTER, HealthCheckResponse.ADAPTER)
+            HealthBlockingServer::Check.rpcPath to GrpcEndpoint(this, MockHealthService::Check, HealthCheckRequest.ADAPTER, HealthCheckResponse.ADAPTER)
         )
     }
 }

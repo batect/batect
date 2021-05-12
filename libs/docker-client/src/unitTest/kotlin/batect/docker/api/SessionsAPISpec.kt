@@ -20,7 +20,6 @@ import batect.docker.DockerException
 import batect.docker.DockerHttpConfig
 import batect.docker.build.buildkit.BuildKitSession
 import batect.docker.build.buildkit.GrpcListener
-import batect.docker.build.buildkit.services.ServiceWithEndpointMetadata
 import batect.docker.run.ConnectionHijacker
 import batect.os.SystemInfo
 import batect.testutils.createForEachTest
@@ -101,15 +100,9 @@ object SessionsAPISpec : Spek({
                 whenever(httpClient.newBuilder()).doReturn(clientBuilder)
             }
 
-            val service by createForEachTest {
-                mock<ServiceWithEndpointMetadata>() {
-                    on { getEndpoints() } doReturn mapOf("/my.v1.Service/SomeMethod" to mock(), "/my.v1.Service/SomeOtherMethod" to mock())
-                }
-            }
-
             val grpcListener by createForEachTest {
                 mock<GrpcListener>() {
-                    on { services } doReturn setOf(service)
+                    on { endpoints } doReturn mapOf("/my.v1.Service/SomeMethod" to mock(), "/my.v1.Service/SomeOtherMethod" to mock())
                 }
             }
 

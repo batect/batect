@@ -17,6 +17,8 @@
 package batect.docker.build.buildkit.services
 
 import batect.docker.build.ImageBuildOutputSink
+import batect.docker.build.buildkit.GrpcEndpoint
+import batect.docker.build.buildkit.rpcPath
 import batect.docker.pull.PasswordRegistryCredentials
 import batect.docker.pull.RegistryCredentialsProvider
 import batect.docker.pull.TokenRegistryCredentials
@@ -36,11 +38,11 @@ class AuthService(
     private val credentialsProvider: RegistryCredentialsProvider,
     private val outputSink: ImageBuildOutputSink,
     private val logger: Logger
-) : AuthBlockingServer, ServiceWithEndpointMetadata {
+) : AuthBlockingServer {
     override fun GetTokenAuthority(request: GetTokenAuthorityRequest): GetTokenAuthorityResponse {
         // Docker defaults to calling this first, but it appears that we're able to return a gRPC UNIMPLEMENTED error for this,
         // and Docker will then revert to calling Credentials().
-        throw UnsupportedGrpcMethodException(AuthBlockingServer::GetTokenAuthority.path)
+        throw UnsupportedGrpcMethodException(AuthBlockingServer::GetTokenAuthority.rpcPath)
     }
 
     override fun Credentials(request: CredentialsRequest): CredentialsResponse {
@@ -70,20 +72,20 @@ class AuthService(
 
     override fun FetchToken(request: FetchTokenRequest): FetchTokenResponse {
         // This doesn't appear to be used.
-        throw UnsupportedGrpcMethodException(AuthBlockingServer::FetchToken.path)
+        throw UnsupportedGrpcMethodException(AuthBlockingServer::FetchToken.rpcPath)
     }
 
     override fun VerifyTokenAuthority(request: VerifyTokenAuthorityRequest): VerifyTokenAuthorityResponse {
         // This doesn't appear to be used.
-        throw UnsupportedGrpcMethodException(AuthBlockingServer::VerifyTokenAuthority.path)
+        throw UnsupportedGrpcMethodException(AuthBlockingServer::VerifyTokenAuthority.rpcPath)
     }
 
-    override fun getEndpoints(): Map<String, Endpoint<*, *>> {
+    fun getEndpoints(): Map<String, GrpcEndpoint<*, *, *>> {
         return mapOf(
-            AuthBlockingServer::Credentials.path to Endpoint(::Credentials, CredentialsRequest.ADAPTER, CredentialsResponse.ADAPTER),
-            AuthBlockingServer::FetchToken.path to Endpoint(::FetchToken, FetchTokenRequest.ADAPTER, FetchTokenResponse.ADAPTER),
-            AuthBlockingServer::GetTokenAuthority.path to Endpoint(::GetTokenAuthority, GetTokenAuthorityRequest.ADAPTER, GetTokenAuthorityResponse.ADAPTER),
-            AuthBlockingServer::VerifyTokenAuthority.path to Endpoint(::VerifyTokenAuthority, VerifyTokenAuthorityRequest.ADAPTER, VerifyTokenAuthorityResponse.ADAPTER),
+            AuthBlockingServer::Credentials.rpcPath to GrpcEndpoint(this, AuthService::Credentials, CredentialsRequest.ADAPTER, CredentialsResponse.ADAPTER),
+            AuthBlockingServer::FetchToken.rpcPath to GrpcEndpoint(this, AuthService::FetchToken, FetchTokenRequest.ADAPTER, FetchTokenResponse.ADAPTER),
+            AuthBlockingServer::GetTokenAuthority.rpcPath to GrpcEndpoint(this, AuthService::GetTokenAuthority, GetTokenAuthorityRequest.ADAPTER, GetTokenAuthorityResponse.ADAPTER),
+            AuthBlockingServer::VerifyTokenAuthority.rpcPath to GrpcEndpoint(this, AuthService::VerifyTokenAuthority, VerifyTokenAuthorityRequest.ADAPTER, VerifyTokenAuthorityResponse.ADAPTER),
         )
     }
 }

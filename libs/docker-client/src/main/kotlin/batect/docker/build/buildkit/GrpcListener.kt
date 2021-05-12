@@ -16,8 +16,6 @@
 
 package batect.docker.build.buildkit
 
-import batect.docker.build.buildkit.services.Endpoint
-import batect.docker.build.buildkit.services.ServiceWithEndpointMetadata
 import batect.docker.build.buildkit.services.UnsupportedGrpcMethodException
 import batect.logging.LogMessageBuilder
 import batect.logging.Logger
@@ -39,11 +37,9 @@ import java.util.concurrent.ConcurrentLinkedQueue
 // are also useful references.
 class GrpcListener(
     val sessionId: String,
-    val services: Set<ServiceWithEndpointMetadata>,
+    val endpoints: Map<String, GrpcEndpoint<*, *, *>>,
     val logger: Logger
 ) : Http2Connection.Listener() {
-    private val endpoints: Map<String, Endpoint<*, *>> = services.flatMap { it.getEndpoints().entries }.associate { it.toPair() }
-
     private val exceptionsCollector = ConcurrentLinkedQueue<Throwable>()
     val exceptionsThrownDuringProcessing: List<Throwable>
         get() = exceptionsCollector.toList()
@@ -87,6 +83,18 @@ class GrpcListener(
         }
 
         val path = headers[Header.TARGET_PATH_UTF8]
+
+        if (path == null) {
+            logger.error {
+                message("Request does not contain a path")
+                data("streamId", stream.id)
+                data("sessionId", sessionId)
+            }
+
+            stream.sendGrpcError(GrpcStatus.Internal, "No path provided")
+            return
+        }
+
         val endpoint = endpoints[path]
 
         if (endpoint == null) {
@@ -104,16 +112,22 @@ class GrpcListener(
         executeCall(endpoint, headers, stream)
     }
 
-    private fun <RequestType : Any, ResponseType : Any> executeCall(endpoint: Endpoint<RequestType, ResponseType>, headers: Headers, stream: Http2Stream) {
+    private fun <ServiceType : Any, RequestType : Any, ResponseType : Any> executeCall(
+        endpoint: GrpcEndpoint<ServiceType, RequestType, ResponseType>,
+        headers: Headers,
+        stream: Http2Stream
+    ) {
         stream.sendResponseHeaders()
 
         try {
+            val serviceInstance = endpoint.serviceInstanceFactory.invoke(headers)
+
             GrpcMessageSource(stream.getSource().buffer(), endpoint.requestAdaptor, headers[grpcEncoding]).use { source ->
                 // Important: don't call close() on GrpcMessageSink: it closes the underlying stream, causing writing the trailers
                 // to silently fail later on.
                 val sink = GrpcMessageSink(stream.getSink().buffer(), endpoint.responseAdaptor, null, identityEncoding)
 
-                endpoint.method.invoke(source, sink)
+                endpoint.method.invoke(serviceInstance, source, sink)
                 stream.sendResponseTrailers(GrpcStatus.OK)
 
                 logger.warn {
@@ -199,8 +213,10 @@ private enum class HttpStatus(val code: Int) {
     UnsupportedMediaType(415)
 }
 
+// See https://github.com/grpc/grpc/blob/master/doc/statuscodes.md for definitions.
 private enum class GrpcStatus(val code: Int) {
     OK(0),
     Unknown(2),
+    Internal(13),
     Unimplemented(12),
 }

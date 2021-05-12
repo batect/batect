@@ -16,23 +16,26 @@
 
 package batect.docker.build.buildkit.services
 
+import batect.docker.build.buildkit.GrpcEndpoint
+import batect.docker.build.buildkit.rpcPath
 import com.squareup.wire.MessageSink
 import io.grpc.health.v1.HealthBlockingServer
 import io.grpc.health.v1.HealthCheckRequest
 import io.grpc.health.v1.HealthCheckResponse
 
-class HealthService : HealthBlockingServer, ServiceWithEndpointMetadata {
+class HealthService : HealthBlockingServer {
     override fun Check(request: HealthCheckRequest): HealthCheckResponse {
         return HealthCheckResponse(HealthCheckResponse.ServingStatus.SERVING)
     }
 
     override fun Watch(request: HealthCheckRequest, response: MessageSink<HealthCheckResponse>) {
-        throw UnsupportedGrpcMethodException(HealthBlockingServer::Watch.path)
+        throw UnsupportedGrpcMethodException(HealthBlockingServer::Watch.rpcPath)
     }
 
-    override fun getEndpoints(): Map<String, Endpoint<*, *>> {
+    fun getEndpoints(): Map<String, GrpcEndpoint<*, *, *>> {
         return mapOf(
-            HealthBlockingServer::Check.path to Endpoint(::Check, HealthCheckRequest.ADAPTER, HealthCheckResponse.ADAPTER)
+            HealthBlockingServer::Check.rpcPath to GrpcEndpoint(this, HealthService::Check, HealthCheckRequest.ADAPTER, HealthCheckResponse.ADAPTER),
+            HealthBlockingServer::Watch.rpcPath to GrpcEndpoint(this, HealthService::Watch, HealthCheckRequest.ADAPTER, HealthCheckResponse.ADAPTER)
         )
     }
 }

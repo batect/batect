@@ -51,9 +51,7 @@ class SessionsAPI(
             .header("X-Docker-Expose-Session-Name", session.name)
             .header("X-Docker-Expose-Session-Sharedkey", session.sharedKey)
 
-        session.grpcListener.services.forEach { service ->
-            service.getEndpoints().keys.forEach { requestBuilder.addHeader("X-Docker-Expose-Session-Grpc-Method", it) }
-        }
+        session.grpcListener.endpoints.keys.forEach { requestBuilder.addHeader("X-Docker-Expose-Session-Grpc-Method", it) }
 
         val request = requestBuilder.build()
 

@@ -19,7 +19,6 @@ package batect.docker.build.buildkit
 import batect.docker.build.ImageBuildOutputSink
 import batect.docker.build.buildkit.services.AuthService
 import batect.docker.build.buildkit.services.HealthService
-import batect.docker.build.buildkit.services.ServiceWithEndpointMetadata
 import batect.docker.pull.RegistryCredentialsProvider
 import batect.logging.LoggerFactory
 import batect.os.SystemInfo
@@ -55,11 +54,12 @@ class BuildKitSessionFactory(
         )
     }
 
-    private fun createServices(outputSink: ImageBuildOutputSink): Set<ServiceWithEndpointMetadata> =
-        setOf(
-            healthService,
-            AuthService(credentialsProvider, outputSink, loggerFactory.createLoggerForClass(AuthService::class))
-        )
+    private fun createServices(outputSink: ImageBuildOutputSink): Map<String, GrpcEndpoint<*, *, *>> {
+        val authService = AuthService(credentialsProvider, outputSink, loggerFactory.createLoggerForClass(AuthService::class))
+
+        return healthService.getEndpoints() +
+            authService.getEndpoints()
+    }
 
     private fun generateSharedKey(buildDirectory: Path): String {
         val buffer = Buffer()

@@ -19,7 +19,6 @@ package batect.docker.build.buildkit
 import batect.docker.build.ImageBuildOutputSink
 import batect.docker.build.buildkit.services.AuthService
 import batect.docker.build.buildkit.services.HealthService
-import batect.docker.build.buildkit.services.ServiceWithEndpointMetadata
 import batect.docker.pull.RegistryCredentialsProvider
 import batect.logging.Logger
 import batect.logging.LoggerFactory
@@ -29,12 +28,13 @@ import batect.testutils.createForEachTest
 import batect.testutils.given
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
+import com.natpryce.hamkrest.MatchResult
+import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.and
-import com.natpryce.hamkrest.anyElement
 import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.describe
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
-import com.natpryce.hamkrest.isA
 import com.natpryce.hamkrest.matches
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
@@ -59,7 +59,7 @@ object BuildKitSessionFactorySpec : Spek({
             }
         }
 
-        val healthService by createForEachTest { mock<HealthService>() }
+        val healthService by createForEachTest { HealthService() }
         val credentialsProvider by createForEachTest { mock<RegistryCredentialsProvider>() }
         val telemetrySessionBuilder by createForEachTest { mock<TelemetrySessionBuilder>() }
         val listenerLogger by createForEachTest { mock<Logger>() }
@@ -94,10 +94,19 @@ object BuildKitSessionFactorySpec : Spek({
             }
 
             it("creates a gRPC listener with the session's session ID, the auth service, the health service and a logger") {
+                val expectedEndpoints = arrayOf(
+                    "/moby.filesync.v1.Auth/Credentials",
+                    "/moby.filesync.v1.Auth/FetchToken",
+                    "/moby.filesync.v1.Auth/GetTokenAuthority",
+                    "/moby.filesync.v1.Auth/VerifyTokenAuthority",
+                    "/grpc.health.v1.Health/Check",
+                    "/grpc.health.v1.Health/Watch",
+                )
+
                 assertThat(
                     accessor().grpcListener,
                     has(GrpcListener::sessionId, equalTo(accessor().sessionId)) and
-                        has(GrpcListener::services, anyElement<ServiceWithEndpointMetadata>(equalTo(healthService)) and anyElement(isA<AuthService>())) and
+                        has(GrpcListener::endpoints, hasKeys(*expectedEndpoints)) and
                         has(GrpcListener::logger, equalTo(listenerLogger))
                 )
             }
@@ -129,7 +138,12 @@ object BuildKitSessionFactorySpec : Spek({
                 beforeEachTest { Files.createDirectories(dockerConfigDirectory) }
 
                 given("the build node ID file exists") {
-                    beforeEachTest { Files.write(buildNodeIdFile, "012345678901234567890123456789012345678901234567890123456789abcd".toByteArray(Charsets.UTF_8)) }
+                    beforeEachTest {
+                        Files.write(
+                            buildNodeIdFile,
+                            "012345678901234567890123456789012345678901234567890123456789abcd".toByteArray(Charsets.UTF_8)
+                        )
+                    }
 
                     val session by createForEachTest { factory.create(buildDirectory, outputSink) }
 
@@ -157,3 +171,20 @@ object BuildKitSessionFactorySpec : Spek({
         }
     }
 })
+
+private fun <KeyType, ValueType> hasKeys(vararg expectedKeys: KeyType): Matcher<Map<KeyType, ValueType>> =
+    object : Matcher<Map<KeyType, ValueType>> {
+        override fun invoke(actual: Map<KeyType, ValueType>): MatchResult {
+            return if (actual.keys == setOf(*expectedKeys)) {
+                MatchResult.Match
+            } else {
+                MatchResult.Mismatch("was: ${describe(actual)}")
+            }
+        }
+
+        override val description: String
+            get() = "has exactly the keys [${expectedKeys.joinToString(",") { describe(it) }}]"
+
+        override val negatedDescription: String
+            get() = "does not have exactly the keys [${expectedKeys.joinToString(",") { describe(it) }}]"
+    }

@@ -121,7 +121,7 @@ object DontCleanupAfterDependencyStartupFailureJourneyTest : Spek({
                 assert(logsProcess.exitValue()).toBe(0)
 
                 val output = InputStreamReader(logsProcess.inputStream).readText().trim()
-                assert(output).contains("This is some output from the HTTP server\n")
+                assert(output).containsRegex("^This is some output from the HTTP server$".toRegex(RegexOption.MULTILINE))
             }
 
             it("exits with a non-zero code") {

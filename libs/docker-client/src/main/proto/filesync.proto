@@ -7,6 +7,8 @@
 // How is that even possible?!
 // The Golang implementation of gRPC doesn't enforce types for streams, so sending or receiving the wrong type is perfectly possible - the gRPC
 // library then just encodes / decodes whatever it is given.
+//
+// This can be removed once https://github.com/moby/buildkit/pull/2134 is released.
 
 syntax = "proto3";
 

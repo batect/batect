@@ -16,6 +16,7 @@
 
 package batect.docker.build.buildkit.services
 
+import batect.docker.DockerException
 import batect.docker.build.buildkit.GrpcEndpoint
 import batect.docker.build.buildkit.ServiceInstanceFactory
 import batect.docker.build.buildkit.rpcPath
@@ -40,6 +41,7 @@ import java.nio.file.FileVisitResult
 import java.nio.file.FileVisitor
 import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.StandardOpenOption
 import java.nio.file.attribute.BasicFileAttributes
 import java.util.concurrent.TimeUnit
 
@@ -159,12 +161,23 @@ class FileSyncService(
                 println("Received request packet: $packet")
 
                 when (packet.type) {
+                    Packet.PacketType.PACKET_REQ -> fileRequests.send(packet.ID)
+                    Packet.PacketType.PACKET_STAT -> throw UnsupportedOperationException("Should never receive a STAT packet from server")
+                    Packet.PacketType.PACKET_DATA -> throw UnsupportedOperationException("Should never receive a DATA packet from server")
                     Packet.PacketType.PACKET_FIN -> {
                         response.write(Packet(Packet.PacketType.PACKET_FIN))
                         return
                     }
-                    Packet.PacketType.PACKET_REQ -> fileRequests.send(packet.ID)
-                    Packet.PacketType.PACKET_STAT -> throw UnsupportedOperationException("Should never receive a STAT packet from server")
+                    Packet.PacketType.PACKET_ERR -> {
+                        val message = packet.data_.utf8()
+
+                        logger.error {
+                            message("Received error message during file sync.")
+                            data("message", message)
+                        }
+
+                        throw DockerException("Received error message from daemon during file sync: $message")
+                    }
                     else -> throw UnsupportedOperationException("Unknown packet type: ${packet.type}")
                 }
             }
@@ -193,12 +206,22 @@ class FileSyncService(
             return
         }
 
-        val bytes = Files.readAllBytes(path).toByteString()
-
         println("Sending data for $id ($path)")
-        // TODO: read in 32k chunks
-        response.write(Packet(Packet.PacketType.PACKET_DATA, ID = id, data_ = bytes))
-        response.write(Packet(Packet.PacketType.PACKET_DATA, ID = id))
+
+        Files.newInputStream(path, StandardOpenOption.READ).use { stream ->
+            val buffer = ByteArray(32 * 1024)
+
+            while (true) {
+                val bytesRead = stream.read(buffer)
+
+                if (bytesRead == -1) {
+                    response.write(Packet(Packet.PacketType.PACKET_DATA, ID = id))
+                    return
+                }
+
+                response.write(Packet(Packet.PacketType.PACKET_DATA, ID = id, data_ = buffer.toByteString(0, bytesRead)))
+            }
+        }
     }
 
     override fun TarStream(request: MessageSource<Packet>, response: MessageSink<Packet>) {

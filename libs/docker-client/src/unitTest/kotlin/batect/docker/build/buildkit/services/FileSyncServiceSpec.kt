@@ -32,6 +32,7 @@ import fsutil.types.Packet
 import fsutil.types.Stat
 import okhttp3.Headers
 import okio.ByteString.Companion.encodeUtf8
+import okio.utf8Size
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.nio.file.Files
@@ -126,12 +127,13 @@ object FileSyncServiceSpec : Spek({
             }
 
             given("the Dockerfile directory contains only a Dockerfile") {
+                val dockerfileContent = "This is the Dockerfile!"
                 val lastModifiedTime = 1620798740644000000L
-                val dockerfileStat = Stat("Dockerfile", 0x1ED, 123, 456, 23, lastModifiedTime)
+                val dockerfileStat = Stat("Dockerfile", 0x1ED, 123, 456, dockerfileContent.utf8Size(), lastModifiedTime)
 
                 beforeEachTest {
                     val dockerfilePath = dockerfileDirectory.resolve("Dockerfile")
-                    Files.write(dockerfilePath, "This is the Dockerfile!".toByteArray(Charsets.UTF_8))
+                    Files.write(dockerfilePath, dockerfileContent.toByteArray(Charsets.UTF_8))
                     Files.setLastModifiedTime(dockerfilePath, FileTime.from(lastModifiedTime, TimeUnit.NANOSECONDS))
                 }
 
@@ -184,7 +186,7 @@ object FileSyncServiceSpec : Spek({
                                 listOf(
                                     Packet(Packet.PacketType.PACKET_STAT, dockerfileStat, ID = 0),
                                     statFinishedPacket,
-                                    Packet(Packet.PacketType.PACKET_DATA, ID = 0, data_ = "This is the Dockerfile!".encodeUtf8()),
+                                    Packet(Packet.PacketType.PACKET_DATA, ID = 0, data_ = dockerfileContent.encodeUtf8()),
                                     Packet(Packet.PacketType.PACKET_DATA, ID = 0),
                                     Packet(Packet.PacketType.PACKET_FIN)
                                 )
@@ -226,16 +228,70 @@ object FileSyncServiceSpec : Spek({
                 }
 
                 // TODO: stat() call for paths, need different implementations for Unix and Windows (see stat.go, stat_unix.go, stat_windows.go)
-                // TODO: test for file over 32K in size (32*1024 bytes - should be broken into multiple packets)
             }
 
-            given("the Dockerfile directory contains a file other than those requested") {
+            given("the Dockerfile directory contains a Dockerfile and it is over 32 kB in size") {
+                val first1KB = "A".repeat(1024)
+                val second1KB = "1".repeat(1024)
+                val third1KB = "!".repeat(1024)
+                val first30KB = first1KB.repeat(30)
+                val second30KB = second1KB.repeat(30)
+                val third30KB = third1KB.repeat(30)
+                val dockerfileContent = first30KB + second30KB + third30KB
+
+                val expectedFirst32KBChunk = first1KB.repeat(30) + second1KB.repeat(2)
+                val expectedSecond32KBChunk = second1KB.repeat(28) + third1KB.repeat(4)
+                val expectedThird32KBChunk = third1KB.repeat(26)
+
                 val lastModifiedTime = 1620798740644000000L
-                val dockerfileStat = Stat("Dockerfile", 0x1ED, 123, 456, 23, lastModifiedTime)
+                val dockerfileStat = Stat("Dockerfile", 0x1ED, 123, 456, dockerfileContent.utf8Size(), lastModifiedTime)
 
                 beforeEachTest {
                     val dockerfilePath = dockerfileDirectory.resolve("Dockerfile")
-                    Files.write(dockerfilePath, "This is the Dockerfile!".toByteArray(Charsets.UTF_8))
+                    Files.write(dockerfilePath, dockerfileContent.toByteArray(Charsets.UTF_8))
+                    Files.setLastModifiedTime(dockerfilePath, FileTime.from(lastModifiedTime, TimeUnit.NANOSECONDS))
+
+                    messageSink.addCallback(
+                        "send request for Dockerfile contents when Dockerfile PACKET_STAT sent to server",
+                        { it.type == Packet.PacketType.PACKET_STAT && it.stat?.path == "Dockerfile" },
+                        { messageSource.enqueue(Packet(Packet.PacketType.PACKET_REQ, ID = it.ID)) }
+                    )
+
+                    messageSink.addCallback(
+                        "send PACKET_FIN when final empty PACKET_DATA sent to server",
+                        { it.type == Packet.PacketType.PACKET_DATA && it.data_.size == 0 },
+                        { messageSource.enqueueFinalFinPacket() }
+                    )
+                }
+
+                runForEachTest { service.DiffCopy(messageSource, messageSink) }
+
+                it("sends the contents of the file in 32 kB chunks") {
+                    assertThat(
+                        messageSink.packetsSent,
+                        equalTo(
+                            listOf(
+                                Packet(Packet.PacketType.PACKET_STAT, dockerfileStat, ID = 0),
+                                statFinishedPacket,
+                                Packet(Packet.PacketType.PACKET_DATA, ID = 0, data_ = expectedFirst32KBChunk.encodeUtf8()),
+                                Packet(Packet.PacketType.PACKET_DATA, ID = 0, data_ = expectedSecond32KBChunk.encodeUtf8()),
+                                Packet(Packet.PacketType.PACKET_DATA, ID = 0, data_ = expectedThird32KBChunk.encodeUtf8()),
+                                Packet(Packet.PacketType.PACKET_DATA, ID = 0),
+                                Packet(Packet.PacketType.PACKET_FIN)
+                            )
+                        )
+                    )
+                }
+            }
+
+            given("the Dockerfile directory contains a file other than those requested") {
+                val dockerfileContent = "This is the Dockerfile!"
+                val lastModifiedTime = 1620798740644000000L
+                val dockerfileStat = Stat("Dockerfile", 0x1ED, 123, 456, dockerfileContent.utf8Size(), lastModifiedTime)
+
+                beforeEachTest {
+                    val dockerfilePath = dockerfileDirectory.resolve("Dockerfile")
+                    Files.write(dockerfilePath, dockerfileContent.toByteArray(Charsets.UTF_8))
                     Files.setLastModifiedTime(dockerfilePath, FileTime.from(lastModifiedTime, TimeUnit.NANOSECONDS))
 
                     val otherFilePath = dockerfileDirectory.resolve("some-other-file")

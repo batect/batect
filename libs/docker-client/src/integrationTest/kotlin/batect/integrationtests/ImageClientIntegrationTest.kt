@@ -16,6 +16,7 @@
 
 package batect.integrationtests
 
+import batect.docker.DockerImage
 import batect.docker.api.BuilderVersion
 import batect.os.DefaultPathResolutionContext
 import batect.os.ProcessOutput

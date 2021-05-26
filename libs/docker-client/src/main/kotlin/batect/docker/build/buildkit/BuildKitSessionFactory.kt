@@ -18,6 +18,7 @@ package batect.docker.build.buildkit
 
 import batect.docker.build.ImageBuildOutputSink
 import batect.docker.build.buildkit.services.AuthService
+import batect.docker.build.buildkit.services.FileSyncService
 import batect.docker.build.buildkit.services.HealthService
 import batect.docker.pull.RegistryCredentialsProvider
 import batect.logging.LoggerFactory
@@ -40,7 +41,7 @@ class BuildKitSessionFactory(
 
     fun create(buildDirectory: Path, outputSink: ImageBuildOutputSink): BuildKitSession {
         val sessionId = generateBase36Id(25)
-        val services = createServices(outputSink)
+        val services = createServices(buildDirectory, outputSink)
         val listenerLogger = loggerFactory.createLoggerForClass(GrpcListener::class)
         val listener = GrpcListener(sessionId, services, listenerLogger)
 
@@ -54,11 +55,12 @@ class BuildKitSessionFactory(
         )
     }
 
-    private fun createServices(outputSink: ImageBuildOutputSink): Map<String, GrpcEndpoint<*, *, *>> {
+    private fun createServices(buildDirectory: Path, outputSink: ImageBuildOutputSink): Map<String, GrpcEndpoint<*, *, *>> {
         val authService = AuthService(credentialsProvider, outputSink, loggerFactory.createLoggerForClass(AuthService::class))
 
         return healthService.getEndpoints() +
-            authService.getEndpoints()
+            authService.getEndpoints() +
+            FileSyncService.endpointsForFactory { headers -> FileSyncService(buildDirectory, buildDirectory, headers, loggerFactory.createLoggerForClass(FileSyncService::class)) }
     }
 
     private fun generateSharedKey(buildDirectory: Path): String {

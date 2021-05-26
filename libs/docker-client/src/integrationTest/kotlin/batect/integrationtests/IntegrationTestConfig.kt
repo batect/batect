@@ -31,6 +31,7 @@ import batect.docker.build.DockerfileParser
 import batect.docker.build.ImageBuildContextFactory
 import batect.docker.build.buildkit.BuildKitSessionFactory
 import batect.docker.build.buildkit.services.HealthService
+import batect.docker.build.buildkit.services.StatFactory
 import batect.docker.client.ContainersClient
 import batect.docker.client.DockerClient
 import batect.docker.client.ExecClient
@@ -102,7 +103,8 @@ fun createClient(posix: POSIX = POSIXFactory.getNativePOSIX(), nativeMethods: Na
     val signalListener = SignalListener(posix)
     val consoleDimensions = ConsoleDimensions(nativeMethods, signalListener, logger)
     val ttyManager = ContainerTTYManager(containersAPI, consoleDimensions, logger)
-    val buildKitSessionFactory = BuildKitSessionFactory(systemInfo, HealthService(), credentialsProvider, mock(), loggerFactory)
+    val statFactory = StatFactory()
+    val buildKitSessionFactory = BuildKitSessionFactory(systemInfo, HealthService(), credentialsProvider, statFactory, mock(), loggerFactory)
 
     val containersClient = ContainersClient(containersAPI, consoleManager, waiter, streamer, ttyManager, logger)
     val execClient = ExecClient(execAPI, streamer, logger)

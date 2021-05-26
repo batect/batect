@@ -26,6 +26,11 @@ import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.throws
+import com.nhaarman.mockitokotlin2.any
+import com.nhaarman.mockitokotlin2.doReturn
+import com.nhaarman.mockitokotlin2.eq
+import com.nhaarman.mockitokotlin2.mock
+import com.nhaarman.mockitokotlin2.whenever
 import com.squareup.wire.MessageSink
 import com.squareup.wire.MessageSource
 import fsutil.types.Packet
@@ -36,11 +41,9 @@ import okio.utf8Size
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.nio.file.Files
-import java.nio.file.attribute.FileTime
 import java.util.Collections
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.Semaphore
-import java.util.concurrent.TimeUnit
 
 object FileSyncServiceSpec : Spek({
     describe("a BuildKit file sync service") {
@@ -51,6 +54,7 @@ object FileSyncServiceSpec : Spek({
 
         val messageSource by createForEachTest { FakeMessageSource() }
         val messageSink by createForEachTest { FakeMessageSink() }
+        val statFactory by createForEachTest { mock<StatFactory>() }
 
         beforeEachTest {
             Files.createDirectories(contextDirectory)
@@ -61,7 +65,7 @@ object FileSyncServiceSpec : Spek({
 
         given("no directory name is provided") {
             val headers = Headers.Builder().build()
-            val service by createForEachTest { FileSyncService(contextDirectory, dockerfileDirectory, headers, logger) }
+            val service by createForEachTest { FileSyncService(contextDirectory, dockerfileDirectory, statFactory, headers, logger) }
 
             it("throws an exception") {
                 assertThat({ service.DiffCopy(messageSource, messageSink) }, throws(withMessage("No directory name provided.")))
@@ -73,7 +77,7 @@ object FileSyncServiceSpec : Spek({
                 .add("dir-name", "")
                 .build()
 
-            val service by createForEachTest { FileSyncService(contextDirectory, dockerfileDirectory, headers, logger) }
+            val service by createForEachTest { FileSyncService(contextDirectory, dockerfileDirectory, statFactory, headers, logger) }
 
             it("throws an exception") {
                 assertThat({ service.DiffCopy(messageSource, messageSink) }, throws(withMessage("No directory name provided.")))
@@ -85,7 +89,7 @@ object FileSyncServiceSpec : Spek({
                 .add("dir-name", "blah")
                 .build()
 
-            val service by createForEachTest { FileSyncService(contextDirectory, dockerfileDirectory, headers, logger) }
+            val service by createForEachTest { FileSyncService(contextDirectory, dockerfileDirectory, statFactory, headers, logger) }
 
             it("throws an exception") {
                 assertThat({ service.DiffCopy(messageSource, messageSink) }, throws(withMessage("Unknown directory name 'blah'.")))
@@ -100,7 +104,7 @@ object FileSyncServiceSpec : Spek({
                 .add("followpaths", "dockerfile")
                 .build()
 
-            val service by createForEachTest { FileSyncService(contextDirectory, dockerfileDirectory, headers, logger) }
+            val service by createForEachTest { FileSyncService(contextDirectory, dockerfileDirectory, statFactory, headers, logger) }
 
             given("the Dockerfile directory is empty") {
                 beforeEachTest {
@@ -134,7 +138,7 @@ object FileSyncServiceSpec : Spek({
                 beforeEachTest {
                     val dockerfilePath = dockerfileDirectory.resolve("Dockerfile")
                     Files.write(dockerfilePath, dockerfileContent.toByteArray(Charsets.UTF_8))
-                    Files.setLastModifiedTime(dockerfilePath, FileTime.from(lastModifiedTime, TimeUnit.NANOSECONDS))
+                    whenever(statFactory.createStat(eq(dockerfilePath), eq("Dockerfile"), any())).doReturn(dockerfileStat)
                 }
 
                 given("the server does not request the contents of any files") {
@@ -249,7 +253,7 @@ object FileSyncServiceSpec : Spek({
                 beforeEachTest {
                     val dockerfilePath = dockerfileDirectory.resolve("Dockerfile")
                     Files.write(dockerfilePath, dockerfileContent.toByteArray(Charsets.UTF_8))
-                    Files.setLastModifiedTime(dockerfilePath, FileTime.from(lastModifiedTime, TimeUnit.NANOSECONDS))
+                    whenever(statFactory.createStat(eq(dockerfilePath), eq("Dockerfile"), any())).doReturn(dockerfileStat)
 
                     messageSink.addCallback(
                         "send request for Dockerfile contents when Dockerfile PACKET_STAT sent to server",
@@ -292,7 +296,7 @@ object FileSyncServiceSpec : Spek({
                 beforeEachTest {
                     val dockerfilePath = dockerfileDirectory.resolve("Dockerfile")
                     Files.write(dockerfilePath, dockerfileContent.toByteArray(Charsets.UTF_8))
-                    Files.setLastModifiedTime(dockerfilePath, FileTime.from(lastModifiedTime, TimeUnit.NANOSECONDS))
+                    whenever(statFactory.createStat(eq(dockerfilePath), eq("Dockerfile"), any())).doReturn(dockerfileStat)
 
                     val otherFilePath = dockerfileDirectory.resolve("some-other-file")
                     Files.write(otherFilePath, "This is another file".toByteArray(Charsets.UTF_8))
@@ -326,11 +330,13 @@ object FileSyncServiceSpec : Spek({
         given("the build context directory is requested") {
 
             // Need to cover here:
-            // - directories
+            // - directories - should not be allocated an ID
             // - symlinks, pipes etc.
             // - making sure all files are sent with UID and GID set to 0
 
             // Check behaviour when ADD instruction references a particular file, but the file doesn't exist
+
+            // ADD / COPY with '.' as path - will receive no followpaths headers, need to send all directory contents
         }
     }
 })

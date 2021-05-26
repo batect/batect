@@ -43,7 +43,6 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
 import java.nio.file.attribute.BasicFileAttributes
-import java.util.concurrent.TimeUnit
 
 // Original notes from BuildKit docs and code:
 //
@@ -71,10 +70,12 @@ import java.util.concurrent.TimeUnit
 //          - send finishing packet with type PACKET_DATA, corresponding ID and no data
 //          - error if file has been requested already
 //     - PACKET_FIN: respond with packet with type PACKET_FIN and exit
+//
 
 class FileSyncService(
     contextDirectory: Path,
     dockerfileDirectory: Path,
+    private val statFactory: StatFactory,
     private val headers: Headers,
     private val logger: Logger
 ) : FileSyncBlockingServer {
@@ -120,16 +121,7 @@ class FileSyncService(
                     return FileVisitResult.CONTINUE
                 }
 
-                val modTime = attrs.lastModifiedTime().to(TimeUnit.NANOSECONDS)
-
-                val stat = Stat(
-                    relativePath,
-                    "0755".toInt(8),
-                    123,
-                    456,
-                    attrs.size(),
-                    modTime
-                )
+                val stat = statFactory.createStat(path, relativePath, attrs)
 
                 // TODO: only add paths here if they're requestable
                 paths.add(path)
@@ -160,6 +152,7 @@ class FileSyncService(
 
                 println("Received request packet: $packet")
 
+                @Suppress("REDUNDANT_ELSE_IN_WHEN") // We only know about the packet types we've got in our protobuf file, but there might be others if we're talking to a newer server.
                 when (packet.type) {
                     Packet.PacketType.PACKET_REQ -> fileRequests.send(packet.ID)
                     Packet.PacketType.PACKET_STAT -> throw UnsupportedOperationException("Should never receive a STAT packet from server")

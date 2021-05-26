@@ -108,12 +108,20 @@ class FileSyncService(
     }
 
     private fun sendDirectoryContents(root: FileSyncRoot, response: SynchronisedMessageSink<Packet>) {
+        val patterns = headers.values("followpaths").toSet()
+
         val visitor = object : FileVisitor<Path> {
             override fun visitFile(path: Path, attrs: BasicFileAttributes): FileVisitResult {
+                val relativePath = root.rootDirectory.relativize(path).toString()
+
+                if (!patterns.contains(relativePath)) {
+                    return FileVisitResult.CONTINUE
+                }
+
                 val modTime = attrs.lastModifiedTime().to(TimeUnit.NANOSECONDS)
 
                 val stat = Stat(
-                    root.rootDirectory.relativize(path).toString(),
+                    relativePath,
                     "0755".toInt(8),
                     123,
                     456,

@@ -229,8 +229,41 @@ object FileSyncServiceSpec : Spek({
                 // TODO: test for file over 32K in size (32*1024 bytes - should be broken into multiple packets)
             }
 
-            given("the Dockerfile directory contains files other than those requested") {
-                // Only sends PACKET_STAT packets for files requested
+            given("the Dockerfile directory contains a file other than those requested") {
+                val lastModifiedTime = 1620798740644000000L
+                val dockerfileStat = Stat("Dockerfile", 0x1ED, 123, 456, 23, lastModifiedTime)
+
+                beforeEachTest {
+                    val dockerfilePath = dockerfileDirectory.resolve("Dockerfile")
+                    Files.write(dockerfilePath, "This is the Dockerfile!".toByteArray(Charsets.UTF_8))
+                    Files.setLastModifiedTime(dockerfilePath, FileTime.from(lastModifiedTime, TimeUnit.NANOSECONDS))
+
+                    val otherFilePath = dockerfileDirectory.resolve("some-other-file")
+                    Files.write(otherFilePath, "This is another file".toByteArray(Charsets.UTF_8))
+                }
+
+                beforeEachTest {
+                    messageSink.addCallback(
+                        "send PACKET_FIN when final empty PACKET_STAT sent to server",
+                        { it == statFinishedPacket },
+                        { messageSource.enqueueFinalFinPacket() }
+                    )
+                }
+
+                runForEachTest { service.DiffCopy(messageSource, messageSink) }
+
+                it("only sends the details of the requested file, and not of the other file") {
+                    assertThat(
+                        messageSink.packetsSent,
+                        equalTo(
+                            listOf(
+                                Packet(Packet.PacketType.PACKET_STAT, dockerfileStat),
+                                statFinishedPacket,
+                                Packet(Packet.PacketType.PACKET_FIN)
+                            )
+                        )
+                    )
+                }
             }
         }
 

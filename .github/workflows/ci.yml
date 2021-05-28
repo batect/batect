@@ -14,7 +14,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Validate Gradle wrapper
-        uses: gradle/wrapper-validation-action@v1.0.3
+        uses: gradle/wrapper-validation-action@v1.0.4
 
   # This is a temporary workaround for https://github.com/square/wire/issues/1325 - ideally we'd just generate the code
   # at build time, but Wire doesn't yet work on Windows.

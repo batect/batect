@@ -35,6 +35,7 @@ import org.spekframework.spek2.style.specification.describe
 import java.io.InputStreamReader
 import java.nio.file.Files
 import java.nio.file.LinkOption
+import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
 import java.nio.file.attribute.FileTime
 import java.util.concurrent.TimeUnit
@@ -74,6 +75,9 @@ object StatFactorySpec : Spek({
                 val currentUserId = posix.geteuid()
                 val currentGroupId = posix.getegid()
 
+                // See https://bugs.launchpad.net/ubuntu/+source/linux/+bug/919896/comments/3 for an explanation of this.
+                val extendedAttributesSupportedOnSymlinks = Platform.getNativePlatform().os == Platform.OS.DARWIN
+
                 given("an ordinary file") {
                     val filePath by createForGroup { Files.createTempFile("batect-${StatFactorySpec::class.simpleName!!}", "-test-file") }
                     val lastModifiedTime = 1620798740000123000L
@@ -84,8 +88,8 @@ object StatFactorySpec : Spek({
 
                         Files.write(filePath, fileContent.toByteArray(Charsets.UTF_8))
                         runCommand("chmod", "0751", filePath.toString())
-                        runCommand("xattr", "-w", "attribute-1", "attribute-1-value", filePath.toString())
-                        runCommand("xattr", "-w", "attribute-2", "attribute-2-value", filePath.toString())
+                        setExtendedAttribute(filePath, "attribute-1", "attribute-1-value")
+                        setExtendedAttribute(filePath, "attribute-2", "attribute-2-value")
                         Files.setLastModifiedTime(filePath, FileTime.from(lastModifiedTime, TimeUnit.NANOSECONDS))
                     }
 
@@ -150,15 +154,19 @@ object StatFactorySpec : Spek({
 
                         Files.write(filePath, fileContent.toByteArray(Charsets.UTF_8))
                         runCommand("chmod", "0711", filePath.toString())
-                        runCommand("xattr", "-w", "target-attribute-1", "target-attribute-1-value", filePath.toString())
-                        runCommand("xattr", "-w", "target-attribute-2", "target-attribute-2-value", filePath.toString())
+                        setExtendedAttribute(filePath, "target-attribute-1", "target-attribute-1-value")
+                        setExtendedAttribute(filePath, "target-attribute-2", "target-attribute-2-value")
                         Files.setLastModifiedTime(filePath, FileTime.from(fileLastModifiedTime, TimeUnit.NANOSECONDS))
 
                         Files.delete(linkPath)
                         Files.createSymbolicLink(linkPath, filePath)
                         runCommand("chmod", "0755", linkPath.toString())
-                        runCommand("xattr", "-w", "-s", "link-attribute-1", "link-attribute-1-value", linkPath.toString())
-                        runCommand("xattr", "-w", "-s", "link-attribute-2", "link-attribute-2-value", linkPath.toString())
+
+                        if (extendedAttributesSupportedOnSymlinks) {
+                            setExtendedAttribute(linkPath, "link-attribute-1", "link-attribute-1-value")
+                            setExtendedAttribute(linkPath, "link-attribute-2", "link-attribute-2-value")
+                        }
+
                         Files.setLastModifiedTime(linkPath, FileTime.from(linkLastModifiedTime, TimeUnit.NANOSECONDS))
                     }
 
@@ -200,15 +208,16 @@ object StatFactorySpec : Spek({
                     }
 
                     it("returns the extended attributes of the symlink, not the file") {
-                        assertThat(
-                            stat.xattrs,
-                            equalTo(
-                                mapOf(
-                                    "link-attribute-1" to "link-attribute-1-value".encodeUtf8(),
-                                    "link-attribute-2" to "link-attribute-2-value".encodeUtf8()
-                                )
+                        val expectedAttributes = if (extendedAttributesSupportedOnSymlinks) {
+                            mapOf(
+                                "link-attribute-1" to "link-attribute-1-value".encodeUtf8(),
+                                "link-attribute-2" to "link-attribute-2-value".encodeUtf8()
                             )
-                        )
+                        } else {
+                            emptyMap()
+                        }
+
+                        assertThat(stat.xattrs, equalTo(expectedAttributes))
                     }
                 }
 
@@ -220,8 +229,8 @@ object StatFactorySpec : Spek({
                         directoryPath.toFile().deleteOnExit()
 
                         runCommand("chmod", "0751", directoryPath.toString())
-                        runCommand("xattr", "-w", "attribute-1", "attribute-1-value", directoryPath.toString())
-                        runCommand("xattr", "-w", "attribute-2", "attribute-2-value", directoryPath.toString())
+                        setExtendedAttribute(directoryPath, "attribute-1", "attribute-1-value")
+                        setExtendedAttribute(directoryPath, "attribute-2", "attribute-2-value")
                         Files.setLastModifiedTime(directoryPath, FileTime.from(lastModifiedTime, TimeUnit.NANOSECONDS))
                     }
 
@@ -284,15 +293,19 @@ object StatFactorySpec : Spek({
                         linkPath.toFile().deleteOnExit()
 
                         runCommand("chmod", "0751", directoryPath.toString())
-                        runCommand("xattr", "-w", "target-attribute-1", "target-attribute-1-value", directoryPath.toString())
-                        runCommand("xattr", "-w", "target-attribute-2", "target-attribute-2-value", directoryPath.toString())
+                        setExtendedAttribute(directoryPath, "target-attribute-1", "target-attribute-1-value")
+                        setExtendedAttribute(directoryPath, "target-attribute-2", "target-attribute-2-value")
                         Files.setLastModifiedTime(directoryPath, FileTime.from(directoryLastModifiedTime, TimeUnit.NANOSECONDS))
 
                         Files.delete(linkPath)
                         Files.createSymbolicLink(linkPath, directoryPath)
                         runCommand("chmod", "0755", linkPath.toString())
-                        runCommand("xattr", "-w", "-s", "link-attribute-1", "link-attribute-1-value", linkPath.toString())
-                        runCommand("xattr", "-w", "-s", "link-attribute-2", "link-attribute-2-value", linkPath.toString())
+
+                        if (extendedAttributesSupportedOnSymlinks) {
+                            setExtendedAttribute(linkPath, "link-attribute-1", "link-attribute-1-value")
+                            setExtendedAttribute(linkPath, "link-attribute-2", "link-attribute-2-value")
+                        }
+
                         Files.setLastModifiedTime(linkPath, FileTime.from(linkLastModifiedTime, TimeUnit.NANOSECONDS))
                     }
 
@@ -334,15 +347,16 @@ object StatFactorySpec : Spek({
                     }
 
                     it("returns the extended attributes of the symlink, not the file") {
-                        assertThat(
-                            stat.xattrs,
-                            equalTo(
-                                mapOf(
-                                    "link-attribute-1" to "link-attribute-1-value".encodeUtf8(),
-                                    "link-attribute-2" to "link-attribute-2-value".encodeUtf8()
-                                )
+                        val expectedAttributes = if (extendedAttributesSupportedOnSymlinks) {
+                            mapOf(
+                                "link-attribute-1" to "link-attribute-1-value".encodeUtf8(),
+                                "link-attribute-2" to "link-attribute-2-value".encodeUtf8()
                             )
-                        )
+                        } else {
+                            emptyMap()
+                        }
+
+                        assertThat(stat.xattrs, equalTo(expectedAttributes))
                     }
                 }
             }
@@ -361,6 +375,12 @@ private fun runCommand(vararg args: String) {
     val exitCode = process.waitFor()
 
     if (exitCode != 0) {
-        throw RuntimeException("Command $args failed with exit code $exitCode and output $output")
+        throw RuntimeException("Command ${args.joinToString(" ")} failed with exit code $exitCode and output $output")
     }
+}
+
+private fun setExtendedAttribute(path: Path, name: String, value: String) = when (Platform.getNativePlatform().os) {
+    Platform.OS.DARWIN -> runCommand("xattr", "-w", "-s", name, value, path.toString())
+    Platform.OS.LINUX -> runCommand("attr", "-s", name, "-V", value, path.toString())
+    else -> throw UnsupportedOperationException()
 }

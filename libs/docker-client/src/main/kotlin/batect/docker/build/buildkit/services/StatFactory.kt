@@ -29,7 +29,9 @@ import jnr.posix.POSIXFactory
 import okio.ByteString
 import okio.ByteString.Companion.toByteString
 import java.nio.ByteBuffer
+import java.nio.file.FileSystemException
 import java.nio.file.Files
+import java.nio.file.LinkOption
 import java.nio.file.Path
 import java.nio.file.attribute.UserDefinedFileAttributeView
 import java.util.concurrent.TimeUnit
@@ -85,13 +87,23 @@ class StatFactory(
 
     private class LinuxExtendedAttributesProvider : ExtendedAttributesProvider {
         override fun getExtendedAttributes(path: Path): Map<String, ByteString> {
-            val attributeView = Files.getFileAttributeView(path, UserDefinedFileAttributeView::class.java)
+            val attributeView = Files.getFileAttributeView(path, UserDefinedFileAttributeView::class.java, LinkOption.NOFOLLOW_LINKS)
 
             if (attributeView == null) {
                 throw UnsupportedOperationException("Extended file attributes not supported.")
             }
 
-            return attributeView.list().associateWith { name -> attributeView.getAttributeValue(name) }
+            try {
+                return attributeView.list().associateWith { name -> attributeView.getAttributeValue(name) }
+            } catch (e: FileSystemException) {
+                val message = e.message
+
+                if (message != null && message.endsWith("Too many levels of symbolic links or unable to access attributes of symbolic link")) {
+                    return emptyMap()
+                }
+                
+                throw e
+            }
         }
 
         private fun UserDefinedFileAttributeView.getAttributeValue(name: String): ByteString {

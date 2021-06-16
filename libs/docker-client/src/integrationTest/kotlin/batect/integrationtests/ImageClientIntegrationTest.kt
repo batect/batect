@@ -75,8 +75,8 @@ object ImageClientIntegrationTest : Spek({
             it("includes all expected output in the response") {
                 val lines = output.toString().lines()
 
-                assertThat(lines, hasElement("#1 [internal] load build definition from Dockerfile"))
-                assertThat(lines, hasElement("#2 [internal] load .dockerignore"))
+                assertThat(lines, anyElement(matches("""^#(1|2) \[internal\] load build definition from Dockerfile""".toRegex())))
+                assertThat(lines, anyElement(matches("""^#(1|2) \[internal\] load \.dockerignore""".toRegex())))
                 assertThat(lines, anyElement(matches("""^#3 \[internal] load metadata for docker.io/library/alpine:.*""".toRegex())))
                 assertThat(lines, anyElement(matches("""^#(4|5) \[internal] load build context""".toRegex())))
                 assertThat(lines, anyElement(matches("""^#(4|5) \[1/3] FROM docker.io/library/alpine:.*""".toRegex())))

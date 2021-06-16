@@ -101,7 +101,7 @@ class StatFactory(
                 if (message != null && message.endsWith("Too many levels of symbolic links or unable to access attributes of symbolic link")) {
                     return emptyMap()
                 }
-                
+
                 throw e
             }
         }

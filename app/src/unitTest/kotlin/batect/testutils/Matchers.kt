@@ -37,8 +37,6 @@ fun withPath(path: String): Matcher<ConfigurationException> {
     return has(ConfigurationException::path, equalTo(path))
 }
 
-fun <K, V> isEmptyMap() = Matcher(Map<K, V>::isEmpty)
-
 fun equivalentTo(expected: TextRun): Matcher<TextRun> =
     object : Matcher<TextRun> {
         override fun invoke(actual: TextRun): MatchResult = if (actual.simplify() == expected.simplify()) {

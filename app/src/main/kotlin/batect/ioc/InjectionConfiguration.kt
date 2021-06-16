@@ -221,7 +221,7 @@ private val dockerBuildModule = DI.Module("docker.build") {
     bind<DockerIgnoreParser>() with singleton { DockerIgnoreParser() }
     bind<HealthService>() with singleton { HealthService() }
     bind<ImageBuildContextFactory>() with singleton { ImageBuildContextFactory(instance()) }
-    bind<StatFactory>() with singleton { StatFactory(instance(), instance()) }
+    bind<StatFactory>() with singleton { StatFactory.create(instance()) }
 }
 
 private val dockerClientModule = DI.Module("docker.client") {

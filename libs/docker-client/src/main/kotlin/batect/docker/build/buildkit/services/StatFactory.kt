@@ -16,15 +16,13 @@
 
 package batect.docker.build.buildkit.services
 
-import batect.os.OperatingSystem
-import batect.os.SystemInfo
 import batect.os.UnixNativeMethodException
 import fsutil.types.Stat
 import jnr.constants.platform.Errno
 import jnr.ffi.LibraryLoader
+import jnr.ffi.Platform
 import jnr.ffi.annotations.Out
 import jnr.ffi.annotations.SaveError
-import jnr.posix.FileStat
 import jnr.posix.POSIX
 import jnr.posix.POSIXFactory
 import okio.ByteString
@@ -48,53 +46,30 @@ import java.util.concurrent.TimeUnit
 // - uid, gid, devmajor and devminor are always 0
 // - xattrs is always empty
 
-class StatFactory(
-    private val systemInfo: SystemInfo,
-    private val posix: POSIX
-) {
-    private val extendedAttributesProvider = when (systemInfo.operatingSystem) {
-        OperatingSystem.Linux -> LinuxExtendedAttributesProvider()
-        OperatingSystem.Mac -> DarwinExtendedAttributesProvider(posix)
-        OperatingSystem.Windows -> WindowsExtendedAttributesProvider()
-        else -> throw UnsupportedOperationException("Unsupported operating system: ${systemInfo.operatingSystem}")
-    }
+interface StatFactory {
+    fun createStat(path: Path, relativePath: String): Stat
 
-    fun createStat(path: Path, relativePath: String): Stat {
+    companion object {
+        fun create(posix: POSIX): StatFactory = when (Platform.getNativePlatform().os) {
+            Platform.OS.DARWIN -> MacOSStatFactory(posix)
+            Platform.OS.LINUX -> LinuxStatFactory(posix)
+            Platform.OS.WINDOWS -> WindowsStatFactory(posix)
+            else -> throw java.lang.UnsupportedOperationException("Unknown operating system ${Platform.getNativePlatform().os}")
+        }
+    }
+}
+
+abstract class PosixStatFactory(private val posix: POSIX) : StatFactory {
+    override fun createStat(path: Path, relativePath: String): Stat {
         val details = posix.lstat(path.toString())
         val linkTarget = if (details.isSymlink) posix.readlink(path.toString()) else ""
-        val extendedAttributes = extendedAttributesProvider.getExtendedAttributes(path)
+        val extendedAttributes = getExtendedAttributes(path)
 
         // jnr-posix doesn't expose the mtime_nsec field, so we can't get the modification time
         // with nanosecond precision (https://stackoverflow.com/a/7206128)... so we have to use
         // the JVM's method, which does provide that level of precision. Yuck.
         val modificationTime = Files.getLastModifiedTime(path).to(TimeUnit.NANOSECONDS)
 
-        return when (systemInfo.operatingSystem) {
-            OperatingSystem.Windows -> createStatWindows(relativePath, details, modificationTime, linkTarget, extendedAttributes)
-            else -> createStatUnix(relativePath, details, modificationTime, linkTarget, extendedAttributes)
-        }
-    }
-
-    private fun createStatWindows(relativePath: String, details: FileStat, modificationTime: Long, linkTarget: String, extendedAttributes: Map<String, ByteString>): Stat {
-        val permissionMask: Int = "777".toInt(8)
-        val nonPermissionBits = details.mode() and permissionMask.inv()
-        val newMode = nonPermissionBits or "755".toInt(8)
-
-        return Stat(
-            relativePath,
-            newMode,
-            0,
-            0,
-            details.st_size(),
-            modificationTime,
-            linkTarget,
-            0,
-            0,
-            extendedAttributes
-        )
-    }
-
-    private fun createStatUnix(relativePath: String, details: FileStat, modificationTime: Long, linkTarget: String, extendedAttributes: Map<String, ByteString>): Stat {
         return Stat(
             relativePath,
             details.mode(),
@@ -109,126 +84,147 @@ class StatFactory(
         )
     }
 
-    private interface ExtendedAttributesProvider {
-        fun getExtendedAttributes(path: Path): Map<String, ByteString>
+    protected abstract fun getExtendedAttributes(path: Path): Map<String, ByteString>
+}
+
+class MacOSStatFactory(private val posix: POSIX) : PosixStatFactory(posix) {
+    private val xAttrMethods = LibraryLoader.create(MacOSXAttrMethods::class.java).load(POSIXFactory.STANDARD_C_LIBRARY_NAME)
+    private val XATTR_NOFOLLOW = 0x1
+
+    override fun getExtendedAttributes(path: Path): Map<String, ByteString> {
+        return getAttributeNames(path).associateWith { getAttributeValue(path, it) }
     }
 
-    private class LinuxExtendedAttributesProvider : ExtendedAttributesProvider {
-        override fun getExtendedAttributes(path: Path): Map<String, ByteString> {
-            val attributeView = Files.getFileAttributeView(path, UserDefinedFileAttributeView::class.java, LinkOption.NOFOLLOW_LINKS)
+    private fun getAttributeNames(path: Path): Set<String> {
+        val bufferSize = getAttributeListSize(path)
 
-            if (attributeView == null) {
-                throw UnsupportedOperationException("Extended file attributes not supported.")
-            }
-
-            try {
-                return attributeView.list().associateWith { name -> attributeView.getAttributeValue(name) }
-            } catch (e: FileSystemException) {
-                val message = e.message
-
-                if (message != null && message.endsWith("Too many levels of symbolic links or unable to access attributes of symbolic link")) {
-                    return emptyMap()
-                }
-
-                throw e
-            }
+        if (bufferSize == 0L) {
+            return emptySet()
         }
 
-        private fun UserDefinedFileAttributeView.getAttributeValue(name: String): ByteString {
-            val size = this.size(name)
-            val buffer = ByteBuffer.allocate(size)
-            this.read(name, buffer)
+        val buffer = ByteBuffer.allocate(bufferSize.toInt())
+        val result = xAttrMethods.listxattr(path.toString(), buffer, bufferSize, XATTR_NOFOLLOW)
 
-            return buffer.array().toByteString()
+        if (result < 0) {
+            val errno = posix.errno().toLong()
+
+            throw UnixNativeMethodException(MacOSXAttrMethods::listxattr.name, Errno.valueOf(errno))
         }
+
+        return buffer.array()
+            .toString(Charsets.UTF_8)
+            .removeSuffix("\u0000")
+            .split('\u0000')
+            .toSet()
     }
 
-    private class WindowsExtendedAttributesProvider : ExtendedAttributesProvider {
-        override fun getExtendedAttributes(path: Path): Map<String, ByteString> {
-            return emptyMap()
+    private fun getAttributeListSize(path: Path): Long {
+        val size = xAttrMethods.listxattr(path.toString(), null, 0, XATTR_NOFOLLOW)
+
+        if (size < 0) {
+            val errno = posix.errno().toLong()
+
+            throw UnixNativeMethodException(MacOSXAttrMethods::listxattr.name, Errno.valueOf(errno))
         }
+
+        return size
     }
 
-    private class DarwinExtendedAttributesProvider(private val posix: POSIX) : ExtendedAttributesProvider {
-        private val xAttrMethods = LibraryLoader.create(DarwinXAttrMethods::class.java).load(POSIXFactory.STANDARD_C_LIBRARY_NAME)
-        private val XATTR_NOFOLLOW = 0x1
+    private fun getAttributeValue(path: Path, name: String): ByteString {
+        val bufferSize = getAttributeValueSize(path, name)
 
-        override fun getExtendedAttributes(path: Path): Map<String, ByteString> {
-            return getAttributeNames(path).associateWith { getAttributeValue(path, it) }
+        if (bufferSize == 0L) {
+            return ByteString.EMPTY
         }
 
-        private fun getAttributeNames(path: Path): Set<String> {
-            val bufferSize = getAttributeListSize(path)
+        val buffer = ByteBuffer.allocate(bufferSize.toInt())
+        val result = xAttrMethods.getxattr(path.toString(), name, buffer, bufferSize, 0, XATTR_NOFOLLOW)
 
-            if (bufferSize == 0L) {
-                return emptySet()
-            }
+        if (result < 0) {
+            val errno = posix.errno().toLong()
 
-            val buffer = ByteBuffer.allocate(bufferSize.toInt())
-            val result = xAttrMethods.listxattr(path.toString(), buffer, bufferSize, XATTR_NOFOLLOW)
-
-            if (result < 0) {
-                val errno = posix.errno().toLong()
-
-                throw UnixNativeMethodException(DarwinXAttrMethods::listxattr.name, Errno.valueOf(errno))
-            }
-
-            return buffer.array()
-                .toString(Charsets.UTF_8)
-                .removeSuffix("\u0000")
-                .split('\u0000')
-                .toSet()
+            throw UnixNativeMethodException(MacOSXAttrMethods::getxattr.name, Errno.valueOf(errno))
         }
 
-        private fun getAttributeListSize(path: Path): Long {
-            val size = xAttrMethods.listxattr(path.toString(), null, 0, XATTR_NOFOLLOW)
-
-            if (size < 0) {
-                val errno = posix.errno().toLong()
-
-                throw UnixNativeMethodException(DarwinXAttrMethods::listxattr.name, Errno.valueOf(errno))
-            }
-
-            return size
-        }
-
-        private fun getAttributeValue(path: Path, name: String): ByteString {
-            val bufferSize = getAttributeValueSize(path, name)
-
-            if (bufferSize == 0L) {
-                return ByteString.EMPTY
-            }
-
-            val buffer = ByteBuffer.allocate(bufferSize.toInt())
-            val result = xAttrMethods.getxattr(path.toString(), name, buffer, bufferSize, 0, XATTR_NOFOLLOW)
-
-            if (result < 0) {
-                val errno = posix.errno().toLong()
-
-                throw UnixNativeMethodException(DarwinXAttrMethods::getxattr.name, Errno.valueOf(errno))
-            }
-
-            return buffer.toByteString()
-        }
-
-        private fun getAttributeValueSize(path: Path, name: String): Long {
-            val size = xAttrMethods.getxattr(path.toString(), name, null, 0, 0, XATTR_NOFOLLOW)
-
-            if (size < 0) {
-                val errno = posix.errno().toLong()
-
-                throw UnixNativeMethodException(DarwinXAttrMethods::getxattr.name, Errno.valueOf(errno))
-            }
-
-            return size
-        }
+        return buffer.toByteString()
     }
 
-    interface DarwinXAttrMethods {
+    private fun getAttributeValueSize(path: Path, name: String): Long {
+        val size = xAttrMethods.getxattr(path.toString(), name, null, 0, 0, XATTR_NOFOLLOW)
+
+        if (size < 0) {
+            val errno = posix.errno().toLong()
+
+            throw UnixNativeMethodException(MacOSXAttrMethods::getxattr.name, Errno.valueOf(errno))
+        }
+
+        return size
+    }
+
+    interface MacOSXAttrMethods {
         @SaveError
         fun listxattr(path: String, @Out list: ByteBuffer?, size: Long, options: Int): Long
 
         @SaveError
         fun getxattr(path: String, name: String, @Out value: ByteBuffer?, size: Long, position: Long, options: Int): Long
+    }
+}
+
+class LinuxStatFactory(private val posix: POSIX) : PosixStatFactory(posix) {
+    override fun getExtendedAttributes(path: Path): Map<String, ByteString> {
+        val attributeView = Files.getFileAttributeView(path, UserDefinedFileAttributeView::class.java, LinkOption.NOFOLLOW_LINKS)
+
+        if (attributeView == null) {
+            throw UnsupportedOperationException("Extended file attributes not supported.")
+        }
+
+        try {
+            return attributeView.list().associateWith { name -> attributeView.getAttributeValue(name) }
+        } catch (e: FileSystemException) {
+            val message = e.message
+
+            if (message != null && message.endsWith("Too many levels of symbolic links or unable to access attributes of symbolic link")) {
+                return emptyMap()
+            }
+
+            throw e
+        }
+    }
+
+    private fun UserDefinedFileAttributeView.getAttributeValue(name: String): ByteString {
+        val size = this.size(name)
+        val buffer = ByteBuffer.allocate(size)
+        this.read(name, buffer)
+
+        return buffer.array().toByteString()
+    }
+}
+
+class WindowsStatFactory(private val posix: POSIX) : StatFactory {
+    override fun createStat(path: Path, relativePath: String): Stat {
+        val details = posix.lstat(path.toString())
+        val linkTarget = if (details.isSymlink) posix.readlink(path.toString()) else ""
+
+        // jnr-posix doesn't expose the mtime_nsec field, so we can't get the modification time
+        // with nanosecond precision (https://stackoverflow.com/a/7206128)... so we have to use
+        // the JVM's method, which does provide that level of precision. Yuck.
+        val modificationTime = Files.getLastModifiedTime(path).to(TimeUnit.NANOSECONDS)
+
+        val permissionMask: Int = "777".toInt(8)
+        val nonPermissionBits = details.mode() and permissionMask.inv()
+        val newMode = nonPermissionBits or "755".toInt(8)
+
+        return Stat(
+            relativePath,
+            newMode,
+            0,
+            0,
+            details.st_size(),
+            modificationTime,
+            linkTarget,
+            0,
+            0,
+            emptyMap()
+        )
     }
 }

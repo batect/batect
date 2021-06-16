@@ -16,8 +16,6 @@
 
 package batect.docker.build.buildkit.services
 
-import batect.os.OperatingSystem
-import batect.os.SystemInfo
 import batect.testutils.createForGroup
 import batect.testutils.equalTo
 import batect.testutils.given
@@ -25,8 +23,6 @@ import batect.testutils.isEmptyMap
 import batect.testutils.onlyOn
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.isEmptyString
-import com.nhaarman.mockitokotlin2.doReturn
-import com.nhaarman.mockitokotlin2.mock
 import jnr.ffi.Platform
 import jnr.posix.POSIXFactory
 import okio.ByteString.Companion.encodeUtf8
@@ -44,17 +40,10 @@ import java.util.concurrent.TimeUnit
 object StatFactorySpec : Spek({
     describe("a Stat factory") {
         val posix = POSIXFactory.getNativePOSIX()
+        val factory by createForGroup { StatFactory.create(posix) }
 
         onlyOn(Platform.OS.WINDOWS) {
             given("the application is running on Windows") {
-                val systemInfo by createForGroup {
-                    mock<SystemInfo> {
-                        on { operatingSystem } doReturn OperatingSystem.Windows
-                    }
-                }
-
-                val factory by createForGroup { StatFactory(systemInfo, posix) }
-
                 given("an ordinary file") {
                     val filePath by createForGroup { Files.createTempFile("batect-${StatFactorySpec::class.simpleName!!}", "-test-file") }
                     val lastModifiedTime = 1620798740000123000L
@@ -280,18 +269,6 @@ object StatFactorySpec : Spek({
 
         onlyOn(setOf(Platform.OS.DARWIN, Platform.OS.LINUX)) {
             given("the application is not running on Windows") {
-                val systemInfo by createForGroup {
-                    mock<SystemInfo> {
-                        on { operatingSystem } doReturn when (Platform.getNativePlatform().os) {
-                            Platform.OS.LINUX -> OperatingSystem.Linux
-                            Platform.OS.DARWIN -> OperatingSystem.Mac
-                            else -> throw UnsupportedOperationException("Unknown operating system ${Platform.getNativePlatform().os}")
-                        }
-                    }
-                }
-
-                val factory by createForGroup { StatFactory(systemInfo, posix) }
-
                 val currentUserId = posix.geteuid()
                 val currentGroupId = posix.getegid()
 

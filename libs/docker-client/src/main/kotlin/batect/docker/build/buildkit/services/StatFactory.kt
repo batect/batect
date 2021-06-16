@@ -24,6 +24,7 @@ import jnr.constants.platform.Errno
 import jnr.ffi.LibraryLoader
 import jnr.ffi.annotations.Out
 import jnr.ffi.annotations.SaveError
+import jnr.posix.FileStat
 import jnr.posix.POSIX
 import jnr.posix.POSIXFactory
 import okio.ByteString
@@ -61,12 +62,39 @@ class StatFactory(
     fun createStat(path: Path, relativePath: String): Stat {
         val details = posix.lstat(path.toString())
         val linkTarget = if (details.isSymlink) posix.readlink(path.toString()) else ""
+        val extendedAttributes = extendedAttributesProvider.getExtendedAttributes(path)
 
         // jnr-posix doesn't expose the mtime_nsec field, so we can't get the modification time
         // with nanosecond precision (https://stackoverflow.com/a/7206128)... so we have to use
         // the JVM's method, which does provide that level of precision. Yuck.
         val modificationTime = Files.getLastModifiedTime(path).to(TimeUnit.NANOSECONDS)
 
+        return when (systemInfo.operatingSystem) {
+            OperatingSystem.Windows -> createStatWindows(relativePath, details, modificationTime, linkTarget, extendedAttributes)
+            else -> createStatUnix(relativePath, details, modificationTime, linkTarget, extendedAttributes)
+        }
+    }
+
+    private fun createStatWindows(relativePath: String, details: FileStat, modificationTime: Long, linkTarget: String, extendedAttributes: Map<String, ByteString>): Stat {
+        val permissionMask: Int = "777".toInt(8)
+        val nonPermissionBits = details.mode() and permissionMask.inv()
+        val newMode = nonPermissionBits or "755".toInt(8)
+
+        return Stat(
+            relativePath,
+            newMode,
+            0,
+            0,
+            details.st_size(),
+            modificationTime,
+            linkTarget,
+            0,
+            0,
+            extendedAttributes
+        )
+    }
+
+    private fun createStatUnix(relativePath: String, details: FileStat, modificationTime: Long, linkTarget: String, extendedAttributes: Map<String, ByteString>): Stat {
         return Stat(
             relativePath,
             details.mode(),
@@ -77,7 +105,7 @@ class StatFactory(
             linkTarget,
             0,
             0,
-            extendedAttributesProvider.getExtendedAttributes(path)
+            extendedAttributes
         )
     }
 

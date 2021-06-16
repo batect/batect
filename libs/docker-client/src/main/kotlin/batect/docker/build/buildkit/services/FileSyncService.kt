@@ -256,6 +256,7 @@ class FileSyncService(
 
         override fun write(message: T) {
             synchronized(lock) {
+                println("Sending $message")
                 inner.write(message)
             }
         }

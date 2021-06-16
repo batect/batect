@@ -26,9 +26,7 @@ import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.throws
-import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doReturn
-import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
 import com.squareup.wire.MessageSink
@@ -138,7 +136,7 @@ object FileSyncServiceSpec : Spek({
                 beforeEachTest {
                     val dockerfilePath = dockerfileDirectory.resolve("Dockerfile")
                     Files.write(dockerfilePath, dockerfileContent.toByteArray(Charsets.UTF_8))
-                    whenever(statFactory.createStat(eq(dockerfilePath), eq("Dockerfile"), any())).doReturn(dockerfileStat)
+                    whenever(statFactory.createStat(dockerfilePath, "Dockerfile")).doReturn(dockerfileStat)
                 }
 
                 given("the server does not request the contents of any files") {
@@ -230,8 +228,6 @@ object FileSyncServiceSpec : Spek({
                         )
                     }
                 }
-
-                // TODO: stat() call for paths, need different implementations for Unix and Windows (see stat.go, stat_unix.go, stat_windows.go)
             }
 
             given("the Dockerfile directory contains a Dockerfile and it is over 32 kB in size") {
@@ -253,7 +249,7 @@ object FileSyncServiceSpec : Spek({
                 beforeEachTest {
                     val dockerfilePath = dockerfileDirectory.resolve("Dockerfile")
                     Files.write(dockerfilePath, dockerfileContent.toByteArray(Charsets.UTF_8))
-                    whenever(statFactory.createStat(eq(dockerfilePath), eq("Dockerfile"), any())).doReturn(dockerfileStat)
+                    whenever(statFactory.createStat(dockerfilePath, "Dockerfile")).doReturn(dockerfileStat)
 
                     messageSink.addCallback(
                         "send request for Dockerfile contents when Dockerfile PACKET_STAT sent to server",
@@ -296,7 +292,7 @@ object FileSyncServiceSpec : Spek({
                 beforeEachTest {
                     val dockerfilePath = dockerfileDirectory.resolve("Dockerfile")
                     Files.write(dockerfilePath, dockerfileContent.toByteArray(Charsets.UTF_8))
-                    whenever(statFactory.createStat(eq(dockerfilePath), eq("Dockerfile"), any())).doReturn(dockerfileStat)
+                    whenever(statFactory.createStat(dockerfilePath, "Dockerfile")).doReturn(dockerfileStat)
 
                     val otherFilePath = dockerfileDirectory.resolve("some-other-file")
                     Files.write(otherFilePath, "This is another file".toByteArray(Charsets.UTF_8))

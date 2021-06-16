@@ -121,7 +121,7 @@ class FileSyncService(
                     return FileVisitResult.CONTINUE
                 }
 
-                val stat = statFactory.createStat(path, relativePath, attrs)
+                val stat = statFactory.createStat(path, relativePath)
 
                 // TODO: only add paths here if they're requestable
                 paths.add(path)

@@ -103,7 +103,7 @@ fun createClient(posix: POSIX = POSIXFactory.getNativePOSIX(), nativeMethods: Na
     val signalListener = SignalListener(posix)
     val consoleDimensions = ConsoleDimensions(nativeMethods, signalListener, logger)
     val ttyManager = ContainerTTYManager(containersAPI, consoleDimensions, logger)
-    val statFactory = StatFactory()
+    val statFactory = StatFactory(systemInfo, posix)
     val buildKitSessionFactory = BuildKitSessionFactory(systemInfo, HealthService(), credentialsProvider, statFactory, mock(), loggerFactory)
 
     val containersClient = ContainersClient(containersAPI, consoleManager, waiter, streamer, ttyManager, logger)

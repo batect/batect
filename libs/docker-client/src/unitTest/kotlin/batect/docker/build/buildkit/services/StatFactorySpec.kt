@@ -177,7 +177,13 @@ object StatFactorySpec : Spek({
                     }
 
                     it("returns the mode of the symlink") {
-                        assertThat(stat.mode, equalTo(octal("120755")))
+                        val expectedMode = when (Platform.getNativePlatform().os) {
+                            Platform.OS.DARWIN -> octal("120755")
+                            Platform.OS.LINUX -> octal("120777") // Symlinks are always 0777 on Linux
+                            else -> throw UnsupportedOperationException()
+                        }
+
+                        assertThat(stat.mode, equalTo(expectedMode))
                     }
 
                     it("returns the owner of the symlink") {
@@ -316,7 +322,13 @@ object StatFactorySpec : Spek({
                     }
 
                     it("returns the mode of the symlink") {
-                        assertThat(stat.mode, equalTo(octal("120755")))
+                        val expectedMode = when (Platform.getNativePlatform().os) {
+                            Platform.OS.DARWIN -> octal("120755")
+                            Platform.OS.LINUX -> octal("120777") // Symlinks are always 0777 on Linux
+                            else -> throw UnsupportedOperationException()
+                        }
+
+                        assertThat(stat.mode, equalTo(expectedMode))
                     }
 
                     it("returns the owner of the symlink") {

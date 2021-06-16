@@ -33,6 +33,7 @@ import jnr.ffi.byref.IntByReference
 import jnr.ffi.mapper.TypeMapper
 import jnr.posix.HANDLE
 import jnr.posix.POSIX
+import jnr.posix.POSIXFactory
 import jnr.posix.WindowsLibC
 import java.io.FileDescriptor
 import java.nio.ByteBuffer
@@ -45,7 +46,7 @@ class WindowsNativeMethods(
     constructor(posix: POSIX) : this(
         LibraryLoader.create(Win32::class.java)
             .option(LibraryOption.TypeMapper, createTypeMapper())
-            .library("msvcrt")
+            .library(POSIXFactory.STANDARD_C_LIBRARY_NAME)
             .library("kernel32")
             .library("Advapi32")
             .load(),

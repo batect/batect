@@ -45,15 +45,17 @@ class WindowsNativeMethodException(method: String, errorName: String, errorDescr
     constructor(method: String, error: LastError) : this(method, error.name, error.toString(), error)
 }
 
-fun <R> throwWindowsNativeMethodFailed(function: KFunction<R>, posix: POSIX): Nothing {
+fun <R> throwWindowsNativeMethodFailed(function: KFunction<R>, posix: POSIX): Nothing = throwWindowsNativeMethodFailed(function.name, posix)
+
+fun throwWindowsNativeMethodFailed(functionName: String, posix: POSIX): Nothing {
     val errno = posix.errno()
     val error = LastError.values().singleOrNull { it.intValue() == errno }
 
     if (error != null) {
-        throw WindowsNativeMethodException(function.name, error)
+        throw WindowsNativeMethodException(functionName, error)
     }
 
-    throw WindowsNativeMethodException(function.name, "0x${errno.toString(16)}", "unknown", null)
+    throw WindowsNativeMethodException(functionName, "0x${errno.toString(16)}", "unknown", null)
 }
 
 class NoConsoleException : RuntimeException("STDOUT is not connected to a console.")

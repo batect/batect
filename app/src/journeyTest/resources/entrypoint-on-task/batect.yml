@@ -2,7 +2,7 @@ project_name: entrypoint-on-task
 
 containers:
   build-env:
-    image: alpine:3.13.5
+    image: alpine:3.14.0
     command: |
       "echo 'This is some output from the task' && exit 123"
 

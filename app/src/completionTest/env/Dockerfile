@@ -6,7 +6,7 @@ RUN apk --no-cache add \
     fish==3.1.2-r4 \
     openjdk11-jre=11.0.11_p9-r0 \
     python3==3.8.10-r0 \
-    zsh==5.8-r1
+    zsh==5.8-r2
 
 # fish completion
 RUN curl --location --fail --show-error https://raw.githubusercontent.com/batect/batect-fish-completion/45881e3d7b55b4c648196284194de8e3536f0afc/completions/batect.fish \

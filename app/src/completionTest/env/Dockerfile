@@ -1,7 +1,7 @@
 FROM alpine:3.13.5@sha256:69e70a79f2d41ab5d637de98c1e0b055206ba40a8145e7bddb55ccc04e13cf8f
 
 RUN apk --no-cache add \
-    bash==5.1.0-r0 \
+    bash==5.1.4-r0 \
     curl==7.77.0-r1 \
     fish==3.1.2-r4 \
     openjdk11-jre=11.0.9_p11-r1 \

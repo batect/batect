@@ -2,10 +2,10 @@ project_name: task-with-environment-task
 
 containers:
   build-env:
-    image: alpine:3.13.5
+    image: alpine:3.14.0
 
   dependency:
-    image: alpine:3.13.5
+    image: alpine:3.14.0
     command: sh -c 'echo "Working directory is $(pwd)" && echo "Value of CONTAINER_VAR is $CONTAINER_VAR" && echo "Value of OVERRIDDEN_VAR is $OVERRIDDEN_VAR" && echo "Value of NEW_VAR is $NEW_VAR"'
     environment:
       CONTAINER_VAR: set on container

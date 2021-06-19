@@ -2,7 +2,7 @@ project_name: run-as-current-user-with-cache-test
 
 containers:
   build-env:
-    image: alpine:3.13.5
+    image: alpine:3.14.0
     volumes:
       - local: .
         container: /scripts

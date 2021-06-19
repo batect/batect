@@ -10,7 +10,7 @@ RUN ln -sf /dev/stdout /var/log/nginx/access.log \
 
 RUN mkdir -p /run/nginx
 
-RUN sed -i 's/return 404/return 200/' /etc/nginx/conf.d/default.conf
+RUN sed -i 's/return 404/return 200/' /etc/nginx/http.d/default.conf
 
 STOPSIGNAL SIGTERM
 

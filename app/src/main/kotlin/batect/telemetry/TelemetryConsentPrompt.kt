@@ -33,15 +33,7 @@ class TelemetryConsentPrompt(
     private val prompt: Prompt
 ) {
     fun askForConsentIfRequired() {
-        if (configurationStore.currentConfiguration.state != ConsentState.None) {
-            return
-        }
-
-        if (commandLineOptions.disableTelemetry != null || commandLineOptions.permanentlyEnableTelemetry || commandLineOptions.permanentlyDisableTelemetry) {
-            return
-        }
-
-        if (commandLineOptions.requestedOutputStyle == OutputStyle.Quiet) {
+        if (!shouldPromptForConsent) {
             return
         }
 
@@ -62,6 +54,19 @@ class TelemetryConsentPrompt(
             console.println()
         }
     }
+
+    private val shouldPromptForConsent: Boolean
+        get() {
+            if (configurationStore.currentConfiguration.state != ConsentState.None) return false
+            if (commandLineOptions.disableTelemetry != null) return false
+            if (commandLineOptions.permanentlyEnableTelemetry) return false
+            if (commandLineOptions.permanentlyDisableTelemetry) return false
+            if (commandLineOptions.generateShellTabCompletionScript != null) return false
+            if (commandLineOptions.generateShellTabCompletionTaskInformation != null) return false
+            if (commandLineOptions.requestedOutputStyle == OutputStyle.Quiet) return false
+
+            return true
+        }
 
     private fun promptForResponse() {
         val consentState = when (prompt.askYesNoQuestion("Is it OK for Batect to collect this information?")) {

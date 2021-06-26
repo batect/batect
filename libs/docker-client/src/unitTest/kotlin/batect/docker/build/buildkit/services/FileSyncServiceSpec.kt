@@ -186,7 +186,7 @@ object FileSyncServiceSpec : Spek({
                             messageSink.packetsSent,
                             equalTo(
                                 listOf(
-                                    Packet(Packet.PacketType.PACKET_STAT, dockerfileStat, ID = 0),
+                                    Packet(Packet.PacketType.PACKET_STAT, dockerfileStat),
                                     statFinishedPacket,
                                     Packet(Packet.PacketType.PACKET_DATA, ID = 0, data_ = dockerfileContent.encodeUtf8()),
                                     Packet(Packet.PacketType.PACKET_DATA, ID = 0),
@@ -219,7 +219,7 @@ object FileSyncServiceSpec : Spek({
                             messageSink.packetsSent,
                             equalTo(
                                 listOf(
-                                    Packet(Packet.PacketType.PACKET_STAT, dockerfileStat, ID = 0),
+                                    Packet(Packet.PacketType.PACKET_STAT, dockerfileStat),
                                     statFinishedPacket,
                                     Packet(Packet.PacketType.PACKET_ERR, data_ = "Unknown file ID 9000".encodeUtf8()),
                                     Packet(Packet.PacketType.PACKET_FIN)
@@ -271,7 +271,7 @@ object FileSyncServiceSpec : Spek({
                         messageSink.packetsSent,
                         equalTo(
                             listOf(
-                                Packet(Packet.PacketType.PACKET_STAT, dockerfileStat, ID = 0),
+                                Packet(Packet.PacketType.PACKET_STAT, dockerfileStat),
                                 statFinishedPacket,
                                 Packet(Packet.PacketType.PACKET_DATA, ID = 0, data_ = expectedFirst32KBChunk.encodeUtf8()),
                                 Packet(Packet.PacketType.PACKET_DATA, ID = 0, data_ = expectedSecond32KBChunk.encodeUtf8()),

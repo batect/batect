@@ -122,10 +122,7 @@ class FileSyncService(
 
             if (patterns.isEmpty() || patterns.contains(relativeChildPath)) {
                 val stat = root.mapper(statFactory.createStat(childPath, relativeChildPath))
-
-                // TODO: only add paths here if they're requestable
                 paths.add(childPath)
-
                 response.write(Packet(Packet.PacketType.PACKET_STAT, stat))
             }
 

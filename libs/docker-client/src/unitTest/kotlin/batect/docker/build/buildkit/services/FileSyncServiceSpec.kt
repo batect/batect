@@ -550,9 +550,10 @@ object FileSyncServiceSpec : Spek({
                 }
             }
 
+            // Adjust file mode to match Golang behaviour: no bits set if normal file, otherwise use different bits to signal type (os/stat_darwin.go:12)
             // Need to send parent directory if children included (even if directory was otherwise not included)
             // Need to cover here:
-            // - directories - should not be allocated an ID
+            // - directories - should be allocated an ID but should not be requestable
             // - symlinks, pipes etc.
 
             // Check behaviour when ADD instruction references a particular file, but the file doesn't exist

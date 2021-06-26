@@ -131,11 +131,16 @@ object ImageClientIntegrationTest : Spek({
                         val output by runBeforeGroup { executeCommandInContainer(image, "cat", "/test.txt") }
 
                         it("successfully downloads and stores the file") {
-                            assertThat(output, equalTo("""
-                                |User-agent: *
-                                |Disallow: /deny
-                                |
-                            """.trimMargin()))
+                            assertThat(
+                                output,
+                                equalTo(
+                                    """
+                                        |User-agent: *
+                                        |Disallow: /deny
+                                        |
+                                    """.trimMargin()
+                                )
+                            )
                         }
                     }
 
@@ -144,13 +149,18 @@ object ImageClientIntegrationTest : Spek({
                         val output by runBeforeGroup { executeCommandInContainer(image, "tree", "-RaF", "--noreport", "/app") }
 
                         it("correctly includes only the permitted files in the build context") {
-                            assertThat(output, equalTo("""
-                                |/app
-                                |├── files/
-                                |│   └── other_include.txt
-                                |└── include.txt
-                                |
-                            """.trimMargin()))
+                            assertThat(
+                                output,
+                                equalTo(
+                                    """
+                                        |/app
+                                        |├── files/
+                                        |│   └── other_include.txt
+                                        |└── include.txt
+                                        |
+                                    """.trimMargin()
+                                )
+                            )
                         }
                     }
 
@@ -159,14 +169,19 @@ object ImageClientIntegrationTest : Spek({
                         val output by runBeforeGroup { executeCommandInContainer(image, "tree", "-RaF", "--noreport", "/app") }
 
                         it("correctly includes only the permitted files in the build context") {
-                            assertThat(output, equalTo("""
-                                |/app
-                                |├── dockerfiles/
-                                |├── files/
-                                |│   └── other_include.txt
-                                |└── include.txt
-                                |
-                            """.trimMargin()))
+                            assertThat(
+                                output,
+                                equalTo(
+                                    """
+                                        |/app
+                                        |├── dockerfiles/
+                                        |├── files/
+                                        |│   └── other_include.txt
+                                        |└── include.txt
+                                        |
+                                    """.trimMargin()
+                                )
+                            )
                         }
                     }
 
@@ -175,12 +190,17 @@ object ImageClientIntegrationTest : Spek({
                         val output by runBeforeGroup { executeCommandInContainer(image, "ls", "-lA", "/app") }
 
                         it("correctly copies the contents of the linked file into the resulting image") {
-                            assertThat(output, equalTo("""
-                                |total 8
-                                |-rw-r--r--    1 root     root            26 Jan 19  2020 link-to-original.txt
-                                |-rw-r--r--    1 root     root            26 Jan 19  2020 original.txt
-                                |
-                            """.trimMargin()))
+                            assertThat(
+                                output,
+                                equalTo(
+                                    """
+                                        |total 8
+                                        |-rw-r--r--    1 root     root            26 Jan 19  2020 link-to-original.txt
+                                        |-rw-r--r--    1 root     root            26 Jan 19  2020 original.txt
+                                        |
+                                    """.trimMargin()
+                                )
+                            )
                         }
                     }
                 }

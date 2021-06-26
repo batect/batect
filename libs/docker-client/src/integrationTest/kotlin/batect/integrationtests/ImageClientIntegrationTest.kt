@@ -17,6 +17,7 @@
 package batect.integrationtests
 
 import batect.docker.DockerImage
+import batect.docker.ImageBuildFailedException
 import batect.docker.api.BuilderVersion
 import batect.os.DefaultPathResolutionContext
 import batect.os.ProcessOutput
@@ -53,10 +54,10 @@ object ImageClientIntegrationTest : Spek({
             }
         }
 
-        describe("building an image with BuildKit", skip = if (runBuildKitTests) Skip.No else Skip.Yes("not supported on this version of Docker")) {
+        describe("building a basic image with BuildKit", skip = if (runBuildKitTests) Skip.No else Skip.Yes("not supported on this version of Docker")) {
+            val cacheBustingId by createForGroup { UUID.randomUUID().toString() }
             val imageDirectory = testImagesDirectory.resolve("basic-image")
             val output by createForGroup { ByteArrayOutputStream() }
-            val cacheBustingId by createForGroup { UUID.randomUUID().toString() }
 
             runBeforeGroup {
                 client.images.build(
@@ -64,7 +65,7 @@ object ImageClientIntegrationTest : Spek({
                     mapOf("CACHE_BUSTING_ID" to cacheBustingId),
                     "Dockerfile",
                     DefaultPathResolutionContext(imageDirectory),
-                    setOf("batect-integration-tests-image-buildkit"),
+                    setOf("batect-integration-tests-basic-image-buildkit"),
                     false,
                     output.sink(),
                     BuilderVersion.BuildKit,
@@ -95,6 +96,96 @@ object ImageClientIntegrationTest : Spek({
                 assertThat(lines, hasElement("#8 CACHED") or hasElement("#8 DONE"))
             }
         }
+
+        describe("building images") {
+            mapOf(
+                "the legacy builder" to BuilderVersion.Legacy,
+                "BuildKit" to BuilderVersion.BuildKit
+            ).forEach { (description, builderVersion) ->
+                describe("using $description") {
+                    val cacheBustingId by createForGroup { UUID.randomUUID().toString() }
+
+                    fun buildImage(path: String, dockerfileName: String = "Dockerfile"): DockerImage {
+                        val imageDirectory = testImagesDirectory.resolve(path)
+                        val output = ByteArrayOutputStream()
+
+                        try {
+                            return client.images.build(
+                                imageDirectory,
+                                mapOf("CACHE_BUSTING_ID" to cacheBustingId),
+                                dockerfileName,
+                                DefaultPathResolutionContext(imageDirectory),
+                                setOf("batect-integration-tests-$path-${builderVersion.toString().lowercase()}"),
+                                false,
+                                output.sink(),
+                                builderVersion,
+                                CancellationContext()
+                            ) {}
+                        } catch (e: ImageBuildFailedException) {
+                            throw ImageBuildFailedException("Image build failed with an exception. Output was:\n$output", e)
+                        }
+                    }
+
+                    describe("building an image with an add operation from a URL") {
+                        val image by runBeforeGroup { buildImage("dockerfile-with-add-from-url") }
+                        val output by runBeforeGroup { executeCommandInContainer(image, "cat", "/test.txt") }
+
+                        it("successfully downloads and stores the file") {
+                            assertThat(output, equalTo("""
+                                |User-agent: *
+                                |Disallow: /deny
+                                |
+                            """.trimMargin()))
+                        }
+                    }
+
+                    describe("building an image with a .dockerignore file") {
+                        val image by runBeforeGroup { buildImage("dockerignore") }
+                        val output by runBeforeGroup { executeCommandInContainer(image, "tree", "-RaF", "--noreport", "/app") }
+
+                        it("correctly includes only the permitted files in the build context") {
+                            assertThat(output, equalTo("""
+                                |/app
+                                |├── files/
+                                |│   └── other_include.txt
+                                |└── include.txt
+                                |
+                            """.trimMargin()))
+                        }
+                    }
+
+                    describe("building an image with a non-default Dockerfile name and a .dockerignore file") {
+                        val image by runBeforeGroup { buildImage("dockerignore-custom-dockerfile", "dockerfiles/my-special-dockerfile") }
+                        val output by runBeforeGroup { executeCommandInContainer(image, "tree", "-RaF", "--noreport", "/app") }
+
+                        it("correctly includes only the permitted files in the build context") {
+                            assertThat(output, equalTo("""
+                                |/app
+                                |├── dockerfiles/
+                                |├── files/
+                                |│   └── other_include.txt
+                                |└── include.txt
+                                |
+                            """.trimMargin()))
+                        }
+                    }
+
+                    describe("building an image with a symlink in the build context") {
+                        val image by runBeforeGroup { buildImage("symlink-in-build-context") }
+                        val output by runBeforeGroup { executeCommandInContainer(image, "ls", "-lA", "/app") }
+
+                        it("correctly copies the contents of the linked file into the resulting image") {
+                            assertThat(output, equalTo("""
+                                |total 8
+                                |-rw-r--r--    1 root     root            26 Jan 19  2020 link-to-original.txt
+                                |-rw-r--r--    1 root     root            26 Jan 19  2020 original.txt
+                                |
+                            """.trimMargin()))
+                        }
+                    }
+                }
+            }
+        }
     }
 })
 
@@ -103,4 +194,13 @@ private fun removeImage(imageName: String) {
     val result = processRunner.runAndCaptureOutput(listOf("docker", "rmi", "-f", imageName))
 
     assertThat(result, has(ProcessOutput::output, containsSubstring("No such image: $imageName")) or has(ProcessOutput::exitCode, equalTo(0)))
+}
+
+private fun executeCommandInContainer(image: DockerImage, vararg command: String): String {
+    val processRunner = ProcessRunner(mock())
+    val result = processRunner.runAndCaptureOutput(listOf("docker", "run", "--rm", image.id) + command)
+
+    assertThat(result, has(ProcessOutput::exitCode, equalTo(0)))
+
+    return result.output
 }

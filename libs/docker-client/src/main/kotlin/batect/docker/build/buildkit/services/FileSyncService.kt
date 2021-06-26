@@ -36,19 +36,17 @@ import moby.filesync.v1.FileSyncBlockingServer
 import okhttp3.Headers
 import okio.ByteString.Companion.encodeUtf8
 import okio.ByteString.Companion.toByteString
-import java.io.IOException
-import java.nio.file.FileVisitResult
-import java.nio.file.FileVisitor
 import java.nio.file.Files
+import java.nio.file.LinkOption
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
-import java.nio.file.attribute.BasicFileAttributes
+import kotlin.streams.toList
 
 // Original notes from BuildKit docs and code:
 //
 // Headers:
 // - dir-name: "context" (context directory) or "dockerfile" (dockerfile directory)
-// - exclude-patterns: raw exclude patterns
+// - exclude-patterns: raw exclude patterns (.dockerignore syntax)
 // - include-patterns: raw include patterns, no wildcards allowed
 // - override-excludes: can be ignored
 // - followpaths: patterns to paths (possibly including symlinks and wildcards) that should be treated as additional include patterns - Golang implementation resolves these ahead of time to include patterns
@@ -112,32 +110,29 @@ class FileSyncService(
 
     private fun sendDirectoryContents(root: FileSyncRoot, response: SynchronisedMessageSink<Packet>) {
         val patterns = headers.values("followpaths").toSet()
+        walkDirectory(root, root.rootDirectory, patterns, response)
+        sendDirectoryContentsEnumerationCompleted(response)
+    }
 
-        val visitor = object : FileVisitor<Path> {
-            override fun visitFile(path: Path, attrs: BasicFileAttributes): FileVisitResult {
-                val relativePath = root.rootDirectory.relativize(path).toString()
+    private fun walkDirectory(root: FileSyncRoot, parentPath: Path, patterns: Set<String>, response: SynchronisedMessageSink<Packet>) {
+        val contents = Files.list(parentPath).use { it.toList().sorted() }
 
-                if (!patterns.contains(relativePath)) {
-                    return FileVisitResult.CONTINUE
-                }
+        contents.forEach { childPath ->
+            val relativeChildPath = root.rootDirectory.relativize(childPath).toString()
 
-                val stat = statFactory.createStat(path, relativePath)
+            if (patterns.isEmpty() || patterns.contains(relativeChildPath)) {
+                val stat = root.mapper(statFactory.createStat(childPath, relativeChildPath))
 
                 // TODO: only add paths here if they're requestable
-                paths.add(path)
+                paths.add(childPath)
 
                 response.write(Packet(Packet.PacketType.PACKET_STAT, stat))
-
-                return FileVisitResult.CONTINUE
             }
 
-            override fun preVisitDirectory(dir: Path?, attrs: BasicFileAttributes?): FileVisitResult = FileVisitResult.CONTINUE
-            override fun visitFileFailed(file: Path?, exc: IOException?): FileVisitResult = throw RuntimeException("Could not visit file $file.", exc)
-            override fun postVisitDirectory(dir: Path?, exc: IOException?): FileVisitResult = FileVisitResult.CONTINUE
+            if (Files.isDirectory(childPath, LinkOption.NOFOLLOW_LINKS)) {
+                walkDirectory(root, childPath, patterns, response)
+            }
         }
-
-        Files.walkFileTree(root.rootDirectory, visitor)
-        sendDirectoryContentsEnumerationCompleted(response)
     }
 
     private fun sendDirectoryContentsEnumerationCompleted(response: SynchronisedMessageSink<Packet>) {

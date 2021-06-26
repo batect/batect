@@ -169,7 +169,7 @@ object FileSyncServiceSpec : Spek({
                         messageSink.addCallback(
                             "send request for Dockerfile contents when Dockerfile PACKET_STAT sent to server",
                             { it.type == Packet.PacketType.PACKET_STAT && it.stat?.path == "Dockerfile" },
-                            { messageSource.enqueue(Packet(Packet.PacketType.PACKET_REQ, ID = it.ID)) }
+                            { messageSource.enqueue(Packet(Packet.PacketType.PACKET_REQ, ID = 0)) }
                         )
 
                         messageSink.addCallback(
@@ -254,7 +254,7 @@ object FileSyncServiceSpec : Spek({
                     messageSink.addCallback(
                         "send request for Dockerfile contents when Dockerfile PACKET_STAT sent to server",
                         { it.type == Packet.PacketType.PACKET_STAT && it.stat?.path == "Dockerfile" },
-                        { messageSource.enqueue(Packet(Packet.PacketType.PACKET_REQ, ID = it.ID)) }
+                        { messageSource.enqueue(Packet(Packet.PacketType.PACKET_REQ, ID = 0)) }
                     )
 
                     messageSink.addCallback(
@@ -281,6 +281,118 @@ object FileSyncServiceSpec : Spek({
                             )
                         )
                     )
+                }
+            }
+
+            given("the Dockerfile directory contains a Dockerfile and a .dockerignore file") {
+                val dockerfileContent = "This is the Dockerfile!"
+                val dockerignoreContent = "This is the .dockerignore!"
+                val lastModifiedTime = 1620798740644000000L
+                val dockerfileStat = Stat("Dockerfile", 0x1ED, 123, 456, dockerfileContent.utf8Size(), lastModifiedTime)
+                val dockerignoreStat = Stat("Dockerfile.dockerignore", 0x1ED, 123, 456, dockerignoreContent.utf8Size(), lastModifiedTime)
+
+                beforeEachTest {
+                    val dockerfilePath = dockerfileDirectory.resolve("Dockerfile")
+                    Files.write(dockerfilePath, dockerfileContent.toByteArray(Charsets.UTF_8))
+                    whenever(statFactory.createStat(dockerfilePath, "Dockerfile")).doReturn(dockerfileStat)
+
+                    val dockerignorePath = dockerfileDirectory.resolve("Dockerfile.dockerignore")
+                    Files.write(dockerignorePath, dockerignoreContent.toByteArray(Charsets.UTF_8))
+                    whenever(statFactory.createStat(dockerignorePath, "Dockerfile.dockerignore")).doReturn(dockerignoreStat)
+                }
+
+                given("the server does not request the contents of any files") {
+                    beforeEachTest {
+                        messageSink.addCallback(
+                            "send PACKET_FIN when final empty PACKET_STAT sent to server",
+                            { it == statFinishedPacket },
+                            { messageSource.enqueueFinalFinPacket() }
+                        )
+                    }
+
+                    runForEachTest { service.DiffCopy(messageSource, messageSink) }
+
+                    it("sends a PACKET_STAT packet for the Dockerfile, a PACKET_STAT packet for the .dockerignore file, an empty PACKET_STAT packet to indicate the enumeration is complete, and then responds with a PACKET_FIN packet when the server sends a PACKET_FIN packet") {
+                        assertThat(
+                            messageSink.packetsSent,
+                            equalTo(
+                                listOf(
+                                    Packet(Packet.PacketType.PACKET_STAT, dockerfileStat),
+                                    Packet(Packet.PacketType.PACKET_STAT, dockerignoreStat),
+                                    statFinishedPacket,
+                                    Packet(Packet.PacketType.PACKET_FIN)
+                                )
+                            )
+                        )
+                    }
+                }
+
+                given("the server requests the contents of the Dockerfile") {
+                    beforeEachTest {
+                        messageSink.addCallback(
+                            "send request for Dockerfile contents when Dockerfile PACKET_STAT sent to server",
+                            { it.type == Packet.PacketType.PACKET_STAT && it.stat?.path == "Dockerfile" },
+                            { messageSource.enqueue(Packet(Packet.PacketType.PACKET_REQ, ID = 0)) }
+                        )
+
+                        messageSink.addCallback(
+                            "send PACKET_FIN when final empty PACKET_DATA sent to server",
+                            { it.type == Packet.PacketType.PACKET_DATA && it.data_.size == 0 },
+                            { messageSource.enqueueFinalFinPacket() }
+                        )
+                    }
+
+                    runForEachTest { service.DiffCopy(messageSource, messageSink) }
+
+                    it("sends the details of the Dockerfile and .dockerignore files, then responds with the contents of the Dockerfile when requested, and then responds with a PACKET_FIN packet when the server sends a PACKET_FIN packet") {
+                        assertThat(
+                            messageSink.packetsSent,
+                            equalTo(
+                                listOf(
+                                    Packet(Packet.PacketType.PACKET_STAT, dockerfileStat),
+                                    Packet(Packet.PacketType.PACKET_STAT, dockerignoreStat),
+                                    statFinishedPacket,
+                                    Packet(Packet.PacketType.PACKET_DATA, ID = 0, data_ = dockerfileContent.encodeUtf8()),
+                                    Packet(Packet.PacketType.PACKET_DATA, ID = 0),
+                                    Packet(Packet.PacketType.PACKET_FIN)
+                                )
+                            )
+                        )
+                    }
+                }
+
+                given("the server requests the contents of the .dockerignore file") {
+                    beforeEachTest {
+                        messageSink.addCallback(
+                            "send request for .dockerignore contents when PACKET_STAT sent to server",
+                            { it.type == Packet.PacketType.PACKET_STAT && it.stat?.path == "Dockerfile.dockerignore" },
+                            { messageSource.enqueue(Packet(Packet.PacketType.PACKET_REQ, ID = 1)) }
+                        )
+
+                        messageSink.addCallback(
+                            "send PACKET_FIN when final empty PACKET_DATA sent to server",
+                            { it.type == Packet.PacketType.PACKET_DATA && it.data_.size == 0 },
+                            { messageSource.enqueueFinalFinPacket() }
+                        )
+                    }
+
+                    runForEachTest { service.DiffCopy(messageSource, messageSink) }
+
+                    it("sends the details of the Dockerfile and .dockerignore files, then responds with the contents of the .dockerignore when requested, and then responds with a PACKET_FIN packet when the server sends a PACKET_FIN packet") {
+                        assertThat(
+                            messageSink.packetsSent,
+                            equalTo(
+                                listOf(
+                                    Packet(Packet.PacketType.PACKET_STAT, dockerfileStat),
+                                    Packet(Packet.PacketType.PACKET_STAT, dockerignoreStat),
+                                    statFinishedPacket,
+                                    Packet(Packet.PacketType.PACKET_DATA, ID = 1, data_ = dockerignoreContent.encodeUtf8()),
+                                    Packet(Packet.PacketType.PACKET_DATA, ID = 1),
+                                    Packet(Packet.PacketType.PACKET_FIN)
+                                )
+                            )
+                        )
+                    }
                 }
             }
 
@@ -324,15 +436,129 @@ object FileSyncServiceSpec : Spek({
         }
 
         given("the build context directory is requested") {
+            val headers = Headers.Builder()
+                .add("dir-name", "context")
+                .build()
 
+            val service by createForEachTest { FileSyncService(contextDirectory, dockerfileDirectory, statFactory, headers, logger) }
+
+            given("the directory contains a single file") {
+                val lastModifiedTime = 1620798740644000000L
+                val testFileStat = Stat("test-file", 0x1ED, 123, 456, 0, lastModifiedTime)
+                val testFileStatWithResetUIDAndGID = Stat("test-file", 0x1ED, 0, 0, 0, lastModifiedTime)
+
+                beforeEachTest {
+                    val testFilePath = contextDirectory.resolve("test-file")
+                    Files.createFile(testFilePath)
+                    whenever(statFactory.createStat(testFilePath, "test-file")).doReturn(testFileStat)
+                }
+
+                beforeEachTest {
+                    messageSink.addCallback(
+                        "send PACKET_FIN when final empty PACKET_STAT sent to server",
+                        { it == statFinishedPacket },
+                        { messageSource.enqueueFinalFinPacket() }
+                    )
+                }
+
+                runForEachTest { service.DiffCopy(messageSource, messageSink) }
+
+                it("sends the details of the file with the UID and GID set to 0") {
+                    assertThat(
+                        messageSink.packetsSent,
+                        equalTo(
+                            listOf(
+                                Packet(Packet.PacketType.PACKET_STAT, testFileStatWithResetUIDAndGID),
+                                statFinishedPacket,
+                                Packet(Packet.PacketType.PACKET_FIN)
+                            )
+                        )
+                    )
+                }
+            }
+
+            given("the directory contains a single directory") {
+                val lastModifiedTime = 1620798740644000000L
+                val testDirectoryStat = Stat("test-directory", 0x1ED, 123, 456, 0, lastModifiedTime)
+                val testDirectoryStatWithResetUIDAndGID = Stat("test-directory", 0x1ED, 0, 0, 0, lastModifiedTime)
+
+                beforeEachTest {
+                    val testFilePath = contextDirectory.resolve("test-directory")
+                    Files.createFile(testFilePath)
+                    whenever(statFactory.createStat(testFilePath, "test-directory")).doReturn(testDirectoryStat)
+                }
+
+                beforeEachTest {
+                    messageSink.addCallback(
+                        "send PACKET_FIN when final empty PACKET_STAT sent to server",
+                        { it == statFinishedPacket },
+                        { messageSource.enqueueFinalFinPacket() }
+                    )
+                }
+
+                runForEachTest { service.DiffCopy(messageSource, messageSink) }
+
+                it("sends the details of the directory with the UID and GID set to 0") {
+                    assertThat(
+                        messageSink.packetsSent,
+                        equalTo(
+                            listOf(
+                                Packet(Packet.PacketType.PACKET_STAT, testDirectoryStatWithResetUIDAndGID),
+                                statFinishedPacket,
+                                Packet(Packet.PacketType.PACKET_FIN)
+                            )
+                        )
+                    )
+                }
+            }
+
+            given("the directory contains multiple files") {
+                val lastModifiedTime = 1620798740644000000L
+
+                beforeEachTest {
+                    listOf("file-C", "file-A", "file-D", "file-B").forEach { name ->
+                        val path = contextDirectory.resolve(name)
+                        Files.createFile(path)
+                        whenever(statFactory.createStat(path, name)).doReturn(Stat(name, 0x1ED, 123, 456, 0, lastModifiedTime))
+                    }
+                }
+
+                beforeEachTest {
+                    messageSink.addCallback(
+                        "send PACKET_FIN when final empty PACKET_STAT sent to server",
+                        { it == statFinishedPacket },
+                        { messageSource.enqueueFinalFinPacket() }
+                    )
+                }
+
+                runForEachTest { service.DiffCopy(messageSource, messageSink) }
+
+                it("sends the details of the files in alphabetical order with the UID and GID set to 0") {
+                    assertThat(
+                        messageSink.packetsSent,
+                        equalTo(
+                            listOf(
+                                Packet(Packet.PacketType.PACKET_STAT, Stat("file-A", 0x1ED, 0, 0, 0, lastModifiedTime)),
+                                Packet(Packet.PacketType.PACKET_STAT, Stat("file-B", 0x1ED, 0, 0, 0, lastModifiedTime)),
+                                Packet(Packet.PacketType.PACKET_STAT, Stat("file-C", 0x1ED, 0, 0, 0, lastModifiedTime)),
+                                Packet(Packet.PacketType.PACKET_STAT, Stat("file-D", 0x1ED, 0, 0, 0, lastModifiedTime)),
+                                statFinishedPacket,
+                                Packet(Packet.PacketType.PACKET_FIN)
+                            )
+                        )
+                    )
+                }
+            }
+
+            // Need to send parent directory if children included (even if directory was otherwise not included)
             // Need to cover here:
             // - directories - should not be allocated an ID
             // - symlinks, pipes etc.
-            // - making sure all files are sent with UID and GID set to 0
 
             // Check behaviour when ADD instruction references a particular file, but the file doesn't exist
 
             // ADD / COPY with '.' as path - will receive no followpaths headers, need to send all directory contents
+            // Handle combinations of followpaths, exclude-patterns, include-patterns
         }
     }
 })

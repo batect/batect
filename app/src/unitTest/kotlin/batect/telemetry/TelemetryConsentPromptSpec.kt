@@ -17,6 +17,7 @@
 package batect.telemetry
 
 import batect.cli.CommandLineOptions
+import batect.cli.commands.completion.Shell
 import batect.os.ConsoleInfo
 import batect.testutils.createForEachTest
 import batect.testutils.given
@@ -169,6 +170,22 @@ object TelemetryConsentPromptSpec : Spek({
                     given("the user is permanently disabling telemetry via the command line") {
                         beforeEachTest {
                             whenever(commandLineOptions.permanentlyDisableTelemetry).doReturn(true)
+                        }
+
+                        itDoesNotPromptForConsent()
+                    }
+
+                    given("the user is retrieving a shell tab completion script") {
+                        beforeEachTest {
+                            whenever(commandLineOptions.generateShellTabCompletionScript).doReturn(Shell.Fish)
+                        }
+
+                        itDoesNotPromptForConsent()
+                    }
+
+                    given("the user is retrieving task information for shell tab completion") {
+                        beforeEachTest {
+                            whenever(commandLineOptions.generateShellTabCompletionTaskInformation).doReturn(Shell.Fish)
                         }
 
                         itDoesNotPromptForConsent()

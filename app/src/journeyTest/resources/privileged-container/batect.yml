@@ -2,7 +2,7 @@ project_name: privileged-container
 
 containers:
   the-container:
-    image: alpine:3.13.5
+    image: alpine:3.14.0
     privileged: true
     volumes:
       - local: .

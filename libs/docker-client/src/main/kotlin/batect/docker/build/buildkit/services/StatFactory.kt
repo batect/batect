@@ -85,6 +85,8 @@ private enum class ModeBit(val golangValue: UInt, val posixValue: Int) {
     Sticky(0x10_0000u, FileStat.S_ISVTX),
     Regular(0u, FileStat.S_IFREG);
 
+    fun isSet(posixMode: Int): Boolean = posixMode and posixValue != 0
+
     companion object {
         val permissionMask: Int = "777".toInt(8)
 
@@ -102,6 +104,22 @@ private enum class ModeBit(val golangValue: UInt, val posixValue: Int) {
     }
 }
 
+private fun convertPosixModeToGolangMode(mode: Int, path: Path): Int {
+    val permissionBits = mode and ModeBit.permissionMask
+    val typeBit = mode and FileStat.S_IFMT
+    val golangTypeBit = ModeBit.typeFromPosixValue[typeBit]?.golangValue
+
+    if (golangTypeBit == null) {
+        throw IllegalArgumentException("Unknown type bit in mode 0x${mode.toString(16)} for path $path")
+    }
+
+    val setuidBit = if (ModeBit.Setuid.isSet(mode)) ModeBit.Setuid.golangValue else 0u
+    val setgidBit = if (ModeBit.Setgid.isSet(mode)) ModeBit.Setgid.golangValue else 0u
+    val stickyBit = if (ModeBit.Sticky.isSet(mode)) ModeBit.Sticky.golangValue else 0u
+
+    return permissionBits or (golangTypeBit or setuidBit or setgidBit or stickyBit).toInt()
+}
+
 abstract class PosixStatFactory(private val posix: POSIX) : StatFactory {
     override fun createStat(path: Path, relativePath: String): Stat {
         val details = posix.lstat(path.toString())
@@ -115,7 +133,7 @@ abstract class PosixStatFactory(private val posix: POSIX) : StatFactory {
 
         return Stat(
             relativePath,
-            convertToGolangMode(details, path),
+            convertPosixModeToGolangMode(details.mode(), path),
             details.uid(),
             details.gid(),
             details.st_size(),
@@ -125,22 +143,6 @@ abstract class PosixStatFactory(private val posix: POSIX) : StatFactory {
             0,
             extendedAttributes
         )
-    }
-
-    private fun convertToGolangMode(stat: FileStat, path: Path): Int {
-        val permissionBits = stat.mode() and ModeBit.permissionMask
-        val typeBit = stat.mode() and FileStat.S_IFMT
-        val golangTypeBit = ModeBit.typeFromPosixValue[typeBit]?.golangValue
-
-        if (golangTypeBit == null) {
-            throw IllegalArgumentException("Unknown type bit in mode 0x${stat.mode().toString(16)} for path $path")
-        }
-
-        val setuidBit = if (stat.isSetuid) ModeBit.Setuid.golangValue else 0u
-        val setgidBit = if (stat.isSetgid) ModeBit.Setgid.golangValue else 0u
-        val stickyBit = if (stat.isSticky) ModeBit.Sticky.golangValue else 0u
-
-        return permissionBits or (golangTypeBit or setuidBit or setgidBit or stickyBit).toInt()
     }
 
     protected abstract fun getExtendedAttributes(path: Path): Map<String, ByteString>
@@ -281,7 +283,7 @@ class WindowsStatFactory(private val posix: POSIX) : StatFactory {
 
         return Stat(
             relativePath,
-            newMode,
+            convertPosixModeToGolangMode(newMode, path),
             0,
             0,
             details.st_size(),

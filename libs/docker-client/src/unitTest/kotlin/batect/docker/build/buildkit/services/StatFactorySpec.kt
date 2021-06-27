@@ -62,8 +62,8 @@ object StatFactorySpec : Spek({
                         assertThat(stat.path, equalTo("the-test-file"))
                     }
 
-                    it("returns the mode of the file, with the permission bits set to rwxr-xr-x") {
-                        assertThat(stat.mode, equalTo(octal("100755")))
+                    it("returns the Golang platform-independent mode of the file, with the permission bits set to rwxr-xr-x") {
+                        assertThat(stat.mode, equalTo(octal("755")))
                     }
 
                     it("returns root as the owner of the file") {
@@ -121,8 +121,8 @@ object StatFactorySpec : Spek({
                         assertThat(stat.path, equalTo("the-test-link"))
                     }
 
-                    it("returns the mode of the symlink, with the permission bits set to rwxr-xr-x") {
-                        assertThat(stat.mode, equalTo(octal("120755")))
+                    it("returns the Golang platform-independent mode of the symlink, with the permission bits set to rwxr-xr-x") {
+                        assertThat(stat.mode, equalTo(octal("1000000755")))
                     }
 
                     it("returns root as the owner of the file") {
@@ -172,8 +172,8 @@ object StatFactorySpec : Spek({
                         assertThat(stat.path, equalTo("the-test-directory"))
                     }
 
-                    it("returns the mode of the directory, with the permission bits set to rwxr-xr-x") {
-                        assertThat(stat.mode, equalTo(octal("40755")))
+                    it("returns the Golang platform-independent mode of the directory, with the permission bits set to rwxr-xr-x") {
+                        assertThat(stat.mode, equalTo(octal("20000000755")))
                     }
 
                     it("returns root as the owner of the file") {
@@ -229,8 +229,8 @@ object StatFactorySpec : Spek({
                         assertThat(stat.path, equalTo("the-test-directory"))
                     }
 
-                    it("returns the mode of the symlink, with the permission bits set to rwxr-xr-x") {
-                        assertThat(stat.mode, equalTo(octal("120755")))
+                    it("returns the Golang platform-independent mode of the symlink, with the permission bits set to rwxr-xr-x") {
+                        assertThat(stat.mode, equalTo(octal("1000000755")))
                     }
 
                     it("returns root as the owner of the file") {
@@ -296,8 +296,8 @@ object StatFactorySpec : Spek({
                         assertThat(stat.path, equalTo("the-test-file"))
                     }
 
-                    it("returns the mode of the file") {
-                        assertThat(stat.mode, equalTo(octal("100751")))
+                    it("returns the Golang platform-independent mode of the file") {
+                        assertThat(stat.mode, equalTo(octal("751")))
                     }
 
                     it("returns the owner of the file") {
@@ -373,10 +373,10 @@ object StatFactorySpec : Spek({
                         assertThat(stat.path, equalTo("the-test-link"))
                     }
 
-                    it("returns the mode of the symlink") {
+                    it("returns the Golang platform-independent mode of the symlink") {
                         val expectedMode = when (Platform.getNativePlatform().os) {
-                            Platform.OS.DARWIN -> octal("120755")
-                            Platform.OS.LINUX -> octal("120777") // Symlinks are always 0777 on Linux
+                            Platform.OS.DARWIN -> octal("1000000755")
+                            Platform.OS.LINUX -> octal("1000000777") // Symlinks are always 0777 on Linux
                             else -> throw UnsupportedOperationException()
                         }
 
@@ -443,8 +443,8 @@ object StatFactorySpec : Spek({
                         assertThat(stat.path, equalTo("the-test-directory"))
                     }
 
-                    it("returns the mode of the directory") {
-                        assertThat(stat.mode, equalTo(octal("40751")))
+                    it("returns the Golang platform-independent mode of the directory") {
+                        assertThat(stat.mode, equalTo(octal("20000000751")))
                     }
 
                     it("returns the owner of the directory") {
@@ -518,10 +518,10 @@ object StatFactorySpec : Spek({
                         assertThat(stat.path, equalTo("the-test-directory"))
                     }
 
-                    it("returns the mode of the symlink") {
+                    it("returns the Golang platform-independent mode of the symlink") {
                         val expectedMode = when (Platform.getNativePlatform().os) {
-                            Platform.OS.DARWIN -> octal("120755")
-                            Platform.OS.LINUX -> octal("120777") // Symlinks are always 0777 on Linux
+                            Platform.OS.DARWIN -> octal("1000000755")
+                            Platform.OS.LINUX -> octal("1000000777") // Symlinks are always 0777 on Linux
                             else -> throw UnsupportedOperationException()
                         }
 
@@ -573,7 +573,7 @@ object StatFactorySpec : Spek({
     }
 })
 
-private fun octal(value: String): Int = value.toInt(8)
+private fun octal(value: String): Int = value.toUInt(8).toInt()
 
 private fun runCommand(vararg args: String) {
     val process = ProcessBuilder(args.toList())

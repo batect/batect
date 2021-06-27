@@ -48,6 +48,9 @@ import java.util.concurrent.TimeUnit
 
 // This is based on stat.go, stat_unix.go and stat_windows.go from github.com/tonistiigi/fsutil, which is what BuildKit uses internally.
 //
+// Note that Golang translates file modes from their native values to platform-independent values, so we have to do the same.
+// See https://golang.org/pkg/io/fs/#FileMode.
+//
 // Some shortcuts have been taken, for example:
 // - character and block devices are not handled correctly (devmajor and devminor are never populated)
 // - there is no handling of hard links (and it looks like Docker doesn't handle these either)
@@ -70,6 +73,35 @@ interface StatFactory {
     }
 }
 
+private enum class ModeBit(val golangValue: UInt, val posixValue: Int) {
+    Directory(0x8000_0000u, FileStat.S_IFDIR),
+    Symlink(0x800_0000u, FileStat.S_IFLNK),
+    Device(0x400_0000u, FileStat.S_IFBLK),
+    NamedPipe(0x200_0000u, FileStat.S_IFIFO),
+    Socket(0x100_0000u, FileStat.S_IFSOCK),
+    Setuid(0x80_0000u, FileStat.S_ISUID),
+    Setgid(0x40_0000u, FileStat.S_ISGID),
+    CharDevice(Device.golangValue or 0x20_0000u, FileStat.S_IFCHR),
+    Sticky(0x10_0000u, FileStat.S_ISVTX),
+    Regular(0u, FileStat.S_IFREG);
+
+    companion object {
+        val permissionMask: Int = "777".toInt(8)
+
+        val types = setOf(
+            Directory,
+            Symlink,
+            Device,
+            NamedPipe,
+            Socket,
+            CharDevice,
+            Regular
+        )
+
+        val typeFromPosixValue: Map<Int, ModeBit> = types.associateBy { it.posixValue }
+    }
+}
+
 abstract class PosixStatFactory(private val posix: POSIX) : StatFactory {
     override fun createStat(path: Path, relativePath: String): Stat {
         val details = posix.lstat(path.toString())
@@ -83,7 +115,7 @@ abstract class PosixStatFactory(private val posix: POSIX) : StatFactory {
 
         return Stat(
             relativePath,
-            details.mode(),
+            convertToGolangMode(details, path),
             details.uid(),
             details.gid(),
             details.st_size(),
@@ -93,6 +125,22 @@ abstract class PosixStatFactory(private val posix: POSIX) : StatFactory {
             0,
             extendedAttributes
         )
+    }
+
+    private fun convertToGolangMode(stat: FileStat, path: Path): Int {
+        val permissionBits = stat.mode() and ModeBit.permissionMask
+        val typeBit = stat.mode() and FileStat.S_IFMT
+        val golangTypeBit = ModeBit.typeFromPosixValue[typeBit]?.golangValue
+
+        if (golangTypeBit == null) {
+            throw IllegalArgumentException("Unknown type bit in mode 0x${stat.mode().toString(16)} for path $path")
+        }
+
+        val setuidBit = if (stat.isSetuid) ModeBit.Setuid.golangValue else 0u
+        val setgidBit = if (stat.isSetgid) ModeBit.Setgid.golangValue else 0u
+        val stickyBit = if (stat.isSticky) ModeBit.Sticky.golangValue else 0u
+
+        return permissionBits or (golangTypeBit or setuidBit or setgidBit or stickyBit).toInt()
     }
 
     protected abstract fun getExtendedAttributes(path: Path): Map<String, ByteString>
@@ -228,8 +276,7 @@ class WindowsStatFactory(private val posix: POSIX) : StatFactory {
         // the JVM's method, which does provide that level of precision. Yuck.
         val modificationTime = Files.getLastModifiedTime(path).to(TimeUnit.NANOSECONDS)
 
-        val permissionMask: Int = "777".toInt(8)
-        val nonPermissionBits = if (pathIsSymlink) FileStat.S_IFLNK else details.mode() and permissionMask.inv()
+        val nonPermissionBits = if (pathIsSymlink) FileStat.S_IFLNK else details.mode() and ModeBit.permissionMask.inv()
         val newMode = nonPermissionBits or "755".toInt(8)
 
         return Stat(
@@ -279,7 +326,15 @@ class WindowsStatFactory(private val posix: POSIX) : StatFactory {
 
     // Based on https://stackoverflow.com/a/58644115/1668119
     private fun symlinkTarget(path: Path): String {
-        val handle = windowsMethods.CreateFileW(WindowsHelpers.toWPath(path.toString()), GENERIC_READ, FILE_SHARE_READ, null, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0)
+        val handle = windowsMethods.CreateFileW(
+            WindowsHelpers.toWPath(path.toString()),
+            GENERIC_READ,
+            FILE_SHARE_READ,
+            null,
+            OPEN_EXISTING,
+            FILE_FLAG_BACKUP_SEMANTICS,
+            0
+        )
 
         if (!handle.isValid) {
             throwWindowsNativeMethodFailed(WindowsMethods::CreateFileW, posix)

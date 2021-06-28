@@ -31,7 +31,7 @@ buildscript {
     }
 
     dependencies {
-        classpath("com.google.cloud:google-cloud-storage:1.116.0")
+        classpath("com.google.cloud:google-cloud-storage:1.117.0")
     }
 }
 

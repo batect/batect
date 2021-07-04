@@ -39,6 +39,7 @@ import okio.utf8Size
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.nio.file.Files
+import java.nio.file.Path
 import java.util.Collections
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.Semaphore
@@ -53,6 +54,7 @@ object FileSyncServiceSpec : Spek({
         val messageSource by createForEachTest { FakeMessageSource() }
         val messageSink by createForEachTest { FakeMessageSink() }
         val statFactory by createForEachTest { mock<StatFactory>() }
+        val scopeFactory by createForEachTest { FakeSyncScopeFactory() }
 
         beforeEachTest {
             Files.createDirectories(contextDirectory)
@@ -63,7 +65,7 @@ object FileSyncServiceSpec : Spek({
 
         given("no directory name is provided") {
             val headers = Headers.Builder().build()
-            val service by createForEachTest { FileSyncService(contextDirectory, dockerfileDirectory, statFactory, headers, logger) }
+            val service by createForEachTest { FileSyncService(contextDirectory, dockerfileDirectory, statFactory, headers, logger, scopeFactory::create) }
 
             it("throws an exception") {
                 assertThat({ service.DiffCopy(messageSource, messageSink) }, throws(withMessage("No directory name provided.")))
@@ -75,7 +77,7 @@ object FileSyncServiceSpec : Spek({
                 .add("dir-name", "")
                 .build()
 
-            val service by createForEachTest { FileSyncService(contextDirectory, dockerfileDirectory, statFactory, headers, logger) }
+            val service by createForEachTest { FileSyncService(contextDirectory, dockerfileDirectory, statFactory, headers, logger, scopeFactory::create) }
 
             it("throws an exception") {
                 assertThat({ service.DiffCopy(messageSource, messageSink) }, throws(withMessage("No directory name provided.")))
@@ -87,7 +89,7 @@ object FileSyncServiceSpec : Spek({
                 .add("dir-name", "blah")
                 .build()
 
-            val service by createForEachTest { FileSyncService(contextDirectory, dockerfileDirectory, statFactory, headers, logger) }
+            val service by createForEachTest { FileSyncService(contextDirectory, dockerfileDirectory, statFactory, headers, logger, scopeFactory::create) }
 
             it("throws an exception") {
                 assertThat({ service.DiffCopy(messageSource, messageSink) }, throws(withMessage("Unknown directory name 'blah'.")))
@@ -100,9 +102,13 @@ object FileSyncServiceSpec : Spek({
                 .add("followpaths", "Dockerfile")
                 .add("followpaths", "Dockerfile.dockerignore")
                 .add("followpaths", "dockerfile")
+                .add("include-patterns", "some-include-pattern")
+                .add("include-patterns", "some-other-include-pattern")
+                .add("exclude-patterns", "exclude-pattern-1")
+                .add("exclude-patterns", "exclude-pattern-2")
                 .build()
 
-            val service by createForEachTest { FileSyncService(contextDirectory, dockerfileDirectory, statFactory, headers, logger) }
+            val service by createForEachTest { FileSyncService(contextDirectory, dockerfileDirectory, statFactory, headers, logger, scopeFactory::create) }
 
             given("the Dockerfile directory is empty") {
                 beforeEachTest {
@@ -126,6 +132,15 @@ object FileSyncServiceSpec : Spek({
                         )
                     )
                 }
+
+                it("creates the file sync scope with the correct information") {
+                    scopeFactory.assertCreatedWith(
+                        dockerfileDirectory,
+                        listOf("exclude-pattern-1", "exclude-pattern-2"),
+                        setOf("some-include-pattern", "some-other-include-pattern"),
+                        setOf("Dockerfile", "Dockerfile.dockerignore", "dockerfile")
+                    )
+                }
             }
 
             given("the Dockerfile directory contains only a Dockerfile") {
@@ -136,6 +151,8 @@ object FileSyncServiceSpec : Spek({
                 beforeEachTest {
                     val dockerfilePath = dockerfileDirectory.resolve("Dockerfile")
                     Files.write(dockerfilePath, dockerfileContent.toByteArray(Charsets.UTF_8))
+
+                    scopeFactory.entriesToReturn = listOf(FileSyncScopeEntry(dockerfilePath, "Dockerfile"))
                     whenever(statFactory.createStat(dockerfilePath, "Dockerfile")).doReturn(dockerfileStat)
                 }
 
@@ -249,6 +266,8 @@ object FileSyncServiceSpec : Spek({
                 beforeEachTest {
                     val dockerfilePath = dockerfileDirectory.resolve("Dockerfile")
                     Files.write(dockerfilePath, dockerfileContent.toByteArray(Charsets.UTF_8))
+
+                    scopeFactory.entriesToReturn = listOf(FileSyncScopeEntry(dockerfilePath, "Dockerfile"))
                     whenever(statFactory.createStat(dockerfilePath, "Dockerfile")).doReturn(dockerfileStat)
 
                     messageSink.addCallback(
@@ -299,6 +318,11 @@ object FileSyncServiceSpec : Spek({
                     val dockerignorePath = dockerfileDirectory.resolve("Dockerfile.dockerignore")
                     Files.write(dockerignorePath, dockerignoreContent.toByteArray(Charsets.UTF_8))
                     whenever(statFactory.createStat(dockerignorePath, "Dockerfile.dockerignore")).doReturn(dockerignoreStat)
+
+                    scopeFactory.entriesToReturn = listOf(
+                        FileSyncScopeEntry(dockerfilePath, "Dockerfile"),
+                        FileSyncScopeEntry(dockerignorePath, "Dockerfile.dockerignore")
+                    )
                 }
 
                 given("the server does not request the contents of any files") {
@@ -395,52 +419,20 @@ object FileSyncServiceSpec : Spek({
                     }
                 }
             }
-
-            given("the Dockerfile directory contains a file other than those requested") {
-                val dockerfileContent = "This is the Dockerfile!"
-                val lastModifiedTime = 1620798740644000000L
-                val dockerfileStat = Stat("Dockerfile", 0x1ED, 123, 456, dockerfileContent.utf8Size(), lastModifiedTime)
-
-                beforeEachTest {
-                    val dockerfilePath = dockerfileDirectory.resolve("Dockerfile")
-                    Files.write(dockerfilePath, dockerfileContent.toByteArray(Charsets.UTF_8))
-                    whenever(statFactory.createStat(dockerfilePath, "Dockerfile")).doReturn(dockerfileStat)
-
-                    val otherFilePath = dockerfileDirectory.resolve("some-other-file")
-                    Files.write(otherFilePath, "This is another file".toByteArray(Charsets.UTF_8))
-                }
-
-                beforeEachTest {
-                    messageSink.addCallback(
-                        "send PACKET_FIN when final empty PACKET_STAT sent to server",
-                        { it == statFinishedPacket },
-                        { messageSource.enqueueFinalFinPacket() }
-                    )
-                }
-
-                runForEachTest { service.DiffCopy(messageSource, messageSink) }
-
-                it("only sends the details of the requested file, and not of the other file") {
-                    assertThat(
-                        messageSink.packetsSent,
-                        equalTo(
-                            listOf(
-                                Packet(Packet.PacketType.PACKET_STAT, dockerfileStat),
-                                statFinishedPacket,
-                                Packet(Packet.PacketType.PACKET_FIN)
-                            )
-                        )
-                    )
-                }
-            }
         }
 
         given("the build context directory is requested") {
             val headers = Headers.Builder()
                 .add("dir-name", "context")
+                .add("followpaths", "follow-path-1")
+                .add("followpaths", "follow-path-2")
+                .add("include-patterns", "some-include-pattern")
+                .add("include-patterns", "some-other-include-pattern")
+                .add("exclude-patterns", "exclude-pattern-1")
+                .add("exclude-patterns", "exclude-pattern-2")
                 .build()
 
-            val service by createForEachTest { FileSyncService(contextDirectory, dockerfileDirectory, statFactory, headers, logger) }
+            val service by createForEachTest { FileSyncService(contextDirectory, dockerfileDirectory, statFactory, headers, logger, scopeFactory::create) }
 
             given("the directory contains a single file") {
                 val lastModifiedTime = 1620798740644000000L
@@ -450,6 +442,8 @@ object FileSyncServiceSpec : Spek({
                 beforeEachTest {
                     val testFilePath = contextDirectory.resolve("test-file")
                     Files.createFile(testFilePath)
+
+                    scopeFactory.entriesToReturn = listOf(FileSyncScopeEntry(testFilePath, "test-file"))
                     whenever(statFactory.createStat(testFilePath, "test-file")).doReturn(testFileStat)
                 }
 
@@ -475,6 +469,15 @@ object FileSyncServiceSpec : Spek({
                         )
                     )
                 }
+
+                it("creates the file sync scope with the correct information") {
+                    scopeFactory.assertCreatedWith(
+                        contextDirectory,
+                        listOf("exclude-pattern-1", "exclude-pattern-2"),
+                        setOf("some-include-pattern", "some-other-include-pattern"),
+                        setOf("follow-path-1", "follow-path-2")
+                    )
+                }
             }
 
             given("the directory contains a single directory") {
@@ -483,9 +486,11 @@ object FileSyncServiceSpec : Spek({
                 val testDirectoryStatWithResetUIDAndGID = Stat("test-directory", 0x1ED, 0, 0, 0, lastModifiedTime)
 
                 beforeEachTest {
-                    val testFilePath = contextDirectory.resolve("test-directory")
-                    Files.createFile(testFilePath)
-                    whenever(statFactory.createStat(testFilePath, "test-directory")).doReturn(testDirectoryStat)
+                    val testDirectoryPath = contextDirectory.resolve("test-directory")
+                    Files.createDirectory(testDirectoryPath)
+
+                    scopeFactory.entriesToReturn = listOf(FileSyncScopeEntry(testDirectoryPath, "test-directory"))
+                    whenever(statFactory.createStat(testDirectoryPath, "test-directory")).doReturn(testDirectoryStat)
                 }
 
                 beforeEachTest {
@@ -511,47 +516,6 @@ object FileSyncServiceSpec : Spek({
                     )
                 }
             }
-
-            given("the directory contains multiple files") {
-                val lastModifiedTime = 1620798740644000000L
-
-                beforeEachTest {
-                    listOf("file-C", "file-A", "file-D", "file-B").forEach { name ->
-                        val path = contextDirectory.resolve(name)
-                        Files.createFile(path)
-                        whenever(statFactory.createStat(path, name)).doReturn(Stat(name, 0x1ED, 123, 456, 0, lastModifiedTime))
-                    }
-                }
-
-                beforeEachTest {
-                    messageSink.addCallback(
-                        "send PACKET_FIN when final empty PACKET_STAT sent to server",
-                        { it == statFinishedPacket },
-                        { messageSource.enqueueFinalFinPacket() }
-                    )
-                }
-
-                runForEachTest { service.DiffCopy(messageSource, messageSink) }
-
-                it("sends the details of the files in alphabetical order with the UID and GID set to 0") {
-                    assertThat(
-                        messageSink.packetsSent,
-                        equalTo(
-                            listOf(
-                                Packet(Packet.PacketType.PACKET_STAT, Stat("file-A", 0x1ED, 0, 0, 0, lastModifiedTime)),
-                                Packet(Packet.PacketType.PACKET_STAT, Stat("file-B", 0x1ED, 0, 0, 0, lastModifiedTime)),
-                                Packet(Packet.PacketType.PACKET_STAT, Stat("file-C", 0x1ED, 0, 0, 0, lastModifiedTime)),
-                                Packet(Packet.PacketType.PACKET_STAT, Stat("file-D", 0x1ED, 0, 0, 0, lastModifiedTime)),
-                                statFinishedPacket,
-                                Packet(Packet.PacketType.PACKET_FIN)
-                            )
-                        )
-                    )
-                }
-            }
-
-            // Check behaviour when ADD instruction references a particular file, but the file doesn't exist
-            // Update these tests to only test functionality to boundary with FileSyncScope
         }
     }
 })
@@ -607,4 +571,32 @@ private class FakeMessageSink : MessageSink<Packet> {
     override fun close() {}
 
     private data class Callback(val description: String, val criteria: (Packet) -> Boolean, val action: (Packet) -> Unit)
+}
+
+private class FakeSyncScopeFactory {
+    var entriesToReturn: List<FileSyncScopeEntry> = emptyList()
+
+    private lateinit var calledWithRootDirectory: Path
+    private lateinit var calledWithExcludePatterns: List<String>
+    private lateinit var calledWithIncludePatterns: Set<String>
+    private lateinit var calledWithFollowPaths: Set<String>
+
+    fun assertCreatedWith(rootDirectory: Path, excludePatterns: List<String>, includePatterns: Set<String>, followPaths: Set<String>) {
+        assertThat(::calledWithRootDirectory.isInitialized, equalTo(true)) { "expected sync scope to be created" }
+        assertThat(calledWithRootDirectory, equalTo(rootDirectory))
+        assertThat(calledWithExcludePatterns, equalTo(excludePatterns))
+        assertThat(calledWithIncludePatterns, equalTo(includePatterns))
+        assertThat(calledWithFollowPaths, equalTo(followPaths))
+    }
+
+    fun create(rootDirectory: Path, excludePatterns: List<String>, includePatterns: Set<String>, followPaths: Set<String>): FileSyncScope {
+        calledWithRootDirectory = rootDirectory
+        calledWithExcludePatterns = excludePatterns
+        calledWithIncludePatterns = includePatterns
+        calledWithFollowPaths = followPaths
+
+        return mock {
+            on { contents } doReturn entriesToReturn
+        }
+    }
 }

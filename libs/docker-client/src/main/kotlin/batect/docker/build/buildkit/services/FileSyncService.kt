@@ -69,12 +69,15 @@ import java.nio.file.StandardOpenOption
 //     - PACKET_FIN: respond with packet with type PACKET_FIN and exit
 //
 
+typealias FileSyncScopeFactory = (Path, List<String>, Set<String>, Set<String>) -> FileSyncScope
+
 class FileSyncService(
     contextDirectory: Path,
     dockerfileDirectory: Path,
     private val statFactory: StatFactory,
     private val headers: Headers,
-    private val logger: Logger
+    private val logger: Logger,
+    private val scopeFactory: FileSyncScopeFactory = ::FileSyncScope
 ) : FileSyncBlockingServer {
     private val roots = setOf(
         FileSyncRoot("context", contextDirectory, ::resetUIDAndGID),
@@ -108,7 +111,7 @@ class FileSyncService(
     }
 
     private fun sendDirectoryContents(root: FileSyncRoot, response: SynchronisedMessageSink<Packet>) {
-        val scope = FileSyncScope(
+        val scope = scopeFactory(
             root.rootDirectory,
             headers.values("exclude-patterns"),
             headers.values("include-patterns").toSet(),

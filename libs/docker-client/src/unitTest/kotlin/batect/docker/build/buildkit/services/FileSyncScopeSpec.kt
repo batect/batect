@@ -76,6 +76,34 @@ object FileSyncScopeSpec : Spek({
                         }
                     }
 
+                    given("the request contains an include pattern that matches the file when cleaned") {
+                        val includePatterns = setOf("abc/../some-file")
+                        val request by createForEachTest { FileSyncScope(rootDirectory, emptyList(), includePatterns, emptySet()) }
+
+                        it("returns just that file to sync") {
+                            assertThat(
+                                request.contents,
+                                containsInOrder(
+                                    FileSyncScopeEntry(filePath, "some-file")
+                                )
+                            )
+                        }
+                    }
+
+                    given("the request contains an include pattern that matches the root directory when cleaned") {
+                        val includePatterns = setOf("abc/..")
+                        val request by createForEachTest { FileSyncScope(rootDirectory, emptyList(), includePatterns, emptySet()) }
+
+                        it("returns just that file to sync") {
+                            assertThat(
+                                request.contents,
+                                containsInOrder(
+                                    FileSyncScopeEntry(filePath, "some-file")
+                                )
+                            )
+                        }
+                    }
+
                     given("the request contains an include pattern that does not match the file") {
                         val includePatterns = setOf("some-other-file")
                         val request by createForEachTest { FileSyncScope(rootDirectory, emptyList(), includePatterns, emptySet()) }
@@ -113,6 +141,34 @@ object FileSyncScopeSpec : Spek({
                         }
                     }
 
+                    given("the request contains a follow path that matches the file when cleaned") {
+                        val followPaths = setOf("abc/../some-file")
+                        val request by createForEachTest { FileSyncScope(rootDirectory, emptyList(), emptySet(), followPaths) }
+
+                        it("returns just that file to sync") {
+                            assertThat(
+                                request.contents,
+                                containsInOrder(
+                                    FileSyncScopeEntry(filePath, "some-file")
+                                )
+                            )
+                        }
+                    }
+
+                    given("the request contains a follow path that matches the root directory when cleaned") {
+                        val followPaths = setOf("abc/..")
+                        val request by createForEachTest { FileSyncScope(rootDirectory, emptyList(), emptySet(), followPaths) }
+
+                        it("returns just that file to sync") {
+                            assertThat(
+                                request.contents,
+                                containsInOrder(
+                                    FileSyncScopeEntry(filePath, "some-file")
+                                )
+                            )
+                        }
+                    }
+
                     given("the request contains a follow path that does not match the file") {
                         val followPaths = setOf("some-other-file")
                         val request by createForEachTest { FileSyncScope(rootDirectory, emptyList(), emptySet(), followPaths) }
@@ -133,6 +189,15 @@ object FileSyncScopeSpec : Spek({
 
                     given("the request contains an exclude pattern that matches the file") {
                         val excludePatterns = listOf("some-file")
+                        val request by createForEachTest { FileSyncScope(rootDirectory, excludePatterns, emptySet(), emptySet()) }
+
+                        it("returns an empty list of files to sync") {
+                            assertThat(request.contents, isEmpty)
+                        }
+                    }
+
+                    given("the request contains an exclude pattern that matches the file when cleaned") {
+                        val excludePatterns = listOf("abc/../some-file")
                         val request by createForEachTest { FileSyncScope(rootDirectory, excludePatterns, emptySet(), emptySet()) }
 
                         it("returns an empty list of files to sync") {

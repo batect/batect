@@ -32,15 +32,18 @@ import kotlin.streams.toList
 class FileSyncScope(
     private val rootDirectory: Path,
     excludePatterns: List<String>,
-    private val includePatterns: Set<String>,
+    includePatterns: Set<String>,
     followPaths: Set<String>
 ) {
-    private val parsedFollowPathPatterns = followPaths.mapToSet { ImageBuildIgnoreEntry(it, true) }
+    private val cleanedIncludePatterns = includePatterns.mapToSet { ImageBuildIgnoreEntry.cleanPattern(it) }
+    private val parsedFollowPathPatterns = followPaths.mapToSet { ImageBuildIgnoreEntry.withUncleanPattern(it, true) }
+    private val shouldIncludeEverything = (cleanedIncludePatterns.isEmpty() && parsedFollowPathPatterns.isEmpty()) || cleanedIncludePatterns.contains(".") || parsedFollowPathPatterns.any { it.pattern == "." }
+
     private val parsedExcludePatterns = excludePatterns.map { pattern ->
         if (pattern.isNotEmpty() && pattern[0] == '!') {
-            ImageBuildIgnoreEntry(pattern.substring(1), true)
+            ImageBuildIgnoreEntry.withUncleanPattern(pattern.substring(1), true)
         } else {
-            ImageBuildIgnoreEntry(pattern, false)
+            ImageBuildIgnoreEntry.withUncleanPattern(pattern, false)
         }
     }
 
@@ -80,11 +83,11 @@ class FileSyncScope(
     }
 
     private fun isIncluded(entry: FileSyncScopeEntry): Boolean {
-        if (includePatterns.isEmpty() && parsedFollowPathPatterns.isEmpty()) {
+        if (shouldIncludeEverything) {
             return true
         }
 
-        if (includePatterns.contains(entry.relativePath)) {
+        if (cleanedIncludePatterns.contains(entry.relativePath)) {
             return true
         }
 

@@ -151,9 +151,47 @@ data class ImageBuildIgnoreEntry(val pattern: String, val inverted: Boolean) {
     private fun invalidPattern() = DockerException("The .dockerignore pattern '$pattern' is invalid.")
 
     fun matches(pathToTest: String): MatchResult = when {
+        // See note at end of section at https://docs.docker.com/engine/reference/builder/#dockerignore-file:
+        // "For historical reasons, the pattern . is ignored."
+        pattern == "." -> MatchResult.NoMatch
         !regex.matches(pathToTest) -> MatchResult.NoMatch
         inverted -> MatchResult.MatchedInclude
         else -> MatchResult.MatchedExclude
+    }
+
+    companion object {
+        fun withUncleanPattern(uncleanPattern: String, inverted: Boolean) = ImageBuildIgnoreEntry(cleanPattern(uncleanPattern), inverted)
+
+        // This needs to match the behaviour of Golang's filepath.Clean().
+        // The only difference is paths that start with a leading / will have this removed in the cleaned version.
+        fun cleanPattern(pattern: String): String {
+            val normalisedPattern = pattern
+                .split("/")
+                .filterNot { it == "" }
+                .filterNot { it == "." }
+                .fold(emptyList<String>()) { soFar, nextSegment ->
+                    if (nextSegment != "..") {
+                        soFar + nextSegment
+                    } else if (soFar.isEmpty()) {
+                        if (pattern.startsWith("/")) {
+                            emptyList()
+                        } else {
+                            listOf(nextSegment)
+                        }
+                    } else if (soFar.last() == "..") {
+                        soFar + nextSegment
+                    } else {
+                        soFar.dropLast(1)
+                    }
+                }
+                .joinToString("/")
+
+            if (normalisedPattern.isEmpty()) {
+                return "."
+            }
+
+            return normalisedPattern
+        }
     }
 }
 

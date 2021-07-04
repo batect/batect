@@ -552,7 +552,6 @@ object FileSyncServiceSpec : Spek({
 
             // Check behaviour when ADD instruction references a particular file, but the file doesn't exist
             // Update these tests to only test functionality to boundary with FileSyncScope
-            // Correctly clean received patterns
         }
     }
 })

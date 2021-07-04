@@ -85,8 +85,6 @@ class FileSyncService(
     )
 
     private val rootsByName = roots.associateBy { it.name }
-
-    // FIXME: does this need to be thread safe?
     private val paths = mutableListOf<Path>()
 
     override fun DiffCopy(request: MessageSource<Packet>, response: MessageSink<Packet>) {
@@ -120,7 +118,7 @@ class FileSyncService(
 
         scope.contents.forEach { entry ->
             val stat = root.mapper(statFactory.createStat(entry.path, entry.relativePath))
-            paths.add(entry.path)
+            synchronized(paths) { paths.add(entry.path) }
             response.write(Packet(Packet.PacketType.PACKET_STAT, stat))
         }
 
@@ -173,7 +171,7 @@ class FileSyncService(
     }
 
     private fun sendFileContents(id: Int, response: SynchronisedMessageSink<Packet>) {
-        val path = paths.getOrNull(id)
+        val path = synchronized(paths) { paths.getOrNull(id) }
 
         if (path == null) {
             response.write(Packet(Packet.PacketType.PACKET_ERR, data_ = "Unknown file ID $id".encodeUtf8()))

@@ -39,7 +39,10 @@ import org.spekframework.spek2.Spek
 import org.spekframework.spek2.dsl.Skip
 import org.spekframework.spek2.style.specification.describe
 import java.io.ByteArrayOutputStream
+import java.nio.file.Files
+import java.nio.file.attribute.FileTime
 import java.util.UUID
+import java.util.concurrent.TimeUnit
 
 object ImageClientIntegrationTest : Spek({
     describe("a Docker images client") {
@@ -194,7 +197,15 @@ object ImageClientIntegrationTest : Spek({
                     }
 
                     describe("building an image with a symlink in the build context") {
-                        val image by runBeforeGroup { buildImage("symlink-in-build-context") }
+                        val imageName = "symlink-in-build-context"
+
+                        runBeforeGroup {
+                            val imageDirectory = testImagesDirectory.resolve(imageName)
+                            Files.setLastModifiedTime(imageDirectory.resolve("original.txt"), FileTime.from(1579425984, TimeUnit.MILLISECONDS))
+                            Files.setLastModifiedTime(imageDirectory.resolve("link-to-original.txt"), FileTime.from(1579425984, TimeUnit.MILLISECONDS))
+                        }
+
+                        val image by runBeforeGroup { buildImage(imageName) }
                         val output by runBeforeGroup { executeCommandInContainer(image, "ls", "-lA", "/app") }
 
                         it("correctly copies the contents of the linked file into the resulting image") {

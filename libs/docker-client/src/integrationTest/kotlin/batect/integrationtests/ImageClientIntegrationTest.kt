@@ -146,7 +146,7 @@ object ImageClientIntegrationTest : Spek({
 
                     describe("building an image with a .dockerignore file") {
                         val image by runBeforeGroup { buildImage("dockerignore") }
-                        val output by runBeforeGroup { executeCommandInContainer(image, "tree", "-RaF", "--noreport", "/app") }
+                        val output by runBeforeGroup { executeCommandInContainer(image, "sh", "-c", "find /app | sort") }
 
                         it("correctly includes only the permitted files in the build context") {
                             assertThat(
@@ -154,9 +154,9 @@ object ImageClientIntegrationTest : Spek({
                                 equalTo(
                                     """
                                         |/app
-                                        |├── files/
-                                        |│   └── other_include.txt
-                                        |└── include.txt
+                                        |/app/files
+                                        |/app/files/other_include.txt
+                                        |/app/include.txt
                                         |
                                     """.trimMargin()
                                 )
@@ -166,25 +166,25 @@ object ImageClientIntegrationTest : Spek({
 
                     describe("building an image with a non-default Dockerfile name and a .dockerignore file") {
                         val image by runBeforeGroup { buildImage("dockerignore-custom-dockerfile", "dockerfiles/my-special-dockerfile") }
-                        val output by runBeforeGroup { executeCommandInContainer(image, "tree", "-RaF", "--noreport", "/app") }
+                        val output by runBeforeGroup { executeCommandInContainer(image, "sh", "-c", "find /app | sort") }
 
                         it("correctly includes only the permitted files in the build context") {
                             val expectedOutput = when (builderVersion) {
                                 BuilderVersion.BuildKit ->
                                     """
                                         |/app
-                                        |├── files/
-                                        |│   └── other_include.txt
-                                        |└── include.txt
+                                        |/app/files
+                                        |/app/files/other_include.txt
+                                        |/app/include.txt
                                         |
                                     """.trimMargin()
                                 BuilderVersion.Legacy ->
                                     """
                                         |/app
-                                        |├── dockerfiles/
-                                        |├── files/
-                                        |│   └── other_include.txt
-                                        |└── include.txt
+                                        |/app/dockerfiles
+                                        |/app/files
+                                        |/app/files/other_include.txt
+                                        |/app/include.txt
                                         |
                                     """.trimMargin()
                             }

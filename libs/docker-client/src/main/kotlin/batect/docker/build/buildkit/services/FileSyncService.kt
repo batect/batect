@@ -37,10 +37,8 @@ import okhttp3.Headers
 import okio.ByteString.Companion.encodeUtf8
 import okio.ByteString.Companion.toByteString
 import java.nio.file.Files
-import java.nio.file.LinkOption
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
-import kotlin.streams.toList
 
 // Original notes from BuildKit docs and code:
 //
@@ -48,8 +46,9 @@ import kotlin.streams.toList
 // - dir-name: "context" (context directory) or "dockerfile" (dockerfile directory)
 // - exclude-patterns: raw exclude patterns (.dockerignore syntax)
 // - include-patterns: raw include patterns, no wildcards allowed
+// - followpaths: patterns to paths (possibly including symlinks and wildcards) that should be treated as additional include patterns - Golang
+//   implementation resolves these ahead of time to include patterns and then treats them the same
 // - override-excludes: can be ignored
-// - followpaths: patterns to paths (possibly including symlinks and wildcards) that should be treated as additional include patterns - Golang implementation resolves these ahead of time to include patterns
 //
 // For context directory, need to reset UID and GID to 0 before sending any content
 //
@@ -109,27 +108,20 @@ class FileSyncService(
     }
 
     private fun sendDirectoryContents(root: FileSyncRoot, response: SynchronisedMessageSink<Packet>) {
-        val patterns = headers.values("followpaths").toSet()
-        walkDirectory(root, root.rootDirectory, patterns, response)
-        sendDirectoryContentsEnumerationCompleted(response)
-    }
+        val scope = FileSyncScope(
+            root.rootDirectory,
+            headers.values("exclude-patterns"),
+            headers.values("include-patterns").toSet(),
+            headers.values("followpaths").toSet()
+        )
 
-    private fun walkDirectory(root: FileSyncRoot, parentPath: Path, patterns: Set<String>, response: SynchronisedMessageSink<Packet>) {
-        val contents = Files.list(parentPath).use { it.toList().sorted() }
-
-        contents.forEach { childPath ->
-            val relativeChildPath = root.rootDirectory.relativize(childPath).toString()
-
-            if (patterns.isEmpty() || patterns.contains(relativeChildPath)) {
-                val stat = root.mapper(statFactory.createStat(childPath, relativeChildPath))
-                paths.add(childPath)
-                response.write(Packet(Packet.PacketType.PACKET_STAT, stat))
-            }
-
-            if (Files.isDirectory(childPath, LinkOption.NOFOLLOW_LINKS)) {
-                walkDirectory(root, childPath, patterns, response)
-            }
+        scope.contents.forEach { entry ->
+            val stat = root.mapper(statFactory.createStat(entry.path, entry.relativePath))
+            paths.add(entry.path)
+            response.write(Packet(Packet.PacketType.PACKET_STAT, stat))
         }
+
+        sendDirectoryContentsEnumerationCompleted(response)
     }
 
     private fun sendDirectoryContentsEnumerationCompleted(response: SynchronisedMessageSink<Packet>) {

@@ -550,15 +550,9 @@ object FileSyncServiceSpec : Spek({
                 }
             }
 
-            // Need to send parent directory if children included (even if directory was otherwise not included)
-            // Need to cover here:
-            // - directories - should be allocated an ID but should not be requestable
-            // - symlinks, pipes etc.
-
             // Check behaviour when ADD instruction references a particular file, but the file doesn't exist
-
-            // ADD / COPY with '.' as path - will receive no followpaths headers, need to send all directory contents
-            // Handle combinations of followpaths, exclude-patterns, include-patterns
+            // Update these tests to only test functionality to boundary with FileSyncScope
+            // Correctly clean received patterns
         }
     }
 })

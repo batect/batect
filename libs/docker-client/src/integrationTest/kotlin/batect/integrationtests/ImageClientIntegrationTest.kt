@@ -169,9 +169,16 @@ object ImageClientIntegrationTest : Spek({
                         val output by runBeforeGroup { executeCommandInContainer(image, "tree", "-RaF", "--noreport", "/app") }
 
                         it("correctly includes only the permitted files in the build context") {
-                            assertThat(
-                                output,
-                                equalTo(
+                            val expectedOutput = when (builderVersion) {
+                                BuilderVersion.BuildKit ->
+                                    """
+                                        |/app
+                                        |├── files/
+                                        |│   └── other_include.txt
+                                        |└── include.txt
+                                        |
+                                    """.trimMargin()
+                                BuilderVersion.Legacy ->
                                     """
                                         |/app
                                         |├── dockerfiles/
@@ -180,8 +187,9 @@ object ImageClientIntegrationTest : Spek({
                                         |└── include.txt
                                         |
                                     """.trimMargin()
-                                )
-                            )
+                            }
+
+                            assertThat(output, equalTo(expectedOutput))
                         }
                     }
 

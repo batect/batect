@@ -162,7 +162,7 @@ object DockerIgnoreParserSpec : Spek({
             }
         }
 
-        given("the file contains a single exclusion pattern with leading whitespace") {
+        given("the file contains a single exclusion pattern with trailing whitespace") {
             beforeEachTest {
                 Files.write(path, listOf("path/thing.go   "))
             }

@@ -96,9 +96,7 @@ class FileSyncService(
 
         val root = rootsByName[directoryName] ?: throw IllegalArgumentException("Unknown directory name '$directoryName'.")
 
-        println(headers)
-
-        val messageSink = SynchronisedMessageSink(response)
+        val messageSink = SynchronisedMessageSink(response, logger)
         val fileRequests = Channel<Int>(UNLIMITED)
 
         runBlocking(Dispatchers.Default) {
@@ -135,7 +133,10 @@ class FileSyncService(
             while (true) {
                 val packet = request.read() ?: return
 
-                println("Received request packet: $packet")
+                logger.info {
+                    message("Received request packet.")
+                    data("packet", packet.toString())
+                }
 
                 @Suppress("REDUNDANT_ELSE_IN_WHEN") // We only know about the packet types we've got in our protobuf file, but there might be others if we're talking to a newer server.
                 when (packet.type) {
@@ -184,8 +185,6 @@ class FileSyncService(
             return
         }
 
-        println("Sending data for $id ($path)")
-
         Files.newInputStream(path, StandardOpenOption.READ).use { stream ->
             val buffer = ByteArray(32 * 1024)
 
@@ -224,7 +223,7 @@ class FileSyncService(
         val mapper: (Stat) -> Stat = { it }
     )
 
-    private class SynchronisedMessageSink<T : Any>(private val inner: MessageSink<T>) : MessageSink<T> {
+    private class SynchronisedMessageSink<T : Any>(private val inner: MessageSink<T>, private val logger: Logger) : MessageSink<T> {
         private val lock = Any()
 
         override fun cancel() {
@@ -241,7 +240,11 @@ class FileSyncService(
 
         override fun write(message: T) {
             synchronized(lock) {
-                println("Sending $message")
+                logger.info {
+                    message("Sending packet.")
+                    data("packet", message.toString())
+                }
+
                 inner.write(message)
             }
         }

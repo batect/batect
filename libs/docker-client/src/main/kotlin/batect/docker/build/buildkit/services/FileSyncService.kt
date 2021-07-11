@@ -102,10 +102,10 @@ class FileSyncService(
         runBlocking(Dispatchers.Default) {
             println("$directoryName: Launching sendDirectoryContents")
             launch { println("$directoryName: Starting to send directory contents"); sendDirectoryContents(root, messageSink); println("$directoryName: Finished sending directory contents") }
-            println("$directoryName: Launching handleIncomingRequests")
-            launch { println("$directoryName: Starting to handle incoming requests"); handleIncomingRequests(request, messageSink, fileRequests); println("$directoryName: Finished handling incoming requests") }
             println("$directoryName: Launching handleFileRequests")
             launch { println("$directoryName: Starting to handle file requests"); handleFileRequests(messageSink, fileRequests); println("$directoryName: Finished handling file requests") }
+            println("$directoryName: Launching handleIncomingRequests")
+            launch { println("$directoryName: Starting to handle incoming requests"); handleIncomingRequests(request, messageSink, fileRequests); println("$directoryName: Finished handling incoming requests") }
             println("$directoryName: All coroutines launched")
         }
 

@@ -25,6 +25,7 @@ import batect.os.ProcessRunner
 import batect.primitives.CancellationContext
 import batect.testutils.createForGroup
 import batect.testutils.runBeforeGroup
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.natpryce.hamkrest.anyElement
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.containsSubstring
@@ -35,6 +36,7 @@ import com.natpryce.hamkrest.matches
 import com.natpryce.hamkrest.or
 import com.nhaarman.mockitokotlin2.mock
 import okio.sink
+import org.araqnid.hamkrest.json.json
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.dsl.Skip
 import org.spekframework.spek2.style.specification.describe
@@ -199,27 +201,27 @@ object ImageClientIntegrationTest : Spek({
                     describe("building an image with a symlink in the build context") {
                         val imageName = "symlink-in-build-context"
 
-                        runBeforeGroup {
-                            val imageDirectory = testImagesDirectory.resolve(imageName)
-                            Files.setLastModifiedTime(imageDirectory.resolve("original.txt"), FileTime.from(1579425984, TimeUnit.MILLISECONDS))
-                            Files.setLastModifiedTime(imageDirectory.resolve("link-to-original.txt"), FileTime.from(1579425984, TimeUnit.MILLISECONDS))
-                        }
-
                         val image by runBeforeGroup { buildImage(imageName) }
-                        val output by runBeforeGroup { executeCommandInContainer(image, "ls", "-lA", "/app") }
+                        val output by runBeforeGroup { executeCommandInContainer(image, "tree", "-J", "--noreport", "/everything") }
 
-                        it("correctly copies the contents of the linked file into the resulting image") {
-                            assertThat(
-                                output,
-                                equalTo(
-                                    """
-                                        |total 8
-                                        |-rw-r--r--    1 root     root            26 Jan 19  2020 link-to-original.txt
-                                        |-rw-r--r--    1 root     root            26 Jan 19  2020 original.txt
-                                        |
-                                    """.trimMargin()
-                                )
+                        it("correctly copies the linked file into the resulting image") {
+                            val expectedContents = ObjectMapper().readTree(
+                                """
+                                    [
+                                      {
+                                        "type": "directory",
+                                        "name": "/everything",
+                                        "contents": [
+                                          { "type": "file", "name": "Dockerfile" },
+                                          { "type": "link", "name": "link-to-original.txt", "target": "original.txt", "contents": [] },
+                                          { "type": "file", "name": "original.txt" }
+                                        ]
+                                      }
+                                    ]
+                                """
                             )
+
+                            assertThat(output, json(equalTo(expectedContents)))
                         }
                     }
                 }

@@ -47,6 +47,9 @@ class GrpcListener(
     override fun onStream(stream: Http2Stream) {
         val headers = stream.takeHeaders()
 
+        println("Received request")
+        println(headers.toMultimap())
+
         logger.info {
             message("Received request")
             data("streamId", stream.id)

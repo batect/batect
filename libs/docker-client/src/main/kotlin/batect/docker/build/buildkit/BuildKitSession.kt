@@ -52,6 +52,8 @@ class BuildKitSession(
     }
 
     private val threadFactory: ThreadFactory = ThreadFactory { runnable ->
+        println("Creating thread")
+
         Thread(runnable, "BuildKit session $sessionId").apply {
             isDaemon = true
             uncaughtExceptionHandler = Thread.UncaughtExceptionHandler { _, e ->

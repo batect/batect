@@ -100,10 +100,16 @@ class FileSyncService(
         val fileRequests = Channel<Int>(UNLIMITED)
 
         runBlocking(Dispatchers.Default) {
-            launch { sendDirectoryContents(root, messageSink) }
-            launch { handleIncomingRequests(request, messageSink, fileRequests) }
-            launch { handleFileRequests(messageSink, fileRequests) }
+            println("Launching sendDirectoryContents")
+            launch { println("Starting to send directory contents"); sendDirectoryContents(root, messageSink); println("Finished sending directory contents") }
+            println("Launching handleIncomingRequests")
+            launch { println("Starting to handle incoming requests"); handleIncomingRequests(request, messageSink, fileRequests); println("Finished handling incoming requests") }
+            println("Launching handleFileRequests")
+            launch { println("Starting to handle file requests"); handleFileRequests(messageSink, fileRequests); println("Finished handling file requests") }
+            println("All coroutines launched")
         }
+
+        println("All coroutines finished")
     }
 
     private fun sendDirectoryContents(root: FileSyncRoot, response: SynchronisedMessageSink<Packet>) {

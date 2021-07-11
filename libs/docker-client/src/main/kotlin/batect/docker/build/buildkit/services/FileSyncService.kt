@@ -176,13 +176,18 @@ class FileSyncService(
     }
 
     private suspend fun handleFileRequests(response: SynchronisedMessageSink<Packet>, fileRequests: ReceiveChannel<Int>) {
+        println("In handleFileRequests...")
         for (id in fileRequests) {
+            println("Handling request for $id")
+
             sendFileContents(id, response)
         }
     }
 
     private fun sendFileContents(id: Int, response: SynchronisedMessageSink<Packet>) {
         val path = synchronized(paths) { paths.getOrNull(id) }
+
+        println("$path: Sending for ID $id")
 
         if (path == null) {
             response.write(Packet(Packet.PacketType.PACKET_ERR, data_ = "Unknown file ID $id".encodeUtf8()))
@@ -195,6 +200,8 @@ class FileSyncService(
             return
         }
 
+        println("$path: Opening...")
+
         Files.newInputStream(path, StandardOpenOption.READ).use { stream ->
             val buffer = ByteArray(32 * 1024)
 
@@ -202,10 +209,12 @@ class FileSyncService(
                 val bytesRead = stream.read(buffer)
 
                 if (bytesRead == -1) {
+                    println("$path: Sending EOF")
                     response.write(Packet(Packet.PacketType.PACKET_DATA, ID = id))
                     return
                 }
 
+                println("$path: Sending file content...")
                 response.write(Packet(Packet.PacketType.PACKET_DATA, ID = id, data_ = buffer.toByteString(0, bytesRead)))
             }
         }

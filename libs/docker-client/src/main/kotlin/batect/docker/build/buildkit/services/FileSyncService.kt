@@ -100,16 +100,16 @@ class FileSyncService(
         val fileRequests = Channel<Int>(UNLIMITED)
 
         runBlocking(Dispatchers.Default) {
-            println("Launching sendDirectoryContents")
-            launch { println("Starting to send directory contents"); sendDirectoryContents(root, messageSink); println("Finished sending directory contents") }
-            println("Launching handleIncomingRequests")
-            launch { println("Starting to handle incoming requests"); handleIncomingRequests(request, messageSink, fileRequests); println("Finished handling incoming requests") }
-            println("Launching handleFileRequests")
-            launch { println("Starting to handle file requests"); handleFileRequests(messageSink, fileRequests); println("Finished handling file requests") }
-            println("All coroutines launched")
+            println("$directoryName: Launching sendDirectoryContents")
+            launch { println("$directoryName: Starting to send directory contents"); sendDirectoryContents(root, messageSink); println("$directoryName: Finished sending directory contents") }
+            println("$directoryName: Launching handleIncomingRequests")
+            launch { println("$directoryName: Starting to handle incoming requests"); handleIncomingRequests(request, messageSink, fileRequests); println("$directoryName: Finished handling incoming requests") }
+            println("$directoryName: Launching handleFileRequests")
+            launch { println("$directoryName: Starting to handle file requests"); handleFileRequests(messageSink, fileRequests); println("$directoryName: Finished handling file requests") }
+            println("$directoryName: All coroutines launched")
         }
 
-        println("All coroutines finished")
+        println("$directoryName: All coroutines finished")
     }
 
     private fun sendDirectoryContents(root: FileSyncRoot, response: SynchronisedMessageSink<Packet>) {
@@ -254,6 +254,8 @@ class FileSyncService(
                     message("Sending packet.")
                     data("packet", message.toString())
                 }
+
+                println("Sending packet $message")
 
                 inner.write(message)
             }

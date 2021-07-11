@@ -108,6 +108,8 @@ object ImageClientIntegrationTest : Spek({
                     val cacheBustingId by createForGroup { UUID.randomUUID().toString() }
 
                     fun buildImage(path: String, dockerfileName: String = "Dockerfile"): DockerImage {
+                        println("Building $path...")
+
                         val imageDirectory = testImagesDirectory.resolve(path)
                         val output = ByteArrayOutputStream()
 

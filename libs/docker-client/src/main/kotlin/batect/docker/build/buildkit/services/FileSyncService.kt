@@ -137,12 +137,16 @@ class FileSyncService(
     private suspend fun handleIncomingRequests(request: MessageSource<Packet>, response: SynchronisedMessageSink<Packet>, fileRequests: SendChannel<Int>) {
         try {
             while (true) {
+                println("Waiting for packet...")
+
                 val packet = request.read() ?: return
 
                 logger.info {
                     message("Received request packet.")
                     data("packet", packet.toString())
                 }
+
+                println("Received incoming packet: $packet")
 
                 @Suppress("REDUNDANT_ELSE_IN_WHEN") // We only know about the packet types we've got in our protobuf file, but there might be others if we're talking to a newer server.
                 when (packet.type) {

@@ -41,10 +41,7 @@ import org.spekframework.spek2.Spek
 import org.spekframework.spek2.dsl.Skip
 import org.spekframework.spek2.style.specification.describe
 import java.io.ByteArrayOutputStream
-import java.nio.file.Files
-import java.nio.file.attribute.FileTime
 import java.util.UUID
-import java.util.concurrent.TimeUnit
 
 object ImageClientIntegrationTest : Spek({
     describe("a Docker images client") {
@@ -107,7 +104,7 @@ object ImageClientIntegrationTest : Spek({
                 "the legacy builder" to BuilderVersion.Legacy,
                 "BuildKit" to BuilderVersion.BuildKit
             ).forEach { (description, builderVersion) ->
-                describe("using $description") {
+                describe("using $description", skip = if (builderVersion != BuilderVersion.BuildKit || runBuildKitTests) Skip.No else Skip.Yes("not supported on this version of Docker")) {
                     val cacheBustingId by createForGroup { UUID.randomUUID().toString() }
 
                     fun buildImage(path: String, dockerfileName: String = "Dockerfile"): DockerImage {

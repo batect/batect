@@ -52,6 +52,10 @@ data class ApplicationRunner(val testName: String) {
 
         val outputBuffer = StringWriter()
 
+        // Why do we run this on a thread? If we're not consuming output from the output stream, its buffer will
+        // eventually fill, blocking the running process from continuing.
+        // There's no way to set a timeout for reads from the output stream, so we run this in parallel with
+        // waiting for the application to finish, which does support a timeout.
         val outputThread = thread(isDaemon = true) {
             InputStreamReader(process.inputStream).copyTo(outputBuffer)
         }

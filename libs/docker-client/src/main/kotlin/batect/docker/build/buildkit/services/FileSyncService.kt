@@ -100,16 +100,10 @@ class FileSyncService(
         val fileRequests = Channel<Int>(UNLIMITED)
 
         runBlocking(Dispatchers.IO) {
-            println("$directoryName: Launching sendDirectoryContents")
-            launch { println("$directoryName: Starting to send directory contents"); sendDirectoryContents(root, messageSink); println("$directoryName: Finished sending directory contents") }
-            println("$directoryName: Launching handleFileRequests")
-            launch { println("$directoryName: Starting to handle incoming requests"); handleIncomingRequests(request, messageSink, fileRequests); println("$directoryName: Finished handling incoming requests") }
-            println("$directoryName: All coroutines launched")
-            launch { println("$directoryName: Starting to handle file requests"); handleFileRequests(messageSink, fileRequests); println("$directoryName: Finished handling file requests") }
-            println("$directoryName: Launching handleIncomingRequests")
+            launch { sendDirectoryContents(root, messageSink) }
+            launch { handleIncomingRequests(request, messageSink, fileRequests) }
+            launch { handleFileRequests(messageSink, fileRequests) }
         }
-
-        println("$directoryName: All coroutines finished")
     }
 
     private fun sendDirectoryContents(root: FileSyncRoot, response: SynchronisedMessageSink<Packet>) {
@@ -137,16 +131,12 @@ class FileSyncService(
     private suspend fun handleIncomingRequests(request: MessageSource<Packet>, response: SynchronisedMessageSink<Packet>, fileRequests: SendChannel<Int>) {
         try {
             while (true) {
-                println("Waiting for packet...")
-
                 val packet = request.read() ?: return
 
                 logger.info {
                     message("Received request packet.")
                     data("packet", packet.toString())
                 }
-
-                println("Received incoming packet: $packet")
 
                 @Suppress("REDUNDANT_ELSE_IN_WHEN") // We only know about the packet types we've got in our protobuf file, but there might be others if we're talking to a newer server.
                 when (packet.type) {
@@ -176,18 +166,13 @@ class FileSyncService(
     }
 
     private suspend fun handleFileRequests(response: SynchronisedMessageSink<Packet>, fileRequests: ReceiveChannel<Int>) {
-        println("In handleFileRequests...")
         for (id in fileRequests) {
-            println("Handling request for $id")
-
             sendFileContents(id, response)
         }
     }
 
     private fun sendFileContents(id: Int, response: SynchronisedMessageSink<Packet>) {
         val path = synchronized(paths) { paths.getOrNull(id) }
-
-        println("$path: Sending for ID $id")
 
         if (path == null) {
             response.write(Packet(Packet.PacketType.PACKET_ERR, data_ = "Unknown file ID $id".encodeUtf8()))
@@ -200,8 +185,6 @@ class FileSyncService(
             return
         }
 
-        println("$path: Opening...")
-
         Files.newInputStream(path, StandardOpenOption.READ).use { stream ->
             val buffer = ByteArray(32 * 1024)
 
@@ -209,12 +192,10 @@ class FileSyncService(
                 val bytesRead = stream.read(buffer)
 
                 if (bytesRead == -1) {
-                    println("$path: Sending EOF")
                     response.write(Packet(Packet.PacketType.PACKET_DATA, ID = id))
                     return
                 }
 
-                println("$path: Sending file content...")
                 response.write(Packet(Packet.PacketType.PACKET_DATA, ID = id, data_ = buffer.toByteString(0, bytesRead)))
             }
         }
@@ -263,8 +244,6 @@ class FileSyncService(
                     message("Sending packet.")
                     data("packet", message.toString())
                 }
-
-                println("Sending packet $message")
 
                 inner.write(message)
             }

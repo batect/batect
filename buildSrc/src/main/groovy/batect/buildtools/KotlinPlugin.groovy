@@ -118,9 +118,6 @@ class KotlinPlugin implements Plugin<Project> {
             }
 
             testLogging {
-                events "started"
-                events "passed"
-
                 events "failed"
                 events "skipped"
                 events "standard_out"

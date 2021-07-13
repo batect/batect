@@ -17,7 +17,7 @@
 plugins {
     id("java-gradle-plugin")
     id("groovy")
-    kotlin("jvm") version "1.5.20"
+    kotlin("jvm") version "1.5.21"
 }
 
 repositories {

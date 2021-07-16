@@ -95,6 +95,10 @@ internal fun requestWithBody(expectedBody: RequestBody) = com.nhaarman.mockitoko
     assertThat(request.body, equalTo(expectedBody))
 }
 
+internal fun requestWithEmptyBody() = com.nhaarman.mockitokotlin2.check<Request> { request ->
+    assertThat(request.body?.contentLength(), equalTo(0))
+}
+
 // HACK: ConnectionPool doesn't expose the keep-alive time, so we have to reach into it to verify that we've set it correctly.
 internal fun connectionPoolWithNoEviction(): ConnectionPool = argThat {
     val delegate = ConnectionPool::class.java.getDeclaredField("delegate")

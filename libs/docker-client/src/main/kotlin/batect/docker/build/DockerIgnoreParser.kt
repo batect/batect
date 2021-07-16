@@ -46,39 +46,9 @@ class DockerIgnoreParser {
                     Pair(it, false)
                 }
             }.map { (pattern, inverted) ->
-                ImageBuildIgnoreEntry(cleanPattern(pattern), inverted)
+                ImageBuildIgnoreEntry.withUncleanPattern(pattern, inverted)
             }
 
         return ImageBuildIgnoreList(entries)
-    }
-
-    // This needs to match the behaviour of Golang's filepath.Clean()
-    private fun cleanPattern(pattern: String): String {
-        val normalisedPattern = pattern
-            .split("/")
-            .filterNot { it == "" }
-            .filterNot { it == "." }
-            .fold(emptyList<String>()) { soFar, nextSegment ->
-                if (nextSegment != "..") {
-                    soFar + nextSegment
-                } else if (soFar.isEmpty()) {
-                    if (pattern.startsWith("/")) {
-                        emptyList()
-                    } else {
-                        listOf(nextSegment)
-                    }
-                } else if (soFar.last() == "..") {
-                    soFar + nextSegment
-                } else {
-                    soFar.dropLast(1)
-                }
-            }
-            .joinToString("/")
-
-        if (normalisedPattern.isEmpty()) {
-            return "."
-        }
-
-        return normalisedPattern
     }
 }

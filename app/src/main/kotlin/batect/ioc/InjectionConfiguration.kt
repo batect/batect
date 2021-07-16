@@ -57,6 +57,7 @@ import batect.docker.build.DockerfileParser
 import batect.docker.build.ImageBuildContextFactory
 import batect.docker.build.buildkit.BuildKitSessionFactory
 import batect.docker.build.buildkit.services.HealthService
+import batect.docker.build.buildkit.services.StatFactory
 import batect.docker.client.ContainersClient
 import batect.docker.client.DockerClient
 import batect.docker.client.ExecClient
@@ -215,11 +216,12 @@ private val dockerApiModule = DI.Module("docker.api") {
 }
 
 private val dockerBuildModule = DI.Module("docker.build") {
-    bind<BuildKitSessionFactory>() with singleton { BuildKitSessionFactory(instance(), instance(), instance(), instance(), instance()) }
+    bind<BuildKitSessionFactory>() with singleton { BuildKitSessionFactory(instance(), instance(), instance(), instance(), instance(), instance()) }
     bind<DockerfileParser>() with singleton { DockerfileParser() }
     bind<DockerIgnoreParser>() with singleton { DockerIgnoreParser() }
     bind<HealthService>() with singleton { HealthService() }
     bind<ImageBuildContextFactory>() with singleton { ImageBuildContextFactory(instance()) }
+    bind<StatFactory>() with singleton { StatFactory.create(instance()) }
 }
 
 private val dockerClientModule = DI.Module("docker.client") {

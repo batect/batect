@@ -18,7 +18,9 @@ package batect.docker.build.buildkit
 
 import batect.docker.build.ImageBuildOutputSink
 import batect.docker.build.buildkit.services.AuthService
+import batect.docker.build.buildkit.services.FileSyncService
 import batect.docker.build.buildkit.services.HealthService
+import batect.docker.build.buildkit.services.StatFactory
 import batect.docker.pull.RegistryCredentialsProvider
 import batect.logging.Logger
 import batect.logging.LoggerFactory
@@ -61,17 +63,20 @@ object BuildKitSessionFactorySpec : Spek({
 
         val healthService by createForEachTest { HealthService() }
         val credentialsProvider by createForEachTest { mock<RegistryCredentialsProvider>() }
+        val statFactory by createForEachTest { mock<StatFactory>() }
         val telemetrySessionBuilder by createForEachTest { mock<TelemetrySessionBuilder>() }
         val listenerLogger by createForEachTest { mock<Logger>() }
         val authServiceLogger by createForEachTest { mock<Logger>() }
+        val fileSyncServiceLogger by createForEachTest { mock<Logger>() }
         val loggerFactory by createForEachTest {
             mock<LoggerFactory> {
                 on { createLoggerForClass(GrpcListener::class) } doReturn listenerLogger
                 on { createLoggerForClass(AuthService::class) } doReturn authServiceLogger
+                on { createLoggerForClass(FileSyncService::class) } doReturn fileSyncServiceLogger
             }
         }
 
-        val factory by createForEachTest { BuildKitSessionFactory(systemInfo, healthService, credentialsProvider, telemetrySessionBuilder, loggerFactory) }
+        val factory by createForEachTest { BuildKitSessionFactory(systemInfo, healthService, credentialsProvider, statFactory, telemetrySessionBuilder, loggerFactory) }
 
         val dockerConfigDirectory by createForEachTest { fileSystem.getPath("/my/home/.docker") }
         val buildNodeIdFile by createForEachTest { fileSystem.getPath("/my/home/.docker/.buildNodeID") }
@@ -99,6 +104,8 @@ object BuildKitSessionFactorySpec : Spek({
                     "/moby.filesync.v1.Auth/FetchToken",
                     "/moby.filesync.v1.Auth/GetTokenAuthority",
                     "/moby.filesync.v1.Auth/VerifyTokenAuthority",
+                    "/moby.filesync.v1.FileSync/DiffCopy",
+                    "/moby.filesync.v1.FileSync/TarStream",
                     "/grpc.health.v1.Health/Check",
                     "/grpc.health.v1.Health/Watch",
                 )

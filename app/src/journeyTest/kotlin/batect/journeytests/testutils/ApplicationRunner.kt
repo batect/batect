@@ -17,9 +17,12 @@
 package batect.journeytests.testutils
 
 import java.io.InputStreamReader
+import java.io.StringWriter
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.util.concurrent.TimeUnit
+import kotlin.concurrent.thread
 import kotlin.streams.toList
 
 data class ApplicationRunner(val testName: String) {
@@ -47,10 +50,26 @@ data class ApplicationRunner(val testName: String) {
         val process = builder.start()
         afterStart(process)
 
-        val output = InputStreamReader(process.inputStream).readText()
-        process.waitFor()
+        val outputBuffer = StringWriter()
 
-        return ApplicationResult(process.exitValue(), output)
+        // Why do we run this on a thread? If we're not consuming output from the output stream, its buffer will
+        // eventually fill, blocking the running process from continuing.
+        // There's no way to set a timeout for reads from the output stream, so we run this in parallel with
+        // waiting for the application to finish, which does support a timeout.
+        val outputThread = thread(isDaemon = true) {
+            InputStreamReader(process.inputStream).copyTo(outputBuffer)
+        }
+
+        val timeoutMinutes = 3L
+
+        if (!process.waitFor(timeoutMinutes, TimeUnit.MINUTES)) {
+            process.destroyForcibly()
+            throw RuntimeException("Running process timed out after $timeoutMinutes minutes. Output from process so far: $outputBuffer")
+        }
+
+        outputThread.join(1000)
+
+        return ApplicationResult(process.exitValue(), outputBuffer.toString())
     }
 
     fun commandLineForApplication(arguments: Iterable<String>): List<String> {

@@ -55,8 +55,6 @@ object TaskWithEntrypointOnContainerJourneyTest : SimpleTaskJourneyTest("entrypo
 object TaskWithEntrypointOnTaskJourneyTest : SimpleTaskJourneyTest("entrypoint-on-task", "a task with an entrypoint specified on the task in the configuration file")
 object TaskWithEnvironmentJourneyTest : SimpleTaskJourneyTest("task-with-environment", "a task with a task-level environment variable")
 object ContainerWithHealthCheckOverridesJourneyTest : SimpleTaskJourneyTest("container-with-health-check-overrides", "a task with a dependency container that has a batect-specific health check configuration")
-object BuildImageWithDockerignoreJourneyTest : SimpleTaskJourneyTest("build-image-dockerignore", "a task that builds an image with a .dockerignore file")
-object DockerfileWithAddFromUrlJourneyTest : SimpleTaskJourneyTest("dockerfile-with-add-from-url", "a task that uses a Dockerfile with an ADD command that downloads a file from a URL")
 object DependencyContainerWithSetupCommandJourneyTest : SimpleTaskJourneyTest("dependency-container-with-setup-command", "a task that uses a setup command on a dependency container")
 object TaskContainerWithSetupCommandJourneyTest : SimpleTaskJourneyTest("task-container-with-setup-command", "a task that uses a setup command on the task container")
 object ConfigWithIncludesJourneyTest : SimpleTaskJourneyTest("config-with-includes", "a configuration file that uses includes")

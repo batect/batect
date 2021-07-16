@@ -205,7 +205,8 @@ object ImagesAPISpec : Spek({
 
                     val expectedBuildKitUrl = expectedUrl and hasQueryParameter("version", "2") and
                         hasQueryParameter("session", session.sessionId) and
-                        hasQueryParameter("buildid", session.buildId)
+                        hasQueryParameter("buildid", session.buildId) and
+                        hasQueryParameter("remote", "client-session")
 
                     val expectedBuildKitHeaders = Headers.Builder().build()
 
@@ -215,6 +216,10 @@ object ImagesAPISpec : Spek({
 
                     it("sends a request to the Docker daemon to build the image with the expected URL") {
                         verify(call).execute()
+                    }
+
+                    it("builds the image with no context in the request body") {
+                        verify(clientWithLongTimeout).newCall(requestWithEmptyBody())
                     }
 
                     it("creates a BuildKit response body") {

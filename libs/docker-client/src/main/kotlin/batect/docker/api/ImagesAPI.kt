@@ -108,29 +108,34 @@ class ImagesAPI(
         forcePull: Boolean,
         builderConfig: BuilderConfig
     ): Request {
-        val url = baseUrl.newBuilder()
+        val baseUrl = baseUrl.newBuilder()
             .addPathSegment("build")
             .addQueryParameter("buildargs", buildArgs.toJsonObject().toString())
             .addQueryParameter("dockerfile", dockerfilePath)
             .addQueryParameter("pull", if (forcePull) "1" else "0")
 
-        imageTags.forEach { url.addQueryParameter("t", it) }
+        imageTags.forEach { baseUrl.addQueryParameter("t", it) }
 
-        val requestBuilder = Request.Builder()
-            .post(ImageBuildContextRequestBody(context))
-
-        when (builderConfig) {
-            is LegacyBuilderConfig -> requestBuilder.addRegistryCredentialsForBuild(builderConfig.registryCredentials)
-            is BuildKitConfig ->
-                url
+        return when (builderConfig) {
+            is LegacyBuilderConfig -> Request.Builder()
+                .post(ImageBuildContextRequestBody(context))
+                .url(baseUrl.build())
+                .addRegistryCredentialsForBuild(builderConfig.registryCredentials)
+                .build()
+            is BuildKitConfig -> {
+                val url = baseUrl
                     .addQueryParameter("version", "2")
                     .addQueryParameter("session", builderConfig.session.sessionId)
                     .addQueryParameter("buildid", builderConfig.session.buildId)
-        }
+                    .addQueryParameter("remote", "client-session")
+                    .build()
 
-        return requestBuilder
-            .url(url.build())
-            .build()
+                Request.Builder()
+                    .post(emptyRequestBody())
+                    .url(url)
+                    .build()
+            }
+        }
     }
 
     private fun Request.Builder.addRegistryCredentialsForBuild(registryCredentials: Set<RegistryCredentials>): Request.Builder {

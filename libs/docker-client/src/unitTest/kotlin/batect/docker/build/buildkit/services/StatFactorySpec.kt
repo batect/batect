@@ -96,22 +96,23 @@ object StatFactorySpec : Spek({
                     }
                 }
 
-                given("a symlink to an ordinary file") {
-                    val filePath by createForGroup { Files.createTempFile("batect-${StatFactorySpec::class.simpleName!!}", "-test-link-target") }
+                given("a symlink to an ordinary file in the same directory") {
                     val linkPath by createForGroup { Files.createTempFile("batect-${StatFactorySpec::class.simpleName!!}", "-test-link") }
+                    val targetName by createForGroup { "${linkPath.fileName}-target" }
+                    val targetPath by createForGroup { linkPath.resolveSibling(targetName) }
                     val linkLastModifiedTime = 1620798740000123000L
-                    val fileLastModifiedTime = 1000798749999123000L
+                    val targetLastModifiedTime = 1000798749999123000L
                     val fileContent = "Some file content"
 
                     beforeGroup {
-                        filePath.toFile().deleteOnExit()
+                        targetPath.toFile().deleteOnExit()
                         linkPath.toFile().deleteOnExit()
 
-                        Files.write(filePath, fileContent.toByteArray(Charsets.UTF_8))
-                        Files.setLastModifiedTime(filePath, FileTime.from(fileLastModifiedTime, TimeUnit.NANOSECONDS))
+                        Files.write(targetPath, fileContent.toByteArray(Charsets.UTF_8))
+                        Files.setLastModifiedTime(targetPath, FileTime.from(targetLastModifiedTime, TimeUnit.NANOSECONDS))
 
                         Files.delete(linkPath)
-                        Files.createSymbolicLink(linkPath, filePath)
+                        Files.createSymbolicLink(linkPath, targetPath)
                         Files.setLastModifiedTime(linkPath, FileTime.from(linkLastModifiedTime, TimeUnit.NANOSECONDS))
                     }
 
@@ -143,8 +144,8 @@ object StatFactorySpec : Spek({
                         assertThat(stat.modTime, equalTo(linkLastModifiedTime))
                     }
 
-                    it("returns the target of the symlink") {
-                        assertThat(stat.linkname, equalTo(filePath.toString()))
+                    it("returns the relative path of the target of the symlink") {
+                        assertThat(stat.linkname, equalTo(targetName))
                     }
 
                     it("returns empty major and minor device numbers") {
@@ -154,6 +155,37 @@ object StatFactorySpec : Spek({
 
                     it("returns no extended attributes") {
                         assertThat(stat.xattrs, isEmptyMap())
+                    }
+                }
+
+                given("a symlink to an ordinary file in a different directory") {
+                    val parentDirectory by createForGroup { Files.createTempDirectory("batect-${StatFactorySpec::class.simpleName!!}-test-dir") }
+                    val linkDirectory by createForGroup { Files.createDirectory(parentDirectory.resolve("link-dir")) }
+                    val targetDirectory by createForGroup { Files.createDirectory(parentDirectory.resolve("target-dir")) }
+                    val linkPath by createForGroup { linkDirectory.resolve("the-link") }
+                    val targetPath by createForGroup { targetDirectory.resolve("the-target") }
+                    val linkLastModifiedTime = 1620798740000123000L
+                    val targetLastModifiedTime = 1000798749999123000L
+                    val fileContent = "Some file content"
+
+                    beforeGroup {
+                        parentDirectory.toFile().deleteOnExit()
+                        linkDirectory.toFile().deleteOnExit()
+                        targetDirectory.toFile().deleteOnExit()
+                        targetPath.toFile().deleteOnExit()
+                        linkPath.toFile().deleteOnExit()
+
+                        Files.write(targetPath, fileContent.toByteArray(Charsets.UTF_8))
+                        Files.setLastModifiedTime(targetPath, FileTime.from(targetLastModifiedTime, TimeUnit.NANOSECONDS))
+
+                        Files.createSymbolicLink(linkPath, targetPath)
+                        Files.setLastModifiedTime(linkPath, FileTime.from(linkLastModifiedTime, TimeUnit.NANOSECONDS))
+                    }
+
+                    val stat by createForGroup { factory.createStat(linkPath, "the-test-link") }
+
+                    it("returns the relative path of the target of the symlink") {
+                        assertThat(stat.linkname, equalTo("..\\target-dir\\the-target"))
                     }
                 }
 
@@ -207,19 +239,20 @@ object StatFactorySpec : Spek({
                 }
 
                 given("a symlink to a directory") {
-                    val directoryPath by createForGroup { Files.createTempDirectory("batect-${StatFactorySpec::class.simpleName!!}-test-directory") }
                     val linkPath by createForGroup { Files.createTempFile("batect-${StatFactorySpec::class.simpleName!!}", "-test-link") }
+                    val targetName by createForGroup { "${linkPath.fileName}-target" }
+                    val targetPath by createForGroup { Files.createDirectory(linkPath.resolveSibling(targetName)) }
                     val linkLastModifiedTime = 1620798740000123000L
                     val directoryLastModifiedTime = 1000798749999123000L
 
                     beforeGroup {
-                        directoryPath.toFile().deleteOnExit()
+                        targetPath.toFile().deleteOnExit()
                         linkPath.toFile().deleteOnExit()
 
-                        Files.setLastModifiedTime(directoryPath, FileTime.from(directoryLastModifiedTime, TimeUnit.NANOSECONDS))
+                        Files.setLastModifiedTime(targetPath, FileTime.from(directoryLastModifiedTime, TimeUnit.NANOSECONDS))
 
                         Files.delete(linkPath)
-                        Files.createSymbolicLink(linkPath, directoryPath)
+                        Files.createSymbolicLink(linkPath, targetPath)
                         Files.setLastModifiedTime(linkPath, FileTime.from(linkLastModifiedTime, TimeUnit.NANOSECONDS))
                     }
 
@@ -251,8 +284,8 @@ object StatFactorySpec : Spek({
                         assertThat(stat.modTime, equalTo(linkLastModifiedTime))
                     }
 
-                    it("returns the target of the symlink") {
-                        assertThat(stat.linkname, equalTo(directoryPath.toString()))
+                    it("returns the relative path to the target of the symlink") {
+                        assertThat(stat.linkname, equalTo(targetName))
                     }
 
                     it("returns empty major and minor device numbers") {

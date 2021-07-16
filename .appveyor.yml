@@ -19,7 +19,6 @@ install:
 build_script:
   - ps: ./ci/Enable-LinuxContainers.ps1
   - docker version
-  - cmd: cmd /C "set "DOCKER_BUILDKIT=1" && docker build -t symlink-test libs/docker-client/src/integrationTest/resources/test-images/symlink-in-build-context && docker run --rm symlink-test tree -J --noreport /everything"
   - ./gradlew :libs:docker-client:integrationTest --exclude-task=generateMainProtos # This is temporarily disabled on Windows due to https://github.com/square/wire/issues/1325
   - ./gradlew journeyTest --exclude-task=generateMainProtos # This is temporarily disabled on Windows due to https://github.com/square/wire/issues/1325
 

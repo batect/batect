@@ -43,8 +43,10 @@ import java.nio.file.FileSystemException
 import java.nio.file.Files
 import java.nio.file.LinkOption
 import java.nio.file.Path
+import java.nio.file.Paths
 import java.nio.file.attribute.UserDefinedFileAttributeView
 import java.util.concurrent.TimeUnit
+import kotlin.io.path.relativeToOrSelf
 
 // This is based on stat.go, stat_unix.go and stat_windows.go from github.com/tonistiigi/fsutil, which is what BuildKit uses internally.
 //
@@ -54,6 +56,8 @@ import java.util.concurrent.TimeUnit
 // Some shortcuts have been taken, for example:
 // - character and block devices are not handled correctly (devmajor and devminor are never populated)
 // - there is no handling of hard links (and it looks like Docker doesn't handle these either)
+// - on Windows, we always return the relative path to a symlink's target, regardless of what was actually set when the symlink was created
+// - on Windows, if there is a chain of symlinks (eg. A links to B and B links to C), then we'll return the target of A as C, not B
 //
 // On Windows, Docker does the following, so we do the same:
 // - files' and directories' permission bits are always rwxr-xr-x regardless of file system permissions (other mode bits such as type are preserved)
@@ -327,9 +331,9 @@ class WindowsStatFactory(private val posix: POSIX) : StatFactory {
         }
 
     // Based on https://stackoverflow.com/a/58644115/1668119
-    private fun symlinkTarget(path: Path): String {
+    private fun symlinkTarget(linkPath: Path): String {
         val handle = windowsMethods.CreateFileW(
-            WindowsHelpers.toWPath(path.toString()),
+            WindowsHelpers.toWPath(linkPath.toString()),
             GENERIC_READ,
             FILE_SHARE_READ,
             null,
@@ -357,8 +361,9 @@ class WindowsStatFactory(private val posix: POSIX) : StatFactory {
             }
 
             val rawPath = String(buffer, 0, buffer.size - 2, Charsets.UTF_16LE)
+            val targetPath = Paths.get(normalisePath(rawPath))
 
-            return normalisePath(rawPath)
+            return targetPath.relativeToOrSelf(linkPath.parent).toString()
         } finally {
             windowsMethods.CloseHandle(handle)
         }

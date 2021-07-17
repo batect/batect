@@ -70,6 +70,18 @@ sealed class DockerTLSConfig {
         private val clientCertificatePath: Path,
         private val clientKeyPath: Path
     ) : DockerTLSConfig() {
+        init {
+            checkFileExists("CA certificate", caCertificatePath)
+            checkFileExists("client certificate", clientCertificatePath)
+            checkFileExists("client key", clientKeyPath)
+        }
+
+        private fun checkFileExists(description: String, path: Path) {
+            if (!Files.exists(path)) {
+                throw InvalidDockerTLSConfigurationException("The $description file '$path' does not exist.")
+            }
+        }
+
         override val scheme: String = "https"
 
         override val hostnameVerifier: HostnameVerifier by lazy {

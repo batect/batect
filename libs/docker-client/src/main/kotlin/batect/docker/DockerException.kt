@@ -26,4 +26,5 @@ class ContainerHealthCheckException(message: String, cause: Throwable? = null) :
 class ImageBuildFailedException(message: String, cause: Throwable? = null) : DockerException(message, cause)
 class ImagePullFailedException(message: String, cause: Throwable? = null) : DockerException(message, cause)
 class DockerRegistryCredentialsException(message: String, cause: Throwable? = null) : DockerException(message, cause)
-class InvalidDockerConfigurationException(message: String) : DockerException(message)
+open class InvalidDockerConfigurationException(message: String) : DockerException(message)
+class InvalidDockerTLSConfigurationException(message: String) : InvalidDockerConfigurationException(message)

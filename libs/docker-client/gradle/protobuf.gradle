@@ -68,9 +68,7 @@ def protos = [
     new ProtoDownloadSpec("github.com/moby/buildkit/api/services/control/control.proto", buildKitVersion),
     new ProtoDownloadSpec("github.com/moby/buildkit/api/types/worker.proto"            , buildKitVersion),
     new ProtoDownloadSpec("github.com/moby/buildkit/session/auth/auth.proto"           , buildKitVersion),
-    // We have to use a custom version of this - see src/main/proto/filesync.proto for explanation.
-    // This can be removed once https://github.com/moby/buildkit/pull/2134 is released.
-    // new ProtoDownloadSpec("github.com/moby/buildkit/session/filesync/filesync.proto"   , buildKitVersion),
+    new ProtoDownloadSpec("github.com/moby/buildkit/session/filesync/filesync.proto"   , buildKitVersion),
     new ProtoDownloadSpec("github.com/moby/buildkit/solver/pb/ops.proto"               , buildKitVersion),
     new ProtoDownloadSpec("github.com/gogo/protobuf/gogoproto/gogo.proto"              , "v1.3.2"),
     new ProtoDownloadSpec("github.com/grpc/grpc-proto/grpc/health/v1/health.proto"     , "14b8f3e1181ed6fc484a033d3cbb912e7e7c6750"),
@@ -107,7 +105,6 @@ task downloadProtos() {
 
 wire.sourcePath {
     srcDir protosDir.toString()
-    srcDir 'src/main/proto'
 }
 
 wire.root('moby.buildkit.v1.StatusResponse')

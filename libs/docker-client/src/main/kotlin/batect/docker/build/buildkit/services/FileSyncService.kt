@@ -25,7 +25,7 @@ import com.squareup.wire.MessageSink
 import com.squareup.wire.MessageSource
 import fsutil.types.Packet
 import fsutil.types.Stat
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.Channel.Factory.UNLIMITED
 import kotlinx.coroutines.channels.ReceiveChannel
@@ -39,6 +39,7 @@ import okio.ByteString.Companion.toByteString
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
+import java.util.concurrent.Executors
 
 // Original notes from BuildKit docs and code:
 //
@@ -99,7 +100,7 @@ class FileSyncService(
         val messageSink = SynchronisedMessageSink(response, logger)
         val fileRequests = Channel<Int>(UNLIMITED)
 
-        runBlocking(Dispatchers.IO) {
+        runBlocking(dispatcher) {
             launch { sendDirectoryContents(root, messageSink) }
             launch { handleIncomingRequests(request, messageSink, fileRequests) }
             launch { handleFileRequests(messageSink, fileRequests) }
@@ -208,6 +209,13 @@ class FileSyncService(
 
     companion object {
         private fun resetUIDAndGID(stat: Stat): Stat = stat.copy(uid = 0, gid = 0)
+
+        // Why not just use Dispatchers.Default? That has a limit on the number of concurrently executing coroutines, equal to the number of physical cores.
+        // On a machine with a small number of physical cores (eg. 2), FileSyncService would deadlock because it launches multiple coroutines that block rather than yield.
+        // Dispatchers.IO would be an option, but that also has a relatively low limit of 64 concurrently executing coroutines.
+        // This gives us unlimited concurrency for extreme scenarios (eg. lots of concurrent image builds with lots of independent stages all requesting files at the same time).
+        // https://stackoverflow.com/questions/49652855/does-io-in-coroutines-cause-suspension explains further.
+        private val dispatcher by lazy { Executors.newCachedThreadPool().asCoroutineDispatcher() }
 
         fun endpointsForFactory(factory: ServiceInstanceFactory<FileSyncService>): Map<String, GrpcEndpoint<*, *, *>> {
             return mapOf(

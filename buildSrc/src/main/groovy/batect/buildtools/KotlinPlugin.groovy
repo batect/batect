@@ -20,6 +20,7 @@ import org.gradle.api.JavaVersion
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.tasks.testing.Test
+import org.gradle.jvm.tasks.Jar
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 
 class KotlinPlugin implements Plugin<Project> {
@@ -34,6 +35,7 @@ class KotlinPlugin implements Plugin<Project> {
         applySpotless(project)
         configureTesting(project)
         applyJacoco(project)
+        configureJar(project)
     }
 
     private void applyKotlin(Project project) {
@@ -216,6 +218,20 @@ class KotlinPlugin implements Plugin<Project> {
             task.jacoco {
                 enabled = generateCoverage == "true" && task.name == "test"
             }
+        }
+    }
+
+    private void configureJar(Project project) {
+        project.tasks.withType(Jar).configureEach { task ->
+            def version = project.version.toString()
+            def delimiter = "-dev"
+            def delimiterIndex = version.indexOf(delimiter)
+
+            if (delimiterIndex != -1) {
+                version = version.substring(0, delimiterIndex + delimiter.length())
+            }
+
+            task.archiveVersion.convention(version)
         }
     }
 }

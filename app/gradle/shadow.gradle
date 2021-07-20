@@ -20,6 +20,10 @@ tasks.withType(AbstractArchiveTask).configureEach {
     reproducibleFileOrder = true
 }
 
+tasks.withType(Jar).configureEach {
+    archiveVersion = project.version.toString()
+}
+
 shadowJar {
     classifier = null
 }

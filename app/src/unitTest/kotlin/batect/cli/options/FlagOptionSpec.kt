@@ -34,23 +34,46 @@ object FlagOptionSpec : Spek({
         val group = OptionGroup("the group")
 
         describe("parsing") {
-            val defaultProvider = mock<DefaultValueProvider<Boolean>> {
-                onGeneric { value } doReturn PossibleValue.Valid(true)
-            }
+            given("the option has not been provided") {
+                given("the default value is from a static value") {
+                    val defaultProvider = mock<DefaultValueProvider<Boolean>> {
+                        onGeneric { value } doReturn PossibleValue.Valid(true)
+                        on { valueSource } doReturn OptionValueSource.Default
+                    }
 
-            val option by createForEachTest { FlagOption(group, "enable-extra-awesomeness", "Enable the extra awesome features.", defaultProvider) }
+                    val option by createForEachTest { FlagOption(group, "enable-extra-awesomeness", "Enable the extra awesome features.", defaultProvider) }
 
-            on("the option not being provided") {
-                it("gives the value from the default value provider") {
-                    assertThat(option.getValue(mock(), mock()), equalTo(true))
+                    it("gives the value from the default value provider") {
+                        assertThat(option.getValue(mock(), mock()), equalTo(true))
+                    }
+
+                    it("reports that the value is the default") {
+                        assertThat(option.valueSource, equalTo(OptionValueSource.Default))
+                    }
                 }
 
-                it("reports that the value is the default") {
-                    assertThat(option.valueSource, equalTo(OptionValueSource.Default))
+                given("the default value is from the environment") {
+                    val defaultProvider = mock<DefaultValueProvider<Boolean>> {
+                        onGeneric { value } doReturn PossibleValue.Valid(true)
+                        on { valueSource } doReturn OptionValueSource.Environment
+                    }
+
+                    val option by createForEachTest { FlagOption(group, "enable-extra-awesomeness", "Enable the extra awesome features.", defaultProvider) }
+
+                    it("reports that the value is from the environment") {
+                        assertThat(option.valueSource, equalTo(OptionValueSource.Environment))
+                    }
                 }
             }
 
             listOf("--enable-extra-awesomeness", "-a").forEach { format ->
+                val defaultProvider = mock<DefaultValueProvider<Boolean>> {
+                    onGeneric { value } doReturn PossibleValue.Valid(true)
+                    on { valueSource } doReturn OptionValueSource.Default
+                }
+
+                val option by createForEachTest { FlagOption(group, "enable-extra-awesomeness", "Enable the extra awesome features.", defaultProvider) }
+
                 on("the option being provided in the format $format") {
                     val result by runForEachTest { option.parseValue(listOf(format)) }
 

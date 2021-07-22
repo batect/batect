@@ -29,7 +29,7 @@ class TristateFlagOption(
     shortName: Char? = null
 ) : OptionDefinition(group, longName, description, false, shortName), ReadOnlyProperty<OptionParserContainer, Boolean?> {
     private var value: PossibleValue<Boolean?> = defaultValueProvider.value
-    override var valueSource: OptionValueSource = OptionValueSource.Default
+    override var valueSource: OptionValueSource = defaultValueProvider.valueSource
         private set
 
     override fun parseValue(args: Iterable<String>): OptionParsingResult {

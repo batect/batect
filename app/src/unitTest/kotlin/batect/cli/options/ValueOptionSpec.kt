@@ -112,14 +112,29 @@ object ValueOptionSpec : Spek({
         }
 
         on("not applying a value for the option") {
-            val option = ValueOption(group, "value", "The value", StaticDefaultValueProvider(9999), ValueConverters.positiveInteger, 'v')
+            given("the default value is from a static default") {
+                val option = ValueOption(group, "value", "The value", StaticDefaultValueProvider(9999), ValueConverters.positiveInteger, 'v')
 
-            it("returns the default value") {
-                assertThat(option.getValue(mock(), mock()), equalTo(9999))
+                it("returns the default value") {
+                    assertThat(option.getValue(mock(), mock()), equalTo(9999))
+                }
+
+                it("reports that the value is the default") {
+                    assertThat(option.valueSource, equalTo(OptionValueSource.Default))
+                }
             }
 
-            it("reports that the value is the default") {
-                assertThat(option.valueSource, equalTo(OptionValueSource.Default))
+            given("the default value is from the environment") {
+                val defaultValueProvider = mock<DefaultValueProvider<Int>> {
+                    on { value } doReturn PossibleValue.Valid(9999)
+                    on { valueSource } doReturn OptionValueSource.Environment
+                }
+
+                val option = ValueOption(group, "value", "The value", defaultValueProvider, ValueConverters.positiveInteger, 'v')
+
+                it("reports that the value is from the environment") {
+                    assertThat(option.valueSource, equalTo(OptionValueSource.Environment))
+                }
             }
         }
 
@@ -127,6 +142,7 @@ object ValueOptionSpec : Spek({
             given("the default value is valid") {
                 val defaultProvider = mock<DefaultValueProvider<String>> {
                     onGeneric { value } doReturn PossibleValue.Valid("foo")
+                    on { valueSource } doReturn OptionValueSource.Default
                 }
 
                 val option by createForEachTest { ValueOption(group, "value", "The value.", defaultProvider, ValueConverters.string) }
@@ -145,6 +161,7 @@ object ValueOptionSpec : Spek({
             given("the default value is invalid") {
                 val defaultProvider = mock<DefaultValueProvider<String>> {
                     onGeneric { value } doReturn PossibleValue.Invalid("The default value is invalid")
+                    on { valueSource } doReturn OptionValueSource.Default
                 }
 
                 val option by createForEachTest { ValueOption(group, "value", "The value.", defaultProvider, ValueConverters.string) }

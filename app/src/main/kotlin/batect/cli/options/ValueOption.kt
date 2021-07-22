@@ -36,7 +36,7 @@ class ValueOption<StorageType, ValueType : StorageType>(
 ) : OptionDefinition(group, longName, description, true, shortName, showInHelp = showInHelp), ReadOnlyProperty<OptionParserContainer, StorageType> {
 
     private var value: PossibleValue<StorageType> = defaultValueProvider.value
-    override var valueSource: OptionValueSource = OptionValueSource.Default
+    override var valueSource: OptionValueSource = defaultValueProvider.valueSource
         private set
 
     override fun parseValue(args: Iterable<String>): OptionParsingResult {

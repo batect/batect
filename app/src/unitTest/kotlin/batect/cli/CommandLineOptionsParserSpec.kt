@@ -32,13 +32,17 @@ import batect.testutils.on
 import batect.ui.OutputStyle
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
+import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.has
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doAnswer
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.Suite
 import org.spekframework.spek2.style.specification.describe
+import java.nio.file.Path
 
 object CommandLineOptionsParserSpec : Spek({
     describe("a command line interface") {
@@ -315,5 +319,382 @@ object CommandLineOptionsParserSpec : Spek({
                 }
             }
         }
+
+        describe("configuring Docker file locations") {
+            fun parseWithEnvironmentVariables(args: List<String>, environmentVariables: HostEnvironmentVariables): CommandLineOptions {
+                val parser = CommandLineOptionsParser(
+                    pathResolverFactory,
+                    EnvironmentVariableDefaultValueProviderFactory(environmentVariables),
+                    dockerHttpConfigDefaults,
+                    systemInfo
+                )
+
+                val result = parser.parse(args)
+
+                return (result as CommandLineOptionsParsingResult.Succeeded).options
+            }
+
+            fun Suite.itParsesArgumentsWith(
+                environmentVariables: HostEnvironmentVariables,
+                topLevelArgs: List<String>,
+                configDirectoryDescription: String,
+                expectedConfigDirectory: Path,
+                certificatesDirectoryDescription: String,
+                defaultCertificatesDirectory: Path
+            ) {
+                val expectedTlsCACertificatePath = defaultCertificatesDirectory.resolve("ca.pem")
+                val expectedTLSCertificatePath = defaultCertificatesDirectory.resolve("cert.pem")
+                val expectedTLSKey = defaultCertificatesDirectory.resolve("key.pem")
+
+                given("no specific file arguments are provided") {
+                    val args = topLevelArgs + listOf("some-task")
+                    val result = parseWithEnvironmentVariables(args, environmentVariables)
+
+                    it("returns a set of options with the $configDirectoryDescription and certificate files within the $certificatesDirectoryDescription") {
+                        assertThat(
+                            result,
+                            hasDockerConfigDirectory(expectedConfigDirectory)
+                                and hasDockerTlsCACertificatePath(expectedTlsCACertificatePath)
+                                and hasDockerTLSCertificatePath(expectedTLSCertificatePath)
+                                and hasDockerTLSKeyPath(expectedTLSKey)
+                        )
+                    }
+                }
+
+                given("the --docker-tls-ca-cert argument is provided") {
+                    val args = topLevelArgs + listOf("--docker-tls-ca-cert=some-tls-ca-cert", "some-task")
+                    val result = parseWithEnvironmentVariables(args, environmentVariables)
+
+                    it("returns a set of options with the value for the TLS CA certificate file from the argument") {
+                        assertThat(
+                            result,
+                            hasDockerConfigDirectory(expectedConfigDirectory)
+                                and hasDockerTlsCACertificatePath(fileSystem.getPath("/resolved/some-tls-ca-cert"))
+                                and hasDockerTLSCertificatePath(expectedTLSCertificatePath)
+                                and hasDockerTLSKeyPath(expectedTLSKey)
+                        )
+                    }
+                }
+
+                given("the --docker-tls-cert argument is provided") {
+                    val args = topLevelArgs + listOf("--docker-tls-cert=some-tls-cert", "some-task")
+                    val result = parseWithEnvironmentVariables(args, environmentVariables)
+
+                    it("returns a set of options with the value for the TLS certificate file from the argument") {
+                        assertThat(
+                            result,
+                            hasDockerConfigDirectory(expectedConfigDirectory)
+                                and hasDockerTlsCACertificatePath(expectedTlsCACertificatePath)
+                                and hasDockerTLSCertificatePath(fileSystem.getPath("/resolved/some-tls-cert"))
+                                and hasDockerTLSKeyPath(expectedTLSKey)
+                        )
+                    }
+                }
+
+                given("the --docker-tls-key argument is provided") {
+                    val args = topLevelArgs + listOf("--docker-tls-key=some-tls-key", "some-task")
+                    val result = parseWithEnvironmentVariables(args, environmentVariables)
+
+                    it("returns a set of options with the value for the TLS key file from the argument") {
+                        assertThat(
+                            result,
+                            hasDockerConfigDirectory(expectedConfigDirectory)
+                                and hasDockerTlsCACertificatePath(expectedTlsCACertificatePath)
+                                and hasDockerTLSCertificatePath(expectedTLSCertificatePath)
+                                and hasDockerTLSKeyPath(fileSystem.getPath("/resolved/some-tls-key"))
+                        )
+                    }
+                }
+            }
+
+            given("the DOCKER_CONFIG environment variable is not set") {
+                val configDirectoryEnvironmentVariable = emptyMap<String, String>()
+
+                given("the --docker-config argument is not provided") {
+                    val configDirectoryArgument = emptyList<String>()
+                    val expectedConfigDirectory = defaultCommandLineOptions.dockerConfigDirectory
+                    val configDirectoryDescription = "the default Docker config directory"
+
+                    given("the DOCKER_CERT_PATH environment variable is not set") {
+                        val environmentVariables = HostEnvironmentVariables(configDirectoryEnvironmentVariable)
+
+                        given("the --docker-cert-path argument is not provided") {
+                            val args = configDirectoryArgument + emptyList()
+
+                            itParsesArgumentsWith(
+                                environmentVariables,
+                                args,
+                                configDirectoryDescription,
+                                expectedConfigDirectory,
+                                configDirectoryDescription,
+                                expectedConfigDirectory
+                            )
+                        }
+
+                        given("the --docker-cert-path argument is provided") {
+                            val args = configDirectoryArgument + listOf("--docker-cert-path=some-cert-dir")
+
+                            itParsesArgumentsWith(
+                                environmentVariables,
+                                args,
+                                configDirectoryDescription,
+                                expectedConfigDirectory,
+                                "the certificates directory provided on the command line",
+                                fileSystem.getPath("/resolved/some-cert-dir")
+                            )
+                        }
+                    }
+
+                    given("the DOCKER_CERT_PATH environment variable is set") {
+                        val environmentVariables = HostEnvironmentVariables(
+                            configDirectoryEnvironmentVariable +
+                                ("DOCKER_CERT_PATH" to "some-environment-cert-dir")
+                        )
+
+                        given("the --docker-cert-path argument is not provided") {
+                            val args = configDirectoryArgument + emptyList()
+
+                            itParsesArgumentsWith(
+                                environmentVariables,
+                                args,
+                                configDirectoryDescription,
+                                expectedConfigDirectory,
+                                "the certificates directory configured in the DOCKER_CERT_PATH environment variable",
+                                fileSystem.getPath("/resolved/some-environment-cert-dir")
+                            )
+                        }
+
+                        given("the --docker-cert-path argument is provided") {
+                            val args = configDirectoryArgument + listOf("--docker-cert-path=some-cert-dir")
+
+                            itParsesArgumentsWith(
+                                environmentVariables,
+                                args,
+                                configDirectoryDescription,
+                                expectedConfigDirectory,
+                                "the certificates directory provided on the command line",
+                                fileSystem.getPath("/resolved/some-cert-dir")
+                            )
+                        }
+                    }
+                }
+
+                given("the --docker-config argument is provided") {
+                    val configDirectoryArgument = listOf("--docker-config=some-config-dir")
+                    val expectedConfigDirectory = fileSystem.getPath("/resolved/some-config-dir")
+                    val configDirectoryDescription = "the Docker config directory provided on the command line"
+
+                    given("the DOCKER_CERT_PATH environment variable is not set") {
+                        val environmentVariables = HostEnvironmentVariables(configDirectoryEnvironmentVariable)
+
+                        given("the --docker-cert-path argument is not provided") {
+                            val args = configDirectoryArgument + emptyList()
+
+                            itParsesArgumentsWith(
+                                environmentVariables,
+                                args,
+                                configDirectoryDescription,
+                                expectedConfigDirectory,
+                                configDirectoryDescription,
+                                expectedConfigDirectory
+                            )
+                        }
+
+                        given("the --docker-cert-path argument is provided") {
+                            val args = configDirectoryArgument + listOf("--docker-cert-path=some-cert-dir")
+
+                            itParsesArgumentsWith(
+                                environmentVariables,
+                                args,
+                                configDirectoryDescription,
+                                expectedConfigDirectory,
+                                "the certificates directory provided on the command line",
+                                fileSystem.getPath("/resolved/some-cert-dir")
+                            )
+                        }
+                    }
+
+                    given("the DOCKER_CERT_PATH environment variable is set") {
+                        val environmentVariables = HostEnvironmentVariables(
+                            configDirectoryEnvironmentVariable +
+                                ("DOCKER_CERT_PATH" to "some-environment-cert-dir")
+                        )
+
+                        given("the --docker-cert-path argument is not provided") {
+                            val args = configDirectoryArgument + emptyList()
+
+                            itParsesArgumentsWith(
+                                environmentVariables,
+                                args,
+                                configDirectoryDescription,
+                                expectedConfigDirectory,
+                                "the certificates directory configured in the DOCKER_CERT_PATH environment variable",
+                                fileSystem.getPath("/resolved/some-environment-cert-dir")
+                            )
+                        }
+
+                        given("the --docker-cert-path argument is provided") {
+                            val args = configDirectoryArgument + listOf("--docker-cert-path=some-cert-dir")
+
+                            itParsesArgumentsWith(
+                                environmentVariables,
+                                args,
+                                configDirectoryDescription,
+                                expectedConfigDirectory,
+                                "the certificates directory provided on the command line",
+                                fileSystem.getPath("/resolved/some-cert-dir")
+                            )
+                        }
+                    }
+                }
+            }
+
+            given("the DOCKER_CONFIG environment variable is set") {
+                val configDirectoryEnvironmentVariable = mapOf("DOCKER_CONFIG" to "some-environment-config-dir")
+
+                given("the --docker-config argument is not provided") {
+                    val configDirectoryArgument = emptyList<String>()
+                    val expectedConfigDirectory = fileSystem.getPath("/resolved/some-environment-config-dir")
+                    val configDirectoryDescription = "the Docker config directory configured in the DOCKER_CONFIG environment variable"
+
+                    given("the DOCKER_CERT_PATH environment variable is not set") {
+                        val environmentVariables = HostEnvironmentVariables(configDirectoryEnvironmentVariable)
+
+                        given("the --docker-cert-path argument is not provided") {
+                            val args = configDirectoryArgument + emptyList()
+
+                            itParsesArgumentsWith(
+                                environmentVariables,
+                                args,
+                                configDirectoryDescription,
+                                expectedConfigDirectory,
+                                configDirectoryDescription,
+                                expectedConfigDirectory
+                            )
+                        }
+
+                        given("the --docker-cert-path argument is provided") {
+                            val args = configDirectoryArgument + listOf("--docker-cert-path=some-cert-dir")
+
+                            itParsesArgumentsWith(
+                                environmentVariables,
+                                args,
+                                configDirectoryDescription,
+                                expectedConfigDirectory,
+                                "the certificates directory provided on the command line",
+                                fileSystem.getPath("/resolved/some-cert-dir")
+                            )
+                        }
+                    }
+
+                    given("the DOCKER_CERT_PATH environment variable is set") {
+                        val environmentVariables = HostEnvironmentVariables(
+                            configDirectoryEnvironmentVariable +
+                                ("DOCKER_CERT_PATH" to "some-environment-cert-dir")
+                        )
+
+                        given("the --docker-cert-path argument is not provided") {
+                            val args = configDirectoryArgument + emptyList()
+
+                            itParsesArgumentsWith(
+                                environmentVariables,
+                                args,
+                                configDirectoryDescription,
+                                expectedConfigDirectory,
+                                "the certificates directory configured in the DOCKER_CERT_PATH environment variable",
+                                fileSystem.getPath("/resolved/some-environment-cert-dir")
+                            )
+                        }
+
+                        given("the --docker-cert-path argument is provided") {
+                            val args = configDirectoryArgument + listOf("--docker-cert-path=some-cert-dir")
+
+                            itParsesArgumentsWith(
+                                environmentVariables,
+                                args,
+                                configDirectoryDescription,
+                                expectedConfigDirectory,
+                                "the certificates directory provided on the command line",
+                                fileSystem.getPath("/resolved/some-cert-dir")
+                            )
+                        }
+                    }
+                }
+
+                given("the --docker-config argument is provided") {
+                    val configDirectoryArgument = listOf("--docker-config=some-config-dir")
+                    val expectedConfigDirectory = fileSystem.getPath("/resolved/some-config-dir")
+                    val configDirectoryDescription = "the Docker config directory provided on the command line"
+
+                    given("the DOCKER_CERT_PATH environment variable is not set") {
+                        val environmentVariables = HostEnvironmentVariables(configDirectoryEnvironmentVariable)
+
+                        given("the --docker-cert-path argument is not provided") {
+                            val args = configDirectoryArgument + emptyList()
+
+                            itParsesArgumentsWith(
+                                environmentVariables,
+                                args,
+                                configDirectoryDescription,
+                                expectedConfigDirectory,
+                                configDirectoryDescription,
+                                expectedConfigDirectory
+                            )
+                        }
+
+                        given("the --docker-cert-path argument is provided") {
+                            val args = configDirectoryArgument + listOf("--docker-cert-path=some-cert-dir")
+
+                            itParsesArgumentsWith(
+                                environmentVariables,
+                                args,
+                                configDirectoryDescription,
+                                expectedConfigDirectory,
+                                "the certificates directory provided on the command line",
+                                fileSystem.getPath("/resolved/some-cert-dir")
+                            )
+                        }
+                    }
+
+                    given("the DOCKER_CERT_PATH environment variable is set") {
+                        val environmentVariables = HostEnvironmentVariables(
+                            configDirectoryEnvironmentVariable +
+                                ("DOCKER_CERT_PATH" to "some-environment-cert-dir")
+                        )
+
+                        given("the --docker-cert-path argument is not provided") {
+                            val args = configDirectoryArgument + emptyList()
+
+                            itParsesArgumentsWith(
+                                environmentVariables,
+                                args,
+                                configDirectoryDescription,
+                                expectedConfigDirectory,
+                                "the certificates directory configured in the DOCKER_CERT_PATH environment variable",
+                                fileSystem.getPath("/resolved/some-environment-cert-dir")
+                            )
+                        }
+
+                        given("the --docker-cert-path argument is provided") {
+                            val args = configDirectoryArgument + listOf("--docker-cert-path=some-cert-dir")
+
+                            itParsesArgumentsWith(
+                                environmentVariables,
+                                args,
+                                configDirectoryDescription,
+                                expectedConfigDirectory,
+                                "the certificates directory provided on the command line",
+                                fileSystem.getPath("/resolved/some-cert-dir")
+                            )
+                        }
+                    }
+                }
+            }
+        }
     }
 })
+
+private fun hasDockerConfigDirectory(expected: Path) = has("Docker config directory", CommandLineOptions::dockerConfigDirectory, equalTo(expected))
+private fun hasDockerTlsCACertificatePath(expected: Path) = has("Docker TLS CA certificate path", CommandLineOptions::dockerTlsCACertificatePath, equalTo(expected))
+private fun hasDockerTLSCertificatePath(expected: Path) = has("Docker TLS certificate path", CommandLineOptions::dockerTLSCertificatePath, equalTo(expected))
+private fun hasDockerTLSKeyPath(expected: Path) = has("Docker TLS key path", CommandLineOptions::dockerTLSKeyPath, equalTo(expected))

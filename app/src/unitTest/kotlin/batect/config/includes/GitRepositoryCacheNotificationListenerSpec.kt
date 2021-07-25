@@ -21,9 +21,9 @@ import batect.testutils.given
 import batect.ui.Console
 import batect.ui.OutputStyle
 import batect.ui.text.Text
-import com.nhaarman.mockitokotlin2.mock
-import com.nhaarman.mockitokotlin2.verify
-import com.nhaarman.mockitokotlin2.verifyZeroInteractions
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.verifyZeroInteractions
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 

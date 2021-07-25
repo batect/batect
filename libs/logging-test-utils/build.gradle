@@ -22,7 +22,7 @@ dependencies {
     implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion"
     implementation "org.spekframework.spek2:spek-dsl-jvm:$spekVersion"
     implementation "com.natpryce:hamkrest:$hamkrestVersion"
-    implementation "com.nhaarman.mockitokotlin2:mockito-kotlin:$mockitoKotlinVersion"
+    implementation "org.mockito.kotlin:mockito-kotlin:$mockitoKotlinVersion"
     implementation project(":libs:logging")
     implementation project(":libs:test-utils")
 }

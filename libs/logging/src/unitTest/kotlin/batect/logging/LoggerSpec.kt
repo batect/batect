@@ -17,9 +17,9 @@
 package batect.logging
 
 import batect.testutils.createForEachTest
-import com.nhaarman.mockitokotlin2.mock
-import com.nhaarman.mockitokotlin2.verify
 import kotlinx.serialization.builtins.serializer
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.verify
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 

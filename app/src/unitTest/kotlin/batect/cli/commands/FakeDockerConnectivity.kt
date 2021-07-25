@@ -16,10 +16,10 @@
 
 package batect.cli.commands
 
-import com.nhaarman.mockitokotlin2.any
-import com.nhaarman.mockitokotlin2.doAnswer
-import com.nhaarman.mockitokotlin2.mock
 import org.kodein.di.DirectDI
+import org.mockito.kotlin.any
+import org.mockito.kotlin.doAnswer
+import org.mockito.kotlin.mock
 
 fun fakeDockerConnectivity(kodein: DirectDI): DockerConnectivity = mock() {
     on { checkAndRun(any()) } doAnswer { invocation ->

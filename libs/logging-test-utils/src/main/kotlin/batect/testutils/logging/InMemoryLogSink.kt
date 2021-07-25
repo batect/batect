@@ -25,9 +25,9 @@ import batect.logging.Logger
 import batect.logging.Severity
 import batect.logging.StandardAdditionalDataSource
 import batect.testutils.createForEachTest
-import com.nhaarman.mockitokotlin2.doReturn
-import com.nhaarman.mockitokotlin2.mock
 import kotlinx.serialization.json.Json
+import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.mock
 import org.spekframework.spek2.dsl.LifecycleAware
 import java.io.ByteArrayOutputStream
 import java.time.ZoneOffset

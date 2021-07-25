@@ -18,7 +18,7 @@ package batect.testutils
 
 import batect.config.ImageSource
 import batect.os.PathResolutionContext
-import com.nhaarman.mockitokotlin2.mock
+import org.mockito.kotlin.mock
 
 fun imageSourceDoesNotMatter(): ImageSource = mock<ImageSource>()
 fun pathResolutionContextDoesNotMatter(): PathResolutionContext = mock<PathResolutionContext>()

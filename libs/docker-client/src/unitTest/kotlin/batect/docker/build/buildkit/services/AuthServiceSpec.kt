@@ -26,12 +26,12 @@ import batect.testutils.given
 import batect.testutils.logging.createLoggerForEachTestWithoutCustomSerializers
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.throws
-import com.nhaarman.mockitokotlin2.doReturn
-import com.nhaarman.mockitokotlin2.mock
-import com.nhaarman.mockitokotlin2.whenever
 import moby.filesync.v1.CredentialsRequest
 import moby.filesync.v1.CredentialsResponse
 import moby.filesync.v1.GetTokenAuthorityRequest
+import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 

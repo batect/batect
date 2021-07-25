@@ -56,7 +56,7 @@ import batect.testutils.pathResolutionContextDoesNotMatter
 import batect.testutils.runForEachTest
 import batect.ui.text.Text
 import com.natpryce.hamkrest.assertion.assertThat
-import com.nhaarman.mockitokotlin2.mock
+import org.mockito.kotlin.mock
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 

@@ -20,10 +20,6 @@ import com.natpryce.hamkrest.MatchResult
 import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.has
-import com.nhaarman.mockitokotlin2.argThat
-import com.nhaarman.mockitokotlin2.doReturn
-import com.nhaarman.mockitokotlin2.mock
-import com.nhaarman.mockitokotlin2.whenever
 import okhttp3.Call
 import okhttp3.Headers
 import okhttp3.HttpUrl
@@ -34,6 +30,10 @@ import okhttp3.Protocol
 import okhttp3.Request
 import okhttp3.Response
 import okhttp3.ResponseBody.Companion.toResponseBody
+import org.mockito.kotlin.argThat
+import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 
 fun OkHttpClient.mockGet(url: String, responseBody: String, statusCode: Int = 200, expectedRequestHeaders: Headers = Headers.Builder().build(), responseHeaders: Headers = Headers.Builder().build()): Call =
     mock("GET", url, responseBody, statusCode, expectedRequestHeaders, responseHeaders)

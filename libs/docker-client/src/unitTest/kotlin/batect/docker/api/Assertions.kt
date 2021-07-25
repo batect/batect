@@ -22,7 +22,6 @@ import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
-import com.nhaarman.mockitokotlin2.argThat
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 import okhttp3.ConnectionPool
@@ -32,6 +31,7 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.internal.connection.RealConnectionPool
 import okio.Buffer
+import org.mockito.kotlin.argThat
 
 internal fun hasScheme(expectedScheme: String) = has(HttpUrl::schemeValue, equalTo(expectedScheme))
 internal fun hasHost(expectedHost: String) = has(HttpUrl::hostValue, equalTo(expectedHost))
@@ -82,7 +82,7 @@ internal fun doesNotHaveQueryParameter(key: String) = object : Matcher<HttpUrl> 
         get() = "does not have query parameter '$key'"
 }
 
-internal fun requestWithJsonBody(predicate: (JsonObject) -> Unit) = com.nhaarman.mockitokotlin2.check<Request> { request ->
+internal fun requestWithJsonBody(predicate: (JsonObject) -> Unit) = org.mockito.kotlin.check<Request> { request ->
     assertThat(request.body!!.contentType(), equalTo("application/json; charset=utf-8".toMediaType()))
 
     val buffer = Buffer()
@@ -91,11 +91,11 @@ internal fun requestWithJsonBody(predicate: (JsonObject) -> Unit) = com.nhaarman
     predicate(parsedBody)
 }
 
-internal fun requestWithBody(expectedBody: RequestBody) = com.nhaarman.mockitokotlin2.check<Request> { request ->
+internal fun requestWithBody(expectedBody: RequestBody) = org.mockito.kotlin.check<Request> { request ->
     assertThat(request.body, equalTo(expectedBody))
 }
 
-internal fun requestWithEmptyBody() = com.nhaarman.mockitokotlin2.check<Request> { request ->
+internal fun requestWithEmptyBody() = org.mockito.kotlin.check<Request> { request ->
     assertThat(request.body?.contentLength(), equalTo(0))
 }
 

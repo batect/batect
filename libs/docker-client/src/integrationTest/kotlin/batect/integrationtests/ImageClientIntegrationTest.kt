@@ -34,9 +34,9 @@ import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.hasElement
 import com.natpryce.hamkrest.matches
 import com.natpryce.hamkrest.or
-import com.nhaarman.mockitokotlin2.mock
 import okio.sink
 import org.araqnid.hamkrest.json.json
+import org.mockito.kotlin.mock
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.dsl.Skip
 import org.spekframework.spek2.style.specification.describe

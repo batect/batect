@@ -26,5 +26,5 @@ dependencies {
     implementation "com.google.jimfs:jimfs:$jimfsVersion"
     implementation "com.github.jnr:jnr-posix:$jnrPosixVersion"
     implementation "com.squareup.okhttp3:okhttp"
-    implementation "com.nhaarman.mockitokotlin2:mockito-kotlin:$mockitoKotlinVersion"
+    implementation "org.mockito.kotlin:mockito-kotlin:$mockitoKotlinVersion"
 }

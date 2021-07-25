@@ -26,9 +26,6 @@ import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.throws
-import com.nhaarman.mockitokotlin2.doReturn
-import com.nhaarman.mockitokotlin2.mock
-import com.nhaarman.mockitokotlin2.whenever
 import com.squareup.wire.MessageSink
 import com.squareup.wire.MessageSource
 import fsutil.types.Packet
@@ -36,6 +33,9 @@ import fsutil.types.Stat
 import okhttp3.Headers
 import okio.ByteString.Companion.encodeUtf8
 import okio.utf8Size
+import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.nio.file.Files

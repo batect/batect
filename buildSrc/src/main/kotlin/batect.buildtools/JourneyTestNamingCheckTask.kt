@@ -25,56 +25,53 @@ import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
+import java.io.File
+import java.nio.file.Files
 
-class JourneyTestNamingCheckTask extends DefaultTask {
-    private static final Set<String> allowedSuffixes = ["JourneyTest.kt", "JourneyTests.kt"]
+abstract class JourneyTestNamingCheckTask : DefaultTask() {
+    @get:InputFiles
+    abstract val files: Property<SourceDirectorySet>
 
-    @InputFiles
-    final Property<SourceDirectorySet> files
+    @get:Input
+    @get:Optional
+    abstract val ignoreFileNameCheck: Property<FileCollection>
 
-    @Input
-    @Optional
-    final Property<FileCollection> ignoreFileNameCheck
+    @get:OutputFile
+    abstract val upToDateFile: Property<File>
 
-    @OutputFile
-    final Property<File> upToDateFile
-
-    JourneyTestNamingCheckTask() {
-        files = project.objects.property(SourceDirectorySet.class)
-        ignoreFileNameCheck = project.objects.property(FileCollection.class)
-        upToDateFile = project.objects.property(File.class)
-
+    init {
         upToDateFile.set(temporaryDir.toPath().resolve("upToDate").toFile())
     }
 
     @TaskAction
-    def run() {
-        def filesToCheck = files.get().files
+    fun run() {
+        val filesToCheck = files.get().files
 
         filesToCheck.forEach { file ->
             checkFile(file)
         }
 
-        upToDateFile.get().text = System.currentTimeMillis()
+        val upToDateContents = System.currentTimeMillis().toString()
+        Files.write(upToDateFile.get().toPath(), upToDateContents.toByteArray(Charsets.UTF_8))
     }
 
-    def checkFile(File file) {
+    private fun checkFile(file: File) {
         if (!endsWithAllowedSuffix(file)) {
-            if (ignoreFileNameCheck.present && ignoreFileNameCheck.get().contains(file)) {
+            if (ignoreFileNameCheck.isPresent && ignoreFileNameCheck.get().contains(file)) {
                 return
             }
 
-            throw new JourneyTestNamingException("Expected file ${file} to have a name ending with any of $allowedSuffixes.")
+            throw JourneyTestNamingException("Expected file $file to have a name ending with any of $allowedSuffixes.")
         }
     }
 
-    static Boolean endsWithAllowedSuffix(File file) {
+    private fun endsWithAllowedSuffix(file: File): Boolean {
         return allowedSuffixes.any {file.name.endsWith(it) }
     }
 
-    class JourneyTestNamingException extends RuntimeException {
-        JourneyTestNamingException(String message) {
-            super(message)
-        }
+    class JourneyTestNamingException(message: String) : RuntimeException(message)
+
+    companion object {
+        private val allowedSuffixes = setOf("JourneyTest.kt", "JourneyTests.kt")
     }
 }

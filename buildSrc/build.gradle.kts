@@ -16,7 +16,6 @@
 
 plugins {
     id("java-gradle-plugin")
-    id("groovy")
     kotlin("jvm") version "1.5.21"
 }
 
@@ -26,8 +25,8 @@ repositories {
 
 dependencies {
     implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
-    implementation(localGroovy())
     implementation(gradleApi())
+    implementation(gradleKotlinDsl())
     implementation("org.jetbrains.kotlin:kotlin-gradle-plugin")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlin:kotlin-serialization")

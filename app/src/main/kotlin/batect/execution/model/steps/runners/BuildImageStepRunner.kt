@@ -25,6 +25,7 @@ import batect.config.TaskSpecialisedConfiguration
 import batect.docker.ImageBuildFailedException
 import batect.docker.api.BuilderVersion
 import batect.docker.build.BuildProgress
+import batect.docker.client.ImageBuildRequest
 import batect.docker.client.ImagesClient
 import batect.execution.model.events.ImageBuildFailedEvent
 import batect.execution.model.events.ImageBuildProgressEvent
@@ -64,19 +65,17 @@ class BuildImageStepRunner(
             val buildArgs = buildTimeProxyEnvironmentVariablesForOptions() + substituteBuildArgs(buildConfig.buildArgs)
             val imageTags = commandLineOptions.imageTags.getOrDefault(step.container.name, emptySet()) + imageTagFor(step)
 
+            val request = ImageBuildRequest(
+                resolveBuildDirectory(buildConfig),
+                buildArgs,
+                buildConfig.dockerfilePath,
+                buildConfig.pathResolutionContext,
+                imageTags,
+                buildConfig.imagePullPolicy.forciblyPull
+            )
+
             val image = telemetrySessionBuilder.addSpan("BuildImage") {
-                imagesClient.build(
-                    resolveBuildDirectory(buildConfig),
-                    buildArgs,
-                    buildConfig.dockerfilePath,
-                    buildConfig.pathResolutionContext,
-                    imageTags,
-                    buildConfig.imagePullPolicy.forciblyPull,
-                    ioStreamingOptions.stdoutForImageBuild(step.container),
-                    builderVersion,
-                    cancellationContext,
-                    onStatusUpdate
-                )
+                imagesClient.build(request, builderVersion, ioStreamingOptions.stdoutForImageBuild(step.container), cancellationContext, onStatusUpdate)
             }
 
             eventSink.postEvent(ImageBuiltEvent(step.container, image))

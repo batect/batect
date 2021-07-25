@@ -19,6 +19,7 @@ package batect.integrationtests
 import batect.docker.DockerImage
 import batect.docker.ImageBuildFailedException
 import batect.docker.api.BuilderVersion
+import batect.docker.client.ImageBuildRequest
 import batect.os.DefaultPathResolutionContext
 import batect.os.ProcessOutput
 import batect.os.ProcessRunner
@@ -62,15 +63,19 @@ object ImageClientIntegrationTest : Spek({
             val output by createForGroup { ByteArrayOutputStream() }
 
             runBeforeGroup {
-                client.images.build(
+                val request = ImageBuildRequest(
                     imageDirectory,
                     mapOf("CACHE_BUSTING_ID" to cacheBustingId),
                     "Dockerfile",
                     DefaultPathResolutionContext(imageDirectory),
                     setOf("batect-integration-tests-basic-image-buildkit"),
-                    false,
-                    output.sink(),
+                    false
+                )
+
+                client.images.build(
+                    request,
                     BuilderVersion.BuildKit,
+                    output.sink(),
                     CancellationContext()
                 ) {}
             }
@@ -112,15 +117,19 @@ object ImageClientIntegrationTest : Spek({
                         val output = ByteArrayOutputStream()
 
                         try {
-                            return client.images.build(
+                            val request = ImageBuildRequest(
                                 imageDirectory,
                                 mapOf("CACHE_BUSTING_ID" to cacheBustingId),
                                 dockerfileName,
                                 DefaultPathResolutionContext(imageDirectory),
                                 setOf("batect-integration-tests-$path-${builderVersion.toString().lowercase()}"),
-                                false,
-                                output.sink(),
+                                false
+                            )
+
+                            return client.images.build(
+                                request,
                                 builderVersion,
+                                output.sink(),
                                 CancellationContext()
                             ) {}
                         } catch (e: ImageBuildFailedException) {

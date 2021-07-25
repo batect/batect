@@ -131,7 +131,18 @@ object ImagesClientSpec : Spek({
                     val onStatusUpdate = fun(_: BuildProgress) {}
 
                     given("the legacy builder is being used") {
-                        val result by runForEachTest { client.build(buildDirectory, buildArgs, dockerfilePath, pathResolutionContext, imageTags, forcePull, outputSink, BuilderVersion.Legacy, cancellationContext, onStatusUpdate) }
+                        val request by createForEachTest {
+                            ImageBuildRequest(
+                                buildDirectory,
+                                buildArgs,
+                                dockerfilePath,
+                                pathResolutionContext,
+                                imageTags,
+                                forcePull
+                            )
+                        }
+
+                        val result by runForEachTest { client.build(request, BuilderVersion.Legacy, outputSink, cancellationContext, onStatusUpdate) }
 
                         it("builds the image") {
                             verify(imagesAPI).build(
@@ -163,7 +174,18 @@ object ImagesClientSpec : Spek({
                         val sessionStreams by createForEachTest { mock<SessionStreams>() }
                         beforeEachTest { whenever(sessionsAPI.create(buildKitSession)).thenReturn(sessionStreams) }
 
-                        val result by runForEachTest { client.build(buildDirectory, buildArgs, dockerfilePath, pathResolutionContext, imageTags, forcePull, outputSink, BuilderVersion.BuildKit, cancellationContext, onStatusUpdate) }
+                        val request by createForEachTest {
+                            ImageBuildRequest(
+                                buildDirectory,
+                                buildArgs,
+                                dockerfilePath,
+                                pathResolutionContext,
+                                imageTags,
+                                forcePull
+                            )
+                        }
+
+                        val result by runForEachTest { client.build(request, BuilderVersion.BuildKit, outputSink, cancellationContext, onStatusUpdate) }
 
                         it("builds the image") {
                             verify(imagesAPI).build(
@@ -199,6 +221,17 @@ object ImagesClientSpec : Spek({
                 }
 
                 given("getting credentials for the base image fails") {
+                    val request by createForEachTest {
+                        ImageBuildRequest(
+                            buildDirectory,
+                            buildArgs,
+                            dockerfilePath,
+                            pathResolutionContext,
+                            imageTags,
+                            forcePull
+                        )
+                    }
+
                     val exception = DockerRegistryCredentialsException("Could not load credentials: something went wrong.")
 
                     beforeEachTest {
@@ -208,7 +241,7 @@ object ImagesClientSpec : Spek({
                     on("building the image") {
                         it("throws an appropriate exception") {
                             assertThat(
-                                { client.build(buildDirectory, buildArgs, dockerfilePath, pathResolutionContext, imageTags, forcePull, outputSink, BuilderVersion.Legacy, cancellationContext) {} },
+                                { client.build(request, BuilderVersion.Legacy, outputSink, cancellationContext) {} },
                                 throws<ImageBuildFailedException>(
                                     withMessage("Could not build image: Could not load credentials: something went wrong.")
                                         and withCause(exception)
@@ -220,10 +253,21 @@ object ImagesClientSpec : Spek({
             }
 
             given("the Dockerfile does not exist") {
+                val request by createForEachTest {
+                    ImageBuildRequest(
+                        buildDirectory,
+                        buildArgs,
+                        dockerfilePath,
+                        pathResolutionContext,
+                        imageTags,
+                        forcePull
+                    )
+                }
+
                 on("building the image") {
                     it("throws an appropriate exception") {
                         assertThat(
-                            { client.build(buildDirectory, buildArgs, dockerfilePath, pathResolutionContext, imageTags, forcePull, outputSink, BuilderVersion.Legacy, cancellationContext) {} },
+                            { client.build(request, BuilderVersion.Legacy, outputSink, cancellationContext) {} },
                             throws<ImageBuildFailedException>(withMessage("Could not build image: the Dockerfile 'some-Dockerfile-path' does not exist in the build directory <a nicely formatted version of the build directory>"))
                         )
                     }
@@ -234,6 +278,17 @@ object ImagesClientSpec : Spek({
                 val dockerfilePathOutsideBuildDir = "../some-Dockerfile"
                 val resolvedDockerfilePath by createForEachTest { buildDirectory.resolve(dockerfilePathOutsideBuildDir) }
 
+                val request by createForEachTest {
+                    ImageBuildRequest(
+                        buildDirectory,
+                        buildArgs,
+                        dockerfilePathOutsideBuildDir,
+                        pathResolutionContext,
+                        imageTags,
+                        forcePull
+                    )
+                }
+
                 beforeEachTest {
                     Files.createDirectories(buildDirectory)
                     Files.createFile(resolvedDockerfilePath)
@@ -242,7 +297,7 @@ object ImagesClientSpec : Spek({
                 on("building the image") {
                     it("throws an appropriate exception") {
                         assertThat(
-                            { client.build(buildDirectory, buildArgs, dockerfilePathOutsideBuildDir, pathResolutionContext, imageTags, forcePull, outputSink, BuilderVersion.Legacy, cancellationContext) {} },
+                            { client.build(request, BuilderVersion.Legacy, outputSink, cancellationContext) {} },
                             throws<ImageBuildFailedException>(withMessage("Could not build image: the Dockerfile '../some-Dockerfile' is not a child of the build directory <a nicely formatted version of the build directory>"))
                         )
                     }

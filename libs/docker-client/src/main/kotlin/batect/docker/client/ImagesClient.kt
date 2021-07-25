@@ -36,6 +36,7 @@ import batect.docker.data
 import batect.docker.pull.ImagePullProgress
 import batect.docker.pull.ImagePullProgressReporter
 import batect.docker.pull.RegistryCredentialsProvider
+import batect.logging.LogMessageBuilder
 import batect.logging.Logger
 import batect.os.PathResolutionContext
 import batect.primitives.CancellationContext
@@ -56,46 +57,29 @@ class ImagesClient(
 ) {
 
     fun build(
-        buildDirectory: Path,
-        buildArgs: Map<String, String>,
-        dockerfilePath: String,
-        pathResolutionContext: PathResolutionContext,
-        imageTags: Set<String>,
-        forcePull: Boolean,
-        outputSink: Sink?,
+        request: ImageBuildRequest,
         builderVersion: BuilderVersion,
+        outputSink: Sink?,
         cancellationContext: CancellationContext,
         onProgressUpdate: (BuildProgress) -> Unit
     ): DockerImage {
         logger.info {
             message("Building image.")
-            data("buildDirectory", buildDirectory)
-            data("buildArgs", buildArgs)
-            data("dockerfilePath", dockerfilePath)
-            data("imageTags", imageTags)
+            addRequestData(request)
             data("builderVersion", builderVersion)
         }
 
         try {
-            val resolvedDockerfilePath = buildDirectory.resolve(dockerfilePath)
-
-            if (!Files.exists(resolvedDockerfilePath)) {
-                throw ImageBuildFailedException("Could not build image: the Dockerfile '$dockerfilePath' does not exist in the build directory ${pathResolutionContext.getPathForDisplay(buildDirectory)}")
-            }
-
-            if (!resolvedDockerfilePath.toRealPath(LinkOption.NOFOLLOW_LINKS).startsWith(buildDirectory.toRealPath(LinkOption.NOFOLLOW_LINKS))) {
-                throw ImageBuildFailedException("Could not build image: the Dockerfile '$dockerfilePath' is not a child of the build directory ${pathResolutionContext.getPathForDisplay(buildDirectory)}")
-            }
-
-            val context = imageBuildContextFactory.createFromDirectory(buildDirectory, dockerfilePath)
+            val resolvedDockerfilePath = request.resolveDockerfilePath()
+            val context = imageBuildContextFactory.createFromDirectory(request.buildDirectory, request.relativeDockerfilePath)
             val imageBuildOutputSink = ImageBuildOutputSink(outputSink)
-            val builderConfig = createBuilderConfig(builderVersion, buildDirectory, resolvedDockerfilePath, imageBuildOutputSink)
+            val builderConfig = createBuilderConfig(builderVersion, request.buildDirectory, resolvedDockerfilePath, imageBuildOutputSink)
             val session = startSession(builderConfig)
 
             // Why not use a use() block here? use() suppresses any exceptions thrown by close() if an exception has already been thrown, but we want to allow them to bubble up so that
             // any exceptions from other threads can be propagated by BuildKitSession.close().
             val image = try {
-                imagesAPI.build(context, buildArgs, dockerfilePath, imageTags, forcePull, imageBuildOutputSink, builderConfig, cancellationContext, onProgressUpdate)
+                imagesAPI.build(context, request.buildArgs, request.relativeDockerfilePath, request.imageTags, request.forcePull, imageBuildOutputSink, builderConfig, cancellationContext, onProgressUpdate)
             } finally {
                 session.close()
             }
@@ -163,5 +147,35 @@ class ImagesClient(
         } catch (e: DockerRegistryCredentialsException) {
             throw ImagePullFailedException("Could not pull image '$imageName': ${e.message}", e)
         }
+    }
+}
+
+private fun LogMessageBuilder.addRequestData(value: ImageBuildRequest) {
+    data("buildDirectory", value.buildDirectory)
+    data("buildArgs", value.buildArgs)
+    data("relativeDockerfilePath", value.relativeDockerfilePath)
+    data("imageTags", value.imageTags)
+}
+
+data class ImageBuildRequest(
+    val buildDirectory: Path,
+    val buildArgs: Map<String, String>,
+    val relativeDockerfilePath: String,
+    val pathResolutionContext: PathResolutionContext,
+    val imageTags: Set<String>,
+    val forcePull: Boolean
+) {
+    fun resolveDockerfilePath(): Path {
+        val resolvedDockerfilePath = buildDirectory.resolve(relativeDockerfilePath)
+
+        if (!Files.exists(resolvedDockerfilePath)) {
+            throw ImageBuildFailedException("Could not build image: the Dockerfile '$relativeDockerfilePath' does not exist in the build directory ${pathResolutionContext.getPathForDisplay(buildDirectory)}")
+        }
+
+        if (!resolvedDockerfilePath.toRealPath(LinkOption.NOFOLLOW_LINKS).startsWith(buildDirectory.toRealPath(LinkOption.NOFOLLOW_LINKS))) {
+            throw ImageBuildFailedException("Could not build image: the Dockerfile '$relativeDockerfilePath' is not a child of the build directory ${pathResolutionContext.getPathForDisplay(buildDirectory)}")
+        }
+
+        return resolvedDockerfilePath
     }
 }

@@ -456,7 +456,7 @@ object ContainersClientSpec : Spek({
                         val result by runForEachTest { client.waitForHealthStatus(container, cancellationContext) }
 
                         it("waits with a timeout that allows the container time to start and become healthy") {
-                            verify(api).waitForNextEvent(any(), any(), eq(Duration.ofSeconds(10 + (3 * 4) + 1)), any())
+                            verify(api).waitForNextEvent(any(), any(), eq(Duration.ofSeconds(10L + (3 * 4) + 1)), any())
                         }
 
                         it("reports that the container became healthy") {

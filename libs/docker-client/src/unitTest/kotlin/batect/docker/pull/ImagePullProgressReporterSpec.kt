@@ -164,7 +164,7 @@ object ImagePullProgressReporterSpec : Spek({
                 val progressUpdate by runNullableForEachTest { reporter.processRawProgressUpdate(json) }
 
                 it("returns a progress update combining the state of both layers") {
-                    assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 329 + 900, 4159 + 7000)))
+                    assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 329L + 900, 4159L + 7000)))
                 }
             }
 
@@ -183,7 +183,7 @@ object ImagePullProgressReporterSpec : Spek({
                         val progressUpdate by runNullableForEachTest { reporter.processRawProgressUpdate(json) }
 
                         it("returns a progress update combining the state of both layers") {
-                            assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 329 + 7000, 4159 + 7000)))
+                            assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 329L + 7000, 4159L + 7000)))
                         }
                     }
                 }
@@ -199,7 +199,7 @@ object ImagePullProgressReporterSpec : Spek({
                     val progressUpdate by runNullableForEachTest { reporter.processRawProgressUpdate(json) }
 
                     it("returns a progress update combining the state of both layers") {
-                        assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 4159 + 900, 4159 + 7000)))
+                        assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 4159L + 900, 4159L + 7000)))
                     }
                 }
             }
@@ -214,7 +214,7 @@ object ImagePullProgressReporterSpec : Spek({
                     val progressUpdate by runNullableForEachTest { reporter.processRawProgressUpdate(json) }
 
                     it("returns a progress update combining the state of both layers") {
-                        assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Extracting, 900, 4159 + 7000)))
+                        assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Extracting, 900, 4159L + 7000)))
                     }
                 }
             }

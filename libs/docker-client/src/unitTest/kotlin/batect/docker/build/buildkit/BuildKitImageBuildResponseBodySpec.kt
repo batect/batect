@@ -549,11 +549,11 @@ object BuildKitImageBuildResponseBodySpec : Spek({
                         listOf(
                             BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(0, "[internal] load metadata for docker.io/library/alpine:3.10.0"))),
                             BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(1, pullStepName))),
-                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.Downloading, 1638 + 528 + 1512, 1638 + 528 + 1512 + 2789589))),
-                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.Downloading, 1638 + 528 + 1512 + 1178564, 1638 + 528 + 1512 + 2789589))),
-                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.Downloading, 1638 + 528 + 1512 + 2455984, 1638 + 528 + 1512 + 2789589))),
-                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.Extracting, 1638 + 528 + 1512, 1638 + 528 + 1512 + 2789589))),
-                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.PullComplete, 1638 + 528 + 1512 + 2789589, 1638 + 528 + 1512 + 2789589))),
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.Downloading, 1638L + 528 + 1512, 1638L + 528 + 1512 + 2789589))),
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.Downloading, 1638L + 528 + 1512 + 1178564, 1638L + 528 + 1512 + 2789589))),
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.Downloading, 1638L + 528 + 1512 + 2455984, 1638L + 528 + 1512 + 2789589))),
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.Extracting, 1638L + 528 + 1512, 1638L + 528 + 1512 + 2789589))),
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.PullComplete, 1638L + 528 + 1512 + 2789589, 1638L + 528 + 1512 + 2789589))),
                             BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(2, "exporting to image")))
                         )
                     )
@@ -649,48 +649,48 @@ object BuildKitImageBuildResponseBodySpec : Spek({
                             BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(0, "[internal] load metadata for gcr.io/distroless/java@sha256:28ec552405a92ed1a3767b81aaece5c48bd1b89dfb5f3c144b0e4cea4dd5ffa4"))),
                             BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(1, pullStepName))),
                             // Line 7:
-                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.Downloading, 0 + 0 + 0 + 1371, 7333575 + 643660 + 4545605 + 1371))),
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.Downloading, 0L + 0 + 0 + 1371, 7333575L + 643660 + 4545605 + 1371))),
                             // Line 8:
-                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.Downloading, 0 + 0 + 0 + 1371 + 1165, 7333575 + 643660 + 4545605 + 1371 + 1165))),
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.Downloading, 0L + 0 + 0 + 1371 + 1165, 7333575L + 643660 + 4545605 + 1371 + 1165))),
                             // Line 9: no change
                             // Line 10: no change
                             // Line 11:
-                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.Downloading, 32768 + 262144 + 376832 + 1371 + 1165, 7333575 + 643660 + 4545605 + 1371 + 1165))),
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.Downloading, 32768L + 262144 + 376832 + 1371 + 1165, 7333575L + 643660 + 4545605 + 1371 + 1165))),
                             // Line 12:
-                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.Downloading, 327680 + 643660 + 1048576 + 1371 + 1165 + 0, 7333575 + 643660 + 4545605 + 1371 + 1165 + 59741782))),
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.Downloading, 327680L + 643660 + 1048576 + 1371 + 1165 + 0, 7333575L + 643660 + 4545605 + 1371 + 1165 + 59741782))),
                             // Line 13:
-                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.Downloading, 1212416 + 643660 + 3768320 + 1371 + 1165 + 0, 7333575 + 643660 + 4545605 + 1371 + 1165 + 59741782))),
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.Downloading, 1212416L + 643660 + 3768320 + 1371 + 1165 + 0, 7333575L + 643660 + 4545605 + 1371 + 1165 + 59741782))),
                             // Line 14:
-                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.Downloading, 1540096 + 643660 + 4545605 + 1371 + 1165 + 0, 7333575 + 643660 + 4545605 + 1371 + 1165 + 59741782))),
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.Downloading, 1540096L + 643660 + 4545605 + 1371 + 1165 + 0, 7333575L + 643660 + 4545605 + 1371 + 1165 + 59741782))),
                             // Line 15:
-                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.Downloading, 7333575 + 643660 + 4545605 + 1371 + 1165 + 0, 7333575 + 643660 + 4545605 + 1371 + 1165 + 59741782))),
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.Downloading, 7333575L + 643660 + 4545605 + 1371 + 1165 + 0, 7333575L + 643660 + 4545605 + 1371 + 1165 + 59741782))),
                             // Line 16:
-                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.Downloading, 7333575 + 643660 + 4545605 + 1371 + 1165 + 391280, 7333575 + 643660 + 4545605 + 1371 + 1165 + 59741782))),
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.Downloading, 7333575L + 643660 + 4545605 + 1371 + 1165 + 391280, 7333575L + 643660 + 4545605 + 1371 + 1165 + 59741782))),
                             // Line 17: no change
                             // Line 18:
-                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.Downloading, 7333575 + 643660 + 4545605 + 1371 + 1165 + 1833072, 7333575 + 643660 + 4545605 + 1371 + 1165 + 59741782))),
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.Downloading, 7333575L + 643660 + 4545605 + 1371 + 1165 + 1833072, 7333575L + 643660 + 4545605 + 1371 + 1165 + 59741782))),
                             // Line 19: no change
                             // Line 20:
-                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.Downloading, 7333575 + 643660 + 4545605 + 1371 + 1165 + 3209328, 7333575 + 643660 + 4545605 + 1371 + 1165 + 59741782))),
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.Downloading, 7333575L + 643660 + 4545605 + 1371 + 1165 + 3209328, 7333575L + 643660 + 4545605 + 1371 + 1165 + 59741782))),
                             // Line 21: no change
                             // Line 22: no change
                             // Line 23:
-                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.Downloading, 7333575 + 643660 + 4545605 + 1371 + 1165 + 4487280, 7333575 + 643660 + 4545605 + 1371 + 1165 + 59741782))),
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.Downloading, 7333575L + 643660 + 4545605 + 1371 + 1165 + 4487280, 7333575L + 643660 + 4545605 + 1371 + 1165 + 59741782))),
                             // Line 24: no change
                             // Line 25: no change
                             // Line 26:
-                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.Downloading, 7333575 + 643660 + 4545605 + 1371 + 1165 + 5240944, 7333575 + 643660 + 4545605 + 1371 + 1165 + 59741782))),
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.Downloading, 7333575L + 643660 + 4545605 + 1371 + 1165 + 5240944, 7333575L + 643660 + 4545605 + 1371 + 1165 + 59741782))),
                             // Line 27: no change
                             // Line 28: no change
                             // Line 29:
-                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.Downloading, 7333575 + 643660 + 4545605 + 1371 + 1165 + 6518896, 7333575 + 643660 + 4545605 + 1371 + 1165 + 59741782))),
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.Downloading, 7333575L + 643660 + 4545605 + 1371 + 1165 + 6518896, 7333575L + 643660 + 4545605 + 1371 + 1165 + 59741782))),
                             // Line 30:
-                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.PullComplete, 7333575 + 643660 + 4545605 + 1371 + 1165 + 0, 7333575 + 643660 + 4545605 + 1371 + 1165 + 59741782))),
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.PullComplete, 7333575L + 643660 + 4545605 + 1371 + 1165 + 0, 7333575L + 643660 + 4545605 + 1371 + 1165 + 59741782))),
                             // Line 31:
-                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.Extracting, 7333575 + 643660 + 4545605 + 1371 + 1165 + 0, 7333575 + 643660 + 4545605 + 1371 + 1165 + 59741782))),
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.Extracting, 7333575L + 643660 + 4545605 + 1371 + 1165 + 0, 7333575L + 643660 + 4545605 + 1371 + 1165 + 59741782))),
                             // Line 32: no change
                             // Line 33:
-                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.PullComplete, 7333575 + 643660 + 4545605 + 1371 + 1165 + 59741782, 7333575 + 643660 + 4545605 + 1371 + 1165 + 59741782))),
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, pullStepName, DownloadOperation.PullComplete, 7333575L + 643660 + 4545605 + 1371 + 1165 + 59741782, 7333575L + 643660 + 4545605 + 1371 + 1165 + 59741782))),
                             // Line 35
                             BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(2, "exporting to image"))),
                             BuildComplete(DockerImage("sha256:a944a906cc971980e5f55d991fb91faa92a25a0a866bcd57fce26a5628f92fa5"))
@@ -785,7 +785,7 @@ object BuildKitImageBuildResponseBodySpec : Spek({
                 val pullStaticImageStepIndex = 2
                 val pullBaseImageStepName = "[first 1/1] FROM gcr.io/distroless/base@sha256:2c12bde3d050850e976fe682193b94f0855866ea4f37a12ed7db8668e8071047"
                 val pullBaseImageStepIndex = 3
-                val pullBaseImageComplete = ActiveImageBuildStep.Downloading(pullBaseImageStepIndex, pullBaseImageStepName, DownloadOperation.PullComplete, 741 + 947 + 814 + 693997, 741 + 947 + 814 + 693997)
+                val pullBaseImageComplete = ActiveImageBuildStep.Downloading(pullBaseImageStepIndex, pullBaseImageStepName, DownloadOperation.PullComplete, 741L + 947 + 814 + 693997, 741L + 947 + 814 + 693997)
 
                 assertThat(
                     eventsPosted,
@@ -811,42 +811,42 @@ object BuildKitImageBuildResponseBodySpec : Spek({
                             // Line 10:
                             BuildProgress(
                                 setOf(
-                                    ActiveImageBuildStep.Downloading(pullStaticImageStepIndex, pullStaticImageStepName, DownloadOperation.Downloading, 732 + 635 + 0 + 0, 732 + 635 + 639412 + 49),
+                                    ActiveImageBuildStep.Downloading(pullStaticImageStepIndex, pullStaticImageStepName, DownloadOperation.Downloading, 732L + 635 + 0 + 0, 732L + 635 + 639412 + 49),
                                     ActiveImageBuildStep.NotDownloading(pullBaseImageStepIndex, pullBaseImageStepName),
                                 )
                             ),
                             // Line 11:
                             BuildProgress(
                                 setOf(
-                                    ActiveImageBuildStep.Downloading(pullStaticImageStepIndex, pullStaticImageStepName, DownloadOperation.Downloading, 732 + 635 + 0 + 0, 732 + 635 + 639412 + 49),
-                                    ActiveImageBuildStep.Downloading(pullBaseImageStepIndex, pullBaseImageStepName, DownloadOperation.Downloading, 741 + 947 + 814 + 0, 741 + 947 + 814 + 693997),
+                                    ActiveImageBuildStep.Downloading(pullStaticImageStepIndex, pullStaticImageStepName, DownloadOperation.Downloading, 732L + 635 + 0 + 0, 732L + 635 + 639412 + 49),
+                                    ActiveImageBuildStep.Downloading(pullBaseImageStepIndex, pullBaseImageStepName, DownloadOperation.Downloading, 741L + 947 + 814 + 0, 741L + 947 + 814 + 693997),
                                 )
                             ),
                             // Line 12:
                             BuildProgress(
                                 setOf(
-                                    ActiveImageBuildStep.Downloading(pullStaticImageStepIndex, pullStaticImageStepName, DownloadOperation.Downloading, 732 + 635 + 0 + 0, 732 + 635 + 639412 + 49),
-                                    ActiveImageBuildStep.Downloading(pullBaseImageStepIndex, pullBaseImageStepName, DownloadOperation.Downloading, 741 + 947 + 814 + 458752, 741 + 947 + 814 + 693997),
+                                    ActiveImageBuildStep.Downloading(pullStaticImageStepIndex, pullStaticImageStepName, DownloadOperation.Downloading, 732L + 635 + 0 + 0, 732L + 635 + 639412 + 49),
+                                    ActiveImageBuildStep.Downloading(pullBaseImageStepIndex, pullBaseImageStepName, DownloadOperation.Downloading, 741L + 947 + 814 + 458752, 741L + 947 + 814 + 693997),
                                 )
                             ),
                             // Line 13:
                             BuildProgress(
                                 setOf(
-                                    ActiveImageBuildStep.Downloading(pullStaticImageStepIndex, pullStaticImageStepName, DownloadOperation.Downloading, 732 + 635 + 0 + 0, 732 + 635 + 639412 + 49),
-                                    ActiveImageBuildStep.Downloading(pullBaseImageStepIndex, pullBaseImageStepName, DownloadOperation.Extracting, 741 + 947 + 814 + 0, 741 + 947 + 814 + 693997),
+                                    ActiveImageBuildStep.Downloading(pullStaticImageStepIndex, pullStaticImageStepName, DownloadOperation.Downloading, 732L + 635 + 0 + 0, 732L + 635 + 639412 + 49),
+                                    ActiveImageBuildStep.Downloading(pullBaseImageStepIndex, pullBaseImageStepName, DownloadOperation.Extracting, 741L + 947 + 814 + 0, 741L + 947 + 814 + 693997),
                                 )
                             ),
                             // Line 14:
                             BuildProgress(
                                 setOf(
-                                    ActiveImageBuildStep.Downloading(pullStaticImageStepIndex, pullStaticImageStepName, DownloadOperation.Downloading, 732 + 635 + 0 + 0, 732 + 635 + 639412 + 49),
+                                    ActiveImageBuildStep.Downloading(pullStaticImageStepIndex, pullStaticImageStepName, DownloadOperation.Downloading, 732L + 635 + 0 + 0, 732L + 635 + 639412 + 49),
                                     pullBaseImageComplete,
                                 )
                             ),
                             // Line 15:
                             BuildProgress(
                                 setOf(
-                                    ActiveImageBuildStep.Downloading(pullStaticImageStepIndex, pullStaticImageStepName, DownloadOperation.Downloading, 732 + 635 + 0 + 49, 732 + 635 + 639412 + 49),
+                                    ActiveImageBuildStep.Downloading(pullStaticImageStepIndex, pullStaticImageStepName, DownloadOperation.Downloading, 732L + 635 + 0 + 49, 732L + 635 + 639412 + 49),
                                     pullBaseImageComplete,
                                 )
                             ),
@@ -854,32 +854,32 @@ object BuildKitImageBuildResponseBodySpec : Spek({
                             // Line 17:
                             BuildProgress(
                                 setOf(
-                                    ActiveImageBuildStep.Downloading(pullStaticImageStepIndex, pullStaticImageStepName, DownloadOperation.Downloading, 732 + 635 + 0 + 49, 732 + 635 + 639412 + 49),
+                                    ActiveImageBuildStep.Downloading(pullStaticImageStepIndex, pullStaticImageStepName, DownloadOperation.Downloading, 732L + 635 + 0 + 49, 732L + 635 + 639412 + 49),
                                 )
                             ),
                             // Line 18:
                             BuildProgress(
                                 setOf(
-                                    ActiveImageBuildStep.Downloading(pullStaticImageStepIndex, pullStaticImageStepName, DownloadOperation.Extracting, 732 + 635 + 0 + 0, 732 + 635 + 639412 + 49),
+                                    ActiveImageBuildStep.Downloading(pullStaticImageStepIndex, pullStaticImageStepName, DownloadOperation.Extracting, 732L + 635 + 0 + 0, 732L + 635 + 639412 + 49),
                                 )
                             ),
                             // Line 19:
                             BuildProgress(
                                 setOf(
-                                    ActiveImageBuildStep.Downloading(pullStaticImageStepIndex, pullStaticImageStepName, DownloadOperation.PullComplete, 732 + 635 + 639412 + 0, 732 + 635 + 639412 + 49),
+                                    ActiveImageBuildStep.Downloading(pullStaticImageStepIndex, pullStaticImageStepName, DownloadOperation.PullComplete, 732L + 635 + 639412 + 0, 732L + 635 + 639412 + 49),
                                 )
                             ),
                             // Line 20:
                             BuildProgress(
                                 setOf(
-                                    ActiveImageBuildStep.Downloading(pullStaticImageStepIndex, pullStaticImageStepName, DownloadOperation.Extracting, 732 + 635 + 639412 + 0, 732 + 635 + 639412 + 49),
+                                    ActiveImageBuildStep.Downloading(pullStaticImageStepIndex, pullStaticImageStepName, DownloadOperation.Extracting, 732L + 635 + 639412 + 0, 732L + 635 + 639412 + 49),
                                 )
                             ),
                             // Line 21: no change
                             // Line 22:
                             BuildProgress(
                                 setOf(
-                                    ActiveImageBuildStep.Downloading(pullStaticImageStepIndex, pullStaticImageStepName, DownloadOperation.PullComplete, 732 + 635 + 639412 + 49, 732 + 635 + 639412 + 49),
+                                    ActiveImageBuildStep.Downloading(pullStaticImageStepIndex, pullStaticImageStepName, DownloadOperation.PullComplete, 732L + 635 + 639412 + 49, 732L + 635 + 639412 + 49),
                                 )
                             ),
                             // Line 23: no change (all steps complete, wait for next update)

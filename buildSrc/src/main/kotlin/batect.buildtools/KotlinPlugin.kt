@@ -50,7 +50,7 @@ class KotlinPlugin : Plugin<Project> {
     override fun apply(project: Project) {
         project.repositories {
             mavenCentral()
-            jcenter()
+            jcenter() // Required until https://github.com/araqnid/hamkrest-json/issues/1 is resolved.
         }
 
         applyKotlin(project)

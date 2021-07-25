@@ -110,7 +110,7 @@ class SystemInfoAPI(
             val builderVersionHeader = response.headers.get("Builder-Version") ?: "1"
 
             return when (builderVersionHeader) {
-                "1" -> PingResponse(BuilderVersion.Legacy)
+                "", "1" -> PingResponse(BuilderVersion.Legacy)
                 "2" -> PingResponse(BuilderVersion.BuildKit)
                 else -> throw DockerException("Docker daemon responded with unknown Builder-Version '$builderVersionHeader'.")
             }

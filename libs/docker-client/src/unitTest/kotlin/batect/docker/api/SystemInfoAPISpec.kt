@@ -198,6 +198,18 @@ object SystemInfoAPISpec : Spek({
                         assertThat({ api.ping() }, throws<DockerException>(withMessage("Docker daemon responded with unknown Builder-Version '3'.")))
                     }
                 }
+
+                // See https://github.com/batect/batect/issues/895
+                given("the response includes an empty builder version") {
+                    val headers = Headers.Builder().add("Builder-Version", "").build()
+                    beforeEachTest { httpClient.mockGet(expectedUrl, "OK", responseHeaders = headers) }
+
+                    val response by runForEachTest { api.ping() }
+
+                    it("returns a response with the legacy builder type") {
+                        assertThat(response.builderVersion, equalTo(BuilderVersion.Legacy))
+                    }
+                }
             }
 
             given("the ping fails") {

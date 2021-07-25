@@ -42,7 +42,6 @@ If there's something you're really keen to see, pull requests are always welcome
 * ability to build one or more container images separate to running a task (two use cases: build and push an application image, and pre-build all CI environment images in parallel rather than waiting until they're needed and building them effectively serially)
 
 ### Other
-* logo
 * switch to Kotlin's built-in `Result` where appropriate
 * use Detekt for static analysis
 * PEP8 formatting check for Python code
@@ -51,8 +50,6 @@ If there's something you're really keen to see, pull requests are always welcome
 * fail CI build on pending tests
 * for fatal exceptions (ie. crashes), add information on where to report the error (ie. GitHub issue)
 * documentation
-  * add page explaining basic concepts (eg. explain what a task and a container are)
-  * add check for broken internal or external links
   * examples for common languages and scenarios ![good first issue](https://img.shields.io/badge/-good%20first%20issue-green)
     * Android app
   * add FAQs
@@ -75,7 +72,6 @@ If there's something you're really keen to see, pull requests are always welcome
   * tab to show configuration as parsed
 * switch to [MockK](https://github.com/oleksiyp/mockk) - Kotlin specific library with clearer upgrade path to Kotlin/Native
   * remove MockMaker resource file
-* add running integration tests against Minikube to CI - can't currently easily be done as Travis doesn't support nested virtualisation and bare-metal minikube doesn't set up its own Docker daemon like it does when running in a VM
 * move to Kotlin/Native
   * Why? Don't want to require users to install a JVM to use Batect, also want to remove as much overhead as possible
 

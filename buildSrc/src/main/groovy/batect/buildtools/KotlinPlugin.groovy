@@ -36,6 +36,7 @@ class KotlinPlugin implements Plugin<Project> {
         configureTesting(project)
         applyJacoco(project)
         configureJar(project)
+        applyLicensee(project)
     }
 
     private void applyKotlin(Project project) {
@@ -232,6 +233,49 @@ class KotlinPlugin implements Plugin<Project> {
             }
 
             task.archiveVersion.convention(version)
+        }
+    }
+
+    private void applyLicensee(Project project) {
+        project.plugins.apply('app.cash.licensee')
+
+        project.licensee {
+            allow('Apache-2.0')
+            allowUrl('http://opensource.org/licenses/Apache-2.0')
+
+            allow('MIT')
+            allowUrl('http://opensource.org/licenses/MIT')
+            allowUrl('http://www.opensource.org/licenses/mit-license.php')
+            allowUrl('https://github.com/mockito/mockito/blob/release/3.x/LICENSE') // MIT
+
+            allowUrl('https://github.com/spekframework/spek/blob/2.x/LICENSE.TXT') // BSD
+            allowUrl('https://asm.ow2.io/license.html') // BSD
+
+            allow('EPL-1.0')
+
+            allowDependency('com.github.jnr', 'jnr-posix', '3.1.7') {
+                because 'Licensed under three licenses, including EPL 2.0 and LGPL'
+            }
+
+            allowDependency('org.mockito.kotlin', 'mockito-kotlin', '3.2.0') {
+                because 'Licensee incorrectly fails this dependency due to https://github.com/cashapp/licensee/issues/40'
+            }
+
+            allowDependency('org.checkerframework', 'checker-compat-qual', '2.5.5') {
+                because 'https://github.com/typetools/checker-framework/blob/checker-framework-2.5.5/LICENSE.txt says that the annotations are licensed under the MIT license'
+            }
+
+            allowDependency('org.bouncycastle', 'bcutil-jdk15on', '1.69') {
+                because 'https://www.bouncycastle.org/licence.html is the MIT license'
+            }
+
+            allowDependency('org.bouncycastle', 'bcpkix-jdk15on', '1.69') {
+                because 'https://www.bouncycastle.org/licence.html is the MIT license'
+            }
+
+            allowDependency('org.bouncycastle', 'bcprov-jdk15on', '1.69') {
+                because 'https://www.bouncycastle.org/licence.html is the MIT license'
+            }
         }
     }
 }

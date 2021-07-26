@@ -231,11 +231,11 @@ object ImageClientIntegrationTest : Spek({
                     }
 
                     describe("building an image with a particular target") {
-                        val image by runBeforeGroup { buildImage("multistage", targetStage = "stage-1") }
+                        val image by runBeforeGroup { buildImage("multistage", targetStage = "stage1") }
                         val output by runBeforeGroup { executeCommandInContainer(image, "cat", "/stage-name") }
 
                         it("executes the desired stage") {
-                            assertThat(output, equalTo("stage1"))
+                            assertThat(output.trim(), equalTo("stage1"))
                         }
                     }
                 }

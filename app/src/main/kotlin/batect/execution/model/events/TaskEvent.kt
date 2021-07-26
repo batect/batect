@@ -37,7 +37,6 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import kotlinx.serialization.UseSerializers
 import kotlinx.serialization.builtins.SetSerializer
-import java.nio.file.Path
 
 @Serializable
 sealed class TaskEvent(
@@ -103,18 +102,6 @@ data class CustomTaskNetworkCheckedEvent(override val network: DockerNetwork) : 
 @Serializable
 object TaskNetworkDeletedEvent : TaskEvent()
 
-@Serializable
-data class TemporaryDirectoryCreatedEvent(val container: Container, val directoryPath: Path) : TaskEvent()
-
-@Serializable
-data class TemporaryDirectoryDeletedEvent(val directoryPath: Path) : TaskEvent()
-
-@Serializable
-data class TemporaryFileCreatedEvent(val container: Container, val filePath: Path) : TaskEvent()
-
-@Serializable
-data class TemporaryFileDeletedEvent(val filePath: Path) : TaskEvent()
-
 sealed class TaskFailedEvent : TaskEvent()
 
 @Serializable
@@ -149,12 +136,6 @@ data class ContainerRemovalFailedEvent(val container: Container, val message: St
 
 @Serializable
 data class TaskNetworkDeletionFailedEvent(val message: String) : TaskFailedEvent()
-
-@Serializable
-data class TemporaryFileDeletionFailedEvent(val filePath: Path, val message: String) : TaskFailedEvent()
-
-@Serializable
-data class TemporaryDirectoryDeletionFailedEvent(val directoryPath: Path, val message: String) : TaskFailedEvent()
 
 @Serializable
 object UserInterruptedExecutionEvent : TaskFailedEvent()

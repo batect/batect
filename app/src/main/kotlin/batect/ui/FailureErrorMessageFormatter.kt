@@ -40,8 +40,6 @@ import batect.execution.model.events.TaskEvent
 import batect.execution.model.events.TaskFailedEvent
 import batect.execution.model.events.TaskNetworkCreationFailedEvent
 import batect.execution.model.events.TaskNetworkDeletionFailedEvent
-import batect.execution.model.events.TemporaryDirectoryDeletionFailedEvent
-import batect.execution.model.events.TemporaryFileDeletionFailedEvent
 import batect.execution.model.events.UserInterruptedExecutionEvent
 import batect.os.SystemInfo
 import batect.ui.text.Text
@@ -63,8 +61,6 @@ class FailureErrorMessageFormatter(private val runOptions: RunOptions, systemInf
         is ContainerStopFailedEvent -> formatErrorMessage(Text("Could not stop container ") + Text.bold(event.container.name), event.message)
         is ContainerRemovalFailedEvent -> formatErrorMessage(Text("Could not remove container ") + Text.bold(event.container.name), event.message)
         is TaskNetworkDeletionFailedEvent -> formatErrorMessage("Could not delete the task network", event.message)
-        is TemporaryFileDeletionFailedEvent -> formatErrorMessage("Could not delete temporary file '${event.filePath}'", event.message)
-        is TemporaryDirectoryDeletionFailedEvent -> formatErrorMessage("Could not delete temporary directory '${event.directoryPath}'", event.message)
         is SetupCommandExecutionErrorEvent -> formatErrorMessage(Text("Could not run setup command ") + Text.bold(event.command.command.originalCommand) + Text(" in container ") + Text.bold(event.container.name), event.message) + hintToReRunWithCleanupDisabled
         is SetupCommandFailedEvent -> formatErrorMessage(Text("Setup command ") + Text.bold(event.command.command.originalCommand) + Text(" in container ") + Text.bold(event.container.name) + Text(" failed"), setupCommandFailedBodyText(event.exitCode, event.output)) + hintToReRunWithCleanupDisabled
         is ExecutionFailedEvent -> formatErrorMessage("An unexpected exception occurred during execution", event.message)

@@ -20,8 +20,6 @@ import batect.execution.model.events.TaskEventSink
 import batect.execution.model.steps.runners.BuildImageStepRunner
 import batect.execution.model.steps.runners.CreateContainerStepRunner
 import batect.execution.model.steps.runners.DeleteTaskNetworkStepRunner
-import batect.execution.model.steps.runners.DeleteTemporaryDirectoryStepRunner
-import batect.execution.model.steps.runners.DeleteTemporaryFileStepRunner
 import batect.execution.model.steps.runners.InitialiseCachesStepRunner
 import batect.execution.model.steps.runners.PrepareTaskNetworkStepRunner
 import batect.execution.model.steps.runners.PullImageStepRunner
@@ -46,8 +44,6 @@ class TaskStepRunner(private val kodein: DirectDI) {
             is RunContainerSetupCommandsStep -> kodein.instance<RunContainerSetupCommandsStepRunner>().run(step, eventSink)
             is StopContainerStep -> kodein.instance<StopContainerStepRunner>().run(step, eventSink)
             is RemoveContainerStep -> kodein.instance<RemoveContainerStepRunner>().run(step, eventSink)
-            is DeleteTemporaryFileStep -> kodein.instance<DeleteTemporaryFileStepRunner>().run(step, eventSink)
-            is DeleteTemporaryDirectoryStep -> kodein.instance<DeleteTemporaryDirectoryStepRunner>().run(step, eventSink)
             is DeleteTaskNetworkStep -> kodein.instance<DeleteTaskNetworkStepRunner>().run(step, eventSink)
         }
     }

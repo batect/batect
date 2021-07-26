@@ -32,7 +32,6 @@ import batect.logging.PathSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import kotlinx.serialization.UseSerializers
-import java.nio.file.Path
 
 @Serializable
 sealed class TaskStep(
@@ -77,12 +76,6 @@ data class StopContainerStep(val container: Container, val dockerContainer: Dock
 
 @Serializable
 data class RemoveContainerStep(val container: Container, val dockerContainer: DockerContainer) : CleanupStep()
-
-@Serializable
-data class DeleteTemporaryFileStep(val filePath: Path) : CleanupStep()
-
-@Serializable
-data class DeleteTemporaryDirectoryStep(val directoryPath: Path) : CleanupStep()
 
 @Serializable
 data class DeleteTaskNetworkStep(val network: DockerNetwork) : CleanupStep()

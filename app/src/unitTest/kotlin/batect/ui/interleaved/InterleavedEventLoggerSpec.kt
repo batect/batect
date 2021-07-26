@@ -42,8 +42,6 @@ import batect.execution.model.events.StepStartingEvent
 import batect.execution.model.events.TaskFailedEvent
 import batect.execution.model.events.TaskNetworkCreationFailedEvent
 import batect.execution.model.events.TaskNetworkDeletionFailedEvent
-import batect.execution.model.events.TemporaryDirectoryDeletionFailedEvent
-import batect.execution.model.events.TemporaryFileDeletionFailedEvent
 import batect.execution.model.events.UserInterruptedExecutionEvent
 import batect.execution.model.steps.BuildImageStep
 import batect.execution.model.steps.CleanupStep
@@ -69,7 +67,6 @@ import org.mockito.kotlin.verifyZeroInteractions
 import org.mockito.kotlin.whenever
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.nio.file.Paths
 import java.time.Duration
 
 object InterleavedEventLoggerSpec : Spek({
@@ -325,8 +322,6 @@ object InterleavedEventLoggerSpec : Spek({
                             "execution failed" to ExecutionFailedEvent("Couldn't do the thing."),
                             "network creation failed" to TaskNetworkCreationFailedEvent("Couldn't create the network."),
                             "network deletion failed" to TaskNetworkDeletionFailedEvent("Couldn't delete the network."),
-                            "temporary file deletion failed" to TemporaryFileDeletionFailedEvent(Paths.get("some-file"), "Couldn't delete the file."),
-                            "temporary directory deletion failed" to TemporaryDirectoryDeletionFailedEvent(Paths.get("some-dir"), "Couldn't delete the directory."),
                             "user interrupted execution" to UserInterruptedExecutionEvent
                         ).forEach { (description, event) ->
                             on("when a '$description' event is posted") {

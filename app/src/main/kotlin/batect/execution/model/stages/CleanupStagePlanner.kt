@@ -23,12 +23,8 @@ import batect.execution.model.events.ContainerCreatedEvent
 import batect.execution.model.events.ContainerStartedEvent
 import batect.execution.model.events.TaskEvent
 import batect.execution.model.events.TaskNetworkCreatedEvent
-import batect.execution.model.events.TemporaryDirectoryCreatedEvent
-import batect.execution.model.events.TemporaryFileCreatedEvent
 import batect.execution.model.events.data
 import batect.execution.model.rules.cleanup.DeleteTaskNetworkStepRule
-import batect.execution.model.rules.cleanup.DeleteTemporaryDirectoryStepRule
-import batect.execution.model.rules.cleanup.DeleteTemporaryFileStepRule
 import batect.execution.model.rules.cleanup.RemoveContainerStepRule
 import batect.execution.model.rules.cleanup.StopContainerStepRule
 import batect.execution.model.rules.data
@@ -53,9 +49,7 @@ class CleanupStagePlanner(
 
         val rules = networkCleanupRules(pastEvents, containersCreated) +
             stopContainerRules(containersCreated, containersStarted) +
-            removeContainerRules(containersCreated, containersStarted) +
-            fileDeletionRules(pastEvents, containersCreated) +
-            directoryDeletionRules(pastEvents, containersCreated)
+            removeContainerRules(containersCreated, containersStarted)
 
         logger.info {
             message("Created cleanup plan.")
@@ -91,31 +85,5 @@ class CleanupStagePlanner(
                 val containerWasStarted = containersStarted.contains(container)
 
                 RemoveContainerStepRule(container, dockerContainer, containerWasStarted)
-            }
-
-    private fun fileDeletionRules(pastEvents: Set<TaskEvent>, containersCreated: Map<Container, DockerContainer>): Set<DeleteTemporaryFileStepRule> =
-        pastEvents
-            .filterIsInstance<TemporaryFileCreatedEvent>()
-            .mapToSet {
-                val containerThatMustBeRemovedFirst = if (containersCreated.containsKey(it.container)) {
-                    it.container
-                } else {
-                    null
-                }
-
-                DeleteTemporaryFileStepRule(it.filePath, containerThatMustBeRemovedFirst)
-            }
-
-    private fun directoryDeletionRules(pastEvents: Set<TaskEvent>, containersCreated: Map<Container, DockerContainer>): Set<DeleteTemporaryDirectoryStepRule> =
-        pastEvents
-            .filterIsInstance<TemporaryDirectoryCreatedEvent>()
-            .mapToSet {
-                val containerThatMustBeRemovedFirst = if (containersCreated.containsKey(it.container)) {
-                    it.container
-                } else {
-                    null
-                }
-
-                DeleteTemporaryDirectoryStepRule(it.directoryPath, containerThatMustBeRemovedFirst)
             }
 }

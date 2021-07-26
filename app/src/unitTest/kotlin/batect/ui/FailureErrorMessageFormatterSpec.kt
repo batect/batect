@@ -42,8 +42,6 @@ import batect.execution.model.events.TaskFailedEvent
 import batect.execution.model.events.TaskNetworkCreationFailedEvent
 import batect.execution.model.events.TaskNetworkDeletedEvent
 import batect.execution.model.events.TaskNetworkDeletionFailedEvent
-import batect.execution.model.events.TemporaryDirectoryDeletionFailedEvent
-import batect.execution.model.events.TemporaryFileDeletionFailedEvent
 import batect.execution.model.events.UserInterruptedExecutionEvent
 import batect.os.Command
 import batect.os.SystemInfo
@@ -51,7 +49,6 @@ import batect.testutils.equivalentTo
 import batect.testutils.given
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.on
-import batect.testutils.osIndependentPath
 import batect.testutils.withMessage
 import batect.ui.text.Text
 import batect.ui.text.TextRun
@@ -112,16 +109,6 @@ object FailureErrorMessageFormatterSpec : Spek({
                     "task network deletion failed",
                     TaskNetworkDeletionFailedEvent("Something went wrong."),
                     Text.red(Text.bold("Error: ") + Text("Could not delete the task network.\n")) + Text("Something went wrong.")
-                ),
-                Scenario(
-                    "temporary file deletion failed",
-                    TemporaryFileDeletionFailedEvent(osIndependentPath("/tmp/some-file"), "Something went wrong."),
-                    Text.red(Text.bold("Error: ") + Text("Could not delete temporary file '/tmp/some-file'.\n")) + Text("Something went wrong.")
-                ),
-                Scenario(
-                    "temporary directory deletion failed",
-                    TemporaryDirectoryDeletionFailedEvent(osIndependentPath("/tmp/some-directory"), "Something went wrong."),
-                    Text.red(Text.bold("Error: ") + Text("Could not delete temporary directory '/tmp/some-directory'.\n")) + Text("Something went wrong.")
                 ),
                 Scenario(
                     "container run failed",

@@ -38,8 +38,6 @@ import batect.execution.model.events.TaskEvent
 import batect.execution.model.events.TaskFailedEvent
 import batect.execution.model.events.TaskNetworkCreationFailedEvent
 import batect.execution.model.events.TaskNetworkDeletionFailedEvent
-import batect.execution.model.events.TemporaryDirectoryDeletionFailedEvent
-import batect.execution.model.events.TemporaryFileDeletionFailedEvent
 import batect.execution.model.events.UserInterruptedExecutionEvent
 import batect.execution.model.steps.BuildImageStep
 import batect.execution.model.steps.CleanupStep
@@ -189,8 +187,6 @@ class InterleavedEventLogger(
             is ExecutionFailedEvent -> printErrorForTask(event)
             is TaskNetworkCreationFailedEvent -> printErrorForTask(event)
             is TaskNetworkDeletionFailedEvent -> printErrorForTask(event)
-            is TemporaryFileDeletionFailedEvent -> printErrorForTask(event)
-            is TemporaryDirectoryDeletionFailedEvent -> printErrorForTask(event)
             is UserInterruptedExecutionEvent -> printErrorForTask(event)
         }
     }

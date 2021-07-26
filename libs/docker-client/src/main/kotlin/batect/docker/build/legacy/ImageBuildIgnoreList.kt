@@ -14,8 +14,10 @@
    limitations under the License.
 */
 
-package batect.docker.build
+package batect.docker.build.legacy
 
+import batect.docker.build.ImageBuildIgnoreEntry
+import batect.docker.build.MatchResult
 import java.nio.file.Path
 
 data class ImageBuildIgnoreList(private val entries: List<ImageBuildIgnoreEntry>) {

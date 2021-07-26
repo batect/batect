@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package batect.docker.build
+package batect.docker.build.legacy
 
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo

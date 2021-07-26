@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package batect.docker.build
+package batect.docker.build.legacy
 
 import batect.logging.PathSerializer
 import kotlinx.serialization.Serializable

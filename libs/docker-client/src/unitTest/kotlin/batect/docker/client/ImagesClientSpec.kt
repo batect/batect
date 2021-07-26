@@ -29,12 +29,12 @@ import batect.docker.api.SessionStreams
 import batect.docker.api.SessionsAPI
 import batect.docker.build.BuildKitConfig
 import batect.docker.build.BuildProgress
-import batect.docker.build.DockerfileParser
-import batect.docker.build.ImageBuildContext
-import batect.docker.build.ImageBuildContextFactory
 import batect.docker.build.LegacyBuilderConfig
 import batect.docker.build.buildkit.BuildKitSession
 import batect.docker.build.buildkit.BuildKitSessionFactory
+import batect.docker.build.legacy.DockerfileParser
+import batect.docker.build.legacy.ImageBuildContext
+import batect.docker.build.legacy.ImageBuildContextFactory
 import batect.docker.pull.ImagePullProgress
 import batect.docker.pull.ImagePullProgressReporter
 import batect.docker.pull.RegistryCredentials
@@ -103,7 +103,6 @@ object ImagesClientSpec : Spek({
 
             val outputSink by createForEachTest { mock<Sink>() }
             val cancellationContext by createForEachTest { mock<CancellationContext>() }
-            val context = ImageBuildContext(emptySet())
 
             given("the Dockerfile exists") {
                 val resolvedDockerfilePath by createForEachTest { buildDirectory.resolve(dockerfilePath) }
@@ -112,7 +111,6 @@ object ImagesClientSpec : Spek({
                     Files.createDirectories(buildDirectory)
                     Files.createFile(resolvedDockerfilePath)
 
-                    whenever(imageBuildContextFactory.createFromDirectory(buildDirectory, dockerfilePath)).doReturn(context)
                     whenever(dockerfileParser.extractBaseImageNames(resolvedDockerfilePath)).doReturn(setOf(ImageReference("nginx:1.13.0"), ImageReference("some-other-image:2.3.4")))
                 }
 
@@ -126,11 +124,17 @@ object ImagesClientSpec : Spek({
                     }
 
                     val image = DockerImage("some-image-id")
-                    beforeEachTest { whenever(imagesAPI.build(any(), any(), any(), any(), any(), any(), any(), any(), any())).doReturn(image) }
+                    beforeEachTest { whenever(imagesAPI.build(any(), any(), any(), any(), any(), any(), any(), any())).doReturn(image) }
 
                     val onStatusUpdate = fun(_: BuildProgress) {}
 
                     given("the legacy builder is being used") {
+                        val context = ImageBuildContext(emptySet())
+
+                        beforeEachTest {
+                            whenever(imageBuildContextFactory.createFromDirectory(buildDirectory, dockerfilePath)).doReturn(context)
+                        }
+
                         val request by createForEachTest {
                             ImageBuildRequest(
                                 buildDirectory,
@@ -146,13 +150,12 @@ object ImagesClientSpec : Spek({
 
                         it("builds the image") {
                             verify(imagesAPI).build(
-                                eq(context),
                                 eq(buildArgs),
                                 eq(dockerfilePath),
                                 eq(imageTags),
                                 eq(forcePull),
                                 argThat { destinationSink == outputSink },
-                                eq(LegacyBuilderConfig(setOf(image1Credentials, image2Credentials))),
+                                eq(LegacyBuilderConfig(setOf(image1Credentials, image2Credentials), context)),
                                 eq(cancellationContext),
                                 eq(onStatusUpdate)
                             )
@@ -189,7 +192,6 @@ object ImagesClientSpec : Spek({
 
                         it("builds the image") {
                             verify(imagesAPI).build(
-                                eq(context),
                                 eq(buildArgs),
                                 eq(dockerfilePath),
                                 eq(imageTags),
@@ -209,7 +211,7 @@ object ImagesClientSpec : Spek({
                             inOrder(sessionsAPI, imagesAPI, buildKitSession) {
                                 verify(sessionsAPI).create(any())
                                 verify(buildKitSession).start(sessionStreams)
-                                verify(imagesAPI).build(any(), any(), any(), any(), any(), any(), any(), any(), any())
+                                verify(imagesAPI).build(any(), any(), any(), any(), any(), any(), any(), any())
                                 verify(buildKitSession).close()
                             }
                         }

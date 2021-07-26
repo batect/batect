@@ -52,12 +52,12 @@ import batect.docker.api.NetworksAPI
 import batect.docker.api.SessionsAPI
 import batect.docker.api.SystemInfoAPI
 import batect.docker.api.VolumesAPI
-import batect.docker.build.DockerIgnoreParser
-import batect.docker.build.DockerfileParser
-import batect.docker.build.ImageBuildContextFactory
 import batect.docker.build.buildkit.BuildKitSessionFactory
 import batect.docker.build.buildkit.services.HealthService
 import batect.docker.build.buildkit.services.StatFactory
+import batect.docker.build.legacy.DockerIgnoreParser
+import batect.docker.build.legacy.DockerfileParser
+import batect.docker.build.legacy.ImageBuildContextFactory
 import batect.docker.client.ContainersClient
 import batect.docker.client.DockerClient
 import batect.docker.client.ExecClient

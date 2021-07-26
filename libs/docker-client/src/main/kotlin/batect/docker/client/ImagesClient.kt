@@ -27,11 +27,11 @@ import batect.docker.api.SessionsAPI
 import batect.docker.build.BuildKitConfig
 import batect.docker.build.BuildProgress
 import batect.docker.build.BuilderConfig
-import batect.docker.build.DockerfileParser
-import batect.docker.build.ImageBuildContextFactory
 import batect.docker.build.ImageBuildOutputSink
 import batect.docker.build.LegacyBuilderConfig
 import batect.docker.build.buildkit.BuildKitSessionFactory
+import batect.docker.build.legacy.DockerfileParser
+import batect.docker.build.legacy.ImageBuildContextFactory
 import batect.docker.data
 import batect.docker.pull.ImagePullProgress
 import batect.docker.pull.ImagePullProgressReporter
@@ -70,16 +70,16 @@ class ImagesClient(
         }
 
         try {
-            val resolvedDockerfilePath = request.resolveDockerfilePath()
-            val context = imageBuildContextFactory.createFromDirectory(request.buildDirectory, request.relativeDockerfilePath)
+            val resolvedDockerfilePath = request.resolveDockerfilePath() // We do this early so we can show a clear error message if the configured Dockerfile doesn't exist.
+
             val imageBuildOutputSink = ImageBuildOutputSink(outputSink)
-            val builderConfig = createBuilderConfig(builderVersion, request.buildDirectory, resolvedDockerfilePath, imageBuildOutputSink)
+            val builderConfig = createBuilderConfig(builderVersion, request.buildDirectory, request.relativeDockerfilePath, resolvedDockerfilePath, imageBuildOutputSink)
             val session = startSession(builderConfig)
 
             // Why not use a use() block here? use() suppresses any exceptions thrown by close() if an exception has already been thrown, but we want to allow them to bubble up so that
             // any exceptions from other threads can be propagated by BuildKitSession.close().
             val image = try {
-                imagesAPI.build(context, request.buildArgs, request.relativeDockerfilePath, request.imageTags, request.forcePull, imageBuildOutputSink, builderConfig, cancellationContext, onProgressUpdate)
+                imagesAPI.build(request.buildArgs, request.relativeDockerfilePath, request.imageTags, request.forcePull, imageBuildOutputSink, builderConfig, cancellationContext, onProgressUpdate)
             } finally {
                 session.close()
             }
@@ -98,14 +98,16 @@ class ImagesClient(
     private fun createBuilderConfig(
         builderVersion: BuilderVersion,
         buildDirectory: Path,
+        relativeDockerfilePath: String,
         resolvedDockerfilePath: Path,
         imageBuildOutputSink: ImageBuildOutputSink
     ): BuilderConfig = when (builderVersion) {
         BuilderVersion.Legacy -> {
             val baseImageNames = dockerfileParser.extractBaseImageNames(resolvedDockerfilePath)
             val credentials = baseImageNames.mapNotNull { credentialsProvider.getCredentials(it) }.toSet()
+            val context = imageBuildContextFactory.createFromDirectory(buildDirectory, relativeDockerfilePath)
 
-            LegacyBuilderConfig(credentials)
+            LegacyBuilderConfig(credentials, context)
         }
         BuilderVersion.BuildKit -> BuildKitConfig(buildKitSessionFactory.create(buildDirectory, imageBuildOutputSink))
     }

@@ -27,16 +27,14 @@ import batect.docker.build.BuildError
 import batect.docker.build.BuildKitConfig
 import batect.docker.build.BuildProgress
 import batect.docker.build.BuilderConfig
-import batect.docker.build.ImageBuildContext
-import batect.docker.build.ImageBuildContextRequestBody
 import batect.docker.build.ImageBuildOutputSink
 import batect.docker.build.ImageBuildResponseBody
 import batect.docker.build.LegacyBuilderConfig
 import batect.docker.build.buildkit.BuildKitImageBuildResponseBody
+import batect.docker.build.legacy.ImageBuildContextRequestBody
 import batect.docker.build.legacy.LegacyImageBuildResponseBody
 import batect.docker.pull.RegistryCredentials
 import batect.docker.toJsonObject
-import batect.logging.LogMessageBuilder
 import batect.logging.Logger
 import batect.os.SystemInfo
 import batect.primitives.CancellationContext
@@ -57,7 +55,6 @@ class ImagesAPI(
     private val buildResponseBodyFactory: (BuilderVersion) -> ImageBuildResponseBody = ::buildResponseBodyForBuilder
 ) : APIBase(httpConfig, systemInfo, logger) {
     fun build(
-        context: ImageBuildContext,
         buildArgs: Map<String, String>,
         dockerfilePath: String,
         imageTags: Set<String>,
@@ -69,13 +66,12 @@ class ImagesAPI(
     ): DockerImage {
         logger.info {
             message("Building image.")
-            data("context", context)
             data("buildArgs", buildArgs)
             data("imageTags", imageTags)
             data("forcePull", forcePull)
         }
 
-        val request = createBuildRequest(context, buildArgs, dockerfilePath, imageTags, forcePull, builderConfig)
+        val request = createBuildRequest(buildArgs, dockerfilePath, imageTags, forcePull, builderConfig)
 
         clientWithNoTimeout()
             .newCall(request)
@@ -101,7 +97,6 @@ class ImagesAPI(
     }
 
     private fun createBuildRequest(
-        context: ImageBuildContext,
         buildArgs: Map<String, String>,
         dockerfilePath: String,
         imageTags: Set<String>,
@@ -118,7 +113,7 @@ class ImagesAPI(
 
         return when (builderConfig) {
             is LegacyBuilderConfig -> Request.Builder()
-                .post(ImageBuildContextRequestBody(context))
+                .post(ImageBuildContextRequestBody(builderConfig.context))
                 .url(baseUrl.build())
                 .addRegistryCredentialsForBuild(builderConfig.registryCredentials)
                 .build()
@@ -274,8 +269,6 @@ class ImagesAPI(
     private val urlForImages: HttpUrl = baseUrl.newBuilder()
         .addPathSegment("images")
         .build()
-
-    private fun LogMessageBuilder.data(key: String, value: ImageBuildContext) = this.data(key, value, ImageBuildContext.serializer())
 
     companion object {
         private fun buildResponseBodyForBuilder(builderVersion: BuilderVersion) = when (builderVersion) {

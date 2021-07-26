@@ -18,9 +18,10 @@ package batect.docker.build
 
 import batect.docker.api.BuilderVersion
 import batect.docker.build.buildkit.BuildKitSession
+import batect.docker.build.legacy.ImageBuildContext
 import batect.docker.pull.RegistryCredentials
 
 sealed class BuilderConfig(val builderVersion: BuilderVersion)
 
-data class LegacyBuilderConfig(val registryCredentials: Set<RegistryCredentials>) : BuilderConfig(BuilderVersion.Legacy)
+data class LegacyBuilderConfig(val registryCredentials: Set<RegistryCredentials>, val context: ImageBuildContext) : BuilderConfig(BuilderVersion.Legacy)
 data class BuildKitConfig(val session: BuildKitSession) : BuilderConfig(BuilderVersion.BuildKit)

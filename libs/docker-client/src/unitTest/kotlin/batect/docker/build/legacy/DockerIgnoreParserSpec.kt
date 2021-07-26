@@ -14,9 +14,10 @@
    limitations under the License.
 */
 
-package batect.docker.build
+package batect.docker.build.legacy
 
 import batect.docker.DockerException
+import batect.docker.build.ImageBuildIgnoreEntry
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given

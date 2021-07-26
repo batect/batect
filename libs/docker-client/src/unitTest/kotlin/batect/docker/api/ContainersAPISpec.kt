@@ -622,7 +622,7 @@ object ContainersAPISpec : Spek({
                             on { code } doReturn 101
                         }
 
-                        beforeEachTest { attachHttpClient.mock("POST", expectedUrl, response, expectedHeaders) }
+                        val call by createForEachTest { attachHttpClient.mock("POST", expectedUrl, response) }
 
                         given("a TTY is being used") {
                             val streams by runForEachTest { api.attachToOutput(container, isTTY = true) }
@@ -641,6 +641,10 @@ object ContainersAPISpec : Spek({
 
                             it("configures the HTTP client with a separate connection pool that does not evict connections (because the underlying connection cannot be reused and because we don't want to evict the connection just because there hasn't been any output for a while)") {
                                 verify(clientBuilder).connectionPool(connectionPoolWithNoEviction())
+                            }
+
+                            it("sends headers to instruct the daemon to switch to raw sockets") {
+                                assertThat(call.request().headers, equalTo(expectedHeaders))
                             }
                         }
 
@@ -662,11 +666,15 @@ object ContainersAPISpec : Spek({
                             it("configures the HTTP client with a separate connection pool that does not evict connections (because the underlying connection cannot be reused and because we don't want to evict the connection just because there hasn't been any output for a while)") {
                                 verify(clientBuilder).connectionPool(connectionPoolWithNoEviction())
                             }
+
+                            it("sends headers to instruct the daemon to switch to raw sockets") {
+                                assertThat(call.request().headers, equalTo(expectedHeaders))
+                            }
                         }
                     }
 
                     on("an unsuccessful attach attempt") {
-                        beforeEachTest { attachHttpClient.mockPost(expectedUrl, errorResponse, 418, expectedHeaders) }
+                        beforeEachTest { attachHttpClient.mockPost(expectedUrl, errorResponse, 418) }
 
                         it("raises an appropriate exception") {
                             assertThat({ api.attachToOutput(container, true) }, throws<DockerException>(withMessage("Attaching to output from container 'the-container-id' failed: $errorMessageWithCorrectLineEndings")))
@@ -682,7 +690,7 @@ object ContainersAPISpec : Spek({
                             on { code } doReturn 101
                         }
 
-                        beforeEachTest { attachHttpClient.mock("POST", expectedUrl, response, expectedHeaders) }
+                        val call by createForEachTest { attachHttpClient.mock("POST", expectedUrl, response) }
 
                         val streams by runForEachTest { api.attachToInput(container) }
 
@@ -701,10 +709,14 @@ object ContainersAPISpec : Spek({
                         it("configures the HTTP client with a separate connection pool that does not evict connections (because the underlying connection cannot be reused and because we don't want to evict the connection just because there hasn't been any input for a while)") {
                             verify(clientBuilder).connectionPool(connectionPoolWithNoEviction())
                         }
+
+                        it("sends headers to instruct the daemon to switch to raw sockets") {
+                            assertThat(call.request().headers, equalTo(expectedHeaders))
+                        }
                     }
 
                     on("an unsuccessful attach attempt") {
-                        beforeEachTest { attachHttpClient.mockPost(expectedUrl, errorResponse, 418, expectedHeaders) }
+                        beforeEachTest { attachHttpClient.mockPost(expectedUrl, errorResponse, 418) }
 
                         it("raises an appropriate exception") {
                             assertThat({ api.attachToInput(container) }, throws<DockerException>(withMessage("Attaching to input for container 'the-container-id' failed: $errorMessageWithCorrectLineEndings")))

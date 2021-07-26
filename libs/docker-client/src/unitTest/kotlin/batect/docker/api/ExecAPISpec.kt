@@ -163,10 +163,6 @@ object ExecAPISpec : Spek({
                 val attachTty = true
                 val request = ExecCreationRequest(false, false, false, attachTty, emptyMap(), emptyList(), false, null, "/some/work/dir")
                 val instance = DockerExecInstance("the-exec-instance")
-                val expectedHeaders = Headers.Builder()
-                    .add("Connection", "Upgrade")
-                    .add("Upgrade", "tcp")
-                    .build()
 
                 val expectedUrl = "$dockerBaseUrl/v1.37/exec/the-exec-instance/start"
 
@@ -176,7 +172,7 @@ object ExecAPISpec : Spek({
                         on { isSuccessful } doReturn true
                     }
 
-                    beforeEachTest { hijackableHttpClient.mock("POST", expectedUrl, response, expectedHeaders) }
+                    val call by createForEachTest { hijackableHttpClient.mock("POST", expectedUrl, response) }
 
                     val stream by runForEachTest { api.start(request, instance) }
 
@@ -211,10 +207,22 @@ object ExecAPISpec : Spek({
                     it("configures the HTTP client with a separate connection pool that does not evict connections (because the underlying connection cannot be reused and because we don't want to evict the connection just because there hasn't been any output for a while)") {
                         verify(clientBuilder).connectionPool(connectionPoolWithNoEviction())
                     }
+
+                    it("sends headers to instruct the daemon to switch to raw sockets") {
+                        assertThat(
+                            call.request().headers,
+                            equalTo(
+                                Headers.Builder()
+                                    .add("Connection", "Upgrade")
+                                    .add("Upgrade", "tcp")
+                                    .build()
+                            )
+                        )
+                    }
                 }
 
                 on("an unsuccessful start attempt") {
-                    beforeEachTest { hijackableHttpClient.mockPost(expectedUrl, errorResponse, 418, expectedHeaders) }
+                    beforeEachTest { hijackableHttpClient.mockPost(expectedUrl, errorResponse, 418) }
 
                     it("raises an appropriate exception") {
                         assertThat({ api.start(request, instance) }, throws<ExecFailedException>(withMessage("Starting exec instance 'the-exec-instance' failed: $errorMessageWithCorrectLineEndings")))

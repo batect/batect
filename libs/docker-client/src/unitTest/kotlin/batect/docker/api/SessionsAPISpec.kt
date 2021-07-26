@@ -108,22 +108,13 @@ object SessionsAPISpec : Spek({
 
             val session by createForEachTest { BuildKitSession("session-id-123", "build-id-123", "session-name-123", "session-shared-key-123", grpcListener, mock()) }
             val expectedUrl = "$dockerBaseUrl/v1.37/session"
-            val expectedHeaders = Headers.Builder()
-                .add("Connection", "Upgrade")
-                .add("Upgrade", "h2c")
-                .add("X-Docker-Expose-Session-Uuid", "session-id-123")
-                .add("X-Docker-Expose-Session-Name", "session-name-123")
-                .add("X-Docker-Expose-Session-Sharedkey", "session-shared-key-123")
-                .add("X-Docker-Expose-Session-Grpc-Method", "/my.v1.Service/SomeMethod")
-                .add("X-Docker-Expose-Session-Grpc-Method", "/my.v1.Service/SomeOtherMethod")
-                .build()
 
             given("creating the session succeeds") {
                 val response = mock<Response> {
                     on { code } doReturn 101
                 }
 
-                beforeEachTest { attachHttpClient.mock("POST", expectedUrl, response, expectedHeaders) }
+                val call by createForEachTest { attachHttpClient.mock("POST", expectedUrl, response) }
 
                 val streams by runForEachTest { api.create(session) }
 
@@ -142,10 +133,24 @@ object SessionsAPISpec : Spek({
                 it("configures the HTTP client with a separate connection pool that does not evict connections (because the underlying connection cannot be reused and because we don't want to evict the connection just because there hasn't been any activity for a while)") {
                     verify(clientBuilder).connectionPool(connectionPoolWithNoEviction())
                 }
+
+                it("sends headers to instruct the daemon to switch to HTTP/2 sockets and includes details of the session") {
+                    val expectedHeaders = Headers.Builder()
+                        .add("Connection", "Upgrade")
+                        .add("Upgrade", "h2c")
+                        .add("X-Docker-Expose-Session-Uuid", "session-id-123")
+                        .add("X-Docker-Expose-Session-Name", "session-name-123")
+                        .add("X-Docker-Expose-Session-Sharedkey", "session-shared-key-123")
+                        .add("X-Docker-Expose-Session-Grpc-Method", "/my.v1.Service/SomeMethod")
+                        .add("X-Docker-Expose-Session-Grpc-Method", "/my.v1.Service/SomeOtherMethod")
+                        .build()
+
+                    assertThat(call.request().headers, equalTo(expectedHeaders))
+                }
             }
 
             given("creating the session fails") {
-                beforeEachTest { attachHttpClient.mockPost(expectedUrl, errorResponse, 418, expectedHeaders) }
+                beforeEachTest { attachHttpClient.mockPost(expectedUrl, errorResponse, 418) }
 
                 it("raises an appropriate exception") {
                     assertThat({ api.create(session) }, throws<DockerException>(withMessage("Creating session failed: $errorMessageWithCorrectLineEndings")))

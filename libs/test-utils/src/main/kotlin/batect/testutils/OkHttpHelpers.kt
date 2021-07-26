@@ -38,23 +38,22 @@ import org.mockito.kotlin.whenever
 
 val noHeaders = Headers.Builder().build()
 
-fun OkHttpClient.mockGet(url: String, responseBody: String, statusCode: Int = 200, expectedRequestHeaders: Headers = noHeaders, responseHeaders: Headers = noHeaders): Call =
-    mock("GET", url, responseBody, statusCode, expectedRequestHeaders, responseHeaders)
+fun OkHttpClient.mockGet(url: String, responseBody: String, statusCode: Int = 200, responseHeaders: Headers = noHeaders): Call =
+    mock("GET", url, responseBody, statusCode, responseHeaders = responseHeaders)
 
-fun OkHttpClient.mockPost(url: String, responseBody: String, statusCode: Int = 200, expectedRequestHeaders: Headers = noHeaders): Call = mock("POST", url, responseBody, statusCode, expectedRequestHeaders)
-fun OkHttpClient.mockDelete(url: String, responseBody: String, statusCode: Int = 200, expectedRequestHeaders: Headers = noHeaders): Call = mock("DELETE", url, responseBody, statusCode, expectedRequestHeaders)
+fun OkHttpClient.mockPost(url: String, responseBody: String, statusCode: Int = 200): Call = mock("POST", url, responseBody, statusCode)
+fun OkHttpClient.mockDelete(url: String, responseBody: String, statusCode: Int = 200): Call = mock("DELETE", url, responseBody, statusCode)
 
 fun OkHttpClient.mock(
     method: String,
     url: String,
     responseBody: String,
     statusCode: Int = 200,
-    expectedRequestHeaders: Headers = noHeaders,
     responseHeaders: Headers = noHeaders
 ): Call {
     val parsedUrl = url.toHttpUrl()
 
-    return this.mock(method, equalTo(parsedUrl), responseBody, statusCode, expectedRequestHeaders, responseHeaders)
+    return this.mock(method, equalTo(parsedUrl), responseBody, statusCode, responseHeaders)
 }
 
 fun OkHttpClient.mock(
@@ -62,7 +61,6 @@ fun OkHttpClient.mock(
     urlMatcher: Matcher<HttpUrl>,
     responseBody: String,
     statusCode: Int = 200,
-    expectedRequestHeaders: Headers = noHeaders, // TODO: remove this here and below
     responseHeaders: Headers = noHeaders
 ): Call {
     val jsonMediaType = "application/json; charset=utf-8".toMediaType()
@@ -84,7 +82,6 @@ fun OkHttpClient.mock(
         requestReceived = request
 
         assertThat(request, has(Request::methodValue, equalTo(method)))
-        assertThat(request, has(Request::headerSet, equalTo(expectedRequestHeaders)))
 
         whenever(call.execute()).doReturn(
             Response.Builder()
@@ -103,7 +100,7 @@ fun OkHttpClient.mock(
     return call
 }
 
-fun OkHttpClient.mock(method: String, url: String, response: Response, expectedRequestHeaders: Headers = noHeaders): Call {
+fun OkHttpClient.mock(method: String, url: String, response: Response): Call {
     val parsedUrl = url.toHttpUrl()
     var requestReceived: Request? = null
 
@@ -122,7 +119,6 @@ fun OkHttpClient.mock(method: String, url: String, response: Response, expectedR
         requestReceived = request
 
         assertThat(request, has(Request::methodValue, equalTo(method)))
-        assertThat(request, has(Request::headerSet, equalTo(expectedRequestHeaders)))
 
         whenever(call.execute()).doReturn(response)
 

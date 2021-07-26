@@ -448,12 +448,16 @@ object ImagesAPISpec : Spek({
                     |{"status":"Status: Image is up to date for some-image"}
                 """.trimMargin()
 
-                val call by createForEachTest { clientWithLongTimeout.mockPost(expectedUrl, response, 200, expectedHeadersForAuthentication) }
+                val call by createForEachTest { clientWithLongTimeout.mockPost(expectedUrl, response, 200) }
                 val progressReceiver by createForEachTest { ImageProgressReceiver() }
                 beforeEachTest { api.pull(imageReference, registryCredentials, cancellationContext, progressReceiver::onProgressUpdate) }
 
                 it("sends a request to the Docker daemon to pull the image") {
                     verify(call).execute()
+                }
+
+                it("includes registry authentication information in headers") {
+                    assertThat(call.request().headers, equalTo(expectedHeadersForAuthentication))
                 }
 
                 it("sends all progress updates to the receiver") {
@@ -479,12 +483,16 @@ object ImagesAPISpec : Spek({
                     |{"status":"Status: Downloaded newer image for some-image:latest"}
                 """.trimMargin()
 
-                val call by createForEachTest { clientWithLongTimeout.mockPost(expectedUrl, response, 200, expectedHeadersForAuthentication) }
+                val call by createForEachTest { clientWithLongTimeout.mockPost(expectedUrl, response, 200) }
                 val progressReceiver by createForEachTest { ImageProgressReceiver() }
                 beforeEachTest { api.pull(imageReference, registryCredentials, cancellationContext, progressReceiver::onProgressUpdate) }
 
                 it("sends a request to the Docker daemon to pull the image") {
                     verify(call).execute()
+                }
+
+                it("includes registry authentication information in headers") {
+                    assertThat(call.request().headers, equalTo(expectedHeadersForAuthentication))
                 }
 
                 it("sends all progress updates to the receiver") {
@@ -502,7 +510,7 @@ object ImagesAPISpec : Spek({
 
             on("the pull request having no registry credentials") {
                 val expectedHeadersForNoAuthentication = noHeaders
-                val call by createForEachTest { clientWithLongTimeout.mockPost(expectedUrl, "", 200, expectedHeadersForNoAuthentication) }
+                val call by createForEachTest { clientWithLongTimeout.mockPost(expectedUrl, "", 200) }
                 beforeEachTest { api.pull(imageReference, null, cancellationContext, {}) }
 
                 it("sends a request to the Docker daemon to pull the image with no authentication header") {
@@ -511,7 +519,7 @@ object ImagesAPISpec : Spek({
             }
 
             on("the pull failing immediately") {
-                beforeEachTest { clientWithLongTimeout.mockPost(expectedUrl, errorResponse, 418, expectedHeadersForAuthentication) }
+                beforeEachTest { clientWithLongTimeout.mockPost(expectedUrl, errorResponse, 418) }
 
                 it("throws an appropriate exception") {
                     assertThat(
@@ -533,7 +541,7 @@ object ImagesAPISpec : Spek({
                     |{"error":"Server error: 404 trying to fetch remote history for some-image.\nMore details on following line.","errorDetail":{"code":404,"message":"Server error: 404 trying to fetch remote history for some-image"}}
                 """.trimMargin()
 
-                beforeEachTest { clientWithLongTimeout.mockPost(expectedUrl, response, 200, expectedHeadersForAuthentication) }
+                beforeEachTest { clientWithLongTimeout.mockPost(expectedUrl, response, 200) }
                 val progressReceiver = ImageProgressReceiver()
 
                 it("throws an appropriate exception with all line endings corrected for the host system") {

@@ -18,6 +18,8 @@ package batect.docker.api
 
 import batect.docker.ContainerCreationFailedException
 import batect.docker.ContainerCreationRequest
+import batect.docker.ContainerDirectory
+import batect.docker.ContainerFile
 import batect.docker.DockerContainer
 import batect.docker.DockerContainerConfiguration
 import batect.docker.DockerContainerHealthCheckConfig
@@ -47,6 +49,7 @@ import batect.testutils.mock
 import batect.testutils.mockDelete
 import batect.testutils.mockGet
 import batect.testutils.mockPost
+import batect.testutils.mockPut
 import batect.testutils.on
 import batect.testutils.runForEachTest
 import batect.testutils.withMessage
@@ -803,6 +806,51 @@ object ContainersAPISpec : Spek({
 
                     it("throws an appropriate exception") {
                         assertThat({ api.resizeTTY(container, dimensions) }, throws<DockerException>(withMessage("Resizing TTY for container 'the-container-id' failed: $errorMessageWithCorrectLineEndings")))
+                    }
+                }
+            }
+        }
+
+        describe("uploading files or folders to a container") {
+            given("a Docker container") {
+                val container = DockerContainer("the-container-id")
+
+                val expectedUrl = hasScheme("http") and
+                    hasHost(dockerHost) and
+                    hasPath("/v1.37/containers/the-container-id/archive")
+
+                val itemsToUpload = setOf(
+                    ContainerFile("file-1", 100, 200, "file contents".toByteArray(Charsets.UTF_8)),
+                    ContainerDirectory("some-dir", 100, 200)
+                )
+
+                given("the API call succeeds") {
+                    val call by createForEachTest { httpClient.mockPut(expectedUrl, "", 200) }
+
+                    beforeEachTest { api.upload(container, itemsToUpload, "/some-dir") }
+
+                    it("sends a request to the Docker daemon to upload the files and folders") {
+                        verify(call).execute()
+                    }
+
+                    it("includes the target directory in the request") {
+                        assertThat(call.request().url, hasQueryParameter("path", "/some-dir"))
+                    }
+
+                    it("instructs the Docker daemon to copy UID and GID information from the uploaded files and folders") {
+                        assertThat(call.request().url, hasQueryParameter("copyUIDGID", "1"))
+                    }
+
+                    it("includes the files and folders in the request body") {
+                        assertThat(call.request().body, equalTo(FilesystemUploadRequestBody(itemsToUpload)))
+                    }
+                }
+
+                given("the API call fails") {
+                    beforeEachTest { httpClient.mockPut(expectedUrl, errorResponse, 418) }
+
+                    it("throws an appropriate exception") {
+                        assertThat({ api.upload(container, itemsToUpload, "/some-dir") }, throws<DockerException>(withMessage("Uploading 2 items to container 'the-container-id' failed: $errorMessageWithCorrectLineEndings")))
                     }
                 }
             }

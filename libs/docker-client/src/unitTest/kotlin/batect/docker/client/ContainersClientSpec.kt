@@ -17,6 +17,8 @@
 package batect.docker.client
 
 import batect.docker.ContainerCreationRequest
+import batect.docker.ContainerDirectory
+import batect.docker.ContainerFile
 import batect.docker.ContainerHealthCheckException
 import batect.docker.DockerContainer
 import batect.docker.DockerContainerConfiguration
@@ -381,6 +383,27 @@ object ContainersClientSpec : Spek({
 
                     it("sends a request to the Docker daemon to remove the container") {
                         verify(api).remove(container)
+                    }
+                }
+            }
+        }
+
+        describe("uploading files or directories to a container") {
+            given("an existing container, a set of files and directories to upload and a destination within the container") {
+                val container = DockerContainer("the-container-id")
+
+                val itemsToUpload = setOf(
+                    ContainerFile("file-1", 100, 200, "file contents".toByteArray(Charsets.UTF_8)),
+                    ContainerDirectory("some-dir", 100, 200)
+                )
+
+                val destination = "/some-dir"
+
+                on("uploading to that container") {
+                    beforeEachTest { client.upload(container, itemsToUpload, destination) }
+
+                    it("sends a request to the Docker daemon to remove the container") {
+                        verify(api).upload(container, itemsToUpload, destination)
                     }
                 }
             }

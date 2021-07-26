@@ -17,6 +17,7 @@
 package batect.docker.client
 
 import batect.docker.ContainerCreationRequest
+import batect.docker.ContainerFilesystemItem
 import batect.docker.ContainerHealthCheckException
 import batect.docker.DockerContainer
 import batect.docker.DockerContainerInfo
@@ -50,6 +51,7 @@ class ContainersClient(
     fun create(creationRequest: ContainerCreationRequest): DockerContainer = api.create(creationRequest)
     fun stop(container: DockerContainer) = api.stop(container)
     fun remove(container: DockerContainer) = api.remove(container)
+    fun upload(container: DockerContainer, source: Set<ContainerFilesystemItem>, destination: String) = api.upload(container, source, destination)
 
     fun run(container: DockerContainer, stdout: Sink?, stdin: Source?, usesTTY: Boolean, cancellationContext: CancellationContext, frameDimensions: Dimensions, onStarted: () -> Unit): DockerContainerRunResult {
         logger.info {

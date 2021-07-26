@@ -18,6 +18,7 @@ package batect.docker.api
 
 import batect.docker.ContainerCreationFailedException
 import batect.docker.ContainerCreationRequest
+import batect.docker.ContainerFilesystemItem
 import batect.docker.DockerContainer
 import batect.docker.DockerContainerInfo
 import batect.docker.DockerEvent
@@ -38,6 +39,7 @@ import batect.primitives.CancellationContext
 import batect.primitives.executeInCancellationContext
 import jnr.constants.platform.Signal
 import kotlinx.serialization.SerializationException
+import kotlinx.serialization.builtins.SetSerializer
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
@@ -47,7 +49,6 @@ import kotlinx.serialization.json.long
 import okhttp3.HttpUrl
 import okhttp3.Request
 import okio.BufferedSource
-import java.lang.Exception
 import java.time.Duration
 import java.util.concurrent.TimeUnit
 
@@ -493,6 +494,41 @@ class ContainersAPI(
 
         logger.info {
             message("Container TTY resized.")
+        }
+    }
+
+    fun upload(container: DockerContainer, source: Set<ContainerFilesystemItem>, destination: String) {
+        logger.info {
+            message("Uploading items to container.")
+            data("container", container)
+            data("source", source, SetSerializer(ContainerFilesystemItem.serializer()))
+            data("destination", destination)
+        }
+
+        val url = urlForContainer(container).newBuilder()
+            .addPathSegment("archive")
+            .addQueryParameter("path", destination)
+            .addQueryParameter("copyUIDGID", "1")
+            .build()
+
+        val request = Request.Builder()
+            .put(FilesystemUploadRequestBody(source))
+            .url(url)
+            .build()
+
+        httpConfig.client.newCall(request).execute().use { response ->
+            checkForFailure(response) { error ->
+                logger.error {
+                    message("Could not upload items to container.")
+                    data("error", error)
+                }
+
+                throw DockerException("Uploading ${source.size} items to container '${container.id}' failed: ${error.message}")
+            }
+        }
+
+        logger.info {
+            message("Files uploaded.")
         }
     }
 

@@ -42,7 +42,11 @@ fun OkHttpClient.mockGet(url: String, responseBody: String, statusCode: Int = 20
     mock("GET", url, responseBody, statusCode, responseHeaders = responseHeaders)
 
 fun OkHttpClient.mockPost(url: String, responseBody: String, statusCode: Int = 200): Call = mock("POST", url, responseBody, statusCode)
+fun OkHttpClient.mockPost(urlMatcher: Matcher<HttpUrl>, responseBody: String, statusCode: Int = 200): Call = mock("POST", urlMatcher, responseBody, statusCode)
+fun OkHttpClient.mockPut(url: String, responseBody: String, statusCode: Int = 200): Call = mock("PUT", url, responseBody, statusCode)
+fun OkHttpClient.mockPut(urlMatcher: Matcher<HttpUrl>, responseBody: String, statusCode: Int = 200): Call = mock("PUT", urlMatcher, responseBody, statusCode)
 fun OkHttpClient.mockDelete(url: String, responseBody: String, statusCode: Int = 200): Call = mock("DELETE", url, responseBody, statusCode)
+fun OkHttpClient.mockDelete(urlMatcher: Matcher<HttpUrl>, responseBody: String, statusCode: Int = 200): Call = mock("DELETE", urlMatcher, responseBody, statusCode)
 
 fun OkHttpClient.mock(
     method: String,

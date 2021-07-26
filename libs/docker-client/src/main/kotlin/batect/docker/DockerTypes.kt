@@ -91,6 +91,28 @@ data class DockerExecResult(
     val output: String
 )
 
+@Serializable
+sealed class ContainerFilesystemItem() {
+    abstract val path: String
+    abstract val uid: Long
+    abstract val gid: Long
+}
+
+@Serializable
+data class ContainerFile(
+    override val path: String,
+    override val uid: Long,
+    override val gid: Long,
+    val contents: ByteArray
+) : ContainerFilesystemItem()
+
+@Serializable
+data class ContainerDirectory(
+    override val path: String,
+    override val uid: Long,
+    override val gid: Long
+) : ContainerFilesystemItem()
+
 fun LogMessageBuilder.data(key: String, value: DockerImage) = this.data(key, value, DockerImage.serializer())
 fun LogMessageBuilder.data(key: String, value: DockerContainer) = this.data(key, value, DockerContainer.serializer())
 fun LogMessageBuilder.data(key: String, value: DockerVolume) = this.data(key, value, DockerVolume.serializer())

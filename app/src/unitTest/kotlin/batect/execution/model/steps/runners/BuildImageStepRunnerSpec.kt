@@ -74,7 +74,8 @@ object BuildImageStepRunnerSpec : Spek({
         val resolvedBuildDirectory = osIndependentPath("/resolved/build-dir")
         val buildArgs = mapOf("some_arg" to LiteralValue("some_value"), "SOME_PROXY_CONFIG" to LiteralValue("overridden"), "SOME_HOST_VAR" to EnvironmentVariableReference("SOME_ENV_VAR"))
         val dockerfilePath = "some-Dockerfile-path"
-        val container = Container("some-container", BuildImage(buildDirectory, pathResolutionContext, buildArgs, dockerfilePath))
+        val targetStage = "some-target-stage"
+        val container = Container("some-container", BuildImage(buildDirectory, pathResolutionContext, buildArgs, dockerfilePath, targetStage = targetStage))
         val step = BuildImageStep(container)
         val outputSink by createForEachTest { mock<Sink>() }
         val builderVersion = BuilderVersion.BuildKit
@@ -162,8 +163,19 @@ object BuildImageStepRunnerSpec : Spek({
                         runner.run(step, eventSink)
                     }
 
-                    it("passes the resolved build directory, Dockerfile path and path resolution context to the image build") {
-                        verify(imagesClient).build(argWhere { it.buildDirectory == resolvedBuildDirectory && it.relativeDockerfilePath == dockerfilePath && it.pathResolutionContext == pathResolutionContext }, any(), any(), any(), any())
+                    it("passes the resolved build directory, Dockerfile path, build target and path resolution context to the image build") {
+                        verify(imagesClient).build(
+                            argWhere {
+                                it.buildDirectory == resolvedBuildDirectory &&
+                                    it.relativeDockerfilePath == dockerfilePath &&
+                                    it.targetStage == targetStage &&
+                                    it.pathResolutionContext == pathResolutionContext
+                            },
+                            any(),
+                            any(),
+                            any(),
+                            any()
+                        )
                     }
 
                     it("generates a tag for the image based on the project and container names, and includes any additional image tags provided on the command line") {

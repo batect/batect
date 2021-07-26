@@ -133,6 +133,22 @@ object ContainerSpec : Spek({
             }
         }
 
+        given("the config file has both an image and a target stage") {
+            val yaml = """
+                image: some_image
+                build_target: some-build-target
+            """.trimIndent()
+
+            on("loading the configuration from the config file") {
+                it("throws an appropriate exception") {
+                    assertThat(
+                        { parser.decodeFromString(Container.Companion, yaml) },
+                        throws(withMessage("build_target cannot be used with image, but both have been provided.") and withLineNumber(1) and withColumn(1) and withPath("<root>"))
+                    )
+                }
+            }
+        }
+
         given("the config file has neither a build directory nor an image") {
             val yaml = """
                 command: do-the-thing
@@ -154,6 +170,7 @@ object ContainerSpec : Spek({
                 build_args:
                   SOME_ARG: some_value
                   SOME_DYNAMIC_VALUE: ${'$'}{host_var}
+                build_target: some-build-stage
                 dockerfile: some-Dockerfile
                 command: do-the-thing.sh some-param
                 entrypoint: sh
@@ -215,7 +232,8 @@ object ContainerSpec : Spek({
                                 pathResolverContext,
                                 mapOf("SOME_ARG" to LiteralValue("some_value"), "SOME_DYNAMIC_VALUE" to EnvironmentVariableReference("host_var")),
                                 "some-Dockerfile",
-                                ImagePullPolicy.Always
+                                ImagePullPolicy.Always,
+                                "some-build-stage"
                             )
                         )
                     )

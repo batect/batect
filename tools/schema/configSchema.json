@@ -52,6 +52,11 @@
           "description": "List of build args to use when building the image in build_directory",
           "$ref": "#/definitions/buildArgList"
         },
+        "build_target": {
+          "type": "string",
+          "description": "Dockerfile stage name to build and use for this container",
+          "minLength": 1
+        },
         "dockerfile": {
           "type": "string",
           "description": "Dockerfile (relative to build_directory) to use when building the image. Defaults to Dockerfile` if not set.",

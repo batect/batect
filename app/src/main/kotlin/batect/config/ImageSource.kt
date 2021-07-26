@@ -28,7 +28,8 @@ data class BuildImage(
     val pathResolutionContext: PathResolutionContext,
     val buildArgs: Map<String, Expression> = emptyMap(),
     val dockerfilePath: String = "Dockerfile",
-    override val imagePullPolicy: ImagePullPolicy = ImagePullPolicy.IfNotPresent
+    override val imagePullPolicy: ImagePullPolicy = ImagePullPolicy.IfNotPresent,
+    val targetStage: String? = null
 ) : ImageSource()
 
 @Serializable

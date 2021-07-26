@@ -71,7 +71,8 @@ class BuildImageStepRunner(
                 buildConfig.dockerfilePath,
                 buildConfig.pathResolutionContext,
                 imageTags,
-                buildConfig.imagePullPolicy.forciblyPull
+                buildConfig.imagePullPolicy.forciblyPull,
+                buildConfig.targetStage
             )
 
             val image = telemetrySessionBuilder.addSpan("BuildImage") {

@@ -72,6 +72,7 @@ data class Container(
 
         private const val buildDirectoryFieldName = "build_directory"
         private const val buildArgsFieldName = "build_args"
+        private const val buildTargetFieldName = "build_target"
         private const val dockerfileFieldName = "dockerfile"
         private const val imageNameFieldName = "image"
         private const val commandFieldName = "command"
@@ -99,6 +100,7 @@ data class Container(
         override val descriptor: SerialDescriptor = buildClassSerialDescriptor("Container") {
             element(buildDirectoryFieldName, String.serializer().descriptor, isOptional = true)
             element(buildArgsFieldName, EnvironmentSerializer.descriptor, isOptional = true)
+            element(buildTargetFieldName, String.serializer().descriptor, isOptional = true)
             element(dockerfileFieldName, String.serializer().descriptor, isOptional = true)
             element(imageNameFieldName, String.serializer().descriptor, isOptional = true)
             element(commandFieldName, CommandSerializer.descriptor, isOptional = true)
@@ -126,6 +128,7 @@ data class Container(
 
         private val buildDirectoryFieldIndex = descriptor.getElementIndex(buildDirectoryFieldName)
         private val buildArgsFieldIndex = descriptor.getElementIndex(buildArgsFieldName)
+        private val buildTargetFieldIndex = descriptor.getElementIndex(buildTargetFieldName)
         private val dockerfileFieldIndex = descriptor.getElementIndex(dockerfileFieldName)
         private val imageNameFieldIndex = descriptor.getElementIndex(imageNameFieldName)
         private val commandFieldIndex = descriptor.getElementIndex(commandFieldName)
@@ -159,6 +162,7 @@ data class Container(
         private fun deserializeFromObject(input: YamlInput): Container {
             var buildDirectory: Expression? = null
             var buildArgs: Map<String, Expression>? = null
+            var buildTarget: String? = null
             var dockerfilePath: String? = null
             var imageName: String? = null
             var command: Command? = null
@@ -188,6 +192,7 @@ data class Container(
                     CompositeDecoder.DECODE_DONE -> break@loop
                     buildDirectoryFieldIndex -> buildDirectory = input.decodeSerializableElement(descriptor, i, Expression.serializer())
                     buildArgsFieldIndex -> buildArgs = input.decodeSerializableElement(descriptor, i, EnvironmentSerializer)
+                    buildTargetFieldIndex -> buildTarget = input.decodeStringElement(descriptor, i)
                     dockerfileFieldIndex -> dockerfilePath = input.decodeStringElement(descriptor, i)
                     imageNameFieldIndex -> imageName = input.decodeStringElement(descriptor, i)
                     commandFieldIndex -> command = input.decodeSerializableElement(descriptor, i, CommandSerializer)
@@ -218,7 +223,7 @@ data class Container(
 
             return Container(
                 "UNNAMED-FROM-CONFIG-FILE",
-                resolveImageSource(input, buildDirectory, buildArgs, dockerfilePath, imageName, imagePullPolicy, input.node.path),
+                resolveImageSource(input, buildDirectory, buildArgs, buildTarget, dockerfilePath, imageName, imagePullPolicy, input.node.path),
                 command,
                 entrypoint,
                 environment,
@@ -246,6 +251,7 @@ data class Container(
             input: YamlInput,
             buildDirectory: Expression?,
             buildArgs: Map<String, Expression>?,
+            buildTarget: String?,
             dockerfilePath: String?,
             imageName: String?,
             imagePullPolicy: ImagePullPolicy,
@@ -263,6 +269,10 @@ data class Container(
                 throw ConfigurationException("build_args cannot be used with image, but both have been provided.", path)
             }
 
+            if (imageName != null && buildTarget != null) {
+                throw ConfigurationException("build_target cannot be used with image, but both have been provided.", path)
+            }
+
             if (imageName != null && dockerfilePath != null) {
                 throw ConfigurationException("dockerfile cannot be used with image, but both have been provided.", path)
             }
@@ -271,7 +281,7 @@ data class Container(
                 val loader = input.serializersModule.getContextual(PathResolutionResult::class)!! as PathDeserializer
                 val context = loader.pathResolver.context
 
-                BuildImage(buildDirectory, context, buildArgs ?: emptyMap(), dockerfilePath ?: "Dockerfile", imagePullPolicy)
+                BuildImage(buildDirectory, context, buildArgs ?: emptyMap(), dockerfilePath ?: "Dockerfile", imagePullPolicy, buildTarget)
             } else {
                 PullImage(imageName!!, imagePullPolicy)
             }

@@ -104,7 +104,29 @@ data class ContainerFile(
     override val uid: Long,
     override val gid: Long,
     val contents: ByteArray
-) : ContainerFilesystemItem()
+) : ContainerFilesystemItem() {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as ContainerFile
+
+        if (path != other.path) return false
+        if (uid != other.uid) return false
+        if (gid != other.gid) return false
+        if (!contents.contentEquals(other.contents)) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = path.hashCode()
+        result = 31 * result + uid.hashCode()
+        result = 31 * result + gid.hashCode()
+        result = 31 * result + contents.contentHashCode()
+        return result
+    }
+}
 
 @Serializable
 data class ContainerDirectory(

@@ -28,7 +28,6 @@ import batect.docker.DockerVolumeMount
 import batect.docker.DockerVolumeMountSource
 import batect.docker.UserAndGroup
 import batect.docker.client.ContainersClient
-import batect.execution.RunAsCurrentUserConfiguration
 import batect.execution.RunAsCurrentUserConfigurationException
 import batect.execution.RunAsCurrentUserConfigurationProvider
 import batect.execution.VolumeMountResolutionException
@@ -60,33 +59,32 @@ object CreateContainerStepRunnerSpec : Spek({
         val step = CreateContainerStep(container, image, network)
         val request = mock<ContainerCreationRequest>()
 
-        val containersClient by createForEachTest { mock<ContainersClient>() }
+        val dockerContainer = DockerContainer("some-id")
+        val containersClient by createForEachTest {
+            mock<ContainersClient> {
+                on { create(any()) } doReturn dockerContainer
+            }
+        }
+
+        val resolvedMounts = setOf(DockerVolumeMount(DockerVolumeMountSource.LocalPath("/local-container"), "/remote-container", "some-options-from-container"))
 
         val volumeMountResolver by createForEachTest {
             mock<VolumeMountResolver> {
-                on { resolve(any<Set<VolumeMount>>()) } doReturn setOf(DockerVolumeMount(DockerVolumeMountSource.LocalPath("/local-container"), "/remote-container", "some-options-from-container"))
+                on { resolve(any<Set<VolumeMount>>()) } doReturn resolvedMounts
             }
         }
 
         val userAndGroup = UserAndGroup(456, 789)
-        val runAsCurrentUserConfiguration = RunAsCurrentUserConfiguration(
-            setOf(DockerVolumeMount(DockerVolumeMountSource.LocalPath("/local-user"), "/remote-user", "some-options-from-run-as-current-user")),
-            userAndGroup
-        )
 
-        val runAsCurrentUserConfigurationProvider = mock<RunAsCurrentUserConfigurationProvider> {
-            on { generateConfiguration(any(), any()) } doReturn runAsCurrentUserConfiguration
-            on { determineUserAndGroup(any()) } doReturn userAndGroup
+        val runAsCurrentUserConfigurationProvider by createForEachTest {
+            mock<RunAsCurrentUserConfigurationProvider> {
+                on { determineUserAndGroup(any()) } doReturn userAndGroup
+            }
         }
-
-        val combinedMounts = setOf(
-            DockerVolumeMount(DockerVolumeMountSource.LocalPath("/local-container"), "/remote-container", "some-options-from-container"),
-            DockerVolumeMount(DockerVolumeMountSource.LocalPath("/local-user"), "/remote-user", "some-options-from-run-as-current-user")
-        )
 
         val creationRequestFactory by createForEachTest {
             mock<DockerContainerCreationRequestFactory> {
-                on { create(container, image, network, combinedMounts, runAsCurrentUserConfiguration.userAndGroup, "some-terminal", true, false) } doReturn request
+                on { create(container, image, network, resolvedMounts, userAndGroup, "some-terminal", true, false) } doReturn request
             }
         }
 
@@ -102,11 +100,7 @@ object CreateContainerStepRunnerSpec : Spek({
         val runner by createForEachTest { CreateContainerStepRunner(containersClient, volumeMountResolver, runAsCurrentUserConfigurationProvider, creationRequestFactory, ioStreamingOptions) }
 
         on("when creating the container succeeds") {
-            val dockerContainer = DockerContainer("some-id")
-
             beforeEachTest {
-                whenever(containersClient.create(request)).doReturn(dockerContainer)
-
                 runner.run(step, eventSink)
             }
 
@@ -116,13 +110,24 @@ object CreateContainerStepRunnerSpec : Spek({
 
             it("creates any missing local volume mount directories before creating the container") {
                 inOrder(runAsCurrentUserConfigurationProvider, containersClient) {
-                    verify(runAsCurrentUserConfigurationProvider).createMissingVolumeMountDirectories(combinedMounts, container)
+                    verify(runAsCurrentUserConfigurationProvider).createMissingVolumeMountDirectories(resolvedMounts, container)
                     verify(containersClient).create(any())
                 }
             }
 
             it("emits a 'container created' event") {
                 verify(eventSink).postEvent(ContainerCreatedEvent(container, dockerContainer))
+            }
+
+            it("applies any configuration required for 'run as current user' mode") {
+                verify(runAsCurrentUserConfigurationProvider).applyConfigurationToContainer(container, dockerContainer)
+            }
+
+            it("applies any configuration required for 'run as current user' mode before emitting the 'container created' event") {
+                inOrder(runAsCurrentUserConfigurationProvider, eventSink) {
+                    verify(runAsCurrentUserConfigurationProvider).applyConfigurationToContainer(container, dockerContainer)
+                    verify(eventSink).postEvent(ContainerCreatedEvent(container, dockerContainer))
+                }
             }
         }
 
@@ -150,15 +155,19 @@ object CreateContainerStepRunnerSpec : Spek({
             }
         }
 
-        on("when generating the 'run as current user' configuration fails") {
+        on("when applying configuration for 'run as current user' mode fails") {
             beforeEachTest {
-                whenever(runAsCurrentUserConfigurationProvider.generateConfiguration(any(), any())).doThrow(RunAsCurrentUserConfigurationException("Something went wrong."))
+                whenever(runAsCurrentUserConfigurationProvider.applyConfigurationToContainer(any(), any())).doThrow(RunAsCurrentUserConfigurationException("Something went wrong."))
 
                 runner.run(step, eventSink)
             }
 
             it("emits a 'container creation failed' event") {
                 verify(eventSink).postEvent(ContainerCreationFailedEvent(container, "Something went wrong."))
+            }
+
+            it("still emits a 'container created' event") {
+                verify(eventSink).postEvent(ContainerCreatedEvent(container, dockerContainer))
             }
         }
     }

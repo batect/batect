@@ -837,10 +837,6 @@ object ContainersAPISpec : Spek({
                         assertThat(call.request().url, hasQueryParameter("path", "/some-dir"))
                     }
 
-                    it("instructs the Docker daemon to copy UID and GID information from the uploaded files and folders") {
-                        assertThat(call.request().url, hasQueryParameter("copyUIDGID", "1"))
-                    }
-
                     it("includes the files and folders in the request body") {
                         assertThat(call.request().body, equalTo(FilesystemUploadRequestBody(itemsToUpload)))
                     }

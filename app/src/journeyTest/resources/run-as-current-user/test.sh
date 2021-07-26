@@ -20,6 +20,12 @@ else
     echo "Home directory does not exist"
 fi
 
+if [ -f /etc/hosts ]; then
+    echo "/etc/hosts exists"
+else
+    echo "/etc/hosts does not exist"
+fi
+
 touch /output/created-file
 
 echo "/output contents:"

@@ -63,7 +63,8 @@ object RunAsCurrentUserJourneyTest : Spek({
                         "Home directory: /home/special-place",
                         "Home directory exists",
                         "Home directory owned by user: $expectedContainerUserName",
-                        "Home directory owned by group: $expectedContainerGroupName"
+                        "Home directory owned by group: $expectedContainerGroupName",
+                        "/etc/hosts exists"
                     ).joinToString("\n")
 
                     assert(result).output().contains(expectedOutput)

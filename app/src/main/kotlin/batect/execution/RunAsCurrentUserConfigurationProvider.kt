@@ -18,146 +18,136 @@ package batect.execution
 
 import batect.config.Container
 import batect.config.RunAsCurrentUserConfig
+import batect.docker.ContainerDirectory
+import batect.docker.ContainerFile
+import batect.docker.DockerContainer
+import batect.docker.DockerException
 import batect.docker.DockerVolumeMount
 import batect.docker.DockerVolumeMountSource
 import batect.docker.UserAndGroup
+import batect.docker.client.ContainersClient
 import batect.docker.client.DockerContainerType
-import batect.execution.model.events.TaskEventSink
-import batect.execution.model.events.TemporaryDirectoryCreatedEvent
-import batect.execution.model.events.TemporaryFileCreatedEvent
 import batect.os.NativeMethods
 import batect.os.OperatingSystem
 import batect.os.SystemInfo
 import java.nio.file.FileSystem
 import java.nio.file.Files
-import java.nio.file.LinkOption
-import java.nio.file.Path
-import java.nio.file.attribute.PosixFileAttributeView
 
 class RunAsCurrentUserConfigurationProvider(
     private val systemInfo: SystemInfo,
     private val nativeMethods: NativeMethods,
     private val fileSystem: FileSystem,
-    private val containerType: DockerContainerType
+    private val containerType: DockerContainerType,
+    private val containersClient: ContainersClient
 ) {
+    private val userId: Int by lazy {
+        when (systemInfo.operatingSystem) {
+            OperatingSystem.Windows -> 0
+            else -> nativeMethods.getUserId()
+        }
+    }
+
+    private val groupId: Int by lazy {
+        when (systemInfo.operatingSystem) {
+            OperatingSystem.Windows -> 0
+            else -> nativeMethods.getGroupId()
+        }
+    }
+
+    private val userName: String by lazy {
+        when (systemInfo.operatingSystem) {
+            OperatingSystem.Windows -> "root"
+            else -> nativeMethods.getUserName()
+        }
+    }
+
+    private val groupName: String by lazy {
+        when (systemInfo.operatingSystem) {
+            OperatingSystem.Windows -> "root"
+            else -> nativeMethods.getGroupName()
+        }
+    }
+
     fun determineUserAndGroup(container: Container): UserAndGroup? = when (container.runAsCurrentUserConfig) {
         is RunAsCurrentUserConfig.RunAsDefaultContainerUser -> null
-        is RunAsCurrentUserConfig.RunAsCurrentUser -> UserAndGroup(determineUserId(), determineGroupId())
+        is RunAsCurrentUserConfig.RunAsCurrentUser -> UserAndGroup(userId, groupId)
     }
 
-    fun generateConfiguration(container: Container, eventSink: TaskEventSink): RunAsCurrentUserConfiguration = when (container.runAsCurrentUserConfig) {
-        is RunAsCurrentUserConfig.RunAsCurrentUser -> {
-            if (containerType == DockerContainerType.Windows) {
-                throw RunAsCurrentUserConfigurationException("Container '${container.name}' has run as current user enabled, but this is not supported for Windows containers.")
-            }
-
-            val userId = determineUserId()
-            val userName = determineUserName()
-            val groupId = determineGroupId()
-            val groupName = determineGroupName()
-            val volumeMounts = createMounts(container, container.runAsCurrentUserConfig, userId, userName, groupId, groupName, eventSink)
-
-            RunAsCurrentUserConfiguration(volumeMounts, UserAndGroup(userId, groupId))
+    fun applyConfigurationToContainer(container: Container, dockerContainer: DockerContainer) {
+        when (container.runAsCurrentUserConfig) {
+            is RunAsCurrentUserConfig.RunAsDefaultContainerUser -> return
+            is RunAsCurrentUserConfig.RunAsCurrentUser -> applyConfigurationToContainer(container.runAsCurrentUserConfig, container, dockerContainer)
         }
-        is RunAsCurrentUserConfig.RunAsDefaultContainerUser -> RunAsCurrentUserConfiguration(emptySet(), null)
     }
 
-    private fun determineUserId(): Int = when (systemInfo.operatingSystem) {
-        OperatingSystem.Windows -> 0
-        else -> nativeMethods.getUserId()
+    private fun applyConfigurationToContainer(configuration: RunAsCurrentUserConfig.RunAsCurrentUser, container: Container, dockerContainer: DockerContainer) {
+        if (containerType == DockerContainerType.Windows) {
+            throw RunAsCurrentUserConfigurationException("Container '${container.name}' has run as current user enabled, but this is not supported for Windows containers.")
+        }
+
+        try {
+            uploadFilesForConfiguration(configuration, dockerContainer)
+            uploadHomeDirectoryForConfiguration(configuration, container, dockerContainer)
+        } catch (e: DockerException) {
+            throw RunAsCurrentUserConfigurationException("Could not apply 'run as current user' configuration to container '${container.name}': ${e.message}", e)
+        }
     }
 
-    private fun determineGroupId(): Int = when (systemInfo.operatingSystem) {
-        OperatingSystem.Windows -> 0
-        else -> nativeMethods.getGroupId()
-    }
+    private fun uploadFilesForConfiguration(configuration: RunAsCurrentUserConfig.RunAsCurrentUser, dockerContainer: DockerContainer) {
+        val passwdContents = generatePasswdFile(configuration)
+        val groupContents = generateGroupFile()
 
-    private fun determineUserName(): String = when (systemInfo.operatingSystem) {
-        OperatingSystem.Windows -> "root"
-        else -> nativeMethods.getUserName()
-    }
-
-    private fun determineGroupName(): String = when (systemInfo.operatingSystem) {
-        OperatingSystem.Windows -> "root"
-        else -> nativeMethods.getGroupName()
-    }
-
-    private fun createMounts(
-        container: Container,
-        runAsCurrentUserConfig: RunAsCurrentUserConfig.RunAsCurrentUser,
-        userId: Int,
-        userName: String,
-        groupId: Int,
-        groupName: String,
-        eventSink: TaskEventSink
-    ): Set<DockerVolumeMount> {
-        val passwdFile = createPasswdFile(runAsCurrentUserConfig, userId, userName, groupId)
-        eventSink.postEvent(TemporaryFileCreatedEvent(container, passwdFile))
-
-        val groupFile = createGroupFile(userName, groupId, groupName)
-        eventSink.postEvent(TemporaryFileCreatedEvent(container, groupFile))
-
-        val homeDirectory = createHomeDirectory()
-        eventSink.postEvent(TemporaryDirectoryCreatedEvent(container, homeDirectory))
-
-        return setOf(
-            DockerVolumeMount(DockerVolumeMountSource.LocalPath(passwdFile.toString()), "/etc/passwd", "ro"),
-            DockerVolumeMount(DockerVolumeMountSource.LocalPath(groupFile.toString()), "/etc/group", "ro"),
-            DockerVolumeMount(DockerVolumeMountSource.LocalPath(homeDirectory.toString()), runAsCurrentUserConfig.homeDirectory, "delegated")
+        containersClient.upload(
+            dockerContainer,
+            setOf(
+                ContainerFile("passwd", 0, 0, passwdContents.toByteArray(Charsets.UTF_8)),
+                ContainerFile("group", 0, 0, groupContents.toByteArray(Charsets.UTF_8))
+            ),
+            "/etc"
         )
     }
 
-    private fun createPasswdFile(runAsCurrentUserConfig: RunAsCurrentUserConfig.RunAsCurrentUser, userId: Int, userName: String, groupId: Int): Path {
-        val path = createTempFile("passwd")
+    private fun uploadHomeDirectoryForConfiguration(configuration: RunAsCurrentUserConfig.RunAsCurrentUser, container: Container, dockerContainer: DockerContainer) {
+        if (!configuration.homeDirectory.startsWith("/")) {
+            throw RunAsCurrentUserConfigurationException("Container '${container.name}' has an invalid home directory configured: '${configuration.homeDirectory}' is not an absolute path.")
+        }
+
+        val homeDirectorySegments = configuration.homeDirectory.splitToPathSegments()
+        val homeDirectoryName = homeDirectorySegments.last()
+        val homeDirectoryParentPath = if (homeDirectorySegments.size <= 2) "/" else homeDirectorySegments.dropLast(1).joinToString("/")
+
+        containersClient.upload(
+            dockerContainer,
+            setOf(ContainerDirectory(homeDirectoryName, userId.toLong(), groupId.toLong())),
+            homeDirectoryParentPath
+        )
+    }
+
+    private fun generatePasswdFile(runAsCurrentUserConfig: RunAsCurrentUserConfig.RunAsCurrentUser): String {
         val homeDirectory = runAsCurrentUserConfig.homeDirectory
 
-        val lines = if (userId == 0) {
-            listOf("root:x:0:0:root:$homeDirectory:/bin/sh")
+        return if (userId == 0) {
+            "root:x:0:0:root:$homeDirectory:/bin/sh"
         } else {
-            listOf(
-                "root:x:0:0:root:/root:/bin/sh",
-                "$userName:x:$userId:$groupId:$userName:$homeDirectory:/bin/sh"
-            )
+            """
+                |root:x:0:0:root:/root:/bin/sh
+                |$userName:x:$userId:$groupId:$userName:$homeDirectory:/bin/sh
+            """.trimMargin()
         }
-
-        Files.write(path, lines)
-
-        return path
     }
 
-    private fun createGroupFile(userName: String, groupId: Int, groupName: String): Path {
-        val path = createTempFile("group")
+    private fun generateGroupFile(): String {
         val rootGroup = "root:x:0:root"
 
-        val lines = if (groupId == 0) {
-            listOf(rootGroup)
+        return if (groupId == 0) {
+            rootGroup
         } else {
-            listOf(
-                rootGroup,
-                "$groupName:x:$groupId:$userName"
-            )
+            """
+                |$rootGroup
+                |$groupName:x:$groupId:$userName
+            """.trimMargin()
         }
-
-        Files.write(path, lines)
-
-        return path
     }
-
-    private fun createHomeDirectory(): Path {
-        val path = Files.createTempDirectory(systemInfo.tempDirectory, "batect-home-")
-
-        if (systemInfo.operatingSystem != OperatingSystem.Windows) {
-            val attributeView = Files.getFileAttributeView(path, PosixFileAttributeView::class.java, LinkOption.NOFOLLOW_LINKS)
-            val lookupService = fileSystem.userPrincipalLookupService
-
-            attributeView.setOwner(lookupService.lookupPrincipalByName(nativeMethods.getUserName()))
-            attributeView.setGroup(lookupService.lookupPrincipalByGroupName(nativeMethods.getGroupName()))
-        }
-
-        return path
-    }
-
-    private fun createTempFile(name: String): Path = Files.createTempFile(systemInfo.tempDirectory, "batect-$name-", "")
 
     fun createMissingVolumeMountDirectories(mounts: Set<DockerVolumeMount>, container: Container) {
         if (containerType == DockerContainerType.Linux && container.runAsCurrentUserConfig is RunAsCurrentUserConfig.RunAsDefaultContainerUser) {
@@ -206,4 +196,4 @@ class RunAsCurrentUserConfigurationProvider(
     private fun String.splitToPathSegments() = this.split('/')
 }
 
-class RunAsCurrentUserConfigurationException(message: String) : RuntimeException(message)
+class RunAsCurrentUserConfigurationException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)

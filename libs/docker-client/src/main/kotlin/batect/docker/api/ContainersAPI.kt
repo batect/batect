@@ -508,7 +508,6 @@ class ContainersAPI(
         val url = urlForContainer(container).newBuilder()
             .addPathSegment("archive")
             .addQueryParameter("path", destination)
-            .addQueryParameter("copyUIDGID", "1")
             .build()
 
         val request = Request.Builder()

@@ -37,32 +37,40 @@ class CreateContainerStepRunner(
     private val ioStreamingOptions: ContainerIOStreamingOptions
 ) {
     fun run(step: CreateContainerStep, eventSink: TaskEventSink) {
-        try {
-            val resolvedMounts = volumeMountResolver.resolve(step.container.volumeMounts)
-            val runAsCurrentUserConfiguration = runAsCurrentUserConfigurationProvider.generateConfiguration(step.container, eventSink)
-            val volumeMounts = resolvedMounts + runAsCurrentUserConfiguration.volumeMounts
+        val container = step.container
 
-            runAsCurrentUserConfigurationProvider.createMissingVolumeMountDirectories(volumeMounts, step.container)
+        try {
+            val resolvedMounts = volumeMountResolver.resolve(container.volumeMounts)
+            val userAndGroup = runAsCurrentUserConfigurationProvider.determineUserAndGroup(container)
+
+            runAsCurrentUserConfigurationProvider.createMissingVolumeMountDirectories(resolvedMounts, container)
 
             val creationRequest = creationRequestFactory.create(
-                step.container,
+                container,
                 step.image,
                 step.network,
-                volumeMounts,
-                runAsCurrentUserConfiguration.userAndGroup,
-                ioStreamingOptions.terminalTypeForContainer(step.container),
-                ioStreamingOptions.useTTYForContainer(step.container),
-                ioStreamingOptions.attachStdinForContainer(step.container)
+                resolvedMounts,
+                userAndGroup,
+                ioStreamingOptions.terminalTypeForContainer(container),
+                ioStreamingOptions.useTTYForContainer(container),
+                ioStreamingOptions.attachStdinForContainer(container)
             )
 
             val dockerContainer = containersClient.create(creationRequest)
-            eventSink.postEvent(ContainerCreatedEvent(step.container, dockerContainer))
+
+            try {
+                runAsCurrentUserConfigurationProvider.applyConfigurationToContainer(container, dockerContainer)
+            } finally {
+                // We always want to post that we created the container, even if we didn't finish configuring it -
+                // this ensures that we will clean it up correctly.
+                eventSink.postEvent(ContainerCreatedEvent(container, dockerContainer))
+            }
         } catch (e: ContainerCreationFailedException) {
-            eventSink.postEvent(ContainerCreationFailedEvent(step.container, e.message ?: ""))
+            eventSink.postEvent(ContainerCreationFailedEvent(container, e.message ?: ""))
         } catch (e: VolumeMountResolutionException) {
-            eventSink.postEvent(ContainerCreationFailedEvent(step.container, e.message ?: ""))
+            eventSink.postEvent(ContainerCreationFailedEvent(container, e.message ?: ""))
         } catch (e: RunAsCurrentUserConfigurationException) {
-            eventSink.postEvent(ContainerCreationFailedEvent(step.container, e.message ?: ""))
+            eventSink.postEvent(ContainerCreationFailedEvent(container, e.message ?: ""))
         }
     }
 }

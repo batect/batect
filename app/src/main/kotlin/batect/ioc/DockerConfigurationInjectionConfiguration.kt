@@ -27,6 +27,6 @@ import org.kodein.di.singleton
 val dockerConfigurationModule = DI.Module("Docker configuration scope: root") {
     bind<CacheManager>() with singleton { CacheManager(instance(), instance(), instance()) }
     bind<DockerTelemetryCollector>() with singleton { DockerTelemetryCollector(instance(), instance(), instance()) }
-    bind<RunAsCurrentUserConfigurationProvider>() with singleton { RunAsCurrentUserConfigurationProvider(instance(), instance(), instance(), instance()) }
+    bind<RunAsCurrentUserConfigurationProvider>() with singleton { RunAsCurrentUserConfigurationProvider(instance(), instance(), instance(), instance(), instance()) }
     bind<SessionKodeinFactory>() with singleton { SessionKodeinFactory(directDI) }
 }

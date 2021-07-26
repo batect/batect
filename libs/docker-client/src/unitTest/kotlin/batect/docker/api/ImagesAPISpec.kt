@@ -509,12 +509,15 @@ object ImagesAPISpec : Spek({
             }
 
             on("the pull request having no registry credentials") {
-                val expectedHeadersForNoAuthentication = noHeaders
                 val call by createForEachTest { clientWithLongTimeout.mockPost(expectedUrl, "", 200) }
                 beforeEachTest { api.pull(imageReference, null, cancellationContext, {}) }
 
                 it("sends a request to the Docker daemon to pull the image with no authentication header") {
                     verify(call).execute()
+                }
+
+                it("includes no registry authentication information in headers") {
+                    assertThat(call.request().headers, equalTo(noHeaders))
                 }
             }
 

@@ -46,6 +46,7 @@ import batect.testutils.given
 import batect.testutils.logging.createLoggerForEachTestWithoutCustomSerializers
 import batect.testutils.mock
 import batect.testutils.mockPost
+import batect.testutils.noHeaders
 import batect.testutils.on
 import batect.testutils.runForEachTest
 import batect.testutils.withMessage
@@ -120,16 +121,11 @@ object ImagesAPISpec : Spek({
             val dockerfilePath = "some-Dockerfile-path"
             val imageTags = setOf("some_image_tag", "some_other_image_tag")
             val pullImage = false
-            val registryCredentials = setOf(TokenRegistryCredentials("some_token", "registry.com"))
+            val targetStage: String? = null
 
-            val expectedUrl = hasScheme("http") and
+            val baseBuildUrl = hasScheme("http") and
                 hasHost(dockerHost) and
-                hasPath("/v1.37/build") and
-                hasQueryParameter("buildargs", """{"someArg":"someValue"}""") and
-                hasQueryParameter("t", "some_image_tag") and
-                hasQueryParameter("t", "some_other_image_tag") and
-                hasQueryParameter("dockerfile", dockerfilePath) and
-                hasQueryParameter("pull", "0")
+                hasPath("/v1.37/build")
 
             val cancellationContext by createForEachTest { mock<CancellationContext>() }
 
@@ -143,25 +139,49 @@ object ImagesAPISpec : Spek({
             val successProgressEvents = successEvents.dropLast(1)
 
             given("the legacy builder is requested") {
-                val expectedLegacyBuilderUrl = expectedUrl and doesNotHaveQueryParameter("version")
-                val base64EncodedJSONCredentials = "eyJyZWdpc3RyeS5jb20iOnsiaWRlbnRpdHl0b2tlbiI6InNvbWVfdG9rZW4ifX0="
-                val expectedHeadersForLegacyAuthentication = Headers.Builder().set("X-Registry-Config", base64EncodedJSONCredentials).build()
-
                 given("the build succeeds") {
                     beforeEachTest {
                         buildResponseBody.eventsToPost = successEvents
                     }
 
-                    val expectedCall by createForEachTest { clientWithLongTimeout.mock("POST", expectedLegacyBuilderUrl, daemonBuildResponse, 200, expectedHeadersForLegacyAuthentication) }
+                    val registryCredentials = setOf(TokenRegistryCredentials("some_token", "registry.com"))
+                    val base64EncodedJSONCredentials = "eyJyZWdpc3RyeS5jb20iOnsiaWRlbnRpdHl0b2tlbiI6InNvbWVfdG9rZW4ifX0="
+                    val expectedHeadersForLegacyAuthentication = Headers.Builder().set("X-Registry-Config", base64EncodedJSONCredentials).build()
+
+                    val call by createForEachTest { clientWithLongTimeout.mock("POST", baseBuildUrl, daemonBuildResponse, 200, expectedHeadersForLegacyAuthentication) }
                     val output by createForEachTest { ImageBuildOutputSink(null) }
                     val eventsReceiver by createForEachTest { BuildEventsReceiver() }
 
                     val image by runForEachTest {
-                        api.build(buildArgs, dockerfilePath, imageTags, pullImage, output, LegacyBuilderConfig(registryCredentials, context), cancellationContext, eventsReceiver::onProgressUpdate)
+                        api.build(buildArgs, dockerfilePath, imageTags, pullImage, targetStage, output, LegacyBuilderConfig(registryCredentials, context), cancellationContext, eventsReceiver::onProgressUpdate)
                     }
 
                     it("sends a request to the Docker daemon to build the image") {
-                        verify(expectedCall).execute()
+                        verify(call).execute()
+                    }
+
+                    it("includes the build args in the request") {
+                        assertThat(call.request().url, hasQueryParameter("buildargs", """{"someArg":"someValue"}"""))
+                    }
+
+                    it("includes the image tags in the request") {
+                        assertThat(call.request().url, hasQueryParameter("t", "some_image_tag") and hasQueryParameter("t", "some_other_image_tag"))
+                    }
+
+                    it("includes the Dockerfile name in the request") {
+                        assertThat(call.request().url, hasQueryParameter("dockerfile", dockerfilePath))
+                    }
+
+                    it("instructs the daemon to not re-pull already pulled images") {
+                        assertThat(call.request().url, hasQueryParameter("pull", "0"))
+                    }
+
+                    it("does not include an explicit version in the request") {
+                        assertThat(call.request().url, doesNotHaveQueryParameter("version"))
+                    }
+
+                    it("includes the registry credentials in a header in the request") {
+                        assertThat(call.request().headers, equalTo(expectedHeadersForLegacyAuthentication))
                     }
 
                     it("configures the HTTP client with no timeout to allow for slow build output") {
@@ -177,7 +197,7 @@ object ImagesAPISpec : Spek({
                     }
 
                     it("registers the API call with the cancellation context") {
-                        verify(cancellationContext).addCancellationCallback(expectedCall::cancel)
+                        verify(cancellationContext).addCancellationCallback(call::cancel)
                     }
 
                     it("returns the build image") {
@@ -194,17 +214,21 @@ object ImagesAPISpec : Spek({
                 }
 
                 given("the build has no registry credentials") {
-                    val expectedHeadersForNoAuthentication = Headers.Builder().build()
-                    val expectedCall by createForEachTest { clientWithLongTimeout.mock("POST", expectedLegacyBuilderUrl, daemonBuildResponse, 200, expectedHeadersForNoAuthentication) }
+                    val expectedHeadersForNoAuthentication = noHeaders
+                    val call by createForEachTest { clientWithLongTimeout.mock("POST", baseBuildUrl, daemonBuildResponse, 200, expectedHeadersForNoAuthentication) }
 
                     beforeEachTest {
                         buildResponseBody.eventsToPost = successEvents
                     }
 
-                    beforeEachTest { api.build(buildArgs, dockerfilePath, imageTags, pullImage, ImageBuildOutputSink(null), LegacyBuilderConfig(emptySet(), context), cancellationContext, {}) }
+                    beforeEachTest { api.build(buildArgs, dockerfilePath, imageTags, pullImage, targetStage, ImageBuildOutputSink(null), LegacyBuilderConfig(emptySet(), context), cancellationContext, {}) }
 
                     it("sends a request to the Docker daemon to build the image with no authentication header") {
-                        verify(expectedCall).execute()
+                        verify(call).execute()
+                    }
+
+                    it("includes no authentication headers in the request") {
+                        assertThat(call.request().headers, equalTo(expectedHeadersForNoAuthentication))
                     }
                 }
             }
@@ -221,81 +245,124 @@ object ImagesAPISpec : Spek({
                     )
                 }
 
-                val expectedBuildKitUrl by createForEachTest {
-                    expectedUrl and hasQueryParameter("version", "2") and
-                        hasQueryParameter("session", session.sessionId) and
-                        hasQueryParameter("buildid", session.buildId) and
-                        hasQueryParameter("remote", "client-session")
-                }
-
                 given("the build succeeds") {
                     beforeEachTest {
                         buildResponseBody.eventsToPost = successEvents
                     }
 
-                    val expectedCall by createForEachTest { clientWithLongTimeout.mock("POST", expectedBuildKitUrl, daemonBuildResponse, 200) }
+                    given("the build has no special options") {
+                        val call by createForEachTest { clientWithLongTimeout.mock("POST", baseBuildUrl, daemonBuildResponse, 200) }
 
-                    runForEachTest { api.build(buildArgs, dockerfilePath, imageTags, pullImage, ImageBuildOutputSink(null), BuildKitConfig(session), cancellationContext, {}) }
+                        runForEachTest { api.build(buildArgs, dockerfilePath, imageTags, pullImage, targetStage, ImageBuildOutputSink(null), BuildKitConfig(session), cancellationContext, {}) }
 
-                    it("sends a request to the Docker daemon to build the image with the expected URL") {
-                        verify(expectedCall).execute()
+                        it("sends a request to the Docker daemon to build the image with the expected URL") {
+                            verify(call).execute()
+                        }
+
+                        it("sends a request to the Docker daemon to build the image") {
+                            verify(call).execute()
+                        }
+
+                        it("includes the build args in the request") {
+                            assertThat(call.request().url, hasQueryParameter("buildargs", """{"someArg":"someValue"}"""))
+                        }
+
+                        it("includes the image tags in the request") {
+                            assertThat(call.request().url, hasQueryParameter("t", "some_image_tag") and hasQueryParameter("t", "some_other_image_tag"))
+                        }
+
+                        it("includes the Dockerfile name in the request") {
+                            assertThat(call.request().url, hasQueryParameter("dockerfile", dockerfilePath))
+                        }
+
+                        it("instructs the daemon to not re-pull already pulled images") {
+                            assertThat(call.request().url, hasQueryParameter("pull", "0"))
+                        }
+
+                        it("includes the BuildKit version number in the request") {
+                            assertThat(call.request().url, hasQueryParameter("version", "2"))
+                        }
+
+                        it("includes the session ID in the request") {
+                            assertThat(call.request().url, hasQueryParameter("session", session.sessionId))
+                        }
+
+                        it("includes the build ID in the request") {
+                            assertThat(call.request().url, hasQueryParameter("buildid", session.buildId))
+                        }
+
+                        it("instructs the daemon to take build context from the session") {
+                            assertThat(call.request().url, hasQueryParameter("remote", "client-session"))
+                        }
+
+                        it("does not include a target stage name in the request") {
+                            assertThat(call.request().url, doesNotHaveQueryParameter("target"))
+                        }
+
+                        it("does not include any registry authentication headers in the request") {
+                            assertThat(call.request().headers, equalTo(noHeaders))
+                        }
+
+                        it("builds the image with no context in the request body") {
+                            verify(clientWithLongTimeout).newCall(requestWithEmptyBody())
+                        }
+
+                        it("creates a BuildKit response body") {
+                            assertThat(buildResponseBody.builderVersion, equalTo(BuilderVersion.BuildKit))
+                        }
                     }
 
-                    it("builds the image with no context in the request body") {
-                        verify(clientWithLongTimeout).newCall(requestWithEmptyBody())
+                    given("the build is running with all images re-pulled") {
+                        val expectedCall by createForEachTest { clientWithLongTimeout.mock("POST", baseBuildUrl, daemonBuildResponse, 200) }
+
+                        beforeEachTest { api.build(emptyMap(), dockerfilePath, imageTags, true, targetStage, ImageBuildOutputSink(null), BuildKitConfig(session), cancellationContext, {}) }
+
+                        it("makes a call to the build API endpoint") {
+                            verify(expectedCall).execute()
+                        }
+
+                        it("requests the daemon to re-pull all images") {
+                            assertThat(expectedCall.request().url, hasQueryParameter("pull", "1"))
+                        }
                     }
 
-                    it("creates a BuildKit response body") {
-                        assertThat(buildResponseBody.builderVersion, equalTo(BuilderVersion.BuildKit))
-                    }
-                }
+                    given("the build has no build args") {
+                        val expectedCall by createForEachTest { clientWithLongTimeout.mock("POST", baseBuildUrl, daemonBuildResponse, 200) }
 
-                given("the build is running with all images re-pulled") {
-                    val expectedUrlWithRePullingEnabled = hasScheme("http") and
-                        hasHost(dockerHost) and
-                        hasPath("/v1.37/build") and
-                        hasQueryParameter("pull", "1")
+                        beforeEachTest { api.build(emptyMap(), dockerfilePath, imageTags, pullImage, targetStage, ImageBuildOutputSink(null), BuildKitConfig(session), cancellationContext, {}) }
 
-                    val expectedCall by createForEachTest { clientWithLongTimeout.mock("POST", expectedUrlWithRePullingEnabled, daemonBuildResponse, 200) }
+                        it("makes a call to the build API endpoint") {
+                            verify(expectedCall).execute()
+                        }
 
-                    beforeEachTest {
-                        buildResponseBody.eventsToPost = successEvents
+                        it("includes an empty set of build args") {
+                            assertThat(expectedCall.request().url, hasQueryParameter("buildargs", "{}"))
+                        }
                     }
 
-                    beforeEachTest { api.build(emptyMap(), dockerfilePath, imageTags, true, ImageBuildOutputSink(null), BuildKitConfig(session), cancellationContext, {}) }
+                    given("the build is for a particular stage in the Dockerfile") {
+                        val expectedCall by createForEachTest { clientWithLongTimeout.mock("POST", baseBuildUrl, daemonBuildResponse, 200) }
 
-                    it("sends a request to the Docker daemon to build the image with re-pulling all images enabled") {
-                        verify(expectedCall).execute()
-                    }
-                }
+                        beforeEachTest { api.build(emptyMap(), dockerfilePath, imageTags, pullImage, "the-target-stage", ImageBuildOutputSink(null), BuildKitConfig(session), cancellationContext, {}) }
 
-                given("the build has no build args") {
-                    val expectedUrlWithNoBuildArgs = hasScheme("http") and
-                        hasHost(dockerHost) and
-                        hasPath("/v1.37/build") and
-                        hasQueryParameter("buildargs", """{}""")
+                        it("makes a call to the build API endpoint") {
+                            verify(expectedCall).execute()
+                        }
 
-                    val expectedCall by createForEachTest { clientWithLongTimeout.mock("POST", expectedUrlWithNoBuildArgs, daemonBuildResponse, 200) }
-
-                    beforeEachTest {
-                        buildResponseBody.eventsToPost = successEvents
-                    }
-
-                    beforeEachTest { api.build(emptyMap(), dockerfilePath, imageTags, pullImage, ImageBuildOutputSink(null), BuildKitConfig(session), cancellationContext, {}) }
-
-                    it("sends a request to the Docker daemon to build the image with an empty set of build args") {
-                        verify(expectedCall).execute()
+                        it("includes the target stage name") {
+                            assertThat(expectedCall.request().url, hasQueryParameter("target", "the-target-stage"))
+                        }
                     }
                 }
 
                 given("the build fails immediately") {
                     beforeEachTest {
-                        clientWithLongTimeout.mock("POST", expectedBuildKitUrl, errorResponse, 418)
+                        clientWithLongTimeout.mock("POST", baseBuildUrl, errorResponse, 418)
                     }
 
                     it("throws an appropriate exception") {
                         assertThat(
-                            { api.build(buildArgs, dockerfilePath, imageTags, pullImage, ImageBuildOutputSink(null), BuildKitConfig(session), cancellationContext, {}) },
+                            { api.build(buildArgs, dockerfilePath, imageTags, pullImage, targetStage, ImageBuildOutputSink(null), BuildKitConfig(session), cancellationContext, {}) },
                             throws<ImageBuildFailedException>(
                                 withMessage("Building image failed: $errorMessageWithCorrectLineEndings")
                             )
@@ -307,7 +374,7 @@ object ImagesAPISpec : Spek({
                     val output by createForEachTest { ImageBuildOutputSink(null) }
 
                     beforeEachTest {
-                        clientWithLongTimeout.mock("POST", expectedBuildKitUrl, daemonBuildResponse, 200)
+                        clientWithLongTimeout.mock("POST", baseBuildUrl, daemonBuildResponse, 200)
 
                         buildResponseBody.outputToStream = "This is some output from the build process.\nThis is some more output from the build process.\n"
                         buildResponseBody.eventsToPost = listOf(
@@ -319,7 +386,7 @@ object ImagesAPISpec : Spek({
 
                     it("throws an appropriate exception with all line endings corrected for the host system") {
                         assertThat(
-                            { api.build(buildArgs, dockerfilePath, imageTags, pullImage, output, BuildKitConfig(session), cancellationContext, {}) },
+                            { api.build(buildArgs, dockerfilePath, imageTags, pullImage, targetStage, output, BuildKitConfig(session), cancellationContext, {}) },
                             throws<ImageBuildFailedException>(
                                 withMessage(
                                     "Building image failed: The command '/bin/sh -c exit 1' returned a non-zero code: 1. Output from build process was:SYSTEM_LINE_SEPARATOR" +
@@ -333,7 +400,7 @@ object ImagesAPISpec : Spek({
 
                 given("the build process never sends an output line with the built image ID") {
                     beforeEachTest {
-                        clientWithLongTimeout.mock("POST", expectedBuildKitUrl, daemonBuildResponse, 200)
+                        clientWithLongTimeout.mock("POST", baseBuildUrl, daemonBuildResponse, 200)
 
                         buildResponseBody.eventsToPost = listOf(
                             BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(0, "FROM nginx:1.13.0"))),
@@ -342,7 +409,7 @@ object ImagesAPISpec : Spek({
 
                     it("throws an appropriate exception") {
                         assertThat(
-                            { api.build(buildArgs, dockerfilePath, imageTags, pullImage, ImageBuildOutputSink(null), BuildKitConfig(session), cancellationContext, {}) },
+                            { api.build(buildArgs, dockerfilePath, imageTags, pullImage, targetStage, ImageBuildOutputSink(null), BuildKitConfig(session), cancellationContext, {}) },
                             throws<ImageBuildFailedException>(
                                 withMessage("Building image failed: daemon never sent built image ID.")
                             )
@@ -434,7 +501,7 @@ object ImagesAPISpec : Spek({
             }
 
             on("the pull request having no registry credentials") {
-                val expectedHeadersForNoAuthentication = Headers.Builder().build()
+                val expectedHeadersForNoAuthentication = noHeaders
                 val call by createForEachTest { clientWithLongTimeout.mockPost(expectedUrl, "", 200, expectedHeadersForNoAuthentication) }
                 beforeEachTest { api.pull(imageReference, null, cancellationContext, {}) }
 

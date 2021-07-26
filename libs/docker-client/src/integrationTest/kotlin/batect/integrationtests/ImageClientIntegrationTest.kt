@@ -112,7 +112,7 @@ object ImageClientIntegrationTest : Spek({
                 describe("using $description", skip = if (builderVersion != BuilderVersion.BuildKit || runBuildKitTests) Skip.No else Skip.Yes("not supported on this version of Docker")) {
                     val cacheBustingId by createForGroup { UUID.randomUUID().toString() }
 
-                    fun buildImage(path: String, dockerfileName: String = "Dockerfile"): DockerImage {
+                    fun buildImage(path: String, dockerfileName: String = "Dockerfile", targetStage: String? = null): DockerImage {
                         val imageDirectory = testImagesDirectory.resolve(path)
                         val output = ByteArrayOutputStream()
 
@@ -123,7 +123,8 @@ object ImageClientIntegrationTest : Spek({
                                 dockerfileName,
                                 DefaultPathResolutionContext(imageDirectory),
                                 setOf("batect-integration-tests-$path-${builderVersion.toString().lowercase()}"),
-                                false
+                                false,
+                                targetStage
                             )
 
                             return client.images.build(
@@ -205,9 +206,7 @@ object ImageClientIntegrationTest : Spek({
                     }
 
                     describe("building an image with a symlink in the build context") {
-                        val imageName = "symlink-in-build-context"
-
-                        val image by runBeforeGroup { buildImage(imageName) }
+                        val image by runBeforeGroup { buildImage("symlink-in-build-context") }
                         val output by runBeforeGroup { executeCommandInContainer(image, "tree", "-J", "--noreport", "/everything") }
 
                         it("correctly copies the linked file into the resulting image") {
@@ -228,6 +227,15 @@ object ImageClientIntegrationTest : Spek({
                             )
 
                             assertThat(output, json(equalTo(expectedContents)))
+                        }
+                    }
+
+                    describe("building an image with a particular target") {
+                        val image by runBeforeGroup { buildImage("multistage", targetStage = "stage-1") }
+                        val output by runBeforeGroup { executeCommandInContainer(image, "cat", "/stage-name") }
+
+                        it("executes the desired stage") {
+                            assertThat(output, equalTo("stage1"))
                         }
                     }
                 }

@@ -58,6 +58,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 import okio.Sink
 import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.argThat
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.eq
@@ -94,6 +95,7 @@ object ImagesClientSpec : Spek({
             val dockerfilePath = "some-Dockerfile-path"
             val imageTags = setOf("some_image_tag", "some_other_image_tag")
             val forcePull = true
+            val targetStage = "some-target-stage"
 
             val pathResolutionContext by createForEachTest {
                 mock<PathResolutionContext> {
@@ -124,7 +126,7 @@ object ImagesClientSpec : Spek({
                     }
 
                     val image = DockerImage("some-image-id")
-                    beforeEachTest { whenever(imagesAPI.build(any(), any(), any(), any(), any(), any(), any(), any())).doReturn(image) }
+                    beforeEachTest { whenever(imagesAPI.build(any(), any(), any(), any(), anyOrNull(), any(), any(), any(), any())).doReturn(image) }
 
                     val onStatusUpdate = fun(_: BuildProgress) {}
 
@@ -142,7 +144,8 @@ object ImagesClientSpec : Spek({
                                 dockerfilePath,
                                 pathResolutionContext,
                                 imageTags,
-                                forcePull
+                                forcePull,
+                                targetStage
                             )
                         }
 
@@ -154,6 +157,7 @@ object ImagesClientSpec : Spek({
                                 eq(dockerfilePath),
                                 eq(imageTags),
                                 eq(forcePull),
+                                eq(targetStage),
                                 argThat { destinationSink == outputSink },
                                 eq(LegacyBuilderConfig(setOf(image1Credentials, image2Credentials), context)),
                                 eq(cancellationContext),
@@ -184,7 +188,8 @@ object ImagesClientSpec : Spek({
                                 dockerfilePath,
                                 pathResolutionContext,
                                 imageTags,
-                                forcePull
+                                forcePull,
+                                targetStage
                             )
                         }
 
@@ -196,6 +201,7 @@ object ImagesClientSpec : Spek({
                                 eq(dockerfilePath),
                                 eq(imageTags),
                                 eq(forcePull),
+                                eq(targetStage),
                                 argThat { destinationSink == outputSink },
                                 eq(BuildKitConfig(buildKitSession)),
                                 eq(cancellationContext),
@@ -211,7 +217,7 @@ object ImagesClientSpec : Spek({
                             inOrder(sessionsAPI, imagesAPI, buildKitSession) {
                                 verify(sessionsAPI).create(any())
                                 verify(buildKitSession).start(sessionStreams)
-                                verify(imagesAPI).build(any(), any(), any(), any(), any(), any(), any(), any())
+                                verify(imagesAPI).build(any(), any(), any(), any(), anyOrNull(), any(), any(), any(), any())
                                 verify(buildKitSession).close()
                             }
                         }

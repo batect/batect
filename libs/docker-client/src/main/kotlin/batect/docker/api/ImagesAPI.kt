@@ -59,6 +59,7 @@ class ImagesAPI(
         dockerfilePath: String,
         imageTags: Set<String>,
         forcePull: Boolean,
+        targetStage: String?,
         outputSink: ImageBuildOutputSink,
         builderConfig: BuilderConfig,
         cancellationContext: CancellationContext,
@@ -69,9 +70,10 @@ class ImagesAPI(
             data("buildArgs", buildArgs)
             data("imageTags", imageTags)
             data("forcePull", forcePull)
+            data("targetStage", targetStage)
         }
 
-        val request = createBuildRequest(buildArgs, dockerfilePath, imageTags, forcePull, builderConfig)
+        val request = createBuildRequest(buildArgs, dockerfilePath, imageTags, forcePull, targetStage, builderConfig)
 
         clientWithNoTimeout()
             .newCall(request)
@@ -101,33 +103,36 @@ class ImagesAPI(
         dockerfilePath: String,
         imageTags: Set<String>,
         forcePull: Boolean,
+        targetStage: String?,
         builderConfig: BuilderConfig
     ): Request {
-        val baseUrl = baseUrl.newBuilder()
+        val url = baseUrl.newBuilder()
             .addPathSegment("build")
             .addQueryParameter("buildargs", buildArgs.toJsonObject().toString())
             .addQueryParameter("dockerfile", dockerfilePath)
             .addQueryParameter("pull", if (forcePull) "1" else "0")
 
-        imageTags.forEach { baseUrl.addQueryParameter("t", it) }
+        if (targetStage != null) {
+            url.addQueryParameter("target", targetStage)
+        }
+
+        imageTags.forEach { url.addQueryParameter("t", it) }
 
         return when (builderConfig) {
             is LegacyBuilderConfig -> Request.Builder()
                 .post(ImageBuildContextRequestBody(builderConfig.context))
-                .url(baseUrl.build())
+                .url(url.build())
                 .addRegistryCredentialsForBuild(builderConfig.registryCredentials)
                 .build()
             is BuildKitConfig -> {
-                val url = baseUrl
-                    .addQueryParameter("version", "2")
+                url.addQueryParameter("version", "2")
                     .addQueryParameter("session", builderConfig.session.sessionId)
                     .addQueryParameter("buildid", builderConfig.session.buildId)
                     .addQueryParameter("remote", "client-session")
-                    .build()
 
                 Request.Builder()
                     .post(emptyRequestBody())
-                    .url(url)
+                    .url(url.build())
                     .build()
             }
         }

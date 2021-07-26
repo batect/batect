@@ -31,23 +31,26 @@ import okhttp3.Request
 import okhttp3.Response
 import okhttp3.ResponseBody.Companion.toResponseBody
 import org.mockito.kotlin.argThat
+import org.mockito.kotlin.doAnswer
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
 
-fun OkHttpClient.mockGet(url: String, responseBody: String, statusCode: Int = 200, expectedRequestHeaders: Headers = Headers.Builder().build(), responseHeaders: Headers = Headers.Builder().build()): Call =
+val noHeaders = Headers.Builder().build()
+
+fun OkHttpClient.mockGet(url: String, responseBody: String, statusCode: Int = 200, expectedRequestHeaders: Headers = noHeaders, responseHeaders: Headers = noHeaders): Call =
     mock("GET", url, responseBody, statusCode, expectedRequestHeaders, responseHeaders)
 
-fun OkHttpClient.mockPost(url: String, responseBody: String, statusCode: Int = 200, expectedRequestHeaders: Headers = Headers.Builder().build()): Call = mock("POST", url, responseBody, statusCode, expectedRequestHeaders)
-fun OkHttpClient.mockDelete(url: String, responseBody: String, statusCode: Int = 200, expectedRequestHeaders: Headers = Headers.Builder().build()): Call = mock("DELETE", url, responseBody, statusCode, expectedRequestHeaders)
+fun OkHttpClient.mockPost(url: String, responseBody: String, statusCode: Int = 200, expectedRequestHeaders: Headers = noHeaders): Call = mock("POST", url, responseBody, statusCode, expectedRequestHeaders)
+fun OkHttpClient.mockDelete(url: String, responseBody: String, statusCode: Int = 200, expectedRequestHeaders: Headers = noHeaders): Call = mock("DELETE", url, responseBody, statusCode, expectedRequestHeaders)
 
 fun OkHttpClient.mock(
     method: String,
     url: String,
     responseBody: String,
     statusCode: Int = 200,
-    expectedRequestHeaders: Headers = Headers.Builder().build(),
-    responseHeaders: Headers = Headers.Builder().build()
+    expectedRequestHeaders: Headers = noHeaders,
+    responseHeaders: Headers = noHeaders
 ): Call {
     val parsedUrl = url.toHttpUrl()
 
@@ -59,18 +62,28 @@ fun OkHttpClient.mock(
     urlMatcher: Matcher<HttpUrl>,
     responseBody: String,
     statusCode: Int = 200,
-    expectedRequestHeaders: Headers = Headers.Builder().build(),
-    responseHeaders: Headers = Headers.Builder().build()
+    expectedRequestHeaders: Headers = noHeaders, // TODO: remove this here and below
+    responseHeaders: Headers = noHeaders
 ): Call {
     val jsonMediaType = "application/json; charset=utf-8".toMediaType()
     val parsedResponseBody = responseBody.toResponseBody(jsonMediaType)
-    val call = mock<Call>()
+    var requestReceived: Request? = null
+
+    val call = mock<Call> {
+        on { request() } doAnswer {
+            if (requestReceived != null) {
+                requestReceived
+            } else {
+                throw RuntimeException("Call was never invoked, can't return request.")
+            }
+        }
+    }
 
     whenever(this.newCall(argThat { urlMatcher.invoke(url) == MatchResult.Match })).then { invocation ->
         val request = invocation.getArgument<Request>(0)
+        requestReceived = request
 
         assertThat(request, has(Request::methodValue, equalTo(method)))
-        assertThat(request, has(Request::urlValue, urlMatcher))
         assertThat(request, has(Request::headerSet, equalTo(expectedRequestHeaders)))
 
         whenever(call.execute()).doReturn(
@@ -90,15 +103,25 @@ fun OkHttpClient.mock(
     return call
 }
 
-fun OkHttpClient.mock(method: String, url: String, response: Response, expectedRequestHeaders: Headers = Headers.Builder().build()): Call {
+fun OkHttpClient.mock(method: String, url: String, response: Response, expectedRequestHeaders: Headers = noHeaders): Call {
     val parsedUrl = url.toHttpUrl()
-    val call = mock<Call>()
+    var requestReceived: Request? = null
 
-    whenever(this.newCall(argThat { this.url.toString() == url })).then { invocation ->
+    val call = mock<Call> {
+        on { request() } doAnswer {
+            if (requestReceived != null) {
+                requestReceived
+            } else {
+                throw RuntimeException("Call was never invoked, can't return request.")
+            }
+        }
+    }
+
+    whenever(this.newCall(argThat { this.url == parsedUrl })).then { invocation ->
         val request = invocation.getArgument<Request>(0)
+        requestReceived = request
 
         assertThat(request, has(Request::methodValue, equalTo(method)))
-        assertThat(request, has(Request::urlValue, equalTo(parsedUrl)))
         assertThat(request, has(Request::headerSet, equalTo(expectedRequestHeaders)))
 
         whenever(call.execute()).doReturn(response)

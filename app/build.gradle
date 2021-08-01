@@ -52,7 +52,7 @@ dependencies {
     implementation project(":libs:os")
     implementation project(":libs:telemetry")
 
-    testImplementation "org.araqnid:hamkrest-json:$hamkrestJsonVersion"
+    testImplementation "org.araqnid.hamkrest:hamkrest-json:$hamkrestJsonVersion"
     testImplementation "com.google.jimfs:jimfs:$jimfsVersion"
     testImplementation project(":libs:test-utils")
     testImplementation project(":libs:logging-test-utils")

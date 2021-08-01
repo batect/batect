@@ -45,7 +45,7 @@ dependencies {
     implementation project(":libs:primitives")
 
     testImplementation "com.google.jimfs:jimfs:$jimfsVersion"
-    testImplementation "org.araqnid:hamkrest-json:$hamkrestJsonVersion"
+    testImplementation "org.araqnid.hamkrest:hamkrest-json:$hamkrestJsonVersion"
 
     testImplementation project(":libs:logging-test-utils")
     testImplementation project(":libs:test-utils")

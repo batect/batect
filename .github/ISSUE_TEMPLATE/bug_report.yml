@@ -1,0 +1,48 @@
+name: Bug report
+description: Report an issue in Batect
+labels:
+  - is:bug
+body:
+  - type: textarea
+    attributes:
+      label: Describe the bug
+      description: Describe the problem in a few sentences. Please include exact error messages (if any) or relevant snippets from configuration files.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Reproduction repo
+      description: While not required, if you can provide a simple sample project that demonstrates the problem, this makes it much easier to understand and investigate the issue and validate that it has been fixed.
+    validations:
+      required: false
+  - type: textarea
+    attributes:
+      label: Steps to reproduce
+      description: A clear set of steps that triggers the issue.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Expected behaviour
+      description: A description of what you expected to happen.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Actual behaviour
+      description: A description of what actually happened. Include any error messages and other surrounding output.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Version information
+      description: Run `./batect --version` and paste the output here. (Now is also a good time to double-check you're using the [most recent version](https://github.com/batect/batect/releases/latest) of Batect.)
+      render: plain text
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Any other information
+      description: Is there anything else we need to know?
+    validations:
+      required: false

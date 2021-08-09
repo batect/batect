@@ -51,7 +51,7 @@ function __batect_completion_PLACEHOLDER_REGISTER_AS_need_to_refresh_cache --arg
         end
     end
 
-    if string collect $files_with_hashes | __batect_completion_PLACEHOLDER_REGISTER_AS_sha256 -c -s -
+    if string collect $files_with_hashes | __batect_completion_PLACEHOLDER_REGISTER_AS_sha256 -c --status -
         return 1
     else
         return 0

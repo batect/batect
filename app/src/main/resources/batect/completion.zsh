@@ -111,7 +111,7 @@ PLACEHOLDER_REGISTER_AS_need_to_refresh_cache() {
         fi
     done
 
-    if echo "$hashes" | PLACEHOLDER_REGISTER_AS_sha256 -c -s -; then
+    if echo "$hashes" | PLACEHOLDER_REGISTER_AS_sha256 -c --status -; then
         return 1
     else
         return 0

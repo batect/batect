@@ -4,7 +4,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates=20210119~20.04.1 \
     curl=7.68.0-1ubuntu2.6 \
     fish=3.1.0-1.2 \
-    openjdk-11-jre-headless=11.0.11+9-0ubuntu2~20.04 \
+    openjdk-11-jre-headless=16.0.1+9-1~20.04 \
     python3=3.8.2-0ubuntu2 \
     zsh=5.8-3ubuntu1 \
     && apt-get clean && \

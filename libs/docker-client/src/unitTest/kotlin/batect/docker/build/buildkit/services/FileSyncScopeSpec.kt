@@ -594,6 +594,28 @@ object FileSyncScopeSpec : Spek({
                         }
                     }
                 }
+
+                // See https://github.com/batect/batect/issues/970
+                given("a directory containing files that are a prefix of a sub-directory name") {
+                    val fileInRootDirectory by createForEachTest { Files.createFile(rootDirectory.resolve("testproj.sub")) }
+                    val childDirectory by createForEachTest { Files.createDirectory(rootDirectory.resolve("testproj")) }
+                    val fileInChildDirectory by createForEachTest { Files.createFile(childDirectory.resolve("some-file.txt")) }
+
+                    given("there are no criteria included in the request") {
+                        val request by createForEachTest { FileSyncScope(rootDirectory, emptyList(), emptySet(), emptySet()) }
+
+                        it("returns all files and folders in the correct order") {
+                            assertThat(
+                                request.contents,
+                                containsInOrder(
+                                    FileSyncScopeEntry(childDirectory, "testproj"),
+                                    FileSyncScopeEntry(fileInChildDirectory, "testproj/some-file.txt"),
+                                    FileSyncScopeEntry(fileInRootDirectory, "testproj.sub"),
+                                )
+                            )
+                        }
+                    }
+                }
             }
         }
     }

@@ -52,13 +52,13 @@ class FileSyncScope(
     val contents: List<FileSyncScopeEntry> = resolveContents()
 
     private fun resolveContents(): List<FileSyncScopeEntry> {
-        return walkDirectory(rootDirectory).sortedBy { it.relativePath }
+        return walkDirectory(rootDirectory)
     }
 
     // TODO: don't bother walking a directory that could never be included by includePatterns / followPaths
     // TODO: don't bother walking a directory that could never be included due to excludePatterns
     private fun walkDirectory(directory: Path): List<FileSyncScopeEntry> {
-        val contents = Files.list(directory).toList()
+        val contents = Files.list(directory).toList().sortedBy { it.fileName.toString() }
         val entries = mutableListOf<FileSyncScopeEntry>()
 
         contents.forEach { child ->

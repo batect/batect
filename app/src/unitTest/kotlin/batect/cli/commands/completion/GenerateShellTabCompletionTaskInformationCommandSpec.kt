@@ -87,6 +87,50 @@ object GenerateShellTabCompletionTaskInformationCommandSpec : Spek({
             Files.write(includedFile2, "ghi789".toByteArray(Charsets.UTF_8))
         }
 
+        describe("when run for Bash") {
+            val commandLineOptions by createForEachTest { CommandLineOptions(configurationFileName = configurationFileName, generateShellTabCompletionTaskInformation = Shell.Bash) }
+            val command by createForEachTest { GenerateShellTabCompletionTaskInformationCommand(commandLineOptions, PrintStream(output), configurationLoader, telemetrySessionBuilder, hostEnvironmentVariables) }
+            val exitCode by runForEachTest { command.run() }
+
+            it("returns a zero exit code") {
+                assertThat(exitCode, equalTo(0))
+            }
+
+            // You can generate these hashes yourself with something like:
+            // echo -n '<file content>' | sha256sum
+            it("prints all loaded paths and all tasks in the project, both in alphabetical order, and with the SHA-256 hash of each file before each file's path") {
+                assertThat(
+                    output.toString(),
+                    equalTo(
+                        """
+                        |### FILES ###
+                        |5eb9480d37ff7490f465d5fad3b425fe4a4c65b46fd4eef160cb1b644df7f1e8  /another/file.yml
+                        |6ca13d52ca70c883e0f0bb101e425a89e8624de51db2d2392593af6a84118090  /my-project/batect.yml
+                        |8f61ad5cfa0c471c8cbf810ea285cb1e5f9c2c5e5e5e4f58a3229667703e1587  /some/other/file.yml
+                        |### TASKS ###
+                        |first-task
+                        |fourth-task
+                        |second-task
+                        |task-with-no-description
+                        |task:with:colons
+                        |third-task
+                        |
+                        """.trimMargin().withPlatformSpecificLineSeparator()
+                    )
+                )
+            }
+
+            it("records an event in telemetry with the shell name and proxy completion script version") {
+                verify(telemetrySessionBuilder).addEvent(
+                    "GeneratedShellTabCompletionTaskInformation",
+                    mapOf(
+                        "shell" to AttributeValue("Bash"),
+                        "proxyCompletionScriptVersion" to AttributeValue("4.5.6")
+                    )
+                )
+            }
+        }
+
         describe("when run for Fish") {
             val commandLineOptions by createForEachTest { CommandLineOptions(configurationFileName = configurationFileName, generateShellTabCompletionTaskInformation = Shell.Fish) }
             val command by createForEachTest { GenerateShellTabCompletionTaskInformationCommand(commandLineOptions, PrintStream(output), configurationLoader, telemetrySessionBuilder, hostEnvironmentVariables) }

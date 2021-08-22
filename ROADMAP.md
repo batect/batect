@@ -36,8 +36,6 @@ If there's something you're really keen to see, pull requests are always welcome
 * support setting `ulimit` values (`--ulimit` - https://docs.docker.com/engine/reference/commandline/run/#set-ulimits-in-container---ulimit)
 * show build context upload progress when building image
 * some way to kill a misbehaving task (eg. one that is not responding to Ctrl+C)
-* shell tab completion for options (eg. `batect --h<tab>` completes to `batect --help`) - #116 ![good first issue](https://img.shields.io/badge/-good%20first%20issue-green)
-* shell tab completion for tasks (eg. `batect b<tab>` completes to `batect build`) - #116 ![good first issue](https://img.shields.io/badge/-good%20first%20issue-green)
 * Kubernetes-style health checks from outside the container (don't require `curl` / `wget` to be installed in the container, just provide HTTP endpoint)
 * ability to build one or more container images separate to running a task (two use cases: build and push an application image, and pre-build all CI environment images in parallel rather than waiting until they're needed and building them effectively serially)
 

@@ -58,12 +58,18 @@ tasks.register("completionTest", Exec) {
     dependsOn buildCompletionTestEnvironmentImage
     dependsOn installShadowDist
 
-    commandLine "docker", "run", "--rm", "-t",
-        "-v", "$completionTestDir/tests:/tests",
-        "-v", "$buildDir/install/app-shadow:/app",
-        "-w", "/tests",
-        "-e", "BATECT_ENABLE_TELEMETRY=false",
-        testEnvironmentImageName, "./tests.py"
+    def args = ["docker", "run", "--rm", "-t",
+                "-v", "$completionTestDir/tests:/tests",
+                "-v", "$buildDir/install/app-shadow:/app",
+                "-w", "/tests",
+                "-e", "BATECT_ENABLE_TELEMETRY=false",
+                testEnvironmentImageName, "./tests.py"]
+
+    if (project.hasProperty("focusCompletionTests")) {
+        args += ["-k", project.property("focusCompletionTests")]
+    }
+
+    commandLine args
 
     doLast {
         // Based on https://stackoverflow.com/questions/1406473/simulate-touch-command-with-java

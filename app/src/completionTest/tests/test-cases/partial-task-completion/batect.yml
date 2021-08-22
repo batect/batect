@@ -1,0 +1,12 @@
+tasks:
+  task-1:
+    run:
+      container: doesnt-exist
+
+  some-task:
+    run:
+      container: doesnt-exist
+
+  some-other-task:
+    run:
+      container: doesnt-exist

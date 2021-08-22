@@ -59,6 +59,12 @@ object GenerateShellTabCompletionScriptCommandSpec : Spek({
 
         val outputStream by createForEachTest { ByteArrayOutputStream() }
 
+        val bashGenerator by createForEachTest {
+            mock<BashShellTabCompletionScriptGenerator> {
+                on { generate(any(), any()) } doReturn "bash-shell-completion-script"
+            }
+        }
+
         val fishGenerator by createForEachTest {
             mock<FishShellTabCompletionScriptGenerator> {
                 on { generate(any(), any()) } doReturn "fish-shell-completion-script"
@@ -84,6 +90,7 @@ object GenerateShellTabCompletionScriptCommandSpec : Spek({
             data class TestCase(val shell: Shell, val generator: () -> ShellTabCompletionScriptGenerator, val expectedOutput: String)
 
             setOf(
+                TestCase(Shell.Bash, { bashGenerator }, "bash-shell-completion-script"),
                 TestCase(Shell.Fish, { fishGenerator }, "fish-shell-completion-script"),
                 TestCase(Shell.Zsh, { zshGenerator }, "zsh-shell-completion-script"),
             ).forEach { testCase ->
@@ -94,6 +101,7 @@ object GenerateShellTabCompletionScriptCommandSpec : Spek({
                         GenerateShellTabCompletionScriptCommand(
                             commandLineOptions,
                             commandLineOptionsParser,
+                            bashGenerator,
                             fishGenerator,
                             zshGenerator,
                             PrintStream(outputStream),
@@ -136,6 +144,7 @@ object GenerateShellTabCompletionScriptCommandSpec : Spek({
                 GenerateShellTabCompletionScriptCommand(
                     commandLineOptions,
                     commandLineOptionsParser,
+                    bashGenerator,
                     fishGenerator,
                     zshGenerator,
                     PrintStream(outputStream),

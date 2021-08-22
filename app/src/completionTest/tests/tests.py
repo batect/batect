@@ -75,6 +75,10 @@ class CompletionTestBase(ABC):
         results = self.run_completions_for("./batect --config-", "/app/bin")
         self.assertIn("--config-file", results)
 
+    def test_partial_task_completion(self):
+        results = self.run_completions_for("/app/bin/batect some-", self.directory_for_test_case("partial-task-completion"))
+        self.assertEqual(["some-other-task", "some-task"], results)
+
     def test_task_name_completion_standard_file_location(self):
         results = self.run_completions_for("/app/bin/batect task-", self.directory_for_test_case("simple-config"))
         self.assertEqual(["task-1", "task-2"], results)
@@ -202,7 +206,7 @@ class CompletionTestBase(ABC):
     def run_completions_for(self, input, working_directory):
         stdout = self.run_command_in_shell(self.completion_command_for(input), working_directory)
 
-        return sorted(self.post_process_generated_completions(stdout.splitlines()))
+        return sorted(self.post_process_generated_completions(stdout.rstrip('\n').splitlines()))
 
     def completion_command_for(self, input) -> str:
         pass
@@ -242,6 +246,26 @@ class CompletionTestBase(ABC):
 
     def post_process_generated_completions(self, completions):
         return completions
+
+
+class BashCompletionTests(CompletionTestBase, unittest.TestCase):
+    def __init__(self, methodName):
+        super().__init__(methodName)
+        self.maxDiff = None
+
+    def completion_command_for(self, input) -> str:
+        return 'test_complete.bash "{}"'.format(input)
+
+    def shell_command_for(self, command):
+        return ["bash", "-c", command]
+
+    def test_enum_option_completion_after_equals(self):
+        results = self.run_completions_for("./batect --output=", "/app/bin")
+        self.assertEqual(["all", "fancy", "quiet", "simple"], results)
+
+    def test_enum_option_completion_after_space(self):
+        results = self.run_completions_for("./batect --output ", "/app/bin")
+        self.assertEqual(["all", "fancy", "quiet", "simple"], results)
 
 
 class FishCompletionTests(CompletionTestBase, unittest.TestCase):

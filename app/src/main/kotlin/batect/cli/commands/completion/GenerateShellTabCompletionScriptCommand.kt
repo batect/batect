@@ -29,6 +29,7 @@ import java.io.PrintStream
 class GenerateShellTabCompletionScriptCommand(
     private val commandLineOptions: CommandLineOptions,
     private val optionsParser: CommandLineOptionsParser,
+    private val bashGenerator: BashShellTabCompletionScriptGenerator,
     private val fishGenerator: FishShellTabCompletionScriptGenerator,
     private val zshGenerator: ZshShellTabCompletionScriptGenerator,
     private val outputStream: PrintStream,
@@ -68,6 +69,7 @@ class GenerateShellTabCompletionScriptCommand(
             ?: throw IllegalArgumentException("'BATECT_COMPLETION_PROXY_REGISTER_AS' environment variable not set.")
 
     private fun getGeneratorForShell(): ShellTabCompletionScriptGenerator = when (commandLineOptions.generateShellTabCompletionScript) {
+        Shell.Bash -> bashGenerator
         Shell.Fish -> fishGenerator
         Shell.Zsh -> zshGenerator
         else -> throw IllegalArgumentException("Can't generate completions for shell ${commandLineOptions.generateShellTabCompletionScript}")

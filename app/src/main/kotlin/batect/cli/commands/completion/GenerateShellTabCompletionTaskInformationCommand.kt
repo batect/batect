@@ -73,6 +73,7 @@ class GenerateShellTabCompletionTaskInformationCommand(
     private fun formatTask(task: Task) = when (commandLineOptions.generateShellTabCompletionTaskInformation!!) {
         Shell.Zsh -> task.name.replace(":", "\\:") + formatTaskDescription(task.description, ":")
         Shell.Fish -> task.name + formatTaskDescription(task.description, "\t")
+        Shell.Bash -> task.name
     }
 
     private fun formatTaskDescription(description: String, separator: String): String {

@@ -140,22 +140,86 @@ See [the contribution guide](CONTRIBUTING.md).
 
 Thank you to the following people for their bug reports, pull requests, suggestions and feedback, in alphabetical order:
 
-* [@andeemarks](https://github.com/andeemarks)
-* [@assafw](https://github.com/assafw)
-* [@binkley](https://github.com/binkley)
-* [@Byron-TW](https://github.com/Byron-TW)
-* [@cazgp](https://github.com/cazgp)
-* [@eichelkrauta](https://github.com/eichelkrauta)
-* [@ekamara](https://github.com/ekamara)
-* [@ineffyble](https://github.com/ineffyble)
-* [@jagregory](https://github.com/jagregory)
-* [@jobasiimwe](https://github.com/jobasiimwe)
-* [@Letitia-May](https://github.com/Letitia-May)
-* [@minnn-minnn](https://github.com/minnn-minnn)
-* [@pameck](https://github.com/pameck)
-* [@safiranugroho](https://github.com/safiranugroho)
-* [@Sami5](https://github.com/Sami5)
-* ...and everyone else who has used the tool and provided feedback offline
+<!-- CONTRIBUTOR_LIST_STARTS_HERE -->
+[@Abhisha1](https://github.com/Abhisha1),
+[@aidansteele](https://github.com/aidansteele),
+[@akamanocha](https://github.com/akamanocha),
+[@alexswilliams](https://github.com/alexswilliams),
+[@alpha-er](https://github.com/alpha-er),
+[@andeemarks](https://github.com/andeemarks),
+[@asharma8438](https://github.com/asharma8438),
+[@askfor](https://github.com/askfor),
+[@assafw](https://github.com/assafw),
+[@b-a-byte](https://github.com/b-a-byte),
+[@BethanyDrake-x](https://github.com/BethanyDrake-x),
+[@binkley](https://github.com/binkley),
+[@boxleytw](https://github.com/boxleytw),
+[@Byron-TW](https://github.com/Byron-TW),
+[@camjackson](https://github.com/camjackson),
+[@carloslimasis](https://github.com/carloslimasis),
+[@catacgc](https://github.com/catacgc),
+[@cazgp](https://github.com/cazgp),
+[@chandantp](https://github.com/chandantp),
+[@chinwobble](https://github.com/chinwobble),
+[@csxero](https://github.com/csxero),
+[@da4089](https://github.com/da4089),
+[@damian-bisignano](https://github.com/damian-bisignano),
+[@DamianBis](https://github.com/DamianBis),
+[@dan-neumegen-xero](https://github.com/dan-neumegen-xero),
+[@DavidHe1127](https://github.com/DavidHe1127),
+[@dflook](https://github.com/dflook),
+[@DiegoAlpizar](https://github.com/DiegoAlpizar),
+[@diffidentDude](https://github.com/diffidentDude),
+[@diwang-xero](https://github.com/diwang-xero),
+[@doug-ferris-mondo](https://github.com/doug-ferris-mondo),
+[@eichelkrauta](https://github.com/eichelkrauta),
+[@ekamara](https://github.com/ekamara),
+[@erMaurone](https://github.com/erMaurone),
+[@frglrock](https://github.com/frglrock),
+[@fwilhe2](https://github.com/fwilhe2),
+[@gabrielsadaka](https://github.com/gabrielsadaka),
+[@GerardWorks](https://github.com/GerardWorks),
+[@GoodDingo](https://github.com/GoodDingo),
+[@heyheman11](https://github.com/heyheman11),
+[@hongyuanlei](https://github.com/hongyuanlei),
+[@hpcsc](https://github.com/hpcsc),
+[@hussein-joe](https://github.com/hussein-joe),
+[@ineffyble](https://github.com/ineffyble),
+[@jagregory](https://github.com/jagregory),
+[@jbduncan](https://github.com/jbduncan),
+[@jmewes](https://github.com/jmewes),
+[@jobasiimwe](https://github.com/jobasiimwe),
+[@Letitia-May](https://github.com/Letitia-May),
+[@mario-prabowo-xero](https://github.com/mario-prabowo-xero),
+[@marty-macfly](https://github.com/marty-macfly),
+[@mdlnr](https://github.com/mdlnr),
+[@minnn-minnn](https://github.com/minnn-minnn),
+[@mjstrasser](https://github.com/mjstrasser),
+[@Mubashwer](https://github.com/Mubashwer),
+[@mylesmacrae](https://github.com/mylesmacrae),
+[@nashvan](https://github.com/nashvan),
+[@nesl247](https://github.com/nesl247),
+[@nkrul](https://github.com/nkrul),
+[@pameck](https://github.com/pameck),
+[@paulvalla-zorro](https://github.com/paulvalla-zorro),
+[@priorax](https://github.com/priorax),
+[@ryanb6920](https://github.com/ryanb6920),
+[@safiranugroho](https://github.com/safiranugroho),
+[@Sami5](https://github.com/Sami5),
+[@smozely](https://github.com/smozely),
+[@SongGithub](https://github.com/SongGithub),
+[@squirmy](https://github.com/squirmy),
+[@TassSinclair](https://github.com/TassSinclair),
+[@thirkcircus](https://github.com/thirkcircus),
+[@Tzrlk](https://github.com/Tzrlk),
+[@wandrewni](https://github.com/wandrewni),
+[@wilvk](https://github.com/wilvk),
+[@wyvern8](https://github.com/wyvern8),
+[@xdavidnguyen](https://github.com/xdavidnguyen),
+[@yoyo-i3](https://github.com/yoyo-i3),
+[@ZhuYeXero](https://github.com/ZhuYeXero),
+[@zizhongzhang](https://github.com/zizhongzhang), and everyone else who has used the tool and provided feedback offline
+<!-- CONTRIBUTOR_LIST_ENDS_HERE -->
 
 Thank you to YourKit for providing a complimentary copy of the [YourKit profiler](https://www.yourkit.com/java/profiler), and
 thank you to JFrog for providing a complimentary instance of both [Bintray](https://bintray.com/batect/batect/batect) and

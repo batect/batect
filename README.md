@@ -224,3 +224,6 @@ Thank you to the following people for their bug reports, pull requests, suggesti
 Thank you to YourKit for providing a complimentary copy of the [YourKit profiler](https://www.yourkit.com/java/profiler), and
 thank you to JFrog for providing a complimentary instance of both [Bintray](https://bintray.com/batect/batect/batect) and
 [Artifactory](https://jfrog.com/artifactory/).
+
+And thank you to Thoughtworks for providing [me](https://github.com/charleskorn) a day of paid leave each month to work on
+Batect. If you'd like to join us at Thoughtworks, [check out our current job openings](https://grnh.se/ab40b6a51us).

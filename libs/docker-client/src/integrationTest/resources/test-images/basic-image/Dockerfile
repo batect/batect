@@ -1,4 +1,4 @@
-FROM alpine:3.14.1
+FROM alpine:3.14.2
 
 ARG CACHE_BUSTING_ID
 COPY test.sh /test-$CACHE_BUSTING_ID.sh

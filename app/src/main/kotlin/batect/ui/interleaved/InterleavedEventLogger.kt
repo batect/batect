@@ -97,6 +97,7 @@ class InterleavedEventLogger(
             is SetupCommandsCompletedEvent -> onSetupCommandsCompletedEvent(event)
             is StepStartingEvent -> onStepStarting(event)
             is TaskFailedEvent -> onTaskFailed(event)
+            else -> {}
         }
     }
 
@@ -140,6 +141,7 @@ class InterleavedEventLogger(
             is PullImageStep -> onPullImageStepStarting(event.step)
             is RunContainerStep -> onRunContainerStepStarting(event.step)
             is CleanupStep -> onCleanupStepStarting()
+            else -> {}
         }
     }
 
@@ -188,6 +190,7 @@ class InterleavedEventLogger(
             is TaskNetworkCreationFailedEvent -> printErrorForTask(event)
             is TaskNetworkDeletionFailedEvent -> printErrorForTask(event)
             is UserInterruptedExecutionEvent -> printErrorForTask(event)
+            else -> {}
         }
     }
 

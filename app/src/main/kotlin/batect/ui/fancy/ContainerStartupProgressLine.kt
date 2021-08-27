@@ -163,6 +163,7 @@ data class ContainerStartupProgressLine(val container: Container, val dependenci
             is RunningSetupCommandEvent -> onRunningSetupCommandEventPosted(event)
             is CachesInitialisedEvent -> cacheInitialised = true
             is StepStartingEvent -> onStepStarting(event.step)
+            else -> {}
         }
     }
 
@@ -172,6 +173,7 @@ data class ContainerStartupProgressLine(val container: Container, val dependenci
             is PullImageStep -> onPullImageStepStarting(step)
             is CreateContainerStep -> onCreateContainerStepStarting(step)
             is RunContainerStep -> onRunContainerStepStarting(step)
+            else -> {}
         }
     }
 

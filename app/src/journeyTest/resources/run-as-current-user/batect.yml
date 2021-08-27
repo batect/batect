@@ -2,7 +2,7 @@ project_name: run-as-current-user-test
 
 containers:
   build-env:
-    image: alpine:3.14.1
+    image: alpine:3.14.2
     volumes:
       - local: ../../../../build/test-results/journey-tests/run-as-current-user
         container: /output

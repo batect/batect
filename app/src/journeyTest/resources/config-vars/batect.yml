@@ -2,7 +2,7 @@ project_name: config-vars-test
 
 containers:
   build-env:
-    image: alpine:3.14.1
+    image: alpine:3.14.2
     command: sh -c 'echo $FROM_FILE && echo $FROM_COMMAND_LINE && echo $FROM_DEFAULT && exit 123'
     environment:
       FROM_FILE: <FROM_FILE

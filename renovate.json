@@ -60,9 +60,7 @@
       "datasourceTemplate": "github-releases"
     },
     {
-      "fileMatch": [
-        "gradle.properties$"
-      ],
+      "fileMatch": ["gradle.properties$"],
       "matchStrings": [
         "#renovate:(?<depName>[a-zA-Z0-9-.]+:[a-zA-Z0-9-.]+)\\s([a-zA-Z]+)=(?<currentValue>[\\d.]+)"
       ],
@@ -90,6 +88,14 @@
       "matchManagers": ["gradle-lite"],
       "matchPackagePatterns": ["^org\\.jetbrains\\.kotlin\\."],
       "matchDepTypes": ["plugin"]
+    },
+    {
+      "matchDatasources": ["maven"],
+      "matchPackagePatterns": ["\\.gradle\\.plugin$"],
+      "registryUrls": [
+        "https://repo.maven.apache.org/maven2/",
+        "https://plugins.gradle.org/m2/"
+      ]
     }
   ]
 }

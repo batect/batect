@@ -58,6 +58,16 @@
         "\"github.com/(?<depName>[a-z]+/[a-z]+?)/(.*).proto\"\\s+,\\s+\"(?<currentValue>v[\\d.]*?)\""
       ],
       "datasourceTemplate": "github-releases"
+    },
+    {
+      "fileMatch": [
+        "gradle.properties$"
+      ],
+      "matchStrings": [
+        "junitPlatformVersion=(?<currentValue>[\\d.]*)"
+      ],
+      "datasourceTemplate": "maven",
+      "depNameTemplate": "org.junit.platform:junit-platform-engine"
     }
   ],
   "packageRules": [

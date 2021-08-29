@@ -64,10 +64,9 @@
         "gradle.properties$"
       ],
       "matchStrings": [
-        "junitPlatformVersion=(?<currentValue>[\\d.]*)"
+        "#renovate:(?<depName>[a-zA-Z0-9-.]+:[a-zA-Z0-9-.]+)\\s([a-zA-Z]+)=(?<currentValue>[\\d.]+)"
       ],
-      "datasourceTemplate": "maven",
-      "depNameTemplate": "org.junit.platform:junit-platform-engine"
+      "datasourceTemplate": "maven"
     }
   ],
   "packageRules": [

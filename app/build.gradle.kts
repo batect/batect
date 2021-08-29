@@ -29,7 +29,7 @@ val jimfsVersion: String by project
 plugins {
     id("com.github.johnrengelman.shadow")
     id("batect-kotlin")
-    id("application")
+    application
 }
 
 base {

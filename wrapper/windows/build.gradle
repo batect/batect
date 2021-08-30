@@ -52,7 +52,7 @@ tasks.register("build") {
             .replace("VERSION-GOES-HERE", version.toString())
             .replace("CHECKSUM-GOES-HERE", hash)
 
-        // Why the double new line in join() below? ^ at the end of a line followed by a non-empty line produces a space, 
+        // Why the double new line in join() below? ^ at the end of a line followed by a non-empty line produces a space,
         // whereas ^ followed by an empty line produces a single new line character in the resulting string.
         def escapedPowershellScript = powershellScript
             .replace("|", "^|")

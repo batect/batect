@@ -272,7 +272,7 @@ class KotlinPlugin : Plugin<Project> {
 
             allow("EPL-1.0")
 
-            allowDependency("com.github.jnr", "jnr-posix", "3.1.7") {
+            allowDependency("com.github.jnr", "jnr-posix", "3.1.8") {
                 it.because("Licensed under three licenses, including EPL 2.0 and LGPL")
             }
 

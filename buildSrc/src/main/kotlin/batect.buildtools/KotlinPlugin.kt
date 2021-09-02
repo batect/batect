@@ -271,13 +271,10 @@ class KotlinPlugin : Plugin<Project> {
             allowUrl("https://asm.ow2.io/license.html") // BSD
 
             allow("EPL-1.0")
+            allowUrl("https://www.eclipse.org/legal/epl-v20.html")
 
-            allowDependency("com.github.jnr", "jnr-posix", "3.1.7") {
+            allowDependency("com.github.jnr", "jnr-posix", "3.1.8") {
                 it.because("Licensed under three licenses, including EPL 2.0 and LGPL")
-            }
-
-            allowDependency("org.mockito.kotlin", "mockito-kotlin", "3.2.0") {
-                it.because("Licensee incorrectly fails this dependency due to https://github.com/cashapp/licensee/issues/40")
             }
 
             allowDependency("org.checkerframework", "checker-compat-qual", "2.5.5") {

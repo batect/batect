@@ -16,6 +16,7 @@
 
 package batect.execution
 
+import batect.config.CacheMount
 import batect.config.Container
 import batect.config.RunAsCurrentUserConfig
 import batect.docker.ContainerDirectory
@@ -88,6 +89,7 @@ class RunAsCurrentUserConfigurationProvider(
         try {
             uploadFilesForConfiguration(configuration, dockerContainer)
             uploadHomeDirectoryForConfiguration(configuration, container, dockerContainer)
+            uploadCacheDirectories(container, dockerContainer)
         } catch (e: DockerException) {
             throw RunAsCurrentUserConfigurationException("Could not apply 'run as current user' configuration to container '${container.name}': ${e.message}", e)
         }
@@ -112,15 +114,36 @@ class RunAsCurrentUserConfigurationProvider(
             throw RunAsCurrentUserConfigurationException("Container '${container.name}' has an invalid home directory configured: '${configuration.homeDirectory}' is not an absolute path.")
         }
 
-        val homeDirectorySegments = configuration.homeDirectory.splitToPathSegments()
-        val homeDirectoryName = homeDirectorySegments.last()
-        val homeDirectoryParentPath = if (homeDirectorySegments.size <= 2) "/" else homeDirectorySegments.dropLast(1).joinToString("/")
+        uploadDirectory(configuration.homeDirectory, dockerContainer)
+    }
 
+    private fun uploadCacheDirectories(container: Container, dockerContainer: DockerContainer) {
+        val cacheMounts = container.volumeMounts.filterIsInstance<CacheMount>()
+
+        cacheMounts.forEach { cacheMount ->
+            if (!cacheMount.containerPath.startsWith("/")) {
+                throw RunAsCurrentUserConfigurationException("Container '${container.name}' has an invalid cache mount configured: '${cacheMount.containerPath}' is not an absolute path.")
+            }
+
+            uploadDirectory(cacheMount.containerPath, dockerContainer)
+        }
+    }
+
+    private fun uploadDirectory(path: String, dockerContainer: DockerContainer) {
         containersClient.upload(
             dockerContainer,
-            setOf(ContainerDirectory(homeDirectoryName, userId.toLong(), groupId.toLong())),
-            homeDirectoryParentPath
+            setOf(ContainerDirectory(leafDirectoryNameOf(path), userId.toLong(), groupId.toLong())),
+            parentDirectoryOf(path)
         )
+    }
+
+    private fun parentDirectoryOf(path: String): String {
+        val segments = path.splitToPathSegments()
+        return if (segments.size <= 2) "/" else segments.dropLast(1).joinToString("/")
+    }
+
+    private fun leafDirectoryNameOf(path: String): String {
+        return path.splitToPathSegments().last()
     }
 
     private fun generatePasswdFile(runAsCurrentUserConfig: RunAsCurrentUserConfig.RunAsCurrentUser): String {

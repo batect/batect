@@ -48,9 +48,6 @@ data class PullImageStep(val source: PullImage) : TaskStep()
 object PrepareTaskNetworkStep : TaskStep()
 
 @Serializable
-object InitialiseCachesStep : TaskStep()
-
-@Serializable
 data class CreateContainerStep(
     val container: Container,
     val image: DockerImage,

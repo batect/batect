@@ -56,14 +56,6 @@ object CacheMountJourneyTest : Spek({
                         assert(secondResult).output().contains("File created in task exists\n")
                     }
 
-                    it("should not have access to the file from the image in the first run") {
-                        assert(firstResult).output().contains("File created in image does not exist\n")
-                    }
-
-                    it("should not have access to the file from the image in the second run") {
-                        assert(secondResult).output().contains("File created in image does not exist\n")
-                    }
-
                     it("should succeed on the first run") {
                         assert(firstResult).exitCode().toBe(0)
                     }

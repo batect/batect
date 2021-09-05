@@ -22,7 +22,6 @@ import batect.execution.model.rules.cleanup.RemoveContainerStepRule
 import batect.execution.model.rules.cleanup.StopContainerStepRule
 import batect.execution.model.rules.run.BuildImageStepRule
 import batect.execution.model.rules.run.CreateContainerStepRule
-import batect.execution.model.rules.run.InitialiseCachesStepRule
 import batect.execution.model.rules.run.PrepareTaskNetworkStepRule
 import batect.execution.model.rules.run.PullImageStepRule
 import batect.execution.model.rules.run.RunContainerSetupCommandsStepRule
@@ -54,7 +53,6 @@ val serializersModule = SerializersModule {
     polymorphic(TaskStepRule::class, CreateContainerStepRule::class, CreateContainerStepRule.serializer())
     polymorphic(TaskStepRule::class, PrepareTaskNetworkStepRule::class, PrepareTaskNetworkStepRule.serializer())
     polymorphic(TaskStepRule::class, DeleteTaskNetworkStepRule::class, DeleteTaskNetworkStepRule.serializer())
-    polymorphic(TaskStepRule::class, InitialiseCachesStepRule::class, InitialiseCachesStepRule.serializer())
     polymorphic(TaskStepRule::class, PullImageStepRule::class, PullImageStepRule.serializer())
     polymorphic(TaskStepRule::class, RemoveContainerStepRule::class, RemoveContainerStepRule.serializer())
     polymorphic(TaskStepRule::class, RunContainerSetupCommandsStepRule::class, RunContainerSetupCommandsStepRule.serializer())

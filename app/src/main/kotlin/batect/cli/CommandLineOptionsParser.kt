@@ -26,7 +26,6 @@ import batect.cli.options.ValueConverters
 import batect.cli.options.defaultvalues.EnvironmentVariableDefaultValueProviderFactory
 import batect.cli.options.defaultvalues.FileDefaultValueProvider
 import batect.docker.DockerHttpConfigDefaults
-import batect.execution.CacheInitialisationImage
 import batect.execution.CacheType
 import batect.os.PathResolverFactory
 import batect.os.SystemInfo
@@ -144,13 +143,6 @@ class CommandLineOptionsParser(
         "Storage mechanism to use for caches. Valid values are: 'volume' (use Docker volumes) or 'directory' (use directories mounted from the host). Ignored for Windows containers (directory mounts are always used).",
         environmentVariableDefaultValueProviderFactory.create("BATECT_CACHE_TYPE", CacheType.Volume, CacheType.Volume.name.lowercase(), ValueConverters.enum()),
         ValueConverters.enum()
-    )
-
-    private val linuxCacheInitImageName: String by valueOption(
-        cacheOptionsGroup,
-        "linux-cache-init-image",
-        "Image to use to initialise caches.",
-        environmentVariableDefaultValueProviderFactory.create("BATECT_LINUX_CACHE_INIT_IMAGE", CacheInitialisationImage.linuxDefault, ValueConverters.string)
     )
 
     private val dockerHost: String by valueOption(
@@ -341,7 +333,6 @@ class CommandLineOptionsParser(
         dockerTlsCACertificatePath = resolvePathToDockerCertificate(dockerTlsCACertificatePath, dockerTLSCACertificatePathOption.valueSource, "ca.pem"),
         dockerConfigDirectory = dockerConfigDirectory,
         cacheType = cacheType,
-        linuxCacheInitImageName = linuxCacheInitImageName,
         existingNetworkToUse = existingNetworkToUse,
         skipPrerequisites = skipPrerequisites,
         disableTelemetry = disableTelemetry,

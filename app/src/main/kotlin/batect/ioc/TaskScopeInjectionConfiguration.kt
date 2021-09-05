@@ -30,7 +30,6 @@ import batect.execution.model.steps.TaskStepRunner
 import batect.execution.model.steps.runners.BuildImageStepRunner
 import batect.execution.model.steps.runners.CreateContainerStepRunner
 import batect.execution.model.steps.runners.DeleteTaskNetworkStepRunner
-import batect.execution.model.steps.runners.InitialiseCachesStepRunner
 import batect.execution.model.steps.runners.PrepareTaskNetworkStepRunner
 import batect.execution.model.steps.runners.PullImageStepRunner
 import batect.execution.model.steps.runners.RemoveContainerStepRunner
@@ -81,7 +80,6 @@ private val runnersModule = DI.Module("Task scope: execution.model.steps.runners
     bind<CreateContainerStepRunner>() with scoped(TaskScope).singleton { CreateContainerStepRunner(instance(), instance(), instance(), instance(), instance()) }
     bind<PrepareTaskNetworkStepRunner>() with scoped(TaskScope).singleton { PrepareTaskNetworkStepRunner(instance(), instance(), instance(), instance()) }
     bind<DeleteTaskNetworkStepRunner>() with scoped(TaskScope).singleton { DeleteTaskNetworkStepRunner(instance()) }
-    bind<InitialiseCachesStepRunner>() with scoped(TaskScope).singleton { InitialiseCachesStepRunner(instance(), commandLineOptions().linuxCacheInitImageName, instance(), instance(), instance(), instance(), instance(), instance(), instance()) }
     bind<PullImageStepRunner>() with scoped(TaskScope).singleton { PullImageStepRunner(instance(), instance()) }
     bind<RemoveContainerStepRunner>() with scoped(TaskScope).singleton { RemoveContainerStepRunner(instance()) }
     bind<RunContainerSetupCommandsStepRunner>() with scoped(TaskScope).singleton { RunContainerSetupCommandsStepRunner(instance(), instance(), instance(), instance(), instance()) }

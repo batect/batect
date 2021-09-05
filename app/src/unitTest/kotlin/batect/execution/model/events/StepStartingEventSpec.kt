@@ -16,7 +16,7 @@
 
 package batect.execution.model.events
 
-import batect.execution.model.steps.InitialiseCachesStep
+import batect.execution.model.steps.PrepareTaskNetworkStep
 import batect.testutils.logRepresentationOf
 import batect.testutils.on
 import com.natpryce.hamkrest.assertion.assertThat
@@ -26,7 +26,7 @@ import org.spekframework.spek2.style.specification.describe
 
 object StepStartingEventSpec : Spek({
     describe("a 'step starting' event") {
-        val event = StepStartingEvent(InitialiseCachesStep)
+        val event = StepStartingEvent(PrepareTaskNetworkStep)
 
         on("attaching it to a log message") {
             it("returns a machine-readable representation of itself") {
@@ -36,7 +36,7 @@ object StepStartingEventSpec : Spek({
                         """
                         |{
                         |   "type": "${event::class.qualifiedName}",
-                        |   "step": {"type": "${InitialiseCachesStep::class.qualifiedName}"}
+                        |   "step": {"type": "${PrepareTaskNetworkStep::class.qualifiedName}"}
                         |}
                         """.trimMargin()
                     )

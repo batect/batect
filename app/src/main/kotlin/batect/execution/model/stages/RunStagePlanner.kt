@@ -25,7 +25,6 @@ import batect.execution.model.rules.TaskStepRule
 import batect.execution.model.rules.data
 import batect.execution.model.rules.run.BuildImageStepRule
 import batect.execution.model.rules.run.CreateContainerStepRule
-import batect.execution.model.rules.run.InitialiseCachesStepRule
 import batect.execution.model.rules.run.PrepareTaskNetworkStepRule
 import batect.execution.model.rules.run.PullImageStepRule
 import batect.execution.model.rules.run.RunContainerSetupCommandsStepRule
@@ -40,8 +39,7 @@ class RunStagePlanner(
 ) {
     fun createStage(): RunStage {
         val rules = graph.allNodes.flatMapToSet { executionStepsFor(it) } +
-            PrepareTaskNetworkStepRule +
-            InitialiseCachesStepRule
+            PrepareTaskNetworkStepRule
 
         logger.info {
             message("Created run plan.")

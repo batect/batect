@@ -17,7 +17,6 @@
 package batect.ui.fancy
 
 import batect.config.BuildImage
-import batect.config.CacheMount
 import batect.config.Container
 import batect.config.LiteralValue
 import batect.config.PullImage
@@ -29,7 +28,6 @@ import batect.docker.DownloadOperation
 import batect.docker.build.ActiveImageBuildStep
 import batect.docker.build.BuildProgress
 import batect.docker.pull.ImagePullProgress
-import batect.execution.model.events.CachesInitialisedEvent
 import batect.execution.model.events.ContainerBecameHealthyEvent
 import batect.execution.model.events.ContainerBecameReadyEvent
 import batect.execution.model.events.ContainerCreatedEvent
@@ -689,130 +687,6 @@ object ContainerStartupProgressLineSpec : Spek({
 
                     it("prints that the container is ready to be created") {
                         assertThat(output, equivalentTo(Text.white(Text.bold(containerName) + Text(": image pulled, ready to create container"))))
-                    }
-                }
-            }
-        }
-
-        given("the container has one or more cache mounts") {
-            given("the container's image is one that needs to be built") {
-                val imageSource = BuildImage(LiteralValue("/some-image-dir"), pathResolutionContextDoesNotMatter())
-                val container = Container(containerName, imageSource, volumeMounts = setOf(CacheMount("some-cache", "/cache")))
-
-                val line: ContainerStartupProgressLine by createForEachTest {
-                    ContainerStartupProgressLine(container, setOf(dependencyA, dependencyB, dependencyC), false)
-                }
-
-                on("initial state") {
-                    val output by runForEachTest { line.print() }
-
-                    it("prints that the container is waiting to pull its image") {
-                        assertThat(output, equivalentTo(Text.white(Text.bold(containerName) + Text(": ready to build image"))))
-                    }
-                }
-
-                describe("after receiving an 'image built' notification") {
-                    val event = ImageBuiltEvent(container, DockerImage("some-image"))
-
-                    on("when the task network has already been created") {
-                        beforeEachTest {
-                            line.onEventPosted(TaskNetworkCreatedEvent(DockerNetwork("some-network")))
-                        }
-
-                        on("when cache initialisation has not completed") {
-                            beforeEachTest {
-                                line.onEventPosted(event)
-                            }
-
-                            val output by runForEachTest { line.print() }
-
-                            it("prints that the container is ready to be created") {
-                                assertThat(output, equivalentTo(Text.white(Text.bold(containerName) + Text(": waiting for cache initialisation to finish..."))))
-                            }
-                        }
-
-                        on("when cache initialisation has completed") {
-                            beforeEachTest {
-                                line.onEventPosted(CachesInitialisedEvent)
-                                line.onEventPosted(event)
-                            }
-
-                            val output by runForEachTest { line.print() }
-
-                            it("prints that the container is ready to be created") {
-                                assertThat(output, equivalentTo(Text.white(Text.bold(containerName) + Text(": image built, ready to create container"))))
-                            }
-                        }
-                    }
-
-                    on("when the task network has not already been created") {
-                        beforeEachTest { line.onEventPosted(event) }
-                        val output by runForEachTest { line.print() }
-
-                        it("prints that the container is waiting for the network to be ready") {
-                            assertThat(output, equivalentTo(Text.white(Text.bold(containerName) + Text(": image built, waiting for network to be ready..."))))
-                        }
-                    }
-                }
-            }
-
-            given("the container's image is a pre-existing image that needs to be pulled") {
-                val imageSource = PullImage("some-image")
-                val container = Container(containerName, imageSource, volumeMounts = setOf(CacheMount("some-cache", "/cache")))
-
-                val line: ContainerStartupProgressLine by createForEachTest {
-                    ContainerStartupProgressLine(container, setOf(dependencyA, dependencyB, dependencyC), false)
-                }
-
-                on("initial state") {
-                    val output by runForEachTest { line.print() }
-
-                    it("prints that the container is waiting to pull its image") {
-                        assertThat(output, equivalentTo(Text.white(Text.bold(containerName) + Text(": ready to pull image"))))
-                    }
-                }
-
-                describe("after receiving an 'image pulled' notification") {
-                    val event = ImagePulledEvent(imageSource, DockerImage("some-image"))
-
-                    on("when the task network has already been created") {
-                        beforeEachTest {
-                            line.onEventPosted(TaskNetworkCreatedEvent(DockerNetwork("some-network")))
-                        }
-
-                        on("when cache initialisation has not completed") {
-                            beforeEachTest {
-                                line.onEventPosted(event)
-                            }
-
-                            val output by runForEachTest { line.print() }
-
-                            it("prints that the container is ready to be created") {
-                                assertThat(output, equivalentTo(Text.white(Text.bold(containerName) + Text(": waiting for cache initialisation to finish..."))))
-                            }
-                        }
-
-                        on("when cache initialisation has completed") {
-                            beforeEachTest {
-                                line.onEventPosted(CachesInitialisedEvent)
-                                line.onEventPosted(event)
-                            }
-
-                            val output by runForEachTest { line.print() }
-
-                            it("prints that the container is ready to be created") {
-                                assertThat(output, equivalentTo(Text.white(Text.bold(containerName) + Text(": image pulled, ready to create container"))))
-                            }
-                        }
-                    }
-
-                    on("when the task network has not already been created") {
-                        beforeEachTest { line.onEventPosted(event) }
-                        val output by runForEachTest { line.print() }
-
-                        it("prints that the container is waiting for the network to be ready") {
-                            assertThat(output, equivalentTo(Text.white(Text.bold(containerName) + Text(": image pulled, waiting for network to be ready..."))))
-                        }
                     }
                 }
             }

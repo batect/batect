@@ -20,7 +20,6 @@ import batect.execution.model.events.TaskEventSink
 import batect.execution.model.steps.runners.BuildImageStepRunner
 import batect.execution.model.steps.runners.CreateContainerStepRunner
 import batect.execution.model.steps.runners.DeleteTaskNetworkStepRunner
-import batect.execution.model.steps.runners.InitialiseCachesStepRunner
 import batect.execution.model.steps.runners.PrepareTaskNetworkStepRunner
 import batect.execution.model.steps.runners.PullImageStepRunner
 import batect.execution.model.steps.runners.RemoveContainerStepRunner
@@ -37,7 +36,6 @@ class TaskStepRunner(private val kodein: DirectDI) {
             is BuildImageStep -> kodein.instance<BuildImageStepRunner>().run(step, eventSink)
             is PullImageStep -> kodein.instance<PullImageStepRunner>().run(step, eventSink)
             is PrepareTaskNetworkStep -> kodein.instance<PrepareTaskNetworkStepRunner>().run(eventSink)
-            is InitialiseCachesStep -> kodein.instance<InitialiseCachesStepRunner>().run(eventSink)
             is CreateContainerStep -> kodein.instance<CreateContainerStepRunner>().run(step, eventSink)
             is RunContainerStep -> kodein.instance<RunContainerStepRunner>().run(step, eventSink)
             is WaitForContainerToBecomeHealthyStep -> kodein.instance<WaitForContainerToBecomeHealthyStepRunner>().run(step, eventSink)

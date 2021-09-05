@@ -17,13 +17,11 @@
 package batect.ui.fancy
 
 import batect.config.BuildImage
-import batect.config.CacheMount
 import batect.config.Container
 import batect.config.PullImage
 import batect.config.SetupCommand
 import batect.docker.build.BuildProgress
 import batect.docker.pull.ImagePullProgress
-import batect.execution.model.events.CachesInitialisedEvent
 import batect.execution.model.events.ContainerBecameHealthyEvent
 import batect.execution.model.events.ContainerBecameReadyEvent
 import batect.execution.model.events.ContainerCreatedEvent
@@ -59,8 +57,6 @@ data class ContainerStartupProgressLine(val container: Container, val dependenci
     private var isHealthy = false
     private var isRunning = false
     private var networkIsReady = false
-    private val needsCacheInitialisation = container.volumeMounts.any { it is CacheMount }
-    private var cacheInitialised = false
 
     private var setupCommandState: SetupCommandState = if (container.setupCommands.isEmpty()) {
         SetupCommandState.None
@@ -80,10 +76,9 @@ data class ContainerStartupProgressLine(val container: Container, val dependenci
             isStarting -> TextRun("starting container...")
             hasBeenCreated -> descriptionWhenWaitingToStart()
             isCreating -> TextRun("creating container...")
-            (hasBeenPulled || hasBeenBuilt) && networkIsReady && !cacheInitialised && needsCacheInitialisation -> TextRun("waiting for cache initialisation to finish...")
-            hasBeenBuilt && networkIsReady && (cacheInitialised || !needsCacheInitialisation) -> TextRun("image built, ready to create container")
+            hasBeenBuilt && networkIsReady -> TextRun("image built, ready to create container")
             hasBeenBuilt && !networkIsReady -> TextRun("image built, waiting for network to be ready...")
-            hasBeenPulled && networkIsReady && (cacheInitialised || !needsCacheInitialisation) -> TextRun("image pulled, ready to create container")
+            hasBeenPulled && networkIsReady -> TextRun("image pulled, ready to create container")
             hasBeenPulled && !networkIsReady -> TextRun("image pulled, waiting for network to be ready...")
             isBuilding && lastBuildProgressUpdate == null -> TextRun("building image...")
             isBuilding && lastBuildProgressUpdate != null -> descriptionWhenBuilding()
@@ -161,7 +156,6 @@ data class ContainerStartupProgressLine(val container: Container, val dependenci
             is ContainerBecameHealthyEvent -> onContainerBecameHealthyEventPosted(event)
             is ContainerBecameReadyEvent -> onContainerBecameReadyEventPosted(event)
             is RunningSetupCommandEvent -> onRunningSetupCommandEventPosted(event)
-            is CachesInitialisedEvent -> cacheInitialised = true
             is StepStartingEvent -> onStepStarting(event.step)
         }
     }

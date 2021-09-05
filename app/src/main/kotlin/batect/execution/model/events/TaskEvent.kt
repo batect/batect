@@ -44,9 +44,6 @@ sealed class TaskEvent(
 )
 
 @Serializable
-object CachesInitialisedEvent : TaskEvent()
-
-@Serializable
 data class ContainerBecameHealthyEvent(val container: Container) : TaskEvent()
 
 @Serializable
@@ -145,9 +142,6 @@ data class SetupCommandExecutionErrorEvent(val container: Container, val command
 
 @Serializable
 data class SetupCommandFailedEvent(val container: Container, val command: SetupCommand, val exitCode: Int, val output: String) : TaskFailedEvent()
-
-@Serializable
-data class CacheInitialisationFailedEvent(val message: String) : TaskFailedEvent()
 
 fun LogMessageBuilder.data(key: String, value: TaskEvent) = this.data(key, value, TaskEvent.serializer())
 fun LogMessageBuilder.data(key: String, value: Set<TaskEvent>) = this.data(key, value, SetSerializer(TaskEvent.serializer()))

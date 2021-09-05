@@ -36,7 +36,6 @@ class CompletionTestBase(ABC):
             "--docker-tls-verify",
             "--enable-buildkit",
             "--help",
-            "--linux-cache-init-image",
             "--list-tasks",
             "--log-file",
             "--max-parallelism",

@@ -30,10 +30,10 @@ data class DeviceMount(
     @SerialName("options") val options: String? = null
 ) {
     override fun toString(): String {
-        if (options == null) {
-            return "$localPath:$containerPath"
+        return if (options == null) {
+            "$localPath:$containerPath"
         } else {
-            return "$localPath:$containerPath:$options"
+            "$localPath:$containerPath:$options"
         }
     }
 

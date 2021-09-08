@@ -44,10 +44,10 @@ class OptionParser {
         val option = optionNames[argName]
 
         if (option == null) {
-            if (argName.startsWith("-")) {
-                return OptionParsingResult.InvalidOption("Invalid option '$argName'. Run './batect --help' for a list of valid options.")
+            return if (argName.startsWith("-")) {
+                OptionParsingResult.InvalidOption("Invalid option '$argName'. Run './batect --help' for a list of valid options.")
             } else {
-                return OptionParsingResult.NoOption
+                OptionParsingResult.NoOption
             }
         }
 

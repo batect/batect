@@ -23,14 +23,14 @@ data class Command(val originalCommand: String, val parsedCommand: List<String>)
     }
 
     private fun formatNewArguments(newArguments: Iterable<String>): String {
-        if (newArguments.any()) {
-            return " " + newArguments
+        return if (newArguments.any()) {
+            " " + newArguments
                 .map { it.replace("$singleQuote", "$backslash$singleQuote") }
                 .map { it.replace("$doubleQuote", "$backslash$doubleQuote") }
                 .map { if (it.contains(' ')) doubleQuote + it + doubleQuote else it }
                 .joinToString(" ")
         } else {
-            return ""
+            ""
         }
     }
 

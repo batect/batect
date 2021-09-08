@@ -237,9 +237,9 @@ internal class NativeMethods(
     }
 
     private fun waitForEvent(event: HANDLE, timeoutInMilliseconds: Int): WaitResult {
-        when (win32.WaitForSingleObject(event, timeoutInMilliseconds)) {
-            WAIT_OBJECT_0 -> return WaitResult.Signaled
-            WAIT_TIMEOUT -> return WaitResult.TimedOut
+        return when (win32.WaitForSingleObject(event, timeoutInMilliseconds)) {
+            WAIT_OBJECT_0 -> WaitResult.Signaled
+            WAIT_TIMEOUT -> WaitResult.TimedOut
             WAIT_ABANDONED -> throw RuntimeException("WaitForSingleObject returned WAIT_ABANDONED")
             else -> throwWindowsNativeMethodFailed(Win32::WaitForSingleObject, posix)
         }

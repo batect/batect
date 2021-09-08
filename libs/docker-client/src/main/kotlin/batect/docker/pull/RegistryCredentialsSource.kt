@@ -45,10 +45,10 @@ data class BasicCredentialsSource(val encodedCredentials: String, val serverAddr
                 throw DockerRegistryCredentialsException("Decoded credentials for '$serverAddress' are not valid.")
             }
 
-            if (parts[0] == "<token>") {
-                return TokenRegistryCredentials(parts[1], serverAddress)
+            return if (parts[0] == "<token>") {
+                TokenRegistryCredentials(parts[1], serverAddress)
             } else {
-                return PasswordRegistryCredentials(parts[0], parts[1], serverAddress)
+                PasswordRegistryCredentials(parts[0], parts[1], serverAddress)
             }
         } catch (_: IllegalArgumentException) {
             throw DockerRegistryCredentialsException("Could not decode credentials for '$serverAddress'.")
@@ -90,10 +90,10 @@ data class HelperBasedCredentialsSource(val helperName: String, val serverAddres
 
         val serverUrl = parsed.getStringMember("ServerURL")
 
-        if (username == "<token>") {
-            return TokenRegistryCredentials(secret, serverUrl)
+        return if (username == "<token>") {
+            TokenRegistryCredentials(secret, serverUrl)
         } else {
-            return PasswordRegistryCredentials(username, secret, serverUrl)
+            PasswordRegistryCredentials(username, secret, serverUrl)
         }
     }
 

@@ -237,9 +237,9 @@ class CommandLineOptionsParser(
     private val generateShellTabCompletionTaskInformation: Shell? by valueOption(hiddenOptionsGroup, "generate-completion-task-info", "Generate shell tab completion task information for given shell.", ValueConverters.enum<Shell>(), showInHelp = false)
 
     fun parse(args: Iterable<String>): CommandLineOptionsParsingResult {
-        when (val result = optionParser.parseOptions(args)) {
-            is OptionsParsingResult.InvalidOptions -> return CommandLineOptionsParsingResult.Failed(result.message)
-            is OptionsParsingResult.ReadOptions -> return parseTaskName(args.drop(result.argumentsConsumed))
+        return when (val result = optionParser.parseOptions(args)) {
+            is OptionsParsingResult.InvalidOptions -> CommandLineOptionsParsingResult.Failed(result.message)
+            is OptionsParsingResult.ReadOptions -> parseTaskName(args.drop(result.argumentsConsumed))
         }
     }
 

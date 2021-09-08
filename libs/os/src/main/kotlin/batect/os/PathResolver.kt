@@ -25,14 +25,14 @@ data class PathResolver(val context: PathResolutionContext, private val systemPr
     private val homeDir = getPath(systemProperties.getProperty("user.home"))
 
     fun resolve(path: String): PathResolutionResult {
-        try {
+        return try {
             val originalPath = resolveHomeDir(getPath(path))
             val resolvedPath = context.relativeTo.resolve(originalPath).normalize().toAbsolutePath()
             val description = context.getResolutionDescription(resolvedPath)
 
-            return PathResolutionResult.Resolved(path, resolvedPath, pathType(resolvedPath), description)
+            PathResolutionResult.Resolved(path, resolvedPath, pathType(resolvedPath), description)
         } catch (e: InvalidPathException) {
-            return PathResolutionResult.InvalidPath(path)
+            PathResolutionResult.InvalidPath(path)
         }
     }
 
@@ -41,10 +41,10 @@ data class PathResolver(val context: PathResolutionContext, private val systemPr
     private fun resolveHomeDir(path: Path): Path {
         val homeSymbol = getPath("~")
 
-        if (path.startsWith(homeSymbol)) {
-            return homeDir.resolve(homeSymbol.relativize(path))
+        return if (path.startsWith(homeSymbol)) {
+            homeDir.resolve(homeSymbol.relativize(path))
         } else {
-            return path
+            path
         }
     }
 

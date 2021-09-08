@@ -33,11 +33,11 @@ fun hasMessage(messageCriteria: Matcher<LogMessage>): Matcher<InMemoryLogSink> {
                 return MatchResult.Mismatch("no messages were logged")
             }
 
-            if (actual.loggedMessages.any { messageCriteria(it) == MatchResult.Match }) {
-                return MatchResult.Match
+            return if (actual.loggedMessages.any { messageCriteria(it) == MatchResult.Match }) {
+                MatchResult.Match
             } else {
                 val logMessages = actual.loggedMessages.joinToString("\n")
-                return MatchResult.Mismatch("none of the logged messaged matched that criteria, messages logged were:\n$logMessages")
+                MatchResult.Mismatch("none of the logged messaged matched that criteria, messages logged were:\n$logMessages")
             }
         }
 
@@ -53,10 +53,10 @@ fun withException(key: String, exception: Throwable): Matcher<LogMessage> = with
 
 fun withAdditionalData(key: String, value: Any?): Matcher<LogMessage> = object : Matcher.Primitive<LogMessage>() {
     override fun invoke(actual: LogMessage): MatchResult {
-        if (actual.additionalData.containsKey(key) && (actual.additionalData.get(key) as JsonableObject<*>).value == value) {
-            return MatchResult.Match
+        return if (actual.additionalData.containsKey(key) && (actual.additionalData.get(key) as JsonableObject<*>).value == value) {
+            MatchResult.Match
         } else {
-            return MatchResult.Mismatch("was ${describe(actual)}")
+            MatchResult.Mismatch("was ${describe(actual)}")
         }
     }
 
@@ -66,10 +66,10 @@ fun withAdditionalData(key: String, value: Any?): Matcher<LogMessage> = object :
 
 fun withAdditionalDataAndAnyValue(key: String): Matcher<LogMessage> = object : Matcher.Primitive<LogMessage>() {
     override fun invoke(actual: LogMessage): MatchResult {
-        if (actual.additionalData.containsKey(key)) {
-            return MatchResult.Match
+        return if (actual.additionalData.containsKey(key)) {
+            MatchResult.Match
         } else {
-            return MatchResult.Mismatch("was ${describe(actual)}")
+            MatchResult.Mismatch("was ${describe(actual)}")
         }
     }
 

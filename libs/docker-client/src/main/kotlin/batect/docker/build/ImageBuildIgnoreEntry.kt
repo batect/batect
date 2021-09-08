@@ -55,11 +55,7 @@ data class ImageBuildIgnoreEntry(val pattern: String, val inverted: Boolean) {
                     }
                 }
                 '\\' -> {
-                    val followingChar = patternToUse.getOrNull(currentIndex + 1)
-
-                    if (followingChar == null) {
-                        throw invalidPattern()
-                    }
+                    val followingChar = patternToUse.getOrNull(currentIndex + 1) ?: throw invalidPattern()
 
                     currentIndex++
 

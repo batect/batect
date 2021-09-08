@@ -35,7 +35,7 @@ class ProxyEnvironmentVariablesProvider(
 
     fun getProxyEnvironmentVariables(extraNoProxyEntries: Set<String>): Map<String, String> {
         val variables = allPossibleEnvironmentVariableNames
-            .associate { it to hostEnvironmentVariables.getMatchingCaseOrOtherCase(it) }
+            .associateWith { hostEnvironmentVariables.getMatchingCaseOrOtherCase(it) }
             .filterValues { it != null }
             .mapValues { (_, value) -> value!! }
             .mapValues { (name, value) ->

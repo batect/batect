@@ -25,7 +25,7 @@ import java.nio.file.FileSystem
 import java.nio.file.Path
 import java.util.Properties
 
-@Serializable()
+@Serializable
 class SystemInfo(
     val operatingSystem: OperatingSystem,
     val osName: String,

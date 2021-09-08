@@ -69,11 +69,11 @@ data class ContainerCreationRequest(
             put("Env", environmentVariables.toDockerFormatJsonArray())
             put("ExposedPorts", formatExposedPorts())
 
-            if (command.count() > 0) {
+            if (command.isNotEmpty()) {
                 put("Cmd", command.toJsonArray())
             }
 
-            if (entrypoint.count() > 0) {
+            if (entrypoint.isNotEmpty()) {
                 put("Entrypoint", entrypoint.toJsonArray())
             }
 

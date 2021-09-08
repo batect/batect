@@ -69,7 +69,7 @@ class StartupProgressDisplay(
 
         console.moveCursorUp(newStatus.size - firstLineWithChange)
 
-        for (i in firstLineWithChange..newStatus.size - 1) {
+        for (i in firstLineWithChange until newStatus.size) {
             val new = newStatus[i]
             val old = lastStatus[i]
 

@@ -59,8 +59,8 @@ class HelpCommand(
     private fun nameFor(option: OptionDefinition): String {
         val longNamePart = if (option.acceptsValue) "${option.longOption}=${option.valueFormatForHelp}" else option.longOption
 
-        return when {
-            option.shortName == null -> "    $longNamePart"
+        return when (option.shortName) {
+            null -> "    $longNamePart"
             else -> "${option.shortOption}, $longNamePart"
         }
     }

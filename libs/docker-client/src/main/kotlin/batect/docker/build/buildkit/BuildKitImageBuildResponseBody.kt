@@ -402,10 +402,10 @@ class BuildKitImageBuildResponseBody : ImageBuildResponseBody {
 
                 val layersInEarliestOperation = layers.values.filter { it.currentOperation == operationToReportOn }
                 val layersInLaterOperations = layers.values.filter { it.currentOperation > operationToReportOn }
-                val completedBytes = layersInEarliestOperation.map { it.completedBytes }.sum() +
-                    layersInLaterOperations.map { it.totalBytes }.sum()
+                val completedBytes = layersInEarliestOperation.sumOf { it.completedBytes } +
+                    layersInLaterOperations.sumOf { it.totalBytes }
 
-                val totalBytes = layers.values.map { it.totalBytes }.sum()
+                val totalBytes = layers.values.sumOf { it.totalBytes }
 
                 ActiveImageBuildStep.Downloading(stepIndex, name, operationToReportOn, completedBytes, totalBytes)
             }

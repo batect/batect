@@ -27,8 +27,7 @@ data class Command(val originalCommand: String, val parsedCommand: List<String>)
             " " + newArguments
                 .map { it.replace("$singleQuote", "$backslash$singleQuote") }
                 .map { it.replace("$doubleQuote", "$backslash$doubleQuote") }
-                .map { if (it.contains(' ')) doubleQuote + it + doubleQuote else it }
-                .joinToString(" ")
+                .joinToString(" ") { if (it.contains(' ')) doubleQuote + it + doubleQuote else it }
         } else {
             ""
         }

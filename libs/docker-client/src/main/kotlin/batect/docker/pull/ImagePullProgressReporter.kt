@@ -72,7 +72,7 @@ class ImagePullProgressReporter {
         val currentOperation = if (extractionPhase) {
             layerStates.values.map { it.currentOperation }.filter { it >= DownloadOperation.Extracting }.minOrNull()!!
         } else {
-            layerStates.values.map { it.currentOperation }.minOrNull()!!
+            layerStates.values.minOf { it.currentOperation }
         }
 
         val layersInCurrentOperation = layerStates.values.filter { it.currentOperation == currentOperation }

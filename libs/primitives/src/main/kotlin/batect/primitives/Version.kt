@@ -62,23 +62,11 @@ data class Version(val major: Int, val minor: Int, val patch: Int, val suffix: S
         }
 
         private fun MatchResult.getIntegerMatch(index: Int): Int {
-            val group = this.groups[index]
-
-            if (group == null) {
-                return 0
-            } else {
-                return group.value.toInt()
-            }
+            return groups[index]?.value?.toInt() ?: 0
         }
 
         private fun MatchResult.getStringMatch(index: Int): String {
-            val group = this.groups[index]
-
-            if (group == null) {
-                return ""
-            } else {
-                return group.value
-            }
+            return groups[index]?.value.orEmpty()
         }
 
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("version", PrimitiveKind.STRING)

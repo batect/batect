@@ -66,5 +66,5 @@ class BashShellTabCompletionScriptGenerator : ShellTabCompletionScriptGenerator 
     }
 
     private val OptionDefinition.optionNames: Set<String>
-        get() = if (shortOption != null) setOf(shortOption, longOption) else setOf(longOption)
+        get() = setOfNotNull(shortOption, longOption)
 }

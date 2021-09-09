@@ -52,8 +52,7 @@ object ValueConverters {
     }
 
     inline fun <reified T : Enum<T>> enum(): ValueConverter<T> {
-        val valueMap = enumValues<T>()
-            .associate { it.name.lowercase(Locale.ROOT) to it }
+        val valueMap = enumValues<T>().associateBy { it.name.lowercase(Locale.ROOT) }
 
         return EnumValueConverter<T>(valueMap)
     }

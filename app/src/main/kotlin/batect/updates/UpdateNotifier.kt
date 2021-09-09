@@ -59,8 +59,8 @@ class UpdateNotifier(
     }
 
     private fun tryToLoadCachedInfo(): UpdateInfo? {
-        try {
-            return updateInfoStorage.read()
+        return try {
+            updateInfoStorage.read()
         } catch (e: Throwable) {
             logger.warn {
                 message("Could not load cached update information.")
@@ -69,7 +69,7 @@ class UpdateNotifier(
 
             telemetrySessionBuilder.addUnhandledExceptionEvent(e, isUserFacing = false)
 
-            return null
+            null
         }
     }
 

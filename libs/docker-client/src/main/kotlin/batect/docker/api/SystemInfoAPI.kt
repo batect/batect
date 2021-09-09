@@ -107,9 +107,7 @@ class SystemInfoAPI(
                 throw DockerException("Could not ping Docker daemon, daemon responded with HTTP ${response.code}: $responseBody")
             }
 
-            val builderVersionHeader = response.headers.get("Builder-Version") ?: "1"
-
-            return when (builderVersionHeader) {
+            return when (val builderVersionHeader = response.headers["Builder-Version"] ?: "1") {
                 "", "1" -> PingResponse(BuilderVersion.Legacy)
                 "2" -> PingResponse(BuilderVersion.BuildKit)
                 else -> throw DockerException("Docker daemon responded with unknown Builder-Version '$builderVersionHeader'.")

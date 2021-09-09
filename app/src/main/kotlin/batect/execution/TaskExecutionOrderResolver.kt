@@ -94,12 +94,12 @@ class TaskExecutionOrderResolver(
             } else {
                 val literalEnd = this.indexOf('*', nextIndex)
 
-                if (literalEnd == -1) {
+                nextIndex = if (literalEnd == -1) {
                     builder.append(Regex.escape(this.substring(nextIndex)))
-                    nextIndex = this.length
+                    this.length
                 } else {
                     builder.append(Regex.escape(this.substring(nextIndex, literalEnd)))
-                    nextIndex = literalEnd
+                    literalEnd
                 }
             }
         }

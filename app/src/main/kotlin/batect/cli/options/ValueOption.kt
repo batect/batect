@@ -87,10 +87,10 @@ class ValueOption<StorageType, ValueType : StorageType>(
         get() {
             val defaultDescription = defaultValueProvider.description
 
-            if (defaultDescription == "") {
-                return description
+            return if (defaultDescription == "") {
+                description
             } else {
-                return "$description $defaultDescription"
+                "$description $defaultDescription"
             }
         }
 }

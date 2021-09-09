@@ -238,10 +238,7 @@ class MacOSStatFactory(private val posix: POSIX) : PosixStatFactory(posix) {
 class LinuxStatFactory(private val posix: POSIX) : PosixStatFactory(posix) {
     override fun getExtendedAttributes(path: Path): Map<String, ByteString> {
         val attributeView = Files.getFileAttributeView(path, UserDefinedFileAttributeView::class.java, LinkOption.NOFOLLOW_LINKS)
-
-        if (attributeView == null) {
-            throw UnsupportedOperationException("Extended file attributes not supported.")
-        }
+            ?: throw UnsupportedOperationException("Extended file attributes not supported.")
 
         try {
             return attributeView.list().associateWith { name -> attributeView.getAttributeValue(name) }

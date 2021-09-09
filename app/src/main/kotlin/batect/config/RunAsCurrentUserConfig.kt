@@ -65,18 +65,18 @@ sealed class RunAsCurrentUserConfig {
                 }
             }
 
-            if (enabled) {
+            return if (enabled) {
                 if (homeDirectory == null) {
                     throw ConfigurationException("Running as the current user has been enabled, but a home directory for that user has not been provided.", input.node)
                 }
 
-                return RunAsCurrentUser(homeDirectory)
+                RunAsCurrentUser(homeDirectory)
             } else {
                 if (homeDirectory != null) {
                     throw ConfigurationException("Running as the current user has not been enabled, but a home directory for that user has been provided.", input.node)
                 }
 
-                return RunAsDefaultContainerUser
+                RunAsDefaultContainerUser
             }
         }
 

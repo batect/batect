@@ -42,17 +42,17 @@ class SystemInfoClient(
     // It's used in a number of places where throwing exceptions would be undesirable or unsafe (eg. during logging startup
     // and when showing version info), so instead we wrap the result.
     fun getDockerVersionInfo(): DockerVersionInfoRetrievalResult {
-        try {
+        return try {
             val info = api.getServerVersionInfo()
 
-            return DockerVersionInfoRetrievalResult.Succeeded(info)
+            DockerVersionInfoRetrievalResult.Succeeded(info)
         } catch (t: Throwable) {
             logger.error {
                 message("An exception was thrown while getting Docker version info.")
                 exception(t)
             }
 
-            return DockerVersionInfoRetrievalResult.Failed("Could not get Docker version information because ${t.javaClass.simpleName} was thrown: ${t.message}")
+            DockerVersionInfoRetrievalResult.Failed("Could not get Docker version information because ${t.javaClass.simpleName} was thrown: ${t.message}")
         }
     }
 

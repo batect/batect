@@ -58,7 +58,7 @@ object ContainerEndToEndIntegrationTest : Spek({
                     mapOf(
                         "using a TTY" to true,
                         "not using a TTY" to false
-                    ).forEach { description, useTTY ->
+                    ).forEach { (description, useTTY) ->
                         describe(description) {
                             val output by runBeforeGroup {
                                 val outputStream = ByteArrayOutputStream()

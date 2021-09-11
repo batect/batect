@@ -106,15 +106,7 @@ tasks.register("validateSampleFilesAgainstSchema") {
 
     doLast {
         val schema = loadSchema(schemaFile)
-        val failingFiles = mutableListOf<File>()
-
-        configFiles.forEach {
-            val succeeded = validateFileAgainstSchema(it, schema)
-
-            if (!succeeded) {
-                failingFiles += it
-            }
-        }
+        val failingFiles = configFiles.filterNot { validateFileAgainstSchema(it, schema) }
 
         if (failingFiles.isNotEmpty()) {
             throw RuntimeException("Schema validation failed for ${failingFiles.size} file(s).")

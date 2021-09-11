@@ -74,16 +74,16 @@ fun validateFileAgainstSchema(fileToValidate: File, schema: JsonSchema): Boolean
         false
     }
 
-fun printReport(report: ProcessingReport, sourceFile: File) {
-    val schemaLogLevelsToGradleLogLevels = mapOf(
-        LogLevel.DEBUG to org.gradle.api.logging.LogLevel.DEBUG,
-        LogLevel.ERROR to org.gradle.api.logging.LogLevel.ERROR,
-        LogLevel.FATAL to org.gradle.api.logging.LogLevel.ERROR,
-        LogLevel.INFO to org.gradle.api.logging.LogLevel.INFO,
-        LogLevel.NONE to org.gradle.api.logging.LogLevel.INFO,
-        LogLevel.WARNING to org.gradle.api.logging.LogLevel.WARN
-    )
+private val schemaLogLevelsToGradleLogLevels = mapOf(
+    LogLevel.DEBUG to org.gradle.api.logging.LogLevel.DEBUG,
+    LogLevel.ERROR to org.gradle.api.logging.LogLevel.ERROR,
+    LogLevel.FATAL to org.gradle.api.logging.LogLevel.ERROR,
+    LogLevel.INFO to org.gradle.api.logging.LogLevel.INFO,
+    LogLevel.NONE to org.gradle.api.logging.LogLevel.INFO,
+    LogLevel.WARNING to org.gradle.api.logging.LogLevel.WARN
+)
 
+fun printReport(report: ProcessingReport, sourceFile: File) {
     report.forEach {
         logger.log(schemaLogLevelsToGradleLogLevels[it.logLevel], "${it.logLevel}: $sourceFile: $it")
     }

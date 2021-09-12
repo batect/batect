@@ -22,7 +22,8 @@
     {
       "fileMatch": [
         ".groovy$",
-        ".gradle$"
+        ".gradle$",
+        ".gradle.kts$"
       ],
       "matchStrings": [
         "ktlint\\(\"(?<currentValue>[\\d.]*?)\"\\)"

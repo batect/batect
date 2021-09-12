@@ -80,20 +80,24 @@ tasks.named("check").configure {
 }
 
 checkUnitTestLayout {
-    ignoreFileNameCheck.set(fileTree("src/unitTest/kotlin") {
-        include(
-            "batect/cli/commands/FakeDockerConnectivity.kt",
-            "batect/testutils/**",
-            "batect/config/ExceptionMatchers.kt"
-        )
-    })
+    ignoreFileNameCheck.set(
+        fileTree("src/unitTest/kotlin") {
+            include(
+                "batect/cli/commands/FakeDockerConnectivity.kt",
+                "batect/testutils/**",
+                "batect/config/ExceptionMatchers.kt"
+            )
+        }
+    )
 
-    ignoreMissingMainFile.set(fileTree("src/unitTest/kotlin") {
-        include(
-            "batect/execution/model/steps/*.kt",
-            "batect/execution/model/events/*.kt"
-        )
-    })
+    ignoreMissingMainFile.set(
+        fileTree("src/unitTest/kotlin") {
+            include(
+                "batect/execution/model/steps/*.kt",
+                "batect/execution/model/events/*.kt"
+            )
+        }
+    )
 }
 
 apply {

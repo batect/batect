@@ -1,5 +1,5 @@
 /*
-   Copyright 2017-2020 Charles Korn.
+   Copyright 2017-2021 Charles Korn.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -15,14 +15,7 @@
 */
 
 import batect.buildtools.GoogleCloudStorageUpload
-import com.google.auth.oauth2.GoogleCredentials
-import com.google.cloud.storage.BlobId
-import com.google.cloud.storage.BlobInfo
-import com.google.cloud.storage.Storage
-import com.google.cloud.storage.StorageOptions
-import java.io.FileInputStream
 import java.nio.file.Files
-import java.io.ByteArrayInputStream
 
 
 buildscript {

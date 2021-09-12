@@ -4,7 +4,6 @@
 *.conf           text       eol=lf
 *.editorconfig   text       eol=lf
 *.gradle         text       eol=lf
-*.groovy         text       eol=lf
 *.html           text       eol=lf
 *.java           text       eol=lf
 *.kt             text       eol=lf

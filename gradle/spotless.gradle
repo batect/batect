@@ -50,12 +50,6 @@ spotless {
         licenseHeader "/*$licenseText*/\n\n", "(//|apply|def|ext|import|plugins|rootProject|sourceSets|tasks|buildscript|pluginManagement)"
     }
 
-    format "groovy", {
-        target "**/*.groovy"
-
-        licenseHeader "/*$licenseText*/\n\n", "package"
-    }
-
     kotlinGradle {
         target "**/*.gradle.kts"
 

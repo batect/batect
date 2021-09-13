@@ -21,7 +21,6 @@
   "regexManagers": [
     {
       "fileMatch": [
-        ".groovy$",
         ".gradle$",
         ".gradle.kts$"
       ],
@@ -33,7 +32,7 @@
     },
     {
       "fileMatch": [
-        "KotlinPlugin.groovy$"
+        "KotlinPlugin.kt$"
       ],
       "matchStrings": [
         "jacoco {\\s+toolVersion = '(?<currentValue>[\\d.]*?)'"

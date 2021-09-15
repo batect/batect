@@ -14,11 +14,11 @@
    limitations under the License.
 */
 
-tasks.register("build", Copy) {
-    description "Build the wrapper scripts."
-    group "Build"
+tasks.register<Copy>("build") {
+    description = "Build the wrapper scripts."
+    group = "Build"
 
-    from project("unix").getTasksByName("build", false)
-    from project("windows").getTasksByName("build", false)
-    into getBuildDir().toPath().resolve("build")
+    from(project("unix").getTasksByName("build", false))
+    from(project("windows").getTasksByName("build", false))
+    into(buildDir.resolve("build"))
 }

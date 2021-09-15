@@ -15,32 +15,33 @@
 */
 
 plugins {
-    id "com.diffplug.spotless"
+    id("com.diffplug.spotless")
+    application
 }
 
-apply plugin: "java"
-apply plugin: "application"
+application {
+    mainClassName = "testapp.Application"
+}
 
-mainClassName = "testapp.Application"
-
-jar {
+tasks.withType<Jar>().configureEach {
     manifest {
-        attributes(
-            "Main-Class": mainClassName
-        )
+        attributes["Main-Class"] = application.mainClassName
     }
 
-    archiveFileName = "testapp.jar"
+    archiveFileName.set("testapp.jar")
 }
 
-sourceCompatibility = JavaVersion.VERSION_1_8
-targetCompatibility = JavaVersion.VERSION_1_8
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
 
-ext.javaLicenseHeader = "/*$licenseText*/\n\n"
+val licenseText: String by rootProject.extra
+val javaLicenseHeader = "/*$licenseText*/\n\n"
 
 spotless {
     java {
-        licenseHeader javaLicenseHeader
+        licenseHeader(javaLicenseHeader)
 
         removeUnusedImports()
         trimTrailingWhitespace()

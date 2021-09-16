@@ -28,7 +28,7 @@ String getBuildDate() {
 }
 
 String versionInfoFileContents() {
-    "/*${rootProject.licenseText}*/\n\n" +
+    "/*${rootProject.licenseText}*/\n" +
         """
         |package batect
         |

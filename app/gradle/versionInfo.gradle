@@ -28,8 +28,9 @@ String getBuildDate() {
 }
 
 String versionInfoFileContents() {
-    kotlinLicenseHeader +
-        """ |package batect
+    "/*${rootProject.licenseText}*/\n\n" +
+        """
+        |package batect
         |
         |import batect.logging.LogMessageBuilder
         |import batect.primitives.ApplicationVersionInfoProvider

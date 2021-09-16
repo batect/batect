@@ -17,7 +17,6 @@
 package batect.buildtools
 
 import app.cash.licensee.LicenseeExtension
-import com.diffplug.gradle.spotless.SpotlessExtension
 import org.gradle.api.JavaVersion
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -32,7 +31,6 @@ import org.gradle.jvm.tasks.Jar
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.dependencies
-import org.gradle.kotlin.dsl.extra
 import org.gradle.kotlin.dsl.getByName
 import org.gradle.kotlin.dsl.getByType
 import org.gradle.kotlin.dsl.named
@@ -53,7 +51,6 @@ class KotlinPlugin : Plugin<Project> {
         }
 
         applyKotlin(project)
-        applySpotless(project)
         configureTesting(project)
         applyJacoco(project)
         configureJar(project)
@@ -77,39 +74,6 @@ class KotlinPlugin : Plugin<Project> {
             it.kotlinOptions {
                 jvmTarget = "1.8"
                 freeCompilerArgs = listOf("-progressive", "-Xopt-in=kotlin.RequiresOptIn")
-            }
-        }
-    }
-
-    private fun applySpotless(project: Project) {
-        project.plugins.apply("com.diffplug.spotless")
-
-        val licenseText = project.rootProject.extra.get("licenseText") as String
-        val kotlinLicenseHeader = "/*${licenseText}*/\n\n"
-        project.extensions.add("kotlinLicenseHeader", kotlinLicenseHeader)
-
-        project.extensions.configure<SpotlessExtension>() {
-            kotlin {
-                it.ktlint("0.41.0")
-
-                it.licenseHeader(kotlinLicenseHeader)
-
-                it.trimTrailingWhitespace()
-                it.indentWithSpaces()
-                it.endWithNewline()
-
-                it.targetExclude("build/**")
-                it.targetExclude("src/generated/**")
-            }
-        }
-
-        project.afterEvaluate {
-            project.tasks.named<Task>("spotlessKotlinCheck") {
-                mustRunAfter("test")
-            }
-
-            project.tasks.named<Task>("spotlessKotlin") {
-                mustRunAfter("test")
             }
         }
     }

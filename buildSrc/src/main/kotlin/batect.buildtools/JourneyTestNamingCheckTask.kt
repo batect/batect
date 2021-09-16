@@ -66,7 +66,7 @@ abstract class JourneyTestNamingCheckTask : DefaultTask() {
     }
 
     private fun endsWithAllowedSuffix(file: File): Boolean {
-        return allowedSuffixes.any {file.name.endsWith(it) }
+        return allowedSuffixes.any { file.name.endsWith(it) }
     }
 
     class JourneyTestNamingException(message: String) : RuntimeException(message)

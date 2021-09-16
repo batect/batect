@@ -15,7 +15,6 @@
 */
 
 plugins {
-    id("com.diffplug.spotless")
     application
 }
 
@@ -34,18 +33,4 @@ tasks.withType<Jar>().configureEach {
 java {
     sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = JavaVersion.VERSION_1_8
-}
-
-val licenseText: String by rootProject.extra
-val javaLicenseHeader = "/*$licenseText*/\n\n"
-
-spotless {
-    java {
-        licenseHeader(javaLicenseHeader)
-
-        removeUnusedImports()
-        trimTrailingWhitespace()
-        indentWithSpaces()
-        endWithNewline()
-    }
 }

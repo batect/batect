@@ -25,7 +25,7 @@
         ".gradle.kts$"
       ],
       "matchStrings": [
-        "ktlint\\(\"(?<currentValue>[\\d.]*?)\"\\)"
+        "def ktlintVersion = \"(?<currentValue>[\\d.]*?)\""
       ],
       "datasourceTemplate": "maven",
       "depNameTemplate": "com.pinterest:ktlint"

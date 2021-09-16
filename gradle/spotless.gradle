@@ -30,6 +30,10 @@ ext.licenseText = """
    limitations under the License.
 """
 
+def kotlinLicenseHeader = "/*$licenseText*/\n\n"
+def javaLicenseHeader = "/*$licenseText*/\n\n"
+def ktlintVersion = "0.42.1"
+
 spotless {
     format "misc", {
         target fileTree(
@@ -53,12 +57,38 @@ spotless {
     kotlinGradle {
         target "**/*.gradle.kts"
 
-        ktlint("0.42.1")
+        ktlint(ktlintVersion)
 
         // Check what values are really required with: find . -name '*.gradle.kts' -type f -exec sed -n 17p {} \; | cut -d' ' -f1 | sort | uniq
         // TODO: This confuses spotless plugin for settings.gradle.kts -- is
         //       this a spotless issue, or does this configuration need more
         //       specificity?
-        licenseHeader "/*$licenseText*/\n\n", "(val|import|pluginManagement|plugins|tasks|//)"
+        licenseHeader kotlinLicenseHeader, "(val|import|pluginManagement|plugins|tasks|//)"
+    }
+
+    kotlin {
+        target("**/*.kt")
+
+        ktlint(ktlintVersion)
+
+        licenseHeader(kotlinLicenseHeader)
+
+        trimTrailingWhitespace()
+        indentWithSpaces()
+        endWithNewline()
+
+        targetExclude("**/build/**")
+        targetExclude("**/src/generated/**")
+    }
+
+    java {
+        target("**/*.java")
+
+        licenseHeader(javaLicenseHeader)
+
+        removeUnusedImports()
+        trimTrailingWhitespace()
+        indentWithSpaces()
+        endWithNewline()
     }
 }

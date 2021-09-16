@@ -17,17 +17,6 @@
 import batect.buildtools.GoogleCloudStorageUpload
 import java.nio.file.Files
 
-
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-
-    dependencies {
-        classpath("com.google.cloud:google-cloud-storage:2.1.3")
-    }
-}
-
 val updateInfoFile = buildDir.resolve("updateInfo").resolve("latest.json")
 
 val generateUpdateInfoFile = tasks.register("generateUpdateInfoFile") {

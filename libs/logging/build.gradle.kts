@@ -14,17 +14,18 @@
     limitations under the License.
 */
 
+val kotlinxSerializationVersion: String by project
+val jnrPosixVersion: String by project
+val jimfsVersion: String by project
+
 plugins {
-    id "batect-kotlin"
+    id("batect-kotlin")
 }
 
 dependencies {
-    implementation platform("com.squareup.okhttp3:okhttp-bom:$okhttpVersion")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
+    implementation("com.github.jnr:jnr-posix:$jnrPosixVersion")
 
-    implementation "org.spekframework.spek2:spek-dsl-jvm:$spekVersion"
-    implementation "com.natpryce:hamkrest:$hamkrestVersion"
-    implementation "com.google.jimfs:jimfs:$jimfsVersion"
-    implementation "com.github.jnr:jnr-posix:$jnrPosixVersion"
-    implementation "com.squareup.okhttp3:okhttp"
-    implementation "org.mockito.kotlin:mockito-kotlin:$mockitoKotlinVersion"
+    testImplementation("com.google.jimfs:jimfs:$jimfsVersion")
+    testImplementation(project(":libs:test-utils"))
 }

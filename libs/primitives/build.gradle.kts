@@ -14,16 +14,19 @@
     limitations under the License.
 */
 
+val okhttpVersion: String by project
+val kotlinxSerializationVersion: String by project
+
 plugins {
-    id "batect-kotlin"
+    id("batect-kotlin")
 }
 
 dependencies {
-    implementation platform("com.squareup.okhttp3:okhttp-bom:$okhttpVersion")
+    implementation(platform("com.squareup.okhttp3:okhttp-bom:$okhttpVersion"))
 
-    implementation "org.jetbrains.kotlinx:kotlinx-serialization-core:$kotlinxSerializationVersion"
-    implementation "com.squareup.okhttp3:okhttp"
-    testImplementation "com.squareup.okhttp3:mockwebserver"
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:$kotlinxSerializationVersion")
+    implementation("com.squareup.okhttp3:okhttp")
+    testImplementation("com.squareup.okhttp3:mockwebserver")
 
-    testImplementation project(":libs:test-utils")
+    testImplementation(project(":libs:test-utils"))
 }

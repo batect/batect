@@ -14,10 +14,15 @@
     limitations under the License.
 */
 
-def libsCheckTask = tasks.register("check")
+plugins {
+    id("batect-kotlin")
+}
 
-subprojects { project ->
-    afterEvaluate {
-        libsCheckTask.configure { dependsOn(project.tasks.named("check")) }
-    }
+apply(from = "gradle/integrationTest.gradle")
+
+dependencies {
+    implementation(project(":libs:logging"))
+    implementation(project(":libs:os"))
+
+    testImplementation(project(":libs:test-utils"))
 }

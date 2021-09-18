@@ -276,8 +276,11 @@ class WrapperScriptTests(unittest.TestCase):
         if download_url is None:
             download_url = self.default_download_url()
 
+        inherited_env = os.environ.copy()
+        inherited_env.pop("JAVA_HOME", None)
+
         env = {
-            **os.environ,
+            **inherited_env,
             "BATECT_CACHE_DIR": self.cache_dir,
             "BATECT_DOWNLOAD_URL": download_url,
             "BATECT_DOWNLOAD_CHECKSUM": self.get_checksum_of_test_app(),

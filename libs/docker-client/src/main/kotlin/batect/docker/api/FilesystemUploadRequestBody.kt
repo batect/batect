@@ -34,6 +34,9 @@ data class FilesystemUploadRequestBody(val contents: Set<ContainerFilesystemItem
         val output = ByteArrayOutputStream()
 
         TarArchiveOutputStream(output).use { archive ->
+            archive.setLongFileMode(TarArchiveOutputStream.LONGFILE_POSIX)
+            // Required to support a uid larger than 2097151
+            archive.setBigNumberMode(TarArchiveOutputStream.BIGNUMBER_POSIX)
             contents.forEach { archive.add(it) }
         }
 

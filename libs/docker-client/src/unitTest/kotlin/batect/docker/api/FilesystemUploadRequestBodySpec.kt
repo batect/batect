@@ -42,7 +42,11 @@ object FilesystemUploadRequestBodySpec : Spek({
             val fileBytes = fileContent.toByteArray(Charsets.UTF_8)
 
             val itemsToUpload = setOf(
-                ContainerFile("file-1", 100, 200, fileBytes),
+                // Using a user id larger than 2097151 because this will trigger
+                //   `java.lang.IllegalArgumentException: user id '300000000' is too big ( > 2097151 ).`
+                //   if the underlying TarArchiveOutputStream's bigNumberMode is not set to a
+                //   configuration that will allow large numbers
+                ContainerFile("file-1", 300000001, 200, fileBytes),
                 ContainerDirectory("some-dir", 300, 400)
             )
 
@@ -67,7 +71,7 @@ object FilesystemUploadRequestBodySpec : Spek({
                 assertThat(
                     archive.entries,
                     anyElement(
-                        hasName("file-1") and hasUID(100) and hasGID(200) and isRegularFile() and hasEntrySize(fileBytes.size.toLong())
+                        hasName("file-1") and hasUID(300000001) and hasGID(200) and isRegularFile() and hasEntrySize(fileBytes.size.toLong())
                     )
                 )
 

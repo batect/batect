@@ -32,6 +32,8 @@ data class ImageBuildContextRequestBody(val context: ImageBuildContext) : Reques
     override fun writeTo(sink: BufferedSink) {
         TarArchiveOutputStream(sink.outputStream()).use { output ->
             output.setLongFileMode(TarArchiveOutputStream.LONGFILE_POSIX)
+            // Required to support a uid larger than 2097151
+            output.setBigNumberMode(TarArchiveOutputStream.BIGNUMBER_POSIX)
 
             context.entries.forEach { entry ->
                 writeEntry(entry, output)

@@ -102,26 +102,75 @@ class WrapperScriptTests(unittest.TestCase):
         self.assertIn("Java is not installed or not on your PATH. Please install it and try again.", result.stdout)
         self.assertNotEqual(result.returncode, 0)
 
-    def test_unsupported_java(self):
-        path_dir = self.create_limited_path_for_specific_java_version("7")
+    def test_no_java_in_java_home(self):
+        path_dir = self.create_limited_path()
+        java_home = "C:\\nonsense"
+
+        result = self.run_script([], path=path_dir, java_home=java_home)
+
+        self.assertIn("JAVA_HOME is set to 'C:\\nonsense', but there is no Java executable at 'C:\\nonsense\\bin\\java.exe'.", result.stdout)
+        self.assertNotEqual(result.returncode, 0)
+
+    def test_java_not_on_path_but_java_home_set(self):
+        path_dir = self.create_limited_path()
+        java_home = self.java_home_dir("8")
+
+        result = self.run_script([], path=path_dir, java_home=java_home)
+
+        self.assertIn("The application has started.", result.stdout)
+        self.assertEqual(result.returncode, 0)
+
+    def test_unsupported_java_on_path(self):
+        path_dir = self.create_limited_path_for_specific_java("7")
 
         result = self.run_script([], path=path_dir)
 
         self.assertIn("The version of Java that is available on your PATH is version 1.7, but version 1.8 or greater is required.\n" +
                       "If you have a newer version of Java installed, please make sure your PATH is set correctly.", result.stdout)
 
-        self.assertNotIn("The application has started.", result.stdout)
         self.assertNotEqual(result.returncode, 0)
 
-    def test_32bit_java(self):
-        path_dir = self.create_limited_path_for_specific_java_version("8-32bit")
+    def test_unsupported_java_in_java_home(self):
+        path_dir = self.create_limited_path_for_specific_java("8")
+        java_home = self.java_home_dir("7")
+
+        result = self.run_script([], path=path_dir, java_home=java_home)
+
+        self.assertIn("The version of Java that is available in JAVA_HOME is version 1.7, but version 1.8 or greater is required.\n" +
+                      "If you have a newer version of Java installed, please make sure JAVA_HOME is set correctly.\n" +
+                      "JAVA_HOME takes precedence over any versions of Java available on your PATH.", result.stdout)
+
+        self.assertNotEqual(result.returncode, 0)
+
+    def test_unsupported_java_on_path_with_supported_java_in_java_home(self):
+        path_dir = self.create_limited_path_for_specific_java("7")
+        java_home = self.java_home_dir("8")
+
+        result = self.run_script([], path=path_dir, java_home=java_home)
+
+        self.assertIn("The application has started.", result.stdout)
+        self.assertEqual(result.returncode, 0)
+
+    def test_32bit_java_on_path(self):
+        path_dir = self.create_limited_path_for_specific_java("8-32bit")
 
         result = self.run_script([], path=path_dir)
 
         self.assertIn("The version of Java that is available on your PATH is a 32-bit version, but Batect requires a 64-bit Java runtime.\n" +
                       "If you have a 64-bit version of Java installed, please make sure your PATH is set correctly.", result.stdout)
 
-        self.assertNotIn("The application has started.", result.stdout)
+        self.assertNotEqual(result.returncode, 0)
+
+    def test_32bit_java_in_java_home(self):
+        path_dir = self.create_limited_path_for_specific_java("8")
+        java_home = self.java_home_dir("8-32bit")
+
+        result = self.run_script([], path=path_dir, java_home=java_home)
+
+        self.assertIn("The version of Java that is available in JAVA_HOME is a 32-bit version, but Batect requires a 64-bit Java runtime.\n" +
+                      "If you have a 64-bit version of Java installed, please make sure JAVA_HOME is set correctly.\n" +
+                      "JAVA_HOME takes precedence over any versions of Java available on your PATH.", result.stdout)
+
         self.assertNotEqual(result.returncode, 0)
 
     def test_supported_java(self):
@@ -129,7 +178,7 @@ class WrapperScriptTests(unittest.TestCase):
 
         for version in [8, 9, 10, 11]:
             with self.subTest(java_version=version):
-                path_dir = self.create_limited_path_for_specific_java_version(version)
+                path_dir = self.create_limited_path_for_specific_java(version)
 
                 result = self.run_script([], path=path_dir)
 
@@ -143,7 +192,7 @@ class WrapperScriptTests(unittest.TestCase):
                 self.assertEqual(result.returncode, 0)
 
     def test_supported_java_with_tool_options_set(self):
-        path_dir = self.create_limited_path_for_specific_java_version("8")
+        path_dir = self.create_limited_path_for_specific_java("8")
 
         result = self.run_script([], path=path_dir, with_java_tool_options="true")
 
@@ -214,15 +263,16 @@ class WrapperScriptTests(unittest.TestCase):
 
         return powershellDir
 
-    def create_limited_path_for_specific_java_version(self, version):
-        javaDir = os.path.join(self.get_tests_dir(), "fakes", "java" + str(version))
-
+    def create_limited_path_for_specific_java(self, version):
         return ";".join([
             self.create_limited_path(),
-            javaDir
+            os.path.join(self.java_home_dir(version), "bin")
         ])
 
-    def run_script(self, args, download_url=None, path=os.environ["PATH"], with_java_tool_options=None, start_with=None):
+    def java_home_dir(self, version):
+        return os.path.join(self.get_tests_dir(), "fakes", "java" + str(version))
+
+    def run_script(self, args, download_url=None, path=os.environ["PATH"], java_home=None, with_java_tool_options=None, start_with=None):
         if download_url is None:
             download_url = self.default_download_url()
 
@@ -233,6 +283,9 @@ class WrapperScriptTests(unittest.TestCase):
             "BATECT_DOWNLOAD_CHECKSUM": self.get_checksum_of_test_app(),
             "PATH": path
         }
+
+        if java_home is not None:
+            env["JAVA_HOME"] = java_home
 
         if with_java_tool_options is not None:
             env["JAVA_TOOL_OPTIONS"] = "-XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap"

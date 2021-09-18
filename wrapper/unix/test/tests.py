@@ -123,7 +123,25 @@ class WrapperScriptTests(unittest.TestCase):
         self.assertIn("Java is not installed or not on your PATH. Please install it and try again.", result.stdout.decode())
         self.assertNotEqual(result.returncode, 0)
 
-    def test_unsupported_java(self):
+    def test_no_java_in_java_home(self):
+        path_dir = self.create_limited_path(self.minimum_script_dependencies_with_default_bash + ["/usr/bin/curl"])
+        java_home = "/nonsense"
+
+        result = self.run_script([], path=path_dir, java_home=java_home)
+
+        self.assertIn("JAVA_HOME is set to '/nonsense', but there is no Java executable at '/nonsense/bin/java'.", result.stdout.decode())
+        self.assertNotEqual(result.returncode, 0)
+
+    def test_java_not_on_path_but_java_home_set(self):
+        path_dir = self.create_limited_path(self.minimum_script_dependencies_with_default_bash + ["/usr/bin/curl"])
+        java_home = self.java_home_dir(self.java_name_for_version("8"))
+
+        result = self.run_script([], path=path_dir, java_home=java_home)
+
+        self.assertIn("The Java application has started.", result.stdout.decode())
+        self.assertEqual(result.returncode, 0)
+
+    def test_unsupported_java_on_path(self):
         path_dir = self.create_limited_path_for_specific_java_version("7")
 
         result = self.run_script([], path=path_dir)
@@ -133,13 +151,46 @@ class WrapperScriptTests(unittest.TestCase):
 
         self.assertNotEqual(result.returncode, 0)
 
-    def test_32bit_java(self):
+    def test_unsupported_java_in_java_home(self):
+        path_dir = self.create_limited_path_for_specific_java_version("8")
+        java_home = self.java_home_dir(self.java_name_for_version("7"))
+
+        result = self.run_script([], path=path_dir, java_home=java_home)
+
+        self.assertIn("The version of Java that is available in JAVA_HOME is version 1.7, but version 1.8 or greater is required.\n" +
+                      "If you have a newer version of Java installed, please make sure JAVA_HOME is set correctly.\n" +
+                      "JAVA_HOME takes precedence over any versions of Java available on your PATH.", result.stdout.decode())
+
+        self.assertNotEqual(result.returncode, 0)
+
+    def test_unsupported_java_on_path_with_supported_java_in_java_home(self):
+        path_dir = self.create_limited_path_for_specific_java_version("7")
+        java_home = self.java_home_dir(self.java_name_for_version("8"))
+
+        result = self.run_script([], path=path_dir, java_home=java_home)
+
+        self.assertIn("The Java application has started.", result.stdout.decode())
+        self.assertEqual(result.returncode, 0)
+
+    def test_32bit_java_on_path(self):
         path_dir = self.create_limited_path_for_specific_java("fake-32-bit")
 
         result = self.run_script([], path=path_dir)
 
         self.assertIn("The version of Java that is available on your PATH is a 32-bit version, but Batect requires a 64-bit Java runtime.\n" +
                       "If you have a 64-bit version of Java installed, please make sure your PATH is set correctly.", result.stdout.decode())
+
+        self.assertNotEqual(result.returncode, 0)
+
+    def test_32bit_java_in_java_home(self):
+        path_dir = self.create_limited_path_for_specific_java("8")
+        java_home = self.java_home_dir("fake-32-bit")
+
+        result = self.run_script([], path=path_dir, java_home=java_home)
+
+        self.assertIn("The version of Java that is available in JAVA_HOME is a 32-bit version, but Batect requires a 64-bit Java runtime.\n" +
+                      "If you have a 64-bit version of Java installed, please make sure JAVA_HOME is set correctly.\n" +
+                      "JAVA_HOME takes precedence over any versions of Java available on your PATH.", result.stdout.decode())
 
         self.assertNotEqual(result.returncode, 0)
 
@@ -211,15 +262,21 @@ class WrapperScriptTests(unittest.TestCase):
             f.truncate(10)
 
     def create_limited_path_for_specific_java_version(self, java_version, bash=default_bash):
-        return self.create_limited_path_for_specific_java("java-{}-openjdk-amd64".format(java_version), bash)
+        return self.create_limited_path_for_specific_java(self.java_name_for_version(java_version), bash)
+
+    def java_name_for_version(self, java_version):
+        return "java-{}-openjdk-amd64".format(java_version)
 
     def create_limited_path_for_specific_java(self, java_name, bash=default_bash):
         return self.create_limited_path(self.minimum_script_dependencies +
                                         [
                                             bash,
                                             "/usr/bin/curl",
-                                            "/usr/lib/jvm/{}/bin/java".format(java_name),
+                                            "{}/bin/java".format(self.java_home_dir(java_name)),
                                         ])
+
+    def java_home_dir(self, java_name):
+        return "/usr/lib/jvm/{}".format(java_name)
 
     def create_limited_path(self, executables):
         path_dir = tempfile.mkdtemp()
@@ -231,7 +288,15 @@ class WrapperScriptTests(unittest.TestCase):
 
         return path_dir
 
-    def run_script(self, args, download_url=None, path=os.environ["PATH"], quiet_download=None, with_java_tool_options=None):
+    def run_script(
+            self,
+            args,
+            download_url=None,
+            path=os.environ["PATH"],
+            java_home=None,
+            quiet_download=None,
+            with_java_tool_options=None
+    ):
         if download_url is None:
             download_url = self.default_download_url()
 
@@ -241,6 +306,9 @@ class WrapperScriptTests(unittest.TestCase):
             "BATECT_DOWNLOAD_CHECKSUM": self.get_checksum_of_test_app(),
             "PATH": path
         }
+
+        if java_home is not None:
+            env["JAVA_HOME"] = java_home
 
         if quiet_download is not None:
             env["BATECT_QUIET_DOWNLOAD"] = quiet_download

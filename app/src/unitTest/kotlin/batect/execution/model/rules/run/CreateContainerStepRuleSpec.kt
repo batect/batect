@@ -1,30 +1,27 @@
 /*
-   Copyright 2017-2021 Charles Korn.
+    Copyright 2017-2021 Charles Korn.
 
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-       http://www.apache.org/licenses/LICENSE-2.0
+        http://www.apache.org/licenses/LICENSE-2.0
 
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
 */
 
 package batect.execution.model.rules.run
 
 import batect.config.BuildImage
-import batect.config.CacheMount
 import batect.config.Container
 import batect.config.LiteralValue
-import batect.config.LocalMount
 import batect.config.PullImage
 import batect.docker.DockerImage
 import batect.docker.DockerNetwork
-import batect.execution.model.events.CachesInitialisedEvent
 import batect.execution.model.events.ImageBuiltEvent
 import batect.execution.model.events.ImagePulledEvent
 import batect.execution.model.events.TaskEvent
@@ -51,58 +48,44 @@ object CreateContainerStepRuleSpec : Spek({
         val events by createForEachTest { mutableSetOf<TaskEvent>() }
 
         given("the container uses an existing image") {
-            val imageName = "the-image"
-            val imageSource = PullImage(imageName)
+            val imageSource = PullImage("the-image")
+            val container = Container("the-container", imageSource)
+            val rule = CreateContainerStepRule(container)
 
-            given("the container has no cache mounts") {
-                val container = Container("the-container", imageSource, volumeMounts = setOf(LocalMount(LiteralValue("/some-local-path"), pathResolutionContextDoesNotMatter(), "/some-container-path")))
-                val rule = CreateContainerStepRule(container)
+            given("the task network is ready") {
+                val dockerNetwork = DockerNetwork("the-network")
+                val networkReadyEvent = mock<TaskNetworkReadyEvent> {
+                    on { network } doReturn dockerNetwork
+                }
 
-                given("the task network is ready") {
-                    val dockerNetwork = DockerNetwork("the-network")
-                    val networkReadyEvent = mock<TaskNetworkReadyEvent> {
-                        on { network } doReturn dockerNetwork
-                    }
+                beforeEachTest { events.add(networkReadyEvent) }
 
-                    beforeEachTest { events.add(networkReadyEvent) }
+                given("the image for the container has been pulled") {
+                    val image = DockerImage("some-image-id")
+                    beforeEachTest { events.add(ImagePulledEvent(imageSource, image)) }
 
-                    given("the image for the container has been pulled") {
-                        val image = DockerImage("some-image-id")
-                        beforeEachTest { events.add(ImagePulledEvent(imageSource, image)) }
+                    on("evaluating the rule") {
+                        val result by runForEachTest { rule.evaluate(events) }
 
-                        on("evaluating the rule") {
-                            val result by runForEachTest { rule.evaluate(events) }
-
-                            it("returns a 'create container' step") {
-                                assertThat(result, equalTo(TaskStepRuleEvaluationResult.Ready(CreateContainerStep(container, image, dockerNetwork))))
-                            }
-                        }
-                    }
-
-                    given("an image has been pulled for another container") {
-                        beforeEachTest { events.add(ImagePulledEvent(PullImage("some-other-image"), DockerImage("some-other-image-id"))) }
-
-                        on("evaluating the rule") {
-                            val result by runForEachTest { rule.evaluate(events) }
-
-                            it("indicates that the step is not yet ready") {
-                                assertThat(result, equalTo(TaskStepRuleEvaluationResult.NotReady))
-                            }
-                        }
-                    }
-
-                    given("no images have been pulled") {
-                        on("evaluating the rule") {
-                            val result by runForEachTest { rule.evaluate(events) }
-
-                            it("indicates that the step is not yet ready") {
-                                assertThat(result, equalTo(TaskStepRuleEvaluationResult.NotReady))
-                            }
+                        it("returns a 'create container' step") {
+                            assertThat(result, equalTo(TaskStepRuleEvaluationResult.Ready(CreateContainerStep(container, image, dockerNetwork))))
                         }
                     }
                 }
 
-                given("the task network has not been created") {
+                given("an image has been pulled for another container") {
+                    beforeEachTest { events.add(ImagePulledEvent(PullImage("some-other-image"), DockerImage("some-other-image-id"))) }
+
+                    on("evaluating the rule") {
+                        val result by runForEachTest { rule.evaluate(events) }
+
+                        it("indicates that the step is not yet ready") {
+                            assertThat(result, equalTo(TaskStepRuleEvaluationResult.NotReady))
+                        }
+                    }
+                }
+
+                given("no images have been pulled") {
                     on("evaluating the rule") {
                         val result by runForEachTest { rule.evaluate(events) }
 
@@ -113,41 +96,12 @@ object CreateContainerStepRuleSpec : Spek({
                 }
             }
 
-            given("the container has a cache mount") {
-                val container = Container("the-container", imageSource, volumeMounts = setOf(CacheMount("some-cache", "/some-container-path")))
-                val rule = CreateContainerStepRule(container)
+            given("the task network has not been created") {
+                on("evaluating the rule") {
+                    val result by runForEachTest { rule.evaluate(events) }
 
-                given("the task network is ready") {
-                    val dockerNetwork = DockerNetwork("the-network")
-                    val networkReadyEvent = mock<TaskNetworkReadyEvent> {
-                        on { network } doReturn dockerNetwork
-                    }
-
-                    beforeEachTest { events.add(networkReadyEvent) }
-
-                    given("the image for the container has been pulled") {
-                        val image = DockerImage("some-image-id")
-                        beforeEachTest { events.add(ImagePulledEvent(imageSource, image)) }
-
-                        given("caches have been initialised") {
-                            beforeEachTest { events.add(CachesInitialisedEvent) }
-
-                            val result by runForEachTest { rule.evaluate(events) }
-
-                            it("returns a 'create container' step") {
-                                assertThat(result, equalTo(TaskStepRuleEvaluationResult.Ready(CreateContainerStep(container, image, dockerNetwork))))
-                            }
-                        }
-
-                        given("caches have not been initialised") {
-                            on("evaluating the rule") {
-                                val result by runForEachTest { rule.evaluate(events) }
-
-                                it("indicates that the step is not yet ready") {
-                                    assertThat(result, equalTo(TaskStepRuleEvaluationResult.NotReady))
-                                }
-                            }
-                        }
+                    it("indicates that the step is not yet ready") {
+                        assertThat(result, equalTo(TaskStepRuleEvaluationResult.NotReady))
                     }
                 }
             }

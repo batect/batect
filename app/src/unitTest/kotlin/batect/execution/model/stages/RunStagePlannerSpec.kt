@@ -1,17 +1,17 @@
 /*
-   Copyright 2017-2021 Charles Korn.
+    Copyright 2017-2021 Charles Korn.
 
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-       http://www.apache.org/licenses/LICENSE-2.0
+        http://www.apache.org/licenses/LICENSE-2.0
 
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
 */
 
 package batect.execution.model.stages
@@ -30,7 +30,6 @@ import batect.execution.ContainerDependencyGraph
 import batect.execution.model.rules.TaskStepRule
 import batect.execution.model.rules.run.BuildImageStepRule
 import batect.execution.model.rules.run.CreateContainerStepRule
-import batect.execution.model.rules.run.InitialiseCachesStepRule
 import batect.execution.model.rules.run.PrepareTaskNetworkStepRule
 import batect.execution.model.rules.run.PullImageStepRule
 import batect.execution.model.rules.run.RunContainerSetupCommandsStepRule
@@ -84,7 +83,6 @@ object RunStagePlannerSpec : Spek({
                         graph,
                         mapOf(
                             "prepare the task network" to PrepareTaskNetworkStepRule,
-                            "initialise caches" to InitialiseCachesStepRule,
                             "pull the image for the task container" to PullImageStepRule(PullImage("some-image")),
                             "create the task container" to CreateContainerStepRule(container),
                             "run the task container" to RunContainerStepRule(container, emptySet()),
@@ -104,7 +102,6 @@ object RunStagePlannerSpec : Spek({
                         graph,
                         mapOf(
                             "prepare the task network" to PrepareTaskNetworkStepRule,
-                            "initialise caches" to InitialiseCachesStepRule,
                             "build the image for the task container" to BuildImageStepRule(container),
                             "create the task container" to CreateContainerStepRule(container),
                             "run the task container" to RunContainerStepRule(container, emptySet()),
@@ -135,7 +132,6 @@ object RunStagePlannerSpec : Spek({
                     graph,
                     mapOf(
                         "prepare the task network" to PrepareTaskNetworkStepRule,
-                        "initialise caches" to InitialiseCachesStepRule,
                         "build the image for the task container" to BuildImageStepRule(taskContainer),
                         "build the image for container 1" to BuildImageStepRule(container1),
                         "pull the image for container 2" to PullImageStepRule(container2ImageSource),
@@ -173,7 +169,6 @@ object RunStagePlannerSpec : Spek({
                     graph,
                     mapOf(
                         "prepare the task network" to PrepareTaskNetworkStepRule,
-                        "initialise caches" to InitialiseCachesStepRule,
                         "pull the image for the task container" to PullImageStepRule(taskContainerImageSource),
                         "pull the image shared by both container 1 and 2" to PullImageStepRule(sharedImageSource),
                         "create the task container" to CreateContainerStepRule(taskContainer),

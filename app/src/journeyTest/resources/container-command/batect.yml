@@ -2,7 +2,7 @@ project_name: container-command-test
 
 containers:
   build-env:
-    image: alpine:3.14.1
+    image: alpine:3.14.2
     command: sh -c "echo 'This is some output from the task' && exit 123"
 
 tasks:

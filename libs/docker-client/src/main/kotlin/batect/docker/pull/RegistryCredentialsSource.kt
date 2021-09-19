@@ -1,17 +1,17 @@
 /*
-   Copyright 2017-2021 Charles Korn.
+    Copyright 2017-2021 Charles Korn.
 
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-       http://www.apache.org/licenses/LICENSE-2.0
+        http://www.apache.org/licenses/LICENSE-2.0
 
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
 */
 
 package batect.docker.pull
@@ -45,10 +45,9 @@ data class BasicCredentialsSource(val encodedCredentials: String, val serverAddr
                 throw DockerRegistryCredentialsException("Decoded credentials for '$serverAddress' are not valid.")
             }
 
-            if (parts[0] == "<token>") {
-                return TokenRegistryCredentials(parts[1], serverAddress)
-            } else {
-                return PasswordRegistryCredentials(parts[0], parts[1], serverAddress)
+            return when (parts[0]) {
+                "<token>" -> TokenRegistryCredentials(parts[1], serverAddress)
+                else -> PasswordRegistryCredentials(parts[0], parts[1], serverAddress)
             }
         } catch (_: IllegalArgumentException) {
             throw DockerRegistryCredentialsException("Could not decode credentials for '$serverAddress'.")
@@ -90,10 +89,9 @@ data class HelperBasedCredentialsSource(val helperName: String, val serverAddres
 
         val serverUrl = parsed.getStringMember("ServerURL")
 
-        if (username == "<token>") {
-            return TokenRegistryCredentials(secret, serverUrl)
-        } else {
-            return PasswordRegistryCredentials(username, secret, serverUrl)
+        return when (username) {
+            "<token>" -> TokenRegistryCredentials(secret, serverUrl)
+            else -> PasswordRegistryCredentials(username, secret, serverUrl)
         }
     }
 

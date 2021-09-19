@@ -29,7 +29,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up JDK
-        uses: actions/setup-java@v2.2.0
+        uses: actions/setup-java@v2.3.0
         with:
           java-version: 11
           distribution: adopt
@@ -70,7 +70,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up JDK
-        uses: actions/setup-java@v2.2.0
+        uses: actions/setup-java@v2.3.0
         with:
           java-version: 11
           distribution: adopt
@@ -87,7 +87,7 @@ jobs:
         run: ./gradlew --parallel -DgenerateCoverage=true app:check jacocoTestReport --exclude-task=generateMainProtos # This is temporarily disabled on Windows due to https://github.com/square/wire/issues/1325
 
       - name: Upload coverage to codecov.io
-        uses: codecov/codecov-action@v2.0.3
+        uses: codecov/codecov-action@v2.1.0
         with:
           flags: windows
 
@@ -125,7 +125,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up JDK
-        uses: actions/setup-java@v2.2.0
+        uses: actions/setup-java@v2.3.0
         with:
           java-version: 11
           distribution: adopt
@@ -175,7 +175,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up JDK
-        uses: actions/setup-java@v2.2.0
+        uses: actions/setup-java@v2.3.0
         with:
           java-version: 11
           distribution: adopt
@@ -228,7 +228,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up JDK
-        uses: actions/setup-java@v2.2.0
+        uses: actions/setup-java@v2.3.0
         with:
           java-version: 11
           distribution: adopt
@@ -274,7 +274,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up JDK
-        uses: actions/setup-java@v2.2.0
+        uses: actions/setup-java@v2.3.0
         with:
           java-version: 11
           distribution: adopt
@@ -301,7 +301,7 @@ jobs:
         run: unset JAVA_TOOL_OPTIONS && ./gradlew --parallel -DgenerateCoverage=true check libs:git-client:integrationTest jacocoTestReport -x wrapper:unix:check -x wrapper:windows:check
 
       - name: Upload coverage to codecov.io
-        uses: codecov/codecov-action@v2.0.3
+        uses: codecov/codecov-action@v2.1.0
         with:
           flags: linux
 
@@ -347,7 +347,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up JDK
-        uses: actions/setup-java@v2.2.0
+        uses: actions/setup-java@v2.3.0
         with:
           java-version: 11
           distribution: adopt
@@ -381,7 +381,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up JDK
-        uses: actions/setup-java@v2.2.0
+        uses: actions/setup-java@v2.3.0
         with:
           java-version: 11
           distribution: adopt
@@ -438,7 +438,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up JDK
-        uses: actions/setup-java@v2.2.0
+        uses: actions/setup-java@v2.3.0
         with:
           java-version: 11
           distribution: adopt
@@ -500,7 +500,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up JDK
-        uses: actions/setup-java@v2.2.0
+        uses: actions/setup-java@v2.3.0
         with:
           java-version: 11
           distribution: adopt
@@ -541,7 +541,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up JDK
-        uses: actions/setup-java@v2.2.0
+        uses: actions/setup-java@v2.3.0
         with:
           java-version: 11
           distribution: adopt
@@ -565,7 +565,7 @@ jobs:
         run: unset JAVA_TOOL_OPTIONS && ./gradlew --parallel -DgenerateCoverage=true check libs:git-client:integrationTest jacocoTestReport -x wrapper:unix:check -x wrapper:windows:check
 
       - name: Upload coverage to codecov.io
-        uses: codecov/codecov-action@v2.0.3
+        uses: codecov/codecov-action@v2.1.0
         with:
           flags: mac
 
@@ -621,7 +621,7 @@ jobs:
         run: git fetch -f origin ${{ github.ref }}:${{ github.ref }}
 
       - name: Set up JDK
-        uses: actions/setup-java@v2.2.0
+        uses: actions/setup-java@v2.3.0
         with:
           java-version: 11
           distribution: adopt

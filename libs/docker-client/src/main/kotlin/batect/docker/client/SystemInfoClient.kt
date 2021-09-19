@@ -1,17 +1,17 @@
 /*
-   Copyright 2017-2021 Charles Korn.
+    Copyright 2017-2021 Charles Korn.
 
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-       http://www.apache.org/licenses/LICENSE-2.0
+        http://www.apache.org/licenses/LICENSE-2.0
 
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
 */
 
 package batect.docker.client
@@ -42,17 +42,17 @@ class SystemInfoClient(
     // It's used in a number of places where throwing exceptions would be undesirable or unsafe (eg. during logging startup
     // and when showing version info), so instead we wrap the result.
     fun getDockerVersionInfo(): DockerVersionInfoRetrievalResult {
-        try {
+        return try {
             val info = api.getServerVersionInfo()
 
-            return DockerVersionInfoRetrievalResult.Succeeded(info)
+            DockerVersionInfoRetrievalResult.Succeeded(info)
         } catch (t: Throwable) {
             logger.error {
                 message("An exception was thrown while getting Docker version info.")
                 exception(t)
             }
 
-            return DockerVersionInfoRetrievalResult.Failed("Could not get Docker version information because ${t.javaClass.simpleName} was thrown: ${t.message}")
+            DockerVersionInfoRetrievalResult.Failed("Could not get Docker version information because ${t.javaClass.simpleName} was thrown: ${t.message}")
         }
     }
 

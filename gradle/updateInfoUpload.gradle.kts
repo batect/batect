@@ -1,39 +1,21 @@
 /*
-   Copyright 2017-2020 Charles Korn.
+    Copyright 2017-2021 Charles Korn.
 
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-       http://www.apache.org/licenses/LICENSE-2.0
+        http://www.apache.org/licenses/LICENSE-2.0
 
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
 */
 
 import batect.buildtools.GoogleCloudStorageUpload
-import com.google.auth.oauth2.GoogleCredentials
-import com.google.cloud.storage.BlobId
-import com.google.cloud.storage.BlobInfo
-import com.google.cloud.storage.Storage
-import com.google.cloud.storage.StorageOptions
-import java.io.FileInputStream
 import java.nio.file.Files
-import java.io.ByteArrayInputStream
-
-
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-
-    dependencies {
-        classpath("com.google.cloud:google-cloud-storage:2.1.0")
-    }
-}
 
 val updateInfoFile = buildDir.resolve("updateInfo").resolve("latest.json")
 

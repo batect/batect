@@ -1,17 +1,17 @@
 /*
-   Copyright 2017-2021 Charles Korn.
+    Copyright 2017-2021 Charles Korn.
 
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-       http://www.apache.org/licenses/LICENSE-2.0
+        http://www.apache.org/licenses/LICENSE-2.0
 
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
 */
 
 package batect.docker.build.buildkit
@@ -402,10 +402,10 @@ class BuildKitImageBuildResponseBody : ImageBuildResponseBody {
 
                 val layersInEarliestOperation = layers.values.filter { it.currentOperation == operationToReportOn }
                 val layersInLaterOperations = layers.values.filter { it.currentOperation > operationToReportOn }
-                val completedBytes = layersInEarliestOperation.map { it.completedBytes }.sum() +
-                    layersInLaterOperations.map { it.totalBytes }.sum()
+                val completedBytes = layersInEarliestOperation.sumOf { it.completedBytes } +
+                    layersInLaterOperations.sumOf { it.totalBytes }
 
-                val totalBytes = layers.values.map { it.totalBytes }.sum()
+                val totalBytes = layers.values.sumOf { it.totalBytes }
 
                 ActiveImageBuildStep.Downloading(stepIndex, name, operationToReportOn, completedBytes, totalBytes)
             }

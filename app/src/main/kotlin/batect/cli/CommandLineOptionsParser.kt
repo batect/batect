@@ -1,17 +1,17 @@
 /*
-   Copyright 2017-2021 Charles Korn.
+    Copyright 2017-2021 Charles Korn.
 
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-       http://www.apache.org/licenses/LICENSE-2.0
+        http://www.apache.org/licenses/LICENSE-2.0
 
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
 */
 
 package batect.cli
@@ -26,7 +26,6 @@ import batect.cli.options.ValueConverters
 import batect.cli.options.defaultvalues.EnvironmentVariableDefaultValueProviderFactory
 import batect.cli.options.defaultvalues.FileDefaultValueProvider
 import batect.docker.DockerHttpConfigDefaults
-import batect.execution.CacheInitialisationImage
 import batect.execution.CacheType
 import batect.os.PathResolverFactory
 import batect.os.SystemInfo
@@ -146,13 +145,6 @@ class CommandLineOptionsParser(
         ValueConverters.enum()
     )
 
-    private val linuxCacheInitImageName: String by valueOption(
-        cacheOptionsGroup,
-        "linux-cache-init-image",
-        "Image to use to initialise caches.",
-        environmentVariableDefaultValueProviderFactory.create("BATECT_LINUX_CACHE_INIT_IMAGE", CacheInitialisationImage.linuxDefault, ValueConverters.string)
-    )
-
     private val dockerHost: String by valueOption(
         dockerConnectionOptionsGroup,
         "docker-host",
@@ -245,9 +237,9 @@ class CommandLineOptionsParser(
     private val generateShellTabCompletionTaskInformation: Shell? by valueOption(hiddenOptionsGroup, "generate-completion-task-info", "Generate shell tab completion task information for given shell.", ValueConverters.enum<Shell>(), showInHelp = false)
 
     fun parse(args: Iterable<String>): CommandLineOptionsParsingResult {
-        when (val result = optionParser.parseOptions(args)) {
-            is OptionsParsingResult.InvalidOptions -> return CommandLineOptionsParsingResult.Failed(result.message)
-            is OptionsParsingResult.ReadOptions -> return parseTaskName(args.drop(result.argumentsConsumed))
+        return when (val result = optionParser.parseOptions(args)) {
+            is OptionsParsingResult.InvalidOptions -> CommandLineOptionsParsingResult.Failed(result.message)
+            is OptionsParsingResult.ReadOptions -> parseTaskName(args.drop(result.argumentsConsumed))
         }
     }
 
@@ -341,7 +333,6 @@ class CommandLineOptionsParser(
         dockerTlsCACertificatePath = resolvePathToDockerCertificate(dockerTlsCACertificatePath, dockerTLSCACertificatePathOption.valueSource, "ca.pem"),
         dockerConfigDirectory = dockerConfigDirectory,
         cacheType = cacheType,
-        linuxCacheInitImageName = linuxCacheInitImageName,
         existingNetworkToUse = existingNetworkToUse,
         skipPrerequisites = skipPrerequisites,
         disableTelemetry = disableTelemetry,

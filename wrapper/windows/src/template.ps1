@@ -104,7 +104,22 @@ function runApplication() {
     exit $process.ExitCode
 }
 
+function useJavaHome() {
+    return ($env:JAVA_HOME -ne $null)
+}
+
 function findJava() {
+    if (useJavaHome) {
+        $java = Get-Command "$env:JAVA_HOME\bin\java" -ErrorAction SilentlyContinue
+
+        if ($java -eq $null) {
+            Write-Host -ForegroundColor Red "JAVA_HOME is set to '$env:JAVA_HOME', but there is no Java executable at '$env:JAVA_HOME\bin\java.exe'."
+            exit 1
+        }
+
+        return $java
+    }
+
     $java = Get-Command "java" -ErrorAction SilentlyContinue
 
     if ($java -eq $null) {
@@ -122,14 +137,28 @@ function checkJavaVersion([System.Management.Automation.CommandInfo]$java) {
     $minimumVersion = "1.8"
 
     if ($parsedVersion -lt (New-Object Version -ArgumentList $minimumVersion)) {
-        Write-Host -ForegroundColor Red "The version of Java that is available on your PATH is version $rawVersion, but version $minimumVersion or greater is required."
-        Write-Host -ForegroundColor Red "If you have a newer version of Java installed, please make sure your PATH is set correctly."
+        if (useJavaHome) {
+            Write-Host -ForegroundColor Red "The version of Java that is available in JAVA_HOME is version $rawVersion, but version $minimumVersion or greater is required."
+            Write-Host -ForegroundColor Red "If you have a newer version of Java installed, please make sure JAVA_HOME is set correctly."
+            Write-Host -ForegroundColor Red "JAVA_HOME takes precedence over any versions of Java available on your PATH."
+        } else {
+            Write-Host -ForegroundColor Red "The version of Java that is available on your PATH is version $rawVersion, but version $minimumVersion or greater is required."
+            Write-Host -ForegroundColor Red "If you have a newer version of Java installed, please make sure your PATH is set correctly."
+        }
+
         exit 1
     }
 
     if (-not ($versionInfo -match "64\-[bB]it")) {
-        Write-Host -ForegroundColor Red "The version of Java that is available on your PATH is a 32-bit version, but Batect requires a 64-bit Java runtime."
-        Write-Host -ForegroundColor Red "If you have a 64-bit version of Java installed, please make sure your PATH is set correctly."
+        if (useJavaHome) {
+            Write-Host -ForegroundColor Red "The version of Java that is available in JAVA_HOME is a 32-bit version, but Batect requires a 64-bit Java runtime."
+            Write-Host -ForegroundColor Red "If you have a 64-bit version of Java installed, please make sure JAVA_HOME is set correctly."
+            Write-Host -ForegroundColor Red "JAVA_HOME takes precedence over any versions of Java available on your PATH."
+        } else {
+            Write-Host -ForegroundColor Red "The version of Java that is available on your PATH is a 32-bit version, but Batect requires a 64-bit Java runtime."
+            Write-Host -ForegroundColor Red "If you have a 64-bit version of Java installed, please make sure your PATH is set correctly."
+        }
+
         exit 1
     }
 

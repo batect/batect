@@ -1,21 +1,22 @@
 /*
-   Copyright 2017-2021 Charles Korn.
+    Copyright 2017-2021 Charles Korn.
 
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-       http://www.apache.org/licenses/LICENSE-2.0
+        http://www.apache.org/licenses/LICENSE-2.0
 
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
 */
 
 package batect.execution
 
+import batect.config.CacheMount
 import batect.config.Container
 import batect.config.RunAsCurrentUserConfig
 import batect.docker.ContainerDirectory
@@ -68,7 +69,8 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
             val container = Container(
                 "some-container",
                 imageSourceDoesNotMatter(),
-                runAsCurrentUserConfig = RunAsCurrentUserConfig.RunAsDefaultContainerUser
+                runAsCurrentUserConfig = RunAsCurrentUserConfig.RunAsDefaultContainerUser,
+                volumeMounts = setOf(CacheMount("some-cache", "/my-cache"))
             )
 
             val systemInfo by createForEachTest { mock<SystemInfo>() }
@@ -143,7 +145,8 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
             val container = Container(
                 "some-container",
                 imageSourceDoesNotMatter(),
-                runAsCurrentUserConfig = runAsCurrentUserConfig
+                runAsCurrentUserConfig = runAsCurrentUserConfig,
+                volumeMounts = setOf(CacheMount("some-cache", "/caches/first-cache"))
             )
 
             given("the application is running on Windows") {
@@ -194,6 +197,16 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                                     ContainerDirectory("some-user", 0, 0)
                                 ),
                                 "/home"
+                            )
+                        }
+
+                        it("uploads the configured cache directory to the container, with the owner and group set to root") {
+                            verify(containersClient).upload(
+                                dockerContainer,
+                                setOf(
+                                    ContainerDirectory("first-cache", 0, 0)
+                                ),
+                                "/caches"
                             )
                         }
                     }
@@ -271,6 +284,16 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                                     "/home"
                                 )
                             }
+
+                            it("uploads the configured cache directory to the container, with the owner and group set to the current user's user and group") {
+                                verify(containersClient).upload(
+                                    dockerContainer,
+                                    setOf(
+                                        ContainerDirectory("first-cache", 123, 456)
+                                    ),
+                                    "/caches"
+                                )
+                            }
                         }
 
                         on("determining the user and group to use") {
@@ -306,6 +329,34 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                         on("applying configuration to the container") {
                             it("throws an appropriate exception") {
                                 assertThat({ provider.applyConfigurationToContainer(containerWithNonAbsoluteHomeDirectory, dockerContainer) }, throws<RunAsCurrentUserConfigurationException>(withMessage("Container 'some-container' has an invalid home directory configured: 'my-home' is not an absolute path.")))
+                            }
+                        }
+                    }
+
+                    given("a configured cache directory is in the root of the filesystem") {
+                        val containerWithCacheDirectoryInRoot = container.copy(volumeMounts = setOf(CacheMount("some-cache", "/first-cache")))
+
+                        on("applying configuration to the container") {
+                            runForEachTest { provider.applyConfigurationToContainer(containerWithCacheDirectoryInRoot, dockerContainer) }
+
+                            it("uploads the configured cache directory to the container, with the owner and group set to the current user's user and group") {
+                                verify(containersClient).upload(
+                                    dockerContainer,
+                                    setOf(
+                                        ContainerDirectory("first-cache", 123, 456)
+                                    ),
+                                    "/"
+                                )
+                            }
+                        }
+                    }
+
+                    given("a configured cache directory is not an absolute path") {
+                        val containerWithNonAbsoluteCacheDirectory = container.copy(volumeMounts = setOf(CacheMount("some-cache", "first-cache")))
+
+                        on("applying configuration to the container") {
+                            it("throws an appropriate exception") {
+                                assertThat({ provider.applyConfigurationToContainer(containerWithNonAbsoluteCacheDirectory, dockerContainer) }, throws<RunAsCurrentUserConfigurationException>(withMessage("Container 'some-container' has an invalid cache mount configured: 'first-cache' is not an absolute path.")))
                             }
                         }
                     }
@@ -370,6 +421,16 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                                     ContainerDirectory("some-user", 0, 0)
                                 ),
                                 "/home"
+                            )
+                        }
+
+                        it("uploads the configured cache directory to the container, with the owner and group set to root") {
+                            verify(containersClient).upload(
+                                dockerContainer,
+                                setOf(
+                                    ContainerDirectory("first-cache", 0, 0)
+                                ),
+                                "/caches"
                             )
                         }
                     }

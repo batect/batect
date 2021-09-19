@@ -21,18 +21,18 @@
   "regexManagers": [
     {
       "fileMatch": [
-        ".groovy$",
-        ".gradle$"
+        ".gradle$",
+        ".gradle.kts$"
       ],
       "matchStrings": [
-        "ktlint\\(\"(?<currentValue>[\\d.]*?)\"\\)"
+        "def ktlintVersion = \"(?<currentValue>[\\d.]*?)\""
       ],
       "datasourceTemplate": "maven",
       "depNameTemplate": "com.pinterest:ktlint"
     },
     {
       "fileMatch": [
-        "KotlinPlugin.groovy$"
+        "KotlinPlugin.kt$"
       ],
       "matchStrings": [
         "jacoco {\\s+toolVersion = '(?<currentValue>[\\d.]*?)'"
@@ -58,6 +58,13 @@
         "\"github.com/(?<depName>[a-z]+/[a-z]+?)/(.*).proto\"\\s+,\\s+\"(?<currentValue>v[\\d.]*?)\""
       ],
       "datasourceTemplate": "github-releases"
+    },
+    {
+      "fileMatch": ["gradle.properties$"],
+      "matchStrings": [
+        "#renovate:(?<depName>[a-zA-Z0-9-.]+:[a-zA-Z0-9-.]+)\\s([a-zA-Z]+)=(?<currentValue>[\\d.]+)"
+      ],
+      "datasourceTemplate": "maven"
     }
   ],
   "packageRules": [
@@ -81,6 +88,14 @@
       "matchManagers": ["gradle-lite"],
       "matchPackagePatterns": ["^org\\.jetbrains\\.kotlin\\."],
       "matchDepTypes": ["plugin"]
+    },
+    {
+      "matchDatasources": ["maven"],
+      "matchPackagePatterns": ["\\.gradle\\.plugin$"],
+      "registryUrls": [
+        "https://repo.maven.apache.org/maven2/",
+        "https://plugins.gradle.org/m2/"
+      ]
     }
   ]
 }

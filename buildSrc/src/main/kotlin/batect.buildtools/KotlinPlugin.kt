@@ -1,23 +1,22 @@
 /*
-   Copyright 2017-2021 Charles Korn.
+    Copyright 2017-2021 Charles Korn.
 
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-       http://www.apache.org/licenses/LICENSE-2.0
+        http://www.apache.org/licenses/LICENSE-2.0
 
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
 */
 
 package batect.buildtools
 
 import app.cash.licensee.LicenseeExtension
-import com.diffplug.gradle.spotless.SpotlessExtension
 import org.gradle.api.JavaVersion
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -32,7 +31,6 @@ import org.gradle.jvm.tasks.Jar
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.dependencies
-import org.gradle.kotlin.dsl.extra
 import org.gradle.kotlin.dsl.getByName
 import org.gradle.kotlin.dsl.getByType
 import org.gradle.kotlin.dsl.named
@@ -53,7 +51,6 @@ class KotlinPlugin : Plugin<Project> {
         }
 
         applyKotlin(project)
-        applySpotless(project)
         configureTesting(project)
         applyJacoco(project)
         configureJar(project)
@@ -77,39 +74,6 @@ class KotlinPlugin : Plugin<Project> {
             it.kotlinOptions {
                 jvmTarget = "1.8"
                 freeCompilerArgs = listOf("-progressive", "-Xopt-in=kotlin.RequiresOptIn")
-            }
-        }
-    }
-
-    private fun applySpotless(project: Project) {
-        project.plugins.apply("com.diffplug.spotless")
-
-        val licenseText = project.rootProject.extra.get("licenseText") as String
-        val kotlinLicenseHeader = "/*${licenseText}*/\n\n"
-        project.extensions.add("kotlinLicenseHeader", kotlinLicenseHeader)
-
-        project.extensions.configure<SpotlessExtension>() {
-            kotlin {
-                it.ktlint("0.41.0")
-
-                it.licenseHeader(kotlinLicenseHeader)
-
-                it.trimTrailingWhitespace()
-                it.indentWithSpaces()
-                it.endWithNewline()
-
-                it.targetExclude("build/**")
-                it.targetExclude("src/generated/**")
-            }
-        }
-
-        project.afterEvaluate {
-            project.tasks.named<Task>("spotlessKotlinCheck") {
-                mustRunAfter("test")
-            }
-
-            project.tasks.named<Task>("spotlessKotlin") {
-                mustRunAfter("test")
             }
         }
     }
@@ -271,13 +235,10 @@ class KotlinPlugin : Plugin<Project> {
             allowUrl("https://asm.ow2.io/license.html") // BSD
 
             allow("EPL-1.0")
+            allowUrl("https://www.eclipse.org/legal/epl-v20.html")
 
-            allowDependency("com.github.jnr", "jnr-posix", "3.1.7") {
+            allowDependency("com.github.jnr", "jnr-posix", "3.1.10") {
                 it.because("Licensed under three licenses, including EPL 2.0 and LGPL")
-            }
-
-            allowDependency("org.mockito.kotlin", "mockito-kotlin", "3.2.0") {
-                it.because("Licensee incorrectly fails this dependency due to https://github.com/cashapp/licensee/issues/40")
             }
 
             allowDependency("org.checkerframework", "checker-compat-qual", "2.5.5") {

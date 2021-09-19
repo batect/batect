@@ -1,17 +1,17 @@
 /*
-   Copyright 2017-2021 Charles Korn.
+    Copyright 2017-2021 Charles Korn.
 
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-       http://www.apache.org/licenses/LICENSE-2.0
+        http://www.apache.org/licenses/LICENSE-2.0
 
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
 */
 
 package batect.docker.build
@@ -55,11 +55,7 @@ data class ImageBuildIgnoreEntry(val pattern: String, val inverted: Boolean) {
                     }
                 }
                 '\\' -> {
-                    val followingChar = patternToUse.getOrNull(currentIndex + 1)
-
-                    if (followingChar == null) {
-                        throw invalidPattern()
-                    }
+                    val followingChar = patternToUse.getOrNull(currentIndex + 1) ?: throw invalidPattern()
 
                     currentIndex++
 
@@ -141,10 +137,10 @@ data class ImageBuildIgnoreEntry(val pattern: String, val inverted: Boolean) {
     private fun cleanPattern(): String {
         val trimmedPattern = pattern.trim()
 
-        if (trimmedPattern.endsWith("/")) {
-            return trimmedPattern.substring(0, trimmedPattern.length - 1)
+        return if (trimmedPattern.endsWith("/")) {
+            trimmedPattern.substring(0, trimmedPattern.length - 1)
         } else {
-            return trimmedPattern
+            trimmedPattern
         }
     }
 

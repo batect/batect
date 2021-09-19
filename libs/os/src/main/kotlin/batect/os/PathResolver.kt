@@ -1,17 +1,17 @@
 /*
-   Copyright 2017-2021 Charles Korn.
+    Copyright 2017-2021 Charles Korn.
 
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-       http://www.apache.org/licenses/LICENSE-2.0
+        http://www.apache.org/licenses/LICENSE-2.0
 
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
 */
 
 package batect.os
@@ -25,14 +25,14 @@ data class PathResolver(val context: PathResolutionContext, private val systemPr
     private val homeDir = getPath(systemProperties.getProperty("user.home"))
 
     fun resolve(path: String): PathResolutionResult {
-        try {
+        return try {
             val originalPath = resolveHomeDir(getPath(path))
             val resolvedPath = context.relativeTo.resolve(originalPath).normalize().toAbsolutePath()
             val description = context.getResolutionDescription(resolvedPath)
 
-            return PathResolutionResult.Resolved(path, resolvedPath, pathType(resolvedPath), description)
+            PathResolutionResult.Resolved(path, resolvedPath, pathType(resolvedPath), description)
         } catch (e: InvalidPathException) {
-            return PathResolutionResult.InvalidPath(path)
+            PathResolutionResult.InvalidPath(path)
         }
     }
 
@@ -41,10 +41,10 @@ data class PathResolver(val context: PathResolutionContext, private val systemPr
     private fun resolveHomeDir(path: Path): Path {
         val homeSymbol = getPath("~")
 
-        if (path.startsWith(homeSymbol)) {
-            return homeDir.resolve(homeSymbol.relativize(path))
+        return if (path.startsWith(homeSymbol)) {
+            homeDir.resolve(homeSymbol.relativize(path))
         } else {
-            return path
+            path
         }
     }
 

@@ -1,21 +1,22 @@
 /*
-   Copyright 2017-2021 Charles Korn.
+    Copyright 2017-2021 Charles Korn.
 
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-       http://www.apache.org/licenses/LICENSE-2.0
+        http://www.apache.org/licenses/LICENSE-2.0
 
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
 */
 
 package batect.execution
 
+import batect.config.CacheMount
 import batect.config.Container
 import batect.config.RunAsCurrentUserConfig
 import batect.docker.ContainerDirectory
@@ -88,6 +89,7 @@ class RunAsCurrentUserConfigurationProvider(
         try {
             uploadFilesForConfiguration(configuration, dockerContainer)
             uploadHomeDirectoryForConfiguration(configuration, container, dockerContainer)
+            uploadCacheDirectories(container, dockerContainer)
         } catch (e: DockerException) {
             throw RunAsCurrentUserConfigurationException("Could not apply 'run as current user' configuration to container '${container.name}': ${e.message}", e)
         }
@@ -112,15 +114,36 @@ class RunAsCurrentUserConfigurationProvider(
             throw RunAsCurrentUserConfigurationException("Container '${container.name}' has an invalid home directory configured: '${configuration.homeDirectory}' is not an absolute path.")
         }
 
-        val homeDirectorySegments = configuration.homeDirectory.splitToPathSegments()
-        val homeDirectoryName = homeDirectorySegments.last()
-        val homeDirectoryParentPath = if (homeDirectorySegments.size <= 2) "/" else homeDirectorySegments.dropLast(1).joinToString("/")
+        uploadDirectory(configuration.homeDirectory, dockerContainer)
+    }
 
+    private fun uploadCacheDirectories(container: Container, dockerContainer: DockerContainer) {
+        val cacheMounts = container.volumeMounts.filterIsInstance<CacheMount>()
+
+        cacheMounts.forEach { cacheMount ->
+            if (!cacheMount.containerPath.startsWith("/")) {
+                throw RunAsCurrentUserConfigurationException("Container '${container.name}' has an invalid cache mount configured: '${cacheMount.containerPath}' is not an absolute path.")
+            }
+
+            uploadDirectory(cacheMount.containerPath, dockerContainer)
+        }
+    }
+
+    private fun uploadDirectory(path: String, dockerContainer: DockerContainer) {
         containersClient.upload(
             dockerContainer,
-            setOf(ContainerDirectory(homeDirectoryName, userId.toLong(), groupId.toLong())),
-            homeDirectoryParentPath
+            setOf(ContainerDirectory(leafDirectoryNameOf(path), userId.toLong(), groupId.toLong())),
+            parentDirectoryOf(path)
         )
+    }
+
+    private fun parentDirectoryOf(path: String): String {
+        val segments = path.splitToPathSegments()
+        return if (segments.size <= 2) "/" else segments.dropLast(1).joinToString("/")
+    }
+
+    private fun leafDirectoryNameOf(path: String): String {
+        return path.splitToPathSegments().last()
     }
 
     private fun generatePasswdFile(runAsCurrentUserConfig: RunAsCurrentUserConfig.RunAsCurrentUser): String {

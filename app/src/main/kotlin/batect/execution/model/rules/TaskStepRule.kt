@@ -1,17 +1,17 @@
 /*
-   Copyright 2017-2021 Charles Korn.
+    Copyright 2017-2021 Charles Korn.
 
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-       http://www.apache.org/licenses/LICENSE-2.0
+        http://www.apache.org/licenses/LICENSE-2.0
 
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
 */
 
 package batect.execution.model.rules
@@ -22,7 +22,6 @@ import batect.execution.model.rules.cleanup.RemoveContainerStepRule
 import batect.execution.model.rules.cleanup.StopContainerStepRule
 import batect.execution.model.rules.run.BuildImageStepRule
 import batect.execution.model.rules.run.CreateContainerStepRule
-import batect.execution.model.rules.run.InitialiseCachesStepRule
 import batect.execution.model.rules.run.PrepareTaskNetworkStepRule
 import batect.execution.model.rules.run.PullImageStepRule
 import batect.execution.model.rules.run.RunContainerSetupCommandsStepRule
@@ -54,7 +53,6 @@ val serializersModule = SerializersModule {
     polymorphic(TaskStepRule::class, CreateContainerStepRule::class, CreateContainerStepRule.serializer())
     polymorphic(TaskStepRule::class, PrepareTaskNetworkStepRule::class, PrepareTaskNetworkStepRule.serializer())
     polymorphic(TaskStepRule::class, DeleteTaskNetworkStepRule::class, DeleteTaskNetworkStepRule.serializer())
-    polymorphic(TaskStepRule::class, InitialiseCachesStepRule::class, InitialiseCachesStepRule.serializer())
     polymorphic(TaskStepRule::class, PullImageStepRule::class, PullImageStepRule.serializer())
     polymorphic(TaskStepRule::class, RemoveContainerStepRule::class, RemoveContainerStepRule.serializer())
     polymorphic(TaskStepRule::class, RunContainerSetupCommandsStepRule::class, RunContainerSetupCommandsStepRule.serializer())

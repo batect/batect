@@ -1,17 +1,17 @@
 /*
-   Copyright 2017-2021 Charles Korn.
+    Copyright 2017-2021 Charles Korn.
 
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-       http://www.apache.org/licenses/LICENSE-2.0
+        http://www.apache.org/licenses/LICENSE-2.0
 
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
 */
 
 package batect.docker.api
@@ -42,7 +42,11 @@ object FilesystemUploadRequestBodySpec : Spek({
             val fileBytes = fileContent.toByteArray(Charsets.UTF_8)
 
             val itemsToUpload = setOf(
-                ContainerFile("file-1", 100, 200, fileBytes),
+                // Using a user id larger than 2097151 because this will trigger
+                //   `java.lang.IllegalArgumentException: user id '300000000' is too big ( > 2097151 ).`
+                //   if the underlying TarArchiveOutputStream's bigNumberMode is not set to a
+                //   configuration that will allow large numbers
+                ContainerFile("file-1", 300000001, 200, fileBytes),
                 ContainerDirectory("some-dir", 300, 400)
             )
 
@@ -67,7 +71,7 @@ object FilesystemUploadRequestBodySpec : Spek({
                 assertThat(
                     archive.entries,
                     anyElement(
-                        hasName("file-1") and hasUID(100) and hasGID(200) and isRegularFile() and hasEntrySize(fileBytes.size.toLong())
+                        hasName("file-1") and hasUID(300000001) and hasGID(200) and isRegularFile() and hasEntrySize(fileBytes.size.toLong())
                     )
                 )
 

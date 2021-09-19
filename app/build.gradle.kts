@@ -101,7 +101,7 @@ checkUnitTestLayout {
 }
 
 apply {
-    from("gradle/completionTest.gradle")
+    from("gradle/completionTest.gradle.kts")
     from("gradle/journeyTest.gradle")
     from("gradle/profiling.gradle")
     from("gradle/shadow.gradle")

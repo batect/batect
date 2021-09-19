@@ -18,7 +18,7 @@ import org.gradle.api.JavaVersion
 
 plugins {
     id("java-gradle-plugin")
-    kotlin("jvm") version "1.5.30"
+    kotlin("jvm") version "1.5.31"
 }
 
 repositories {

@@ -38,6 +38,7 @@ class CleanupProgressDisplayLine {
             is ContainerRemovedEvent -> containersRemoved.add(event.container)
             is TaskNetworkCreatedEvent -> networkHasBeenCreated = true
             is TaskNetworkDeletedEvent -> networkHasBeenDeleted = true
+            else -> {}
         }
     }
 

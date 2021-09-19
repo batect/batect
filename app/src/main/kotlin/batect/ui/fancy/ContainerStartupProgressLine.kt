@@ -157,6 +157,7 @@ data class ContainerStartupProgressLine(val container: Container, val dependenci
             is ContainerBecameReadyEvent -> onContainerBecameReadyEventPosted(event)
             is RunningSetupCommandEvent -> onRunningSetupCommandEventPosted(event)
             is StepStartingEvent -> onStepStarting(event.step)
+            else -> {}
         }
     }
 
@@ -166,6 +167,7 @@ data class ContainerStartupProgressLine(val container: Container, val dependenci
             is PullImageStep -> onPullImageStepStarting(step)
             is CreateContainerStep -> onCreateContainerStepStarting(step)
             is RunContainerStep -> onRunContainerStepStarting(step)
+            else -> {}
         }
     }
 

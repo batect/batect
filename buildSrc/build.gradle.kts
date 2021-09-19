@@ -14,9 +14,11 @@
     limitations under the License.
 */
 
+import org.gradle.api.JavaVersion
+
 plugins {
     id("java-gradle-plugin")
-    kotlin("jvm") version "1.5.21"
+    kotlin("jvm") version "1.5.31"
 }
 
 repositories {
@@ -42,4 +44,8 @@ gradlePlugin {
             implementationClass = "batect.buildtools.KotlinPlugin"
         }
     }
+}
+
+java {
+    targetCompatibility = JavaVersion.VERSION_1_8
 }

@@ -64,6 +64,7 @@ class SimpleEventLogger(
                 is RunningSetupCommandEvent -> logRunningSetupCommand(event.container, event.command, event.commandIndex)
                 is SetupCommandsCompletedEvent -> logSetupCommandsCompleted(event.container)
                 is StepStartingEvent -> logStepStarting(event.step)
+                else -> {}
             }
         }
     }
@@ -79,6 +80,7 @@ class SimpleEventLogger(
             is PullImageStep -> logImagePullStarting(step.source)
             is RunContainerStep -> logContainerRunning(step.container)
             is CleanupStep -> logCleanUpStarting()
+            else -> {}
         }
     }
 

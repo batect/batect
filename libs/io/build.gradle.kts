@@ -15,14 +15,9 @@
 */
 
 plugins {
-    id "batect-kotlin"
+    id("batect-kotlin")
 }
 
 dependencies {
-    implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion"
-    implementation "org.spekframework.spek2:spek-dsl-jvm:$spekVersion"
-    implementation "com.natpryce:hamkrest:$hamkrestVersion"
-    implementation "org.mockito.kotlin:mockito-kotlin:$mockitoKotlinVersion"
-    implementation project(":libs:logging")
-    implementation project(":libs:test-utils")
+    implementation(project(":libs:os"))
 }

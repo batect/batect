@@ -14,10 +14,20 @@
     limitations under the License.
 */
 
+val kotlinxSerializationVersion: String by project
+val spekVersion: String by project
+val hamkrestVersion: String by project
+val mockitoKotlinVersion: String by project
+
 plugins {
-    id "batect-kotlin"
+    id("batect-kotlin")
 }
 
 dependencies {
-    implementation project(":libs:os")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
+    implementation("org.spekframework.spek2:spek-dsl-jvm:$spekVersion")
+    implementation("com.natpryce:hamkrest:$hamkrestVersion")
+    implementation("org.mockito.kotlin:mockito-kotlin:$mockitoKotlinVersion")
+    implementation(project(":libs:logging"))
+    implementation(project(":libs:test-utils"))
 }

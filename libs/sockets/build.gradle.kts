@@ -14,14 +14,28 @@
     limitations under the License.
 */
 
+val okhttpVersion: String by project
+val jnrUnixsocketVersion: String by project
+
 plugins {
-    id "batect-kotlin"
+    id("batect-kotlin")
 }
 
 dependencies {
-    implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion"
-    implementation "com.github.jnr:jnr-posix:$jnrPosixVersion"
+    implementation(platform("com.squareup.okhttp3:okhttp-bom:$okhttpVersion"))
 
-    testImplementation "com.google.jimfs:jimfs:$jimfsVersion"
-    testImplementation project(":libs:test-utils")
+    implementation("com.github.jnr:jnr-unixsocket:$jnrUnixsocketVersion")
+    implementation("com.squareup.okhttp3:okhttp")
+
+    implementation(project(":libs:os"))
+
+    testImplementation(project(":libs:test-utils"))
+}
+
+checkUnitTestLayout {
+    ignoreFileNameCheck.set(
+        fileTree("src/unitTest/kotlin") {
+            include("batect/sockets/namedpipes/NamedPipeTestServer.kt")
+        }
+    )
 }

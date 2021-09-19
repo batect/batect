@@ -14,15 +14,12 @@
     limitations under the License.
 */
 
-plugins {
-    id "batect-kotlin"
-}
+val check by tasks.registering
 
-apply from: "gradle/integrationTest.gradle"
-
-dependencies {
-    implementation project(":libs:logging")
-    implementation project(":libs:os")
-
-    testImplementation project(":libs:test-utils")
+subprojects {
+    afterEvaluate {
+        check.configure {
+            dependsOn(this@subprojects.tasks.named("check"))
+        }
+    }
 }

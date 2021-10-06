@@ -43,7 +43,7 @@ tasks.register<Exec>("shellcheck") {
     inputs.file(templateFile)
     outputs.file(upToDateFile)
 
-    commandLine = listOf(
+    commandLine(
         "docker", "run", "--rm", "-t",
         "-v", "$projectDir:/code",
         "-w", "/code",
@@ -77,7 +77,7 @@ tasks.register<Exec>("buildTestEnvironmentImage") {
     errorOutput = standardOutput
     isIgnoreExitValue = true
 
-    commandLine = listOf(
+    commandLine(
         "docker", "build",
         "-t", testEnvironmentImageName,
         imageDirectory.path
@@ -129,7 +129,7 @@ tasks.register<Exec>("test") {
 
     dependsOn("buildTestEnvironmentImage")
 
-    commandLine = listOf(
+    commandLine(
         "docker", "run", "--rm", "-t",
         "-v", "$projectDir:/code",
         "-w", "/code",

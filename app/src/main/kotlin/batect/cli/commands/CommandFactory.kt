@@ -34,6 +34,7 @@ class CommandFactory {
             options.permanentlyEnableTelemetry -> kodein.instance<EnableTelemetryCommand>()
             options.generateShellTabCompletionScript != null -> kodein.instance<GenerateShellTabCompletionScriptCommand>()
             options.generateShellTabCompletionTaskInformation != null -> kodein.instance<GenerateShellTabCompletionTaskInformationCommand>()
+            options.cleanCache != null -> kodein.instance<CleanupCachesCommand>()
             else -> kodein.instance<RunTaskCommand>()
         }
     }

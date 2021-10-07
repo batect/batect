@@ -32,7 +32,7 @@ class CleanupCachesCommand(
     private val volumesClient: VolumesClient,
     private val projectPaths: ProjectPaths,
     private val console: Console,
-    private val cacheName: String = ""
+    private val cacheName: String = "",
 ) : Command {
     override fun run(): Int = dockerConnectivity.checkAndRun { kodein ->
         val cacheManager = kodein.instance<CacheManager>()

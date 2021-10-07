@@ -102,6 +102,17 @@ object CommandFactorySpec : Spek({
             }
         }
 
+        given("a set of options with the 'clean cache' flag set") {
+            val options = CommandLineOptions(cleanCache = "some-cache")
+            val command = factory.createCommand(options, kodein)
+
+            on("creating the command") {
+                it("returns a cleanup command") {
+                    assertThat(command, isA<CleanupCachesCommand>())
+                }
+            }
+        }
+
         given("a set of options with the 'disable telemetry' flag set") {
             val options = CommandLineOptions(permanentlyDisableTelemetry = true)
             val command = factory.createCommand(options, kodein)

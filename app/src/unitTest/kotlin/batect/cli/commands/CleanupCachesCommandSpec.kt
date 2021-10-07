@@ -135,6 +135,51 @@ object CleanupCachesCommandSpec : Spek({
             }
         }
 
+        given("volumes name is provided for cache cleanup") {
+            val cacheType = CacheType.Volume
+            val cacheName = "batect-cache-this-project-def456"
+            val command by createForEachTest { CleanupCachesCommand(dockerConnectivity(cacheType), volumesClient, projectPaths, console, cacheName) }
+            val exitCode by runForEachTest { command.run() }
+
+            it("returns a zero exit code") {
+                assertThat(exitCode, equalTo(0))
+            }
+
+            it("deletes the volumes used by the project for caches which matches input cache name") {
+                verify(volumesClient).delete(DockerVolume("batect-cache-this-project-def456"))
+            }
+
+            it("does not delete any other volumes") {
+                verify(volumesClient, never()).delete(DockerVolume("batect-cache-this-project-abc123"))
+                verify(volumesClient, never()).delete(DockerVolume("batect-cache-other-project-abc123"))
+                verify(volumesClient, never()).delete(DockerVolume("something-else"))
+            }
+
+            it("prints messages to the console at appropriate moments") {
+                inOrder(console, volumesClient) {
+                    verify(console).println("Checking for cache volumes...")
+                    verify(volumesClient).getAll()
+                    verify(console).println("Deleting volume 'batect-cache-this-project-def456'...")
+                    verify(volumesClient).delete(DockerVolume("batect-cache-this-project-def456"))
+                    verify(console).println("Done! Deleted 1 volume.")
+                }
+            }
+
+            it("does not delete anything from the cache directory") {
+                assertThat(
+                    Files.list(projectPaths.cacheDirectory).toList().toSet(),
+                    equalTo(
+                        setOf(
+                            fileSystem.getPath("/caches", "empty-cache"),
+                            fileSystem.getPath("/caches", "cache-with-file"),
+                            fileSystem.getPath("/caches", "cache-with-sub-directory"),
+                            fileSystem.getPath("/caches", "file-that-should-not-be-deleted")
+                        )
+                    )
+                )
+            }
+        }
+
         given("directories are being used for caches") {
             val cacheType = CacheType.Directory
             val command by createForEachTest { CleanupCachesCommand(dockerConnectivity(cacheType), volumesClient, projectPaths, console) }
@@ -174,6 +219,42 @@ object CleanupCachesCommandSpec : Spek({
                     verify(console).println("Checking for cache directories in '/caches'...")
                     verify(console).println("Deleting '/caches/cache-with-sub-directory'...")
                     verify(console).println("Done! Deleted 3 directories.")
+                }
+            }
+
+            it("does not delete any volumes") {
+                verify(volumesClient, never()).delete(any())
+            }
+        }
+
+        given("directories are being used for caches and directory relative path to cache is provided") {
+            val cacheType = CacheType.Directory
+            val cacheName = "cache-with-file"
+            val command by createForEachTest { CleanupCachesCommand(dockerConnectivity(cacheType), volumesClient, projectPaths, console, cacheName) }
+            val exitCode by runForEachTest { command.run() }
+
+            it("returns a zero exit code") {
+                assertThat(exitCode, equalTo(0))
+            }
+
+            it("deletes all of the folders in the cache directory") {
+                assertThat(Files.exists(fileSystem.getPath("/caches", "cache-with-file")), equalTo(false))
+            }
+
+            it("does not delete any other files or folder in the cache directory") {
+                assertThat(Files.exists(fileSystem.getPath("/caches", "empty-cache")), equalTo(true))
+                assertThat(Files.exists(fileSystem.getPath("/caches", "file-that-should-not-be-deleted")), equalTo(true))
+                assertThat(Files.exists(fileSystem.getPath("/caches", "cache-with-sub-directory")), equalTo(true))
+            }
+
+            it("prints messages to the console at appropriate moments") {
+                verify(console, times(1)).println("Checking for cache directories in '/caches'...")
+                verify(console, times(1)).println("Done! Deleted 1 directory.")
+
+                inOrder(console) {
+                    verify(console).println("Checking for cache directories in '/caches'...")
+                    verify(console).println("Deleting '/caches/cache-with-file'...")
+                    verify(console).println("Done! Deleted 1 directory.")
                 }
             }
 

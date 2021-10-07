@@ -24,32 +24,38 @@ import batect.os.deleteDirectory
 import batect.ui.Console
 import org.kodein.di.instance
 import java.nio.file.Files
+import kotlin.io.path.name
 import kotlin.streams.toList
 
 class CleanupCachesCommand(
     private val dockerConnectivity: DockerConnectivity,
     private val volumesClient: VolumesClient,
     private val projectPaths: ProjectPaths,
-    private val console: Console
+    private val console: Console,
+    private val cacheName: String = ""
 ) : Command {
     override fun run(): Int = dockerConnectivity.checkAndRun { kodein ->
         val cacheManager = kodein.instance<CacheManager>()
 
         when (cacheManager.cacheType) {
-            CacheType.Volume -> runForVolumes(cacheManager)
-            CacheType.Directory -> runForDirectories()
+            CacheType.Volume -> runForVolumes(cacheManager, cacheName)
+            CacheType.Directory -> runForDirectories(cacheName)
         }
 
         0
     }
 
-    private fun runForVolumes(cacheManager: CacheManager) {
+    private fun runForVolumes(cacheManager: CacheManager, cacheName: String) {
         val prefix = "batect-cache-${cacheManager.projectCacheKey}-"
 
         console.println("Checking for cache volumes...")
 
-        val volumes = volumesClient.getAll()
-            .filter { it.name.startsWith(prefix) }
+        val volumes = when {
+            cacheName.isNotBlank() -> volumesClient.getAll()
+                .filter { it.name == cacheName }
+            else -> volumesClient.getAll()
+                .filter { it.name.startsWith(prefix) }
+        }
 
         volumes.forEach { volume ->
             console.println("Deleting volume '${volume.name}'...")
@@ -63,12 +69,17 @@ class CleanupCachesCommand(
         }
     }
 
-    private fun runForDirectories() {
+    private fun runForDirectories(cacheName: String) {
         console.println("Checking for cache directories in '${projectPaths.cacheDirectory}'...")
 
-        val directories = Files.list(projectPaths.cacheDirectory)
-            .filter { Files.isDirectory(it) }
-            .toList()
+        val directories = when {
+            cacheName.isNotBlank() -> Files.list(projectPaths.cacheDirectory)
+                .filter { Files.isDirectory(it) && it.name == cacheName }
+                .toList()
+            else -> Files.list(projectPaths.cacheDirectory)
+                .filter { Files.isDirectory(it) }
+                .toList()
+        }
 
         directories.forEach { directory ->
             console.println("Deleting '$directory'...")

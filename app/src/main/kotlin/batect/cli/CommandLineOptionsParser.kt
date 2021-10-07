@@ -236,6 +236,12 @@ class CommandLineOptionsParser(
     private val generateShellTabCompletionScript: Shell? by valueOption(hiddenOptionsGroup, "generate-completion-script", "Generate shell tab completion script for given shell.", ValueConverters.enum<Shell>(), showInHelp = false)
     private val generateShellTabCompletionTaskInformation: Shell? by valueOption(hiddenOptionsGroup, "generate-completion-task-info", "Generate shell tab completion task information for given shell.", ValueConverters.enum<Shell>(), showInHelp = false)
 
+    private val cleanCache: String? by valueOption(
+        group=cacheOptionsGroup,
+        longName = "clean-cache",
+        description = "Clean cache specified by user and exit"
+    )
+
     fun parse(args: Iterable<String>): CommandLineOptionsParsingResult {
         return when (val result = optionParser.parseOptions(args)) {
             is OptionsParsingResult.InvalidOptions -> CommandLineOptionsParsingResult.Failed(result.message)
@@ -339,7 +345,8 @@ class CommandLineOptionsParser(
         enableBuildKit = enableBuildKit,
         generateShellTabCompletionScript = generateShellTabCompletionScript,
         generateShellTabCompletionTaskInformation = generateShellTabCompletionTaskInformation,
-        maximumLevelOfParallelism = maximumLevelOfParallelism
+        maximumLevelOfParallelism = maximumLevelOfParallelism,
+        cleanCache = cleanCache,
     )
 }
 

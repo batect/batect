@@ -32,27 +32,27 @@ class CleanupCachesCommand(
     private val volumesClient: VolumesClient,
     private val projectPaths: ProjectPaths,
     private val console: Console,
-    private val cacheName: String = "",
+    private val cacheNames:  List<String> = emptyList(),
 ) : Command {
     override fun run(): Int = dockerConnectivity.checkAndRun { kodein ->
         val cacheManager = kodein.instance<CacheManager>()
 
         when (cacheManager.cacheType) {
-            CacheType.Volume -> runForVolumes(cacheManager, cacheName)
-            CacheType.Directory -> runForDirectories(cacheName)
+            CacheType.Volume -> runForVolumes(cacheManager, cacheNames)
+            CacheType.Directory -> runForDirectories(cacheNames)
         }
 
         0
     }
 
-    private fun runForVolumes(cacheManager: CacheManager, cacheName: String) {
+    private fun runForVolumes(cacheManager: CacheManager, cacheNames: List<String>) {
         val prefix = "batect-cache-${cacheManager.projectCacheKey}-"
 
         console.println("Checking for cache volumes...")
 
         val volumes = when {
-            cacheName.isNotBlank() -> volumesClient.getAll()
-                .filter { it.name == cacheName }
+            cacheNames.isNotEmpty() -> volumesClient.getAll()
+                .filter { it.name.split(prefix).elementAtOrNull(1) in cacheNames }
             else -> volumesClient.getAll()
                 .filter { it.name.startsWith(prefix) }
         }
@@ -69,12 +69,12 @@ class CleanupCachesCommand(
         }
     }
 
-    private fun runForDirectories(cacheName: String) {
+    private fun runForDirectories(cacheNames: List<String>) {
         console.println("Checking for cache directories in '${projectPaths.cacheDirectory}'...")
 
         val directories = when {
-            cacheName.isNotBlank() -> Files.list(projectPaths.cacheDirectory)
-                .filter { Files.isDirectory(it) && it.name == cacheName }
+            cacheNames.isNotEmpty() -> Files.list(projectPaths.cacheDirectory)
+                .filter { Files.isDirectory(it) && it.name in cacheNames }
                 .toList()
             else -> Files.list(projectPaths.cacheDirectory)
                 .filter { Files.isDirectory(it) }

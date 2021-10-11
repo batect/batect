@@ -239,7 +239,7 @@ class CommandLineOptionsParser(
     private val cleanCache: String? by valueOption(
         group=cacheOptionsGroup,
         longName = "clean-cache",
-        description = "Clean cache specified by user and exit"
+        description = "Clean given cache and exit"
     )
 
     fun parse(args: Iterable<String>): CommandLineOptionsParsingResult {
@@ -269,7 +269,8 @@ class CommandLineOptionsParser(
             permanentlyDisableTelemetry ||
             permanentlyEnableTelemetry ||
             generateShellTabCompletionScript != null ||
-            generateShellTabCompletionTaskInformation != null
+            generateShellTabCompletionTaskInformation != null ||
+            cleanCache?.isNotBlank() == true
         ) {
             return CommandLineOptionsParsingResult.Succeeded(createOptionsObject(null, emptyList()))
         }

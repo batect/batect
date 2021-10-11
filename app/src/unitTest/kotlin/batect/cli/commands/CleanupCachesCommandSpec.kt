@@ -137,7 +137,7 @@ object CleanupCachesCommandSpec : Spek({
 
         given("volumes name is provided for cache cleanup") {
             val cacheType = CacheType.Volume
-            val cacheName = "batect-cache-this-project-def456"
+            val cacheName = listOf("def456")
             val command by createForEachTest { CleanupCachesCommand(dockerConnectivity(cacheType), volumesClient, projectPaths, console, cacheName) }
             val exitCode by runForEachTest { command.run() }
 
@@ -229,7 +229,7 @@ object CleanupCachesCommandSpec : Spek({
 
         given("directories are being used for caches and directory relative path to cache is provided") {
             val cacheType = CacheType.Directory
-            val cacheName = "cache-with-file"
+            val cacheName = listOf("cache-with-file")
             val command by createForEachTest { CleanupCachesCommand(dockerConnectivity(cacheType), volumesClient, projectPaths, console, cacheName) }
             val exitCode by runForEachTest { command.run() }
 
@@ -248,9 +248,6 @@ object CleanupCachesCommandSpec : Spek({
             }
 
             it("prints messages to the console at appropriate moments") {
-                verify(console, times(1)).println("Checking for cache directories in '/caches'...")
-                verify(console, times(1)).println("Done! Deleted 1 directory.")
-
                 inOrder(console) {
                     verify(console).println("Checking for cache directories in '/caches'...")
                     verify(console).println("Deleting '/caches/cache-with-file'...")

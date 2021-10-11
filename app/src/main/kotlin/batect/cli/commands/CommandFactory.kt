@@ -29,12 +29,11 @@ class CommandFactory {
             options.showVersionInfo -> kodein.instance<VersionInfoCommand>()
             options.listTasks -> kodein.instance<ListTasksCommand>()
             options.runUpgrade -> kodein.instance<UpgradeCommand>()
-            options.runCleanup -> kodein.instance<CleanupCachesCommand>()
+            options.runCleanup || options.cleanCache != null -> kodein.instance<CleanupCachesCommand>()
             options.permanentlyDisableTelemetry -> kodein.instance<DisableTelemetryCommand>()
             options.permanentlyEnableTelemetry -> kodein.instance<EnableTelemetryCommand>()
             options.generateShellTabCompletionScript != null -> kodein.instance<GenerateShellTabCompletionScriptCommand>()
             options.generateShellTabCompletionTaskInformation != null -> kodein.instance<GenerateShellTabCompletionTaskInformationCommand>()
-            options.cleanCache != null -> kodein.instance<CleanupCachesCommand>()
             else -> kodein.instance<RunTaskCommand>()
         }
     }

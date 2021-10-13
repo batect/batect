@@ -93,6 +93,16 @@ object SetMultiValueOptionSpec : Spek({
                             }
                         }
                     }
+
+                    given("a list of options where value have leading or trailing spaces") {
+                        on("parsing a list of arguments") {
+                            runForEachTest { option.parse(listOf(format, "  value1  ,value2,   value3,value4   ")) }
+
+                            it("successfully parses and removes leading/trailing spaces") {
+                                assertThat(option.getValue(mock(), mock()), equalTo(listOf("value1", "value2", "value3", "value4")))
+                            }
+                        }
+                    }
                 }
             }
 

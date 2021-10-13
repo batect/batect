@@ -54,8 +54,7 @@ class SetMultiValueOption(
             return OptionParsingResult.InvalidOption("Option '$argName' does not allow duplicate values in the list.")
         }
 
-        values.addAll(match)
-
+        match.forEach { values.add(it.trim()) }
         valueSource = OptionValueSource.CommandLine
 
         return if (useNextArgumentForValue) {

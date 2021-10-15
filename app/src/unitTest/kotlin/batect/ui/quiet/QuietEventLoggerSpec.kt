@@ -25,7 +25,7 @@ import batect.ui.text.TextRun
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.inOrder
 import org.mockito.kotlin.mock
-import org.mockito.kotlin.verifyZeroInteractions
+import org.mockito.kotlin.verifyNoMoreInteractions
 import org.mockito.kotlin.whenever
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
@@ -58,7 +58,7 @@ object QuietEventLoggerSpec : Spek({
             beforeEachTest { logger.onTaskFailed("some-task", TextRun("Some cleanup instructions")) }
 
             it("does not print anything to the console") {
-                verifyZeroInteractions(errorConsole)
+                verifyNoMoreInteractions(errorConsole)
             }
         }
 
@@ -66,7 +66,7 @@ object QuietEventLoggerSpec : Spek({
             beforeEachTest { logger.onTaskStarting("some-task") }
 
             it("does not print anything to the console") {
-                verifyZeroInteractions(errorConsole)
+                verifyNoMoreInteractions(errorConsole)
             }
         }
 
@@ -74,7 +74,7 @@ object QuietEventLoggerSpec : Spek({
             beforeEachTest { logger.onTaskFinished("some-task", 123, Duration.ofNanos(456)) }
 
             it("does not print anything to the console") {
-                verifyZeroInteractions(errorConsole)
+                verifyNoMoreInteractions(errorConsole)
             }
         }
 
@@ -82,7 +82,7 @@ object QuietEventLoggerSpec : Spek({
             beforeEachTest { logger.onTaskFinishedWithCleanupDisabled(TextRun()) }
 
             it("does not print anything to the console") {
-                verifyZeroInteractions(errorConsole)
+                verifyNoMoreInteractions(errorConsole)
             }
         }
     }

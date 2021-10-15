@@ -63,7 +63,7 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
-import org.mockito.kotlin.verifyZeroInteractions
+import org.mockito.kotlin.verifyNoMoreInteractions
 import org.mockito.kotlin.whenever
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
@@ -349,7 +349,7 @@ object InterleavedEventLoggerSpec : Spek({
                     }
 
                     it("does not print anything to the output") {
-                        verifyZeroInteractions(output)
+                        verifyNoMoreInteractions(output)
                     }
                 }
             }

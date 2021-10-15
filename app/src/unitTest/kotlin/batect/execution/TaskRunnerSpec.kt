@@ -47,7 +47,7 @@ import org.mockito.kotlin.eq
 import org.mockito.kotlin.inOrder
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
-import org.mockito.kotlin.verifyZeroInteractions
+import org.mockito.kotlin.verifyNoMoreInteractions
 import org.mockito.kotlin.whenever
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
@@ -166,7 +166,7 @@ object TaskRunnerSpec : Spek({
                             }
 
                             it("does not write anything directly to the console") {
-                                verifyZeroInteractions(console)
+                                verifyNoMoreInteractions(console)
                             }
 
                             it("starts a telemetry span for the task") {
@@ -250,7 +250,7 @@ object TaskRunnerSpec : Spek({
                         }
 
                         it("does not write anything directly to the console") {
-                            verifyZeroInteractions(console)
+                            verifyNoMoreInteractions(console)
                         }
                     }
                 }
@@ -271,7 +271,7 @@ object TaskRunnerSpec : Spek({
                     }
 
                     it("does not create a task Kodein instance") {
-                        verifyZeroInteractions(taskKodeinFactory)
+                        verifyNoMoreInteractions(taskKodeinFactory)
                     }
 
                     it("writes a message to the console indicating that the task only has prerequisite tasks") {

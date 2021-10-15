@@ -23,7 +23,7 @@ import batect.ui.OutputStyle
 import batect.ui.text.Text
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
-import org.mockito.kotlin.verifyNoMoreInteractions
+import org.mockito.kotlin.verifyNoInteractions
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -64,7 +64,7 @@ object GitRepositoryCacheNotificationListenerSpec : Spek({
                 beforeEachTest { listener.onCloning(repo) }
 
                 it("does not print anything to the console") {
-                    verifyNoMoreInteractions(console)
+                    verifyNoInteractions(console)
                 }
             }
 
@@ -72,7 +72,7 @@ object GitRepositoryCacheNotificationListenerSpec : Spek({
                 beforeEachTest { listener.onCloneComplete() }
 
                 it("prints a blank line to the console to separate any output from Git from any further output from Batect") {
-                    verifyNoMoreInteractions(console)
+                    verifyNoInteractions(console)
                 }
             }
         }

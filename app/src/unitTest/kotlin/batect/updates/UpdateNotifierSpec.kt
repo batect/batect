@@ -30,7 +30,7 @@ import org.mockito.kotlin.inOrder
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
-import org.mockito.kotlin.verifyNoMoreInteractions
+import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
@@ -62,7 +62,7 @@ object UpdateNotifierSpec : Spek({
             }
 
             it("does not print anything to the console") {
-                verifyNoMoreInteractions(console)
+                verifyNoInteractions(console)
             }
 
             it("does not trigger an update of the cached update info") {
@@ -80,7 +80,7 @@ object UpdateNotifierSpec : Spek({
                 }
 
                 it("does not print anything to the console") {
-                    verifyNoMoreInteractions(console)
+                    verifyNoInteractions(console)
                 }
 
                 it("triggers an update of the cached update info") {
@@ -97,7 +97,7 @@ object UpdateNotifierSpec : Spek({
                 }
 
                 it("does not print anything to the console") {
-                    verifyNoMoreInteractions(console)
+                    verifyNoInteractions(console)
                 }
 
                 it("triggers an update of the cached update info") {
@@ -136,7 +136,7 @@ object UpdateNotifierSpec : Spek({
                         }
 
                         it("does not print anything to the console") {
-                            verifyNoMoreInteractions(console)
+                            verifyNoInteractions(console)
                         }
 
                         it("does not trigger an update of the cached update info") {
@@ -151,7 +151,7 @@ object UpdateNotifierSpec : Spek({
                         }
 
                         it("does not print anything to the console") {
-                            verifyNoMoreInteractions(console)
+                            verifyNoInteractions(console)
                         }
 
                         it("does not trigger an update of the cached update info") {
@@ -202,7 +202,7 @@ object UpdateNotifierSpec : Spek({
                         }
 
                         it("does not print anything to the console") {
-                            verifyNoMoreInteractions(console)
+                            verifyNoInteractions(console)
                         }
 
                         it("triggers an update of the cached update info") {
@@ -217,7 +217,7 @@ object UpdateNotifierSpec : Spek({
                         }
 
                         it("does not print anything to the console") {
-                            verifyNoMoreInteractions(console)
+                            verifyNoInteractions(console)
                         }
 
                         it("triggers an update of the cached update info") {

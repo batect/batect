@@ -31,7 +31,7 @@ import org.mockito.kotlin.inOrder
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
-import org.mockito.kotlin.verifyNoMoreInteractions
+import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.Suite
@@ -57,11 +57,11 @@ object TelemetryConsentPromptSpec : Spek({
                 }
 
                 it("does not print anything to the console") {
-                    verifyNoMoreInteractions(console)
+                    verifyNoInteractions(console)
                 }
 
                 it("does not prompt the user") {
-                    verifyNoMoreInteractions(prompt)
+                    verifyNoInteractions(prompt)
                 }
 
                 it("does not change the stored telemetry configuration") {
@@ -75,7 +75,7 @@ object TelemetryConsentPromptSpec : Spek({
                 }
 
                 it("does not prompt the user to enter a response") {
-                    verifyNoMoreInteractions(prompt)
+                    verifyNoInteractions(prompt)
                 }
 
                 it("does not change the stored telemetry configuration") {

@@ -52,7 +52,7 @@ import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.doThrow
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
-import org.mockito.kotlin.verifyNoMoreInteractions
+import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
@@ -84,7 +84,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                         runForEachTest { provider.applyConfigurationToContainer(container, dockerContainer) }
 
                         it("does not upload any files or directories to the container") {
-                            verifyNoMoreInteractions(containersClient)
+                            verifyNoInteractions(containersClient)
                         }
                     }
 

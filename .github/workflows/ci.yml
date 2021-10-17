@@ -46,7 +46,7 @@ jobs:
         uses: actions/cache@v2.1.6
         with:
           path: ~/.gradle/caches
-          key: gradle-code-generation-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle') }}
+          key: gradle-code-generation-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle', '**/*.gradle.kts', 'gradle.properties') }}
           restore-keys: gradle-code-generation-packages-${{ runner.os }}
 
       - name: Run code generation
@@ -80,7 +80,7 @@ jobs:
         uses: actions/cache@v2.1.6
         with:
           path: ~/.gradle/caches
-          key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle') }}
+          key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle', '**/*.gradle.kts', 'gradle.properties') }}
           restore-keys: gradle-packages-${{ runner.os }}
 
       - name: Build and test
@@ -135,7 +135,7 @@ jobs:
         uses: actions/cache@v2.1.6
         with:
           path: ~/.gradle/caches
-          key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle') }}-wrappertests
+          key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle', '**/*.gradle.kts', 'gradle.properties') }}-wrappertests
           restore-keys: gradle-packages-${{ runner.os }}
 
       - name: Run wrapper tests
@@ -185,7 +185,7 @@ jobs:
         uses: actions/cache@v2.1.6
         with:
           path: ~/.gradle/caches
-          key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle') }}-journeytests
+          key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle', '**/*.gradle.kts', 'gradle.properties') }}-journeytests
           restore-keys: gradle-packages-${{ runner.os }}
 
       - name: Print Docker version information
@@ -238,7 +238,7 @@ jobs:
         uses: actions/cache@v2.1.6
         with:
           path: ~/.gradle/caches
-          key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle') }}-integrationtests
+          key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle', '**/*.gradle.kts', 'gradle.properties') }}-integrationtests
           restore-keys: gradle-packages-${{ runner.os }}
 
       - name: Run integration tests
@@ -291,7 +291,7 @@ jobs:
         uses: actions/cache@v2.1.6
         with:
           path: ~/.gradle/caches
-          key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle') }}
+          key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle', '**/*.gradle.kts', 'gradle.properties') }}
           restore-keys: gradle-packages-${{ runner.os }}
 
       - name: Install tools used by unit tests
@@ -364,7 +364,7 @@ jobs:
         uses: actions/cache@v2.1.6
         with:
           path: ~/.gradle/caches
-          key: gradle-wrapper-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle') }}
+          key: gradle-wrapper-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle', '**/*.gradle.kts', 'gradle.properties') }}
           restore-keys: gradle-wrapper-packages-${{ runner.os }}
 
       - name: Run tests
@@ -398,7 +398,7 @@ jobs:
         uses: actions/cache@v2.1.6
         with:
           path: ~/.gradle/caches
-          key: gradle-wrapper-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle') }}
+          key: gradle-wrapper-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle', '**/*.gradle.kts', 'gradle.properties') }}
           restore-keys: gradle-wrapper-packages-${{ runner.os }}
 
       - name: Run tests
@@ -455,7 +455,7 @@ jobs:
         uses: actions/cache@v2.1.6
         with:
           path: ~/.gradle/caches
-          key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle') }}-journeytests
+          key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle', '**/*.gradle.kts', 'gradle.properties') }}-journeytests
           restore-keys: gradle-packages-${{ runner.os }}
 
       - name: Install Docker
@@ -517,7 +517,7 @@ jobs:
         uses: actions/cache@v2.1.6
         with:
           path: ~/.gradle/caches
-          key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle') }}-integrationtests
+          key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle', '**/*.gradle.kts', 'gradle.properties') }}-integrationtests
           restore-keys: gradle-packages-${{ runner.os }}
 
       - name: Install Docker
@@ -558,7 +558,7 @@ jobs:
         uses: actions/cache@v2.1.6
         with:
           path: ~/.gradle/caches
-          key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle') }}
+          key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle', '**/*.gradle.kts', 'gradle.properties') }}
           restore-keys: gradle-packages-${{ runner.os }}
 
       - name: Build and test
@@ -638,7 +638,7 @@ jobs:
         uses: actions/cache@v2.1.6
         with:
           path: ~/.gradle/caches
-          key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle') }}
+          key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle', '**/*.gradle.kts', 'gradle.properties') }}
           restore-keys: gradle-packages-${{ runner.os }}
 
       - name: Download binaries

@@ -38,7 +38,7 @@ import org.mockito.kotlin.inOrder
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
-import org.mockito.kotlin.verifyZeroInteractions
+import org.mockito.kotlin.verifyNoInteractions
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.Suite
 import org.spekframework.spek2.style.specification.describe
@@ -113,7 +113,7 @@ object GitRepositoryCacheSpec : Spek({
                 }
 
                 it("does not notify the listener that the repository is being cloned or has finished cloning") {
-                    verifyZeroInteractions(listener)
+                    verifyNoInteractions(listener)
                 }
             }
 

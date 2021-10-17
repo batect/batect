@@ -36,7 +36,7 @@ import org.mockito.kotlin.doThrow
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
-import org.mockito.kotlin.verifyZeroInteractions
+import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
@@ -154,7 +154,7 @@ object TelemetryManagerSpec : Spek({
                 }
 
                 it("does not upload the session") {
-                    verifyZeroInteractions(abacusClient)
+                    verifyNoInteractions(abacusClient)
                 }
 
                 it("does not remove the session from the upload queue") {

@@ -230,6 +230,7 @@ class KotlinPlugin : Plugin<Project> {
             allowUrl("http://opensource.org/licenses/MIT")
             allowUrl("http://www.opensource.org/licenses/mit-license.php")
             allowUrl("https://github.com/mockito/mockito/blob/release/3.x/LICENSE") // MIT
+            allowUrl("https://github.com/mockito/mockito/blob/main/LICENSE") // MIT
 
             allowUrl("https://github.com/spekframework/spek/blob/2.x/LICENSE.TXT") // BSD
             allowUrl("https://asm.ow2.io/license.html") // BSD

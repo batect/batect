@@ -42,7 +42,7 @@ import org.mockito.kotlin.inOrder
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
-import org.mockito.kotlin.verifyZeroInteractions
+import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
@@ -124,11 +124,11 @@ object TelemetryUploadTaskSpec : Spek({
             }
 
             it("does not query the upload queue") {
-                verifyZeroInteractions(telemetryUploadQueue)
+                verifyNoInteractions(telemetryUploadQueue)
             }
 
             it("does not upload anything") {
-                verifyZeroInteractions(abacusClient)
+                verifyNoInteractions(abacusClient)
             }
 
             it("logs a message explaining that telemetry is not allowed") {

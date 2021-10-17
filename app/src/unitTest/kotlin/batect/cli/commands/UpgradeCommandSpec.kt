@@ -47,7 +47,7 @@ import org.mockito.kotlin.doThrow
 import org.mockito.kotlin.inOrder
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
-import org.mockito.kotlin.verifyZeroInteractions
+import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
@@ -154,7 +154,7 @@ object UpgradeCommandSpec : Spek({
                                 }
 
                                 it("does not print anything to the error console") {
-                                    verifyZeroInteractions(errorConsole)
+                                    verifyNoInteractions(errorConsole)
                                 }
 
                                 it("overwrites the content of the existing wrapper script with the correct content") {

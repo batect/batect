@@ -33,6 +33,7 @@ class TelemetryUploadTask(
     private val timeSource: TimeSource = ZonedDateTime::now
 ) {
     private val json = Json.Default
+    private val circuitBreaker = CircuitBreaker(5)
 
     fun start() {
         if (!telemetryConsent.telemetryAllowed) {
@@ -58,7 +59,19 @@ class TelemetryUploadTask(
                 return
             }
 
-            sessionPaths.shuffled().forEach { upload(it) }
+            sessionPaths.shuffled().forEach {
+                if (!circuitBreaker.allowRequests) {
+                    logger.warn {
+                        message("Telemetry upload task circuit breaker has failed open, not uploading any further sessions.")
+                    }
+
+                    telemetrySessionBuilder.addEvent("TelemetryUploadCircuitBreakerFailedOpen", emptyMap())
+
+                    return
+                }
+
+                upload(it)
+            }
         } catch (e: Throwable) {
             logger.error {
                 message("Unhandled exception while uploading telemetry sessions.")
@@ -94,6 +107,8 @@ class TelemetryUploadTask(
     }
 
     private fun handleFailedUpload(sessionPath: Path, bytes: ByteArray, uploadException: Throwable) {
+        circuitBreaker.recordFailure()
+
         val session = try {
             json.decodeFromString(TelemetrySession.serializer(), bytes.toString(Charsets.UTF_8))
         } catch (parsingException: Throwable) {
@@ -141,3 +156,14 @@ class TelemetryUploadTask(
 typealias ThreadRunner = (BackgroundProcess) -> Unit
 typealias BackgroundProcess = () -> Unit
 typealias TimeSource = () -> ZonedDateTime
+
+private class CircuitBreaker(private val maximumFailures: Int) {
+    private var failuresSoFar = 0
+
+    fun recordFailure() {
+        failuresSoFar += 1
+    }
+
+    val allowRequests: Boolean
+        get() = failuresSoFar < maximumFailures
+}

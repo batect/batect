@@ -41,6 +41,7 @@ import org.mockito.kotlin.doThrow
 import org.mockito.kotlin.inOrder
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
+import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
@@ -385,43 +386,74 @@ object TelemetryUploadTaskSpec : Spek({
                 }
             }
 
-            given("there are multiple sessions in the queue") {
+            given("there are more than five sessions in the queue") {
                 val session1Path by createForEachTest { fileSystem.getPath("session-1.json") }
                 val session2Path by createForEachTest { fileSystem.getPath("session-2.json") }
                 val session3Path by createForEachTest { fileSystem.getPath("session-3.json") }
-                val sessionsUploadedFirst by createForEachTest { mutableSetOf<Path>() }
+                val session4Path by createForEachTest { fileSystem.getPath("session-4.json") }
+                val session5Path by createForEachTest { fileSystem.getPath("session-5.json") }
+                val session6Path by createForEachTest { fileSystem.getPath("session-6.json") }
 
-                beforeEachTest {
-                    Files.write(session1Path, byteArrayOf(0x01))
-                    Files.write(session2Path, byteArrayOf(0x02))
-                    Files.write(session3Path, byteArrayOf(0x03))
+                given("there are no errors while uploading any sessions") {
+                    val sessionsUploadedFirst by createForEachTest { mutableSetOf<Path>() }
 
-                    val sessionUploadOrder = mutableListOf<Path>()
+                    beforeEachTest {
+                        Files.write(session1Path, byteArrayOf(0x01))
+                        Files.write(session2Path, byteArrayOf(0x02))
+                        Files.write(session3Path, byteArrayOf(0x03))
+                        Files.write(session4Path, byteArrayOf(0x04))
+                        Files.write(session5Path, byteArrayOf(0x05))
+                        Files.write(session6Path, byteArrayOf(0x06))
 
-                    whenever(abacusClient.upload(any(), anyOrNull())).then { invocation ->
-                        val bytes = invocation.arguments[0] as ByteArray
+                        val sessionUploadOrder = mutableListOf<Path>()
 
-                        val session = when (bytes[0]) {
-                            0x01.toByte() -> session1Path
-                            0x02.toByte() -> session2Path
-                            0x03.toByte() -> session3Path
-                            else -> throw RuntimeException("Unknown session uploaded.")
+                        whenever(abacusClient.upload(any(), anyOrNull())).then { invocation ->
+                            val bytes = invocation.arguments[0] as ByteArray
+
+                            val session = when (bytes[0]) {
+                                0x01.toByte() -> session1Path
+                                0x02.toByte() -> session2Path
+                                0x03.toByte() -> session3Path
+                                0x04.toByte() -> session4Path
+                                0x05.toByte() -> session5Path
+                                0x06.toByte() -> session6Path
+                                else -> throw RuntimeException("Unknown session uploaded.")
+                            }
+
+                            sessionUploadOrder.add(session)
                         }
 
-                        sessionUploadOrder.add(session)
+                        for (i in 1..100) {
+                            sessionUploadOrder.clear()
+
+                            runWithSessions(session1Path, session2Path, session3Path)
+
+                            sessionsUploadedFirst.add(sessionUploadOrder.first())
+                        }
                     }
 
-                    for (i in 1..100) {
-                        sessionUploadOrder.clear()
-
-                        runWithSessions(session1Path, session2Path, session3Path)
-
-                        sessionsUploadedFirst.add(sessionUploadOrder.first())
+                    it("uploads them in a random order") {
+                        assertThat(sessionsUploadedFirst, equalTo(setOf(session1Path, session2Path, session3Path)))
                     }
                 }
 
-                it("uploads them in a random order") {
-                    assertThat(sessionsUploadedFirst, equalTo(setOf(session1Path, session2Path, session3Path)))
+                given("all sessions fail to upload") {
+                    beforeEachTest {
+                        createSession(session1Path, now)
+                        createSession(session2Path, now)
+                        createSession(session3Path, now)
+                        createSession(session4Path, now)
+                        createSession(session5Path, now)
+                        createSession(session6Path, now)
+
+                        whenever(abacusClient.upload(any(), anyOrNull())).thenThrow(AbacusClientException("Something went wrong."))
+
+                        runWithSessions(session1Path, session2Path, session3Path, session4Path, session5Path, session6Path)
+                    }
+
+                    it("stops attempting to upload sessions after the fifth upload failure") {
+                        verify(abacusClient, times(5)).upload(any(), anyOrNull())
+                    }
                 }
             }
         }

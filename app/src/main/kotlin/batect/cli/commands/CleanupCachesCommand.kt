@@ -16,6 +16,7 @@
 
 package batect.cli.commands
 
+import batect.config.CachePaths
 import batect.config.ProjectPaths
 import batect.docker.client.VolumesClient
 import batect.execution.CacheManager
@@ -32,20 +33,20 @@ class CleanupCachesCommand(
     private val volumesClient: VolumesClient,
     private val projectPaths: ProjectPaths,
     private val console: Console,
-    private val cacheNames:  List<String> = emptyList(),
+    private val cachePaths:  CachePaths = CachePaths(cacheNames = emptySet()),
 ) : Command {
     override fun run(): Int = dockerConnectivity.checkAndRun { kodein ->
         val cacheManager = kodein.instance<CacheManager>()
 
         when (cacheManager.cacheType) {
-            CacheType.Volume -> runForVolumes(cacheManager, cacheNames)
-            CacheType.Directory -> runForDirectories(cacheNames)
+            CacheType.Volume -> runForVolumes(cacheManager, cachePaths.cacheNames)
+            CacheType.Directory -> runForDirectories(cachePaths.cacheNames)
         }
 
         0
     }
 
-    private fun runForVolumes(cacheManager: CacheManager, cacheNames: List<String>) {
+    private fun runForVolumes(cacheManager: CacheManager, cacheNames: Set<String>) {
         val prefix = "batect-cache-${cacheManager.projectCacheKey}-"
 
         console.println("Checking for cache volumes...")
@@ -69,7 +70,7 @@ class CleanupCachesCommand(
         }
     }
 
-    private fun runForDirectories(cacheNames: List<String>) {
+    private fun runForDirectories(cacheNames: Set<String>) {
         console.println("Checking for cache directories in '${projectPaths.cacheDirectory}'...")
 
         val directories = when {

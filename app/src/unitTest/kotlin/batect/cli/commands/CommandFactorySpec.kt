@@ -102,8 +102,8 @@ object CommandFactorySpec : Spek({
             }
         }
 
-        given("a set of options with the 'clean cache' flag set") {
-            val options = CommandLineOptions(cleanCache = listOf("some-cache"))
+        given("a set of options with a specific cache to clean provided") {
+            val options = CommandLineOptions(cleanCache = setOf("some-cache"))
             val command = factory.createCommand(options, kodein)
 
             on("creating the command") {

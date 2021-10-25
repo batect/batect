@@ -26,24 +26,24 @@ import org.mockito.kotlin.mock
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
-object SetMultiValueOptionSpec : Spek({
+object SetOptionSpec : Spek({
     describe("a list value option") {
         val group = OptionGroup("the group")
 
         describe("parsing") {
             given("an option with short and long names") {
-                val option by createForEachTest { SetMultiValueOption(group, "option", "Some option.", 'o') }
+                val option by createForEachTest { SetOption(group, "option", "Some option.", 'o') }
 
                 listOf("--option", "-o").forEach { format ->
                     on("parsing a list of arguments where the option is specified in the form '$format value'") {
-                        val result by runForEachTest { option.parse(listOf(format, "value", "do-stuff")) }
+                        val result by runForEachTest { option.parse(setOf(format, "value", "do-stuff")) }
 
                         it("indicates that parsing succeeded and that two arguments were consumed") {
                             assertThat(result, equalTo(OptionParsingResult.ReadOption(2)))
                         }
 
                         it("sets the option's value") {
-                            assertThat(option.getValue(mock(), mock()), equalTo(listOf("value")))
+                            assertThat(option.getValue(mock(), mock()), equalTo(setOf("value")))
                         }
 
                         it("reports that the value is from the command line") {
@@ -52,14 +52,14 @@ object SetMultiValueOptionSpec : Spek({
                     }
 
                     on("parsing a list of arguments where the option is specified in the form '$format=value'") {
-                        val result by runForEachTest { option.parse(listOf("$format=value", "do-stuff")) }
+                        val result by runForEachTest { option.parse(setOf("$format=value", "do-stuff")) }
 
                         it("indicates that parsing succeeded and that one argument was consumed") {
                             assertThat(result, equalTo(OptionParsingResult.ReadOption(1)))
                         }
 
                         it("sets the option's value") {
-                            assertThat(option.getValue(mock(), mock()), equalTo(listOf("value")))
+                            assertThat(option.getValue(mock(), mock()), equalTo(setOf("value")))
                         }
 
                         it("reports that the value is from the command line") {
@@ -69,7 +69,7 @@ object SetMultiValueOptionSpec : Spek({
 
 
                     on("parsing a list of arguments where the option is given in the form '$format=(value)' but no value is provided after the equals sign") {
-                        val result by runForEachTest { option.parse(listOf("$format=", "do-stuff")) }
+                        val result by runForEachTest { option.parse(setOf("$format=", "do-stuff")) }
 
                         it("indicates that parsing failed") {
                             assertThat(result, equalTo(OptionParsingResult.InvalidOption("Option '$format=' is in an invalid format, you must provide a value after '='.")))
@@ -77,29 +77,35 @@ object SetMultiValueOptionSpec : Spek({
                     }
 
                     on("parsing a list of arguments where the option is given in the form '$format (value)' but no second argument is provided") {
-                        val result by runForEachTest { option.parse(listOf(format)) }
+                        val result by runForEachTest { option.parse(setOf(format)) }
 
                         it("indicates that parsing failed") {
                             assertThat(result, equalTo(OptionParsingResult.InvalidOption("Option '$format' requires a value to be provided, either in the form '$format=<value1, value2, value3, ...>' or '$format <value1, value2, value3, ...>'.")))
                         }
                     }
 
-                    given("a list of options where a value has been duplicated") {
-                        on("parsing a list of arguments where the option is given a second time with the duplicate value") {
-                            val result by runForEachTest { option.parse(listOf(format, "value1,value2,value3,value1")) }
+                    given("a list of options where a set option is provided") {
+                        beforeEachTest { option.parse(setOf(format, "value1")) }
 
-                            it("indicates that parsing failed") {
-                                assertThat(result, equalTo(OptionParsingResult.InvalidOption("Option '$format' does not allow duplicate values in the list.")))
+                        on("parsing a list of arguments where the option is given a second time with another value") {
+                            val result by runForEachTest { option.parse(setOf(format, "value2")) }
+
+                            it("indicates that parsing succeeded and that two arguments were consumed") {
+                                assertThat(result, equalTo(OptionParsingResult.ReadOption(2)))
+                            }
+
+                            it("indicates that parsing succeeds with 2 values") {
+                                assertThat(option.getValue(mock(), mock()), equalTo(setOf("value1", "value2")))
                             }
                         }
                     }
 
                     given("a list of options where value have leading or trailing spaces") {
                         on("parsing a list of arguments") {
-                            runForEachTest { option.parse(listOf(format, "  value1  ,value2,   value3,value4   ")) }
+                            runForEachTest { option.parse(setOf(format, "  value1  ,value2,   value3,value4   ")) }
 
                             it("successfully parses and removes leading/trailing spaces") {
-                                assertThat(option.getValue(mock(), mock()), equalTo(listOf("value1", "value2", "value3", "value4")))
+                                assertThat(option.getValue(mock(), mock()), equalTo(setOf("value1", "value2", "value3", "value4")))
                             }
                         }
                     }
@@ -107,19 +113,19 @@ object SetMultiValueOptionSpec : Spek({
             }
 
             on("not applying a value for the option") {
-                val option = SetMultiValueOption(group, "option", "Some option.")
+                val option = SetOption(group, "option", "Some option.")
 
                 it("returns an empty list") {
-                    assertThat(option.getValue(mock(), mock()), equalTo(emptyList()))
+                    assertThat(option.getValue(mock(), mock()), equalTo(emptySet()))
                 }
             }
         }
 
         describe("getting the help description for an option") {
-            val option = SetMultiValueOption(group, "option", "Some option.")
+            val option = SetOption(group, "option", "Some option.")
 
             it("returns the provided description") {
-                assertThat(option.descriptionForHelp, equalTo("Some option. Can be provided multiple values."))
+                assertThat(option.descriptionForHelp, equalTo("Some option. Can be provided multiple times."))
             }
         }
     }

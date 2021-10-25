@@ -19,14 +19,14 @@ package batect.cli.options
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
 
-class SetMultiValueOption(
+class SetOption(
     group: OptionGroup,
     longName: String,
     description: String,
     shortName: Char? = null,
     override val valueFormatForHelp: String = "<name>=<value1,value2,value3>"
-) : OptionDefinition(group, longName, description, true, shortName, true), ReadOnlyProperty<OptionParserContainer, List<String>> {
-    private val values: MutableList<String> = mutableListOf()
+) : OptionDefinition(group, longName, description, true, shortName, true), ReadOnlyProperty<OptionParserContainer, Set<String>> {
+    private val values: MutableSet<String> = mutableSetOf()
     override var valueSource: OptionValueSource = OptionValueSource.Default
         private set
 
@@ -50,10 +50,6 @@ class SetMultiValueOption(
             return OptionParsingResult.InvalidOption("Option '$argName' requires a value to be provided, either in the form '$argName=<value1, value2, value3 ...>' or '$argName <value1, value2, value3 ...>'.")
         }
 
-        if (match.distinct().size != match.size) {
-            return OptionParsingResult.InvalidOption("Option '$argName' does not allow duplicate values in the list.")
-        }
-
         match.forEach { values.add(it.trim()) }
         valueSource = OptionValueSource.CommandLine
 
@@ -64,13 +60,13 @@ class SetMultiValueOption(
         }
     }
 
-    operator fun provideDelegate(thisRef: OptionParserContainer, property: KProperty<*>): SetMultiValueOption {
+    operator fun provideDelegate(thisRef: OptionParserContainer, property: KProperty<*>): SetOption {
         thisRef.optionParser.addOption(this)
         return this
     }
 
-    override fun getValue(thisRef: OptionParserContainer, property: KProperty<*>): List<String> = values
+    override fun getValue(thisRef: OptionParserContainer, property: KProperty<*>): Set<String> = values
     override fun checkDefaultValue(): DefaultApplicationResult = DefaultApplicationResult.Succeeded
-    override val descriptionForHelp: String = "${super.descriptionForHelp} Can be provided multiple values."
+    override val descriptionForHelp: String = "${super.descriptionForHelp} Can be provided multiple times."
 
 }

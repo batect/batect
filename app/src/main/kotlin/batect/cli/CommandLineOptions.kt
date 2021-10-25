@@ -71,7 +71,7 @@ data class CommandLineOptions(
     val generateShellTabCompletionScript: Shell? = null,
     val generateShellTabCompletionTaskInformation: Shell? = null,
     val maximumLevelOfParallelism: Int? = null,
-    val cleanCache: List<String> = emptyList(),
+    val cleanCache: Set<String> = emptySet(),
 ) {
     fun extend(originalKodein: DirectDI): DirectDI = subDI(originalKodein.di) {
         bind<CommandLineOptions>() with instance(this@CommandLineOptions)

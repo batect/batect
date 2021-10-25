@@ -33,7 +33,7 @@ class CleanupCachesCommand(
     private val volumesClient: VolumesClient,
     private val projectPaths: ProjectPaths,
     private val console: Console,
-    private val cachePaths:  CachePaths = CachePaths(cacheNames = emptySet()),
+    private val cachePaths: CachePaths = CachePaths(cacheNames = emptySet()),
 ) : Command {
     override fun run(): Int = dockerConnectivity.checkAndRun { kodein ->
         val cacheManager = kodein.instance<CacheManager>()
@@ -53,7 +53,7 @@ class CleanupCachesCommand(
 
         val volumes = when {
             cacheNames.isNotEmpty() -> volumesClient.getAll()
-                .filter { it.name.split(prefix).elementAtOrNull(1) in cacheNames }
+                .filter { it.name.startsWith(prefix) && it.name.substringAfter(prefix) in cacheNames }
             else -> volumesClient.getAll()
                 .filter { it.name.startsWith(prefix) }
         }

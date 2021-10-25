@@ -230,7 +230,7 @@ object CleanupCachesCommandSpec : Spek({
 
         given("directories are being used for caches and directory relative path to cache is provided") {
             val cacheType = CacheType.Directory
-            val cacheName = CachePaths(cacheNames =  setOf("cache-with-file"))
+            val cacheName = CachePaths(cacheNames = setOf("cache-with-file"))
             val command by createForEachTest { CleanupCachesCommand(dockerConnectivity(cacheType), volumesClient, projectPaths, console, cacheName) }
             val exitCode by runForEachTest { command.run() }
 

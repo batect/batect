@@ -237,9 +237,9 @@ class CommandLineOptionsParser(
     private val generateShellTabCompletionTaskInformation: Shell? by valueOption(hiddenOptionsGroup, "generate-completion-task-info", "Generate shell tab completion task information for given shell.", ValueConverters.enum<Shell>(), showInHelp = false)
 
     private val cleanCache: Set<String> by setOption(
-        group=cacheOptionsGroup,
+        group = cacheOptionsGroup,
         longName = "clean-cache",
-        description = "Clean given cache and exit"
+        description = "Clean given cache and exit."
     )
 
     fun parse(args: Iterable<String>): CommandLineOptionsParsingResult {

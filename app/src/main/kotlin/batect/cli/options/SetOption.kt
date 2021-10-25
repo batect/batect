@@ -68,5 +68,4 @@ class SetOption(
     override fun getValue(thisRef: OptionParserContainer, property: KProperty<*>): Set<String> = values
     override fun checkDefaultValue(): DefaultApplicationResult = DefaultApplicationResult.Succeeded
     override val descriptionForHelp: String = "${super.descriptionForHelp} Can be provided multiple times."
-
 }

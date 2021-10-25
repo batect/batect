@@ -67,7 +67,6 @@ object SetOptionSpec : Spek({
                         }
                     }
 
-
                     on("parsing a list of arguments where the option is given in the form '$format=(value)' but no value is provided after the equals sign") {
                         val result by runForEachTest { option.parse(setOf("$format=", "do-stuff")) }
 

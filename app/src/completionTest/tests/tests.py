@@ -22,6 +22,7 @@ class CompletionTestBase(ABC):
         self.assertEqual([
             "--cache-type",
             "--clean",
+            '--clean-cache',
             "--config-file",
             "--config-var",
             "--config-vars-file",

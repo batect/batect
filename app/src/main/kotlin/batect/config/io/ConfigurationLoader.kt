@@ -40,6 +40,7 @@ import batect.os.PathResolver
 import batect.os.PathResolverFactory
 import batect.primitives.flatMapToSet
 import batect.primitives.mapToSet
+import batect.telemetry.TelemetryConsent
 import batect.telemetry.TelemetrySessionBuilder
 import batect.utils.asHumanReadableList
 import com.charleskorn.kaml.EmptyYamlDocumentException
@@ -56,6 +57,7 @@ class ConfigurationLoader(
     private val includeResolver: IncludeResolver,
     private val pathResolverFactory: PathResolverFactory,
     private val telemetrySessionBuilder: TelemetrySessionBuilder,
+    private val telemetryConsent: TelemetryConsent,
     private val defaultGitRepositoryCacheNotificationListener: GitRepositoryCacheNotificationListener,
     private val logger: Logger
 ) {
@@ -89,12 +91,16 @@ class ConfigurationLoader(
                 pathsLoaded.add(pathToLoad)
 
                 val file = loadConfigFile(pathToLoad, includeToLoad, gitRepositoryCacheNotificationListener)
-                checkForProjectName(file, includeToLoad)
+                checkForConfigurationOnlyAllowedInRootFile(file, includeToLoad)
 
                 filesLoaded[includeToLoad] = file
                 remainingIncludesToLoad.remove(includeToLoad)
                 remainingIncludesToLoad += file.includes
                 remainingIncludesToLoad -= filesLoaded.keys
+            }
+
+            if (rootConfigFile.forbidTelemetry) {
+                telemetryConsent.disableTelemetryForThisSession()
             }
 
             val projectName = rootConfigFile.projectName ?: inferProjectName(absolutePathToRootConfigFile)
@@ -174,9 +180,13 @@ class ConfigurationLoader(
             }
     }
 
-    private fun checkForProjectName(file: ConfigurationFile, includedAs: Include) {
+    private fun checkForConfigurationOnlyAllowedInRootFile(file: ConfigurationFile, includedAs: Include) {
         if (file.projectName != null) {
             throw ConfigurationFileException("Only the root configuration file can contain the project name, but this file has a project name.", includedAs.toString())
+        }
+
+        if (file.forbidTelemetry) {
+            throw ConfigurationFileException("Only the root configuration file can forbid telemetry, but this file forbids telemetry.", includedAs.toString())
         }
     }
 

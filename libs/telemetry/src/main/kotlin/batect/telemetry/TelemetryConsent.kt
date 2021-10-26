@@ -20,8 +20,18 @@ class TelemetryConsent(
     private val disabledOnCommandLine: Boolean?,
     private val configurationStore: TelemetryConfigurationStore
 ) {
+    private var disabledForThisSession = false
+
+    fun disableTelemetryForThisSession() {
+        disabledForThisSession = true
+    }
+
     val telemetryAllowed: Boolean
         get() {
+            if (disabledForThisSession) {
+                return false
+            }
+
             return when (disabledOnCommandLine) {
                 true -> false
                 false -> true

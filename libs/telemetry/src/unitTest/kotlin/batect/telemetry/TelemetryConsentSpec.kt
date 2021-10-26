@@ -28,19 +28,28 @@ import java.util.UUID
 
 object TelemetryConsentSpec : Spek({
     describe("telemetry consent") {
-        data class TestCase(val disabledOnCommandLine: Boolean?, val consentStateOnDisk: ConsentState, val expected: Boolean)
+        data class TestCase(val disabledOnCommandLine: Boolean?, val consentStateOnDisk: ConsentState, val disabledForThisSession: Boolean, val expected: Boolean)
 
         setOf(
-            TestCase(true, ConsentState.TelemetryDisabled, expected = false),
-            TestCase(true, ConsentState.TelemetryAllowed, expected = false),
-            TestCase(true, ConsentState.None, expected = false),
-            TestCase(false, ConsentState.TelemetryDisabled, expected = true),
-            TestCase(false, ConsentState.TelemetryAllowed, expected = true),
-            TestCase(false, ConsentState.None, expected = true),
-            TestCase(null, ConsentState.TelemetryDisabled, expected = false),
-            TestCase(null, ConsentState.TelemetryAllowed, expected = true),
-            TestCase(null, ConsentState.None, expected = false)
-        ).forEach { (disabledOnCommandLine, consentStateOnDisk, expected) ->
+            TestCase(true, ConsentState.TelemetryDisabled, false, expected = false),
+            TestCase(true, ConsentState.TelemetryAllowed, false, expected = false),
+            TestCase(true, ConsentState.None, false, expected = false),
+            TestCase(false, ConsentState.TelemetryDisabled, false, expected = true),
+            TestCase(false, ConsentState.TelemetryAllowed, false, expected = true),
+            TestCase(false, ConsentState.None, false, expected = true),
+            TestCase(null, ConsentState.TelemetryDisabled, false, expected = false),
+            TestCase(null, ConsentState.TelemetryAllowed, false, expected = true),
+            TestCase(null, ConsentState.None, false, expected = false),
+            TestCase(true, ConsentState.TelemetryDisabled, true, expected = false),
+            TestCase(true, ConsentState.TelemetryAllowed, true, expected = false),
+            TestCase(true, ConsentState.None, true, expected = false),
+            TestCase(false, ConsentState.TelemetryDisabled, true, expected = false),
+            TestCase(false, ConsentState.TelemetryAllowed, true, expected = false),
+            TestCase(false, ConsentState.None, true, expected = false),
+            TestCase(null, ConsentState.TelemetryDisabled, true, expected = false),
+            TestCase(null, ConsentState.TelemetryAllowed, true, expected = false),
+            TestCase(null, ConsentState.None, true, expected = false),
+        ).forEach { (disabledOnCommandLine, consentStateOnDisk, disabledForThisSession, expected) ->
             val commandLineDescription = when (disabledOnCommandLine) {
                 true -> "explicitly disabled on the command line"
                 false -> "explicitly enabled on the command line"
@@ -53,6 +62,8 @@ object TelemetryConsentSpec : Spek({
                 ConsentState.None -> "there is no configuration on disk"
             }
 
+            val sessionDescription = if (disabledForThisSession) "disabled for this session" else "not disabled for this session"
+
             val configurationStore by createForEachTest {
                 mock<TelemetryConfigurationStore> {
                     on { currentConfiguration } doReturn TelemetryConfiguration(UUID.randomUUID(), consentStateOnDisk)
@@ -61,7 +72,13 @@ object TelemetryConsentSpec : Spek({
 
             val consent by createForEachTest { TelemetryConsent(disabledOnCommandLine, configurationStore) }
 
-            given("telemetry is $commandLineDescription and $consentStateOnDiskDescription") {
+            beforeEachTest {
+                if (disabledForThisSession) {
+                    consent.disableTelemetryForThisSession()
+                }
+            }
+
+            given("telemetry is $commandLineDescription, $consentStateOnDiskDescription and $sessionDescription") {
                 val expectedDescription = when (expected) {
                     true -> "allows telemetry"
                     false -> "does not allow telemetry"

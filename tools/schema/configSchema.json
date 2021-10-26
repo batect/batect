@@ -19,6 +19,10 @@
       "description": "The name of your project. Used to label any images built.",
       "minLength": 1
     },
+    "forbid_telemetry": {
+      "type": "boolean",
+      "description": "Forbid reporting telemetry information for this project, even if the user has previously consented to telemetry."
+    },
     "include": {
       "$ref": "#/definitions/includesList"
     }

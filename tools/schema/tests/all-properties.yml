@@ -1,4 +1,5 @@
 project_name: many-tasks-test
+forbid_telemetry: true
 
 .common-vars: &common-vars
   X: 1

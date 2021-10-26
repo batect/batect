@@ -175,7 +175,7 @@ private val cliModule = DI.Module("cli") {
 }
 
 private val configModule = DI.Module("config") {
-    bind<ConfigurationLoader>() with singletonWithLogger { logger -> ConfigurationLoader(instance(), instance(), instance(), instance(), logger) }
+    bind<ConfigurationLoader>() with singletonWithLogger { logger -> ConfigurationLoader(instance(), instance(), instance(), instance(), instance(), logger) }
     bind<GitRepositoryCache>() with singleton { GitRepositoryCache(instance(), instance(), instance()) }
     bind<GitRepositoryCacheCleanupTask>() with singletonWithLogger { logger -> GitRepositoryCacheCleanupTask(instance(), instance(), logger) }
     bind<GitRepositoryCacheNotificationListener>() with singleton { DefaultGitRepositoryCacheNotificationListener(instance(StreamType.Output), commandLineOptions().requestedOutputStyle) }

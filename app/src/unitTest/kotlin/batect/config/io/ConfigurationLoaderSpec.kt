@@ -40,6 +40,7 @@ import batect.git.GitException
 import batect.os.Command
 import batect.os.DefaultPathResolutionContext
 import batect.os.PathResolverFactory
+import batect.telemetry.TelemetryConsent
 import batect.telemetry.TelemetrySessionBuilder
 import batect.telemetry.TelemetrySpanBuilder
 import batect.testutils.createForEachTest
@@ -62,6 +63,7 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.doAnswer
 import org.mockito.kotlin.doThrow
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.spekframework.spek2.Spek
@@ -97,6 +99,7 @@ object ConfigurationLoaderSpec : Spek({
 
         val pathResolverFactory by createForEachTest { PathResolverFactory(fileSystem) }
         val telemetrySpanBuilder by createForEachTest { mock<TelemetrySpanBuilder>() }
+        val telemetryConsent by createForEachTest { mock<TelemetryConsent>() }
 
         @Suppress("UNCHECKED_CAST")
         val telemetrySessionBuilder by createForEachTest {
@@ -110,7 +113,7 @@ object ConfigurationLoaderSpec : Spek({
 
         val logger by createLoggerForEachTest()
         val testFileName = "/theTestFile.yml"
-        val loader by createForEachTest { ConfigurationLoader(includeResolver, pathResolverFactory, telemetrySessionBuilder, gitRepositoryCacheNotificationListener, logger) }
+        val loader by createForEachTest { ConfigurationLoader(includeResolver, pathResolverFactory, telemetrySessionBuilder, telemetryConsent, gitRepositoryCacheNotificationListener, logger) }
 
         fun createFile(path: Path, contents: String) {
             val directory = path.parent
@@ -192,6 +195,10 @@ object ConfigurationLoaderSpec : Spek({
                 }
 
                 itReportsTelemetryAboutTheConfigurationFile(taskCount = 1)
+
+                it("does not disable telemetry") {
+                    verify(telemetryConsent, never()).disableTelemetryForThisSession()
+                }
             }
 
             on("loading that file from a subdirectory") {
@@ -229,6 +236,19 @@ object ConfigurationLoaderSpec : Spek({
             }
 
             itReportsTelemetryAboutTheConfigurationFile()
+        }
+
+        on("loading a valid configuration file with telemetry forbidden") {
+            val config = """
+                |project_name: the_cool_project
+                |forbid_telemetry: true
+            """.trimMargin()
+
+            beforeEachTest { loadConfiguration(config) }
+
+            it("disables telemetry for the session") {
+                verify(telemetryConsent).disableTelemetryForThisSession()
+            }
         }
 
         on("loading a valid configuration file with a task with no dependencies") {
@@ -829,7 +849,7 @@ object ConfigurationLoaderSpec : Spek({
                 """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Unknown property 'thing'. Known properties are: config_variables, containers, include, project_name, tasks") and withLineNumber(2) and withFileName(testFileName) and withPath("thing")))
+                assertThat({ loadConfiguration(config) }, throws(withMessage("Unknown property 'thing'. Known properties are: config_variables, containers, forbid_telemetry, include, project_name, tasks") and withLineNumber(2) and withFileName(testFileName) and withPath("thing")))
             }
         }
 
@@ -1633,6 +1653,25 @@ object ConfigurationLoaderSpec : Spek({
             }
         }
 
+        on("loading a configuration file that references another configuration file which forbids telemetry") {
+            val rootConfigPath by createForEachTest { fileSystem.getPath("/project/batect.yml") }
+            val files by createForEachTest {
+                mapOf(
+                    rootConfigPath to """
+                        |include:
+                        | - 1.yml
+                    """.trimMargin(),
+                    fileSystem.getPath("/project/1.yml") to """
+                        |forbid_telemetry: true
+                    """.trimMargin()
+                )
+            }
+
+            it("should fail with an error message") {
+                assertThat({ loadConfiguration(files, rootConfigPath) }, throws(withMessage("Only the root configuration file can forbid telemetry, but this file forbids telemetry.") and withFileName("/project/1.yml")))
+            }
+        }
+
         on("loading a configuration file that contains a include dependency cycle") {
             val rootConfigPath by createForEachTest { fileSystem.getPath("/project/1.yml") }
             val files by createForEachTest {
@@ -2009,7 +2048,7 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat(
                     { loadConfiguration(files, rootConfigPath) },
                     throws(
-                        withMessage("Unknown property 'blah'. Known properties are: config_variables, containers, include, project_name, tasks") and
+                        withMessage("Unknown property 'blah'. Known properties are: config_variables, containers, forbid_telemetry, include, project_name, tasks") and
                             withFileName("https://myrepo.com/bundles/bundle.git@v1.2.3: 2.yml")
                     )
                 )
@@ -2042,7 +2081,7 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat(
                     { loadConfiguration(files, rootConfigPath) },
                     throws(
-                        withMessage("Unknown property 'blah'. Known properties are: config_variables, containers, include, project_name, tasks") and
+                        withMessage("Unknown property 'blah'. Known properties are: config_variables, containers, forbid_telemetry, include, project_name, tasks") and
                             withFileName("https://myrepo.com/bundles/bundle.git@v1.2.3: thing/2.yml")
                     )
                 )
@@ -2075,7 +2114,7 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat(
                     { loadConfiguration(files, rootConfigPath) },
                     throws(
-                        withMessage("Unknown property 'blah'. Known properties are: config_variables, containers, include, project_name, tasks") and
+                        withMessage("Unknown property 'blah'. Known properties are: config_variables, containers, forbid_telemetry, include, project_name, tasks") and
                             withFileName("https://myrepo.com/bundles/bundle.git@v1.2.3: otherthings/2.yml")
                     )
                 )
@@ -2138,6 +2177,68 @@ object ConfigurationLoaderSpec : Spek({
                     { loadConfiguration(files, rootConfigPath) },
                     throws(
                         withMessage("Only the root configuration file can contain the project name, but this file has a project name.") and
+                            withFileName("https://myrepo.com/bundles/bundle.git@v1.2.3: 2.yml")
+                    )
+                )
+            }
+        }
+
+        on("loading a configuration file that references another configuration file from a Git repository that forbids telemetry") {
+            val rootConfigPath by createForEachTest { fileSystem.getPath("/project/batect.yml") }
+
+            val files by createForEachTest {
+                mapOf(
+                    rootConfigPath to """
+                        |include:
+                        | - type: git
+                        |   repo: https://myrepo.com/bundles/bundle.git
+                        |   ref: v1.2.3
+                        |   path: 1.yml
+                    """.trimMargin(),
+                    pathForGitInclude("https://myrepo.com/bundles/bundle.git", "v1.2.3", "1.yml") to """
+                        |forbid_telemetry: true
+                    """.trimMargin()
+                )
+            }
+
+            it("should fail with an error message with the user-facing configuration file path") {
+                assertThat(
+                    { loadConfiguration(files, rootConfigPath) },
+                    throws(
+                        withMessage("Only the root configuration file can forbid telemetry, but this file forbids telemetry.") and
+                            withFileName("https://myrepo.com/bundles/bundle.git@v1.2.3: 1.yml")
+                    )
+                )
+            }
+        }
+
+        on("loading a configuration file that references another configuration file from a Git repository that also references another file from the same repository that forbids telemetry") {
+            val rootConfigPath by createForEachTest { fileSystem.getPath("/project/batect.yml") }
+
+            val files by createForEachTest {
+                mapOf(
+                    rootConfigPath to """
+                        |include:
+                        | - type: git
+                        |   repo: https://myrepo.com/bundles/bundle.git
+                        |   ref: v1.2.3
+                        |   path: 1.yml
+                    """.trimMargin(),
+                    pathForGitInclude("https://myrepo.com/bundles/bundle.git", "v1.2.3", "1.yml") to """
+                        |include:
+                        | - 2.yml
+                    """.trimMargin(),
+                    pathForGitInclude("https://myrepo.com/bundles/bundle.git", "v1.2.3", "2.yml") to """
+                        |forbid_telemetry: true
+                    """.trimMargin()
+                )
+            }
+
+            it("should fail with an error message with the user-facing configuration file path") {
+                assertThat(
+                    { loadConfiguration(files, rootConfigPath) },
+                    throws(
+                        withMessage("Only the root configuration file can forbid telemetry, but this file forbids telemetry.") and
                             withFileName("https://myrepo.com/bundles/bundle.git@v1.2.3: 2.yml")
                     )
                 )

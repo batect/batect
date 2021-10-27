@@ -16,6 +16,7 @@
 
 package batect.cli.commands
 
+import batect.config.CachePaths
 import batect.config.ProjectPaths
 import batect.docker.client.VolumesClient
 import batect.execution.CacheManager
@@ -24,32 +25,38 @@ import batect.os.deleteDirectory
 import batect.ui.Console
 import org.kodein.di.instance
 import java.nio.file.Files
+import kotlin.io.path.name
 import kotlin.streams.toList
 
 class CleanupCachesCommand(
     private val dockerConnectivity: DockerConnectivity,
     private val volumesClient: VolumesClient,
     private val projectPaths: ProjectPaths,
-    private val console: Console
+    private val console: Console,
+    private val cachePaths: CachePaths = CachePaths(cacheNames = emptySet()),
 ) : Command {
     override fun run(): Int = dockerConnectivity.checkAndRun { kodein ->
         val cacheManager = kodein.instance<CacheManager>()
 
         when (cacheManager.cacheType) {
-            CacheType.Volume -> runForVolumes(cacheManager)
-            CacheType.Directory -> runForDirectories()
+            CacheType.Volume -> runForVolumes(cacheManager, cachePaths.cacheNames)
+            CacheType.Directory -> runForDirectories(cachePaths.cacheNames)
         }
 
         0
     }
 
-    private fun runForVolumes(cacheManager: CacheManager) {
+    private fun runForVolumes(cacheManager: CacheManager, cacheNames: Set<String>) {
         val prefix = "batect-cache-${cacheManager.projectCacheKey}-"
 
         console.println("Checking for cache volumes...")
 
-        val volumes = volumesClient.getAll()
-            .filter { it.name.startsWith(prefix) }
+        val volumes = when {
+            cacheNames.isNotEmpty() -> volumesClient.getAll()
+                .filter { it.name.startsWith(prefix) && it.name.substringAfter(prefix) in cacheNames }
+            else -> volumesClient.getAll()
+                .filter { it.name.startsWith(prefix) }
+        }
 
         volumes.forEach { volume ->
             console.println("Deleting volume '${volume.name}'...")
@@ -63,12 +70,17 @@ class CleanupCachesCommand(
         }
     }
 
-    private fun runForDirectories() {
+    private fun runForDirectories(cacheNames: Set<String>) {
         console.println("Checking for cache directories in '${projectPaths.cacheDirectory}'...")
 
-        val directories = Files.list(projectPaths.cacheDirectory)
-            .filter { Files.isDirectory(it) }
-            .toList()
+        val directories = when {
+            cacheNames.isNotEmpty() -> Files.list(projectPaths.cacheDirectory)
+                .filter { Files.isDirectory(it) && it.name in cacheNames }
+                .toList()
+            else -> Files.list(projectPaths.cacheDirectory)
+                .filter { Files.isDirectory(it) }
+                .toList()
+        }
 
         directories.forEach { directory ->
             console.println("Deleting '$directory'...")

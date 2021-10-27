@@ -117,6 +117,7 @@ interface OptionParserContainer {
     fun singleValueMapOption(group: OptionGroup, longName: String, description: String, shortName: Char? = null) = SingleValueMapOption(group, longName, description, shortName)
     fun singleValueMapOption(group: OptionGroup, longName: String, description: String, valueFormatForHelp: String, shortName: Char? = null) = SingleValueMapOption(group, longName, description, shortName, valueFormatForHelp)
     fun multiValueMapOption(group: OptionGroup, longName: String, description: String, valueFormatForHelp: String, shortName: Char? = null) = MultiValueMapOption(group, longName, description, shortName, valueFormatForHelp)
+    fun setOption(group: OptionGroup, longName: String, description: String, shortName: Char? = null) = SetOption(group, longName, description, shortName)
 }
 
 sealed class OptionsParsingResult {

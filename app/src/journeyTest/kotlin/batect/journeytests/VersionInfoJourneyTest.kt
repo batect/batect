@@ -21,10 +21,8 @@ import batect.journeytests.testutils.exitCode
 import batect.journeytests.testutils.output
 import batect.testutils.on
 import ch.tutteli.atrium.api.fluent.en_GB.contains
-import ch.tutteli.atrium.api.fluent.en_GB.toBe
 import ch.tutteli.atrium.api.fluent.en_GB.toContain
 import ch.tutteli.atrium.api.fluent.en_GB.toEqual
-import ch.tutteli.atrium.api.verbs.assert
 import ch.tutteli.atrium.api.verbs.expect
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe

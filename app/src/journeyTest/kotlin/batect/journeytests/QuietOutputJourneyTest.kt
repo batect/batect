@@ -22,9 +22,7 @@ import batect.journeytests.testutils.output
 import batect.testutils.createForGroup
 import batect.testutils.on
 import batect.testutils.runBeforeGroup
-import ch.tutteli.atrium.api.fluent.en_GB.toBe
 import ch.tutteli.atrium.api.fluent.en_GB.toEqual
-import ch.tutteli.atrium.api.verbs.assert
 import ch.tutteli.atrium.api.verbs.expect
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe

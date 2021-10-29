@@ -24,10 +24,8 @@ import batect.testutils.on
 import batect.testutils.runBeforeGroup
 import batect.testutils.withPlatformSpecificLineSeparator
 import ch.tutteli.atrium.api.fluent.en_GB.contains
-import ch.tutteli.atrium.api.fluent.en_GB.notToBe
 import ch.tutteli.atrium.api.fluent.en_GB.notToEqual
 import ch.tutteli.atrium.api.fluent.en_GB.toContain
-import ch.tutteli.atrium.api.verbs.assert
 import ch.tutteli.atrium.api.verbs.expect
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe

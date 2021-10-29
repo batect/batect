@@ -25,7 +25,9 @@ import batect.testutils.runBeforeGroup
 import ch.tutteli.atrium.api.fluent.en_GB.any
 import ch.tutteli.atrium.api.fluent.en_GB.matches
 import ch.tutteli.atrium.api.fluent.en_GB.toBe
+import ch.tutteli.atrium.api.fluent.en_GB.toEqual
 import ch.tutteli.atrium.api.verbs.assert
+import ch.tutteli.atrium.api.verbs.expect
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -39,11 +41,11 @@ object TaskUsingLogDriverJourneyTest : Spek({
             it("prints the output from that task") {
                 // On Docker 20.10+, retrieving output from a container using a log driver succeeds.
                 // On versions prior to 20.10, retrieving output from a container using a log driver fails.
-                assert(result.output.lines()).any { matches("^(Error attaching: configured logging driver does not support reading|This is some output from the task)$".toRegex()) }
+                expect(result.output.lines()).any { matches("^(Error attaching: configured logging driver does not support reading|This is some output from the task)$".toRegex()) }
             }
 
             it("returns the exit code from that task") {
-                assert(result).exitCode().toBe(123)
+                expect(result).exitCode().toEqual(123)
             }
         }
     }

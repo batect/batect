@@ -24,7 +24,10 @@ import batect.testutils.on
 import batect.testutils.runBeforeGroup
 import ch.tutteli.atrium.api.fluent.en_GB.contains
 import ch.tutteli.atrium.api.fluent.en_GB.notToBe
+import ch.tutteli.atrium.api.fluent.en_GB.notToEqual
+import ch.tutteli.atrium.api.fluent.en_GB.toContain
 import ch.tutteli.atrium.api.verbs.assert
+import ch.tutteli.atrium.api.verbs.expect
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -41,11 +44,11 @@ object UpgradeJourneyTest : Spek({
             val result by runBeforeGroup { runner.runApplication(listOf("--upgrade")) }
 
             it("prints a message indicating that the upgrade can only be performed if the wrapper script is used") {
-                assert(result).output().contains("Batect was started without using the wrapper script and so cannot upgrade it.")
+                expect(result).output().toContain("Batect was started without using the wrapper script and so cannot upgrade it.")
             }
 
             it("returns a non-zero exit code") {
-                assert(result).exitCode().notToBe(0)
+                expect(result).exitCode().notToEqual(0)
             }
         }
     }

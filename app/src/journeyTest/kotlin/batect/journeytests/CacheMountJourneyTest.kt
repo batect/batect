@@ -26,7 +26,10 @@ import batect.testutils.on
 import batect.testutils.runBeforeGroup
 import ch.tutteli.atrium.api.fluent.en_GB.contains
 import ch.tutteli.atrium.api.fluent.en_GB.toBe
+import ch.tutteli.atrium.api.fluent.en_GB.toContain
+import ch.tutteli.atrium.api.fluent.en_GB.toEqual
 import ch.tutteli.atrium.api.verbs.assert
+import ch.tutteli.atrium.api.verbs.expect
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -49,19 +52,19 @@ object CacheMountJourneyTest : Spek({
                     val secondResult by runBeforeGroup { runner.runApplication(listOf(arg, "the-task")) }
 
                     it("should not have access to the file in the cache in the first run and create it") {
-                        assert(firstResult).output().contains("File created in task does not exist, creating it\n")
+                        expect(firstResult).output().toContain("File created in task does not exist, creating it\n")
                     }
 
                     it("should have access to the file in the cache in the second run") {
-                        assert(secondResult).output().contains("File created in task exists\n")
+                        expect(secondResult).output().toContain("File created in task exists\n")
                     }
 
                     it("should succeed on the first run") {
-                        assert(firstResult).exitCode().toBe(0)
+                        expect(firstResult).exitCode().toEqual(0)
                     }
 
                     it("should succeed on the second run") {
-                        assert(secondResult).exitCode().toBe(0)
+                        expect(secondResult).exitCode().toEqual(0)
                     }
                 }
             }

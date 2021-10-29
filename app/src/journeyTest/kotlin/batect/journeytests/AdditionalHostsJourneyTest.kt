@@ -24,7 +24,10 @@ import batect.testutils.on
 import batect.testutils.runBeforeGroup
 import ch.tutteli.atrium.api.fluent.en_GB.contains
 import ch.tutteli.atrium.api.fluent.en_GB.toBe
+import ch.tutteli.atrium.api.fluent.en_GB.toContain
+import ch.tutteli.atrium.api.fluent.en_GB.toEqual
 import ch.tutteli.atrium.api.verbs.assert
+import ch.tutteli.atrium.api.verbs.expect
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -36,11 +39,11 @@ object AdditionalHostsJourneyTest : Spek({
             val result by runBeforeGroup { runner.runApplication(listOf("the-task")) }
 
             it("is able to resolve the additional host successfully") {
-                assert(result).output().contains("1.2.3.4           additionalhost.batect.dev  additionalhost.batect.dev\n")
+                expect(result).output().toContain("1.2.3.4           additionalhost.batect.dev  additionalhost.batect.dev\n")
             }
 
             it("returns a zero exit code") {
-                assert(result).exitCode().toBe(0)
+                expect(result).exitCode().toEqual(0)
             }
         }
     }

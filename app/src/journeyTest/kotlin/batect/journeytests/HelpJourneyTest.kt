@@ -24,7 +24,10 @@ import batect.testutils.on
 import batect.testutils.runBeforeGroup
 import ch.tutteli.atrium.api.fluent.en_GB.contains
 import ch.tutteli.atrium.api.fluent.en_GB.notToBe
+import ch.tutteli.atrium.api.fluent.en_GB.notToEqual
+import ch.tutteli.atrium.api.fluent.en_GB.toContain
 import ch.tutteli.atrium.api.verbs.assert
+import ch.tutteli.atrium.api.verbs.expect
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -36,11 +39,11 @@ object HelpJourneyTest : Spek({
             val result by runBeforeGroup { runner.runApplication(listOf("--help")) }
 
             it("prints the help header") {
-                assert(result).output().contains("Usage: batect [options] task")
+                expect(result).output().toContain("Usage: batect [options] task")
             }
 
             it("returns a non-zero exit code") {
-                assert(result).exitCode().notToBe(0)
+                expect(result).exitCode().notToEqual(0)
             }
         }
     }

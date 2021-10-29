@@ -25,7 +25,10 @@ import batect.testutils.platformLineSeparator
 import batect.testutils.runBeforeGroup
 import ch.tutteli.atrium.api.fluent.en_GB.contains
 import ch.tutteli.atrium.api.fluent.en_GB.toBe
+import ch.tutteli.atrium.api.fluent.en_GB.toContain
+import ch.tutteli.atrium.api.fluent.en_GB.toEqual
 import ch.tutteli.atrium.api.verbs.assert
+import ch.tutteli.atrium.api.verbs.expect
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -37,15 +40,15 @@ object TaskWithOnlyPrerequisiteJourneyTest : Spek({
             val result by runBeforeGroup { runner.runApplication(listOf("do-stuff")) }
 
             it("prints the output from the prerequisite task") {
-                assert(result).output().contains("This is some output from the build task\n")
+                expect(result).output().toContain("This is some output from the build task\n")
             }
 
             it("prints a message indicating that the main task only defines prerequisites") {
-                assert(result).output().contains("The task do-stuff only defines prerequisite tasks, nothing more to do.$platformLineSeparator")
+                expect(result).output().toContain("The task do-stuff only defines prerequisite tasks, nothing more to do.$platformLineSeparator")
             }
 
             it("returns a zero exit code") {
-                assert(result).exitCode().toBe(0)
+                expect(result).exitCode().toEqual(0)
             }
         }
     }

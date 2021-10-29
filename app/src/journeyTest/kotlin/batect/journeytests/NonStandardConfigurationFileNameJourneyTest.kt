@@ -25,7 +25,10 @@ import batect.testutils.runBeforeGroup
 import batect.testutils.withPlatformSpecificLineSeparator
 import ch.tutteli.atrium.api.fluent.en_GB.contains
 import ch.tutteli.atrium.api.fluent.en_GB.toBe
+import ch.tutteli.atrium.api.fluent.en_GB.toContain
+import ch.tutteli.atrium.api.fluent.en_GB.toEqual
 import ch.tutteli.atrium.api.verbs.assert
+import ch.tutteli.atrium.api.verbs.expect
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -36,7 +39,7 @@ object NonStandardConfigurationFileNameJourneyTest : Spek({
             val result by runBeforeGroup { runner.runApplication(listOf("-f", "another-name.yml", "--list-tasks")) }
 
             it("prints a list of all available tasks") {
-                assert(result).output().contains(
+                expect(result).output().toContain(
                     """
                     |- task-1
                     |- task-2
@@ -46,7 +49,7 @@ object NonStandardConfigurationFileNameJourneyTest : Spek({
             }
 
             it("returns a zero exit code") {
-                assert(result).exitCode().toBe(0)
+                expect(result).exitCode().toEqual(0)
             }
         }
 
@@ -55,11 +58,11 @@ object NonStandardConfigurationFileNameJourneyTest : Spek({
             val result by runBeforeGroup { runner.runApplication(listOf("-f", "another-name.yml", "task-1")) }
 
             it("prints the output of the task ") {
-                assert(result).output().contains("This is some output from task 1\n")
+                expect(result).output().toContain("This is some output from task 1\n")
             }
 
             it("returns the exit code from the task") {
-                assert(result).exitCode().toBe(123)
+                expect(result).exitCode().toEqual(123)
             }
         }
     }

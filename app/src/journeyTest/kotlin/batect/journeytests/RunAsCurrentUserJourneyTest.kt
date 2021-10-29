@@ -26,7 +26,10 @@ import batect.testutils.runBeforeGroup
 import ch.tutteli.atrium.api.fluent.en_GB.contains
 import ch.tutteli.atrium.api.fluent.en_GB.notToThrow
 import ch.tutteli.atrium.api.fluent.en_GB.toBe
+import ch.tutteli.atrium.api.fluent.en_GB.toContain
+import ch.tutteli.atrium.api.fluent.en_GB.toEqual
 import ch.tutteli.atrium.api.verbs.assert
+import ch.tutteli.atrium.api.verbs.expect
 import jnr.ffi.Platform
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
@@ -67,7 +70,7 @@ object RunAsCurrentUserJourneyTest : Spek({
                         "/etc/hosts exists"
                     ).joinToString("\n")
 
-                    assert(result).output().contains(expectedOutput)
+                    expect(result).output().toContain(expectedOutput)
                 }
 
                 if (Platform.getNativePlatform().os != Platform.OS.WINDOWS) {
@@ -76,12 +79,12 @@ object RunAsCurrentUserJourneyTest : Spek({
                     // access, so this test isn't so meaningful.
 
                     it("creates files as the current user, not root") {
-                        assert(Files.getOwner(expectedFilePath).name).toBe(localUserName)
+                        expect(Files.getOwner(expectedFilePath).name).toEqual(localUserName)
                     }
                 }
 
                 it("creates files so that the current host user can read, edit and delete them") {
-                    assert {
+                    expect {
                         Files.readAllBytes(expectedFilePath)
                         Files.write(expectedFilePath, byteArrayOf(1, 2, 3))
                         Files.delete(expectedFilePath)
@@ -89,7 +92,7 @@ object RunAsCurrentUserJourneyTest : Spek({
                 }
 
                 it("returns the exit code from that task") {
-                    assert(result).exitCode().toBe(0)
+                    expect(result).exitCode().toEqual(0)
                 }
             }
         }

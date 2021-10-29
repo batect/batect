@@ -49,11 +49,12 @@ repositories {
 
 dependencies {
     implementation(platform("com.squareup.okhttp3:okhttp-bom:$okhttpVersion"))
+    implementation(platform("com.squareup.okio:okio-bom:$okioVersion"))
     implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
 
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
     implementation("org.kodein.di:kodein-di:$kodeinVersion")
-    implementation("com.squareup.okio:okio:$okioVersion")
+    implementation("com.squareup.okio:okio")
     implementation("com.squareup.okhttp3:okhttp")
     implementation("com.github.jnr:jnr-posix:$jnrPosixVersion")
     implementation("com.charleskorn.kaml:kaml:$kamlVersion")

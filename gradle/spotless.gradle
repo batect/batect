@@ -32,7 +32,7 @@ ext.licenseText = """
 
 def kotlinLicenseHeader = "/*$licenseText*/\n\n"
 def javaLicenseHeader = "/*$licenseText*/\n\n"
-def ktlintVersion = "0.42.1"
+def ktlintVersion = "0.43.0"
 
 spotless {
     format "misc", {

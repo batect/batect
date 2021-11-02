@@ -32,7 +32,6 @@ import batect.telemetry.AttributeValue
 import batect.telemetry.CommonAttributes
 import batect.telemetry.CommonEvents
 import batect.telemetry.EnvironmentTelemetryCollector
-import batect.telemetry.TelemetryConsentPrompt
 import batect.telemetry.TelemetryManager
 import batect.telemetry.TelemetrySessionBuilder
 import batect.testutils.createForEachTest
@@ -101,7 +100,6 @@ object ApplicationSpec : Spek({
                 val consoleManager by createForEachTest { mock<ConsoleManager>() }
                 val errorConsole by createForEachTest { mock<Console>() }
                 val wrapperCache by createForEachTest { mock<WrapperCache>() }
-                val telemetryConsentPrompt by createForEachTest { mock<TelemetryConsentPrompt>() }
                 val telemetryManager by createForEachTest { mock<TelemetryManager>() }
                 val environmentTelemetryCollector by createForEachTest { mock<EnvironmentTelemetryCollector>() }
 
@@ -113,7 +111,6 @@ object ApplicationSpec : Spek({
                         bind<Console>(StreamType.Error) with instance(errorConsole)
                         bind<ConsoleManager>() with instance(consoleManager)
                         bind<WrapperCache>() with instance(wrapperCache)
-                        bind<TelemetryConsentPrompt>() with instance(telemetryConsentPrompt)
                         bind<TelemetryManager>() with instance(telemetryManager)
                         bind<EnvironmentTelemetryCollector>() with instance(environmentTelemetryCollector)
                     }
@@ -151,12 +148,11 @@ object ApplicationSpec : Spek({
                             assertThat(exitCode, equalTo(123))
                         }
 
-                        it("logs information about the application, enables console escape sequences, updates the last used time for the wrapper script, prompts for telemetry consent and collects information about the environment before running the command") {
-                            inOrder(consoleManager, applicationInfoLogger, wrapperCache, telemetryConsentPrompt, environmentTelemetryCollector, command) {
+                        it("logs information about the application, enables console escape sequences, updates the last used time for the wrapper script and collects information about the environment before running the command") {
+                            inOrder(consoleManager, applicationInfoLogger, wrapperCache, environmentTelemetryCollector, command) {
                                 verify(applicationInfoLogger).logApplicationInfo(args)
                                 verify(consoleManager).enableConsoleEscapeSequences()
                                 verify(wrapperCache).setLastUsedForCurrentVersion()
-                                verify(telemetryConsentPrompt).askForConsentIfRequired()
                                 verify(environmentTelemetryCollector).collect(command::class)
                                 verify(command).run()
                             }

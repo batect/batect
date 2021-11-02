@@ -99,9 +99,7 @@ class ConfigurationLoader(
                 remainingIncludesToLoad -= filesLoaded.keys
             }
 
-            if (rootConfigFile.forbidTelemetry) {
-                telemetryConsent.disableTelemetryForThisSession()
-            }
+            telemetryConsent.forbiddenByProjectConfig = rootConfigFile.forbidTelemetry
 
             val projectName = rootConfigFile.projectName ?: inferProjectName(absolutePathToRootConfigFile)
             val config = RawConfiguration(projectName, mergeTasks(filesLoaded), mergeContainers(filesLoaded), mergeConfigVariables(filesLoaded))

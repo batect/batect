@@ -26,6 +26,7 @@ import batect.ui.YesNoAnswer
 
 class TelemetryConsentPrompt(
     private val configurationStore: TelemetryConfigurationStore,
+    private val telemetryConsent: TelemetryConsent,
     private val commandLineOptions: CommandLineOptions,
     private val consoleInfo: ConsoleInfo,
     private val ciEnvironmentDetector: CIEnvironmentDetector,
@@ -58,6 +59,7 @@ class TelemetryConsentPrompt(
     private val shouldPromptForConsent: Boolean
         get() {
             if (configurationStore.currentConfiguration.state != ConsentState.None) return false
+            if (telemetryConsent.forbiddenByProjectConfig) return false
             if (commandLineOptions.disableTelemetry != null) return false
             if (commandLineOptions.permanentlyEnableTelemetry) return false
             if (commandLineOptions.permanentlyDisableTelemetry) return false

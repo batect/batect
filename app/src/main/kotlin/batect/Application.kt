@@ -92,7 +92,6 @@ class Application(override val directDI: DirectDI) : DirectDIAware {
         val consoleManager = extendedKodein.instance<ConsoleManager>()
         val errorConsole = extendedKodein.instance<Console>(StreamType.Error)
         val wrapperCache = extendedKodein.instance<WrapperCache>()
-        val telemetryConsentPrompt = extendedKodein.instance<TelemetryConsentPrompt>()
         val commandFactory = extendedKodein.instance<CommandFactory>()
         val environmentTelemetryCollector = extendedKodein.instance<EnvironmentTelemetryCollector>()
 
@@ -102,7 +101,6 @@ class Application(override val directDI: DirectDI) : DirectDIAware {
 
             consoleManager.enableConsoleEscapeSequences()
             wrapperCache.setLastUsedForCurrentVersion()
-            telemetryConsentPrompt.askForConsentIfRequired()
 
             val command = commandFactory.createCommand(options, extendedKodein)
             environmentTelemetryCollector.collect(command::class)

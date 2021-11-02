@@ -197,7 +197,7 @@ object ConfigurationLoaderSpec : Spek({
                 itReportsTelemetryAboutTheConfigurationFile(taskCount = 1)
 
                 it("does not disable telemetry") {
-                    verify(telemetryConsent, never()).disableTelemetryForThisSession()
+                    verify(telemetryConsent).forbiddenByProjectConfig = false
                 }
             }
 
@@ -247,7 +247,7 @@ object ConfigurationLoaderSpec : Spek({
             beforeEachTest { loadConfiguration(config) }
 
             it("disables telemetry for the session") {
-                verify(telemetryConsent).disableTelemetryForThisSession()
+                verify(telemetryConsent).forbiddenByProjectConfig = true
             }
         }
 

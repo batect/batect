@@ -23,8 +23,9 @@ import batect.testutils.createForGroup
 import batect.testutils.on
 import batect.testutils.runBeforeGroup
 import ch.tutteli.atrium.api.fluent.en_GB.contains
-import ch.tutteli.atrium.api.fluent.en_GB.toBe
-import ch.tutteli.atrium.api.verbs.assert
+import ch.tutteli.atrium.api.fluent.en_GB.toContain
+import ch.tutteli.atrium.api.fluent.en_GB.toEqual
+import ch.tutteli.atrium.api.verbs.expect
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -36,11 +37,11 @@ object PrivilegedContainerJourneyTest : Spek({
             val result by runBeforeGroup { runner.runApplication(listOf("the-task")) }
 
             it("runs the container in privileged mode") {
-                assert(result).output().contains("Container is privileged\n")
+                expect(result).output().toContain("Container is privileged\n")
             }
 
             it("runs successfully") {
-                assert(result).exitCode().toBe(0)
+                expect(result).exitCode().toEqual(0)
             }
         }
     }

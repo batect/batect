@@ -236,10 +236,10 @@ class CommandLineOptionsParser(
     private val generateShellTabCompletionScript: Shell? by valueOption(hiddenOptionsGroup, "generate-completion-script", "Generate shell tab completion script for given shell.", ValueConverters.enum<Shell>(), showInHelp = false)
     private val generateShellTabCompletionTaskInformation: Shell? by valueOption(hiddenOptionsGroup, "generate-completion-task-info", "Generate shell tab completion task information for given shell.", ValueConverters.enum<Shell>(), showInHelp = false)
 
-    private val cleanCache: Set<String> by setOption(
+    private val cleanCaches: Set<String> by setOption(
         group = cacheOptionsGroup,
         longName = "clean-cache",
-        description = "Clean given cache and exit."
+        description = "Clean given cache(s) and exit."
     )
 
     fun parse(args: Iterable<String>): CommandLineOptionsParsingResult {
@@ -270,7 +270,7 @@ class CommandLineOptionsParser(
             permanentlyEnableTelemetry ||
             generateShellTabCompletionScript != null ||
             generateShellTabCompletionTaskInformation != null ||
-            cleanCache.isNotEmpty()
+            cleanCaches.isNotEmpty()
         ) {
             return CommandLineOptionsParsingResult.Succeeded(createOptionsObject(null, emptyList()))
         }
@@ -347,7 +347,7 @@ class CommandLineOptionsParser(
         generateShellTabCompletionScript = generateShellTabCompletionScript,
         generateShellTabCompletionTaskInformation = generateShellTabCompletionTaskInformation,
         maximumLevelOfParallelism = maximumLevelOfParallelism,
-        cleanCache = cleanCache,
+        cleanCaches = cleanCaches,
     )
 }
 

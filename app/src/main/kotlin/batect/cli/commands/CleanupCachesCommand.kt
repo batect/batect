@@ -16,7 +16,6 @@
 
 package batect.cli.commands
 
-import batect.config.CachePaths
 import batect.config.ProjectPaths
 import batect.docker.client.VolumesClient
 import batect.execution.CacheManager
@@ -33,27 +32,27 @@ class CleanupCachesCommand(
     private val volumesClient: VolumesClient,
     private val projectPaths: ProjectPaths,
     private val console: Console,
-    private val cachePaths: CachePaths = CachePaths(cacheNames = emptySet()),
+    private val cachesToClean: Set<String>
 ) : Command {
     override fun run(): Int = dockerConnectivity.checkAndRun { kodein ->
         val cacheManager = kodein.instance<CacheManager>()
 
         when (cacheManager.cacheType) {
-            CacheType.Volume -> runForVolumes(cacheManager, cachePaths.cacheNames)
-            CacheType.Directory -> runForDirectories(cachePaths.cacheNames)
+            CacheType.Volume -> runForVolumes(cacheManager, cachesToClean)
+            CacheType.Directory -> runForDirectories(cachesToClean)
         }
 
         0
     }
 
-    private fun runForVolumes(cacheManager: CacheManager, cacheNames: Set<String>) {
+    private fun runForVolumes(cacheManager: CacheManager, cachesToClean: Set<String>) {
         val prefix = "batect-cache-${cacheManager.projectCacheKey}-"
 
         console.println("Checking for cache volumes...")
 
         val volumes = when {
-            cacheNames.isNotEmpty() -> volumesClient.getAll()
-                .filter { it.name.startsWith(prefix) && it.name.substringAfter(prefix) in cacheNames }
+            cachesToClean.isNotEmpty() -> volumesClient.getAll()
+                .filter { it.name.startsWith(prefix) && it.name.substringAfter(prefix) in cachesToClean }
             else -> volumesClient.getAll()
                 .filter { it.name.startsWith(prefix) }
         }
@@ -70,12 +69,12 @@ class CleanupCachesCommand(
         }
     }
 
-    private fun runForDirectories(cacheNames: Set<String>) {
+    private fun runForDirectories(cachesToClean: Set<String>) {
         console.println("Checking for cache directories in '${projectPaths.cacheDirectory}'...")
 
         val directories = when {
-            cacheNames.isNotEmpty() -> Files.list(projectPaths.cacheDirectory)
-                .filter { Files.isDirectory(it) && it.name in cacheNames }
+            cachesToClean.isNotEmpty() -> Files.list(projectPaths.cacheDirectory)
+                .filter { Files.isDirectory(it) && it.name in cachesToClean }
                 .toList()
             else -> Files.list(projectPaths.cacheDirectory)
                 .filter { Files.isDirectory(it) }

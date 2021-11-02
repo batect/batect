@@ -24,8 +24,9 @@ import batect.testutils.on
 import batect.testutils.runBeforeGroup
 import batect.testutils.withPlatformSpecificLineSeparator
 import ch.tutteli.atrium.api.fluent.en_GB.contains
-import ch.tutteli.atrium.api.fluent.en_GB.notToBe
-import ch.tutteli.atrium.api.verbs.assert
+import ch.tutteli.atrium.api.fluent.en_GB.notToEqual
+import ch.tutteli.atrium.api.fluent.en_GB.toContain
+import ch.tutteli.atrium.api.verbs.expect
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -37,17 +38,18 @@ object TaskWithUnhealthyDependencyJourneyTest : Spek({
             val result by runBeforeGroup { runner.runApplication(listOf("--no-color", "the-task")) }
 
             it("prints an appropriate error message") {
-                assert(result).output().contains("Container http-server did not become healthy.\nThe configured health check did not indicate that the container was healthy within the timeout period.".withPlatformSpecificLineSeparator())
+                expect(result).output()
+                    .toContain("Container http-server did not become healthy.\nThe configured health check did not indicate that the container was healthy within the timeout period.".withPlatformSpecificLineSeparator())
             }
 
             it("prints details of the failing health check") {
-                assert(result).output().contains("The last health check exited with code 1 and output:")
-                assert(result).output().contains("This is some normal output")
-                assert(result).output().contains("This is some error output")
+                expect(result).output().toContain("The last health check exited with code 1 and output:")
+                expect(result).output().toContain("This is some normal output")
+                expect(result).output().toContain("This is some error output")
             }
 
             it("returns a non-zero exit code") {
-                assert(result).exitCode().notToBe(0)
+                expect(result).exitCode().notToEqual(0)
             }
         }
     }

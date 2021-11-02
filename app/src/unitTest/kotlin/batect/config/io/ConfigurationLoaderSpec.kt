@@ -63,7 +63,6 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.doAnswer
 import org.mockito.kotlin.doThrow
 import org.mockito.kotlin.mock
-import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.spekframework.spek2.Spek
@@ -197,7 +196,7 @@ object ConfigurationLoaderSpec : Spek({
                 itReportsTelemetryAboutTheConfigurationFile(taskCount = 1)
 
                 it("does not disable telemetry") {
-                    verify(telemetryConsent, never()).disableTelemetryForThisSession()
+                    verify(telemetryConsent).forbiddenByProjectConfig = false
                 }
             }
 
@@ -247,7 +246,7 @@ object ConfigurationLoaderSpec : Spek({
             beforeEachTest { loadConfiguration(config) }
 
             it("disables telemetry for the session") {
-                verify(telemetryConsent).disableTelemetryForThisSession()
+                verify(telemetryConsent).forbiddenByProjectConfig = true
             }
         }
 

@@ -24,8 +24,9 @@ import batect.testutils.on
 import batect.testutils.runBeforeGroup
 import batect.testutils.withPlatformSpecificLineSeparator
 import ch.tutteli.atrium.api.fluent.en_GB.contains
-import ch.tutteli.atrium.api.fluent.en_GB.toBe
-import ch.tutteli.atrium.api.verbs.assert
+import ch.tutteli.atrium.api.fluent.en_GB.toContain
+import ch.tutteli.atrium.api.fluent.en_GB.toEqual
+import ch.tutteli.atrium.api.verbs.expect
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -37,7 +38,7 @@ object ListTasksJourneyTest : Spek({
             val result by runBeforeGroup { runner.runApplication(listOf("--list-tasks")) }
 
             it("prints a list of all available tasks") {
-                assert(result).output().contains(
+                expect(result).output().toContain(
                     """
                     |- task-1: do the first thing
                     |- task-2: do the second thing
@@ -47,7 +48,7 @@ object ListTasksJourneyTest : Spek({
             }
 
             it("returns a zero exit code") {
-                assert(result).exitCode().toBe(0)
+                expect(result).exitCode().toEqual(0)
             }
         }
     }

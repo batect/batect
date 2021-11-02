@@ -24,8 +24,9 @@ import batect.testutils.createForGroup
 import batect.testutils.on
 import batect.testutils.runBeforeGroup
 import ch.tutteli.atrium.api.fluent.en_GB.contains
-import ch.tutteli.atrium.api.fluent.en_GB.toBe
-import ch.tutteli.atrium.api.verbs.assert
+import ch.tutteli.atrium.api.fluent.en_GB.toContain
+import ch.tutteli.atrium.api.fluent.en_GB.toEqual
+import ch.tutteli.atrium.api.verbs.expect
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -49,11 +50,11 @@ object RunAsCurrentUserWithCacheJourneyTest : Spek({
                     "/home/special-place/cache/created-file created"
                 ).joinToString("\n")
 
-                assert(result).output().contains(expectedOutput)
+                expect(result).output().toContain(expectedOutput)
             }
 
             it("returns the exit code from that task") {
-                assert(result).exitCode().toBe(0)
+                expect(result).exitCode().toEqual(0)
             }
         }
     }

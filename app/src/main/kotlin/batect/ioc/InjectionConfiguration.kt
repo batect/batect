@@ -36,7 +36,6 @@ import batect.cli.commands.completion.GenerateShellTabCompletionScriptCommand
 import batect.cli.commands.completion.GenerateShellTabCompletionTaskInformationCommand
 import batect.cli.commands.completion.ZshShellTabCompletionOptionGenerator
 import batect.cli.commands.completion.ZshShellTabCompletionScriptGenerator
-import batect.config.CachePaths
 import batect.config.ProjectPaths
 import batect.config.includes.DefaultGitRepositoryCacheNotificationListener
 import batect.config.includes.GitRepositoryCache
@@ -157,7 +156,7 @@ val rootModule = DI.Module("root") {
 private val cliModule = DI.Module("cli") {
     bind<BashShellTabCompletionScriptGenerator>() with singleton { BashShellTabCompletionScriptGenerator() }
     bind<BackgroundTaskManager>() with singleton { BackgroundTaskManager(instance(), instance(), instance()) }
-    bind<CleanupCachesCommand>() with singleton { CleanupCachesCommand(instance(), instance(), instance(), instance(StreamType.Output), instance()) }
+    bind<CleanupCachesCommand>() with singleton { CleanupCachesCommand(instance(), instance(), instance(), instance(StreamType.Output), commandLineOptions().cleanCaches) }
     bind<CommandFactory>() with singleton { CommandFactory() }
     bind<DisableTelemetryCommand>() with singleton { DisableTelemetryCommand(instance(), instance(), instance(StreamType.Output)) }
     bind<DockerConnectivity>() with singleton { DockerConnectivity(instance(), instance(), instance(StreamType.Error), instance()) }
@@ -168,7 +167,7 @@ private val cliModule = DI.Module("cli") {
     bind<FishShellTabCompletionLineGenerator>() with singleton { FishShellTabCompletionLineGenerator() }
     bind<HelpCommand>() with singleton { HelpCommand(instance(), instance(StreamType.Output), instance()) }
     bind<ListTasksCommand>() with singleton { ListTasksCommand(instance(), instance(), instance(StreamType.Output)) }
-    bind<RunTaskCommand>() with singleton { RunTaskCommand(instance(), instance(), instance(), instance(), instance()) }
+    bind<RunTaskCommand>() with singleton { RunTaskCommand(instance(), instance(), instance(), instance(), instance(), instance()) }
     bind<UpgradeCommand>() with singletonWithLogger { logger -> UpgradeCommand(instance(), instance(), instance(), instance(), instance(StreamType.Output), instance(StreamType.Error), instance(), instance(), logger) }
     bind<VersionInfoCommand>() with singleton { VersionInfoCommand(instance(), instance(StreamType.Output), instance(), instance(), instance(), instance()) }
     bind<ZshShellTabCompletionOptionGenerator>() with singleton { ZshShellTabCompletionOptionGenerator() }
@@ -182,7 +181,6 @@ private val configModule = DI.Module("config") {
     bind<GitRepositoryCacheNotificationListener>() with singleton { DefaultGitRepositoryCacheNotificationListener(instance(StreamType.Output), commandLineOptions().requestedOutputStyle) }
     bind<IncludeResolver>() with singleton { IncludeResolver(instance()) }
     bind<ProjectPaths>() with singleton { ProjectPaths(commandLineOptions().configurationFileName) }
-    bind<CachePaths>() with singleton { CachePaths(commandLineOptions().cleanCache) }
 }
 
 private val dockerModule = DI.Module("docker") {
@@ -282,7 +280,7 @@ private val telemetryModule = DI.Module("telemetry") {
     bind<EnvironmentTelemetryCollector>() with singleton { EnvironmentTelemetryCollector(instance(), instance(), instance(), instance(), instance(), instance(), instance()) }
     bind<TelemetryConfigurationStore>() with singletonWithLogger { logger -> TelemetryConfigurationStore(instance(), logger) }
     bind<TelemetryConsent>() with singleton { TelemetryConsent(commandLineOptions().disableTelemetry, instance()) }
-    bind<TelemetryConsentPrompt>() with singleton { TelemetryConsentPrompt(instance(), instance(), instance(), instance(), instance(StreamType.Output), instance()) }
+    bind<TelemetryConsentPrompt>() with singleton { TelemetryConsentPrompt(instance(), instance(), instance(), instance(), instance(), instance(StreamType.Output), instance()) }
     bind<TelemetryManager>() with singletonWithLogger { logger -> TelemetryManager(instance(), instance(), instance(), instance(), instance(), logger) }
     bind<TelemetryUploadQueue>() with singletonWithLogger { logger -> TelemetryUploadQueue(instance(), logger) }
     bind<TelemetryUploadTask>() with singletonWithLogger { logger -> TelemetryUploadTask(instance(), instance(), instance(), instance(), logger) }

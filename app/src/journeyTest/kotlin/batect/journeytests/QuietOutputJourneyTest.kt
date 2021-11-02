@@ -22,8 +22,8 @@ import batect.journeytests.testutils.output
 import batect.testutils.createForGroup
 import batect.testutils.on
 import batect.testutils.runBeforeGroup
-import ch.tutteli.atrium.api.fluent.en_GB.toBe
-import ch.tutteli.atrium.api.verbs.assert
+import ch.tutteli.atrium.api.fluent.en_GB.toEqual
+import ch.tutteli.atrium.api.verbs.expect
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -35,11 +35,11 @@ object QuietOutputJourneyTest : Spek({
             val result by runBeforeGroup { runner.runApplication(listOf("--output=quiet", "do-stuff")) }
 
             it("prints the only the output from the task commands") {
-                assert(result).output().toBe("This is some output from the build task\nThis is some output from the main task\n")
+                expect(result).output().toEqual("This is some output from the build task\nThis is some output from the main task\n")
             }
 
             it("returns the exit code from that task") {
-                assert(result).exitCode().toBe(123)
+                expect(result).exitCode().toEqual(123)
             }
         }
     }

@@ -25,13 +25,14 @@ import batect.testutils.on
 import batect.testutils.platformLineSeparator
 import batect.testutils.runBeforeGroup
 import ch.tutteli.atrium.api.fluent.en_GB.contains
-import ch.tutteli.atrium.api.fluent.en_GB.containsNot
-import ch.tutteli.atrium.api.fluent.en_GB.containsRegex
-import ch.tutteli.atrium.api.fluent.en_GB.isEmpty
-import ch.tutteli.atrium.api.fluent.en_GB.notToBe
-import ch.tutteli.atrium.api.fluent.en_GB.notToBeNull
-import ch.tutteli.atrium.api.fluent.en_GB.toBe
-import ch.tutteli.atrium.api.verbs.assert
+import ch.tutteli.atrium.api.fluent.en_GB.notToContain
+import ch.tutteli.atrium.api.fluent.en_GB.notToEqual
+import ch.tutteli.atrium.api.fluent.en_GB.notToEqualNull
+import ch.tutteli.atrium.api.fluent.en_GB.toBeEmpty
+import ch.tutteli.atrium.api.fluent.en_GB.toContain
+import ch.tutteli.atrium.api.fluent.en_GB.toContainRegex
+import ch.tutteli.atrium.api.fluent.en_GB.toEqual
+import ch.tutteli.atrium.api.verbs.expect
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.io.InputStreamReader
@@ -51,16 +52,16 @@ object DontCleanupAfterDependencyStartupFailureJourneyTest : Spek({
                     .start()
                     .waitFor()
 
-                assert(exitCode).toBe(0)
+                expect(exitCode).toEqual(0)
             }
 
             val containersAfterTest = Docker.getAllCreatedContainers()
             val orphanedContainers = containersAfterTest - containersBeforeTest
-            assert(orphanedContainers).isEmpty()
+            expect(orphanedContainers).toBeEmpty()
 
             val networksAfterTest = Docker.getAllNetworks()
             val orphanedNetworks = networksAfterTest - networksBeforeTest
-            assert(orphanedNetworks).isEmpty()
+            expect(orphanedNetworks).toBeEmpty()
         }
 
         on("running that task with the '--no-cleanup-on-failure' option") {
@@ -77,55 +78,56 @@ object DontCleanupAfterDependencyStartupFailureJourneyTest : Spek({
             }
 
             it("does not execute the task") {
-                assert(result).output().containsNot("This task should never be executed!")
+                expect(result).output().notToContain("This task should never be executed!")
             }
 
             it("prints a message explaining what happened and what to do about it") {
-                assert(result).output().contains("Container http-server did not become healthy.${platformLineSeparator}The configured health check did not indicate that the container was healthy within the timeout period.")
+                expect(result).output()
+                    .toContain("Container http-server did not become healthy.${platformLineSeparator}The configured health check did not indicate that the container was healthy within the timeout period.")
             }
 
             it("prints a message explaining how to see the logs of that dependency and how to run a command in the container") {
-                assert(result).output().containsRegex(commandsRegex)
+                expect(result).output().toContainRegex(commandsRegex)
             }
 
             it("prints a message explaining how to clean up any containers left behind") {
-                assert(result).output().containsRegex(cleanupRegex)
+                expect(result).output().toContainRegex(cleanupRegex)
             }
 
             it("does not stop the container") {
                 val containerId = commandsRegex.find(result.output)?.groups?.get("id")?.value
 
-                assert(containerId).notToBeNull()
+                expect(containerId).notToEqualNull()
 
                 val inspectProcess = ProcessBuilder("docker", "inspect", containerId, "--format", "{{.State.Status}}")
                     .redirectErrorStream(true)
                     .start()
 
                 inspectProcess.waitFor()
-                assert(inspectProcess.exitValue()).toBe(0)
+                expect(inspectProcess.exitValue()).toEqual(0)
 
                 val output = InputStreamReader(inspectProcess.inputStream).readText().trim()
-                assert(output).toBe("running")
+                expect(output).toEqual("running")
             }
 
             it("the command given to view the logs displays the logs from the container") {
                 val logsCommand = commandsRegex.find(result.output)?.groups?.get("logsCommand")?.value
 
-                assert(logsCommand).notToBeNull()
+                expect(logsCommand).notToEqualNull()
 
                 val logsProcess = ProcessBuilder(logsCommand!!.trim().split(" "))
                     .redirectErrorStream(true)
                     .start()
 
                 logsProcess.waitFor()
-                assert(logsProcess.exitValue()).toBe(0)
+                expect(logsProcess.exitValue()).toEqual(0)
 
                 val output = InputStreamReader(logsProcess.inputStream).readText().trim()
-                assert(output).containsRegex("^This is some output from the HTTP server$".toRegex(RegexOption.MULTILINE))
+                expect(output).toContainRegex("^This is some output from the HTTP server$".toRegex(RegexOption.MULTILINE))
             }
 
             it("exits with a non-zero code") {
-                assert(result).exitCode().notToBe(0)
+                expect(result).exitCode().notToEqual(0)
             }
         }
     }

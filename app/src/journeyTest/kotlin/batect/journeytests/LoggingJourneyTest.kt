@@ -22,8 +22,8 @@ import batect.testutils.createForGroup
 import batect.testutils.on
 import batect.testutils.runBeforeGroup
 import ch.tutteli.atrium.api.fluent.en_GB.isGreaterThan
-import ch.tutteli.atrium.api.fluent.en_GB.toBe
-import ch.tutteli.atrium.api.verbs.assert
+import ch.tutteli.atrium.api.fluent.en_GB.toEqual
+import ch.tutteli.atrium.api.verbs.expect
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.io.File
@@ -39,12 +39,12 @@ object LoggingJourneyTest : Spek({
             val result by runBeforeGroup { runner.runApplication(listOf("--log-file=$logPath", "--version")) }
 
             it("logs some information to the log file") {
-                assert(logPath.exists()).toBe(true)
-                assert(logPath.length()).isGreaterThan(0L)
+                expect(logPath.exists()).toEqual(true)
+                expect(logPath.length()).isGreaterThan(0L)
             }
 
             it("returns a zero exit code") {
-                assert(result).exitCode().toBe(0)
+                expect(result).exitCode().toEqual(0)
             }
         }
     }

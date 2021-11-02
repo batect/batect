@@ -23,8 +23,9 @@ import batect.testutils.createForGroup
 import batect.testutils.on
 import batect.testutils.runBeforeGroup
 import ch.tutteli.atrium.api.fluent.en_GB.contains
-import ch.tutteli.atrium.api.fluent.en_GB.toBe
-import ch.tutteli.atrium.api.verbs.assert
+import ch.tutteli.atrium.api.fluent.en_GB.toContain
+import ch.tutteli.atrium.api.fluent.en_GB.toEqual
+import ch.tutteli.atrium.api.verbs.expect
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -40,11 +41,11 @@ object ContainerWithMountJourneyTests : Spek({
                 val result by runBeforeGroup { runner.runApplication(listOf("the-task")) }
 
                 it("prints the output from that task") {
-                    assert(result).output().contains("This is some output from the script")
+                    expect(result).output().toContain("This is some output from the script")
                 }
 
                 it("returns the exit code from that task") {
-                    assert(result).exitCode().toBe(123)
+                    expect(result).exitCode().toEqual(123)
                 }
             }
         }

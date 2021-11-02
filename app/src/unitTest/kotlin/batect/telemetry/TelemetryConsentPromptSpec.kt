@@ -41,12 +41,13 @@ import java.util.UUID
 object TelemetryConsentPromptSpec : Spek({
     describe("a telemetry consent prompt") {
         val configurationStore by createForEachTest { mock<TelemetryConfigurationStore>() }
+        val consent by createForEachTest { mock<TelemetryConsent>() }
         val commandLineOptions by createForEachTest { mock<CommandLineOptions>() }
         val consoleInfo by createForEachTest { mock<ConsoleInfo>() }
         val ciEnvironmentDetector by createForEachTest { mock<CIEnvironmentDetector>() }
         val console by createForEachTest { mock<Console>() }
         val prompt by createForEachTest { mock<Prompt>() }
-        val consentPrompt by createForEachTest { TelemetryConsentPrompt(configurationStore, commandLineOptions, consoleInfo, ciEnvironmentDetector, console, prompt) }
+        val consentPrompt by createForEachTest { TelemetryConsentPrompt(configurationStore, consent, commandLineOptions, consoleInfo, ciEnvironmentDetector, console, prompt) }
 
         val userId by createForEachTest { UUID.randomUUID() }
 
@@ -210,44 +211,58 @@ object TelemetryConsentPromptSpec : Spek({
                                 whenever(commandLineOptions.requestedOutputStyle).doReturn(OutputStyle.Fancy)
                             }
 
-                            given("stdin is a TTY") {
+                            given("the user has forbidden telemetry for this project") {
                                 beforeEachTest {
-                                    whenever(consoleInfo.stdinIsTTY).thenReturn(true)
+                                    whenever(consent.forbiddenByProjectConfig).doReturn(true)
                                 }
 
-                                given("the application is not running on CI") {
+                                itDoesNotPromptForConsent()
+                            }
+
+                            given("the user has not forbidden telemetry for this project") {
+                                beforeEachTest {
+                                    whenever(consent.forbiddenByProjectConfig).doReturn(false)
+                                }
+
+                                given("stdin is a TTY") {
                                     beforeEachTest {
-                                        whenever(ciEnvironmentDetector.detect()).doReturn(CIDetectionResult(false, null))
+                                        whenever(consoleInfo.stdinIsTTY).thenReturn(true)
                                     }
 
-                                    given("the user answers 'yes' to the prompt") {
-                                        beforeEachTest { whenever(prompt.askYesNoQuestion(any())).thenReturn(YesNoAnswer.Yes) }
+                                    given("the application is not running on CI") {
+                                        beforeEachTest {
+                                            whenever(ciEnvironmentDetector.detect()).doReturn(CIDetectionResult(false, null))
+                                        }
 
-                                        itPromptsTheUserForTheirChoiceAndStoresIt(ConsentState.TelemetryAllowed)
+                                        given("the user answers 'yes' to the prompt") {
+                                            beforeEachTest { whenever(prompt.askYesNoQuestion(any())).thenReturn(YesNoAnswer.Yes) }
+
+                                            itPromptsTheUserForTheirChoiceAndStoresIt(ConsentState.TelemetryAllowed)
+                                        }
+
+                                        given("the user answers 'no' to the prompt") {
+                                            beforeEachTest { whenever(prompt.askYesNoQuestion(any())).thenReturn(YesNoAnswer.No) }
+
+                                            itPromptsTheUserForTheirChoiceAndStoresIt(ConsentState.TelemetryDisabled)
+                                        }
                                     }
 
-                                    given("the user answers 'no' to the prompt") {
-                                        beforeEachTest { whenever(prompt.askYesNoQuestion(any())).thenReturn(YesNoAnswer.No) }
+                                    given("the application is running on CI") {
+                                        beforeEachTest {
+                                            whenever(ciEnvironmentDetector.detect()).doReturn(CIDetectionResult(true, null))
+                                        }
 
-                                        itPromptsTheUserForTheirChoiceAndStoresIt(ConsentState.TelemetryDisabled)
+                                        itShowsTheNonInteractiveConsentPrompt()
                                     }
                                 }
 
-                                given("the application is running on CI") {
+                                given("stdin is not a TTY") {
                                     beforeEachTest {
-                                        whenever(ciEnvironmentDetector.detect()).doReturn(CIDetectionResult(true, null))
+                                        whenever(consoleInfo.stdinIsTTY).thenReturn(false)
                                     }
 
                                     itShowsTheNonInteractiveConsentPrompt()
                                 }
-                            }
-
-                            given("stdin is not a TTY") {
-                                beforeEachTest {
-                                    whenever(consoleInfo.stdinIsTTY).thenReturn(false)
-                                }
-
-                                itShowsTheNonInteractiveConsentPrompt()
                             }
                         }
                     }

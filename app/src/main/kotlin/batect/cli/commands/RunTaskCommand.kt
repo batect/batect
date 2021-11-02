@@ -21,6 +21,7 @@ import batect.config.RawConfiguration
 import batect.config.io.ConfigurationLoader
 import batect.execution.SessionRunner
 import batect.ioc.SessionKodeinFactory
+import batect.telemetry.TelemetryConsentPrompt
 import batect.ui.OutputStyle
 import batect.updates.UpdateNotifier
 import org.kodein.di.DirectDI
@@ -29,21 +30,24 @@ import org.kodein.di.instance
 class RunTaskCommand(
     private val commandLineOptions: CommandLineOptions,
     private val configLoader: ConfigurationLoader,
+    private val telemetryConsentPrompt: TelemetryConsentPrompt,
     private val updateNotifier: UpdateNotifier,
     private val backgroundTaskManager: BackgroundTaskManager,
-    private val dockerConnectivity: DockerConnectivity
+    private val dockerConnectivity: DockerConnectivity,
 ) : Command {
-
     override fun run(): Int {
         val config = configLoader.loadConfig(commandLineOptions.configurationFileName).configuration
 
+        runPreExecutionOperations()
+
         return dockerConnectivity.checkAndRun { kodein ->
-            runPreExecutionOperations()
             runFromConfig(kodein, config)
         }
     }
 
     private fun runPreExecutionOperations() {
+        telemetryConsentPrompt.askForConsentIfRequired()
+
         if (commandLineOptions.requestedOutputStyle != OutputStyle.Quiet) {
             updateNotifier.run()
         }

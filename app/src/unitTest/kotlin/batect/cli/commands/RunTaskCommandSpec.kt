@@ -26,6 +26,7 @@ import batect.config.io.ConfigurationLoadResult
 import batect.config.io.ConfigurationLoader
 import batect.execution.SessionRunner
 import batect.ioc.SessionKodeinFactory
+import batect.telemetry.TelemetryConsentPrompt
 import batect.testutils.createForEachTest
 import batect.testutils.given
 import batect.testutils.runForEachTest
@@ -66,6 +67,7 @@ object RunTaskCommandSpec : Spek({
                 }
             }
 
+            val telemetryConsentPrompt by createForEachTest { mock<TelemetryConsentPrompt>() }
             val updateNotifier by createForEachTest { mock<UpdateNotifier>() }
             val backgroundTaskManager by createForEachTest { mock<BackgroundTaskManager>() }
 
@@ -94,7 +96,7 @@ object RunTaskCommandSpec : Spek({
 
             given("quiet output mode is not being used") {
                 val commandLineOptions = baseCommandLineOptions.copy(requestedOutputStyle = OutputStyle.Fancy)
-                val command by createForEachTest { RunTaskCommand(commandLineOptions, configLoader, updateNotifier, backgroundTaskManager, dockerConnectivity) }
+                val command by createForEachTest { RunTaskCommand(commandLineOptions, configLoader, telemetryConsentPrompt, updateNotifier, backgroundTaskManager, dockerConnectivity) }
                 val exitCode by runForEachTest { command.run() }
 
                 it("runs the task") {
@@ -120,6 +122,14 @@ object RunTaskCommandSpec : Spek({
                     }
                 }
 
+                it("prompts for telemetry consent after loading the config but before running the task") {
+                    inOrder(configLoader, telemetryConsentPrompt, sessionRunner) {
+                        verify(configLoader).loadConfig(any(), anyOrNull())
+                        verify(telemetryConsentPrompt).askForConsentIfRequired()
+                        verify(sessionRunner).runTaskAndPrerequisites(any())
+                    }
+                }
+
                 it("creates the session Kodein context with the raw configuration") {
                     verify(sessionKodeinFactory).create(config)
                 }
@@ -127,7 +137,7 @@ object RunTaskCommandSpec : Spek({
 
             given("quiet output mode is being used") {
                 val commandLineOptions = baseCommandLineOptions.copy(requestedOutputStyle = OutputStyle.Quiet)
-                val command by createForEachTest { RunTaskCommand(commandLineOptions, configLoader, updateNotifier, backgroundTaskManager, dockerConnectivity) }
+                val command by createForEachTest { RunTaskCommand(commandLineOptions, configLoader, telemetryConsentPrompt, updateNotifier, backgroundTaskManager, dockerConnectivity) }
                 beforeEachTest { command.run() }
 
                 it("does not display any update notifications") {

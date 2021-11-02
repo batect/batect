@@ -27,7 +27,6 @@ import batect.logging.logger
 import batect.os.ConsoleManager
 import batect.os.SystemInfo
 import batect.telemetry.EnvironmentTelemetryCollector
-import batect.telemetry.TelemetryConsentPrompt
 import batect.telemetry.TelemetryManager
 import batect.telemetry.TelemetrySessionBuilder
 import batect.telemetry.addUnhandledExceptionEvent

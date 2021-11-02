@@ -28,7 +28,7 @@ import java.util.UUID
 
 object TelemetryConsentSpec : Spek({
     describe("telemetry consent") {
-        data class TestCase(val disabledOnCommandLine: Boolean?, val consentStateOnDisk: ConsentState, val disabledForThisSession: Boolean, val expected: Boolean)
+        data class TestCase(val disabledOnCommandLine: Boolean?, val consentStateOnDisk: ConsentState, val forbiddenByProjectConfig: Boolean, val expected: Boolean)
 
         setOf(
             TestCase(true, ConsentState.TelemetryDisabled, false, expected = false),
@@ -49,7 +49,7 @@ object TelemetryConsentSpec : Spek({
             TestCase(null, ConsentState.TelemetryDisabled, true, expected = false),
             TestCase(null, ConsentState.TelemetryAllowed, true, expected = false),
             TestCase(null, ConsentState.None, true, expected = false),
-        ).forEach { (disabledOnCommandLine, consentStateOnDisk, disabledForThisSession, expected) ->
+        ).forEach { (disabledOnCommandLine, consentStateOnDisk, forbiddenByProjectConfig, expected) ->
             val commandLineDescription = when (disabledOnCommandLine) {
                 true -> "explicitly disabled on the command line"
                 false -> "explicitly enabled on the command line"
@@ -62,7 +62,7 @@ object TelemetryConsentSpec : Spek({
                 ConsentState.None -> "there is no configuration on disk"
             }
 
-            val sessionDescription = if (disabledForThisSession) "disabled for this session" else "not disabled for this session"
+            val sessionDescription = if (forbiddenByProjectConfig) "forbidden by the project's configuration" else "not forbidden by the project's configuration"
 
             val configurationStore by createForEachTest {
                 mock<TelemetryConfigurationStore> {
@@ -73,9 +73,7 @@ object TelemetryConsentSpec : Spek({
             val consent by createForEachTest { TelemetryConsent(disabledOnCommandLine, configurationStore) }
 
             beforeEachTest {
-                if (disabledForThisSession) {
-                    consent.disableTelemetryForThisSession()
-                }
+                consent.forbiddenByProjectConfig = forbiddenByProjectConfig
             }
 
             given("telemetry is $commandLineDescription, $consentStateOnDiskDescription and $sessionDescription") {

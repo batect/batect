@@ -18,13 +18,12 @@ package batect.journeytests
 
 import batect.journeytests.testutils.ApplicationRunner
 import batect.journeytests.testutils.exitCode
-import batect.journeytests.testutils.output
 import batect.testutils.createForGroup
 import batect.testutils.on
 import batect.testutils.runBeforeGroup
-import ch.tutteli.atrium.api.fluent.en_GB.any
-import ch.tutteli.atrium.api.fluent.en_GB.matches
 import ch.tutteli.atrium.api.fluent.en_GB.toEqual
+import ch.tutteli.atrium.api.fluent.en_GB.toHaveElementsAndAny
+import ch.tutteli.atrium.api.fluent.en_GB.toMatch
 import ch.tutteli.atrium.api.verbs.expect
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
@@ -39,7 +38,9 @@ object TaskUsingLogDriverJourneyTest : Spek({
             it("prints the output from that task") {
                 // On Docker 20.10+, retrieving output from a container using a log driver succeeds.
                 // On versions prior to 20.10, retrieving output from a container using a log driver fails.
-                expect(result.output.lines()).any { matches("^(Error attaching: configured logging driver does not support reading|This is some output from the task)$".toRegex()) }
+                expect(result.output.lines()).toHaveElementsAndAny {
+                    toMatch("^(Error attaching: configured logging driver does not support reading|This is some output from the task)$".toRegex())
+                }
             }
 
             it("returns the exit code from that task") {

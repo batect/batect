@@ -21,7 +21,7 @@ import batect.journeytests.testutils.exitCode
 import batect.testutils.createForGroup
 import batect.testutils.on
 import batect.testutils.runBeforeGroup
-import ch.tutteli.atrium.api.fluent.en_GB.isGreaterThan
+import ch.tutteli.atrium.api.fluent.en_GB.toBeGreaterThan
 import ch.tutteli.atrium.api.fluent.en_GB.toEqual
 import ch.tutteli.atrium.api.verbs.expect
 import org.spekframework.spek2.Spek
@@ -40,7 +40,7 @@ object LoggingJourneyTest : Spek({
 
             it("logs some information to the log file") {
                 expect(logPath.exists()).toEqual(true)
-                expect(logPath.length()).isGreaterThan(0L)
+                expect(logPath.length()).toBeGreaterThan(0L)
             }
 
             it("returns a zero exit code") {

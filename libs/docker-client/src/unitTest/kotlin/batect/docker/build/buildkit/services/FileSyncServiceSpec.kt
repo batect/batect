@@ -24,7 +24,10 @@ import batect.testutils.runForEachTest
 import batect.testutils.withMessage
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
+import com.natpryce.hamkrest.MatchResult
+import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.describe
 import com.natpryce.hamkrest.throws
 import com.squareup.wire.MessageSink
 import com.squareup.wire.MessageSource
@@ -198,17 +201,24 @@ object FileSyncServiceSpec : Spek({
 
                     runForEachTest { service.DiffCopy(messageSource, messageSink) }
 
-                    it("sends the details of the Dockerfile, then responds with the contents of the Dockerfile when requested, and then responds with a PACKET_FIN packet when the server sends a PACKET_FIN packet") {
+                    it("sends the details of the Dockerfile and then sends a PACKET_FIN") {
                         assertThat(
                             messageSink.packetsSent,
-                            equalTo(
-                                listOf(
-                                    Packet(Packet.PacketType.PACKET_STAT, dockerfileStat),
-                                    statFinishedPacket,
-                                    Packet(Packet.PacketType.PACKET_DATA, ID = 0, data_ = dockerfileContent.encodeUtf8()),
-                                    Packet(Packet.PacketType.PACKET_DATA, ID = 0),
-                                    Packet(Packet.PacketType.PACKET_FIN)
-                                )
+                            containsElementsInOrder(
+                                Packet(Packet.PacketType.PACKET_STAT, dockerfileStat),
+                                statFinishedPacket,
+                                Packet(Packet.PacketType.PACKET_FIN)
+                            )
+                        )
+                    }
+
+                    it("responds with the contents of the Dockerfile when requested, and then responds with a PACKET_FIN packet when the server sends a PACKET_FIN packet") {
+                        assertThat(
+                            messageSink.packetsSent,
+                            containsElementsInOrder(
+                                Packet(Packet.PacketType.PACKET_DATA, ID = 0, data_ = dockerfileContent.encodeUtf8()),
+                                Packet(Packet.PacketType.PACKET_DATA, ID = 0),
+                                Packet(Packet.PacketType.PACKET_FIN)
                             )
                         )
                     }
@@ -368,18 +378,25 @@ object FileSyncServiceSpec : Spek({
 
                     runForEachTest { service.DiffCopy(messageSource, messageSink) }
 
-                    it("sends the details of the Dockerfile and .dockerignore files, then responds with the contents of the Dockerfile when requested, and then responds with a PACKET_FIN packet when the server sends a PACKET_FIN packet") {
+                    it("sends the details of the Dockerfile and .dockerignore files") {
                         assertThat(
                             messageSink.packetsSent,
-                            equalTo(
-                                listOf(
-                                    Packet(Packet.PacketType.PACKET_STAT, dockerfileStat),
-                                    Packet(Packet.PacketType.PACKET_STAT, dockerignoreStat),
-                                    statFinishedPacket,
-                                    Packet(Packet.PacketType.PACKET_DATA, ID = 0, data_ = dockerfileContent.encodeUtf8()),
-                                    Packet(Packet.PacketType.PACKET_DATA, ID = 0),
-                                    Packet(Packet.PacketType.PACKET_FIN)
-                                )
+                            containsElementsInOrder(
+                                Packet(Packet.PacketType.PACKET_STAT, dockerfileStat),
+                                Packet(Packet.PacketType.PACKET_STAT, dockerignoreStat),
+                                statFinishedPacket,
+                                Packet(Packet.PacketType.PACKET_FIN)
+                            )
+                        )
+                    }
+
+                    it("responds with the contents of the Dockerfile when requested, and then responds with a PACKET_FIN packet when the server sends a PACKET_FIN packet") {
+                        assertThat(
+                            messageSink.packetsSent,
+                            containsElementsInOrder(
+                                Packet(Packet.PacketType.PACKET_DATA, ID = 0, data_ = dockerfileContent.encodeUtf8()),
+                                Packet(Packet.PacketType.PACKET_DATA, ID = 0),
+                                Packet(Packet.PacketType.PACKET_FIN)
                             )
                         )
                     }
@@ -402,18 +419,25 @@ object FileSyncServiceSpec : Spek({
 
                     runForEachTest { service.DiffCopy(messageSource, messageSink) }
 
-                    it("sends the details of the Dockerfile and .dockerignore files, then responds with the contents of the .dockerignore when requested, and then responds with a PACKET_FIN packet when the server sends a PACKET_FIN packet") {
+                    it("sends the details of the Dockerfile and .dockerignore files") {
                         assertThat(
                             messageSink.packetsSent,
-                            equalTo(
-                                listOf(
-                                    Packet(Packet.PacketType.PACKET_STAT, dockerfileStat),
-                                    Packet(Packet.PacketType.PACKET_STAT, dockerignoreStat),
-                                    statFinishedPacket,
-                                    Packet(Packet.PacketType.PACKET_DATA, ID = 1, data_ = dockerignoreContent.encodeUtf8()),
-                                    Packet(Packet.PacketType.PACKET_DATA, ID = 1),
-                                    Packet(Packet.PacketType.PACKET_FIN)
-                                )
+                            containsElementsInOrder(
+                                Packet(Packet.PacketType.PACKET_STAT, dockerfileStat),
+                                Packet(Packet.PacketType.PACKET_STAT, dockerignoreStat),
+                                statFinishedPacket,
+                                Packet(Packet.PacketType.PACKET_FIN)
+                            )
+                        )
+                    }
+
+                    it("responds with the contents of the .dockerignore when requested, and then responds with a PACKET_FIN packet when the server sends a PACKET_FIN packet") {
+                        assertThat(
+                            messageSink.packetsSent,
+                            containsElementsInOrder(
+                                Packet(Packet.PacketType.PACKET_DATA, ID = 1, data_ = dockerignoreContent.encodeUtf8()),
+                                Packet(Packet.PacketType.PACKET_DATA, ID = 1),
+                                Packet(Packet.PacketType.PACKET_FIN)
                             )
                         )
                     }
@@ -600,3 +624,20 @@ private class FakeSyncScopeFactory {
         }
     }
 }
+
+// Note that this does not handle duplicates in `expected` correctly.
+fun <T> containsElementsInOrder(vararg expected: T): Matcher<Iterable<T>> =
+    object : Matcher<Iterable<T>> {
+        override fun invoke(actual: Iterable<T>): MatchResult {
+            val indices = expected.map { actual.indexOf(it) }
+
+            return if (indices.none { it == -1 } && indices.sorted() == indices) {
+                MatchResult.Match
+            } else {
+                MatchResult.Mismatch("was: ${describe(actual)}")
+            }
+        }
+
+        override val description: String get() = "contains the elements ${describe(expected.toList())} in that order (possibly with other elements in between)"
+        override val negatedDescription: String get() = "does not contain the elements ${describe(expected.toList())} in that order"
+    }

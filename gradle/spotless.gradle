@@ -92,3 +92,19 @@ spotless {
         endWithNewline()
     }
 }
+
+tasks.named("spotlessKotlin") {
+    mustRunAfter(project("app").tasks.named("generateVersionInfoFile"))
+}
+
+[
+    "spotlessGradle",
+    "spotlessJava",
+    "spotlessKotlin",
+    "spotlessKotlinGradle",
+    "spotlessMisc",
+].forEach {
+    tasks.named(it) {
+        mustRunAfter(project("libs").project("docker-client").tasks.named("generateMainProtos"))
+    }
+}

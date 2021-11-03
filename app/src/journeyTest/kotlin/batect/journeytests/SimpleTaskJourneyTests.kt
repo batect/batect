@@ -22,7 +22,6 @@ import batect.journeytests.testutils.output
 import batect.testutils.createForGroup
 import batect.testutils.on
 import batect.testutils.runBeforeGroup
-import ch.tutteli.atrium.api.fluent.en_GB.contains
 import ch.tutteli.atrium.api.fluent.en_GB.toContain
 import ch.tutteli.atrium.api.fluent.en_GB.toEqual
 import ch.tutteli.atrium.api.verbs.expect
@@ -53,5 +52,4 @@ object ContainerWithCustomDockerfileJourneyTest : SimpleTaskJourneyTest("contain
 object ContainerWithHealthCheckOverridesJourneyTest : SimpleTaskJourneyTest("container-with-health-check-overrides", "a task with a dependency container that has a batect-specific health check configuration")
 object DependencyContainerWithSetupCommandJourneyTest : SimpleTaskJourneyTest("dependency-container-with-setup-command", "a task that uses a setup command on a dependency container")
 object TaskContainerWithSetupCommandJourneyTest : SimpleTaskJourneyTest("task-container-with-setup-command", "a task that uses a setup command on the task container")
-object ConfigWithIncludesJourneyTest : SimpleTaskJourneyTest("config-with-includes", "a configuration file that uses includes")
-object ConfigWithIncludeReferenceToProjectDirectoryJourneyTest : SimpleTaskJourneyTest("config-with-include-reference-to-project-directory", "a configuration file that uses includes and contains a reference to the project directory")
+object ConfigWithIncludesJourneyTest : SimpleTaskJourneyTest("config-with-include", "a configuration file that uses includes")

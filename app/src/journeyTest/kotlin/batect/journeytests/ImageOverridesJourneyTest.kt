@@ -34,7 +34,8 @@ object ImageOverridesJourneyTest : Spek({
         val runner by createForGroup { ApplicationRunner("image-override") }
 
         on("running a task") {
-            val result by runBeforeGroup { runner.runApplication(listOf("--override-image", "build-env=alpine:3.6", "the-task")) }
+            val imageName = "alpine:3.6" // renovate:docker-image
+            val result by runBeforeGroup { runner.runApplication(listOf("--override-image", "build-env=$imageName", "the-task")) }
 
             it("prints the output from that task") {
                 expect(result).output().toContain("This is some output from the task\n")

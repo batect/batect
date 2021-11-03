@@ -65,6 +65,13 @@
         "#renovate:(?<depName>[a-zA-Z0-9-.]+:[a-zA-Z0-9-.]+)\\s([a-zA-Z]+)=(?<currentValue>[\\d.]+)"
       ],
       "datasourceTemplate": "maven"
+    },
+    {
+      "fileMatch": [
+        "journeyTest/(.*)/(.*).kt$"
+      ],
+      "matchStrings": ["val .* = \"(?<depName>[a-zA-Z0-9]+):(?<currentValue>[a-zA-Z0-9.]+)\"\\s*\\/\\/\\s*renovate:docker-image"],
+      "datasourceTemplate": "docker"
     }
   ],
   "packageRules": [

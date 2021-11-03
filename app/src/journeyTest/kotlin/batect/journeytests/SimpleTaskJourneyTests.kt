@@ -49,7 +49,6 @@ abstract class SimpleTaskJourneyTest(private val testName: String, private val d
 object TaskUsingDockerfileJourneyTest : SimpleTaskJourneyTest("simple-task-using-dockerfile", "a task that uses a Dockerfile with the command specified on the task in the configuration file")
 object TaskUsingImageJourneyTest : SimpleTaskJourneyTest("simple-task-using-image", "a task that uses an existing image")
 object ContainerWithCustomDockerfileJourneyTest : SimpleTaskJourneyTest("container-with-custom-dockerfile", "a task that uses a Dockerfile in a non-standard location")
-object ContainerWithHealthCheckOverridesJourneyTest : SimpleTaskJourneyTest("container-with-health-check-overrides", "a task with a dependency container that has a batect-specific health check configuration")
 object DependencyContainerWithSetupCommandJourneyTest : SimpleTaskJourneyTest("dependency-container-with-setup-command", "a task that uses a setup command on a dependency container")
 object TaskContainerWithSetupCommandJourneyTest : SimpleTaskJourneyTest("task-container-with-setup-command", "a task that uses a setup command on the task container")
 object ConfigWithIncludesJourneyTest : SimpleTaskJourneyTest("config-with-include", "a configuration file that uses includes")

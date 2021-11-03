@@ -22,7 +22,6 @@ import batect.journeytests.testutils.output
 import batect.testutils.createForGroup
 import batect.testutils.on
 import batect.testutils.runBeforeGroup
-import ch.tutteli.atrium.api.fluent.en_GB.contains
 import ch.tutteli.atrium.api.fluent.en_GB.toContain
 import ch.tutteli.atrium.api.fluent.en_GB.toEqual
 import ch.tutteli.atrium.api.verbs.expect
@@ -30,23 +29,18 @@ import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
 object ContainerWithMountJourneyTests : Spek({
-    mapOf(
-        "container-with-mount" to "a simple task with a volume mount",
-        "container-with-cached-mount" to "a simple task with a cached volume mount"
-    ).forEach { (testName, description) ->
-        describe(description) {
-            val runner by createForGroup { ApplicationRunner(testName) }
+    describe("a simple task with a volume mount") {
+        val runner by createForGroup { ApplicationRunner("container-with-mount") }
 
-            on("running that task") {
-                val result by runBeforeGroup { runner.runApplication(listOf("the-task")) }
+        on("running that task") {
+            val result by runBeforeGroup { runner.runApplication(listOf("the-task")) }
 
-                it("prints the output from that task") {
-                    expect(result).output().toContain("This is some output from the script")
-                }
+            it("prints the output from that task") {
+                expect(result).output().toContain("This is some output from the script")
+            }
 
-                it("returns the exit code from that task") {
-                    expect(result).exitCode().toEqual(123)
-                }
+            it("returns the exit code from that task") {
+                expect(result).exitCode().toEqual(123)
             }
         }
     }

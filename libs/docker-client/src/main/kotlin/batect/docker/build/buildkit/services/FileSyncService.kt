@@ -25,7 +25,9 @@ import com.squareup.wire.MessageSink
 import com.squareup.wire.MessageSource
 import fsutil.types.Packet
 import fsutil.types.Stat
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.Channel.Factory.UNLIMITED
 import kotlinx.coroutines.channels.ReceiveChannel
@@ -101,9 +103,10 @@ class FileSyncService(
         val fileRequests = Channel<Int>(UNLIMITED)
 
         runBlocking(dispatcher) {
-            launch { sendDirectoryContents(root, messageSink) }
-            launch { handleIncomingRequests(request, messageSink, fileRequests) }
-            launch { handleFileRequests(messageSink, fileRequests) }
+            val sendDirectoryContentsJob = launch { sendDirectoryContents(root, messageSink) }
+            val handleFileRequestsJob = launch { handleFileRequests(messageSink, fileRequests) }
+
+            launch { handleIncomingRequests(request, messageSink, fileRequests, setOf(sendDirectoryContentsJob, handleFileRequestsJob)) }
         }
     }
 
@@ -129,7 +132,12 @@ class FileSyncService(
         response.write(statFinished)
     }
 
-    private suspend fun handleIncomingRequests(request: MessageSource<Packet>, response: SynchronisedMessageSink<Packet>, fileRequests: SendChannel<Int>) {
+    private suspend fun handleIncomingRequests(
+        request: MessageSource<Packet>,
+        response: SynchronisedMessageSink<Packet>,
+        fileRequests: SendChannel<Int>,
+        otherJobs: Set<Job>
+    ) {
         try {
             while (true) {
                 val packet = request.read() ?: return
@@ -145,6 +153,8 @@ class FileSyncService(
                     Packet.PacketType.PACKET_STAT -> throw UnsupportedOperationException("Should never receive a STAT packet from server")
                     Packet.PacketType.PACKET_DATA -> throw UnsupportedOperationException("Should never receive a DATA packet from server")
                     Packet.PacketType.PACKET_FIN -> {
+                        fileRequests.close()
+                        otherJobs.forEach { it.join() }
                         response.write(Packet(Packet.PacketType.PACKET_FIN))
                         return
                     }

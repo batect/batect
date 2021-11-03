@@ -28,7 +28,7 @@ import ch.tutteli.atrium.api.verbs.expect
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
-object ContainerWithMountJourneyTests : Spek({
+object ContainerWithMountJourneyTest : Spek({
     describe("a simple task with a volume mount") {
         val runner by createForGroup { ApplicationRunner("container-with-mount") }
 

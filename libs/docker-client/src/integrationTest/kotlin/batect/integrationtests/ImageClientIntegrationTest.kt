@@ -112,14 +112,14 @@ object ImageClientIntegrationTest : Spek({
                 describe("using $description", skip = if (builderVersion != BuilderVersion.BuildKit || runBuildKitTests) Skip.No else Skip.Yes("not supported on this version of Docker")) {
                     val cacheBustingId by createForGroup { UUID.randomUUID().toString() }
 
-                    fun buildImage(path: String, dockerfileName: String = "Dockerfile", targetStage: String? = null): DockerImage {
+                    fun buildImage(path: String, dockerfileName: String = "Dockerfile", targetStage: String? = null, buildArgs: Map<String, String> = emptyMap()): DockerImage {
                         val imageDirectory = testImagesDirectory.resolve(path)
                         val output = ByteArrayOutputStream()
 
                         try {
                             val request = ImageBuildRequest(
                                 imageDirectory,
-                                mapOf("CACHE_BUSTING_ID" to cacheBustingId),
+                                mapOf("CACHE_BUSTING_ID" to cacheBustingId) + buildArgs,
                                 dockerfileName,
                                 DefaultPathResolutionContext(imageDirectory),
                                 setOf("batect-integration-tests-$path-${builderVersion.toString().lowercase()}"),
@@ -236,6 +236,15 @@ object ImageClientIntegrationTest : Spek({
 
                         it("executes the desired stage") {
                             assertThat(output.trim(), equalTo("stage1"))
+                        }
+                    }
+
+                    describe("building an image with a build arg") {
+                        val image by runBeforeGroup { buildImage("build-arg", buildArgs = mapOf("SOME_BUILD_ARG" to "This is the value of the build arg")) }
+                        val output by runBeforeGroup { executeCommandInContainer(image, "cat", "/build_arg.txt") }
+
+                        it("passes the value of the build arg to the image build process") {
+                            assertThat(output.trim(), equalTo("This is the value of the build arg"))
                         }
                     }
                 }

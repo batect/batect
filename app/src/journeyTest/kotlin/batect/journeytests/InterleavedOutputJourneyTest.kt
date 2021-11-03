@@ -22,7 +22,6 @@ import batect.journeytests.testutils.output
 import batect.testutils.createForGroup
 import batect.testutils.on
 import batect.testutils.runBeforeGroup
-import ch.tutteli.atrium.api.fluent.en_GB.contains
 import ch.tutteli.atrium.api.fluent.en_GB.toContain
 import ch.tutteli.atrium.api.fluent.en_GB.toEqual
 import ch.tutteli.atrium.api.verbs.expect
@@ -31,7 +30,7 @@ import org.spekframework.spek2.style.specification.describe
 
 object InterleavedOutputJourneyTest : Spek({
     describe("when simple output mode is enabled") {
-        val runner by createForGroup { ApplicationRunner("task-with-healthy-dependency") }
+        val runner by createForGroup { ApplicationRunner("container-with-dependency") }
 
         on("running a task") {
             val result by runBeforeGroup { runner.runApplication(listOf("--output=all", "--no-color", "the-task")) }

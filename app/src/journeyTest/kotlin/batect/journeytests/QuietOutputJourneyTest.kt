@@ -34,7 +34,7 @@ object QuietOutputJourneyTest : Spek({
         on("running that task") {
             val result by runBeforeGroup { runner.runApplication(listOf("--output=quiet", "do-stuff")) }
 
-            it("prints the only the output from the task commands") {
+            it("prints only the output from the task commands") {
                 expect(result).output().toEqual("This is some output from the build task\nThis is some output from the main task\n")
             }
 

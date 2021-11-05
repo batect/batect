@@ -333,6 +333,39 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                         }
                     }
 
+                    given("the configured home directory and cache directories are provided with trailing slashes") {
+                        val containerWithTrailingSlashes = Container(
+                            "some-container",
+                            imageSourceDoesNotMatter(),
+                            runAsCurrentUserConfig = RunAsCurrentUserConfig.RunAsCurrentUser("/home/some-user/"),
+                            volumeMounts = setOf(CacheMount("some-cache", "/caches/first-cache/"))
+                        )
+
+                        on("applying configuration to the container") {
+                            runForEachTest { provider.applyConfigurationToContainer(containerWithTrailingSlashes, dockerContainer) }
+
+                            it("uploads the configured home directory to the container, with the owner and group set to the current user's user and group") {
+                                verify(containersClient).upload(
+                                    dockerContainer,
+                                    setOf(
+                                        ContainerDirectory("some-user", 123, 456)
+                                    ),
+                                    "/home"
+                                )
+                            }
+
+                            it("uploads the configured cache directory to the container, with the owner and group set to the current user's user and group") {
+                                verify(containersClient).upload(
+                                    dockerContainer,
+                                    setOf(
+                                        ContainerDirectory("first-cache", 123, 456)
+                                    ),
+                                    "/caches"
+                                )
+                            }
+                        }
+                    }
+
                     given("a configured cache directory is in the root of the filesystem") {
                         val containerWithCacheDirectoryInRoot = container.copy(volumeMounts = setOf(CacheMount("some-cache", "/first-cache")))
 

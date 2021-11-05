@@ -216,7 +216,7 @@ class RunAsCurrentUserConfigurationProvider(
     private fun List<String>.relativePathTo(other: List<String>) = other.subList(this.lastIndex + 1, other.lastIndex + 1)
 
     // This method assumes that paths can't contain forward slashes except as path separators, which appears to be true for Linux.
-    private fun String.splitToPathSegments() = this.split('/')
+    private fun String.splitToPathSegments() = this.trimEnd('/').split('/')
 }
 
 class RunAsCurrentUserConfigurationException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)

@@ -23,7 +23,6 @@ import batect.journeytests.testutils.output
 import batect.testutils.createForGroup
 import batect.testutils.on
 import batect.testutils.runBeforeGroup
-import ch.tutteli.atrium.api.fluent.en_GB.contains
 import ch.tutteli.atrium.api.fluent.en_GB.toContain
 import ch.tutteli.atrium.api.fluent.en_GB.toEqual
 import ch.tutteli.atrium.api.verbs.expect
@@ -35,6 +34,7 @@ object RunAsCurrentUserWithCacheJourneyTest : Spek({
         beforeGroup {
             Docker.deleteCache("run-as-current-user-with-cache-test-normal-cache")
             Docker.deleteCache("run-as-current-user-with-cache-test-nested-cache")
+            Docker.deleteCache("run-as-current-user-with-cache-test-deeply-nested-cache")
         }
 
         val runner by createForGroup { ApplicationRunner("run-as-current-user-with-cache") }
@@ -47,7 +47,9 @@ object RunAsCurrentUserWithCacheJourneyTest : Spek({
                     "/cache exists",
                     "/cache/created-file created",
                     "/home/special-place/cache exists",
-                    "/home/special-place/cache/created-file created"
+                    "/home/special-place/cache/created-file created",
+                    "/home/special-place/subdir/cache exists",
+                    "/home/special-place/subdir/cache/created-file created"
                 ).joinToString("\n")
 
                 expect(result).output().toContain(expectedOutput)

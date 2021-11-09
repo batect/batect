@@ -1,7 +1,7 @@
 /*
     Copyright 2017-2021 Charles Korn.
 
-    Licensed under the Apache License, Version 2.0 (the "License");
+     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
     You may obtain a copy of the License at
 
@@ -65,10 +65,11 @@ class ConsoleInfo(
             data("operatingSystem", systemInfo.operatingSystem)
         }
 
-        stdoutIsTTY && !isTravis && terminalType != "dumb" && (systemInfo.operatingSystem == OperatingSystem.Windows || terminalType != null)
+        (stdoutIsTTY || isMinttyTerminal) && !isTravis && terminalType != "dumb" && (systemInfo.operatingSystem == OperatingSystem.Windows || terminalType != null)
     }
 
     val terminalType: String? = environment["TERM"]
+    private val isMinttyTerminal: Boolean = environment["TERM_PROGRAM"]?.lowercase() == "mintty"
     private val isTravis: Boolean = environment["TRAVIS"] == "true"
 
     @OptIn(ExperimentalSerializationApi::class)

@@ -157,6 +157,18 @@ object ConsoleInfoSpec : Spek({
                     assertThat(consoleInfo.supportsInteractivity, equalTo(false))
                 }
             }
+
+            on("STDOUT not being connected to a TTY and environment variable TERM_PROGRAM is set to mintty") {
+                val nativeMethods = mock<NativeMethods> {
+                    on { determineIfStdoutIsTTY() } doReturn false
+                }
+
+                val consoleInfo by createForEachTest { ConsoleInfo(nativeMethods, genericSystemInfo, HostEnvironmentVariables("TERM_PROGRAM" to "mintty"), logger) }
+
+                it("returns true") {
+                    assertThat(consoleInfo.supportsInteractivity, equalTo(true))
+                }
+            }
         }
 
         describe("getting the type of terminal") {

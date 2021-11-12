@@ -219,6 +219,7 @@ object CommandLineOptionsParserSpec : Spek({
 
         mapOf(
             listOf("--help") to defaultCommandLineOptions.copy(showHelp = true),
+            listOf("-h") to defaultCommandLineOptions.copy(showHelp = true),
             listOf("--help", "some-task") to defaultCommandLineOptions.copy(showHelp = true),
             listOf("--version") to defaultCommandLineOptions.copy(showVersionInfo = true),
             listOf("--version", "some-task") to defaultCommandLineOptions.copy(showVersionInfo = true),

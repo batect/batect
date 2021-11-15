@@ -65,10 +65,11 @@ class ConsoleInfo(
             data("operatingSystem", systemInfo.operatingSystem)
         }
 
-        stdoutIsTTY && !isTravis && terminalType != "dumb" && (systemInfo.operatingSystem == OperatingSystem.Windows || terminalType != null)
+        (stdoutIsTTY || isMinttyTerminal) && !isTravis && terminalType != "dumb" && (systemInfo.operatingSystem == OperatingSystem.Windows || terminalType != null)
     }
 
     val terminalType: String? = environment["TERM"]
+    private val isMinttyTerminal: Boolean = environment["TERM_PROGRAM"]?.lowercase() == "mintty"
     private val isTravis: Boolean = environment["TRAVIS"] == "true"
 
     @OptIn(ExperimentalSerializationApi::class)

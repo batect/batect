@@ -158,15 +158,24 @@ object ConsoleInfoSpec : Spek({
                 }
             }
 
-            on("STDOUT not being connected to a TTY and environment variable TERM_PROGRAM is set to mintty") {
+            describe("on STDOUT not being connected to a TTY") {
                 val nativeMethods = mock<NativeMethods> {
                     on { determineIfStdoutIsTTY() } doReturn false
                 }
 
-                val consoleInfo by createForEachTest { ConsoleInfo(nativeMethods, genericSystemInfo, HostEnvironmentVariables("TERM_PROGRAM" to "mintty"), logger) }
+                on("mintty is being used") {
+                    val consoleInfo by createForEachTest {
+                        ConsoleInfo(
+                            nativeMethods,
+                            genericSystemInfo,
+                            HostEnvironmentVariables("TERM" to "other-terminal", "TERM_PROGRAM" to "mintty"),
+                            logger
+                        )
+                    }
 
-                it("returns true") {
-                    assertThat(consoleInfo.supportsInteractivity, equalTo(true))
+                    it("returns true") {
+                        assertThat(consoleInfo.supportsInteractivity, equalTo(true))
+                    }
                 }
             }
         }

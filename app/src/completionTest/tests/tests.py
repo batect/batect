@@ -9,7 +9,6 @@ import uuid
 
 from abc import ABC
 
-
 class CompletionTestBase(ABC):
     def setUp(self):
         cache_directory = os.path.expanduser(os.path.join("~", ".batect"))
@@ -59,6 +58,7 @@ class CompletionTestBase(ABC):
             "--version",
             "-T",
             "-f",
+            "-h",
             "-o",
         ], results)
 

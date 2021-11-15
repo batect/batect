@@ -63,7 +63,7 @@ class CommandLineOptionsParser(
     private val telemetryOptionsGroup = OptionGroup("Telemetry options")
     private val hiddenOptionsGroup = OptionGroup("Hidden options")
 
-    private val showHelp: Boolean by flagOption(helpOptionsGroup, "help", "Show this help information and exit.")
+    private val showHelp: Boolean by flagOption(helpOptionsGroup, "help", "Show this help information and exit.", 'h')
     private val showVersionInfo: Boolean by flagOption(helpOptionsGroup, "version", "Show Batect version information and exit.")
     private val runUpgrade: Boolean by flagOption(helpOptionsGroup, upgradeFlagName, "Upgrade Batect to the latest available version.")
     private val listTasks: Boolean by flagOption(helpOptionsGroup, "list-tasks", "List available tasks and exit.", 'T')

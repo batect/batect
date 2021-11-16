@@ -58,6 +58,7 @@ class OptionParser {
         options.forEach {
             when (val result = it.checkDefaultValue()) {
                 is DefaultApplicationResult.Failed -> return OptionsParsingResult.InvalidOptions("The default value for the ${it.longOption} option is invalid: ${result.message}")
+                is DefaultApplicationResult.Succeeded -> {} // Nothing to do.
             }
         }
 

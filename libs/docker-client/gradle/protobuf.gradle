@@ -58,7 +58,7 @@ class ProtoDownloadSpec implements Serializable {
     }
 }
 
-def buildKitVersion = "v0.9.2"
+def buildKitVersion = "v0.9.3"
 
 def replaceRelativeImportPathWithAbsolute = { String oldContent ->
     oldContent.replace('import "stat.proto";', 'import "github.com/tonistiigi/fsutil/types/stat.proto";')

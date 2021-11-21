@@ -305,9 +305,6 @@ jobs:
         with:
           flags: linux
 
-      - name: Assemble release
-        run: unset JAVA_TOOL_OPTIONS && ./gradlew --parallel assembleRelease
-
       - name: Stop Gradle daemon
         run: ./gradlew --stop
 
@@ -328,13 +325,6 @@ jobs:
           rm -f  $HOME/.gradle/caches/transforms-1/transforms-1.lock
           rm -f  $HOME/.gradle/caches/journal-1/file-access.bin
           rm -f  $HOME/.gradle/caches/journal-1/*.lock
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v2.2.4
-        with:
-          name: Binaries
-          path: build/release
-          if-no-files-found: error
 
   wrapper-test-linux:
     name: "Run wrapper tests (Linux)"
@@ -569,6 +559,9 @@ jobs:
         with:
           flags: mac
 
+      - name: Assemble release
+        run: unset JAVA_TOOL_OPTIONS && ./gradlew --parallel assembleRelease
+
       - name: Stop Gradle daemon
         run: ./gradlew --stop
 
@@ -589,6 +582,13 @@ jobs:
           rm -f  $HOME/.gradle/caches/transforms-1/transforms-1.lock
           rm -f  $HOME/.gradle/caches/journal-1/file-access.bin
           rm -f  $HOME/.gradle/caches/journal-1/*.lock
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2.2.4
+        with:
+          name: Binaries
+          path: build/release
+          if-no-files-found: error
 
   publish-release:
     name: "Publish release"

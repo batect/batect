@@ -246,15 +246,15 @@ class KotlinPlugin : Plugin<Project> {
                 it.because("https://github.com/typetools/checker-framework/blob/checker-framework-2.5.5/LICENSE.txt says that the annotations are licensed under the MIT license")
             }
 
-            allowDependency("org.bouncycastle", "bcutil-jdk15on", "1.69") {
+            allowDependency("org.bouncycastle", "bcutil-jdk15on", "1.70") {
                 it.because("https://www.bouncycastle.org/licence.html is the MIT license")
             }
 
-            allowDependency("org.bouncycastle", "bcpkix-jdk15on", "1.69") {
+            allowDependency("org.bouncycastle", "bcpkix-jdk15on", "1.70") {
                 it.because("https://www.bouncycastle.org/licence.html is the MIT license")
             }
 
-            allowDependency("org.bouncycastle", "bcprov-jdk15on", "1.69") {
+            allowDependency("org.bouncycastle", "bcprov-jdk15on", "1.70") {
                 it.because("https://www.bouncycastle.org/licence.html is the MIT license")
             }
         }

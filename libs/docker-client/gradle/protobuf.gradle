@@ -116,7 +116,6 @@ wire.root('fsutil.types.Packet')
 wire.kotlin {
     rpcCallStyle = 'blocking'
     rpcRole = 'server'
-    out = 'src/generated/protos'
 }
 
 afterEvaluate {

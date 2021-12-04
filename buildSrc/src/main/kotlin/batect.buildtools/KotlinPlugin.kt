@@ -73,7 +73,11 @@ class KotlinPlugin : Plugin<Project> {
         project.tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile::class.java).configureEach {
             it.kotlinOptions {
                 jvmTarget = "1.8"
-                freeCompilerArgs = listOf("-progressive", "-Xopt-in=kotlin.RequiresOptIn")
+                freeCompilerArgs = listOf(
+                    "-progressive",
+                    "-Xopt-in=kotlin.RequiresOptIn",
+                    "-Xjvm-default=all" // Required to workaround https://youtrack.jetbrains.com/issue/KT-45919 until Kotlin 1.6.20 is released
+                )
             }
         }
     }

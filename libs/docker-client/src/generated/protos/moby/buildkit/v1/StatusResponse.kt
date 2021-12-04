@@ -7,6 +7,7 @@ import com.squareup.wire.Message
 import com.squareup.wire.ProtoAdapter
 import com.squareup.wire.ProtoReader
 import com.squareup.wire.ProtoWriter
+import com.squareup.wire.ReverseProtoWriter
 import com.squareup.wire.Syntax.PROTO_3
 import com.squareup.wire.WireField
 import com.squareup.wire.`internal`.immutableCopyOf
@@ -56,7 +57,8 @@ public class StatusResponse(
     message = "Shouldn't be used in Kotlin",
     level = DeprecationLevel.HIDDEN
   )
-  public override fun newBuilder(): Nothing = throw AssertionError()
+  public override fun newBuilder(): Nothing = throw
+      AssertionError("Builders are deprecated and only available in a javaInterop build; see https://square.github.io/wire/wire_compiler/#kotlin")
 
   public override fun equals(other: Any?): Boolean {
     if (other === this) return true
@@ -102,9 +104,10 @@ public class StatusResponse(
       StatusResponse::class, 
       "type.googleapis.com/moby.buildkit.v1.StatusResponse", 
       PROTO_3, 
-      null
+      null, 
+      "github.com/moby/buildkit/api/services/control/control.proto"
     ) {
-      public override fun encodedSize(value: StatusResponse): Int {
+      public override fun encodedSize(`value`: StatusResponse): Int {
         var size = value.unknownFields.size
         size += Vertex.ADAPTER.asRepeated().encodedSizeWithTag(1, value.vertexes)
         size += VertexStatus.ADAPTER.asRepeated().encodedSizeWithTag(2, value.statuses)
@@ -112,11 +115,18 @@ public class StatusResponse(
         return size
       }
 
-      public override fun encode(writer: ProtoWriter, value: StatusResponse): Unit {
+      public override fun encode(writer: ProtoWriter, `value`: StatusResponse): Unit {
         Vertex.ADAPTER.asRepeated().encodeWithTag(writer, 1, value.vertexes)
         VertexStatus.ADAPTER.asRepeated().encodeWithTag(writer, 2, value.statuses)
         VertexLog.ADAPTER.asRepeated().encodeWithTag(writer, 3, value.logs)
         writer.writeBytes(value.unknownFields)
+      }
+
+      public override fun encode(writer: ReverseProtoWriter, `value`: StatusResponse): Unit {
+        writer.writeBytes(value.unknownFields)
+        VertexLog.ADAPTER.asRepeated().encodeWithTag(writer, 3, value.logs)
+        VertexStatus.ADAPTER.asRepeated().encodeWithTag(writer, 2, value.statuses)
+        Vertex.ADAPTER.asRepeated().encodeWithTag(writer, 1, value.vertexes)
       }
 
       public override fun decode(reader: ProtoReader): StatusResponse {
@@ -139,7 +149,7 @@ public class StatusResponse(
         )
       }
 
-      public override fun redact(value: StatusResponse): StatusResponse = value.copy(
+      public override fun redact(`value`: StatusResponse): StatusResponse = value.copy(
         vertexes = value.vertexes.redactElements(Vertex.ADAPTER),
         statuses = value.statuses.redactElements(VertexStatus.ADAPTER),
         logs = value.logs.redactElements(VertexLog.ADAPTER),

@@ -7,6 +7,7 @@ import com.squareup.wire.Message
 import com.squareup.wire.ProtoAdapter
 import com.squareup.wire.ProtoReader
 import com.squareup.wire.ProtoWriter
+import com.squareup.wire.ReverseProtoWriter
 import com.squareup.wire.Syntax.PROTO_3
 import com.squareup.wire.WireField
 import com.squareup.wire.`internal`.sanitize
@@ -20,7 +21,6 @@ import kotlin.Long
 import kotlin.Nothing
 import kotlin.String
 import kotlin.Unit
-import kotlin.hashCode
 import kotlin.jvm.JvmField
 import okio.ByteString
 
@@ -37,7 +37,8 @@ public class HealthCheckRequest(
     message = "Shouldn't be used in Kotlin",
     level = DeprecationLevel.HIDDEN
   )
-  public override fun newBuilder(): Nothing = throw AssertionError()
+  public override fun newBuilder(): Nothing = throw
+      AssertionError("Builders are deprecated and only available in a javaInterop build; see https://square.github.io/wire/wire_compiler/#kotlin")
 
   public override fun equals(other: Any?): Boolean {
     if (other === this) return true
@@ -74,17 +75,23 @@ public class HealthCheckRequest(
       HealthCheckRequest::class, 
       "type.googleapis.com/grpc.health.v1.HealthCheckRequest", 
       PROTO_3, 
-      null
+      null, 
+      "github.com/grpc/grpc-proto/grpc/health/v1/health.proto"
     ) {
-      public override fun encodedSize(value: HealthCheckRequest): Int {
+      public override fun encodedSize(`value`: HealthCheckRequest): Int {
         var size = value.unknownFields.size
         if (value.service != "") size += ProtoAdapter.STRING.encodedSizeWithTag(1, value.service)
         return size
       }
 
-      public override fun encode(writer: ProtoWriter, value: HealthCheckRequest): Unit {
+      public override fun encode(writer: ProtoWriter, `value`: HealthCheckRequest): Unit {
         if (value.service != "") ProtoAdapter.STRING.encodeWithTag(writer, 1, value.service)
         writer.writeBytes(value.unknownFields)
+      }
+
+      public override fun encode(writer: ReverseProtoWriter, `value`: HealthCheckRequest): Unit {
+        writer.writeBytes(value.unknownFields)
+        if (value.service != "") ProtoAdapter.STRING.encodeWithTag(writer, 1, value.service)
       }
 
       public override fun decode(reader: ProtoReader): HealthCheckRequest {
@@ -101,7 +108,7 @@ public class HealthCheckRequest(
         )
       }
 
-      public override fun redact(value: HealthCheckRequest): HealthCheckRequest = value.copy(
+      public override fun redact(`value`: HealthCheckRequest): HealthCheckRequest = value.copy(
         unknownFields = ByteString.EMPTY
       )
     }

@@ -7,6 +7,7 @@ import com.squareup.wire.Message
 import com.squareup.wire.ProtoAdapter
 import com.squareup.wire.ProtoReader
 import com.squareup.wire.ProtoWriter
+import com.squareup.wire.ReverseProtoWriter
 import com.squareup.wire.Syntax.PROTO_3
 import com.squareup.wire.WireField
 import com.squareup.wire.`internal`.immutableCopyOf
@@ -22,7 +23,6 @@ import kotlin.Nothing
 import kotlin.String
 import kotlin.Unit
 import kotlin.collections.Map
-import kotlin.hashCode
 import kotlin.jvm.JvmField
 import kotlin.lazy
 import okio.ByteString
@@ -99,7 +99,8 @@ public class Stat(
     message = "Shouldn't be used in Kotlin",
     level = DeprecationLevel.HIDDEN
   )
-  public override fun newBuilder(): Nothing = throw AssertionError()
+  public override fun newBuilder(): Nothing = throw
+      AssertionError("Builders are deprecated and only available in a javaInterop build; see https://square.github.io/wire/wire_compiler/#kotlin")
 
   public override fun equals(other: Any?): Boolean {
     if (other === this) return true
@@ -174,12 +175,13 @@ public class Stat(
       Stat::class, 
       "type.googleapis.com/fsutil.types.Stat", 
       PROTO_3, 
-      null
+      null, 
+      "github.com/tonistiigi/fsutil/types/stat.proto"
     ) {
       private val xattrsAdapter: ProtoAdapter<Map<String, ByteString>> by lazy {
           ProtoAdapter.newMapAdapter(ProtoAdapter.STRING, ProtoAdapter.BYTES) }
 
-      public override fun encodedSize(value: Stat): Int {
+      public override fun encodedSize(`value`: Stat): Int {
         var size_ = value.unknownFields.size
         if (value.path != "") size_ += ProtoAdapter.STRING.encodedSizeWithTag(1, value.path)
         if (value.mode != 0) size_ += ProtoAdapter.UINT32.encodedSizeWithTag(2, value.mode)
@@ -194,7 +196,7 @@ public class Stat(
         return size_
       }
 
-      public override fun encode(writer: ProtoWriter, value: Stat): Unit {
+      public override fun encode(writer: ProtoWriter, `value`: Stat): Unit {
         if (value.path != "") ProtoAdapter.STRING.encodeWithTag(writer, 1, value.path)
         if (value.mode != 0) ProtoAdapter.UINT32.encodeWithTag(writer, 2, value.mode)
         if (value.uid != 0) ProtoAdapter.UINT32.encodeWithTag(writer, 3, value.uid)
@@ -206,6 +208,20 @@ public class Stat(
         if (value.devminor != 0L) ProtoAdapter.INT64.encodeWithTag(writer, 9, value.devminor)
         xattrsAdapter.encodeWithTag(writer, 10, value.xattrs)
         writer.writeBytes(value.unknownFields)
+      }
+
+      public override fun encode(writer: ReverseProtoWriter, `value`: Stat): Unit {
+        writer.writeBytes(value.unknownFields)
+        xattrsAdapter.encodeWithTag(writer, 10, value.xattrs)
+        if (value.devminor != 0L) ProtoAdapter.INT64.encodeWithTag(writer, 9, value.devminor)
+        if (value.devmajor != 0L) ProtoAdapter.INT64.encodeWithTag(writer, 8, value.devmajor)
+        if (value.linkname != "") ProtoAdapter.STRING.encodeWithTag(writer, 7, value.linkname)
+        if (value.modTime != 0L) ProtoAdapter.INT64.encodeWithTag(writer, 6, value.modTime)
+        if (value.size != 0L) ProtoAdapter.INT64.encodeWithTag(writer, 5, value.size)
+        if (value.gid != 0) ProtoAdapter.UINT32.encodeWithTag(writer, 4, value.gid)
+        if (value.uid != 0) ProtoAdapter.UINT32.encodeWithTag(writer, 3, value.uid)
+        if (value.mode != 0) ProtoAdapter.UINT32.encodeWithTag(writer, 2, value.mode)
+        if (value.path != "") ProtoAdapter.STRING.encodeWithTag(writer, 1, value.path)
       }
 
       public override fun decode(reader: ProtoReader): Stat {
@@ -249,7 +265,7 @@ public class Stat(
         )
       }
 
-      public override fun redact(value: Stat): Stat = value.copy(
+      public override fun redact(`value`: Stat): Stat = value.copy(
         unknownFields = ByteString.EMPTY
       )
     }

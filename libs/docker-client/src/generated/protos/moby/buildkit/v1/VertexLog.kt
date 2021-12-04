@@ -2,12 +2,16 @@
 // Source: moby.buildkit.v1.VertexLog in github.com/moby/buildkit/api/services/control/control.proto
 package moby.buildkit.v1
 
+import com.google.protobuf.CustomtypeOption
+import com.google.protobuf.NullableOption
+import com.google.protobuf.StdtimeOption
 import com.squareup.wire.FieldEncoding
 import com.squareup.wire.Instant
 import com.squareup.wire.Message
 import com.squareup.wire.ProtoAdapter
 import com.squareup.wire.ProtoReader
 import com.squareup.wire.ProtoWriter
+import com.squareup.wire.ReverseProtoWriter
 import com.squareup.wire.Syntax.PROTO_3
 import com.squareup.wire.WireField
 import com.squareup.wire.`internal`.sanitize
@@ -21,17 +25,20 @@ import kotlin.Long
 import kotlin.Nothing
 import kotlin.String
 import kotlin.Unit
-import kotlin.hashCode
 import kotlin.jvm.JvmField
 import okio.ByteString
 
 public class VertexLog(
+  @CustomtypeOption("github.com/opencontainers/go-digest.Digest")
+  @NullableOption(false)
   @field:WireField(
     tag = 1,
     adapter = "com.squareup.wire.ProtoAdapter#STRING",
     label = WireField.Label.OMIT_IDENTITY
   )
   public val vertex: String = "",
+  @StdtimeOption(true)
+  @NullableOption(false)
   @field:WireField(
     tag = 2,
     adapter = "com.squareup.wire.ProtoAdapter#INSTANT",
@@ -56,7 +63,8 @@ public class VertexLog(
     message = "Shouldn't be used in Kotlin",
     level = DeprecationLevel.HIDDEN
   )
-  public override fun newBuilder(): Nothing = throw AssertionError()
+  public override fun newBuilder(): Nothing = throw
+      AssertionError("Builders are deprecated and only available in a javaInterop build; see https://square.github.io/wire/wire_compiler/#kotlin")
 
   public override fun equals(other: Any?): Boolean {
     if (other === this) return true
@@ -74,7 +82,7 @@ public class VertexLog(
     if (result == 0) {
       result = unknownFields.hashCode()
       result = result * 37 + vertex.hashCode()
-      result = result * 37 + timestamp.hashCode()
+      result = result * 37 + (timestamp?.hashCode() ?: 0)
       result = result * 37 + stream.hashCode()
       result = result * 37 + msg.hashCode()
       super.hashCode = result
@@ -106,9 +114,10 @@ public class VertexLog(
       VertexLog::class, 
       "type.googleapis.com/moby.buildkit.v1.VertexLog", 
       PROTO_3, 
-      null
+      null, 
+      "github.com/moby/buildkit/api/services/control/control.proto"
     ) {
-      public override fun encodedSize(value: VertexLog): Int {
+      public override fun encodedSize(`value`: VertexLog): Int {
         var size = value.unknownFields.size
         if (value.vertex != "") size += ProtoAdapter.STRING.encodedSizeWithTag(1, value.vertex)
         if (value.timestamp != null) size += ProtoAdapter.INSTANT.encodedSizeWithTag(2,
@@ -119,12 +128,20 @@ public class VertexLog(
         return size
       }
 
-      public override fun encode(writer: ProtoWriter, value: VertexLog): Unit {
+      public override fun encode(writer: ProtoWriter, `value`: VertexLog): Unit {
         if (value.vertex != "") ProtoAdapter.STRING.encodeWithTag(writer, 1, value.vertex)
         if (value.timestamp != null) ProtoAdapter.INSTANT.encodeWithTag(writer, 2, value.timestamp)
         if (value.stream != 0L) ProtoAdapter.INT64.encodeWithTag(writer, 3, value.stream)
         if (value.msg != ByteString.EMPTY) ProtoAdapter.BYTES.encodeWithTag(writer, 4, value.msg)
         writer.writeBytes(value.unknownFields)
+      }
+
+      public override fun encode(writer: ReverseProtoWriter, `value`: VertexLog): Unit {
+        writer.writeBytes(value.unknownFields)
+        if (value.msg != ByteString.EMPTY) ProtoAdapter.BYTES.encodeWithTag(writer, 4, value.msg)
+        if (value.stream != 0L) ProtoAdapter.INT64.encodeWithTag(writer, 3, value.stream)
+        if (value.timestamp != null) ProtoAdapter.INSTANT.encodeWithTag(writer, 2, value.timestamp)
+        if (value.vertex != "") ProtoAdapter.STRING.encodeWithTag(writer, 1, value.vertex)
       }
 
       public override fun decode(reader: ProtoReader): VertexLog {
@@ -150,7 +167,7 @@ public class VertexLog(
         )
       }
 
-      public override fun redact(value: VertexLog): VertexLog = value.copy(
+      public override fun redact(`value`: VertexLog): VertexLog = value.copy(
         timestamp = value.timestamp?.let(ProtoAdapter.INSTANT::redact),
         unknownFields = ByteString.EMPTY
       )

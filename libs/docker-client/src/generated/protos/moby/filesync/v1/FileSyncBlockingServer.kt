@@ -13,14 +13,16 @@ public interface FileSyncBlockingServer : Service {
   @WireRpc(
     path = "/moby.filesync.v1.FileSync/DiffCopy",
     requestAdapter = "fsutil.types.Packet#ADAPTER",
-    responseAdapter = "fsutil.types.Packet#ADAPTER"
+    responseAdapter = "fsutil.types.Packet#ADAPTER",
+    sourceFile = "github.com/moby/buildkit/session/filesync/filesync.proto"
   )
   public fun DiffCopy(request: MessageSource<Packet>, response: MessageSink<Packet>): Unit
 
   @WireRpc(
     path = "/moby.filesync.v1.FileSync/TarStream",
     requestAdapter = "fsutil.types.Packet#ADAPTER",
-    responseAdapter = "fsutil.types.Packet#ADAPTER"
+    responseAdapter = "fsutil.types.Packet#ADAPTER",
+    sourceFile = "github.com/moby/buildkit/session/filesync/filesync.proto"
   )
   public fun TarStream(request: MessageSource<Packet>, response: MessageSink<Packet>): Unit
 }

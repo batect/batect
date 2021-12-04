@@ -9,7 +9,10 @@ import kotlin.`annotation`.Retention
 import kotlin.`annotation`.Target
 
 @Retention(AnnotationRetention.RUNTIME)
-@Target(AnnotationTarget.PROPERTY)
+@Target(
+  AnnotationTarget.PROPERTY,
+  AnnotationTarget.FIELD
+)
 public annotation class CasttypeOption(
-  public val value: String
+  public val `value`: String
 )

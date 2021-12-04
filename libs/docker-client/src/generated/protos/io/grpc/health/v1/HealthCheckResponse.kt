@@ -8,6 +8,7 @@ import com.squareup.wire.Message
 import com.squareup.wire.ProtoAdapter
 import com.squareup.wire.ProtoReader
 import com.squareup.wire.ProtoWriter
+import com.squareup.wire.ReverseProtoWriter
 import com.squareup.wire.Syntax
 import com.squareup.wire.Syntax.PROTO_3
 import com.squareup.wire.WireEnum
@@ -22,7 +23,6 @@ import kotlin.Long
 import kotlin.Nothing
 import kotlin.String
 import kotlin.Unit
-import kotlin.hashCode
 import kotlin.jvm.JvmField
 import kotlin.jvm.JvmStatic
 import okio.ByteString
@@ -40,7 +40,8 @@ public class HealthCheckResponse(
     message = "Shouldn't be used in Kotlin",
     level = DeprecationLevel.HIDDEN
   )
-  public override fun newBuilder(): Nothing = throw AssertionError()
+  public override fun newBuilder(): Nothing = throw
+      AssertionError("Builders are deprecated and only available in a javaInterop build; see https://square.github.io/wire/wire_compiler/#kotlin")
 
   public override fun equals(other: Any?): Boolean {
     if (other === this) return true
@@ -77,19 +78,26 @@ public class HealthCheckResponse(
       HealthCheckResponse::class, 
       "type.googleapis.com/grpc.health.v1.HealthCheckResponse", 
       PROTO_3, 
-      null
+      null, 
+      "github.com/grpc/grpc-proto/grpc/health/v1/health.proto"
     ) {
-      public override fun encodedSize(value: HealthCheckResponse): Int {
+      public override fun encodedSize(`value`: HealthCheckResponse): Int {
         var size = value.unknownFields.size
         if (value.status != ServingStatus.UNKNOWN) size +=
             ServingStatus.ADAPTER.encodedSizeWithTag(1, value.status)
         return size
       }
 
-      public override fun encode(writer: ProtoWriter, value: HealthCheckResponse): Unit {
+      public override fun encode(writer: ProtoWriter, `value`: HealthCheckResponse): Unit {
         if (value.status != ServingStatus.UNKNOWN) ServingStatus.ADAPTER.encodeWithTag(writer, 1,
             value.status)
         writer.writeBytes(value.unknownFields)
+      }
+
+      public override fun encode(writer: ReverseProtoWriter, `value`: HealthCheckResponse): Unit {
+        writer.writeBytes(value.unknownFields)
+        if (value.status != ServingStatus.UNKNOWN) ServingStatus.ADAPTER.encodeWithTag(writer, 1,
+            value.status)
       }
 
       public override fun decode(reader: ProtoReader): HealthCheckResponse {
@@ -110,7 +118,7 @@ public class HealthCheckResponse(
         )
       }
 
-      public override fun redact(value: HealthCheckResponse): HealthCheckResponse = value.copy(
+      public override fun redact(`value`: HealthCheckResponse): HealthCheckResponse = value.copy(
         unknownFields = ByteString.EMPTY
       )
     }
@@ -119,7 +127,7 @@ public class HealthCheckResponse(
   }
 
   public enum class ServingStatus(
-    public override val value: Int
+    public override val `value`: Int
   ) : WireEnum {
     UNKNOWN(0),
     SERVING(1),
@@ -137,11 +145,11 @@ public class HealthCheckResponse(
         PROTO_3, 
         ServingStatus.UNKNOWN
       ) {
-        public override fun fromValue(value: Int): ServingStatus? = ServingStatus.fromValue(value)
+        public override fun fromValue(`value`: Int): ServingStatus? = ServingStatus.fromValue(value)
       }
 
       @JvmStatic
-      public fun fromValue(value: Int): ServingStatus? = when (value) {
+      public fun fromValue(`value`: Int): ServingStatus? = when (value) {
         0 -> UNKNOWN
         1 -> SERVING
         2 -> NOT_SERVING

@@ -9,28 +9,32 @@ public interface AuthBlockingServer : Service {
   @WireRpc(
     path = "/moby.filesync.v1.Auth/Credentials",
     requestAdapter = "moby.filesync.v1.CredentialsRequest#ADAPTER",
-    responseAdapter = "moby.filesync.v1.CredentialsResponse#ADAPTER"
+    responseAdapter = "moby.filesync.v1.CredentialsResponse#ADAPTER",
+    sourceFile = "github.com/moby/buildkit/session/auth/auth.proto"
   )
   public fun Credentials(request: CredentialsRequest): CredentialsResponse
 
   @WireRpc(
     path = "/moby.filesync.v1.Auth/FetchToken",
     requestAdapter = "moby.filesync.v1.FetchTokenRequest#ADAPTER",
-    responseAdapter = "moby.filesync.v1.FetchTokenResponse#ADAPTER"
+    responseAdapter = "moby.filesync.v1.FetchTokenResponse#ADAPTER",
+    sourceFile = "github.com/moby/buildkit/session/auth/auth.proto"
   )
   public fun FetchToken(request: FetchTokenRequest): FetchTokenResponse
 
   @WireRpc(
     path = "/moby.filesync.v1.Auth/GetTokenAuthority",
     requestAdapter = "moby.filesync.v1.GetTokenAuthorityRequest#ADAPTER",
-    responseAdapter = "moby.filesync.v1.GetTokenAuthorityResponse#ADAPTER"
+    responseAdapter = "moby.filesync.v1.GetTokenAuthorityResponse#ADAPTER",
+    sourceFile = "github.com/moby/buildkit/session/auth/auth.proto"
   )
   public fun GetTokenAuthority(request: GetTokenAuthorityRequest): GetTokenAuthorityResponse
 
   @WireRpc(
     path = "/moby.filesync.v1.Auth/VerifyTokenAuthority",
     requestAdapter = "moby.filesync.v1.VerifyTokenAuthorityRequest#ADAPTER",
-    responseAdapter = "moby.filesync.v1.VerifyTokenAuthorityResponse#ADAPTER"
+    responseAdapter = "moby.filesync.v1.VerifyTokenAuthorityResponse#ADAPTER",
+    sourceFile = "github.com/moby/buildkit/session/auth/auth.proto"
   )
   public fun VerifyTokenAuthority(request: VerifyTokenAuthorityRequest):
       VerifyTokenAuthorityResponse

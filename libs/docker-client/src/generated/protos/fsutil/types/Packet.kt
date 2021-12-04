@@ -8,6 +8,7 @@ import com.squareup.wire.Message
 import com.squareup.wire.ProtoAdapter
 import com.squareup.wire.ProtoReader
 import com.squareup.wire.ProtoWriter
+import com.squareup.wire.ReverseProtoWriter
 import com.squareup.wire.Syntax
 import com.squareup.wire.Syntax.PROTO_3
 import com.squareup.wire.WireEnum
@@ -22,7 +23,6 @@ import kotlin.Long
 import kotlin.Nothing
 import kotlin.String
 import kotlin.Unit
-import kotlin.hashCode
 import kotlin.jvm.JvmField
 import kotlin.jvm.JvmStatic
 import okio.ByteString
@@ -59,7 +59,8 @@ public class Packet(
     message = "Shouldn't be used in Kotlin",
     level = DeprecationLevel.HIDDEN
   )
-  public override fun newBuilder(): Nothing = throw AssertionError()
+  public override fun newBuilder(): Nothing = throw
+      AssertionError("Builders are deprecated and only available in a javaInterop build; see https://square.github.io/wire/wire_compiler/#kotlin")
 
   public override fun equals(other: Any?): Boolean {
     if (other === this) return true
@@ -77,7 +78,7 @@ public class Packet(
     if (result == 0) {
       result = unknownFields.hashCode()
       result = result * 37 + type.hashCode()
-      result = result * 37 + stat.hashCode()
+      result = result * 37 + (stat?.hashCode() ?: 0)
       result = result * 37 + ID.hashCode()
       result = result * 37 + data_.hashCode()
       super.hashCode = result
@@ -109,9 +110,10 @@ public class Packet(
       Packet::class, 
       "type.googleapis.com/fsutil.types.Packet", 
       PROTO_3, 
-      null
+      null, 
+      "github.com/tonistiigi/fsutil/types/wire.proto"
     ) {
-      public override fun encodedSize(value: Packet): Int {
+      public override fun encodedSize(`value`: Packet): Int {
         var size = value.unknownFields.size
         if (value.type != PacketType.PACKET_STAT) size += PacketType.ADAPTER.encodedSizeWithTag(1,
             value.type)
@@ -122,7 +124,7 @@ public class Packet(
         return size
       }
 
-      public override fun encode(writer: ProtoWriter, value: Packet): Unit {
+      public override fun encode(writer: ProtoWriter, `value`: Packet): Unit {
         if (value.type != PacketType.PACKET_STAT) PacketType.ADAPTER.encodeWithTag(writer, 1,
             value.type)
         if (value.stat != null) Stat.ADAPTER.encodeWithTag(writer, 2, value.stat)
@@ -130,6 +132,16 @@ public class Packet(
         if (value.data_ != ByteString.EMPTY) ProtoAdapter.BYTES.encodeWithTag(writer, 4,
             value.data_)
         writer.writeBytes(value.unknownFields)
+      }
+
+      public override fun encode(writer: ReverseProtoWriter, `value`: Packet): Unit {
+        writer.writeBytes(value.unknownFields)
+        if (value.data_ != ByteString.EMPTY) ProtoAdapter.BYTES.encodeWithTag(writer, 4,
+            value.data_)
+        if (value.ID != 0) ProtoAdapter.UINT32.encodeWithTag(writer, 3, value.ID)
+        if (value.stat != null) Stat.ADAPTER.encodeWithTag(writer, 2, value.stat)
+        if (value.type != PacketType.PACKET_STAT) PacketType.ADAPTER.encodeWithTag(writer, 1,
+            value.type)
       }
 
       public override fun decode(reader: ProtoReader): Packet {
@@ -159,7 +171,7 @@ public class Packet(
         )
       }
 
-      public override fun redact(value: Packet): Packet = value.copy(
+      public override fun redact(`value`: Packet): Packet = value.copy(
         stat = value.stat?.let(Stat.ADAPTER::redact),
         unknownFields = ByteString.EMPTY
       )
@@ -169,7 +181,7 @@ public class Packet(
   }
 
   public enum class PacketType(
-    public override val value: Int
+    public override val `value`: Int
   ) : WireEnum {
     PACKET_STAT(0),
     PACKET_REQ(1),
@@ -185,11 +197,11 @@ public class Packet(
         PROTO_3, 
         PacketType.PACKET_STAT
       ) {
-        public override fun fromValue(value: Int): PacketType? = PacketType.fromValue(value)
+        public override fun fromValue(`value`: Int): PacketType? = PacketType.fromValue(value)
       }
 
       @JvmStatic
-      public fun fromValue(value: Int): PacketType? = when (value) {
+      public fun fromValue(`value`: Int): PacketType? = when (value) {
         0 -> PACKET_STAT
         1 -> PACKET_REQ
         2 -> PACKET_DATA

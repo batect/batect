@@ -7,6 +7,7 @@ import com.squareup.wire.Message
 import com.squareup.wire.ProtoAdapter
 import com.squareup.wire.ProtoReader
 import com.squareup.wire.ProtoWriter
+import com.squareup.wire.ReverseProtoWriter
 import com.squareup.wire.Syntax.PROTO_3
 import com.squareup.wire.WireField
 import com.squareup.wire.`internal`.sanitize
@@ -20,7 +21,6 @@ import kotlin.Long
 import kotlin.Nothing
 import kotlin.String
 import kotlin.Unit
-import kotlin.hashCode
 import kotlin.jvm.JvmField
 import okio.ByteString
 
@@ -43,7 +43,8 @@ public class GetTokenAuthorityRequest(
     message = "Shouldn't be used in Kotlin",
     level = DeprecationLevel.HIDDEN
   )
-  public override fun newBuilder(): Nothing = throw AssertionError()
+  public override fun newBuilder(): Nothing = throw
+      AssertionError("Builders are deprecated and only available in a javaInterop build; see https://square.github.io/wire/wire_compiler/#kotlin")
 
   public override fun equals(other: Any?): Boolean {
     if (other === this) return true
@@ -87,9 +88,10 @@ public class GetTokenAuthorityRequest(
       GetTokenAuthorityRequest::class, 
       "type.googleapis.com/moby.filesync.v1.GetTokenAuthorityRequest", 
       PROTO_3, 
-      null
+      null, 
+      "github.com/moby/buildkit/session/auth/auth.proto"
     ) {
-      public override fun encodedSize(value: GetTokenAuthorityRequest): Int {
+      public override fun encodedSize(`value`: GetTokenAuthorityRequest): Int {
         var size = value.unknownFields.size
         if (value.Host != "") size += ProtoAdapter.STRING.encodedSizeWithTag(1, value.Host)
         if (value.Salt != ByteString.EMPTY) size += ProtoAdapter.BYTES.encodedSizeWithTag(2,
@@ -97,10 +99,17 @@ public class GetTokenAuthorityRequest(
         return size
       }
 
-      public override fun encode(writer: ProtoWriter, value: GetTokenAuthorityRequest): Unit {
+      public override fun encode(writer: ProtoWriter, `value`: GetTokenAuthorityRequest): Unit {
         if (value.Host != "") ProtoAdapter.STRING.encodeWithTag(writer, 1, value.Host)
         if (value.Salt != ByteString.EMPTY) ProtoAdapter.BYTES.encodeWithTag(writer, 2, value.Salt)
         writer.writeBytes(value.unknownFields)
+      }
+
+      public override fun encode(writer: ReverseProtoWriter, `value`: GetTokenAuthorityRequest):
+          Unit {
+        writer.writeBytes(value.unknownFields)
+        if (value.Salt != ByteString.EMPTY) ProtoAdapter.BYTES.encodeWithTag(writer, 2, value.Salt)
+        if (value.Host != "") ProtoAdapter.STRING.encodeWithTag(writer, 1, value.Host)
       }
 
       public override fun decode(reader: ProtoReader): GetTokenAuthorityRequest {
@@ -120,7 +129,7 @@ public class GetTokenAuthorityRequest(
         )
       }
 
-      public override fun redact(value: GetTokenAuthorityRequest): GetTokenAuthorityRequest =
+      public override fun redact(`value`: GetTokenAuthorityRequest): GetTokenAuthorityRequest =
           value.copy(
         unknownFields = ByteString.EMPTY
       )

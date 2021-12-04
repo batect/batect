@@ -2,12 +2,16 @@
 // Source: moby.buildkit.v1.Vertex in github.com/moby/buildkit/api/services/control/control.proto
 package moby.buildkit.v1
 
+import com.google.protobuf.CustomtypeOption
+import com.google.protobuf.NullableOption
+import com.google.protobuf.StdtimeOption
 import com.squareup.wire.FieldEncoding
 import com.squareup.wire.Instant
 import com.squareup.wire.Message
 import com.squareup.wire.ProtoAdapter
 import com.squareup.wire.ProtoReader
 import com.squareup.wire.ProtoWriter
+import com.squareup.wire.ReverseProtoWriter
 import com.squareup.wire.Syntax.PROTO_3
 import com.squareup.wire.WireField
 import com.squareup.wire.`internal`.immutableCopyOf
@@ -23,11 +27,12 @@ import kotlin.Nothing
 import kotlin.String
 import kotlin.Unit
 import kotlin.collections.List
-import kotlin.hashCode
 import kotlin.jvm.JvmField
 import okio.ByteString
 
 public class Vertex(
+  @CustomtypeOption("github.com/opencontainers/go-digest.Digest")
+  @NullableOption(false)
   @field:WireField(
     tag = 1,
     adapter = "com.squareup.wire.ProtoAdapter#STRING",
@@ -47,12 +52,14 @@ public class Vertex(
     label = WireField.Label.OMIT_IDENTITY
   )
   public val cached: Boolean = false,
+  @StdtimeOption(true)
   @field:WireField(
     tag = 5,
     adapter = "com.squareup.wire.ProtoAdapter#INSTANT",
     label = WireField.Label.OMIT_IDENTITY
   )
   public val started: Instant? = null,
+  @StdtimeOption(true)
   @field:WireField(
     tag = 6,
     adapter = "com.squareup.wire.ProtoAdapter#INSTANT",
@@ -70,6 +77,8 @@ public class Vertex(
   public val error: String = "",
   unknownFields: ByteString = ByteString.EMPTY
 ) : Message<Vertex, Nothing>(ADAPTER, unknownFields) {
+  @CustomtypeOption("github.com/opencontainers/go-digest.Digest")
+  @NullableOption(false)
   @field:WireField(
     tag = 2,
     adapter = "com.squareup.wire.ProtoAdapter#STRING",
@@ -81,7 +90,8 @@ public class Vertex(
     message = "Shouldn't be used in Kotlin",
     level = DeprecationLevel.HIDDEN
   )
-  public override fun newBuilder(): Nothing = throw AssertionError()
+  public override fun newBuilder(): Nothing = throw
+      AssertionError("Builders are deprecated and only available in a javaInterop build; see https://square.github.io/wire/wire_compiler/#kotlin")
 
   public override fun equals(other: Any?): Boolean {
     if (other === this) return true
@@ -105,8 +115,8 @@ public class Vertex(
       result = result * 37 + inputs.hashCode()
       result = result * 37 + name.hashCode()
       result = result * 37 + cached.hashCode()
-      result = result * 37 + started.hashCode()
-      result = result * 37 + completed.hashCode()
+      result = result * 37 + (started?.hashCode() ?: 0)
+      result = result * 37 + (completed?.hashCode() ?: 0)
       result = result * 37 + error.hashCode()
       super.hashCode = result
     }
@@ -143,9 +153,10 @@ public class Vertex(
       Vertex::class, 
       "type.googleapis.com/moby.buildkit.v1.Vertex", 
       PROTO_3, 
-      null
+      null, 
+      "github.com/moby/buildkit/api/services/control/control.proto"
     ) {
-      public override fun encodedSize(value: Vertex): Int {
+      public override fun encodedSize(`value`: Vertex): Int {
         var size = value.unknownFields.size
         if (value.digest != "") size += ProtoAdapter.STRING.encodedSizeWithTag(1, value.digest)
         size += ProtoAdapter.STRING.asRepeated().encodedSizeWithTag(2, value.inputs)
@@ -158,7 +169,7 @@ public class Vertex(
         return size
       }
 
-      public override fun encode(writer: ProtoWriter, value: Vertex): Unit {
+      public override fun encode(writer: ProtoWriter, `value`: Vertex): Unit {
         if (value.digest != "") ProtoAdapter.STRING.encodeWithTag(writer, 1, value.digest)
         ProtoAdapter.STRING.asRepeated().encodeWithTag(writer, 2, value.inputs)
         if (value.name != "") ProtoAdapter.STRING.encodeWithTag(writer, 3, value.name)
@@ -167,6 +178,17 @@ public class Vertex(
         if (value.completed != null) ProtoAdapter.INSTANT.encodeWithTag(writer, 6, value.completed)
         if (value.error != "") ProtoAdapter.STRING.encodeWithTag(writer, 7, value.error)
         writer.writeBytes(value.unknownFields)
+      }
+
+      public override fun encode(writer: ReverseProtoWriter, `value`: Vertex): Unit {
+        writer.writeBytes(value.unknownFields)
+        if (value.error != "") ProtoAdapter.STRING.encodeWithTag(writer, 7, value.error)
+        if (value.completed != null) ProtoAdapter.INSTANT.encodeWithTag(writer, 6, value.completed)
+        if (value.started != null) ProtoAdapter.INSTANT.encodeWithTag(writer, 5, value.started)
+        if (value.cached != false) ProtoAdapter.BOOL.encodeWithTag(writer, 4, value.cached)
+        if (value.name != "") ProtoAdapter.STRING.encodeWithTag(writer, 3, value.name)
+        ProtoAdapter.STRING.asRepeated().encodeWithTag(writer, 2, value.inputs)
+        if (value.digest != "") ProtoAdapter.STRING.encodeWithTag(writer, 1, value.digest)
       }
 
       public override fun decode(reader: ProtoReader): Vertex {
@@ -201,7 +223,7 @@ public class Vertex(
         )
       }
 
-      public override fun redact(value: Vertex): Vertex = value.copy(
+      public override fun redact(`value`: Vertex): Vertex = value.copy(
         started = value.started?.let(ProtoAdapter.INSTANT::redact),
         completed = value.completed?.let(ProtoAdapter.INSTANT::redact),
         unknownFields = ByteString.EMPTY

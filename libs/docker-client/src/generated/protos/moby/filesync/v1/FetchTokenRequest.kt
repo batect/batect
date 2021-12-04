@@ -7,6 +7,7 @@ import com.squareup.wire.Message
 import com.squareup.wire.ProtoAdapter
 import com.squareup.wire.ProtoReader
 import com.squareup.wire.ProtoWriter
+import com.squareup.wire.ReverseProtoWriter
 import com.squareup.wire.Syntax.PROTO_3
 import com.squareup.wire.WireField
 import com.squareup.wire.`internal`.immutableCopyOf
@@ -22,7 +23,6 @@ import kotlin.Nothing
 import kotlin.String
 import kotlin.Unit
 import kotlin.collections.List
-import kotlin.hashCode
 import kotlin.jvm.JvmField
 import okio.ByteString
 
@@ -65,7 +65,8 @@ public class FetchTokenRequest(
     message = "Shouldn't be used in Kotlin",
     level = DeprecationLevel.HIDDEN
   )
-  public override fun newBuilder(): Nothing = throw AssertionError()
+  public override fun newBuilder(): Nothing = throw
+      AssertionError("Builders are deprecated and only available in a javaInterop build; see https://square.github.io/wire/wire_compiler/#kotlin")
 
   public override fun equals(other: Any?): Boolean {
     if (other === this) return true
@@ -119,9 +120,10 @@ public class FetchTokenRequest(
       FetchTokenRequest::class, 
       "type.googleapis.com/moby.filesync.v1.FetchTokenRequest", 
       PROTO_3, 
-      null
+      null, 
+      "github.com/moby/buildkit/session/auth/auth.proto"
     ) {
-      public override fun encodedSize(value: FetchTokenRequest): Int {
+      public override fun encodedSize(`value`: FetchTokenRequest): Int {
         var size = value.unknownFields.size
         if (value.ClientID != "") size += ProtoAdapter.STRING.encodedSizeWithTag(1, value.ClientID)
         if (value.Host != "") size += ProtoAdapter.STRING.encodedSizeWithTag(2, value.Host)
@@ -131,13 +133,22 @@ public class FetchTokenRequest(
         return size
       }
 
-      public override fun encode(writer: ProtoWriter, value: FetchTokenRequest): Unit {
+      public override fun encode(writer: ProtoWriter, `value`: FetchTokenRequest): Unit {
         if (value.ClientID != "") ProtoAdapter.STRING.encodeWithTag(writer, 1, value.ClientID)
         if (value.Host != "") ProtoAdapter.STRING.encodeWithTag(writer, 2, value.Host)
         if (value.Realm != "") ProtoAdapter.STRING.encodeWithTag(writer, 3, value.Realm)
         if (value.Service != "") ProtoAdapter.STRING.encodeWithTag(writer, 4, value.Service)
         ProtoAdapter.STRING.asRepeated().encodeWithTag(writer, 5, value.Scopes)
         writer.writeBytes(value.unknownFields)
+      }
+
+      public override fun encode(writer: ReverseProtoWriter, `value`: FetchTokenRequest): Unit {
+        writer.writeBytes(value.unknownFields)
+        ProtoAdapter.STRING.asRepeated().encodeWithTag(writer, 5, value.Scopes)
+        if (value.Service != "") ProtoAdapter.STRING.encodeWithTag(writer, 4, value.Service)
+        if (value.Realm != "") ProtoAdapter.STRING.encodeWithTag(writer, 3, value.Realm)
+        if (value.Host != "") ProtoAdapter.STRING.encodeWithTag(writer, 2, value.Host)
+        if (value.ClientID != "") ProtoAdapter.STRING.encodeWithTag(writer, 1, value.ClientID)
       }
 
       public override fun decode(reader: ProtoReader): FetchTokenRequest {
@@ -166,7 +177,7 @@ public class FetchTokenRequest(
         )
       }
 
-      public override fun redact(value: FetchTokenRequest): FetchTokenRequest = value.copy(
+      public override fun redact(`value`: FetchTokenRequest): FetchTokenRequest = value.copy(
         unknownFields = ByteString.EMPTY
       )
     }

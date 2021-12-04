@@ -2,12 +2,16 @@
 // Source: moby.buildkit.v1.VertexStatus in github.com/moby/buildkit/api/services/control/control.proto
 package moby.buildkit.v1
 
+import com.google.protobuf.CustomtypeOption
+import com.google.protobuf.NullableOption
+import com.google.protobuf.StdtimeOption
 import com.squareup.wire.FieldEncoding
 import com.squareup.wire.Instant
 import com.squareup.wire.Message
 import com.squareup.wire.ProtoAdapter
 import com.squareup.wire.ProtoReader
 import com.squareup.wire.ProtoWriter
+import com.squareup.wire.ReverseProtoWriter
 import com.squareup.wire.Syntax.PROTO_3
 import com.squareup.wire.WireField
 import com.squareup.wire.`internal`.sanitize
@@ -21,7 +25,6 @@ import kotlin.Long
 import kotlin.Nothing
 import kotlin.String
 import kotlin.Unit
-import kotlin.hashCode
 import kotlin.jvm.JvmField
 import okio.ByteString
 
@@ -32,6 +35,8 @@ public class VertexStatus(
     label = WireField.Label.OMIT_IDENTITY
   )
   public val ID: String = "",
+  @CustomtypeOption("github.com/opencontainers/go-digest.Digest")
+  @NullableOption(false)
   @field:WireField(
     tag = 2,
     adapter = "com.squareup.wire.ProtoAdapter#STRING",
@@ -59,18 +64,22 @@ public class VertexStatus(
   /**
    * TODO: add started, completed
    */
+  @StdtimeOption(true)
+  @NullableOption(false)
   @field:WireField(
     tag = 6,
     adapter = "com.squareup.wire.ProtoAdapter#INSTANT",
     label = WireField.Label.OMIT_IDENTITY
   )
   public val timestamp: Instant? = null,
+  @StdtimeOption(true)
   @field:WireField(
     tag = 7,
     adapter = "com.squareup.wire.ProtoAdapter#INSTANT",
     label = WireField.Label.OMIT_IDENTITY
   )
   public val started: Instant? = null,
+  @StdtimeOption(true)
   @field:WireField(
     tag = 8,
     adapter = "com.squareup.wire.ProtoAdapter#INSTANT",
@@ -83,7 +92,8 @@ public class VertexStatus(
     message = "Shouldn't be used in Kotlin",
     level = DeprecationLevel.HIDDEN
   )
-  public override fun newBuilder(): Nothing = throw AssertionError()
+  public override fun newBuilder(): Nothing = throw
+      AssertionError("Builders are deprecated and only available in a javaInterop build; see https://square.github.io/wire/wire_compiler/#kotlin")
 
   public override fun equals(other: Any?): Boolean {
     if (other === this) return true
@@ -109,9 +119,9 @@ public class VertexStatus(
       result = result * 37 + name.hashCode()
       result = result * 37 + current.hashCode()
       result = result * 37 + total.hashCode()
-      result = result * 37 + timestamp.hashCode()
-      result = result * 37 + started.hashCode()
-      result = result * 37 + completed.hashCode()
+      result = result * 37 + (timestamp?.hashCode() ?: 0)
+      result = result * 37 + (started?.hashCode() ?: 0)
+      result = result * 37 + (completed?.hashCode() ?: 0)
       super.hashCode = result
     }
     return result
@@ -150,9 +160,10 @@ public class VertexStatus(
       VertexStatus::class, 
       "type.googleapis.com/moby.buildkit.v1.VertexStatus", 
       PROTO_3, 
-      null
+      null, 
+      "github.com/moby/buildkit/api/services/control/control.proto"
     ) {
-      public override fun encodedSize(value: VertexStatus): Int {
+      public override fun encodedSize(`value`: VertexStatus): Int {
         var size = value.unknownFields.size
         if (value.ID != "") size += ProtoAdapter.STRING.encodedSizeWithTag(1, value.ID)
         if (value.vertex != "") size += ProtoAdapter.STRING.encodedSizeWithTag(2, value.vertex)
@@ -167,7 +178,7 @@ public class VertexStatus(
         return size
       }
 
-      public override fun encode(writer: ProtoWriter, value: VertexStatus): Unit {
+      public override fun encode(writer: ProtoWriter, `value`: VertexStatus): Unit {
         if (value.ID != "") ProtoAdapter.STRING.encodeWithTag(writer, 1, value.ID)
         if (value.vertex != "") ProtoAdapter.STRING.encodeWithTag(writer, 2, value.vertex)
         if (value.name != "") ProtoAdapter.STRING.encodeWithTag(writer, 3, value.name)
@@ -177,6 +188,18 @@ public class VertexStatus(
         if (value.started != null) ProtoAdapter.INSTANT.encodeWithTag(writer, 7, value.started)
         if (value.completed != null) ProtoAdapter.INSTANT.encodeWithTag(writer, 8, value.completed)
         writer.writeBytes(value.unknownFields)
+      }
+
+      public override fun encode(writer: ReverseProtoWriter, `value`: VertexStatus): Unit {
+        writer.writeBytes(value.unknownFields)
+        if (value.completed != null) ProtoAdapter.INSTANT.encodeWithTag(writer, 8, value.completed)
+        if (value.started != null) ProtoAdapter.INSTANT.encodeWithTag(writer, 7, value.started)
+        if (value.timestamp != null) ProtoAdapter.INSTANT.encodeWithTag(writer, 6, value.timestamp)
+        if (value.total != 0L) ProtoAdapter.INT64.encodeWithTag(writer, 5, value.total)
+        if (value.current != 0L) ProtoAdapter.INT64.encodeWithTag(writer, 4, value.current)
+        if (value.name != "") ProtoAdapter.STRING.encodeWithTag(writer, 3, value.name)
+        if (value.vertex != "") ProtoAdapter.STRING.encodeWithTag(writer, 2, value.vertex)
+        if (value.ID != "") ProtoAdapter.STRING.encodeWithTag(writer, 1, value.ID)
       }
 
       public override fun decode(reader: ProtoReader): VertexStatus {
@@ -214,7 +237,7 @@ public class VertexStatus(
         )
       }
 
-      public override fun redact(value: VertexStatus): VertexStatus = value.copy(
+      public override fun redact(`value`: VertexStatus): VertexStatus = value.copy(
         timestamp = value.timestamp?.let(ProtoAdapter.INSTANT::redact),
         started = value.started?.let(ProtoAdapter.INSTANT::redact),
         completed = value.completed?.let(ProtoAdapter.INSTANT::redact),

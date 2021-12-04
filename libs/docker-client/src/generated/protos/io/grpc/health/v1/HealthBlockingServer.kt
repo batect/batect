@@ -15,7 +15,8 @@ public interface HealthBlockingServer : Service {
   @WireRpc(
     path = "/grpc.health.v1.Health/Check",
     requestAdapter = "io.grpc.health.v1.HealthCheckRequest#ADAPTER",
-    responseAdapter = "io.grpc.health.v1.HealthCheckResponse#ADAPTER"
+    responseAdapter = "io.grpc.health.v1.HealthCheckResponse#ADAPTER",
+    sourceFile = "github.com/grpc/grpc-proto/grpc/health/v1/health.proto"
   )
   public fun Check(request: HealthCheckRequest): HealthCheckResponse
 
@@ -39,7 +40,8 @@ public interface HealthBlockingServer : Service {
   @WireRpc(
     path = "/grpc.health.v1.Health/Watch",
     requestAdapter = "io.grpc.health.v1.HealthCheckRequest#ADAPTER",
-    responseAdapter = "io.grpc.health.v1.HealthCheckResponse#ADAPTER"
+    responseAdapter = "io.grpc.health.v1.HealthCheckResponse#ADAPTER",
+    sourceFile = "github.com/grpc/grpc-proto/grpc/health/v1/health.proto"
   )
   public fun Watch(request: HealthCheckRequest, response: MessageSink<HealthCheckResponse>): Unit
 }

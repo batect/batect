@@ -14,11 +14,6 @@
     limitations under the License.
 */
 
-import java.nio.file.Files
-import java.nio.file.Path
-
-def buildIsRunningOnMacOS = org.gradle.internal.os.OperatingSystem.current().isMacOsX()
-
 // See https://github.com/johnrengelman/shadow/issues/389#issuecomment-440431318 for an explanation of this.
 tasks.withType(AbstractArchiveTask).configureEach {
     preserveFileTimestamps = false
@@ -31,32 +26,4 @@ tasks.withType(Jar).configureEach {
 
 shadowJar {
     classifier = null
-
-    doLast {
-        if (buildIsRunningOnMacOS) {
-            Path workingDirectory = project.buildDir.toPath().resolve("codesigning")
-            Files.createDirectories(workingDirectory)
-
-            String jarPath = it.archiveFile.get()
-            runProcessInDirectory(workingDirectory, "jar", "xf", jarPath, "jni/Darwin/libjffi-1.2.jnilib")
-            runProcessInDirectory(workingDirectory, "codesign", "-s", "-", "jni/Darwin/libjffi-1.2.jnilib")
-            runProcessInDirectory(workingDirectory, "jar", "uf", jarPath, "jni/Darwin/libjffi-1.2.jnilib")
-        }
-    }
-}
-
-static String runProcessInDirectory(Path workingDirectory, String... args) {
-    def process = new ProcessBuilder(args)
-        .directory(workingDirectory.toFile())
-        .redirectErrorStream(true)
-        .start()
-
-    def exitCode = process.waitFor()
-    def output = process.inputStream.getText()
-
-    if (exitCode != 0) {
-        throw new RuntimeException("\"${args.join(" ")}\" failed with exit code $exitCode. Output was: $output")
-    }
-
-    return output.trim()
 }

@@ -73,7 +73,11 @@ class KotlinPlugin : Plugin<Project> {
         project.tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile::class.java).configureEach {
             it.kotlinOptions {
                 jvmTarget = "1.8"
-                freeCompilerArgs = listOf("-progressive", "-Xopt-in=kotlin.RequiresOptIn")
+                freeCompilerArgs = listOf(
+                    "-progressive",
+                    "-Xopt-in=kotlin.RequiresOptIn",
+                    "-Xjvm-default=all" // Required to workaround https://youtrack.jetbrains.com/issue/KT-45919 until Kotlin 1.6.20 is released
+                )
             }
         }
     }
@@ -238,7 +242,7 @@ class KotlinPlugin : Plugin<Project> {
             allow("EPL-1.0")
             allowUrl("https://www.eclipse.org/legal/epl-v20.html")
 
-            allowDependency("com.github.jnr", "jnr-posix", "3.1.11") {
+            allowDependency("com.github.jnr", "jnr-posix", "3.1.13") {
                 it.because("Licensed under three licenses, including EPL 2.0 and LGPL")
             }
 
@@ -246,15 +250,15 @@ class KotlinPlugin : Plugin<Project> {
                 it.because("https://github.com/typetools/checker-framework/blob/checker-framework-2.5.5/LICENSE.txt says that the annotations are licensed under the MIT license")
             }
 
-            allowDependency("org.bouncycastle", "bcutil-jdk15on", "1.69") {
+            allowDependency("org.bouncycastle", "bcutil-jdk15on", "1.70") {
                 it.because("https://www.bouncycastle.org/licence.html is the MIT license")
             }
 
-            allowDependency("org.bouncycastle", "bcpkix-jdk15on", "1.69") {
+            allowDependency("org.bouncycastle", "bcpkix-jdk15on", "1.70") {
                 it.because("https://www.bouncycastle.org/licence.html is the MIT license")
             }
 
-            allowDependency("org.bouncycastle", "bcprov-jdk15on", "1.69") {
+            allowDependency("org.bouncycastle", "bcprov-jdk15on", "1.70") {
                 it.because("https://www.bouncycastle.org/licence.html is the MIT license")
             }
         }

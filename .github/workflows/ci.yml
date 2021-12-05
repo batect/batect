@@ -16,45 +16,6 @@ jobs:
       - name: Validate Gradle wrapper
         uses: gradle/wrapper-validation-action@v1.0.4
 
-  # This is a temporary workaround for https://github.com/square/wire/issues/1325 - ideally we'd just generate the code
-  # at build time, but Wire doesn't yet work on Windows.
-  validate-generated-code:
-    name: "Validate generated code is up-to-date"
-    runs-on: ubuntu-18.04
-
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v2.4.0
-        with:
-          fetch-depth: 0
-
-      - name: Set up JDK
-        uses: actions/setup-java@v2.3.1
-        with:
-          java-version: 11
-          distribution: adopt
-
-      - name: Cache Gradle wrapper
-        uses: actions/cache@v2.1.6
-        with:
-          path: ~/.gradle/wrapper
-          key: gradle-wrapper-${{ runner.os }}-${{ hashFiles('gradle/wrapper/**/*') }}
-          restore-keys: gradle-wrapper-${{ runner.os }}
-
-      - name: Cache code generation packages
-        id: cache-code-generation-packages
-        uses: actions/cache@v2.1.6
-        with:
-          path: ~/.gradle/caches
-          key: gradle-code-generation-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle', '**/*.gradle.kts', 'gradle.properties') }}
-          restore-keys: gradle-code-generation-packages-${{ runner.os }}
-
-      - name: Run code generation
-        run: unset JAVA_TOOL_OPTIONS && ./gradlew --parallel generateMainProtos
-
-      - name: Check for outdated generated code
-        run: if [ ! -z "$(git status --porcelain)" ]; then echo "Generated code changed. Do you need to run './gradlew generateMainProtos' ?"; git diff; exit 1; fi
-
   build-windows:
     name: "Build (Windows)"
     runs-on: windows-2019
@@ -70,21 +31,21 @@ jobs:
           fetch-depth: 0
 
       - name: Set up JDK
-        uses: actions/setup-java@v2.3.1
+        uses: actions/setup-java@v2.4.0
         with:
           java-version: 11
           distribution: adopt
 
       - name: Cache packages
         id: cache-packages
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         with:
           path: ~/.gradle/caches
           key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle', '**/*.gradle.kts', 'gradle.properties') }}
           restore-keys: gradle-packages-${{ runner.os }}
 
       - name: Build and test
-        run: ./gradlew --parallel -DgenerateCoverage=true app:check jacocoTestReport --exclude-task=generateMainProtos # This is temporarily disabled on Windows due to https://github.com/square/wire/issues/1325
+        run: ./gradlew --parallel -DgenerateCoverage=true app:check jacocoTestReport
 
       - name: Upload coverage to codecov.io
         uses: codecov/codecov-action@v2.1.0
@@ -125,21 +86,21 @@ jobs:
           fetch-depth: 0
 
       - name: Set up JDK
-        uses: actions/setup-java@v2.3.1
+        uses: actions/setup-java@v2.4.0
         with:
           java-version: 11
           distribution: adopt
 
       - name: Cache packages
         id: cache-packages
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         with:
           path: ~/.gradle/caches
           key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle', '**/*.gradle.kts', 'gradle.properties') }}-wrappertests
           restore-keys: gradle-packages-${{ runner.os }}
 
       - name: Run wrapper tests
-        run: ./gradlew wrapper:windows:check --exclude-task=generateMainProtos # This is temporarily disabled on Windows due to https://github.com/square/wire/issues/1325
+        run: ./gradlew wrapper:windows:check
 
       - name: Stop Gradle daemon
         run: ./gradlew --stop
@@ -175,14 +136,14 @@ jobs:
           fetch-depth: 0
 
       - name: Set up JDK
-        uses: actions/setup-java@v2.3.1
+        uses: actions/setup-java@v2.4.0
         with:
           java-version: 11
           distribution: adopt
 
       - name: Cache packages
         id: cache-packages
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         with:
           path: ~/.gradle/caches
           key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle', '**/*.gradle.kts', 'gradle.properties') }}-journeytests
@@ -192,7 +153,7 @@ jobs:
         run: docker version
 
       - name: Run journey tests (Windows containers)
-        run: ./gradlew journeyTest -PwindowsContainers --exclude-task=generateMainProtos # This is temporarily disabled on Windows due to https://github.com/square/wire/issues/1325
+        run: ./gradlew journeyTest -PwindowsContainers
 
       - name: Stop Gradle daemon
         run: ./gradlew --stop
@@ -228,21 +189,21 @@ jobs:
           fetch-depth: 0
 
       - name: Set up JDK
-        uses: actions/setup-java@v2.3.1
+        uses: actions/setup-java@v2.4.0
         with:
           java-version: 11
           distribution: adopt
 
       - name: Cache packages
         id: cache-packages
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         with:
           path: ~/.gradle/caches
           key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle', '**/*.gradle.kts', 'gradle.properties') }}-integrationtests
           restore-keys: gradle-packages-${{ runner.os }}
 
       - name: Run integration tests
-        run: ./gradlew --parallel libs:git-client:integrationTest --exclude-task=generateMainProtos # This is temporarily disabled on Windows due to https://github.com/square/wire/issues/1325
+        run: ./gradlew --parallel libs:git-client:integrationTest
 
       - name: Stop Gradle daemon
         run: ./gradlew --stop
@@ -274,13 +235,13 @@ jobs:
           fetch-depth: 0
 
       - name: Set up JDK
-        uses: actions/setup-java@v2.3.1
+        uses: actions/setup-java@v2.4.0
         with:
           java-version: 11
           distribution: adopt
 
       - name: Cache Gradle wrapper
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         with:
           path: ~/.gradle/wrapper
           key: gradle-wrapper-${{ runner.os }}-${{ hashFiles('gradle/wrapper/**/*') }}
@@ -288,7 +249,7 @@ jobs:
 
       - name: Cache packages
         id: cache-packages
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         with:
           path: ~/.gradle/caches
           key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle', '**/*.gradle.kts', 'gradle.properties') }}
@@ -347,13 +308,13 @@ jobs:
           fetch-depth: 0
 
       - name: Set up JDK
-        uses: actions/setup-java@v2.3.1
+        uses: actions/setup-java@v2.4.0
         with:
           java-version: 11
           distribution: adopt
 
       - name: Cache Gradle wrapper
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         with:
           path: ~/.gradle/wrapper
           key: gradle-wrapper-${{ runner.os }}-${{ hashFiles('gradle/wrapper/**/*') }}
@@ -361,7 +322,7 @@ jobs:
 
       - name: Cache packages
         id: cache-packages
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         with:
           path: ~/.gradle/caches
           key: gradle-wrapper-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle', '**/*.gradle.kts', 'gradle.properties') }}
@@ -381,13 +342,13 @@ jobs:
           fetch-depth: 0
 
       - name: Set up JDK
-        uses: actions/setup-java@v2.3.1
+        uses: actions/setup-java@v2.4.0
         with:
           java-version: 11
           distribution: adopt
 
       - name: Cache Gradle wrapper
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         with:
           path: ~/.gradle/wrapper
           key: gradle-wrapper-${{ runner.os }}-${{ hashFiles('gradle/wrapper/**/*') }}
@@ -395,7 +356,7 @@ jobs:
 
       - name: Cache packages
         id: cache-packages
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         with:
           path: ~/.gradle/caches
           key: gradle-wrapper-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle', '**/*.gradle.kts', 'gradle.properties') }}
@@ -438,13 +399,13 @@ jobs:
           fetch-depth: 0
 
       - name: Set up JDK
-        uses: actions/setup-java@v2.3.1
+        uses: actions/setup-java@v2.4.0
         with:
           java-version: 11
           distribution: adopt
 
       - name: Cache Gradle wrapper
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         with:
           path: ~/.gradle/wrapper
           key: gradle-wrapper-${{ runner.os }}-${{ hashFiles('gradle/wrapper/**/*') }}
@@ -452,7 +413,7 @@ jobs:
 
       - name: Cache packages
         id: cache-packages
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         with:
           path: ~/.gradle/caches
           key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle', '**/*.gradle.kts', 'gradle.properties') }}-journeytests
@@ -500,13 +461,13 @@ jobs:
           fetch-depth: 0
 
       - name: Set up JDK
-        uses: actions/setup-java@v2.3.1
+        uses: actions/setup-java@v2.4.0
         with:
           java-version: 11
           distribution: adopt
 
       - name: Cache Gradle wrapper
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         with:
           path: ~/.gradle/wrapper
           key: gradle-wrapper-${{ runner.os }}-${{ hashFiles('gradle/wrapper/**/*') }}
@@ -514,7 +475,7 @@ jobs:
 
       - name: Cache packages
         id: cache-packages
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         with:
           path: ~/.gradle/caches
           key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle', '**/*.gradle.kts', 'gradle.properties') }}-integrationtests
@@ -541,13 +502,13 @@ jobs:
           fetch-depth: 0
 
       - name: Set up JDK
-        uses: actions/setup-java@v2.3.1
+        uses: actions/setup-java@v2.4.0
         with:
           java-version: 11
           distribution: adopt
 
       - name: Cache Gradle wrapper
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         with:
           path: ~/.gradle/wrapper
           key: gradle-wrapper-${{ runner.os }}-${{ hashFiles('gradle/wrapper/**/*') }}
@@ -555,7 +516,7 @@ jobs:
 
       - name: Cache packages
         id: cache-packages
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         with:
           path: ~/.gradle/caches
           key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle', '**/*.gradle.kts', 'gradle.properties') }}
@@ -594,7 +555,6 @@ jobs:
     name: "Publish release"
     needs:
       - validate-gradle-wrapper
-      - validate-generated-code
       - build-windows
       - build-linux
       - build-mac
@@ -621,13 +581,13 @@ jobs:
         run: git fetch -f origin ${{ github.ref }}:${{ github.ref }}
 
       - name: Set up JDK
-        uses: actions/setup-java@v2.3.1
+        uses: actions/setup-java@v2.4.0
         with:
           java-version: 11
           distribution: adopt
 
       - name: Cache Gradle wrapper
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         with:
           path: ~/.gradle/wrapper
           key: gradle-wrapper-${{ runner.os }}-${{ hashFiles('gradle/wrapper/**/*') }}
@@ -635,7 +595,7 @@ jobs:
 
       - name: Cache packages
         id: cache-packages
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         with:
           path: ~/.gradle/caches
           key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle', '**/*.gradle.kts', 'gradle.properties') }}

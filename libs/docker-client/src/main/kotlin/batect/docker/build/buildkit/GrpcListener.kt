@@ -125,7 +125,7 @@ class GrpcListener(
             GrpcMessageSource(stream.getSource().buffer(), endpoint.requestAdaptor, headers[grpcEncoding]).use { source ->
                 // Important: don't call close() on GrpcMessageSink: it closes the underlying stream, causing writing the trailers
                 // to silently fail later on.
-                val sink = GrpcMessageSink(stream.getSink().buffer(), endpoint.responseAdaptor, null, identityEncoding)
+                val sink = GrpcMessageSink(stream.getSink().buffer(), 0, endpoint.responseAdaptor, null, identityEncoding)
 
                 endpoint.method.invoke(serviceInstance, source, sink)
                 stream.sendResponseTrailers(GrpcStatus.OK)

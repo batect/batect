@@ -24,6 +24,10 @@ plugins {
     kotlin("plugin.serialization") apply false
 }
 
+repositories {
+    mavenCentral()
+}
+
 apply(from = "$rootDir/gradle/spotless.gradle")
 apply(from = "$rootDir/gradle/updateInfoUpload.gradle.kts")
 apply(from = "$rootDir/gradle/utilities.gradle")

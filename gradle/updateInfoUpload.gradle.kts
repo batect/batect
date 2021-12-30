@@ -15,7 +15,6 @@
 */
 
 import batect.buildtools.GoogleCloudStorageUpload
-import java.nio.file.Files
 
 val updateInfoFile = buildDir.resolve("updateInfo").resolve("latest.json")
 
@@ -47,7 +46,7 @@ val generateUpdateInfoFile = tasks.register("generateUpdateInfoFile") {
             .replace(" ", "")
             .replace("\n", "")
 
-        Files.write(updateInfoFile.toPath(), content.toByteArray(Charsets.UTF_8))
+        updateInfoFile.writeText(content)
     }
 }
 

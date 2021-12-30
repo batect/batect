@@ -17,7 +17,7 @@
 import org.gradle.api.JavaVersion
 
 plugins {
-    id("java-gradle-plugin")
+    `java-gradle-plugin`
     kotlin("jvm") version "1.6.10"
 }
 

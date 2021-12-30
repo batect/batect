@@ -42,6 +42,7 @@ import org.gradle.testing.jacoco.plugins.JacocoTaskExtension
 import org.gradle.testing.jacoco.tasks.JacocoReport
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 class KotlinPlugin : Plugin<Project> {
     @Override
@@ -70,7 +71,7 @@ class KotlinPlugin : Plugin<Project> {
             targetCompatibility = JavaVersion.VERSION_1_8
         }
 
-        project.tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile::class.java).configureEach {
+        project.tasks.withType<KotlinCompile>().configureEach {
             it.kotlinOptions {
                 jvmTarget = "1.8"
                 freeCompilerArgs = listOf(

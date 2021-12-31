@@ -17,7 +17,7 @@
 import org.gradle.api.JavaVersion
 
 plugins {
-    id("java-gradle-plugin")
+    `java-gradle-plugin`
     kotlin("jvm") version "1.6.10"
 }
 
@@ -27,7 +27,6 @@ repositories {
 
 dependencies {
     implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
-    implementation(gradleApi())
     implementation(gradleKotlinDsl())
     implementation("org.jetbrains.kotlin:kotlin-gradle-plugin")
     implementation("org.jetbrains.kotlin:kotlin-reflect")

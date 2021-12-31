@@ -54,7 +54,7 @@ tasks {
 
         from(project("app").getTasksByName("shadowJar", false))
         from(project("wrapper").getTasksByName("build", false))
-        into(getBuildDir().toPath().resolve("release"))
+        into(buildDir.resolve("release"))
     }
 
     withType<Wrapper> {

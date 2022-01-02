@@ -14,7 +14,10 @@
     limitations under the License.
 */
 
-ext.licenseText = """
+import com.diffplug.gradle.spotless.SpotlessExtension
+
+val licenseText by extra(
+    """
     Copyright 2017-2021 Charles Korn.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,17 +32,22 @@ ext.licenseText = """
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+)
 
-def kotlinLicenseHeader = "/*$licenseText*/\n\n"
-def javaLicenseHeader = "/*$licenseText*/\n\n"
-def ktlintVersion = "0.43.2"
+val kotlinLicenseHeader = "/*$licenseText*/\n\n"
+val javaLicenseHeader = "/*$licenseText*/\n\n"
+val ktlintVersion = "0.43.2"
 
-spotless {
-    format "misc", {
-        target fileTree(
-            dir: ".",
-            include: ["**/*.gradle", "**/*.md", "**/.gitignore", "**/*.yaml", "**/*.yml", "**/*.sh", "**/Dockerfile", "**/*.py", "**/*.json", "**/*.ps1", "**/*.cmd"],
-            excludes: ["**/node_modules/*", "**/build/*", "**/.devcontainer/*"]
+configure<SpotlessExtension> {
+    format("misc") {
+        target(
+            fileTree(".") {
+                include(
+                    "**/*.gradle", "**/*.md", "**/.gitignore", "**/*.yaml", "**/*.yml", "**/*.sh",
+                    "**/Dockerfile", "**/*.py", "**/*.json", "**/*.ps1", "**/*.cmd"
+                )
+                exclude("**/node_modules/*", "**/build/*", "**/.devcontainer/*")
+            }
         )
 
         trimTrailingWhitespace()
@@ -47,15 +55,15 @@ spotless {
         endWithNewline()
     }
 
-    format "gradle", {
-        target "**/*.gradle"
+    format("gradle") {
+        target("**/*.gradle")
 
         // Check what values are really required with: find . -name '*.gradle' -type f -exec sed -n 17p {} \; | cut -d' ' -f1 | sort | uniq
-        licenseHeader "/*$licenseText*/\n\n", "(//|apply|def|ext|import|plugins|rootProject|sourceSets|tasks|buildscript|pluginManagement)"
+        licenseHeader("/*$licenseText*/\n\n", "(//|apply|def|ext|import|plugins|rootProject|sourceSets|tasks|buildscript|pluginManagement)")
     }
 
     kotlinGradle {
-        target "**/*.gradle.kts"
+        target("**/*.gradle.kts")
 
         ktlint(ktlintVersion)
 
@@ -63,7 +71,7 @@ spotless {
         // TODO: This confuses spotless plugin for settings.gradle.kts -- is
         //       this a spotless issue, or does this configuration need more
         //       specificity?
-        licenseHeader kotlinLicenseHeader, "(val|import|pluginManagement|plugins|tasks|//)"
+        licenseHeader(kotlinLicenseHeader, "(val|import|pluginManagement|plugins|tasks|//)")
     }
 
     kotlin {
@@ -97,13 +105,13 @@ tasks.named("spotlessKotlin") {
     mustRunAfter(project("app").tasks.named("generateVersionInfoFile"))
 }
 
-[
+listOf(
     "spotlessGradle",
     "spotlessJava",
     "spotlessKotlin",
     "spotlessKotlinGradle",
     "spotlessMisc",
-].forEach {
+).forEach {
     tasks.named(it) {
         mustRunAfter(project("libs").project("docker-client").tasks.named("generateMainProtos"))
     }

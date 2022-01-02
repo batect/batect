@@ -28,7 +28,7 @@ repositories {
     mavenCentral()
 }
 
-apply(from = "$rootDir/gradle/spotless.gradle")
+apply(from = "$rootDir/gradle/spotless.gradle.kts")
 apply(from = "$rootDir/gradle/updateInfoUpload.gradle.kts")
 apply(from = "$rootDir/gradle/utilities.gradle")
 apply(from = "$rootDir/gradle/versioning.gradle")

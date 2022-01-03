@@ -18,7 +18,7 @@ plugins {
     id("batect-kotlin")
 }
 
-apply(from = "gradle/integrationTest.gradle")
+apply(from = "gradle/integrationTest.gradle.kts")
 
 dependencies {
     implementation(project(":libs:logging"))

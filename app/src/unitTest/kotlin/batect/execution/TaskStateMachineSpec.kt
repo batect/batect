@@ -63,7 +63,14 @@ import org.spekframework.spek2.style.specification.describe
 object TaskStateMachineSpec : Spek({
     describe("a task state machine") {
         val graph by createForEachTest { mock<ContainerDependencyGraph>() }
-        val runOptions by createForEachTest { mock<RunOptions>() }
+
+        val runOptions by createForEachTest {
+            mock<RunOptions> {
+                on { behaviourAfterFailure } doReturn CleanupOption.Cleanup
+                on { behaviourAfterSuccess } doReturn CleanupOption.Cleanup
+            }
+        }
+
         val logger by createLoggerForEachTest()
         val runStage by createForEachTest { mock<RunStage>() }
         val runStagePlanner by createForEachTest {
@@ -81,7 +88,7 @@ object TaskStateMachineSpec : Spek({
 
         val cleanupStagePlanner by createForEachTest {
             mock<CleanupStagePlanner> {
-                on { createStage(any()) } doReturn cleanupStage
+                on { createStage(any(), any()) } doReturn cleanupStage
             }
         }
 
@@ -146,7 +153,7 @@ object TaskStateMachineSpec : Spek({
                                 }
 
                                 it("does not create the cleanup stage") {
-                                    verify(cleanupStagePlanner, never()).createStage(any())
+                                    verify(cleanupStagePlanner, never()).createStage(any(), any())
                                 }
                             }
                         }
@@ -166,7 +173,7 @@ object TaskStateMachineSpec : Spek({
                                 }
 
                                 it("does not create the cleanup stage") {
-                                    verify(cleanupStagePlanner, never()).createStage(any())
+                                    verify(cleanupStagePlanner, never()).createStage(any(), any())
                                 }
                             }
                         }
@@ -211,7 +218,7 @@ object TaskStateMachineSpec : Spek({
                                     }
 
                                     it("sends all previous events to the cleanup stage planner") {
-                                        verify(cleanupStagePlanner).createStage(setOf(event))
+                                        verify(cleanupStagePlanner).createStage(setOf(event), CleanupOption.Cleanup)
                                     }
                                 }
                             }
@@ -224,17 +231,17 @@ object TaskStateMachineSpec : Spek({
                                         whenever(failureErrorMessageFormatter.formatManualCleanupMessageAfterTaskSuccessWithCleanupDisabled(setOf(event), cleanupCommands)).doReturn(TextRun("Do this to clean up"))
                                     }
 
-                                    val cleanupStepThatShouldNeverBeRun = createMockTaskStep()
-                                    beforeEachTest { whenever(cleanupStage.popNextStep(setOf(event), stepsStillRunning)).doReturn(StepReady(cleanupStepThatShouldNeverBeRun)) }
+                                    val cleanupStep = createMockTaskStep()
+                                    beforeEachTest { whenever(cleanupStage.popNextStep(setOf(event), stepsStillRunning)).doReturn(StepReady(cleanupStep)) }
 
                                     val result by runNullableForEachTest { stateMachine.popNextStep(stepsStillRunning) }
 
-                                    it("returns null") {
-                                        assertThat(result, absent())
+                                    it("returns the step from the cleanup stage") {
+                                        assertThat(result, equalTo(cleanupStep))
                                     }
 
-                                    it("sends all previous events to the cleanup stage planner") {
-                                        verify(cleanupStagePlanner).createStage(setOf(event))
+                                    it("sends all previous events to the cleanup stage planner, and only creates the cleanup stage once") {
+                                        verify(cleanupStagePlanner, times(1)).createStage(setOf(event), CleanupOption.DontCleanup)
                                     }
 
                                     it("sets the cleanup instruction to that provided by the error message formatter") {
@@ -269,7 +276,7 @@ object TaskStateMachineSpec : Spek({
                             }
 
                             it("does not create the cleanup stage") {
-                                verify(cleanupStagePlanner, never()).createStage(any())
+                                verify(cleanupStagePlanner, never()).createStage(any(), any())
                             }
                         }
                     }
@@ -302,7 +309,7 @@ object TaskStateMachineSpec : Spek({
                                 }
 
                                 it("sends all previous events to the cleanup stage planner, and only creates the cleanup stage once") {
-                                    verify(cleanupStagePlanner, times(1)).createStage(setOf(failureEvent))
+                                    verify(cleanupStagePlanner, times(1)).createStage(setOf(failureEvent), CleanupOption.Cleanup)
                                 }
                             }
                         }
@@ -333,7 +340,7 @@ object TaskStateMachineSpec : Spek({
                                     }
 
                                     it("sends all previous events to the cleanup stage planner, and only creates the cleanup stage once") {
-                                        verify(cleanupStagePlanner, times(1)).createStage(setOf(failureEvent))
+                                        verify(cleanupStagePlanner, times(1)).createStage(setOf(failureEvent), CleanupOption.DontCleanup)
                                     }
                                 }
                             }
@@ -355,13 +362,13 @@ object TaskStateMachineSpec : Spek({
                                 }
 
                                 on("getting the next steps to execute") {
-                                    val cleanupStepThatShouldNeverBeRun = createMockTaskStep()
-                                    beforeEachTest { whenever(cleanupStage.popNextStep(events, stepsStillRunning)).doReturn(StepReady(cleanupStepThatShouldNeverBeRun)) }
+                                    val cleanupStep = createMockTaskStep()
+                                    beforeEachTest { whenever(cleanupStage.popNextStep(events, stepsStillRunning)).doReturn(StepReady(cleanupStep)) }
 
                                     val result by runNullableForEachTest { stateMachine.popNextStep(stepsStillRunning) }
 
-                                    it("returns null") {
-                                        assertThat(result, absent())
+                                    it("returns the first step from the cleanup stage") {
+                                        assertThat(result, equalTo(cleanupStep))
                                     }
 
                                     it("does not pop any steps from the run stage") {
@@ -369,7 +376,7 @@ object TaskStateMachineSpec : Spek({
                                     }
 
                                     it("sends all previous events to the cleanup stage planner") {
-                                        verify(cleanupStagePlanner).createStage(events)
+                                        verify(cleanupStagePlanner).createStage(events, CleanupOption.DontCleanup)
                                     }
 
                                     it("sets the cleanup instruction to that provided by the error message formatter") {

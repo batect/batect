@@ -27,6 +27,7 @@ import batect.config.TaskRunConfiguration
 import batect.config.TaskSpecialisedConfiguration
 import batect.docker.DockerContainer
 import batect.docker.DockerNetwork
+import batect.execution.CleanupOption
 import batect.execution.ContainerDependencyGraph
 import batect.execution.model.events.ContainerCreatedEvent
 import batect.execution.model.events.ContainerStartedEvent
@@ -72,15 +73,31 @@ object CleanupStagePlannerSpec : Spek({
         val planner by createForEachTest { CleanupStagePlanner(graph, systemInfo, logger) }
 
         given("no events were posted") {
-            on("creating the stage") {
-                val stage by runForEachTest { planner.createStage(events) }
+            given("automatic cleanup is being performed") {
+                on("creating the stage") {
+                    val stage by runForEachTest { planner.createStage(events, CleanupOption.Cleanup) }
 
-                it("has no rules") {
-                    assertThat(stage.rules, isEmpty)
+                    it("has no rules") {
+                        assertThat(stage.rules, isEmpty)
+                    }
+
+                    it("has no manual cleanup instructions") {
+                        assertThat(stage.manualCleanupInstructions, isEmpty)
+                    }
                 }
+            }
 
-                it("propagates the operating system") {
-                    assertThat(stage.operatingSystem, equalTo(OperatingSystem.Other))
+            given("manual cleanup is enabled") {
+                given("manual cleanup is being performed") {
+                    val stage by runForEachTest { planner.createStage(events, CleanupOption.DontCleanup) }
+
+                    it("has no rules") {
+                        assertThat(stage.rules, isEmpty)
+                    }
+
+                    it("has no manual cleanup instructions") {
+                        assertThat(stage.manualCleanupInstructions, isEmpty)
+                    }
                 }
             }
         }
@@ -91,45 +108,117 @@ object CleanupStagePlannerSpec : Spek({
             beforeEachTest { events.add(TaskNetworkCreatedEvent(network)) }
 
             given("no containers were created") {
-                on("creating the stage") {
-                    itHasExactlyTheRules(
-                        { planner.createStage(events) },
-                        mapOf(
-                            "delete the task network" to DeleteTaskNetworkStepRule(network, emptySet())
+                val expectedCleanupInstructions = listOf("docker network rm the-network")
+
+                given("automatic cleanup is being performed") {
+                    on("creating the stage") {
+                        val stage by runForEachTest { planner.createStage(events, CleanupOption.Cleanup) }
+
+                        itHasExactlyTheRules(
+                            { stage },
+                            mapOf(
+                                "delete the task network" to DeleteTaskNetworkStepRule(network, emptySet())
+                            )
                         )
-                    )
+
+                        it("provides a manual cleanup instruction to remove the network") {
+                            assertThat(stage.manualCleanupInstructions, equalTo(expectedCleanupInstructions))
+                        }
+                    }
+                }
+
+                given("manual cleanup is being performed") {
+                    on("creating the stage") {
+                        val stage by runForEachTest { planner.createStage(events, CleanupOption.DontCleanup) }
+
+                        it("has no rules") {
+                            assertThat(stage.rules, isEmpty)
+                        }
+
+                        it("provides a manual cleanup instruction to remove the network") {
+                            assertThat(stage.manualCleanupInstructions, equalTo(expectedCleanupInstructions))
+                        }
+                    }
                 }
             }
 
             given("only a single container was created") {
                 val dockerContainer = DockerContainer("some-container-id")
+                val expectedCleanupInstructions = listOf("docker rm --force --volumes some-container-id", "docker network rm the-network")
 
                 beforeEachTest { events.add(ContainerCreatedEvent(taskContainer, dockerContainer)) }
 
                 given("the container was not started") {
-                    on("creating the stage") {
-                        itHasExactlyTheRules(
-                            { planner.createStage(events) },
-                            mapOf(
-                                "delete the task network" to DeleteTaskNetworkStepRule(network, setOf(taskContainer)),
-                                "remove the container" to RemoveContainerStepRule(taskContainer, dockerContainer, false)
+                    given("automatic cleanup is being performed") {
+                        on("creating the stage") {
+                            val stage by runForEachTest { planner.createStage(events, CleanupOption.Cleanup) }
+
+                            itHasExactlyTheRules(
+                                { stage },
+                                mapOf(
+                                    "delete the task network" to DeleteTaskNetworkStepRule(network, setOf(taskContainer)),
+                                    "remove the container" to RemoveContainerStepRule(taskContainer, dockerContainer, false)
+                                )
                             )
-                        )
+
+                            it("provides manual cleanup instructions to remove the network and the container") {
+                                assertThat(stage.manualCleanupInstructions, equalTo(expectedCleanupInstructions))
+                            }
+                        }
+                    }
+
+                    given("manual cleanup is being performed") {
+                        on("creating the stage") {
+                            val stage by runForEachTest { planner.createStage(events, CleanupOption.DontCleanup) }
+
+                            it("has no rules") {
+                                assertThat(stage.rules, isEmpty)
+                            }
+
+                            it("provides manual cleanup instructions to remove the network and the container") {
+                                assertThat(stage.manualCleanupInstructions, equalTo(expectedCleanupInstructions))
+                            }
+                        }
                     }
                 }
 
                 given("the container was started") {
                     beforeEachTest { events.add(ContainerStartedEvent(taskContainer)) }
 
-                    on("creating the stage") {
-                        itHasExactlyTheRules(
-                            { planner.createStage(events) },
-                            mapOf(
-                                "delete the task network" to DeleteTaskNetworkStepRule(network, setOf(taskContainer)),
-                                "stop the container" to StopContainerStepRule(taskContainer, dockerContainer, emptySet()),
-                                "remove the container after it is stopped" to RemoveContainerStepRule(taskContainer, dockerContainer, true)
+                    given("automatic cleanup is being performed") {
+                        on("creating the stage") {
+                            val stage by runForEachTest { planner.createStage(events, CleanupOption.Cleanup) }
+
+                            itHasExactlyTheRules(
+                                { stage },
+                                mapOf(
+                                    "delete the task network" to DeleteTaskNetworkStepRule(network, setOf(taskContainer)),
+                                    "stop the container" to StopContainerStepRule(taskContainer, dockerContainer, emptySet()),
+                                    "remove the container after it is stopped" to RemoveContainerStepRule(taskContainer, dockerContainer, true)
+                                )
                             )
-                        )
+
+                            it("provides manual cleanup instructions to remove the network and the container") {
+                                assertThat(stage.manualCleanupInstructions, equalTo(expectedCleanupInstructions))
+                            }
+                        }
+                    }
+
+                    given("manual cleanup is being performed") {
+                        on("creating the stage") {
+                            val stage by runForEachTest { planner.createStage(events, CleanupOption.DontCleanup) }
+
+                            itHasExactlyTheRules(
+                                { stage },
+                                mapOf(
+                                    "stop the container" to StopContainerStepRule(taskContainer, dockerContainer, emptySet()),
+                                )
+                            )
+
+                            it("provides manual cleanup instructions to remove the network and the container") {
+                                assertThat(stage.manualCleanupInstructions, equalTo(expectedCleanupInstructions))
+                            }
+                        }
                     }
                 }
             }
@@ -145,17 +234,46 @@ object CleanupStagePlannerSpec : Spek({
                     events.add(ContainerCreatedEvent(container2, container2DockerContainer))
                 }
 
+                val expectedCleanupInstructions = listOf(
+                    "docker rm --force --volumes task-container-id",
+                    "docker rm --force --volumes container-1-id",
+                    "docker rm --force --volumes container-2-id",
+                    "docker network rm the-network"
+                )
+
                 given("none of the containers were started") {
-                    on("creating the stage") {
-                        itHasExactlyTheRules(
-                            { planner.createStage(events) },
-                            mapOf(
-                                "delete the task network" to DeleteTaskNetworkStepRule(network, setOf(taskContainer, container1, container2)),
-                                "remove the task container" to RemoveContainerStepRule(taskContainer, taskDockerContainer, false),
-                                "remove the first dependency container" to RemoveContainerStepRule(container1, container1DockerContainer, false),
-                                "remove the second dependency container" to RemoveContainerStepRule(container2, container2DockerContainer, false)
+                    given("automatic cleanup is being performed") {
+                        on("creating the stage") {
+                            val stage by runForEachTest { planner.createStage(events, CleanupOption.Cleanup) }
+
+                            itHasExactlyTheRules(
+                                { stage },
+                                mapOf(
+                                    "delete the task network" to DeleteTaskNetworkStepRule(network, setOf(taskContainer, container1, container2)),
+                                    "remove the task container" to RemoveContainerStepRule(taskContainer, taskDockerContainer, false),
+                                    "remove the first dependency container" to RemoveContainerStepRule(container1, container1DockerContainer, false),
+                                    "remove the second dependency container" to RemoveContainerStepRule(container2, container2DockerContainer, false)
+                                )
                             )
-                        )
+
+                            it("provides manual cleanup instructions to remove the network and the containers") {
+                                assertThat(stage.manualCleanupInstructions, equalTo(expectedCleanupInstructions))
+                            }
+                        }
+                    }
+
+                    given("manual cleanup is being performed") {
+                        on("creating the stage") {
+                            val stage by runForEachTest { planner.createStage(events, CleanupOption.DontCleanup) }
+
+                            it("has no rules") {
+                                assertThat(stage.rules, isEmpty)
+                            }
+
+                            it("provides manual cleanup instructions to remove the network and the containers") {
+                                assertThat(stage.manualCleanupInstructions, equalTo(expectedCleanupInstructions))
+                            }
+                        }
                     }
                 }
 
@@ -164,17 +282,42 @@ object CleanupStagePlannerSpec : Spek({
                         events.add(ContainerStartedEvent(container1))
                     }
 
-                    on("creating the stage") {
-                        itHasExactlyTheRules(
-                            { planner.createStage(events) },
-                            mapOf(
-                                "delete the task network" to DeleteTaskNetworkStepRule(network, setOf(taskContainer, container1, container2)),
-                                "stop the first dependency container" to StopContainerStepRule(container1, container1DockerContainer, emptySet()),
-                                "remove the task container" to RemoveContainerStepRule(taskContainer, taskDockerContainer, false),
-                                "remove the first dependency container after it is stopped" to RemoveContainerStepRule(container1, container1DockerContainer, true),
-                                "remove the second dependency container" to RemoveContainerStepRule(container2, container2DockerContainer, false)
+                    given("automatic cleanup is being performed") {
+                        on("creating the stage") {
+                            val stage by runForEachTest { planner.createStage(events, CleanupOption.Cleanup) }
+
+                            itHasExactlyTheRules(
+                                { stage },
+                                mapOf(
+                                    "delete the task network" to DeleteTaskNetworkStepRule(network, setOf(taskContainer, container1, container2)),
+                                    "stop the first dependency container" to StopContainerStepRule(container1, container1DockerContainer, emptySet()),
+                                    "remove the task container" to RemoveContainerStepRule(taskContainer, taskDockerContainer, false),
+                                    "remove the first dependency container after it is stopped" to RemoveContainerStepRule(container1, container1DockerContainer, true),
+                                    "remove the second dependency container" to RemoveContainerStepRule(container2, container2DockerContainer, false)
+                                )
                             )
-                        )
+
+                            it("provides manual cleanup instructions to remove the network and the containers") {
+                                assertThat(stage.manualCleanupInstructions, equalTo(expectedCleanupInstructions))
+                            }
+                        }
+                    }
+
+                    given("manual cleanup is being performed") {
+                        on("creating the stage") {
+                            val stage by runForEachTest { planner.createStage(events, CleanupOption.DontCleanup) }
+
+                            itHasExactlyTheRules(
+                                { stage },
+                                mapOf(
+                                    "stop the first dependency container" to StopContainerStepRule(container1, container1DockerContainer, emptySet()),
+                                )
+                            )
+
+                            it("provides manual cleanup instructions to remove the network and the containers") {
+                                assertThat(stage.manualCleanupInstructions, equalTo(expectedCleanupInstructions))
+                            }
+                        }
                     }
                 }
 
@@ -185,19 +328,46 @@ object CleanupStagePlannerSpec : Spek({
                         events.add(ContainerStartedEvent(container2))
                     }
 
-                    on("creating the stage") {
-                        itHasExactlyTheRules(
-                            { planner.createStage(events) },
-                            mapOf(
-                                "delete the task network" to DeleteTaskNetworkStepRule(network, setOf(taskContainer, container1, container2)),
-                                "stop the task container" to StopContainerStepRule(taskContainer, taskDockerContainer, emptySet()),
-                                "stop the first dependency container" to StopContainerStepRule(container1, container1DockerContainer, setOf(container2, taskContainer)),
-                                "stop the second dependency container" to StopContainerStepRule(container2, container2DockerContainer, setOf(taskContainer)),
-                                "remove the task container after it is stopped" to RemoveContainerStepRule(taskContainer, taskDockerContainer, true),
-                                "remove the first dependency container after it is stopped" to RemoveContainerStepRule(container1, container1DockerContainer, true),
-                                "remove the second dependency container after it is stopped" to RemoveContainerStepRule(container2, container2DockerContainer, true)
+                    given("automatic cleanup is being performed") {
+                        on("creating the stage") {
+                            val stage by runForEachTest { planner.createStage(events, CleanupOption.Cleanup) }
+
+                            itHasExactlyTheRules(
+                                { stage },
+                                mapOf(
+                                    "delete the task network" to DeleteTaskNetworkStepRule(network, setOf(taskContainer, container1, container2)),
+                                    "stop the task container" to StopContainerStepRule(taskContainer, taskDockerContainer, emptySet()),
+                                    "stop the first dependency container" to StopContainerStepRule(container1, container1DockerContainer, setOf(container2, taskContainer)),
+                                    "stop the second dependency container" to StopContainerStepRule(container2, container2DockerContainer, setOf(taskContainer)),
+                                    "remove the task container after it is stopped" to RemoveContainerStepRule(taskContainer, taskDockerContainer, true),
+                                    "remove the first dependency container after it is stopped" to RemoveContainerStepRule(container1, container1DockerContainer, true),
+                                    "remove the second dependency container after it is stopped" to RemoveContainerStepRule(container2, container2DockerContainer, true)
+                                )
                             )
-                        )
+
+                            it("provides manual cleanup instructions to remove the network and the containers") {
+                                assertThat(stage.manualCleanupInstructions, equalTo(expectedCleanupInstructions))
+                            }
+                        }
+                    }
+
+                    given("manual cleanup is being performed") {
+                        on("creating the stage") {
+                            val stage by runForEachTest { planner.createStage(events, CleanupOption.DontCleanup) }
+
+                            itHasExactlyTheRules(
+                                { stage },
+                                mapOf(
+                                    "stop the task container" to StopContainerStepRule(taskContainer, taskDockerContainer, emptySet()),
+                                    "stop the first dependency container" to StopContainerStepRule(container1, container1DockerContainer, setOf(container2, taskContainer)),
+                                    "stop the second dependency container" to StopContainerStepRule(container2, container2DockerContainer, setOf(taskContainer)),
+                                )
+                            )
+
+                            it("provides manual cleanup instructions to remove the network and the containers") {
+                                assertThat(stage.manualCleanupInstructions, equalTo(expectedCleanupInstructions))
+                            }
+                        }
                     }
                 }
             }

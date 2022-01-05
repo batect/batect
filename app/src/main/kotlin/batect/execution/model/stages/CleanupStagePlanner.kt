@@ -18,16 +18,19 @@ package batect.execution.model.stages
 
 import batect.config.Container
 import batect.docker.DockerContainer
+import batect.execution.CleanupOption
 import batect.execution.ContainerDependencyGraph
 import batect.execution.model.events.ContainerCreatedEvent
 import batect.execution.model.events.ContainerStartedEvent
 import batect.execution.model.events.TaskEvent
 import batect.execution.model.events.TaskNetworkCreatedEvent
 import batect.execution.model.events.data
+import batect.execution.model.rules.cleanup.CleanupTaskStepRule
 import batect.execution.model.rules.cleanup.DeleteTaskNetworkStepRule
 import batect.execution.model.rules.cleanup.RemoveContainerStepRule
 import batect.execution.model.rules.cleanup.StopContainerStepRule
 import batect.execution.model.rules.data
+import batect.logging.LogMessageBuilder
 import batect.logging.Logger
 import batect.os.SystemInfo
 import batect.primitives.filterToSet
@@ -38,7 +41,7 @@ class CleanupStagePlanner(
     private val systemInfo: SystemInfo,
     private val logger: Logger
 ) {
-    fun createStage(pastEvents: Set<TaskEvent>): CleanupStage {
+    fun createStage(pastEvents: Set<TaskEvent>, cleanupType: CleanupOption): CleanupStage {
         val containersCreated = pastEvents
             .filterIsInstance<ContainerCreatedEvent>()
             .associate { it.container to it.dockerContainer }
@@ -47,17 +50,29 @@ class CleanupStagePlanner(
             .filterIsInstance<ContainerStartedEvent>()
             .mapToSet { it.container }
 
-        val rules = networkCleanupRules(pastEvents, containersCreated) +
-            stopContainerRules(containersCreated, containersStarted) +
+        val stopContainerRules = stopContainerRules(containersCreated, containersStarted)
+
+        val allRules = networkCleanupRules(pastEvents, containersCreated) +
+            stopContainerRules +
             removeContainerRules(containersCreated, containersStarted)
 
+        val manualCleanupInstructions: List<String> = manualCleanupInstructions(allRules)
+
+        val rules = when (cleanupType) {
+            CleanupOption.DontCleanup -> stopContainerRules
+            CleanupOption.Cleanup -> allRules
+        }
+
+        val stage = CleanupStage(rules, manualCleanupInstructions)
+
         logger.info {
-            message("Created cleanup plan.")
-            data("rules", rules)
+            message("Created cleanup stage.")
+            data("rules", stage.rules)
+            data("manualCleanupInstructions", stage.manualCleanupInstructions)
             data("pastEvents", pastEvents)
         }
 
-        return CleanupStage(rules, systemInfo.operatingSystem)
+        return stage
     }
 
     private fun networkCleanupRules(pastEvents: Set<TaskEvent>, containersCreated: Map<Container, DockerContainer>): Set<DeleteTaskNetworkStepRule> =
@@ -86,4 +101,11 @@ class CleanupStagePlanner(
 
                 RemoveContainerStepRule(container, dockerContainer, containerWasStarted)
             }
+
+    private fun manualCleanupInstructions(allRules: Set<CleanupTaskStepRule>): List<String> = allRules
+        .map { it to it.getManualCleanupInstructionForOperatingSystem(systemInfo.operatingSystem) }
+        .filter { (_, instruction) -> instruction != null }
+        .sortedBy { (rule, _) -> rule.manualCleanupSortOrder }
+        .map { (_, instruction) -> instruction!! }
 }
+

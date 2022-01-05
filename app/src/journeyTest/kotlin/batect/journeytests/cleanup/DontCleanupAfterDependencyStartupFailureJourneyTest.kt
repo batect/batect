@@ -94,7 +94,7 @@ object DontCleanupAfterDependencyStartupFailureJourneyTest : Spek({
                 expect(result).output().toContainRegex(cleanupRegex)
             }
 
-            it("does not stop the container") {
+            it("does not delete the container") {
                 val containerId = commandsRegex.find(result.output)?.groups?.get("id")?.value
 
                 expect(containerId).notToEqualNull()
@@ -107,7 +107,7 @@ object DontCleanupAfterDependencyStartupFailureJourneyTest : Spek({
                 expect(inspectProcess.exitValue()).toEqual(0)
 
                 val output = InputStreamReader(inspectProcess.inputStream).readText().trim()
-                expect(output).toEqual("running")
+                expect(output).toEqual("exited")
             }
 
             it("the command given to view the logs displays the logs from the container") {

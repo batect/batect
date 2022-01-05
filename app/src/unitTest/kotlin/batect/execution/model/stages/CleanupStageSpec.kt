@@ -16,92 +16,21 @@
 
 package batect.execution.model.stages
 
-import batect.execution.model.rules.cleanup.CleanupTaskStepRule
-import batect.execution.model.rules.cleanup.ManualCleanupSortOrder
-import batect.os.OperatingSystem
 import batect.testutils.equalTo
-import batect.testutils.given
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.isEmpty
-import org.mockito.kotlin.doReturn
-import org.mockito.kotlin.doThrow
-import org.mockito.kotlin.mock
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
 object CleanupStageSpec : Spek({
     describe("a cleanup stage") {
-        given("it has no rules") {
-            val stage = CleanupStage(emptySet(), OperatingSystem.Other)
+        val stage = CleanupStage(emptySet(), emptyList())
 
-            it("has no manual cleanup commands") {
-                assertThat(stage.manualCleanupInstructions, isEmpty)
-            }
-
-            it("reports as complete when no steps are still running") {
-                assertThat(stage.popNextStep(emptySet(), false), equalTo(StageComplete))
-            }
-
-            it("reports as incomplete when a step is still running") {
-                assertThat(stage.popNextStep(emptySet(), true), equalTo(NoStepsReady))
-            }
+        it("reports as complete when no steps are still running") {
+            assertThat(stage.popNextStep(emptySet(), false), equalTo(StageComplete))
         }
 
-        given("it has a single rule") {
-            given("that rule has no cleanup command") {
-                val rule = mock<CleanupTaskStepRule> {
-                    on { getManualCleanupInstructionForOperatingSystem(OperatingSystem.Other) } doReturn null as String?
-                    on { manualCleanupSortOrder } doThrow UnsupportedOperationException("This rule has no manual cleanup instruction.")
-                }
-
-                val stage = CleanupStage(setOf(rule), OperatingSystem.Other)
-
-                it("has no manual cleanup commands") {
-                    assertThat(stage.manualCleanupInstructions, isEmpty)
-                }
-            }
-
-            given("that rule has a cleanup command") {
-                val rule = mock<CleanupTaskStepRule> {
-                    on { getManualCleanupInstructionForOperatingSystem(OperatingSystem.Other) } doReturn "do-cleanup"
-                }
-
-                val stage = CleanupStage(setOf(rule), OperatingSystem.Other)
-
-                it("has the cleanup command from the rule") {
-                    assertThat(stage.manualCleanupInstructions, equalTo(listOf("do-cleanup")))
-                }
-            }
-        }
-
-        given("it has multiple rules") {
-            val ruleWithNoCommand = mock<CleanupTaskStepRule> {
-                on { getManualCleanupInstructionForOperatingSystem(OperatingSystem.Other) } doReturn null as String?
-                on { manualCleanupSortOrder } doThrow UnsupportedOperationException("This rule has no manual cleanup instruction.")
-            }
-
-            val lateCleanupRule = mock<CleanupTaskStepRule> {
-                on { getManualCleanupInstructionForOperatingSystem(OperatingSystem.Other) } doReturn "do-this-second"
-                on { manualCleanupSortOrder } doReturn ManualCleanupSortOrder.DeleteTaskNetwork
-            }
-
-            val earlyCleanupRule = mock<CleanupTaskStepRule> {
-                on { getManualCleanupInstructionForOperatingSystem(OperatingSystem.Other) } doReturn "do-this-first"
-                on { manualCleanupSortOrder } doReturn ManualCleanupSortOrder.RemoveContainers
-            }
-
-            val stage = CleanupStage(
-                setOf(
-                    ruleWithNoCommand,
-                    lateCleanupRule,
-                    earlyCleanupRule
-                ),
-                OperatingSystem.Other
-            )
-
-            it("has the cleanup commands from the rules that have commands, sorted in execution order") {
-                assertThat(stage.manualCleanupInstructions, equalTo(listOf("do-this-first", "do-this-second")))
-            }
+        it("reports as incomplete when a step is still running") {
+            assertThat(stage.popNextStep(emptySet(), true), equalTo(NoStepsReady))
         }
     }
 })

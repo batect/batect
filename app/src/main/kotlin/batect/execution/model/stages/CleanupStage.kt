@@ -18,14 +18,7 @@ package batect.execution.model.stages
 
 import batect.execution.model.events.TaskEvent
 import batect.execution.model.rules.cleanup.CleanupTaskStepRule
-import batect.os.OperatingSystem
 
-class CleanupStage(val rules: Set<CleanupTaskStepRule>, val operatingSystem: OperatingSystem) : Stage(rules) {
-    val manualCleanupInstructions: List<String> = rules
-        .map { it to it.getManualCleanupInstructionForOperatingSystem(operatingSystem) }
-        .filter { (_, instruction) -> instruction != null }
-        .sortedBy { (rule, _) -> rule.manualCleanupSortOrder }
-        .map { (_, instruction) -> instruction!! }
-
+class CleanupStage(val rules: Set<CleanupTaskStepRule>, val manualCleanupInstructions: List<String>) : Stage(rules) {
     override fun determineIfStageIsComplete(pastEvents: Set<TaskEvent>, stepsStillRunning: Boolean) = !stepsStillRunning
 }

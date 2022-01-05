@@ -138,23 +138,25 @@ class TaskStateMachine(
     }
 
     private fun startCleanupStage(stepsStillRunning: Boolean): TaskStep? {
-        val cleanupStage = cleanupStagePlanner.createStage(events)
-
-        if (taskHasFailed && shouldLeaveCreatedContainersRunningAfterFailure()) {
-            manualCleanupInstructions = failureErrorMessageFormatter.formatManualCleanupMessageAfterTaskFailureWithCleanupDisabled(events, cleanupStage.manualCleanupInstructions)
-            return null
+        val cleanupType = when {
+            taskHasFailed -> runOptions.behaviourAfterFailure
+            else -> runOptions.behaviourAfterSuccess
         }
 
-        if (runOptions.behaviourAfterSuccess == CleanupOption.DontCleanup) {
+        val cleanupStage = cleanupStagePlanner.createStage(events, cleanupType)
+        currentStage = cleanupStage
+
+        if (taskHasFailed && runOptions.behaviourAfterFailure == CleanupOption.DontCleanup) {
+            manualCleanupInstructions = failureErrorMessageFormatter.formatManualCleanupMessageAfterTaskFailureWithCleanupDisabled(events, cleanupStage.manualCleanupInstructions)
+        }
+
+        if (!taskHasFailed && runOptions.behaviourAfterSuccess == CleanupOption.DontCleanup) {
             logger.info {
                 message("Cleanup after success has been disabled. Not cleaning up.")
             }
 
             manualCleanupInstructions = failureErrorMessageFormatter.formatManualCleanupMessageAfterTaskSuccessWithCleanupDisabled(events, cleanupStage.manualCleanupInstructions)
-            return null
         }
-
-        currentStage = cleanupStage
 
         logger.info {
             message("Returning first step from cleanup stage.")

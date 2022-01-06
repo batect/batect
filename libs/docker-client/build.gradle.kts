@@ -71,5 +71,5 @@ checkUnitTestLayout {
     )
 }
 
-apply(from = "gradle/integrationTest.gradle")
+apply(from = "gradle/integrationTest.gradle.kts")
 apply(from = "gradle/protobuf.gradle")

@@ -16,6 +16,7 @@
 
 package batect.ui.quiet
 
+import batect.execution.PostTaskManualCleanup
 import batect.execution.model.events.TaskEvent
 import batect.execution.model.events.TaskFailedEvent
 import batect.ui.Console
@@ -37,8 +38,8 @@ class QuietEventLogger(
         }
     }
 
-    override fun onTaskFailed(taskName: String, manualCleanupInstructions: TextRun) {}
+    override fun onTaskFailed(taskName: String, postTaskManualCleanup: PostTaskManualCleanup, allEvents: Set<TaskEvent>) {}
     override fun onTaskStarting(taskName: String) {}
     override fun onTaskFinished(taskName: String, exitCode: Long, duration: Duration) {}
-    override fun onTaskFinishedWithCleanupDisabled(manualCleanupInstructions: TextRun) {}
+    override fun onTaskFinishedWithCleanupDisabled(postTaskManualCleanup: PostTaskManualCleanup.Required, allEvents: Set<TaskEvent>) {}
 }

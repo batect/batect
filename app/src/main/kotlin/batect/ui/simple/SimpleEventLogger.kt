@@ -19,6 +19,7 @@ package batect.ui.simple
 import batect.config.Container
 import batect.config.PullImage
 import batect.config.SetupCommand
+import batect.execution.PostTaskManualCleanup
 import batect.execution.model.events.ContainerBecameHealthyEvent
 import batect.execution.model.events.ContainerStartedEvent
 import batect.execution.model.events.ImageBuiltEvent
@@ -165,10 +166,10 @@ class SimpleEventLogger(
         haveStartedCleanUp = true
     }
 
-    override fun onTaskFailed(taskName: String, manualCleanupInstructions: TextRun) {
-        if (manualCleanupInstructions != TextRun()) {
-            errorConsole.println()
-            errorConsole.println(manualCleanupInstructions)
+    override fun onTaskFailed(taskName: String, postTaskManualCleanup: PostTaskManualCleanup, allEvents: Set<TaskEvent>) {
+        when (postTaskManualCleanup) {
+            is PostTaskManualCleanup.NotRequired -> {}
+            is PostTaskManualCleanup.Required -> printManualCleanupInstructions(postTaskManualCleanup, allEvents)
         }
 
         errorConsole.println()
@@ -183,7 +184,13 @@ class SimpleEventLogger(
         console.println(Text.white(Text.bold(taskName) + Text(" finished with exit code $exitCode in ${duration.humanise()}.")))
     }
 
-    override fun onTaskFinishedWithCleanupDisabled(manualCleanupInstructions: TextRun) {
+    override fun onTaskFinishedWithCleanupDisabled(postTaskManualCleanup: PostTaskManualCleanup.Required, allEvents: Set<TaskEvent>) {
+        printManualCleanupInstructions(postTaskManualCleanup, allEvents)
+    }
+
+    private fun printManualCleanupInstructions(postTaskManualCleanup: PostTaskManualCleanup.Required, allEvents: Set<TaskEvent>) {
+        val manualCleanupInstructions = failureErrorMessageFormatter.formatManualCleanupMessage(postTaskManualCleanup, allEvents)
+
         errorConsole.println()
         errorConsole.println(manualCleanupInstructions)
     }

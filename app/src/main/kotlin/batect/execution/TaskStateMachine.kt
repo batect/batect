@@ -16,7 +16,6 @@
 
 package batect.execution
 
-import batect.execution.model.events.ContainerCreatedEvent
 import batect.execution.model.events.RunningContainerExitedEvent
 import batect.execution.model.events.TaskEvent
 import batect.execution.model.events.TaskEventSink
@@ -34,8 +33,6 @@ import batect.execution.model.steps.TaskStep
 import batect.execution.model.steps.data
 import batect.logging.Logger
 import batect.primitives.CancellationContext
-import batect.ui.FailureErrorMessageFormatter
-import batect.ui.text.TextRun
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
@@ -44,14 +41,13 @@ class TaskStateMachine(
     private val runOptions: RunOptions,
     private val runStagePlanner: RunStagePlanner,
     private val cleanupStagePlanner: CleanupStagePlanner,
-    private val failureErrorMessageFormatter: FailureErrorMessageFormatter,
     private val cancellationContext: CancellationContext,
     private val logger: Logger
 ) : TaskEventSink {
     var taskHasFailed: Boolean = false
         private set
 
-    var manualCleanupInstructions: TextRun = TextRun()
+    var postTaskManualCleanup: PostTaskManualCleanup = PostTaskManualCleanup.NotRequired
         private set
 
     private val events: MutableSet<TaskEvent> = mutableSetOf()
@@ -147,15 +143,11 @@ class TaskStateMachine(
         currentStage = cleanupStage
 
         if (taskHasFailed && runOptions.behaviourAfterFailure == CleanupOption.DontCleanup) {
-            manualCleanupInstructions = failureErrorMessageFormatter.formatManualCleanupMessageAfterTaskFailureWithCleanupDisabled(events, cleanupStage.manualCleanupInstructions)
+            postTaskManualCleanup = PostTaskManualCleanup.Required.DueToTaskFailureWithCleanupDisabled(cleanupStage.manualCleanupCommands)
         }
 
         if (!taskHasFailed && runOptions.behaviourAfterSuccess == CleanupOption.DontCleanup) {
-            logger.info {
-                message("Cleanup after success has been disabled. Not cleaning up.")
-            }
-
-            manualCleanupInstructions = failureErrorMessageFormatter.formatManualCleanupMessageAfterTaskSuccessWithCleanupDisabled(events, cleanupStage.manualCleanupInstructions)
+            postTaskManualCleanup = PostTaskManualCleanup.Required.DueToTaskSuccessWithCleanupDisabled(cleanupStage.manualCleanupCommands)
         }
 
         logger.info {
@@ -184,16 +176,14 @@ class TaskStateMachine(
         taskHasFailed = true
 
         if (inCleanupStage()) {
+            val manualCleanupCommands = (currentStage as CleanupStage).manualCleanupCommands
+            postTaskManualCleanup = PostTaskManualCleanup.Required.DueToCleanupFailure(manualCleanupCommands)
             taskFailedDuringCleanup = true
-
-            val manualCleanupCommands = (currentStage as CleanupStage).manualCleanupInstructions
-            manualCleanupInstructions = failureErrorMessageFormatter.formatManualCleanupMessageAfterCleanupFailure(manualCleanupCommands)
         } else {
             cancellationContext.cancel()
         }
     }
 
-    private fun shouldLeaveCreatedContainersRunningAfterFailure(): Boolean = runOptions.behaviourAfterFailure == CleanupOption.DontCleanup && events.any { it is ContainerCreatedEvent }
     private fun inRunStage(): Boolean = currentStage is RunStage
     private fun inCleanupStage(): Boolean = currentStage is CleanupStage
 
@@ -209,4 +199,7 @@ class TaskStateMachine(
 
             return containerExitedEvent.exitCode
         }
+
+    val allEvents: Set<TaskEvent>
+        get() = events.toSet()
 }

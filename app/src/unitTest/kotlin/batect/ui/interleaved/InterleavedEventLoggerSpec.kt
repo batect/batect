@@ -23,6 +23,7 @@ import batect.config.PullImage
 import batect.config.SetupCommand
 import batect.docker.DockerContainer
 import batect.docker.DockerImage
+import batect.execution.PostTaskManualCleanup
 import batect.execution.model.events.ContainerBecameHealthyEvent
 import batect.execution.model.events.ContainerCreationFailedEvent
 import batect.execution.model.events.ContainerDidNotBecomeHealthyEvent
@@ -372,8 +373,12 @@ object InterleavedEventLoggerSpec : Spek({
         }
 
         on("when the task finishes with cleanup disabled") {
-            val cleanupInstructions = TextRun("Some instructions\nAnother line")
-            beforeEachTest { logger.onTaskFinishedWithCleanupDisabled(cleanupInstructions) }
+            beforeEachTest {
+                val postTaskCleanup = PostTaskManualCleanup.Required.DueToTaskSuccessWithCleanupDisabled(listOf("some thing to clean up"))
+                whenever(failureErrorMessageFormatter.formatManualCleanupMessage(postTaskCleanup, emptySet())).doReturn(TextRun("Some instructions\nAnother line"))
+
+                logger.onTaskFinishedWithCleanupDisabled(postTaskCleanup, emptySet())
+            }
 
             it("prints the cleanup instructions, prefixing each line of the instructions") {
                 inOrder(output) {
@@ -386,9 +391,15 @@ object InterleavedEventLoggerSpec : Spek({
         }
 
         describe("when the task fails") {
+            val postTaskCleanup = PostTaskManualCleanup.Required.DueToCleanupFailure(listOf("some thing to clean up"))
+
             given("there are no cleanup instructions") {
+                beforeEachTest {
+                    whenever(failureErrorMessageFormatter.formatManualCleanupMessage(postTaskCleanup, emptySet())).doReturn(TextRun())
+                }
+
                 on("when logging that the task has failed") {
-                    beforeEachTest { logger.onTaskFailed("some-task", TextRun()) }
+                    beforeEachTest { logger.onTaskFailed("some-task", postTaskCleanup, emptySet()) }
 
                     it("prints a message to the output") {
                         inOrder(output) {
@@ -399,8 +410,12 @@ object InterleavedEventLoggerSpec : Spek({
             }
 
             given("there are some cleanup instructions") {
+                beforeEachTest {
+                    whenever(failureErrorMessageFormatter.formatManualCleanupMessage(postTaskCleanup, emptySet())).doReturn(TextRun("Do this to clean up.\nAnother line"))
+                }
+
                 on("when logging that the task has failed") {
-                    beforeEachTest { logger.onTaskFailed("some-task", TextRun("Do this to clean up.\nAnother line")) }
+                    beforeEachTest { logger.onTaskFailed("some-task", postTaskCleanup, emptySet()) }
 
                     it("prints a message to the output, including the instructions, prefixing each line of the instructions") {
                         inOrder(output) {

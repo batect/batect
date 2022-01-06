@@ -18,6 +18,7 @@ package batect.ui.interleaved
 
 import batect.config.Container
 import batect.config.ImageSource
+import batect.execution.PostTaskManualCleanup
 import batect.execution.model.events.ContainerBecameHealthyEvent
 import batect.execution.model.events.ContainerCreationFailedEvent
 import batect.execution.model.events.ContainerDidNotBecomeHealthyEvent
@@ -70,17 +71,26 @@ class InterleavedEventLogger(
         output.printForTask(batectPrefix + Text.bold(taskName) + Text(" finished with exit code $exitCode in ${duration.humanise()}."))
     }
 
-    override fun onTaskFinishedWithCleanupDisabled(manualCleanupInstructions: TextRun) {
+    override fun onTaskFinishedWithCleanupDisabled(postTaskManualCleanup: PostTaskManualCleanup.Required, allEvents: Set<TaskEvent>) {
+        val manualCleanupInstructions = failureErrorMessageFormatter.formatManualCleanupMessage(postTaskManualCleanup, allEvents)
+
         output.printErrorForTask(manualCleanupInstructions.prefixAllLines())
     }
 
-    override fun onTaskFailed(taskName: String, manualCleanupInstructions: TextRun) {
+    override fun onTaskFailed(taskName: String, postTaskManualCleanup: PostTaskManualCleanup, allEvents: Set<TaskEvent>) {
         val message = Text.red(Text("The task ") + Text.bold(taskName) + Text(" failed. See above for details."))
 
-        if (manualCleanupInstructions != TextRun()) {
-            output.printErrorForTask((manualCleanupInstructions + Text("\n\n") + message).prefixAllLines())
-        } else {
-            output.printErrorForTask(message.prefixAllLines())
+        when (postTaskManualCleanup) {
+            is PostTaskManualCleanup.Required -> {
+                val manualCleanupInstructions = failureErrorMessageFormatter.formatManualCleanupMessage(postTaskManualCleanup, allEvents)
+
+                if (manualCleanupInstructions == TextRun()) {
+                    output.printErrorForTask(message.prefixAllLines())
+                } else {
+                    output.printErrorForTask((manualCleanupInstructions + Text("\n\n") + message).prefixAllLines())
+                }
+            }
+            is PostTaskManualCleanup.NotRequired -> output.printErrorForTask(message.prefixAllLines())
         }
     }
 

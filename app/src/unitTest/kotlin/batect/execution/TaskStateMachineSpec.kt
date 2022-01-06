@@ -43,7 +43,6 @@ import batect.testutils.on
 import batect.testutils.runForEachTest
 import batect.testutils.runNullableForEachTest
 import batect.testutils.withMessage
-import batect.ui.FailureErrorMessageFormatter
 import batect.ui.text.TextRun
 import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.assertion.assertThat
@@ -82,7 +81,7 @@ object TaskStateMachineSpec : Spek({
         val cleanupCommands = listOf("rm /tmp/the-file", "rm /tmp/some-other-file")
         val cleanupStage by createForEachTest {
             mock<CleanupStage> {
-                on { manualCleanupInstructions } doReturn cleanupCommands
+                on { manualCleanupCommands } doReturn cleanupCommands
             }
         }
 
@@ -92,10 +91,9 @@ object TaskStateMachineSpec : Spek({
             }
         }
 
-        val failureErrorMessageFormatter by createForEachTest { mock<FailureErrorMessageFormatter>() }
         val cancellationContext by createForEachTest { mock<CancellationContext>() }
 
-        val stateMachine by createForEachTest { TaskStateMachine(graph, runOptions, runStagePlanner, cleanupStagePlanner, failureErrorMessageFormatter, cancellationContext, logger) }
+        val stateMachine by createForEachTest { TaskStateMachine(graph, runOptions, runStagePlanner, cleanupStagePlanner, cancellationContext, logger) }
 
         describe("posting events") {
             given("the event is a failure event") {
@@ -107,6 +105,10 @@ object TaskStateMachineSpec : Spek({
 
                         it("cancels all currently running operations") {
                             verify(cancellationContext).cancel()
+                        }
+
+                        it("includes the event in the list of all events") {
+                            assertThat(stateMachine.allEvents, equalTo(setOf(event)))
                         }
                     }
                 }
@@ -123,6 +125,10 @@ object TaskStateMachineSpec : Spek({
 
                         it("does not cancel all currently running operations") {
                             verify(cancellationContext, never()).cancel()
+                        }
+
+                        it("includes the event in the list of all events") {
+                            assertThat(stateMachine.allEvents, equalTo(setOf(event)))
                         }
                     }
                 }
@@ -227,10 +233,6 @@ object TaskStateMachineSpec : Spek({
                                 beforeEachTest { whenever(runOptions.behaviourAfterSuccess) doReturn CleanupOption.DontCleanup }
 
                                 on("getting the next steps to execute") {
-                                    beforeEachTest {
-                                        whenever(failureErrorMessageFormatter.formatManualCleanupMessageAfterTaskSuccessWithCleanupDisabled(setOf(event), cleanupCommands)).doReturn(TextRun("Do this to clean up"))
-                                    }
-
                                     val cleanupStep = createMockTaskStep()
                                     beforeEachTest { whenever(cleanupStage.popNextStep(setOf(event), stepsStillRunning)).doReturn(StepReady(cleanupStep)) }
 
@@ -244,8 +246,8 @@ object TaskStateMachineSpec : Spek({
                                         verify(cleanupStagePlanner, times(1)).createStage(setOf(event), CleanupOption.DontCleanup)
                                     }
 
-                                    it("sets the cleanup instruction to that provided by the error message formatter") {
-                                        assertThat(stateMachine.manualCleanupInstructions, equalTo(TextRun("Do this to clean up")))
+                                    it("indicates that manual cleanup is required") {
+                                        assertThat(stateMachine.postTaskManualCleanup, equalTo(PostTaskManualCleanup.Required.DueToTaskSuccessWithCleanupDisabled(cleanupCommands)))
                                     }
 
                                     it("does not indicate that the task has failed") {
@@ -357,8 +359,6 @@ object TaskStateMachineSpec : Spek({
                                 beforeEachTest {
                                     stateMachine.postEvent(event1)
                                     stateMachine.postEvent(event2)
-
-                                    whenever(failureErrorMessageFormatter.formatManualCleanupMessageAfterTaskFailureWithCleanupDisabled(events, cleanupCommands)).doReturn(TextRun("Do this to clean up"))
                                 }
 
                                 on("getting the next steps to execute") {
@@ -379,8 +379,9 @@ object TaskStateMachineSpec : Spek({
                                         verify(cleanupStagePlanner).createStage(events, CleanupOption.DontCleanup)
                                     }
 
-                                    it("sets the cleanup instruction to that provided by the error message formatter") {
-                                        assertThat(stateMachine.manualCleanupInstructions, equalTo(TextRun("Do this to clean up")))
+
+                                    it("indicates that manual cleanup is required") {
+                                        assertThat(stateMachine.postTaskManualCleanup, equalTo(PostTaskManualCleanup.Required.DueToTaskFailureWithCleanupDisabled(cleanupCommands)))
                                     }
 
                                     it("indicates that the task has failed") {
@@ -454,8 +455,8 @@ object TaskStateMachineSpec : Spek({
                                         }
                                     }
 
-                                    it("does not provide any cleanup instructions") {
-                                        assertThat(stateMachine.manualCleanupInstructions, equalTo(TextRun()))
+                                    it("indicates that no manual cleanup is required") {
+                                        assertThat(stateMachine.postTaskManualCleanup, equalTo(PostTaskManualCleanup.NotRequired))
                                     }
 
                                     it("indicates that the task has failed") {
@@ -476,8 +477,8 @@ object TaskStateMachineSpec : Spek({
                                         assertThat(result, absent())
                                     }
 
-                                    it("does not provide any cleanup instructions") {
-                                        assertThat(stateMachine.manualCleanupInstructions, equalTo(TextRun()))
+                                    it("indicates that no manual cleanup is required") {
+                                        assertThat(stateMachine.postTaskManualCleanup, equalTo(PostTaskManualCleanup.NotRequired))
                                     }
 
                                     it("indicates that the task has succeeded") {
@@ -493,8 +494,6 @@ object TaskStateMachineSpec : Spek({
                         val previousEventsWithFailureEvent = previousEvents + event
 
                         beforeEachTest {
-                            whenever(failureErrorMessageFormatter.formatManualCleanupMessageAfterCleanupFailure(cleanupCommands)).doReturn(TextRun("Do this to clean up"))
-
                             stateMachine.postEvent(event)
                         }
 
@@ -538,8 +537,8 @@ object TaskStateMachineSpec : Spek({
                                         assertThat(result, absent())
                                     }
 
-                                    it("sets the cleanup instruction to that provided by the error message formatter") {
-                                        assertThat(stateMachine.manualCleanupInstructions, equalTo(TextRun("Do this to clean up")))
+                                    it("indicates that manual cleanup is required") {
+                                        assertThat(stateMachine.postTaskManualCleanup, equalTo(PostTaskManualCleanup.Required.DueToCleanupFailure(cleanupCommands)))
                                     }
                                 }
                             }
@@ -556,8 +555,8 @@ object TaskStateMachineSpec : Spek({
                                         assertThat(result, absent())
                                     }
 
-                                    it("sets the cleanup instruction to that provided by the error message formatter") {
-                                        assertThat(stateMachine.manualCleanupInstructions, equalTo(TextRun("Do this to clean up")))
+                                    it("indicates that manual cleanup is required") {
+                                        assertThat(stateMachine.postTaskManualCleanup, equalTo(PostTaskManualCleanup.Required.DueToCleanupFailure(cleanupCommands)))
                                     }
 
                                     it("indicates that the task has failed") {
@@ -597,8 +596,8 @@ object TaskStateMachineSpec : Spek({
                                         assertThat({ stateMachine.popNextStep(stepsStillRunning) }, throws<IllegalStateException>(withMessage("None of the remaining steps are ready to execute, but there are no steps currently running.")))
                                     }
 
-                                    it("does not provide any cleanup instructions") {
-                                        assertThat(stateMachine.manualCleanupInstructions, equalTo(TextRun()))
+                                    it("indicates that no manual cleanup is required") {
+                                        assertThat(stateMachine.postTaskManualCleanup, equalTo(PostTaskManualCleanup.NotRequired))
                                     }
 
                                     it("indicates that the task has failed") {
@@ -614,8 +613,6 @@ object TaskStateMachineSpec : Spek({
                         val events = previousEvents + otherEvent
 
                         beforeEachTest {
-                            whenever(failureErrorMessageFormatter.formatManualCleanupMessageAfterCleanupFailure(cleanupCommands)).doReturn(TextRun("Do this to clean up"))
-
                             stateMachine.postEvent(otherEvent)
                         }
 
@@ -634,8 +631,8 @@ object TaskStateMachineSpec : Spek({
                                         assertThat(result, absent())
                                     }
 
-                                    it("sets the cleanup instruction to that provided by the error message formatter") {
-                                        assertThat(stateMachine.manualCleanupInstructions, equalTo(TextRun("Do this to clean up")))
+                                    it("indicates that manual cleanup is required") {
+                                        assertThat(stateMachine.postTaskManualCleanup, equalTo(PostTaskManualCleanup.Required.DueToCleanupFailure(cleanupCommands)))
                                     }
 
                                     it("indicates that the task has failed") {

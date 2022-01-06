@@ -16,6 +16,8 @@
 
 package batect.ui
 
+import batect.execution.PostTaskManualCleanup
+import batect.execution.model.events.TaskEvent
 import batect.execution.model.events.TaskEventSink
 import batect.ui.containerio.ContainerIOStreamingOptions
 import batect.ui.text.TextRun
@@ -24,8 +26,8 @@ import java.time.Duration
 interface EventLogger : TaskEventSink {
     fun onTaskStarting(taskName: String)
     fun onTaskFinished(taskName: String, exitCode: Long, duration: Duration)
-    fun onTaskFinishedWithCleanupDisabled(manualCleanupInstructions: TextRun)
-    fun onTaskFailed(taskName: String, manualCleanupInstructions: TextRun)
+    fun onTaskFinishedWithCleanupDisabled(postTaskManualCleanup: PostTaskManualCleanup.Required, allEvents: Set<TaskEvent>)
+    fun onTaskFailed(taskName: String, postTaskManualCleanup: PostTaskManualCleanup, allEvents: Set<TaskEvent>)
 
     val ioStreamingOptions: ContainerIOStreamingOptions
 }

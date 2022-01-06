@@ -14,11 +14,14 @@
     limitations under the License.
 */
 
-package batect.execution.model.stages
+package batect.execution
 
-import batect.execution.model.events.TaskEvent
-import batect.execution.model.rules.cleanup.CleanupTaskStepRule
+sealed class PostTaskManualCleanup {
+    object NotRequired : PostTaskManualCleanup()
 
-class CleanupStage(val rules: Set<CleanupTaskStepRule>, val manualCleanupCommands: List<String>) : Stage(rules) {
-    override fun determineIfStageIsComplete(pastEvents: Set<TaskEvent>, stepsStillRunning: Boolean) = !stepsStillRunning
+    sealed class Required : PostTaskManualCleanup() {
+        data class DueToCleanupFailure(val manualCleanupCommands: List<String>) : PostTaskManualCleanup.Required()
+        data class DueToTaskFailureWithCleanupDisabled(val manualCleanupCommands: List<String>) : PostTaskManualCleanup.Required()
+        data class DueToTaskSuccessWithCleanupDisabled(val manualCleanupCommands: List<String>) : PostTaskManualCleanup.Required()
+    }
 }

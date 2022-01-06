@@ -16,6 +16,7 @@
 
 package batect.ui.quiet
 
+import batect.execution.PostTaskManualCleanup
 import batect.execution.model.events.TaskFailedEvent
 import batect.testutils.createForEachTest
 import batect.testutils.on
@@ -55,7 +56,7 @@ object QuietEventLoggerSpec : Spek({
         }
 
         on("when a task fails") {
-            beforeEachTest { logger.onTaskFailed("some-task", TextRun("Some cleanup instructions")) }
+            beforeEachTest { logger.onTaskFailed("some-task", PostTaskManualCleanup.Required.DueToCleanupFailure(emptyList()), emptySet()) }
 
             it("does not print anything to the console") {
                 verifyNoInteractions(errorConsole)
@@ -79,7 +80,7 @@ object QuietEventLoggerSpec : Spek({
         }
 
         on("when a task finishes with cleanup disabled") {
-            beforeEachTest { logger.onTaskFinishedWithCleanupDisabled(TextRun()) }
+            beforeEachTest { logger.onTaskFinishedWithCleanupDisabled(PostTaskManualCleanup.Required.DueToTaskSuccessWithCleanupDisabled(emptyList()), emptySet()) }
 
             it("does not print anything to the console") {
                 verifyNoInteractions(errorConsole)

@@ -30,7 +30,6 @@ import batect.execution.model.rules.cleanup.DeleteTaskNetworkStepRule
 import batect.execution.model.rules.cleanup.RemoveContainerStepRule
 import batect.execution.model.rules.cleanup.StopContainerStepRule
 import batect.execution.model.rules.data
-import batect.logging.LogMessageBuilder
 import batect.logging.Logger
 import batect.os.SystemInfo
 import batect.primitives.filterToSet
@@ -68,7 +67,7 @@ class CleanupStagePlanner(
         logger.info {
             message("Created cleanup stage.")
             data("rules", stage.rules)
-            data("manualCleanupInstructions", stage.manualCleanupInstructions)
+            data("manualCleanupCommands", stage.manualCleanupCommands)
             data("pastEvents", pastEvents)
         }
 

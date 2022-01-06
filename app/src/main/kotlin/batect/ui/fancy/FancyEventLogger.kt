@@ -17,6 +17,7 @@
 package batect.ui.fancy
 
 import batect.config.Container
+import batect.execution.PostTaskManualCleanup
 import batect.execution.model.events.RunningContainerExitedEvent
 import batect.execution.model.events.StepStartingEvent
 import batect.execution.model.events.TaskEvent
@@ -103,10 +104,10 @@ class FancyEventLogger(
         }
     }
 
-    override fun onTaskFailed(taskName: String, manualCleanupInstructions: TextRun) {
-        if (manualCleanupInstructions != TextRun()) {
-            errorConsole.println()
-            errorConsole.println(manualCleanupInstructions)
+    override fun onTaskFailed(taskName: String, postTaskManualCleanup: PostTaskManualCleanup, allEvents: Set<TaskEvent>) {
+        when (postTaskManualCleanup) {
+            is PostTaskManualCleanup.NotRequired -> {}
+            is PostTaskManualCleanup.Required -> printManualCleanupInstructions(postTaskManualCleanup, allEvents)
         }
 
         errorConsole.println()
@@ -123,7 +124,13 @@ class FancyEventLogger(
         console.println(Text.white(Text.bold(taskName) + Text(" finished with exit code $exitCode in ${duration.humanise()}.")))
     }
 
-    override fun onTaskFinishedWithCleanupDisabled(manualCleanupInstructions: TextRun) {
+    override fun onTaskFinishedWithCleanupDisabled(postTaskManualCleanup: PostTaskManualCleanup.Required, allEvents: Set<TaskEvent>) {
+        printManualCleanupInstructions(postTaskManualCleanup, allEvents)
+    }
+
+    private fun printManualCleanupInstructions(postTaskManualCleanup: PostTaskManualCleanup.Required, allEvents: Set<TaskEvent>) {
+        val manualCleanupInstructions = failureErrorMessageFormatter.formatManualCleanupMessage(postTaskManualCleanup, allEvents)
+
         errorConsole.println()
         errorConsole.println(manualCleanupInstructions)
     }

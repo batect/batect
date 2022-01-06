@@ -66,7 +66,7 @@ object DontCleanupAfterDependencyStartupFailureJourneyTest : Spek({
 
         on("running that task with the '--no-cleanup-on-failure' option") {
             val result by runBeforeGroup { runner.runApplication(listOf("--no-cleanup-after-failure", "--no-color", "the-task")) }
-            val commandsRegex = """For container http-server, view its output by running '(?<logsCommand>docker logs (?<id>.*))', or run a command in the container with 'docker exec -it \2 <command>'\.""".toRegex()
+            val commandsRegex = """For container http-server, view its output by running '(?<logsCommand>docker logs (?<id>.*))', or run a command in the container with 'docker start \2; docker exec -it \2 <command>'\.""".toRegex()
             val cleanupRegex = """Once you have finished investigating the issue, clean up all temporary resources created by Batect by running:$platformLineSeparator(?<command>(.|$platformLineSeparator)+)$platformLineSeparator$platformLineSeparator""".toRegex()
 
             beforeGroup {

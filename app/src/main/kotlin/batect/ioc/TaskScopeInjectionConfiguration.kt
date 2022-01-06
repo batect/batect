@@ -70,7 +70,7 @@ private val executionModule = DI.Module("Task scope: execution") {
     bind<ContainerDependencyGraphProvider>() with scoped(TaskScope).singletonWithLogger { logger -> ContainerDependencyGraphProvider(logger) }
     bind<ParallelExecutionManager>() with scoped(TaskScope).singletonWithLogger { logger -> ParallelExecutionManager(instance(), instance(), instance(), instance(), commandLineOptions().maximumLevelOfParallelism, logger) }
     bind<RunStagePlanner>() with scoped(TaskScope).singletonWithLogger { logger -> RunStagePlanner(instance(), logger) }
-    bind<TaskStateMachine>() with scoped(TaskScope).singletonWithLogger { logger -> TaskStateMachine(instance(), instance(), instance(), instance(), instance(), instance(), logger) }
+    bind<TaskStateMachine>() with scoped(TaskScope).singletonWithLogger { logger -> TaskStateMachine(instance(), instance(), instance(), instance(), instance(), logger) }
     bind<TaskStepRunner>() with scoped(TaskScope).singleton { TaskStepRunner(directDI) }
     bind<VolumeMountResolver>() with scoped(TaskScope).singleton { VolumeMountResolver(instance(), instance(), instance(), instance()) }
 }

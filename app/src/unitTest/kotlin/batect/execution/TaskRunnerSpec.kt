@@ -19,6 +19,7 @@ package batect.execution
 import batect.config.Container
 import batect.config.Task
 import batect.config.TaskRunConfiguration
+import batect.execution.model.events.TaskNetworkDeletedEvent
 import batect.ioc.TaskKodein
 import batect.ioc.TaskKodeinFactory
 import batect.telemetry.TelemetrySessionBuilder
@@ -32,7 +33,6 @@ import batect.testutils.runForEachTest
 import batect.ui.Console
 import batect.ui.EventLogger
 import batect.ui.text.Text
-import batect.ui.text.TextRun
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.isEmpty
@@ -93,7 +93,14 @@ object TaskRunnerSpec : Spek({
                 )
 
                 val eventLogger by createForEachTest { mock<EventLogger>() }
-                val stateMachine by createForEachTest { mock<TaskStateMachine>() }
+
+                val allTaskEvents = setOf(TaskNetworkDeletedEvent)
+                val stateMachine by createForEachTest {
+                    mock<TaskStateMachine> {
+                        on { allEvents } doReturn allTaskEvents
+                    }
+                }
+
                 val executionManager by createForEachTest { mock<ParallelExecutionManager>() }
 
                 val dependencyGraph by createForEachTest {
@@ -185,9 +192,10 @@ object TaskRunnerSpec : Spek({
 
                     given("cleanup after success is disabled") {
                         val runOptionsWithCleanupDisabled = runOptions.copy(behaviourAfterSuccess = CleanupOption.DontCleanup)
+                        val postTaskCleanup = PostTaskManualCleanup.Required.DueToTaskSuccessWithCleanupDisabled(listOf("do this to clean up"))
 
                         beforeEachTest {
-                            whenever(stateMachine.manualCleanupInstructions).doReturn(TextRun("Do this to clean up"))
+                            whenever(stateMachine.postTaskManualCleanup).doReturn(postTaskCleanup)
                         }
 
                         on("running the task") {
@@ -197,7 +205,7 @@ object TaskRunnerSpec : Spek({
                                 inOrder(eventLogger, executionManager) {
                                     verify(executionManager).run()
                                     verify(eventLogger).onTaskFinished(eq("some-task"), eq(100), argThat { this >= Duration.ofMillis(50) })
-                                    verify(eventLogger).onTaskFinishedWithCleanupDisabled(TextRun("Do this to clean up"))
+                                    verify(eventLogger).onTaskFinishedWithCleanupDisabled(postTaskCleanup, allTaskEvents)
                                 }
                             }
 
@@ -213,9 +221,11 @@ object TaskRunnerSpec : Spek({
                 }
 
                 given("the task fails") {
+                    val postTaskCleanup = PostTaskManualCleanup.Required.DueToTaskFailureWithCleanupDisabled(listOf("do this to clean up"))
+
                     beforeEachTest {
                         whenever(stateMachine.taskHasFailed).thenReturn(true)
-                        whenever(stateMachine.manualCleanupInstructions).thenReturn(TextRun("Do this to clean up"))
+                        whenever(stateMachine.postTaskManualCleanup).thenReturn(postTaskCleanup)
                     }
 
                     on("running the task") {
@@ -230,14 +240,14 @@ object TaskRunnerSpec : Spek({
                         }
 
                         it("logs that the task failed") {
-                            verify(eventLogger).onTaskFailed("some-task", TextRun("Do this to clean up"))
+                            verify(eventLogger).onTaskFailed("some-task", postTaskCleanup, allTaskEvents)
                         }
 
                         it("logs that the task is starting before running the task and then logs that the task failed") {
                             inOrder(eventLogger, executionManager) {
                                 verify(eventLogger).onTaskStarting("some-task")
                                 verify(executionManager).run()
-                                verify(eventLogger).onTaskFailed("some-task", TextRun("Do this to clean up"))
+                                verify(eventLogger).onTaskFailed("some-task", postTaskCleanup, allTaskEvents)
                             }
                         }
 

@@ -81,8 +81,8 @@ object CleanupStagePlannerSpec : Spek({
                         assertThat(stage.rules, isEmpty)
                     }
 
-                    it("has no manual cleanup instructions") {
-                        assertThat(stage.manualCleanupInstructions, isEmpty)
+                    it("has no manual cleanup commands") {
+                        assertThat(stage.manualCleanupCommands, isEmpty)
                     }
                 }
             }
@@ -95,8 +95,8 @@ object CleanupStagePlannerSpec : Spek({
                         assertThat(stage.rules, isEmpty)
                     }
 
-                    it("has no manual cleanup instructions") {
-                        assertThat(stage.manualCleanupInstructions, isEmpty)
+                    it("has no manual cleanup commands") {
+                        assertThat(stage.manualCleanupCommands, isEmpty)
                     }
                 }
             }
@@ -108,7 +108,7 @@ object CleanupStagePlannerSpec : Spek({
             beforeEachTest { events.add(TaskNetworkCreatedEvent(network)) }
 
             given("no containers were created") {
-                val expectedCleanupInstructions = listOf("docker network rm the-network")
+                val expectedCleanupCommands = listOf("docker network rm the-network")
 
                 given("automatic cleanup is being performed") {
                     on("creating the stage") {
@@ -122,7 +122,7 @@ object CleanupStagePlannerSpec : Spek({
                         )
 
                         it("provides a manual cleanup instruction to remove the network") {
-                            assertThat(stage.manualCleanupInstructions, equalTo(expectedCleanupInstructions))
+                            assertThat(stage.manualCleanupCommands, equalTo(expectedCleanupCommands))
                         }
                     }
                 }
@@ -136,7 +136,7 @@ object CleanupStagePlannerSpec : Spek({
                         }
 
                         it("provides a manual cleanup instruction to remove the network") {
-                            assertThat(stage.manualCleanupInstructions, equalTo(expectedCleanupInstructions))
+                            assertThat(stage.manualCleanupCommands, equalTo(expectedCleanupCommands))
                         }
                     }
                 }
@@ -144,7 +144,7 @@ object CleanupStagePlannerSpec : Spek({
 
             given("only a single container was created") {
                 val dockerContainer = DockerContainer("some-container-id")
-                val expectedCleanupInstructions = listOf("docker rm --force --volumes some-container-id", "docker network rm the-network")
+                val expectedCleanupCommands = listOf("docker rm --force --volumes some-container-id", "docker network rm the-network")
 
                 beforeEachTest { events.add(ContainerCreatedEvent(taskContainer, dockerContainer)) }
 
@@ -161,8 +161,8 @@ object CleanupStagePlannerSpec : Spek({
                                 )
                             )
 
-                            it("provides manual cleanup instructions to remove the network and the container") {
-                                assertThat(stage.manualCleanupInstructions, equalTo(expectedCleanupInstructions))
+                            it("provides manual cleanup commands to remove the network and the container") {
+                                assertThat(stage.manualCleanupCommands, equalTo(expectedCleanupCommands))
                             }
                         }
                     }
@@ -175,8 +175,8 @@ object CleanupStagePlannerSpec : Spek({
                                 assertThat(stage.rules, isEmpty)
                             }
 
-                            it("provides manual cleanup instructions to remove the network and the container") {
-                                assertThat(stage.manualCleanupInstructions, equalTo(expectedCleanupInstructions))
+                            it("provides manual cleanup commands to remove the network and the container") {
+                                assertThat(stage.manualCleanupCommands, equalTo(expectedCleanupCommands))
                             }
                         }
                     }
@@ -198,8 +198,8 @@ object CleanupStagePlannerSpec : Spek({
                                 )
                             )
 
-                            it("provides manual cleanup instructions to remove the network and the container") {
-                                assertThat(stage.manualCleanupInstructions, equalTo(expectedCleanupInstructions))
+                            it("provides manual cleanup commands to remove the network and the container") {
+                                assertThat(stage.manualCleanupCommands, equalTo(expectedCleanupCommands))
                             }
                         }
                     }
@@ -215,8 +215,8 @@ object CleanupStagePlannerSpec : Spek({
                                 )
                             )
 
-                            it("provides manual cleanup instructions to remove the network and the container") {
-                                assertThat(stage.manualCleanupInstructions, equalTo(expectedCleanupInstructions))
+                            it("provides manual cleanup commands to remove the network and the container") {
+                                assertThat(stage.manualCleanupCommands, equalTo(expectedCleanupCommands))
                             }
                         }
                     }
@@ -234,7 +234,7 @@ object CleanupStagePlannerSpec : Spek({
                     events.add(ContainerCreatedEvent(container2, container2DockerContainer))
                 }
 
-                val expectedCleanupInstructions = listOf(
+                val expectedCleanupCommands = listOf(
                     "docker rm --force --volumes task-container-id",
                     "docker rm --force --volumes container-1-id",
                     "docker rm --force --volumes container-2-id",
@@ -256,8 +256,8 @@ object CleanupStagePlannerSpec : Spek({
                                 )
                             )
 
-                            it("provides manual cleanup instructions to remove the network and the containers") {
-                                assertThat(stage.manualCleanupInstructions, equalTo(expectedCleanupInstructions))
+                            it("provides manual cleanup commands to remove the network and the containers") {
+                                assertThat(stage.manualCleanupCommands, equalTo(expectedCleanupCommands))
                             }
                         }
                     }
@@ -270,8 +270,8 @@ object CleanupStagePlannerSpec : Spek({
                                 assertThat(stage.rules, isEmpty)
                             }
 
-                            it("provides manual cleanup instructions to remove the network and the containers") {
-                                assertThat(stage.manualCleanupInstructions, equalTo(expectedCleanupInstructions))
+                            it("provides manual cleanup commands to remove the network and the containers") {
+                                assertThat(stage.manualCleanupCommands, equalTo(expectedCleanupCommands))
                             }
                         }
                     }
@@ -297,8 +297,8 @@ object CleanupStagePlannerSpec : Spek({
                                 )
                             )
 
-                            it("provides manual cleanup instructions to remove the network and the containers") {
-                                assertThat(stage.manualCleanupInstructions, equalTo(expectedCleanupInstructions))
+                            it("provides manual cleanup commands to remove the network and the containers") {
+                                assertThat(stage.manualCleanupCommands, equalTo(expectedCleanupCommands))
                             }
                         }
                     }
@@ -314,8 +314,8 @@ object CleanupStagePlannerSpec : Spek({
                                 )
                             )
 
-                            it("provides manual cleanup instructions to remove the network and the containers") {
-                                assertThat(stage.manualCleanupInstructions, equalTo(expectedCleanupInstructions))
+                            it("provides manual cleanup commands to remove the network and the containers") {
+                                assertThat(stage.manualCleanupCommands, equalTo(expectedCleanupCommands))
                             }
                         }
                     }
@@ -345,8 +345,8 @@ object CleanupStagePlannerSpec : Spek({
                                 )
                             )
 
-                            it("provides manual cleanup instructions to remove the network and the containers") {
-                                assertThat(stage.manualCleanupInstructions, equalTo(expectedCleanupInstructions))
+                            it("provides manual cleanup commands to remove the network and the containers") {
+                                assertThat(stage.manualCleanupCommands, equalTo(expectedCleanupCommands))
                             }
                         }
                     }
@@ -364,8 +364,8 @@ object CleanupStagePlannerSpec : Spek({
                                 )
                             )
 
-                            it("provides manual cleanup instructions to remove the network and the containers") {
-                                assertThat(stage.manualCleanupInstructions, equalTo(expectedCleanupInstructions))
+                            it("provides manual cleanup commands to remove the network and the containers") {
+                                assertThat(stage.manualCleanupCommands, equalTo(expectedCleanupCommands))
                             }
                         }
                     }

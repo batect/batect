@@ -100,7 +100,7 @@ data class TaskRunner(
     }
 
     private fun onTaskFailed(eventLogger: EventLogger, task: Task, stateMachine: TaskStateMachine): Int {
-        eventLogger.onTaskFailed(task.name, stateMachine.manualCleanupInstructions)
+        eventLogger.onTaskFailed(task.name, stateMachine.postTaskManualCleanup, stateMachine.allEvents)
 
         logger.warn {
             message("Task execution failed.")
@@ -121,7 +121,7 @@ data class TaskRunner(
         }
 
         if (runOptions.behaviourAfterSuccess == CleanupOption.DontCleanup) {
-            eventLogger.onTaskFinishedWithCleanupDisabled(stateMachine.manualCleanupInstructions)
+            eventLogger.onTaskFinishedWithCleanupDisabled(stateMachine.postTaskManualCleanup as PostTaskManualCleanup.Required, stateMachine.allEvents)
             return -1
         }
 

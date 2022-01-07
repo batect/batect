@@ -29,6 +29,7 @@ import jnr.ffi.Struct
 import jnr.ffi.annotations.Out
 import jnr.ffi.annotations.SaveError
 import jnr.ffi.annotations.Transient
+import jnr.ffi.annotations.Variadic
 import jnr.posix.POSIX
 import java.io.FileDescriptor
 
@@ -115,6 +116,7 @@ class UnixNativeMethods(
 
     interface LibC {
         @SaveError
+        @Variadic(fixedCount = 2)
         fun ioctl(fd: Int, request: Int, @Out @Transient winsize: WindowSize): Int
     }
 

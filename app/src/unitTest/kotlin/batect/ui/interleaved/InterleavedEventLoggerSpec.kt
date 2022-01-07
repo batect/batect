@@ -373,19 +373,34 @@ object InterleavedEventLoggerSpec : Spek({
         }
 
         on("when the task finishes with cleanup disabled") {
-            beforeEachTest {
-                val postTaskCleanup = PostTaskManualCleanup.Required.DueToTaskSuccessWithCleanupDisabled(listOf("some thing to clean up"))
-                whenever(failureErrorMessageFormatter.formatManualCleanupMessage(postTaskCleanup, emptySet())).doReturn(TextRun("Some instructions\nAnother line"))
+            given("there are no cleanup instructions") {
+                beforeEachTest {
+                    val postTaskCleanup = PostTaskManualCleanup.Required.DueToTaskSuccessWithCleanupDisabled(listOf("some thing to clean up"))
+                    whenever(failureErrorMessageFormatter.formatManualCleanupMessage(postTaskCleanup, emptySet())).doReturn(null)
 
-                logger.onTaskFinishedWithCleanupDisabled(postTaskCleanup, emptySet())
+                    logger.onTaskFinishedWithCleanupDisabled(postTaskCleanup, emptySet())
+                }
+
+                it("prints nothing") {
+                    verifyNoInteractions(output)
+                }
             }
 
-            it("prints the cleanup instructions, prefixing each line of the instructions") {
-                inOrder(output) {
-                    verify(output).printErrorForTask(
-                        Text.white("Batect | ") + Text("Some instructions") + Text("\n") +
-                            Text.white("Batect | ") + Text("Another line")
-                    )
+            given("there are cleanup instructions") {
+                beforeEachTest {
+                    val postTaskCleanup = PostTaskManualCleanup.Required.DueToTaskSuccessWithCleanupDisabled(listOf("some thing to clean up"))
+                    whenever(failureErrorMessageFormatter.formatManualCleanupMessage(postTaskCleanup, emptySet())).doReturn(TextRun("Some instructions\nAnother line"))
+
+                    logger.onTaskFinishedWithCleanupDisabled(postTaskCleanup, emptySet())
+                }
+
+                it("prints the cleanup instructions, prefixing each line of the instructions") {
+                    inOrder(output) {
+                        verify(output).printErrorForTask(
+                            Text.white("Batect | ") + Text("Some instructions") + Text("\n") +
+                                Text.white("Batect | ") + Text("Another line")
+                        )
+                    }
                 }
             }
         }
@@ -395,7 +410,7 @@ object InterleavedEventLoggerSpec : Spek({
 
             given("there are no cleanup instructions") {
                 beforeEachTest {
-                    whenever(failureErrorMessageFormatter.formatManualCleanupMessage(postTaskCleanup, emptySet())).doReturn(TextRun())
+                    whenever(failureErrorMessageFormatter.formatManualCleanupMessage(postTaskCleanup, emptySet())).doReturn(null)
                 }
 
                 on("when logging that the task has failed") {

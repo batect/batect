@@ -37,8 +37,6 @@ import batect.execution.model.rules.cleanup.CleanupTaskStepRule
 import batect.execution.model.rules.cleanup.DeleteTaskNetworkStepRule
 import batect.execution.model.rules.cleanup.RemoveContainerStepRule
 import batect.execution.model.rules.cleanup.StopContainerStepRule
-import batect.os.OperatingSystem
-import batect.os.SystemInfo
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
 import batect.testutils.given
@@ -50,18 +48,12 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.hasElement
 import com.natpryce.hamkrest.hasSize
 import com.natpryce.hamkrest.isEmpty
-import org.mockito.kotlin.doReturn
-import org.mockito.kotlin.mock
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.Suite
 import org.spekframework.spek2.style.specification.describe
 
 object CleanupStagePlannerSpec : Spek({
     describe("a cleanup stage planner") {
-        val systemInfo = mock<SystemInfo> {
-            on { operatingSystem } doReturn OperatingSystem.Other
-        }
-
         val task = Task("the-task", TaskRunConfiguration("task-container"))
         val container1 = Container("container-1", BuildImage(LiteralValue("./container-1"), pathResolutionContextDoesNotMatter()))
         val container2 = Container("container-2", PullImage("image-2"), dependencies = setOf(container1.name))
@@ -70,7 +62,7 @@ object CleanupStagePlannerSpec : Spek({
         val graph = ContainerDependencyGraph(config, task)
         val events by createForEachTest { mutableSetOf<TaskEvent>() }
         val logger by createLoggerForEachTest()
-        val planner by createForEachTest { CleanupStagePlanner(graph, systemInfo, logger) }
+        val planner by createForEachTest { CleanupStagePlanner(graph, logger) }
 
         given("no events were posted") {
             given("automatic cleanup is being performed") {

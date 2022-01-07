@@ -43,6 +43,7 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.reset
 import org.mockito.kotlin.verify
+import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
@@ -384,19 +385,34 @@ object FancyEventLoggerSpec : Spek({
         }
 
         on("when the task finishes with cleanup disabled") {
-            val cleanupInstructions = TextRun("Some instructions")
+            given("there are no cleanup instructions") {
+                beforeEachTest {
+                    val postTaskCleanup = PostTaskManualCleanup.Required.DueToTaskSuccessWithCleanupDisabled(listOf("some thing to clean up"))
+                    whenever(failureErrorMessageFormatter.formatManualCleanupMessage(postTaskCleanup, emptySet())).doReturn(null)
 
-            beforeEachTest {
-                val postTaskCleanup = PostTaskManualCleanup.Required.DueToTaskSuccessWithCleanupDisabled(listOf("some thing to clean up"))
-                whenever(failureErrorMessageFormatter.formatManualCleanupMessage(postTaskCleanup, emptySet())).doReturn(cleanupInstructions)
+                    logger.onTaskFinishedWithCleanupDisabled(postTaskCleanup, emptySet())
+                }
 
-                logger.onTaskFinishedWithCleanupDisabled(postTaskCleanup, emptySet())
+                it("prints nothing") {
+                    verifyNoInteractions(errorConsole)
+                }
             }
 
-            it("prints the cleanup instructions") {
-                inOrder(errorConsole) {
-                    verify(errorConsole).println()
-                    verify(errorConsole).println(cleanupInstructions)
+            given("there are cleanup instructions") {
+                val cleanupInstructions = TextRun("Some instructions")
+
+                beforeEachTest {
+                    val postTaskCleanup = PostTaskManualCleanup.Required.DueToTaskSuccessWithCleanupDisabled(listOf("some thing to clean up"))
+                    whenever(failureErrorMessageFormatter.formatManualCleanupMessage(postTaskCleanup, emptySet())).doReturn(cleanupInstructions)
+
+                    logger.onTaskFinishedWithCleanupDisabled(postTaskCleanup, emptySet())
+                }
+
+                it("prints the cleanup instructions") {
+                    inOrder(errorConsole) {
+                        verify(errorConsole).println()
+                        verify(errorConsole).println(cleanupInstructions)
+                    }
                 }
             }
         }

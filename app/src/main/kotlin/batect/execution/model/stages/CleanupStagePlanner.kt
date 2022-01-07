@@ -31,13 +31,11 @@ import batect.execution.model.rules.cleanup.RemoveContainerStepRule
 import batect.execution.model.rules.cleanup.StopContainerStepRule
 import batect.execution.model.rules.data
 import batect.logging.Logger
-import batect.os.SystemInfo
 import batect.primitives.filterToSet
 import batect.primitives.mapToSet
 
 class CleanupStagePlanner(
     private val graph: ContainerDependencyGraph,
-    private val systemInfo: SystemInfo,
     private val logger: Logger
 ) {
     fun createStage(pastEvents: Set<TaskEvent>, cleanupType: CleanupOption): CleanupStage {
@@ -55,14 +53,14 @@ class CleanupStagePlanner(
             stopContainerRules +
             removeContainerRules(containersCreated, containersStarted)
 
-        val manualCleanupInstructions: List<String> = manualCleanupInstructions(allRules)
+        val manualCleanupCommands: List<String> = manualCleanupCommands(allRules)
 
         val rules = when (cleanupType) {
             CleanupOption.DontCleanup -> stopContainerRules
             CleanupOption.Cleanup -> allRules
         }
 
-        val stage = CleanupStage(rules, manualCleanupInstructions)
+        val stage = CleanupStage(rules, manualCleanupCommands)
 
         logger.info {
             message("Created cleanup stage.")
@@ -101,10 +99,10 @@ class CleanupStagePlanner(
                 RemoveContainerStepRule(container, dockerContainer, containerWasStarted)
             }
 
-    private fun manualCleanupInstructions(allRules: Set<CleanupTaskStepRule>): List<String> = allRules
-        .map { it to it.getManualCleanupInstructionForOperatingSystem(systemInfo.operatingSystem) }
-        .filter { (_, instruction) -> instruction != null }
+    private fun manualCleanupCommands(allRules: Set<CleanupTaskStepRule>): List<String> = allRules
+        .map { it to it.manualCleanupCommand }
+        .filter { (_, command) -> command != null }
         .sortedBy { (rule, _) -> rule.manualCleanupSortOrder }
-        .map { (_, instruction) -> instruction!! }
+        .map { (_, command) -> command!! }
 }
 

@@ -189,7 +189,7 @@ class SimpleEventLogger(
     }
 
     private fun printManualCleanupInstructions(postTaskManualCleanup: PostTaskManualCleanup.Required, allEvents: Set<TaskEvent>) {
-        val manualCleanupInstructions = failureErrorMessageFormatter.formatManualCleanupMessage(postTaskManualCleanup, allEvents)
+        val manualCleanupInstructions = failureErrorMessageFormatter.formatManualCleanupMessage(postTaskManualCleanup, allEvents) ?: return
 
         errorConsole.println()
         errorConsole.println(manualCleanupInstructions)

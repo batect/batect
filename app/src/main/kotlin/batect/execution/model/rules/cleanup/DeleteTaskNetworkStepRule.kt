@@ -23,7 +23,6 @@ import batect.execution.model.events.TaskEvent
 import batect.execution.model.rules.TaskStepRuleEvaluationResult
 import batect.execution.model.steps.DeleteTaskNetworkStep
 import batect.logging.ContainerNameSetSerializer
-import batect.os.OperatingSystem
 import batect.primitives.mapToSet
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
@@ -45,7 +44,7 @@ data class DeleteTaskNetworkStepRule(
         return TaskStepRuleEvaluationResult.NotReady
     }
 
-    override fun getManualCleanupInstructionForOperatingSystem(operatingSystem: OperatingSystem): String? = "docker network rm ${network.id}"
+    override val manualCleanupCommand: String = "docker network rm ${network.id}"
 
     @Transient
     override val manualCleanupSortOrder: ManualCleanupSortOrder = ManualCleanupSortOrder.DeleteTaskNetwork

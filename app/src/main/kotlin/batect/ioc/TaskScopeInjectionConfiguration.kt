@@ -65,7 +65,7 @@ private val executionModule = DI.Module("Task scope: execution") {
     import(runnersModule)
 
     bind<CancellationContext>() with scoped(TaskScope).singleton { CancellationContext() }
-    bind<CleanupStagePlanner>() with scoped(TaskScope).singletonWithLogger { logger -> CleanupStagePlanner(instance(), instance(), logger) }
+    bind<CleanupStagePlanner>() with scoped(TaskScope).singletonWithLogger { logger -> CleanupStagePlanner(instance(), logger) }
     bind<ContainerDependencyGraph>() with scoped(TaskScope).singleton { instance<ContainerDependencyGraphProvider>().createGraph(instance(), context) }
     bind<ContainerDependencyGraphProvider>() with scoped(TaskScope).singletonWithLogger { logger -> ContainerDependencyGraphProvider(logger) }
     bind<ParallelExecutionManager>() with scoped(TaskScope).singletonWithLogger { logger -> ParallelExecutionManager(instance(), instance(), instance(), instance(), commandLineOptions().maximumLevelOfParallelism, logger) }

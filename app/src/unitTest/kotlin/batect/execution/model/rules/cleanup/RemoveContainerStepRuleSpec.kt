@@ -21,7 +21,6 @@ import batect.docker.DockerContainer
 import batect.execution.model.events.ContainerStoppedEvent
 import batect.execution.model.rules.TaskStepRuleEvaluationResult
 import batect.execution.model.steps.RemoveContainerStep
-import batect.os.OperatingSystem
 import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.imageSourceDoesNotMatter
@@ -93,7 +92,7 @@ object RemoveContainerStepRuleSpec : Spek({
 
         on("getting the manual cleanup instruction") {
             val rule = RemoveContainerStepRule(containerToRemove, dockerContainerToRemove, true)
-            val instruction = rule.getManualCleanupInstructionForOperatingSystem(OperatingSystem.Other)
+            val instruction = rule.manualCleanupCommand
 
             it("returns the appropriate Docker CLI command to use") {
                 assertThat(instruction, equalTo("docker rm --force --volumes some-container-id"))
@@ -112,7 +111,8 @@ object RemoveContainerStepRuleSpec : Spek({
                         |   "type": "${rule::class.qualifiedName}",
                         |   "container": "the-container",
                         |   "dockerContainer": {"id": "some-container-id", "name": null},
-                        |   "containerWasStarted": true
+                        |   "containerWasStarted": true,
+                        |   "manualCleanupCommand": "docker rm --force --volumes some-container-id"
                         |}
                         """.trimMargin()
                     )

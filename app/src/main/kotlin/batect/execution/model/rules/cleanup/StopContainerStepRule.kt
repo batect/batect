@@ -46,7 +46,7 @@ data class StopContainerStepRule(
         return TaskStepRuleEvaluationResult.NotReady
     }
 
-    override fun getManualCleanupInstructionForOperatingSystem(operatingSystem: OperatingSystem): String? = null
+    override val manualCleanupCommand: String? = null
 
     override val manualCleanupSortOrder: ManualCleanupSortOrder
         get() = throw UnsupportedOperationException("This rule has no manual cleanup instruction.")

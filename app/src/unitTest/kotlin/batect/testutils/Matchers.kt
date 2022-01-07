@@ -37,9 +37,11 @@ fun withPath(path: String): Matcher<ConfigurationException> {
     return has(ConfigurationException::path, equalTo(path))
 }
 
-fun equivalentTo(expected: TextRun): Matcher<TextRun> =
-    object : Matcher<TextRun> {
-        override fun invoke(actual: TextRun): MatchResult = if (actual.simplify() == expected.simplify()) {
+fun equivalentTo(expected: TextRun): Matcher<TextRun?> =
+    object : Matcher<TextRun?> {
+        override fun invoke(actual: TextRun?): MatchResult = if (actual == null) {
+            MatchResult.Mismatch("was: ${describe(null)}")
+        } else if (actual.simplify() == expected.simplify()) {
             MatchResult.Match
         } else {
             MatchResult.Mismatch("was: ${describe(actual)}")

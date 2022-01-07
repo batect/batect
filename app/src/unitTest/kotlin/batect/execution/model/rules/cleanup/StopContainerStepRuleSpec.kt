@@ -21,7 +21,6 @@ import batect.docker.DockerContainer
 import batect.execution.model.events.ContainerStoppedEvent
 import batect.execution.model.rules.TaskStepRuleEvaluationResult
 import batect.execution.model.steps.StopContainerStep
-import batect.os.OperatingSystem
 import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.imageSourceDoesNotMatter
@@ -58,7 +57,8 @@ object StopContainerStepRuleSpec : Spek({
                             |   "type": "${rule::class.qualifiedName}",
                             |   "container": "the-container",
                             |   "dockerContainer": {"id": "some-container-id", "name": null},
-                            |   "containersThatMustBeStoppedFirst": []
+                            |   "containersThatMustBeStoppedFirst": [],
+                            |   "manualCleanupCommand": null
                             |}
                             """.trimMargin()
                         )
@@ -107,7 +107,8 @@ object StopContainerStepRuleSpec : Spek({
                             |   "type": "${rule::class.qualifiedName}",
                             |   "container": "the-container",
                             |   "dockerContainer": {"id": "some-container-id", "name": null},
-                            |   "containersThatMustBeStoppedFirst": ["container-1", "container-2"]
+                            |   "containersThatMustBeStoppedFirst": ["container-1", "container-2"],
+                            |   "manualCleanupCommand": null
                             |}
                             """.trimMargin()
                         )
@@ -118,7 +119,7 @@ object StopContainerStepRuleSpec : Spek({
 
         on("getting the manual cleanup instruction") {
             val rule = StopContainerStepRule(containerToStop, dockerContainerToStop, emptySet())
-            val instruction = rule.getManualCleanupInstructionForOperatingSystem(OperatingSystem.Other)
+            val instruction = rule.manualCleanupCommand
 
             it("returns no instruction, since it will be covered by the removal rule's instruction") {
                 assertThat(instruction, equalTo(null))

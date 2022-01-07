@@ -72,7 +72,7 @@ class InterleavedEventLogger(
     }
 
     override fun onTaskFinishedWithCleanupDisabled(postTaskManualCleanup: PostTaskManualCleanup.Required, allEvents: Set<TaskEvent>) {
-        val manualCleanupInstructions = failureErrorMessageFormatter.formatManualCleanupMessage(postTaskManualCleanup, allEvents)
+        val manualCleanupInstructions = failureErrorMessageFormatter.formatManualCleanupMessage(postTaskManualCleanup, allEvents) ?: return
 
         output.printErrorForTask(manualCleanupInstructions.prefixAllLines())
     }
@@ -84,7 +84,7 @@ class InterleavedEventLogger(
             is PostTaskManualCleanup.Required -> {
                 val manualCleanupInstructions = failureErrorMessageFormatter.formatManualCleanupMessage(postTaskManualCleanup, allEvents)
 
-                if (manualCleanupInstructions == TextRun()) {
+                if (manualCleanupInstructions == null) {
                     output.printErrorForTask(message.prefixAllLines())
                 } else {
                     output.printErrorForTask((manualCleanupInstructions + Text("\n\n") + message).prefixAllLines())

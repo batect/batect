@@ -243,7 +243,7 @@ class KotlinPlugin : Plugin<Project> {
             allow("EPL-1.0")
             allowUrl("https://www.eclipse.org/legal/epl-v20.html")
 
-            allowDependency("com.github.jnr", "jnr-posix", "3.1.14") {
+            allowDependency("com.github.jnr", "jnr-posix", "3.1.15") {
                 it.because("Licensed under three licenses, including EPL 2.0 and LGPL")
             }
 

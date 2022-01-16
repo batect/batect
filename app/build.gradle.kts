@@ -33,12 +33,12 @@ plugins {
 }
 
 base {
-    archivesBaseName = "batect"
+    archivesName.set("batect")
 }
 
 application {
     applicationName = "batect"
-    mainClassName = "batect.ApplicationKt"
+    mainClass.set("batect.ApplicationKt")
     applicationDefaultJvmArgs = listOf("--add-opens", "java.base/sun.nio.ch=ALL-UNNAMED", "--add-opens", "java.base/java.io=ALL-UNNAMED")
 }
 
@@ -104,7 +104,6 @@ checkUnitTestLayout {
 apply {
     from("gradle/completionTest.gradle.kts")
     from("gradle/journeyTest.gradle")
-    from("gradle/profiling.gradle")
     from("gradle/shadow.gradle")
     from("gradle/versionInfo.gradle")
 }

@@ -19,12 +19,12 @@ plugins {
 }
 
 application {
-    mainClassName = "testapp.Application"
+    mainClass.set("testapp.Application")
 }
 
 tasks.withType<Jar>().configureEach {
     manifest {
-        attributes["Main-Class"] = application.mainClassName
+        attributes["Main-Class"] = application.mainClass.get()
     }
 
     archiveFileName.set("testapp.jar")

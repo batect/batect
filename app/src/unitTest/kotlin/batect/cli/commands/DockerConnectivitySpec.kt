@@ -142,9 +142,17 @@ object DockerConnectivitySpec : Spek({
             given("the user has not provided a builder preference") {
                 beforeEachTest { whenever(commandLineOptions.enableBuildKit).doReturn(null) }
 
-                val checkResult = DockerConnectivityCheckResult.Succeeded(containerType, Version(19, 3, 1), BuilderVersion.BuildKit, true)
+                given("the builder reports that it prefers the legacy builder") {
+                    val checkResult = DockerConnectivityCheckResult.Succeeded(containerType, Version(19, 3, 1), BuilderVersion.Legacy, true)
 
-                itRunsTheTaskWithBuilder(checkResult, BuilderVersion.Legacy)
+                    itRunsTheTaskWithBuilder(checkResult, BuilderVersion.Legacy)
+                }
+
+                given("the builder reports that it prefers BuildKit") {
+                    val checkResult = DockerConnectivityCheckResult.Succeeded(containerType, Version(19, 3, 1), BuilderVersion.BuildKit, true)
+
+                    itRunsTheTaskWithBuilder(checkResult, BuilderVersion.BuildKit)
+                }
             }
 
             given("the user has explicitly disabled BuildKit") {

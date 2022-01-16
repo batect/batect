@@ -45,7 +45,8 @@ class DockerConnectivity(
 
     private fun handleSuccessfulConnectivityCheck(connectivityCheckResult: DockerConnectivityCheckResult.Succeeded, task: TaskWithKodein): Int {
         val builderVersion = when (commandLineOptions.enableBuildKit) {
-            null, false -> BuilderVersion.Legacy
+            null -> connectivityCheckResult.builderVersion
+            false -> BuilderVersion.Legacy
             true -> {
                 if (connectivityCheckResult.dockerVersion.compareTo(minimumDockerVersionWithBuildKitSupport, VersionComparisonMode.DockerStyle) < 0) {
                     return error("BuildKit has been enabled with --${CommandLineOptionsParser.enableBuildKitFlagName} or the ${CommandLineOptionsParser.enableBuildKitEnvironmentVariableName} environment variable, but the current version of Docker does not support BuildKit, even with experimental features enabled.")

@@ -32,7 +32,7 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlin:kotlin-serialization")
     implementation("com.diffplug.spotless:spotless-plugin-gradle:6.2.1")
-    implementation("com.google.cloud:google-cloud-storage:2.4.0")
+    implementation("com.google.cloud:google-cloud-storage:2.4.1")
     implementation("app.cash.licensee:licensee-gradle-plugin:1.3.1")
 }
 

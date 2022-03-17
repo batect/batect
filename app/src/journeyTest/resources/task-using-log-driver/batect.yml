@@ -2,7 +2,7 @@ project_name: task-using-log-driver-test
 
 containers:
   build-env:
-    image: alpine:3.15.0
+    image: alpine:3.15.1
     log_driver: gelf
     log_options:
       gelf-address: udp://localhost:12201

@@ -2,7 +2,7 @@ project_name: windows-container-test
 
 containers:
   build-env:
-    image: mcr.microsoft.com/windows/nanoserver:2009
+    image: mcr.microsoft.com/windows/nanoserver:ltsc2022
 
 tasks:
   the-task:

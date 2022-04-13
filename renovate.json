@@ -65,6 +65,16 @@
       ],
       "matchStrings": ["val .* = \"(?<depName>[a-zA-Z0-9]+):(?<currentValue>[a-zA-Z0-9.]+)\"\\s*\\/\\/\\s*renovate:docker-image"],
       "datasourceTemplate": "docker"
+    },
+    {
+      "fileMatch": [
+        "gradle.properties$"
+      ],
+      "matchStrings": [
+        "shellcheckVersion=\"(?<currentValue>v[\\d.]*?)\""
+      ],
+      "datasourceTemplate": "github-releases",
+      "depNameTemplate": "koalaman/shellcheck"
     }
   ],
   "packageRules": [

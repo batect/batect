@@ -25,9 +25,7 @@ buildscript {
     }
 
     dependencies {
-        val commonsCodecVersion: String by project
-
-        classpath("commons-codec:commons-codec:$commonsCodecVersion")
+        classpath(libs.commons.codec)
     }
 }
 

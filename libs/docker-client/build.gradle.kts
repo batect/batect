@@ -17,7 +17,6 @@
 val okhttpVersion: String by project
 val kotlinxSerializationVersion: String by project
 val jnrPosixVersion: String by project
-val commonsCompressVersion: String by project
 val bouncycastleVersion: String by project
 val wireVersion: String by project
 val jimfsVersion: String by project
@@ -46,7 +45,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
     implementation("com.github.jnr:jnr-posix:$jnrPosixVersion")
     implementation("com.squareup.okhttp3:okhttp")
-    implementation("org.apache.commons:commons-compress:$commonsCompressVersion")
+    implementation(libs.commons.compress)
     implementation("org.bouncycastle:bcpkix-jdk15on:$bouncycastleVersion")
     implementation("com.squareup.wire:wire-grpc-client:$wireVersion")
 

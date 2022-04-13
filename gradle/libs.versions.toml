@@ -1,5 +1,6 @@
 [versions]
 kotlinx-serialization = "1.3.2"
+spotless = "6.4.2"
 wire = "4.3.0"
 
 [libraries]
@@ -18,8 +19,10 @@ kodein = { group = "org.kodein.di", name = "kodein-di", version = "7.11.0" }
 kotlinx-serialization-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-core", version.ref = "kotlinx-serialization" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 osplatformfinder = { group = "org.graylog.repackaged", name = "os-platform-finder", version = "1.2.3" }
+spotless-plugin = { group = "com.diffplug.spotless", name = "spotless-plugin-gradle", version.ref = "spotless" }
 wire-grpc-client = { group = "com.squareup.wire", name = "wire-grpc-client", version.ref = "wire" }
 
 [plugins]
 reckon = { id = "org.ajoberstar.reckon", version = "0.16.1" }
+spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
 wire = { id = "com.squareup.wire", version.ref = "wire" }

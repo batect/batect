@@ -14,11 +14,9 @@
     limitations under the License.
 */
 
-val okhttpVersion: String by project
-val okioVersion: String by project
 
 plugins {
-    id("com.github.johnrengelman.shadow")
+    alias(libs.plugins.shadow)
     id("batect-kotlin")
     application
 }
@@ -39,8 +37,8 @@ repositories {
 }
 
 dependencies {
-    implementation(platform("com.squareup.okhttp3:okhttp-bom:$okhttpVersion"))
-    implementation(platform("com.squareup.okio:okio-bom:$okioVersion"))
+    implementation(platform(libs.okhttp.bom))
+    implementation(platform(libs.okio.bom))
     implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
 
     implementation(libs.kotlinx.serialization.json)

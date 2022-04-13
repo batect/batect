@@ -18,11 +18,14 @@ kaml = { group = "com.charleskorn.kaml", name = "kaml", version = "0.43.0" }
 kodein = { group = "org.kodein.di", name = "kodein-di", version = "7.11.0" }
 kotlinx-serialization-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-core", version.ref = "kotlinx-serialization" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
+okio-bom = { group = "com.squareup.okio", name = "okio-bom", version = "3.0.0" }
+okhttp-bom = { group = "com.squareup.okhttp3", name = "okhttp-bom", version = "4.9.3" }
 osplatformfinder = { group = "org.graylog.repackaged", name = "os-platform-finder", version = "1.2.3" }
 spotless-plugin = { group = "com.diffplug.spotless", name = "spotless-plugin-gradle", version.ref = "spotless" }
 wire-grpc-client = { group = "com.squareup.wire", name = "wire-grpc-client", version.ref = "wire" }
 
 [plugins]
 reckon = { id = "org.ajoberstar.reckon", version = "0.16.1" }
+shadow = { id = "com.github.johnrengelman.shadow", version = "7.1.2" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
 wire = { id = "com.squareup.wire", version.ref = "wire" }

@@ -14,14 +14,6 @@
     limitations under the License.
 */
 
-pluginManagement {
-    val shadowPluginVersion: String by settings
-
-    plugins {
-        id("com.github.johnrengelman.shadow") version shadowPluginVersion
-    }
-}
-
 rootProject.name = "batect"
 
 include(":app")

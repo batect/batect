@@ -14,14 +14,13 @@
     limitations under the License.
 */
 
-val okhttpVersion: String by project
 
 plugins {
     id("batect-kotlin")
 }
 
 dependencies {
-    implementation(platform("com.squareup.okhttp3:okhttp-bom:$okhttpVersion"))
+    implementation(platform(libs.okhttp.bom))
 
     implementation(libs.jnr.unixsocket)
     implementation("com.squareup.okhttp3:okhttp")

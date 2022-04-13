@@ -14,7 +14,6 @@
     limitations under the License.
 */
 
-val okhttpVersion: String by project
 
 plugins {
     alias(libs.plugins.wire)
@@ -23,7 +22,7 @@ plugins {
 }
 
 dependencies {
-    implementation(platform("com.squareup.okhttp3:okhttp-bom:$okhttpVersion"))
+    implementation(platform(libs.okhttp.bom))
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.jnr.posix)

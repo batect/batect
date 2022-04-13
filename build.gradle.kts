@@ -16,7 +16,7 @@
 
 plugins {
     id("com.diffplug.spotless")
-    id("org.ajoberstar.reckon")
+    alias(libs.plugins.reckon)
     kotlin("jvm") apply false
     kotlin("plugin.serialization") apply false
 }

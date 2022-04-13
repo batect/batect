@@ -21,4 +21,5 @@ osplatformfinder = { group = "org.graylog.repackaged", name = "os-platform-finde
 wire-grpc-client = { group = "com.squareup.wire", name = "wire-grpc-client", version.ref = "wire" }
 
 [plugins]
+reckon = { id = "org.ajoberstar.reckon", version = "0.16.1" }
 wire = { id = "com.squareup.wire", version.ref = "wire" }

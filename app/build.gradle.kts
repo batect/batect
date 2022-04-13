@@ -58,7 +58,7 @@ dependencies {
     implementation(project(":libs:os"))
     implementation(project(":libs:telemetry"))
 
-    testImplementation(libs.hamkrest.json)
+    testImplementation(libs.hamkrestjson)
     testImplementation(libs.jimfs)
     testImplementation(project(":libs:test-utils"))
     testImplementation(project(":libs:logging-test-utils"))

@@ -29,7 +29,7 @@ dependencies {
     implementation(project(":libs:os"))
     implementation(project(":libs:primitives"))
 
-    testImplementation(libs.hamkrest.json)
+    testImplementation(libs.hamkrestjson)
     testImplementation(libs.jimfs)
 
     testImplementation(project(":libs:logging-test-utils"))

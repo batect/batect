@@ -14,8 +14,6 @@
     limitations under the License.
 */
 
-val spekVersion: String by project
-val hamkrestVersion: String by project
 val mockitoKotlinVersion: String by project
 
 plugins {
@@ -24,8 +22,8 @@ plugins {
 
 dependencies {
     implementation(libs.kotlinx.serialization.json)
-    implementation("org.spekframework.spek2:spek-dsl-jvm:$spekVersion")
-    implementation("com.natpryce:hamkrest:$hamkrestVersion")
+    implementation(libs.spek.dsl.jvm)
+    implementation(libs.hamkrest)
     implementation("org.mockito.kotlin:mockito-kotlin:$mockitoKotlinVersion")
     implementation(project(":libs:logging"))
     implementation(project(":libs:test-utils"))

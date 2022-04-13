@@ -1,5 +1,6 @@
 [versions]
 kotlinx-serialization = "1.3.2"
+spek = "2.0.18"
 spotless = "6.4.2"
 wire = "4.3.0"
 
@@ -7,20 +8,26 @@ wire = "4.3.0"
 bouncycastle = { group = "org.bouncycastle", name = "bcpkix-jdk15on", version = "1.70" }
 commons-codec = { group = "commons-codec", name = "commons-codec", version = "1.15" }
 commons-compress = { group = "org.apache.commons", name = "commons-compress", version = "1.21" }
-hamkrest-json = { group = "org.araqnid.hamkrest", name = "hamkrest-json", version = "1.1.2" }
+hamkrest = { group = "com.natpryce", name = "hamkrest", version = "1.8.0.1" }
+hamkrestjson = { group = "org.araqnid.hamkrest", name = "hamkrest-json", version = "1.1.2" }
 hypirion-io = { group = "com.hypirion", name = "io", version = "0.3.1" }
 jackson-yaml = { group = "com.fasterxml.jackson.dataformat", name = "jackson-dataformat-yaml", version = "2.13.2" }
 jimfs = { group = "com.google.jimfs", name = "jimfs", version = "1.2" }
 jnr-posix = { group = "com.github.jnr", name = "jnr-posix", version = "3.1.15" }
 jnr-unixsocket = { group = "com.github.jnr", name = "jnr-unixsocket", version = "0.38.17" }
 jsonschemavalidator = { group = "com.github.java-json-tools", name = "json-schema-validator", version = "2.2.14" }
+junit-platform = { group = "org.junit.platform", name = "junit-platform-engine", version = "1.8.2" }
 kaml = { group = "com.charleskorn.kaml", name = "kaml", version = "0.43.0" }
 kodein = { group = "org.kodein.di", name = "kodein-di", version = "7.11.0" }
 kotlinx-serialization-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-core", version.ref = "kotlinx-serialization" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
+mockito-core = { group = "org.mockito", name = "mockito-core", version = "4.4.0" }
+mockito-kotlin = { group = "org.mockito.kotlin", name = "mockito-kotlin", version = "4.0.0" }
 okio-bom = { group = "com.squareup.okio", name = "okio-bom", version = "3.0.0" }
 okhttp-bom = { group = "com.squareup.okhttp3", name = "okhttp-bom", version = "4.9.3" }
 osplatformfinder = { group = "org.graylog.repackaged", name = "os-platform-finder", version = "1.2.3" }
+spek-dsl-jvm = { group = "org.spekframework.spek2", name = "spek-dsl-jvm", version.ref = "spek" }
+spek-runner-junit5 = { group = "org.spekframework.spek2", name = "spek-runner-junit5", version.ref = "spek" }
 spotless-plugin = { group = "com.diffplug.spotless", name = "spotless-plugin-gradle", version.ref = "spotless" }
 wire-grpc-client = { group = "com.squareup.wire", name = "wire-grpc-client", version.ref = "wire" }
 

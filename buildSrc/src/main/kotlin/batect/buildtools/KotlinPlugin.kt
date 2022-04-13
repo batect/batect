@@ -22,7 +22,10 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.artifacts.Configuration
+import org.gradle.api.artifacts.MinimalExternalModuleDependency
+import org.gradle.api.artifacts.VersionCatalogsExtension
 import org.gradle.api.plugins.JavaPluginExtension
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.testing.Test
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
@@ -96,10 +99,10 @@ class KotlinPlugin : Plugin<Project> {
         }
 
         project.dependencies {
-            add("testCommonImplementation", "com.natpryce:hamkrest:${project.property("hamkrestVersion")}")
-            add("testCommonImplementation", "org.spekframework.spek2:spek-dsl-jvm:${project.property("spekVersion")}")
-            add("testCommonRuntimeOnly", "org.spekframework.spek2:spek-runner-junit5:${project.property("spekVersion")}")
-            add("testCommonRuntimeOnly", "org.junit.platform:junit-platform-engine:${project.property("junitPlatformVersion")}")
+            add("testCommonImplementation", project.lib("hamkrest"))
+            add("testCommonImplementation", project.lib("spek-dsl-jvm"))
+            add("testCommonRuntimeOnly", project.lib("spek-runner-junit5"))
+            add("testCommonRuntimeOnly", project.lib("junit-platform"))
         }
 
         project.tasks.withType<Test>().configureEach {
@@ -121,6 +124,13 @@ class KotlinPlugin : Plugin<Project> {
                 logging.exceptionFormat = TestExceptionFormat.FULL
             }
         }
+    }
+
+    private fun Project.lib(name: String): Provider<MinimalExternalModuleDependency> {
+        val catalogs = this.extensions.getByType<VersionCatalogsExtension>()
+        val libs = catalogs.named("libs")
+
+        return libs.findLibrary(name).orElseGet { throw RuntimeException("No entry for '$name' found in version catalog.") }
     }
 
     private fun configureUnitTesting(project: Project) {
@@ -147,8 +157,8 @@ class KotlinPlugin : Plugin<Project> {
 
         project.dependencies {
             // We don't use mockito directly, but mockito-kotlin does refer to it, so override it to get the latest version.
-            add("testImplementation", "org.mockito:mockito-core:${project.property("mockitoCoreVersion")}")
-            add("testImplementation", "org.mockito.kotlin:mockito-kotlin:${project.property("mockitoKotlinVersion")}")
+            add("testImplementation", project.lib("mockito-core"))
+            add("testImplementation", project.lib("mockito-kotlin"))
         }
     }
 

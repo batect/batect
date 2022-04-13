@@ -14,8 +14,6 @@
     limitations under the License.
 */
 
-val spekVersion: String by project
-val hamkrestVersion: String by project
 val mockitoKotlinVersion: String by project
 
 plugins {
@@ -25,8 +23,8 @@ plugins {
 dependencies {
     implementation(platform(libs.okhttp.bom))
 
-    implementation("org.spekframework.spek2:spek-dsl-jvm:$spekVersion")
-    implementation("com.natpryce:hamkrest:$hamkrestVersion")
+    implementation(libs.spek.dsl.jvm)
+    implementation(libs.hamkrest)
     implementation(libs.jimfs)
     implementation(libs.jnr.posix)
     implementation("com.squareup.okhttp3:okhttp")

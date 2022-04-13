@@ -45,7 +45,7 @@ jobs:
           restore-keys: gradle-packages-${{ runner.os }}
 
       - name: Build and test
-        run: ./gradlew --parallel -DgenerateCoverage=true app:check jacocoTestReport
+        run: ./gradlew -DgenerateCoverage=true app:check jacocoTestReport
 
       - name: Upload coverage to codecov.io
         uses: codecov/codecov-action@v3.0.0
@@ -203,7 +203,7 @@ jobs:
           restore-keys: gradle-packages-${{ runner.os }}
 
       - name: Run integration tests
-        run: ./gradlew --parallel libs:git-client:integrationTest
+        run: ./gradlew libs:git-client:integrationTest
 
       - name: Stop Gradle daemon
         run: ./gradlew --stop
@@ -259,7 +259,7 @@ jobs:
         run: sudo apt-get install attr --no-install-recommends -y
 
       - name: Build and test
-        run: unset JAVA_TOOL_OPTIONS && ./gradlew --parallel -DgenerateCoverage=true check libs:git-client:integrationTest jacocoTestReport -x wrapper:unix:check -x wrapper:windows:check
+        run: unset JAVA_TOOL_OPTIONS && ./gradlew -DgenerateCoverage=true check libs:git-client:integrationTest jacocoTestReport -x wrapper:unix:check -x wrapper:windows:check
 
       - name: Upload coverage to codecov.io
         uses: codecov/codecov-action@v3.0.0
@@ -267,7 +267,7 @@ jobs:
           flags: linux
 
       - name: Assemble release
-        run: unset JAVA_TOOL_OPTIONS && ./gradlew --parallel assembleRelease
+        run: unset JAVA_TOOL_OPTIONS && ./gradlew assembleRelease
 
       - name: Stop Gradle daemon
         run: ./gradlew --stop
@@ -329,7 +329,7 @@ jobs:
           restore-keys: gradle-wrapper-packages-${{ runner.os }}
 
       - name: Run tests
-        run: unset JAVA_TOOL_OPTIONS && ./gradlew --parallel wrapper:unix:check
+        run: unset JAVA_TOOL_OPTIONS && ./gradlew wrapper:unix:check
 
   completion-test-linux:
     name: "Run shell tab completion tests (Linux)"
@@ -363,7 +363,7 @@ jobs:
           restore-keys: gradle-wrapper-packages-${{ runner.os }}
 
       - name: Run tests
-        run: unset JAVA_TOOL_OPTIONS && ./gradlew --parallel completionTest
+        run: unset JAVA_TOOL_OPTIONS && ./gradlew completionTest
 
   journey-test-linux:
     name: "Run journey tests (Linux, Docker ${{ matrix.docker_version }}, BuildKit enabled: ${{ matrix.enable_buildkit }})"
@@ -423,7 +423,7 @@ jobs:
         run: ./ci/install_docker.sh ${{ matrix.docker_version }}
 
       - name: Run journey tests
-        run: unset JAVA_TOOL_OPTIONS && ./gradlew --parallel journeyTest
+        run: unset JAVA_TOOL_OPTIONS && ./gradlew journeyTest
 
   integration-test-linux:
     name: "Run integration tests (Linux, Docker ${{ matrix.docker_version }}, ${{ matrix.connection_type }})"
@@ -489,7 +489,7 @@ jobs:
         if: matrix.connection_type == 'TLS over TCP'
 
       - name: Run integration tests
-        run: unset JAVA_TOOL_OPTIONS && ./gradlew --parallel :libs:docker-client:integrationTest ${{ matrix.test_options }}
+        run: unset JAVA_TOOL_OPTIONS && ./gradlew :libs:docker-client:integrationTest ${{ matrix.test_options }}
 
   build-mac:
     name: "Build (macOS)"
@@ -523,7 +523,7 @@ jobs:
           restore-keys: gradle-packages-${{ runner.os }}
 
       - name: Build and test
-        run: unset JAVA_TOOL_OPTIONS && ./gradlew --parallel -DgenerateCoverage=true check libs:git-client:integrationTest jacocoTestReport -x wrapper:unix:check -x wrapper:windows:check
+        run: unset JAVA_TOOL_OPTIONS && ./gradlew -DgenerateCoverage=true check libs:git-client:integrationTest jacocoTestReport -x wrapper:unix:check -x wrapper:windows:check
 
       - name: Upload coverage to codecov.io
         uses: codecov/codecov-action@v3.0.0
@@ -611,7 +611,7 @@ jobs:
         run: ./ci/wait_for_appveyor.sh
 
       - name: Validate release
-        run: ./gradlew --parallel validateRelease
+        run: ./gradlew validateRelease
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v1

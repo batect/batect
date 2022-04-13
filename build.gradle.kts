@@ -14,11 +14,8 @@
     limitations under the License.
 */
 
-import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
-
 plugins {
     id("com.diffplug.spotless")
-    id("com.github.ben-manes.versions")
     id("org.ajoberstar.reckon")
     kotlin("jvm") apply false
     kotlin("plugin.serialization") apply false
@@ -34,20 +31,6 @@ apply(from = "$rootDir/gradle/utilities.gradle")
 apply(from = "$rootDir/gradle/versioning.gradle")
 
 tasks {
-    named<DependencyUpdatesTask>("dependencyUpdates").configure {
-        val nonFinalQualifiers = listOf(
-            "alpha", "b", "beta", "cr", "ea", "eap", "m", "milestone", "pr", "preview", "rc"
-        ).joinToString("|", "(", ")")
-
-        val nonFinalQualifiersRegex = Regex(".*[.-]$nonFinalQualifiers[.\\d-+]*", RegexOption.IGNORE_CASE)
-
-        gradleReleaseChannel = "current"
-
-        rejectVersionIf {
-            candidate.version.matches(nonFinalQualifiersRegex)
-        }
-    }
-
     register<Copy>("assembleRelease") {
         description = "Prepares files for release."
         group = "Distribution"

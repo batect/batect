@@ -20,7 +20,6 @@ import batect.execution.PostTaskManualCleanup
 import batect.execution.model.events.TaskEvent
 import batect.execution.model.events.TaskEventSink
 import batect.ui.containerio.ContainerIOStreamingOptions
-import batect.ui.text.TextRun
 import java.time.Duration
 
 interface EventLogger : TaskEventSink {

@@ -23,7 +23,6 @@ import batect.ui.Console
 import batect.ui.EventLogger
 import batect.ui.FailureErrorMessageFormatter
 import batect.ui.containerio.TaskContainerOnlyIOStreamingOptions
-import batect.ui.text.TextRun
 import java.time.Duration
 
 class QuietEventLogger(

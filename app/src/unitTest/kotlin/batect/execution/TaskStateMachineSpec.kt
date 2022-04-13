@@ -43,7 +43,6 @@ import batect.testutils.on
 import batect.testutils.runForEachTest
 import batect.testutils.runNullableForEachTest
 import batect.testutils.withMessage
-import batect.ui.text.TextRun
 import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.throws
@@ -378,7 +377,6 @@ object TaskStateMachineSpec : Spek({
                                     it("sends all previous events to the cleanup stage planner") {
                                         verify(cleanupStagePlanner).createStage(events, CleanupOption.DontCleanup)
                                     }
-
 
                                     it("indicates that manual cleanup is required") {
                                         assertThat(stateMachine.postTaskManualCleanup, equalTo(PostTaskManualCleanup.Required.DueToTaskFailureWithCleanupDisabled(cleanupCommands)))

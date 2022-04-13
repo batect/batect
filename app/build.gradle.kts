@@ -14,7 +14,6 @@
     limitations under the License.
 */
 
-
 plugins {
     alias(libs.plugins.shadow)
     id("batect-kotlin")
@@ -67,6 +66,7 @@ dependencies {
 
 tasks.named("check").configure {
     dependsOn(":libs:check")
+    dependsOn(":spotlessCheck")
 }
 
 checkUnitTestLayout {

@@ -259,7 +259,7 @@ jobs:
         run: sudo apt-get install attr --no-install-recommends -y
 
       - name: Build and test
-        run: unset JAVA_TOOL_OPTIONS && ./gradlew -DgenerateCoverage=true check libs:git-client:integrationTest jacocoTestReport -x wrapper:unix:check -x wrapper:windows:check
+        run: unset JAVA_TOOL_OPTIONS && ./gradlew -DgenerateCoverage=true check libs:git-client:integrationTest jacocoTestReport spotlessCheck -x wrapper:unix:check -x wrapper:windows:check
 
       - name: Upload coverage to codecov.io
         uses: codecov/codecov-action@v3.0.0

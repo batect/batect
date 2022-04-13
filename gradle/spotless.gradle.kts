@@ -71,7 +71,7 @@ configure<SpotlessExtension> {
         // TODO: This confuses spotless plugin for settings.gradle.kts -- is
         //       this a spotless issue, or does this configuration need more
         //       specificity?
-        licenseHeader(kotlinLicenseHeader, "(val|import|pluginManagement|plugins|tasks|//)")
+        licenseHeader(kotlinLicenseHeader, "(val|import|plugins|tasks|//|dependencyResolutionManagement|rootProject)")
     }
 
     kotlin {
@@ -91,6 +91,7 @@ configure<SpotlessExtension> {
 
     java {
         target("**/*.java")
+        targetExclude("buildSrc/.gradle/**")
 
         licenseHeader(javaLicenseHeader)
 

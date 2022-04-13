@@ -50,12 +50,10 @@ import batect.testutils.equivalentTo
 import batect.testutils.given
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.on
-import batect.testutils.withMessage
 import batect.ui.text.Text
 import batect.ui.text.TextRun
 import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.throws
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 import org.spekframework.spek2.Spek

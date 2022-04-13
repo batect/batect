@@ -30,7 +30,6 @@ import batect.ui.FailureErrorMessageFormatter
 import batect.ui.containerio.TaskContainerOnlyIOStreamingOptions
 import batect.ui.humanise
 import batect.ui.text.Text
-import batect.ui.text.TextRun
 import java.time.Duration
 
 class FancyEventLogger(

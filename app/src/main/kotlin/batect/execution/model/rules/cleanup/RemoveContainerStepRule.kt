@@ -23,7 +23,6 @@ import batect.execution.model.events.TaskEvent
 import batect.execution.model.rules.TaskStepRuleEvaluationResult
 import batect.execution.model.steps.RemoveContainerStep
 import batect.logging.ContainerNameOnlySerializer
-import batect.os.OperatingSystem
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 

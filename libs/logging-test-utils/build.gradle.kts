@@ -14,8 +14,6 @@
     limitations under the License.
 */
 
-val mockitoKotlinVersion: String by project
-
 plugins {
     id("batect-kotlin")
 }
@@ -24,7 +22,7 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.spek.dsl.jvm)
     implementation(libs.hamkrest)
-    implementation("org.mockito.kotlin:mockito-kotlin:$mockitoKotlinVersion")
+    implementation(libs.mockito.kotlin)
     implementation(project(":libs:logging"))
     implementation(project(":libs:test-utils"))
 }

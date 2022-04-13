@@ -14,8 +14,6 @@
     limitations under the License.
 */
 
-val mockitoKotlinVersion: String by project
-
 plugins {
     id("batect-kotlin")
 }
@@ -28,5 +26,5 @@ dependencies {
     implementation(libs.jimfs)
     implementation(libs.jnr.posix)
     implementation("com.squareup.okhttp3:okhttp")
-    implementation("org.mockito.kotlin:mockito-kotlin:$mockitoKotlinVersion")
+    implementation(libs.mockito.kotlin)
 }

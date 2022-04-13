@@ -14,18 +14,15 @@
     limitations under the License.
 */
 
-val kotlinxSerializationVersion: String by project
-val jnrPosixVersion: String by project
-val jimfsVersion: String by project
 
 plugins {
     id("batect-kotlin")
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
-    implementation("com.github.jnr:jnr-posix:$jnrPosixVersion")
+    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.jnr.posix)
 
-    testImplementation("com.google.jimfs:jimfs:$jimfsVersion")
+    testImplementation(libs.jimfs)
     testImplementation(project(":libs:test-utils"))
 }

@@ -15,9 +15,6 @@
 */
 
 val okhttpVersion: String by project
-val kotlinxSerializationVersion: String by project
-val hamkrestJsonVersion: String by project
-val jimfsVersion: String by project
 
 plugins {
     id("batect-kotlin")
@@ -26,7 +23,7 @@ plugins {
 dependencies {
     implementation(platform("com.squareup.okhttp3:okhttp-bom:$okhttpVersion"))
 
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
+    implementation(libs.kotlinx.serialization.json)
     implementation("com.squareup.okhttp3:okhttp")
 
     implementation(project(":libs:io"))
@@ -34,8 +31,8 @@ dependencies {
     implementation(project(":libs:os"))
     implementation(project(":libs:primitives"))
 
-    testImplementation("org.araqnid.hamkrest:hamkrest-json:$hamkrestJsonVersion")
-    testImplementation("com.google.jimfs:jimfs:$jimfsVersion")
+    testImplementation(libs.hamkrest.json)
+    testImplementation(libs.jimfs)
 
     testImplementation(project(":libs:logging-test-utils"))
     testImplementation(project(":libs:test-utils"))

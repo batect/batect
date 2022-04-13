@@ -15,16 +15,7 @@
 */
 
 val okhttpVersion: String by project
-val kotlinxSerializationVersion: String by project
-val kodeinVersion: String by project
 val okioVersion: String by project
-val jnrPosixVersion: String by project
-val kamlVersion: String by project
-val hypirionIoVersion: String by project
-val bouncycastleVersion: String by project
-val osPlatformFinderVersion: String by project
-val hamkrestJsonVersion: String by project
-val jimfsVersion: String by project
 
 plugins {
     id("com.github.johnrengelman.shadow")
@@ -52,15 +43,15 @@ dependencies {
     implementation(platform("com.squareup.okio:okio-bom:$okioVersion"))
     implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
 
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
-    implementation("org.kodein.di:kodein-di:$kodeinVersion")
+    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.kodein)
     implementation("com.squareup.okio:okio")
     implementation("com.squareup.okhttp3:okhttp")
-    implementation("com.github.jnr:jnr-posix:$jnrPosixVersion")
-    implementation("com.charleskorn.kaml:kaml:$kamlVersion")
-    implementation("com.hypirion:io:$hypirionIoVersion")
-    implementation("org.bouncycastle:bcpkix-jdk15on:$bouncycastleVersion")
-    implementation("org.graylog.repackaged:os-platform-finder:$osPlatformFinderVersion")
+    implementation(libs.jnr.posix)
+    implementation(libs.kaml)
+    implementation(libs.hypirion.io)
+    implementation(libs.bouncycastle)
+    implementation(libs.osplatformfinder)
 
     implementation(project(":libs:docker-client"))
     implementation(project(":libs:git-client"))
@@ -70,8 +61,8 @@ dependencies {
     implementation(project(":libs:os"))
     implementation(project(":libs:telemetry"))
 
-    testImplementation("org.araqnid.hamkrest:hamkrest-json:$hamkrestJsonVersion")
-    testImplementation("com.google.jimfs:jimfs:$jimfsVersion")
+    testImplementation(libs.hamkrest.json)
+    testImplementation(libs.jimfs)
     testImplementation(project(":libs:test-utils"))
     testImplementation(project(":libs:logging-test-utils"))
 }

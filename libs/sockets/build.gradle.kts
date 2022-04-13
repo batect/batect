@@ -15,7 +15,6 @@
 */
 
 val okhttpVersion: String by project
-val jnrUnixsocketVersion: String by project
 
 plugins {
     id("batect-kotlin")
@@ -24,7 +23,7 @@ plugins {
 dependencies {
     implementation(platform("com.squareup.okhttp3:okhttp-bom:$okhttpVersion"))
 
-    implementation("com.github.jnr:jnr-unixsocket:$jnrUnixsocketVersion")
+    implementation(libs.jnr.unixsocket)
     implementation("com.squareup.okhttp3:okhttp")
 
     implementation(project(":libs:os"))

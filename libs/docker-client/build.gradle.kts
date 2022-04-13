@@ -15,26 +15,9 @@
 */
 
 val okhttpVersion: String by project
-val kotlinxSerializationVersion: String by project
-val jnrPosixVersion: String by project
-val bouncycastleVersion: String by project
-val wireVersion: String by project
-val jimfsVersion: String by project
-val hamkrestJsonVersion: String by project
-
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-
-    dependencies {
-        val wireVersion: String by project
-
-        classpath("com.squareup.wire:wire-gradle-plugin:$wireVersion")
-    }
-}
 
 plugins {
+    alias(libs.plugins.wire)
     id("batect-kotlin")
     id("de.undercouch.download")
 }
@@ -42,12 +25,12 @@ plugins {
 dependencies {
     implementation(platform("com.squareup.okhttp3:okhttp-bom:$okhttpVersion"))
     implementation("org.jetbrains.kotlin:kotlin-reflect")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
-    implementation("com.github.jnr:jnr-posix:$jnrPosixVersion")
+    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.jnr.posix)
     implementation("com.squareup.okhttp3:okhttp")
     implementation(libs.commons.compress)
-    implementation("org.bouncycastle:bcpkix-jdk15on:$bouncycastleVersion")
-    implementation("com.squareup.wire:wire-grpc-client:$wireVersion")
+    implementation(libs.bouncycastle)
+    implementation(libs.wire.grpc.client)
 
     implementation(project(":libs:logging"))
     implementation(project(":libs:os"))
@@ -55,8 +38,8 @@ dependencies {
     implementation(project(":libs:telemetry"))
     implementation(project(":libs:primitives"))
 
-    testImplementation("com.google.jimfs:jimfs:$jimfsVersion")
-    testImplementation("org.araqnid.hamkrest:hamkrest-json:$hamkrestJsonVersion")
+    testImplementation(libs.jimfs)
+    testImplementation(libs.hamkrest.json)
 
     testImplementation(project(":libs:logging-test-utils"))
     testImplementation(project(":libs:test-utils"))

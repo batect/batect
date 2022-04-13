@@ -33,11 +33,8 @@ buildscript {
     }
 
     dependencies {
-        val jacksonVersion: String by project
-        val jsonSchemaValidatorVersion: String by project
-
-        classpath("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:$jacksonVersion")
-        classpath("com.github.java-json-tools:json-schema-validator:$jsonSchemaValidatorVersion")
+        classpath(libs.jackson.yaml)
+        classpath(libs.jsonschemavalidator)
     }
 }
 

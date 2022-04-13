@@ -17,8 +17,6 @@
 val okhttpVersion: String by project
 val spekVersion: String by project
 val hamkrestVersion: String by project
-val jimfsVersion: String by project
-val jnrPosixVersion: String by project
 val mockitoKotlinVersion: String by project
 
 plugins {
@@ -30,8 +28,8 @@ dependencies {
 
     implementation("org.spekframework.spek2:spek-dsl-jvm:$spekVersion")
     implementation("com.natpryce:hamkrest:$hamkrestVersion")
-    implementation("com.google.jimfs:jimfs:$jimfsVersion")
-    implementation("com.github.jnr:jnr-posix:$jnrPosixVersion")
+    implementation(libs.jimfs)
+    implementation(libs.jnr.posix)
     implementation("com.squareup.okhttp3:okhttp")
     implementation("org.mockito.kotlin:mockito-kotlin:$mockitoKotlinVersion")
 }

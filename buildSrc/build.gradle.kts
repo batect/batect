@@ -18,7 +18,7 @@ import org.gradle.api.JavaVersion
 
 plugins {
     `java-gradle-plugin`
-    kotlin("jvm") version "1.6.20"
+    alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.spotless)
 }
 
@@ -33,8 +33,8 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlin:kotlin-serialization")
     implementation(libs.spotless.plugin)
-    implementation("com.google.cloud:google-cloud-storage:2.6.0")
-    implementation("app.cash.licensee:licensee-gradle-plugin:1.3.1")
+    implementation(libs.google.cloud.storage)
+    implementation(libs.licensee.plugin)
 }
 
 gradlePlugin {

@@ -70,6 +70,9 @@ data class ContainerOutputDecoder(val source: BufferedSource) : BufferedSource {
     private val buffered = decoded.buffer()
 
     override val buffer: Buffer = buffered.buffer
+
+    // Okio has deprecated this method, so so do we.
+    @Deprecated("moved to val: use getBuffer() instead", replaceWith = ReplaceWith("buffer"), level = DeprecationLevel.WARNING)
     override fun buffer(): Buffer = buffered.buffer
 
     override fun close() = buffered.close()

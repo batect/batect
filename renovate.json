@@ -71,7 +71,7 @@
         "gradle.properties$"
       ],
       "matchStrings": [
-        "shellcheckVersion=\"(?<currentValue>v[\\d.]*?)\""
+        "shellcheckVersion=(?<currentValue>v[\\d.]*?)"
       ],
       "datasourceTemplate": "github-releases",
       "depNameTemplate": "koalaman/shellcheck"

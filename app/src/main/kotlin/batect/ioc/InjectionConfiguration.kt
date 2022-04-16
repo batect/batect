@@ -113,6 +113,7 @@ import batect.updates.UpdateNotifier
 import batect.utils.Json
 import batect.wrapper.WrapperCache
 import batect.wrapper.WrapperCacheCleanupTask
+import com.charleskorn.okhttp.systemkeystore.useOperatingSystemCertificateTrustStore
 import jnr.ffi.Platform
 import okhttp3.OkHttpClient
 import org.kodein.di.DI
@@ -141,6 +142,7 @@ val rootModule = DI.Module("root") {
     bind<OkHttpClient>() with singleton {
         OkHttpClient.Builder()
             .addInterceptor(instance<HttpLoggingInterceptor>())
+            .useOperatingSystemCertificateTrustStore()
             .build()
     }
 

@@ -49,6 +49,7 @@ dependencies {
     implementation(libs.hypirion.io)
     implementation(libs.bouncycastle)
     implementation(libs.osplatformfinder)
+    implementation(libs.okhttp.systemkeystore)
 
     implementation(project(":libs:docker-client"))
     implementation(project(":libs:git-client"))

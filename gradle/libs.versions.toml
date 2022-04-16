@@ -27,6 +27,7 @@ mockito-core = { group = "org.mockito", name = "mockito-core", version = "4.4.0"
 mockito-kotlin = { group = "org.mockito.kotlin", name = "mockito-kotlin", version = "4.0.0" }
 okio-bom = { group = "com.squareup.okio", name = "okio-bom", version = "3.0.0" }
 okhttp-bom = { group = "com.squareup.okhttp3", name = "okhttp-bom", version = "4.9.3" }
+okhttp-systemkeystore = { group = "com.charleskorn.okhttp.systemkeystore", name = "okhttp-system-keystore", version = "1.0.0" }
 osplatformfinder = { group = "org.graylog.repackaged", name = "os-platform-finder", version = "1.2.3" }
 spek-dsl-jvm = { group = "org.spekframework.spek2", name = "spek-dsl-jvm", version.ref = "spek" }
 spek-runner-junit5 = { group = "org.spekframework.spek2", name = "spek-runner-junit5", version.ref = "spek" }

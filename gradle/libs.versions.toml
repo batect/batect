@@ -35,7 +35,7 @@ spotless-plugin = { group = "com.diffplug.spotless", name = "spotless-plugin-gra
 wire-grpc-client = { group = "com.squareup.wire", name = "wire-grpc-client", version.ref = "wire" }
 
 [plugins]
-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version = "1.6.20" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version = "1.6.21" }
 reckon = { id = "org.ajoberstar.reckon", version = "0.16.1" }
 shadow = { id = "com.github.johnrengelman.shadow", version = "7.1.2" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }

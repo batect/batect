@@ -31,7 +31,7 @@ apply(from = "$rootDir/gradle/utilities.gradle")
 apply(from = "$rootDir/gradle/versioning.gradle")
 
 tasks {
-    register<Copy>("assembleRelease") {
+    register<Sync>("assembleRelease") {
         description = "Prepares files for release."
         group = "Distribution"
 

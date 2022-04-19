@@ -51,7 +51,7 @@ val createChecksumsFile by tasks.registering {
             .flatMap { it.files.files }
             .associate { file -> file.name to sha256HashOf(file) }
             .entries
-            .sortedBy { it.key }.joinToString("\n") { "${it.key}  ${it.value}" }
+            .sortedBy { it.key }.joinToString("\n") { "${it.value}  ${it.key}" }
 
         outputFile.writeText(content, Charsets.UTF_8)
     }
@@ -61,7 +61,7 @@ fun sha256HashOf(file: File): String {
     return DigestUtils.sha256Hex(file.readBytes())
 }
 
-tasks.register<Copy>("build") {
+tasks.register<Sync>("build") {
     description = "Build the wrapper scripts."
     group = "Build"
 

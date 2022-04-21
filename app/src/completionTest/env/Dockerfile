@@ -1,4 +1,4 @@
-FROM ubuntu:20.04@sha256:1e48201ccc2ab83afc435394b3bf70af0fa0055215c1e26a5da9b50a1ae367c9
+FROM ubuntu:22.04@sha256:06b5d30fabc1fc574f2ecab87375692299d45f8f190d9b71f512deb494114e1f
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates=20210119~20.04.2 \

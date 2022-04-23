@@ -106,6 +106,14 @@
         "https://repo.maven.apache.org/maven2/",
         "https://plugins.gradle.org/m2/"
       ]
+    },
+    {
+      "groupName": "Spotless",
+      "matchManagers": ["gradle-lite"],
+      "matchPackagePatterns": [
+        "^com\\.diffplug\\.spotless$",
+        "^com\\.diffplug\\.spotless:"
+      ]
     }
   ]
 }

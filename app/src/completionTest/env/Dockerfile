@@ -2,7 +2,7 @@ FROM ubuntu:20.04@sha256:1e48201ccc2ab83afc435394b3bf70af0fa0055215c1e26a5da9b50
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates=20210119~20.04.2 \
-    curl=7.68.0-1ubuntu2.10 \
+    curl=7.68.0-1ubuntu2.11 \
     fish=3.1.0-1.2 \
     openjdk-11-jre-headless=11.0.15+10-0ubuntu0.20.04.1 \
     python3=3.8.2-0ubuntu2 \

@@ -50,5 +50,5 @@ tasks.named("integrationTestClasses") {
 }
 
 dependencies {
-    integrationTestImplementation("org.graylog.repackaged:os-platform-finder:1.2.3")
+    integrationTestImplementation(libs.osplatformfinder)
 }

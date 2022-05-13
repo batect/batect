@@ -17,13 +17,11 @@
 package batect.journeytests
 
 import batect.journeytests.testutils.ApplicationRunner
-import batect.journeytests.testutils.exitCode
-import batect.journeytests.testutils.output
 import batect.testutils.createForGroup
 import batect.testutils.on
 import batect.testutils.runBeforeGroup
-import ch.tutteli.atrium.api.fluent.en_GB.toEqual
-import ch.tutteli.atrium.api.verbs.expect
+import io.kotest.assertions.asClue
+import io.kotest.matchers.shouldBe
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -35,11 +33,11 @@ object QuietOutputJourneyTest : Spek({
             val result by runBeforeGroup { runner.runApplication(listOf("--output=quiet", "do-stuff")) }
 
             it("prints only the output from the task commands") {
-                expect(result).output().toEqual("This is some output from the build task\nThis is some output from the main task\n")
+                result.asClue { it.output shouldBe "This is some output from the build task\nThis is some output from the main task\n" }
             }
 
             it("returns the exit code from that task") {
-                expect(result).exitCode().toEqual(123)
+                result.asClue { it.exitCode shouldBe 123 }
             }
         }
     }

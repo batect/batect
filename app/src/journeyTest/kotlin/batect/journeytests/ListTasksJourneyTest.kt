@@ -17,16 +17,13 @@
 package batect.journeytests
 
 import batect.journeytests.testutils.ApplicationRunner
-import batect.journeytests.testutils.exitCode
-import batect.journeytests.testutils.output
 import batect.testutils.createForGroup
 import batect.testutils.on
 import batect.testutils.runBeforeGroup
 import batect.testutils.withPlatformSpecificLineSeparator
-import ch.tutteli.atrium.api.fluent.en_GB.contains
-import ch.tutteli.atrium.api.fluent.en_GB.toContain
-import ch.tutteli.atrium.api.fluent.en_GB.toEqual
-import ch.tutteli.atrium.api.verbs.expect
+import io.kotest.assertions.asClue
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -38,17 +35,18 @@ object ListTasksJourneyTest : Spek({
             val result by runBeforeGroup { runner.runApplication(listOf("--list-tasks")) }
 
             it("prints a list of all available tasks") {
-                expect(result).output().toContain(
-                    """
-                    |- task-1: do the first thing
-                    |- task-2: do the second thing
-                    |- task-3: do the third thing
-                    """.trimMargin().withPlatformSpecificLineSeparator()
-                )
+                result.asClue {
+                    it.output shouldContain
+                        """
+                        |- task-1: do the first thing
+                        |- task-2: do the second thing
+                        |- task-3: do the third thing
+                        """.trimMargin().withPlatformSpecificLineSeparator()
+                }
             }
 
             it("returns a zero exit code") {
-                expect(result).exitCode().toEqual(0)
+                result.asClue { it.exitCode shouldBe 0 }
             }
         }
     }

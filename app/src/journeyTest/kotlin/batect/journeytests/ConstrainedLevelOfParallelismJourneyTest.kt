@@ -17,16 +17,12 @@
 package batect.journeytests
 
 import batect.journeytests.testutils.ApplicationRunner
-import batect.journeytests.testutils.exitCode
-import batect.journeytests.testutils.output
 import batect.testutils.createForGroup
 import batect.testutils.on
 import batect.testutils.runBeforeGroup
-import ch.tutteli.atrium.api.fluent.en_GB.and
-import ch.tutteli.atrium.api.fluent.en_GB.contains
-import ch.tutteli.atrium.api.fluent.en_GB.toContain
-import ch.tutteli.atrium.api.fluent.en_GB.toEqual
-import ch.tutteli.atrium.api.verbs.expect
+import io.kotest.assertions.asClue
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -38,12 +34,14 @@ object ConstrainedLevelOfParallelismJourneyTest : Spek({
             val result by runBeforeGroup { runner.runApplication(listOf("--max-parallelism=1", "the-task")) }
 
             it("displays the output from that task") {
-                expect(result).output().toContain("Status code for first request: 200")
-                    .and.toContain("Status code for second request: 200")
+                result.asClue {
+                    it.output shouldContain "Status code for first request: 200"
+                    it.output shouldContain "Status code for second request: 200"
+                }
             }
 
             it("returns the exit code from that task") {
-                expect(result).exitCode().toEqual(0)
+                result.asClue { it.exitCode shouldBe 0 }
             }
         }
     }

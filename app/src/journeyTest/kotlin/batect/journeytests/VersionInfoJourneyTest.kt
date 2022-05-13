@@ -17,13 +17,10 @@
 package batect.journeytests
 
 import batect.journeytests.testutils.ApplicationRunner
-import batect.journeytests.testutils.exitCode
-import batect.journeytests.testutils.output
 import batect.testutils.on
-import ch.tutteli.atrium.api.fluent.en_GB.contains
-import ch.tutteli.atrium.api.fluent.en_GB.toContain
-import ch.tutteli.atrium.api.fluent.en_GB.toEqual
-import ch.tutteli.atrium.api.verbs.expect
+import io.kotest.assertions.asClue
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -35,16 +32,16 @@ object VersionInfoJourneyTest : Spek({
             val result = runner.runApplication(listOf("--version"))
 
             it("prints some version info") {
-                expect(result).output().toContain("Batect version:")
-                expect(result).output().toContain("Built:")
-                expect(result).output().toContain("JVM version:")
-                expect(result).output().toContain("OS version:")
-                expect(result).output().toContain("Docker version:")
-                expect(result).output().toContain("Git version:")
+                result.asClue { it.output shouldContain "Batect version:" }
+                result.asClue { it.output shouldContain "Built:" }
+                result.asClue { it.output shouldContain "JVM version:" }
+                result.asClue { it.output shouldContain "OS version:" }
+                result.asClue { it.output shouldContain "Docker version:" }
+                result.asClue { it.output shouldContain "Git version:" }
             }
 
             it("returns a zero exit code") {
-                expect(result).exitCode().toEqual(0)
+                result.asClue { it.exitCode shouldBe 0 }
             }
         }
     }

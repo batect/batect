@@ -18,16 +18,13 @@ package batect.journeytests
 
 import batect.journeytests.testutils.ApplicationRunner
 import batect.journeytests.testutils.Docker
-import batect.journeytests.testutils.exitCode
-import batect.journeytests.testutils.output
 import batect.os.deleteDirectoryContents
 import batect.testutils.createForGroup
 import batect.testutils.on
 import batect.testutils.runBeforeGroup
-import ch.tutteli.atrium.api.fluent.en_GB.contains
-import ch.tutteli.atrium.api.fluent.en_GB.toContain
-import ch.tutteli.atrium.api.fluent.en_GB.toEqual
-import ch.tutteli.atrium.api.verbs.expect
+import io.kotest.assertions.asClue
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -50,19 +47,19 @@ object CacheMountJourneyTest : Spek({
                     val secondResult by runBeforeGroup { runner.runApplication(listOf(arg, "the-task")) }
 
                     it("should not have access to the file in the cache in the first run and create it") {
-                        expect(firstResult).output().toContain("File created in task does not exist, creating it\n")
+                        firstResult.asClue { it.output shouldContain "File created in task does not exist, creating it\n" }
                     }
 
                     it("should have access to the file in the cache in the second run") {
-                        expect(secondResult).output().toContain("File created in task exists\n")
+                        secondResult.asClue { it.output shouldContain "File created in task exists\n" }
                     }
 
                     it("should succeed on the first run") {
-                        expect(firstResult).exitCode().toEqual(0)
+                        firstResult.asClue { it.exitCode shouldBe 0 }
                     }
 
                     it("should succeed on the second run") {
-                        expect(secondResult).exitCode().toEqual(0)
+                        secondResult.asClue { it.exitCode shouldBe 0 }
                     }
                 }
             }

@@ -18,21 +18,16 @@ package batect.journeytests.cleanup
 
 import batect.journeytests.testutils.ApplicationRunner
 import batect.journeytests.testutils.Docker
-import batect.journeytests.testutils.exitCode
-import batect.journeytests.testutils.output
 import batect.testutils.createForGroup
 import batect.testutils.on
 import batect.testutils.platformLineSeparator
 import batect.testutils.runBeforeGroup
-import ch.tutteli.atrium.api.fluent.en_GB.contains
-import ch.tutteli.atrium.api.fluent.en_GB.notToContain
-import ch.tutteli.atrium.api.fluent.en_GB.notToEqual
-import ch.tutteli.atrium.api.fluent.en_GB.notToEqualNull
-import ch.tutteli.atrium.api.fluent.en_GB.toBeEmpty
-import ch.tutteli.atrium.api.fluent.en_GB.toContain
-import ch.tutteli.atrium.api.fluent.en_GB.toContainRegex
-import ch.tutteli.atrium.api.fluent.en_GB.toEqual
-import ch.tutteli.atrium.api.verbs.expect
+import io.kotest.assertions.asClue
+import io.kotest.matchers.collections.shouldBeEmpty
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldNotContain
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.io.InputStreamReader
@@ -52,16 +47,16 @@ object DontCleanupAfterDependencyStartupFailureJourneyTest : Spek({
                     .start()
                     .waitFor()
 
-                expect(exitCode).toEqual(0)
+                exitCode shouldBe 0
             }
 
             val containersAfterTest = Docker.getAllCreatedContainers()
             val orphanedContainers = containersAfterTest - containersBeforeTest
-            expect(orphanedContainers).toBeEmpty()
+            orphanedContainers.shouldBeEmpty()
 
             val networksAfterTest = Docker.getAllNetworks()
             val orphanedNetworks = networksAfterTest - networksBeforeTest
-            expect(orphanedNetworks).toBeEmpty()
+            orphanedNetworks.shouldBeEmpty()
         }
 
         on("running that task with the '--no-cleanup-on-failure' option") {
@@ -78,56 +73,57 @@ object DontCleanupAfterDependencyStartupFailureJourneyTest : Spek({
             }
 
             it("does not execute the task") {
-                expect(result).output().notToContain("This task should never be executed!")
+                result.asClue { it.output shouldNotContain "This task should never be executed!" }
             }
 
             it("prints a message explaining what happened and what to do about it") {
-                expect(result).output()
-                    .toContain("Container http-server did not become healthy.${platformLineSeparator}The configured health check did not indicate that the container was healthy within the timeout period.")
+                result.asClue {
+                    it.output shouldContain "Container http-server did not become healthy.${platformLineSeparator}The configured health check did not indicate that the container was healthy within the timeout period."
+                }
             }
 
             it("prints a message explaining how to see the logs of that dependency and how to run a command in the container") {
-                expect(result).output().toContainRegex(commandsRegex)
+                result.asClue { it.output shouldContain commandsRegex }
             }
 
             it("prints a message explaining how to clean up any containers left behind") {
-                expect(result).output().toContainRegex(cleanupRegex)
+                result.asClue { it.output shouldContain cleanupRegex }
             }
 
             it("does not delete the container") {
                 val containerId = commandsRegex.find(result.output)?.groups?.get("id")?.value
 
-                expect(containerId).notToEqualNull()
+                containerId shouldNotBe null
 
                 val inspectProcess = ProcessBuilder("docker", "inspect", containerId, "--format", "{{.State.Status}}")
                     .redirectErrorStream(true)
                     .start()
 
                 inspectProcess.waitFor()
-                expect(inspectProcess.exitValue()).toEqual(0)
+                inspectProcess.exitValue() shouldBe 0
 
                 val output = InputStreamReader(inspectProcess.inputStream).readText().trim()
-                expect(output).toEqual("exited")
+                output shouldBe "exited"
             }
 
             it("the command given to view the logs displays the logs from the container") {
                 val logsCommand = commandsRegex.find(result.output)?.groups?.get("logsCommand")?.value
 
-                expect(logsCommand).notToEqualNull()
+                logsCommand shouldNotBe null
 
                 val logsProcess = ProcessBuilder(logsCommand!!.trim().split(" "))
                     .redirectErrorStream(true)
                     .start()
 
                 logsProcess.waitFor()
-                expect(logsProcess.exitValue()).toEqual(0)
+                logsProcess.exitValue() shouldBe 0
 
                 val output = InputStreamReader(logsProcess.inputStream).readText().trim()
-                expect(output).toContainRegex("^This is some output from the HTTP server$".toRegex(RegexOption.MULTILINE))
+                output shouldContain "^This is some output from the HTTP server$".toRegex(RegexOption.MULTILINE)
             }
 
             it("exits with a non-zero code") {
-                expect(result).exitCode().notToEqual(0)
+                result.asClue { it.exitCode shouldNotBe 0 }
             }
         }
     }

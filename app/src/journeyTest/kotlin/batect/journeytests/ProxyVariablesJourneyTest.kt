@@ -17,15 +17,12 @@
 package batect.journeytests
 
 import batect.journeytests.testutils.ApplicationRunner
-import batect.journeytests.testutils.exitCode
-import batect.journeytests.testutils.output
 import batect.testutils.createForGroup
 import batect.testutils.on
 import batect.testutils.runBeforeGroup
-import ch.tutteli.atrium.api.fluent.en_GB.contains
-import ch.tutteli.atrium.api.fluent.en_GB.toContain
-import ch.tutteli.atrium.api.fluent.en_GB.toEqual
-import ch.tutteli.atrium.api.verbs.expect
+import io.kotest.assertions.asClue
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -52,25 +49,26 @@ object ProxyVariablesJourneyTest : Spek({
             }
 
             it("prints the output from that task, which shows that the proxy environment variables were set at both build and run time") {
-                expect(result).output().toContain(
-                    """
-                    At build time, environment variables were:
-                    http_proxy: $httpProxy
-                    https_proxy: $httpsProxy
-                    ftp_proxy: $ftpProxy
-                    no_proxy: $noProxy
+                result.asClue {
+                    it.output shouldContain
+                        """
+                        At build time, environment variables were:
+                        http_proxy: $httpProxy
+                        https_proxy: $httpsProxy
+                        ftp_proxy: $ftpProxy
+                        no_proxy: $noProxy
 
-                    At runtime, environment variables are:
-                    http_proxy: $httpProxy
-                    https_proxy: $httpsProxy
-                    ftp_proxy: $ftpProxy
-                    no_proxy: $noProxy,build-env
-                    """.trimIndent()
-                )
+                        At runtime, environment variables are:
+                        http_proxy: $httpProxy
+                        https_proxy: $httpsProxy
+                        ftp_proxy: $ftpProxy
+                        no_proxy: $noProxy,build-env
+                        """.trimIndent()
+                }
             }
 
             it("returns the exit code from that task") {
-                expect(result).exitCode().toEqual(0)
+                result.asClue { it.exitCode shouldBe 0 }
             }
         }
     }

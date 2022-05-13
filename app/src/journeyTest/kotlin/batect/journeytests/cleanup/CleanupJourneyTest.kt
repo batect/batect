@@ -18,16 +18,13 @@ package batect.journeytests.cleanup
 
 import batect.journeytests.testutils.ApplicationRunner
 import batect.journeytests.testutils.Docker
-import batect.journeytests.testutils.exitCode
-import batect.journeytests.testutils.output
 import batect.testutils.createForGroup
 import batect.testutils.on
 import batect.testutils.runBeforeGroup
-import ch.tutteli.atrium.api.fluent.en_GB.contains
-import ch.tutteli.atrium.api.fluent.en_GB.toBeEmpty
-import ch.tutteli.atrium.api.fluent.en_GB.toContain
-import ch.tutteli.atrium.api.fluent.en_GB.toEqual
-import ch.tutteli.atrium.api.verbs.expect
+import io.kotest.assertions.asClue
+import io.kotest.matchers.collections.shouldBeEmpty
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -41,25 +38,25 @@ object CleanupJourneyTest : Spek({
             val result by runBeforeGroup { runner.runApplication(listOf("the-task")) }
 
             it("prints the output from that task") {
-                expect(result).output().toContain("This is some output from the task\n")
+                result.asClue { it.output shouldContain "This is some output from the task\n" }
             }
 
             it("returns the exit code from that task") {
-                expect(result).exitCode().toEqual(123)
+                result.asClue { it.exitCode shouldBe 123 }
             }
 
             it("cleans up all containers it creates") {
                 val containersAfterTest = Docker.getAllCreatedContainers()
                 val potentiallyOrphanedContainers = containersAfterTest - containersBeforeTest
 
-                expect(potentiallyOrphanedContainers).toBeEmpty()
+                potentiallyOrphanedContainers.shouldBeEmpty()
             }
 
             it("cleans up all networks it creates") {
                 val networksAfterTest = Docker.getAllNetworks()
                 val potentiallyOrphanedNetworks = networksAfterTest - networksBeforeTest
 
-                expect(potentiallyOrphanedNetworks).toBeEmpty()
+                potentiallyOrphanedNetworks.shouldBeEmpty()
             }
         }
     }

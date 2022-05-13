@@ -18,7 +18,7 @@ RUN curl --show-error --retry 3 --retry-connrefused https://ftp.gnu.org/gnu/bash
         bison=2:3.5.1+dfsg-1 \
         gcc=4:9.3.0-1ubuntu2 \
         make=4.2.1-1.2 \
-        libc6-dev=2.31-0ubuntu9.7 \
+        libc6-dev=2.31-0ubuntu9.9 \
     && \
     cd /tmp/bash-3.2.57 && \
     ./configure --prefix=/shells/bash-3.2 && \

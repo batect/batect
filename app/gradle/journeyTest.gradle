@@ -27,7 +27,7 @@ configurations {
 }
 
 dependencies {
-    journeyTestImplementation "ch.tutteli.atrium:atrium-fluent-en_GB:0.17.0"
+    journeyTestImplementation "ch.tutteli.atrium:atrium-fluent-en_GB:0.18.0"
 }
 
 abstract class JourneyTest extends Test {}

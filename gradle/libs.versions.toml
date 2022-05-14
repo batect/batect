@@ -19,7 +19,7 @@ jnr-posix = { group = "com.github.jnr", name = "jnr-posix", version = "3.1.15" }
 jnr-unixsocket = { group = "com.github.jnr", name = "jnr-unixsocket", version = "0.38.17" }
 jsonschemavalidator = { group = "com.github.java-json-tools", name = "json-schema-validator", version = "2.2.14" }
 junit-platform = { group = "org.junit.platform", name = "junit-platform-engine", version = "1.8.2" }
-kaml = { group = "com.charleskorn.kaml", name = "kaml", version = "0.43.0" }
+kaml = { group = "com.charleskorn.kaml", name = "kaml", version = "0.44.0" }
 kodein = { group = "org.kodein.di", name = "kodein-di", version = "7.11.0" }
 kotest-assertions-core = { group = "io.kotest", name = "kotest-assertions-core", version.ref = "kotest" }
 kotlinx-serialization-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-core", version.ref = "kotlinx-serialization" }

@@ -285,7 +285,7 @@ object RegistryCredentialsSourceSpec : Spek({
                     assertThat(
                         { credentialsSource.load() },
                         throws<DockerRegistryCredentialsException>(
-                            withMessage("The credentials returned for 'someserver.com' by the credential helper executable 'docker-credentials-secretstore' are invalid: Unexpected JSON token at offset 1: Expected end of the object '}', but had 'EOF' instead\nJSON input: {]")
+                            withMessage("The credentials returned for 'someserver.com' by the credential helper executable 'docker-credentials-secretstore' are invalid: Unexpected JSON token at offset 1: Expected end of the object '}', but had 'EOF' instead at path: $\nJSON input: {]")
                         )
                     )
                 }

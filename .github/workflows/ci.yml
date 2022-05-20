@@ -291,7 +291,7 @@ jobs:
           rm -f  $HOME/.gradle/caches/journal-1/*.lock
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v3.0.0
+        uses: actions/upload-artifact@v3.1.0
         with:
           name: Binaries
           path: build/release

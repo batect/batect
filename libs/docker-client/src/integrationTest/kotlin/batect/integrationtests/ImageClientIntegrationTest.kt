@@ -218,7 +218,7 @@ object ImageClientIntegrationTest : Spek({
                                         "name": "/everything",
                                         "contents": [
                                           { "type": "file", "name": "Dockerfile" },
-                                          { "type": "link", "name": "link-to-original.txt", "target": "original.txt", "contents": [] },
+                                          { "type": "link", "name": "link-to-original.txt", "target": "original.txt" },
                                           { "type": "file", "name": "original.txt" }
                                         ]
                                       }

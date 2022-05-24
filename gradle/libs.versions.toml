@@ -9,7 +9,7 @@ wire = "4.3.0"
 bouncycastle = { group = "org.bouncycastle", name = "bcpkix-jdk15on", version = "1.70" }
 commons-codec = { group = "commons-codec", name = "commons-codec", version = "1.15" }
 commons-compress = { group = "org.apache.commons", name = "commons-compress", version = "1.21" }
-google-cloud-storage = { group = "com.google.cloud", name = "google-cloud-storage", version = "2.6.1" }
+google-cloud-storage = { group = "com.google.cloud", name = "google-cloud-storage", version = "2.7.1" }
 hamkrest = { group = "com.natpryce", name = "hamkrest", version = "1.8.0.1" }
 hamkrestjson = { group = "org.araqnid.hamkrest", name = "hamkrest-json", version = "1.1.2" }
 hypirion-io = { group = "com.hypirion", name = "io", version = "0.3.1" }

@@ -24,7 +24,7 @@ kodein = { group = "org.kodein.di", name = "kodein-di", version = "7.12.0" }
 kotest-assertions-core = { group = "io.kotest", name = "kotest-assertions-core", version.ref = "kotest" }
 kotlinx-serialization-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-core", version.ref = "kotlinx-serialization" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
-licensee-plugin = { group = "app.cash.licensee", name = "licensee-gradle-plugin", version = "1.4.0" }
+licensee-plugin = { group = "app.cash.licensee", name = "licensee-gradle-plugin", version = "1.4.1" }
 mockito-core = { group = "org.mockito", name = "mockito-core", version = "4.6.1" }
 mockito-kotlin = { group = "org.mockito.kotlin", name = "mockito-kotlin", version = "4.0.0" }
 okio-bom = { group = "com.squareup.okio", name = "okio-bom", version = "3.1.0" }

@@ -15,7 +15,7 @@ RUN curl --show-error --retry 3 --retry-connrefused https://ftp.gnu.org/gnu/bash
     cd /tmp && tar xzf /tmp/bash-3.2.57.tar.gz && \
     apt-get update && \
     apt-get install -y --no-install-recommends \
-        bison=2:3.5.1+dfsg-1 \
+        bison=2:3.8.2+dfsg-1build1 \
         gcc=4:9.3.0-1ubuntu2 \
         make=4.2.1-1.2 \
         libc6-dev=2.31-0ubuntu9.9 \

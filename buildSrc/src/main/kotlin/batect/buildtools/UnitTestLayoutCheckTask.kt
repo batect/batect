@@ -61,7 +61,7 @@ abstract class UnitTestLayoutCheckTask : DefaultTask() {
     fun run() {
         val testFiles = testFiles.get()
         val mainFiles = mainFiles.get()
-        val testFilePaths = testFiles.files
+        val testFilePaths = testFiles.files.filter { it.extension == "kt" }
 
         if (testFiles.srcDirs.size != 1) {
             throw RuntimeException("Test files source directories list has unexpected size: ${testFiles.srcDirs.size} (contents: ${testFiles.srcDirs})")

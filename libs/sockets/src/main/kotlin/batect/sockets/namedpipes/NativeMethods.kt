@@ -216,7 +216,7 @@ internal class NativeMethods(
         val bytesTransferred = NativeLongByReference()
 
         if (!win32.GetOverlappedResult(pipe.handle, overlapped, bytesTransferred, false)) {
-            if (posix.errno() == ERROR_OPERATION_ABORTED) {
+            if (posix.errno() in setOf(ERROR_OPERATION_ABORTED, ERROR_BROKEN_PIPE)) {
                 return 0
             }
 

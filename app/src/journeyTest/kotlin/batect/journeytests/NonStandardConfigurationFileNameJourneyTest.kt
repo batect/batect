@@ -1,5 +1,5 @@
 /*
-    Copyright 2017-2021 Charles Korn.
+    Copyright 2017-2022 Charles Korn.
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -17,16 +17,13 @@
 package batect.journeytests
 
 import batect.journeytests.testutils.ApplicationRunner
-import batect.journeytests.testutils.exitCode
-import batect.journeytests.testutils.output
 import batect.testutils.createForGroup
 import batect.testutils.on
 import batect.testutils.runBeforeGroup
 import batect.testutils.withPlatformSpecificLineSeparator
-import ch.tutteli.atrium.api.fluent.en_GB.contains
-import ch.tutteli.atrium.api.fluent.en_GB.toContain
-import ch.tutteli.atrium.api.fluent.en_GB.toEqual
-import ch.tutteli.atrium.api.verbs.expect
+import io.kotest.assertions.asClue
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -37,17 +34,18 @@ object NonStandardConfigurationFileNameJourneyTest : Spek({
             val result by runBeforeGroup { runner.runApplication(listOf("-f", "another-name.yml", "--list-tasks")) }
 
             it("prints a list of all available tasks") {
-                expect(result).output().toContain(
-                    """
-                    |- task-1
-                    |- task-2
-                    |- task-3
-                    """.trimMargin().withPlatformSpecificLineSeparator()
-                )
+                result.asClue {
+                    it.output shouldContain
+                        """
+                        |- task-1
+                        |- task-2
+                        |- task-3
+                        """.trimMargin().withPlatformSpecificLineSeparator()
+                }
             }
 
             it("returns a zero exit code") {
-                expect(result).exitCode().toEqual(0)
+                result.asClue { it.exitCode shouldBe 0 }
             }
         }
 
@@ -56,11 +54,11 @@ object NonStandardConfigurationFileNameJourneyTest : Spek({
             val result by runBeforeGroup { runner.runApplication(listOf("-f", "another-name.yml", "task-1")) }
 
             it("prints the output of the task ") {
-                expect(result).output().toContain("This is some output from task 1\n")
+                result.asClue { it.output shouldContain "This is some output from task 1\n" }
             }
 
             it("returns the exit code from the task") {
-                expect(result).exitCode().toEqual(123)
+                result.asClue { it.exitCode shouldBe 123 }
             }
         }
     }

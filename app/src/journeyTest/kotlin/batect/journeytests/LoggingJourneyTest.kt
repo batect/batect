@@ -1,5 +1,5 @@
 /*
-    Copyright 2017-2021 Charles Korn.
+    Copyright 2017-2022 Charles Korn.
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -17,13 +17,12 @@
 package batect.journeytests
 
 import batect.journeytests.testutils.ApplicationRunner
-import batect.journeytests.testutils.exitCode
 import batect.testutils.createForGroup
 import batect.testutils.on
 import batect.testutils.runBeforeGroup
-import ch.tutteli.atrium.api.fluent.en_GB.toBeGreaterThan
-import ch.tutteli.atrium.api.fluent.en_GB.toEqual
-import ch.tutteli.atrium.api.verbs.expect
+import io.kotest.assertions.asClue
+import io.kotest.matchers.longs.shouldBeGreaterThan
+import io.kotest.matchers.shouldBe
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.io.File
@@ -39,12 +38,12 @@ object LoggingJourneyTest : Spek({
             val result by runBeforeGroup { runner.runApplication(listOf("--log-file=$logPath", "--version")) }
 
             it("logs some information to the log file") {
-                expect(logPath.exists()).toEqual(true)
-                expect(logPath.length()).toBeGreaterThan(0L)
+                logPath.exists() shouldBe true
+                logPath.length() shouldBeGreaterThan 0L
             }
 
             it("returns a zero exit code") {
-                expect(result).exitCode().toEqual(0)
+                result.asClue { it.exitCode shouldBe 0 }
             }
         }
     }

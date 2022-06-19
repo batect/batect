@@ -10,7 +10,7 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v3.0.1
+        uses: actions/checkout@v3.0.2
         with:
           fetch-depth: 0
       - name: Validate Gradle wrapper
@@ -26,19 +26,19 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v3.0.1
+        uses: actions/checkout@v3.0.2
         with:
           fetch-depth: 0
 
       - name: Set up JDK
-        uses: actions/setup-java@v3.1.1
+        uses: actions/setup-java@v3.3.0
         with:
-          java-version: 17
+          java-version: 11 # We must use Java 15 or earlier until https://youtrack.jetbrains.com/issue/KT-47039 is fixed.
           distribution: adopt
 
       - name: Cache packages
         id: cache-packages
-        uses: actions/cache@v3.0.2
+        uses: actions/cache@v3.0.4
         with:
           path: ~/.gradle/caches
           key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle', '**/*.gradle.kts', 'gradle.properties') }}
@@ -48,7 +48,7 @@ jobs:
         run: ./gradlew -DgenerateCoverage=true app:check jacocoTestReport
 
       - name: Upload coverage to codecov.io
-        uses: codecov/codecov-action@v3.0.0
+        uses: codecov/codecov-action@v3.1.0
         with:
           flags: windows
 
@@ -81,19 +81,19 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v3.0.1
+        uses: actions/checkout@v3.0.2
         with:
           fetch-depth: 0
 
       - name: Set up JDK
-        uses: actions/setup-java@v3.1.1
+        uses: actions/setup-java@v3.3.0
         with:
-          java-version: 17
+          java-version: 11 # We must use Java 15 or earlier until https://youtrack.jetbrains.com/issue/KT-47039 is fixed.
           distribution: adopt
 
       - name: Cache packages
         id: cache-packages
-        uses: actions/cache@v3.0.2
+        uses: actions/cache@v3.0.4
         with:
           path: ~/.gradle/caches
           key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle', '**/*.gradle.kts', 'gradle.properties') }}-wrappertests
@@ -131,19 +131,19 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v3.0.1
+        uses: actions/checkout@v3.0.2
         with:
           fetch-depth: 0
 
       - name: Set up JDK
-        uses: actions/setup-java@v3.1.1
+        uses: actions/setup-java@v3.3.0
         with:
-          java-version: 17
+          java-version: 11 # We must use Java 15 or earlier until https://youtrack.jetbrains.com/issue/KT-47039 is fixed.
           distribution: adopt
 
       - name: Cache packages
         id: cache-packages
-        uses: actions/cache@v3.0.2
+        uses: actions/cache@v3.0.4
         with:
           path: ~/.gradle/caches
           key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle', '**/*.gradle.kts', 'gradle.properties') }}-journeytests
@@ -184,19 +184,19 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v3.0.1
+        uses: actions/checkout@v3.0.2
         with:
           fetch-depth: 0
 
       - name: Set up JDK
-        uses: actions/setup-java@v3.1.1
+        uses: actions/setup-java@v3.3.0
         with:
-          java-version: 17
+          java-version: 11 # We must use Java 15 or earlier until https://youtrack.jetbrains.com/issue/KT-47039 is fixed.
           distribution: adopt
 
       - name: Cache packages
         id: cache-packages
-        uses: actions/cache@v3.0.2
+        uses: actions/cache@v3.0.4
         with:
           path: ~/.gradle/caches
           key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle', '**/*.gradle.kts', 'gradle.properties') }}-integrationtests
@@ -230,18 +230,18 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v3.0.1
+        uses: actions/checkout@v3.0.2
         with:
           fetch-depth: 0
 
       - name: Set up JDK
-        uses: actions/setup-java@v3.1.1
+        uses: actions/setup-java@v3.3.0
         with:
-          java-version: 17
+          java-version: 11 # We must use Java 15 or earlier until https://youtrack.jetbrains.com/issue/KT-47039 is fixed.
           distribution: adopt
 
       - name: Cache Gradle wrapper
-        uses: actions/cache@v3.0.2
+        uses: actions/cache@v3.0.4
         with:
           path: ~/.gradle/wrapper
           key: gradle-wrapper-${{ runner.os }}-${{ hashFiles('gradle/wrapper/**/*') }}
@@ -249,7 +249,7 @@ jobs:
 
       - name: Cache packages
         id: cache-packages
-        uses: actions/cache@v3.0.2
+        uses: actions/cache@v3.0.4
         with:
           path: ~/.gradle/caches
           key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle', '**/*.gradle.kts', 'gradle.properties') }}
@@ -262,7 +262,7 @@ jobs:
         run: unset JAVA_TOOL_OPTIONS && ./gradlew -DgenerateCoverage=true check libs:git-client:integrationTest jacocoTestReport spotlessCheck -x wrapper:unix:check -x wrapper:windows:check
 
       - name: Upload coverage to codecov.io
-        uses: codecov/codecov-action@v3.0.0
+        uses: codecov/codecov-action@v3.1.0
         with:
           flags: linux
 
@@ -291,7 +291,7 @@ jobs:
           rm -f  $HOME/.gradle/caches/journal-1/*.lock
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v3.0.0
+        uses: actions/upload-artifact@v3.1.0
         with:
           name: Binaries
           path: build/release
@@ -303,18 +303,18 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v3.0.1
+        uses: actions/checkout@v3.0.2
         with:
           fetch-depth: 0
 
       - name: Set up JDK
-        uses: actions/setup-java@v3.1.1
+        uses: actions/setup-java@v3.3.0
         with:
-          java-version: 17
+          java-version: 11 # We must use Java 15 or earlier until https://youtrack.jetbrains.com/issue/KT-47039 is fixed.
           distribution: adopt
 
       - name: Cache Gradle wrapper
-        uses: actions/cache@v3.0.2
+        uses: actions/cache@v3.0.4
         with:
           path: ~/.gradle/wrapper
           key: gradle-wrapper-${{ runner.os }}-${{ hashFiles('gradle/wrapper/**/*') }}
@@ -322,7 +322,7 @@ jobs:
 
       - name: Cache packages
         id: cache-packages
-        uses: actions/cache@v3.0.2
+        uses: actions/cache@v3.0.4
         with:
           path: ~/.gradle/caches
           key: gradle-wrapper-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle', '**/*.gradle.kts', 'gradle.properties') }}
@@ -337,18 +337,18 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v3.0.1
+        uses: actions/checkout@v3.0.2
         with:
           fetch-depth: 0
 
       - name: Set up JDK
-        uses: actions/setup-java@v3.1.1
+        uses: actions/setup-java@v3.3.0
         with:
-          java-version: 17
+          java-version: 11 # We must use Java 15 or earlier until https://youtrack.jetbrains.com/issue/KT-47039 is fixed.
           distribution: adopt
 
       - name: Cache Gradle wrapper
-        uses: actions/cache@v3.0.2
+        uses: actions/cache@v3.0.4
         with:
           path: ~/.gradle/wrapper
           key: gradle-wrapper-${{ runner.os }}-${{ hashFiles('gradle/wrapper/**/*') }}
@@ -356,7 +356,7 @@ jobs:
 
       - name: Cache packages
         id: cache-packages
-        uses: actions/cache@v3.0.2
+        uses: actions/cache@v3.0.4
         with:
           path: ~/.gradle/caches
           key: gradle-wrapper-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle', '**/*.gradle.kts', 'gradle.properties') }}
@@ -394,18 +394,18 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v3.0.1
+        uses: actions/checkout@v3.0.2
         with:
           fetch-depth: 0
 
       - name: Set up JDK
-        uses: actions/setup-java@v3.1.1
+        uses: actions/setup-java@v3.3.0
         with:
-          java-version: 17
+          java-version: 11 # We must use Java 15 or earlier until https://youtrack.jetbrains.com/issue/KT-47039 is fixed.
           distribution: adopt
 
       - name: Cache Gradle wrapper
-        uses: actions/cache@v3.0.2
+        uses: actions/cache@v3.0.4
         with:
           path: ~/.gradle/wrapper
           key: gradle-wrapper-${{ runner.os }}-${{ hashFiles('gradle/wrapper/**/*') }}
@@ -413,7 +413,7 @@ jobs:
 
       - name: Cache packages
         id: cache-packages
-        uses: actions/cache@v3.0.2
+        uses: actions/cache@v3.0.4
         with:
           path: ~/.gradle/caches
           key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle', '**/*.gradle.kts', 'gradle.properties') }}-journeytests
@@ -456,18 +456,18 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v3.0.1
+        uses: actions/checkout@v3.0.2
         with:
           fetch-depth: 0
 
       - name: Set up JDK
-        uses: actions/setup-java@v3.1.1
+        uses: actions/setup-java@v3.3.0
         with:
-          java-version: 17
+          java-version: 11 # We must use Java 15 or earlier until https://youtrack.jetbrains.com/issue/KT-47039 is fixed.
           distribution: adopt
 
       - name: Cache Gradle wrapper
-        uses: actions/cache@v3.0.2
+        uses: actions/cache@v3.0.4
         with:
           path: ~/.gradle/wrapper
           key: gradle-wrapper-${{ runner.os }}-${{ hashFiles('gradle/wrapper/**/*') }}
@@ -475,7 +475,7 @@ jobs:
 
       - name: Cache packages
         id: cache-packages
-        uses: actions/cache@v3.0.2
+        uses: actions/cache@v3.0.4
         with:
           path: ~/.gradle/caches
           key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle', '**/*.gradle.kts', 'gradle.properties') }}-integrationtests
@@ -497,18 +497,18 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v3.0.1
+        uses: actions/checkout@v3.0.2
         with:
           fetch-depth: 0
 
       - name: Set up JDK
-        uses: actions/setup-java@v3.1.1
+        uses: actions/setup-java@v3.3.0
         with:
-          java-version: 17
+          java-version: 11 # We must use Java 15 or earlier until https://youtrack.jetbrains.com/issue/KT-47039 is fixed.
           distribution: adopt
 
       - name: Cache Gradle wrapper
-        uses: actions/cache@v3.0.2
+        uses: actions/cache@v3.0.4
         with:
           path: ~/.gradle/wrapper
           key: gradle-wrapper-${{ runner.os }}-${{ hashFiles('gradle/wrapper/**/*') }}
@@ -516,7 +516,7 @@ jobs:
 
       - name: Cache packages
         id: cache-packages
-        uses: actions/cache@v3.0.2
+        uses: actions/cache@v3.0.4
         with:
           path: ~/.gradle/caches
           key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle', '**/*.gradle.kts', 'gradle.properties') }}
@@ -526,7 +526,7 @@ jobs:
         run: unset JAVA_TOOL_OPTIONS && ./gradlew -DgenerateCoverage=true check libs:git-client:integrationTest jacocoTestReport -x wrapper:unix:check -x wrapper:windows:check
 
       - name: Upload coverage to codecov.io
-        uses: codecov/codecov-action@v3.0.0
+        uses: codecov/codecov-action@v3.1.0
         with:
           flags: mac
 
@@ -573,7 +573,7 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v3.0.1
+        uses: actions/checkout@v3.0.2
         with:
           fetch-depth: 0
 
@@ -581,13 +581,13 @@ jobs:
         run: git fetch -f origin ${{ github.ref }}:${{ github.ref }}
 
       - name: Set up JDK
-        uses: actions/setup-java@v3.1.1
+        uses: actions/setup-java@v3.3.0
         with:
-          java-version: 17
+          java-version: 11 # We must use Java 15 or earlier until https://youtrack.jetbrains.com/issue/KT-47039 is fixed.
           distribution: adopt
 
       - name: Cache Gradle wrapper
-        uses: actions/cache@v3.0.2
+        uses: actions/cache@v3.0.4
         with:
           path: ~/.gradle/wrapper
           key: gradle-wrapper-${{ runner.os }}-${{ hashFiles('gradle/wrapper/**/*') }}
@@ -595,7 +595,7 @@ jobs:
 
       - name: Cache packages
         id: cache-packages
-        uses: actions/cache@v3.0.2
+        uses: actions/cache@v3.0.4
         with:
           path: ~/.gradle/caches
           key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle', '**/*.gradle.kts', 'gradle.properties') }}

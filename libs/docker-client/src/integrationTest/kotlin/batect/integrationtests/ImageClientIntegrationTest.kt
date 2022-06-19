@@ -1,5 +1,5 @@
 /*
-    Copyright 2017-2021 Charles Korn.
+    Copyright 2017-2022 Charles Korn.
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -218,7 +218,7 @@ object ImageClientIntegrationTest : Spek({
                                         "name": "/everything",
                                         "contents": [
                                           { "type": "file", "name": "Dockerfile" },
-                                          { "type": "link", "name": "link-to-original.txt", "target": "original.txt", "contents": [] },
+                                          { "type": "link", "name": "link-to-original.txt", "target": "original.txt" },
                                           { "type": "file", "name": "original.txt" }
                                         ]
                                       }

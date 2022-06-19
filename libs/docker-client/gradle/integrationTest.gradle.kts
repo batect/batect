@@ -1,5 +1,5 @@
 /*
-    Copyright 2017-2021 Charles Korn.
+    Copyright 2017-2022 Charles Korn.
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -50,5 +50,5 @@ tasks.named("integrationTestClasses") {
 }
 
 dependencies {
-    integrationTestImplementation("org.graylog.repackaged:os-platform-finder:1.2.3")
+    integrationTestImplementation(libs.osplatformfinder)
 }

@@ -2,10 +2,11 @@ FROM ubuntu:22.04@sha256:06b5d30fabc1fc574f2ecab87375692299d45f8f190d9b71f512deb
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates=20211016 \
-    curl=7.81.0-1 \
+    curl=7.81.0-1ubuntu1.2 \
     fish=3.3.1+ds-3 \
     openjdk-11-jre-headless=11.0.14.1+1-0ubuntu1 \
     python3=3.10.4-0ubuntu2 \
+    python3-pip=22.0.2+dfsg-1 \
     zsh=5.8.1-1 \
     && apt-get clean && \
     rm -rf /var/lib/apt/lists/*
@@ -43,17 +44,20 @@ RUN curl --location --fail --show-error https://raw.githubusercontent.com/batect
     -o /usr/share/fish/vendor_completions.d/batect.fish
 
 # Zsh completion
-ARG ZSH_COMPLETION_COMMIT_SHA=c8745e1f5d56b9dd0b78fca4f8c14f8dd7b87a1e
+ARG ZSH_COMPLETION_COMMIT_SHA=c5bad435e38efe49f6f27953548a94c60f01f1f0
 
-RUN curl --location --fail --show-error https://raw.githubusercontent.com/batect/batect-zsh-completion/$ZSH_COMPLETION_COMMIT_SHA/.batect/test-env/zshrc \
+RUN curl --location --fail --show-error https://raw.githubusercontent.com/batect/batect-zsh-completion/$ZSH_COMPLETION_COMMIT_SHA/.batect/test-env/.zshrc \
     -o /root/.zshrc
 
-RUN curl --location --fail --show-error https://raw.githubusercontent.com/batect/batect-zsh-completion/$ZSH_COMPLETION_COMMIT_SHA/.batect/test-env/complete.zsh \
+RUN curl --location --fail --show-error https://raw.githubusercontent.com/batect/batect-zsh-completion/$ZSH_COMPLETION_COMMIT_SHA/.batect/test-env/complete.py \
       -o /usr/local/bin/complete.zsh && \
     chmod +x /usr/local/bin/complete.zsh
 
 RUN curl --location --fail --show-error https://raw.githubusercontent.com/batect/batect-zsh-completion/$ZSH_COMPLETION_COMMIT_SHA/_batect \
     -o /usr/share/zsh/vendor-completions/_batect
+
+RUN curl --location --fail --show-error https://raw.githubusercontent.com/batect/batect-zsh-completion/$ZSH_COMPLETION_COMMIT_SHA/.batect/test-env/requirements.txt | \
+    pip3 install --no-cache-dir -r /dev/stdin
 
 # Bash completion
 ARG BASH_COMPLETION_COMMIT_SHA=a23340c25d24a29bc3e9e1e2620ddb3a5ee258c5

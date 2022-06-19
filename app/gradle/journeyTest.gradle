@@ -1,5 +1,5 @@
 /*
-    Copyright 2017-2021 Charles Korn.
+    Copyright 2017-2022 Charles Korn.
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ configurations {
 }
 
 dependencies {
-    journeyTestImplementation "ch.tutteli.atrium:atrium-fluent-en_GB:0.17.0"
+    journeyTestImplementation libs.kotest.assertions.core
 }
 
 abstract class JourneyTest extends Test {}

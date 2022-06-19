@@ -1,5 +1,5 @@
 /*
-    Copyright 2017-2021 Charles Korn.
+    Copyright 2017-2022 Charles Korn.
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -216,7 +216,7 @@ internal class NativeMethods(
         val bytesTransferred = NativeLongByReference()
 
         if (!win32.GetOverlappedResult(pipe.handle, overlapped, bytesTransferred, false)) {
-            if (posix.errno() == ERROR_OPERATION_ABORTED) {
+            if (posix.errno() in setOf(ERROR_OPERATION_ABORTED, ERROR_BROKEN_PIPE)) {
                 return 0
             }
 

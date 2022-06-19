@@ -1,5 +1,5 @@
 /*
-    Copyright 2017-2021 Charles Korn.
+    Copyright 2017-2022 Charles Korn.
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -17,16 +17,13 @@
 package batect.journeytests
 
 import batect.journeytests.testutils.ApplicationRunner
-import batect.journeytests.testutils.exitCode
-import batect.journeytests.testutils.output
 import batect.testutils.createForGroup
 import batect.testutils.on
 import batect.testutils.platformLineSeparator
 import batect.testutils.runBeforeGroup
-import ch.tutteli.atrium.api.fluent.en_GB.contains
-import ch.tutteli.atrium.api.fluent.en_GB.toContain
-import ch.tutteli.atrium.api.fluent.en_GB.toEqual
-import ch.tutteli.atrium.api.verbs.expect
+import io.kotest.assertions.asClue
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -38,15 +35,15 @@ object TaskWithOnlyPrerequisiteJourneyTest : Spek({
             val result by runBeforeGroup { runner.runApplication(listOf("do-stuff")) }
 
             it("prints the output from the prerequisite task") {
-                expect(result).output().toContain("This is some output from the build task\n")
+                result.asClue { it.output shouldContain "This is some output from the build task\n" }
             }
 
             it("prints a message indicating that the main task only defines prerequisites") {
-                expect(result).output().toContain("The task do-stuff only defines prerequisite tasks, nothing more to do.$platformLineSeparator")
+                result.asClue { it.output shouldContain "The task do-stuff only defines prerequisite tasks, nothing more to do.$platformLineSeparator" }
             }
 
             it("returns a zero exit code") {
-                expect(result).exitCode().toEqual(0)
+                result.asClue { it.exitCode shouldBe 0 }
             }
         }
     }

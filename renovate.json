@@ -84,11 +84,6 @@
       "matchDatasources": ["maven"]
     },
     {
-      "groupName": "Atrium",
-      "matchPackagePatterns": ["^ch\\.tutteli\\.atrium:"],
-      "matchDatasources": ["maven"]
-    },
-    {
       "groupName": "Spek",
       "matchPackagePatterns": ["^org\\.spekframework\\.spek2:"],
       "matchDatasources": ["maven"]
@@ -105,6 +100,14 @@
       "registryUrls": [
         "https://repo.maven.apache.org/maven2/",
         "https://plugins.gradle.org/m2/"
+      ]
+    },
+    {
+      "groupName": "Spotless",
+      "matchManagers": ["gradle-lite"],
+      "matchPackagePatterns": [
+        "^com\\.diffplug\\.spotless$",
+        "^com\\.diffplug\\.spotless:"
       ]
     }
   ]

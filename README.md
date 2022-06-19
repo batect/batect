@@ -105,6 +105,7 @@ Thank you to the following people for their bug reports, pull requests, suggesti
 [@mdlnr](https://github.com/mdlnr),
 [@minnn-minnn](https://github.com/minnn-minnn),
 [@mjstrasser](https://github.com/mjstrasser),
+[@Mknight492](https://github.com/Mknight492),
 [@Mubashwer](https://github.com/Mubashwer),
 [@mylesmacrae](https://github.com/mylesmacrae),
 [@nashvan](https://github.com/nashvan),
@@ -129,13 +130,12 @@ Thank you to the following people for their bug reports, pull requests, suggesti
 [@wyvern8](https://github.com/wyvern8),
 [@xdavidnguyen](https://github.com/xdavidnguyen),
 [@yoyo-i3](https://github.com/yoyo-i3),
+[@yuzhanglong](https://github.com/yuzhanglong),
 [@ZhuYeXero](https://github.com/ZhuYeXero),
 [@zizhongzhang](https://github.com/zizhongzhang), and everyone else who has used the tool and provided feedback offline
 <!-- CONTRIBUTOR_LIST_ENDS_HERE -->
 
-Thank you to YourKit for providing a complimentary copy of the [YourKit profiler](https://www.yourkit.com/java/profiler), and
-thank you to JFrog for providing a complimentary instance of both [Bintray](https://bintray.com/batect/batect/batect) and
-[Artifactory](https://jfrog.com/artifactory/).
+Thank you to YourKit for providing a complimentary copy of the [YourKit profiler](https://www.yourkit.com/java/profiler).
 
 And thank you to Thoughtworks for providing [me](https://github.com/charleskorn) a day of paid leave each month to work on
 Batect. If you'd like to join us at Thoughtworks, [check out our current job openings](https://grnh.se/ab40b6a51us).

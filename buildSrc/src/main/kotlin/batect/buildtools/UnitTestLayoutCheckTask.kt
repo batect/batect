@@ -1,5 +1,5 @@
 /*
-    Copyright 2017-2021 Charles Korn.
+    Copyright 2017-2022 Charles Korn.
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -61,7 +61,7 @@ abstract class UnitTestLayoutCheckTask : DefaultTask() {
     fun run() {
         val testFiles = testFiles.get()
         val mainFiles = mainFiles.get()
-        val testFilePaths = testFiles.files
+        val testFilePaths = testFiles.files.filter { it.extension == "kt" }
 
         if (testFiles.srcDirs.size != 1) {
             throw RuntimeException("Test files source directories list has unexpected size: ${testFiles.srcDirs.size} (contents: ${testFiles.srcDirs})")

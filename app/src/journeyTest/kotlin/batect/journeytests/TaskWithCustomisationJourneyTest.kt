@@ -1,5 +1,5 @@
 /*
-    Copyright 2017-2021 Charles Korn.
+    Copyright 2017-2022 Charles Korn.
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -17,16 +17,12 @@
 package batect.journeytests
 
 import batect.journeytests.testutils.ApplicationRunner
-import batect.journeytests.testutils.exitCode
-import batect.journeytests.testutils.output
 import batect.testutils.createForGroup
 import batect.testutils.on
 import batect.testutils.runBeforeGroup
-import ch.tutteli.atrium.api.fluent.en_GB.and
-import ch.tutteli.atrium.api.fluent.en_GB.contains
-import ch.tutteli.atrium.api.fluent.en_GB.toContain
-import ch.tutteli.atrium.api.fluent.en_GB.toEqual
-import ch.tutteli.atrium.api.verbs.expect
+import io.kotest.assertions.asClue
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -38,14 +34,16 @@ object TaskWithCustomisationJourneyTest : Spek({
             val result by runBeforeGroup { runner.runApplication(listOf("--output=all", "the-task")) }
 
             it("prints the expected output from the dependency container indicating that the customisation has been applied") {
-                expect(result).output().toContain("dependency | Working directory is /customised")
-                    .and.toContain("dependency | Value of CONTAINER_VAR is set on container")
-                    .and.toContain("dependency | Value of OVERRIDDEN_VAR is overridden value from task")
-                    .and.toContain("dependency | Value of NEW_VAR is new value from task")
+                result.asClue {
+                    it.output shouldContain "dependency | Working directory is /customised"
+                    it.output shouldContain "dependency | Value of CONTAINER_VAR is set on container"
+                    it.output shouldContain "dependency | Value of OVERRIDDEN_VAR is overridden value from task"
+                    it.output shouldContain "dependency | Value of NEW_VAR is new value from task"
+                }
             }
 
             it("returns the exit code from that task") {
-                expect(result).exitCode().toEqual(0)
+                result.asClue { it.exitCode shouldBe 0 }
             }
         }
     }

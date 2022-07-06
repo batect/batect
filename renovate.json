@@ -21,11 +21,10 @@
   "regexManagers": [
     {
       "fileMatch": [
-        ".gradle$",
         ".gradle.kts$"
       ],
       "matchStrings": [
-        "def ktlintVersion = \"(?<currentValue>[\\d.]*)\""
+        "val ktlintVersion = \"(?<currentValue>[\\d.]*)\""
       ],
       "datasourceTemplate": "maven",
       "depNameTemplate": "com.pinterest:ktlint"

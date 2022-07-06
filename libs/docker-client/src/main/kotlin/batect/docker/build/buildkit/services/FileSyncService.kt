@@ -229,7 +229,7 @@ class FileSyncService(
         fun endpointsForFactory(factory: ServiceInstanceFactory<FileSyncService>): Map<String, GrpcEndpoint<*, *, *>> {
             return mapOf(
                 FileSyncBlockingServer::DiffCopy.rpcPath to GrpcEndpoint(factory, FileSyncService::DiffCopy, Packet.ADAPTER, Packet.ADAPTER),
-                FileSyncBlockingServer::TarStream.rpcPath to GrpcEndpoint(factory, FileSyncService::TarStream, Packet.ADAPTER, Packet.ADAPTER),
+                FileSyncBlockingServer::TarStream.rpcPath to GrpcEndpoint(factory, FileSyncService::TarStream, Packet.ADAPTER, Packet.ADAPTER)
             )
         }
     }

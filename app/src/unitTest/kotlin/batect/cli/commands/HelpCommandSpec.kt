@@ -96,7 +96,8 @@ object HelpCommandSpec : Spek({
                         |
                         |For documentation and further information on Batect, visit https://github.com/batect/batect.
                         |
-                        |""".trimMargin().withPlatformSpecificLineSeparator()
+                        |
+                        """.trimMargin().withPlatformSpecificLineSeparator()
                     )
                 )
             }

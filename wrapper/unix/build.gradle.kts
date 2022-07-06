@@ -76,8 +76,10 @@ tasks.register<Exec>("buildTestEnvironmentImage") {
     isIgnoreExitValue = true
 
     commandLine(
-        "docker", "build",
-        "-t", testEnvironmentImageName,
+        "docker",
+        "build",
+        "-t",
+        testEnvironmentImageName,
         imageDirectory.path
     )
 

@@ -324,7 +324,7 @@ object LegacyImageBuildResponseBodySpec : Spek({
                             BuildProgress(setOf(ActiveImageBuildStep.Downloading(0, "step 1 of 2: FROM postgres:13.0", DownloadOperation.Extracting, 27092161L + 4178135 + 1772 + 0, 27092161L + 4178135 + 1772 + 1419223))),
                             BuildProgress(setOf(ActiveImageBuildStep.Downloading(0, "step 1 of 2: FROM postgres:13.0", DownloadOperation.PullComplete, 27092161L + 4178135 + 1772 + 0, 27092161L + 4178135 + 1772 + 1419223))),
                             BuildProgress(setOf(ActiveImageBuildStep.Downloading(0, "step 1 of 2: FROM postgres:13.0", DownloadOperation.Extracting, 27092161L + 4178135 + 1772 + 1419223, 27092161L + 4178135 + 1772 + 1419223))),
-                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(0, "step 1 of 2: FROM postgres:13.0", DownloadOperation.PullComplete, 27092161L + 4178135 + 1772 + 1419223, 27092161L + 4178135 + 1772 + 1419223))),
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(0, "step 1 of 2: FROM postgres:13.0", DownloadOperation.PullComplete, 27092161L + 4178135 + 1772 + 1419223, 27092161L + 4178135 + 1772 + 1419223)))
                         )
                     )
                 )
@@ -367,7 +367,7 @@ object LegacyImageBuildResponseBodySpec : Spek({
                             BuildProgress(setOf(ActiveImageBuildStep.Downloading(0, "step 1 of 2: FROM postgres:13.0", DownloadOperation.Downloading, 423, 1772))),
                             BuildProgress(setOf(ActiveImageBuildStep.Downloading(0, "step 1 of 2: FROM postgres:13.0", DownloadOperation.Downloading, 500, 1772))),
                             BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(1, "step 2 of 2: FROM postgres:12.0"))),
-                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, "step 2 of 2: FROM postgres:12.0", DownloadOperation.Downloading, 900, 1300))),
+                            BuildProgress(setOf(ActiveImageBuildStep.Downloading(1, "step 2 of 2: FROM postgres:12.0", DownloadOperation.Downloading, 900, 1300)))
                         )
                     )
                 )

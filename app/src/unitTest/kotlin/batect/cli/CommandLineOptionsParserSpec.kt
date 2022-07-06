@@ -308,7 +308,7 @@ object CommandLineOptionsParserSpec : Spek({
             listOf("--tag-image", "some-container=some-container:abc123", "--tag-image", "some-container=some-other-container:abc123", "some-task") to defaultCommandLineOptions.copy(imageTags = mapOf("some-container" to setOf("some-container:abc123", "some-other-container:abc123")), taskName = "some-task"),
             listOf("--tag-image", "some-container=some-container:abc123", "--tag-image", "some-other-container=some-other-container:abc123", "some-task") to defaultCommandLineOptions.copy(imageTags = mapOf("some-container" to setOf("some-container:abc123"), "some-other-container" to setOf("some-other-container:abc123")), taskName = "some-task"),
             listOf("--tag-image", "some-container=some-container:abc123", "--override-image", "some-other-container=some-other-container:abc123", "some-task") to defaultCommandLineOptions.copy(imageTags = mapOf("some-container" to setOf("some-container:abc123")), imageOverrides = mapOf("some-other-container" to "some-other-container:abc123"), taskName = "some-task"),
-            listOf("--clean-cache=some-cache-name") to defaultCommandLineOptions.copy(cleanCaches = setOf("some-cache-name")),
+            listOf("--clean-cache=some-cache-name") to defaultCommandLineOptions.copy(cleanCaches = setOf("some-cache-name"))
         ).forEach { (args, expectedResult) ->
             given("the arguments $args") {
                 on("parsing the command line") {

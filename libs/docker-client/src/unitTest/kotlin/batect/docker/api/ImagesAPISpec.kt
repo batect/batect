@@ -403,7 +403,7 @@ object ImagesAPISpec : Spek({
                         clientWithLongTimeout.mock("POST", baseBuildUrl, daemonBuildResponse, 200)
 
                         buildResponseBody.eventsToPost = listOf(
-                            BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(0, "FROM nginx:1.13.0"))),
+                            BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(0, "FROM nginx:1.13.0")))
                         )
                     }
 

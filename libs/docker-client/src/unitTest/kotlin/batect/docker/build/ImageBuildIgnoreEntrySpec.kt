@@ -379,7 +379,7 @@ object ImageBuildIgnoreEntrySpec : Spek({
                 ".",
                 "..",
                 "../..",
-                "../../abc",
+                "../../abc"
             ).forEach { pattern ->
                 given("the already clean pattern '$pattern'") {
                     it("uses the pattern as-is") {
@@ -417,7 +417,7 @@ object ImageBuildIgnoreEntrySpec : Spek({
                 "abc/def/../../../ghi/jkl/../../../mno" to "../../mno",
                 "abc/./../def" to "def",
                 "abc//./../def" to "def",
-                "abc/../../././../def" to "../../def",
+                "abc/../../././../def" to "../../def"
             ).forEach { (uncleanPattern, cleanPattern) ->
                 given("the unclean pattern '$uncleanPattern'") {
                     it("cleans the pattern to '$cleanPattern'") {

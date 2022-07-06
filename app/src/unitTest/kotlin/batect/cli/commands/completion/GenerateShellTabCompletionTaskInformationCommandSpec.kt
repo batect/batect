@@ -67,7 +67,7 @@ object GenerateShellTabCompletionTaskInformationCommandSpec : Spek({
                     setOf(
                         configurationFileName,
                         includedFile1,
-                        includedFile2,
+                        includedFile2
                     )
                 )
             }

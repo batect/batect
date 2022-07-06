@@ -62,7 +62,9 @@ object FileLogSinkSpec : Spek({
             }
 
             val expectedMessage = LogMessage(
-                Severity.Info, "This is the message", timestampToUse,
+                Severity.Info,
+                "This is the message",
+                timestampToUse,
                 mapOf(
                     "someAdditionalInfo" to JsonableObject("someValue", String.serializer()),
                     "someLocalInfo" to JsonableObject(888, Int.serializer()),

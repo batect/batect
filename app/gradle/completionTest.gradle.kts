@@ -35,8 +35,10 @@ tasks.register<Exec>("buildCompletionTestEnvironmentImage") {
     environment("DOCKER_BUILDKIT", "1")
 
     commandLine(
-        "docker", "build",
-        "-t", testEnvironmentImageName,
+        "docker",
+        "build",
+        "-t",
+        testEnvironmentImageName,
         imageDirectory.path
     )
 

@@ -117,7 +117,12 @@ class UnixNativeMethods(
     interface LibC {
         @SaveError
         @Variadic(fixedCount = 2)
-        fun ioctl(fd: Int, request: Int, @Out @Transient winsize: WindowSize): Int
+        fun ioctl(
+            fd: Int,
+            request: Int,
+            @Out @Transient
+            winsize: WindowSize
+        ): Int
     }
 
     // Native name is winsize

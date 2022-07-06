@@ -142,7 +142,7 @@ object TaskExecutionOrderResolverSpec : Spek({
                     "the dependent task's name is given with a wildcard that matches a single character at the start of the dependent task's name" to "*ependency-task",
                     "the dependent task's name is given with a wildcard that matches a single character at the end of the dependent task's name" to "dependency-tas*",
                     "the dependent task's name is given with a wildcard that matches a single character in the middle of the dependent task's name" to "dependenc*-task",
-                    "the dependent task's name is given with a wildcard that matches no characters of the dependent task's name" to "dependency-task*",
+                    "the dependent task's name is given with a wildcard that matches no characters of the dependent task's name" to "dependency-task*"
                 ).forEach { description, prerequisiteSpec ->
                     given(description) {
                         val dependencyTask = Task("dependency-task", taskRunConfiguration)
@@ -257,7 +257,7 @@ object TaskExecutionOrderResolverSpec : Spek({
                     "the tasks are given with a wildcard" to listOf("dependency-task-*"),
                     "the tasks are given with a wildcard and both are also specified before the entry with a wildcard" to listOf("dependency-task-1", "dependency-task-2", "dependency-task-*"),
                     "the tasks are given with a wildcard and one is also specified before the entry with a wildcard" to listOf("dependency-task-1", "dependency-task-*"),
-                    "the tasks are given with a wildcard and one is also specified after the entry with a wildcard" to listOf("dependency-task-*", "dependency-task-2"),
+                    "the tasks are given with a wildcard and one is also specified after the entry with a wildcard" to listOf("dependency-task-*", "dependency-task-2")
                 ).forEach { description, prerequisites ->
                     given(description) {
                         val dependencyTask1 = Task("dependency-task-1", taskRunConfiguration)

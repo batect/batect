@@ -36,7 +36,7 @@ val licenseText by extra(
 
 val kotlinLicenseHeader = "/*$licenseText*/\n\n"
 val javaLicenseHeader = "/*$licenseText*/\n\n"
-val ktlintVersion = "0.43.2"
+val ktlintVersion = "0.46.1"
 
 configure<SpotlessExtension> {
     format("misc") {
@@ -111,7 +111,7 @@ listOf(
     "spotlessJava",
     "spotlessKotlin",
     "spotlessKotlinGradle",
-    "spotlessMisc",
+    "spotlessMisc"
 ).forEach {
     tasks.named(it) {
         mustRunAfter(project("libs").project("docker-client").tasks.named("generateMainProtos"))

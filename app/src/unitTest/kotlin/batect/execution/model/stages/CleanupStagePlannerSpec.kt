@@ -203,7 +203,7 @@ object CleanupStagePlannerSpec : Spek({
                             itHasExactlyTheRules(
                                 { stage },
                                 mapOf(
-                                    "stop the container" to StopContainerStepRule(taskContainer, dockerContainer, emptySet()),
+                                    "stop the container" to StopContainerStepRule(taskContainer, dockerContainer, emptySet())
                                 )
                             )
 
@@ -302,7 +302,7 @@ object CleanupStagePlannerSpec : Spek({
                             itHasExactlyTheRules(
                                 { stage },
                                 mapOf(
-                                    "stop the first dependency container" to StopContainerStepRule(container1, container1DockerContainer, emptySet()),
+                                    "stop the first dependency container" to StopContainerStepRule(container1, container1DockerContainer, emptySet())
                                 )
                             )
 
@@ -352,7 +352,7 @@ object CleanupStagePlannerSpec : Spek({
                                 mapOf(
                                     "stop the task container" to StopContainerStepRule(taskContainer, taskDockerContainer, emptySet()),
                                     "stop the first dependency container" to StopContainerStepRule(container1, container1DockerContainer, setOf(container2, taskContainer)),
-                                    "stop the second dependency container" to StopContainerStepRule(container2, container2DockerContainer, setOf(taskContainer)),
+                                    "stop the second dependency container" to StopContainerStepRule(container2, container2DockerContainer, setOf(taskContainer))
                                 )
                             )
 

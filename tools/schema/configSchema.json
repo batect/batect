@@ -63,7 +63,7 @@
         },
         "dockerfile": {
           "type": "string",
-          "description": "Dockerfile (relative to build_directory) to use when building the image. Defaults to Dockerfile` if not set.",
+          "description": "Dockerfile (relative to build_directory) to use when building the image. Defaults to Dockerfile if not set.",
           "minLength": 1
         },
         "command": {

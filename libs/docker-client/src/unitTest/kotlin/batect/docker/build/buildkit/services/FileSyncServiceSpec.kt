@@ -130,7 +130,7 @@ object FileSyncServiceSpec : Spek({
                         equalTo(
                             listOf(
                                 statFinishedPacket,
-                                Packet(Packet.PacketType.PACKET_FIN),
+                                Packet(Packet.PacketType.PACKET_FIN)
                             )
                         )
                     )

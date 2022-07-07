@@ -174,11 +174,11 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                         it("uploads /etc/passwd and /etc/group files for the root user and group to the container") {
                             val passwdContent = """
                                     |root:x:0:0:root:/home/some-user:/bin/sh
-                                """.trimMargin()
+                            """.trimMargin()
 
                             val groupContent = """
                                     |root:x:0:root
-                                """.trimMargin()
+                            """.trimMargin()
 
                             verify(containersClient).upload(
                                 dockerContainer,
@@ -431,11 +431,11 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                         it("uploads /etc/passwd and /etc/group files for the root user and group to the container") {
                             val passwdContent = """
                                     |root:x:0:0:root:/home/some-user:/bin/sh
-                                """.trimMargin()
+                            """.trimMargin()
 
                             val groupContent = """
                                     |root:x:0:root
-                                """.trimMargin()
+                            """.trimMargin()
 
                             verify(containersClient).upload(
                                 dockerContainer,

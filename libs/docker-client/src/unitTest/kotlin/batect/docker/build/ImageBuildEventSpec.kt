@@ -112,7 +112,7 @@ object ImageBuildEventSpec : Spek({
                                 "the download has no total size and has not started",
                                 ActiveImageBuildStep.Downloading(1, "step 2 of 3: FROM postgres:13.0", DownloadOperation.Downloading, 0, null),
                                 "step 2 of 3: FROM postgres:13.0: downloading"
-                            ),
+                            )
                         ).forEach { testCase ->
                             given(testCase.description) {
                                 val event = BuildProgress(setOf(testCase.step))
@@ -129,7 +129,7 @@ object ImageBuildEventSpec : Spek({
                     val event = BuildProgress(
                         setOf(
                             ActiveImageBuildStep.NotDownloading(1, "step 2 of 30: RUN blah.sh"),
-                            ActiveImageBuildStep.NotDownloading(4, "step 5 of 30: RUN foo.sh"),
+                            ActiveImageBuildStep.NotDownloading(4, "step 5 of 30: RUN foo.sh")
                         )
                     )
 
@@ -143,7 +143,7 @@ object ImageBuildEventSpec : Spek({
                         setOf(
                             ActiveImageBuildStep.NotDownloading(1, "step 2 of 30: RUN blah.sh"),
                             ActiveImageBuildStep.NotDownloading(4, "step 5 of 30: RUN foo.sh"),
-                            ActiveImageBuildStep.NotDownloading(9, "step 10 of 30: RUN bar.sh"),
+                            ActiveImageBuildStep.NotDownloading(9, "step 10 of 30: RUN bar.sh")
                         )
                     )
 

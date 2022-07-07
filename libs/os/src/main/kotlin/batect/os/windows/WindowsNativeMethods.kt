@@ -195,7 +195,13 @@ class WindowsNativeMethods(
     interface Win32 : WindowsLibC {
         @SaveError
         @StdCall
-        fun GetConsoleScreenBufferInfo(@In hConsoleOutput: HANDLE, @Out @Transient lpConsoleScreenBufferInfo: ConsoleScreenBufferInfo): Boolean
+        fun GetConsoleScreenBufferInfo(
+            @In
+            hConsoleOutput: HANDLE,
+
+            @Out @Transient
+            lpConsoleScreenBufferInfo: ConsoleScreenBufferInfo
+        ): Boolean
 
         @SaveError
         @StdCall
@@ -206,7 +212,13 @@ class WindowsNativeMethods(
         fun GetConsoleMode(@In hConsoleHandle: HANDLE, @Out lpMode: IntByReference): Boolean
 
         @SaveError
-        fun GetUserNameW(@Out lpBuffer: ByteBuffer, @In @Out pcbBuffer: IntByReference): Boolean
+        fun GetUserNameW(
+            @Out
+            lpBuffer: ByteBuffer,
+
+            @In @Out
+            pcbBuffer: IntByReference
+        ): Boolean
     }
 
     class ConsoleScreenBufferInfo(runtime: Runtime) : Struct(runtime) {

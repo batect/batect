@@ -79,7 +79,7 @@ object RegistryCredentialsConfigurationFileSpec : Spek({
                                     |   "auths": {},
                                     |   "credsStore": "awesomesauce"
                                     |}
-                                """.trimMargin().lines()
+                            """.trimMargin().lines()
                         )
                     }
 

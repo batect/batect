@@ -35,10 +35,11 @@ class DockerContainerCreationRequestFactory(
         useTTY: Boolean,
         attachStdin: Boolean
     ): ContainerCreationRequest {
-        val portMappings = if (commandLineOptions.disablePortMappings)
+        val portMappings = if (commandLineOptions.disablePortMappings) {
             emptySet()
-        else
+        } else {
             container.portMappings.mapToSet { it.toDockerPortMapping() }
+        }
 
         return ContainerCreationRequest(
             resourceNameGenerator.generateNameFor(container),

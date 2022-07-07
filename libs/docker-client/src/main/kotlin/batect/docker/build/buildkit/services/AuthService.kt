@@ -85,7 +85,7 @@ class AuthService(
             AuthBlockingServer::Credentials.rpcPath to GrpcEndpoint(this, AuthService::Credentials, CredentialsRequest.ADAPTER, CredentialsResponse.ADAPTER),
             AuthBlockingServer::FetchToken.rpcPath to GrpcEndpoint(this, AuthService::FetchToken, FetchTokenRequest.ADAPTER, FetchTokenResponse.ADAPTER),
             AuthBlockingServer::GetTokenAuthority.rpcPath to GrpcEndpoint(this, AuthService::GetTokenAuthority, GetTokenAuthorityRequest.ADAPTER, GetTokenAuthorityResponse.ADAPTER),
-            AuthBlockingServer::VerifyTokenAuthority.rpcPath to GrpcEndpoint(this, AuthService::VerifyTokenAuthority, VerifyTokenAuthorityRequest.ADAPTER, VerifyTokenAuthorityResponse.ADAPTER),
+            AuthBlockingServer::VerifyTokenAuthority.rpcPath to GrpcEndpoint(this, AuthService::VerifyTokenAuthority, VerifyTokenAuthorityRequest.ADAPTER, VerifyTokenAuthorityResponse.ADAPTER)
         )
     }
 }

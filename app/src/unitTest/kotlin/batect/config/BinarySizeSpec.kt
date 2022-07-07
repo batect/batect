@@ -100,7 +100,7 @@ object BinarySizeSpec : Spek({
                 "5 gb" to BinarySize.of(5, BinaryUnit.Gigabyte),
                 "5 gB" to BinarySize.of(5, BinaryUnit.Gigabyte),
                 "5 Gb" to BinarySize.of(5, BinaryUnit.Gigabyte),
-                "5 GB" to BinarySize.of(5, BinaryUnit.Gigabyte),
+                "5 GB" to BinarySize.of(5, BinaryUnit.Gigabyte)
             ).forEach { (input, expectedSize) ->
                 given("the input '$input'") {
                     it("correctly deserializes to the expected value") {

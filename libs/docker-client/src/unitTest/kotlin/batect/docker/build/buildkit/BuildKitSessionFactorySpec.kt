@@ -107,7 +107,7 @@ object BuildKitSessionFactorySpec : Spek({
                     "/moby.filesync.v1.FileSync/DiffCopy",
                     "/moby.filesync.v1.FileSync/TarStream",
                     "/grpc.health.v1.Health/Check",
-                    "/grpc.health.v1.Health/Watch",
+                    "/grpc.health.v1.Health/Watch"
                 )
 
                 assertThat(

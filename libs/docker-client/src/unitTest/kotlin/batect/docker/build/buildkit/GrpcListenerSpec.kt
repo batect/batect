@@ -166,7 +166,7 @@ object GrpcListenerSpec : Spek({
                                 HealthCheckRequest("test"),
                                 byteArrayOf(0x00, 0x00, 0x00, 0x00, 0x02, 0x08, 0x01),
                                 HealthCheckResponse(HealthCheckResponse.ServingStatus.SERVING)
-                            ),
+                            )
                         ).forEach { testCase ->
                             given(testCase.description) {
                                 val bodyWritten by createForEachTest { ByteArrayOutputStream() }

@@ -27,7 +27,7 @@ import java.nio.file.Path
 class RegistryCredentialsConfigurationFile(
     private val processRunner: ProcessRunner,
     configDirectory: Path,
-    private val logger: Logger,
+    private val logger: Logger
 ) {
     private val configFilePath = configDirectory.resolve("config.json").toAbsolutePath()
     private val config by lazy { loadConfigFile() }

@@ -48,7 +48,7 @@ object TelemetryConsentSpec : Spek({
             TestCase(false, ConsentState.None, true, expected = false),
             TestCase(null, ConsentState.TelemetryDisabled, true, expected = false),
             TestCase(null, ConsentState.TelemetryAllowed, true, expected = false),
-            TestCase(null, ConsentState.None, true, expected = false),
+            TestCase(null, ConsentState.None, true, expected = false)
         ).forEach { (disabledOnCommandLine, consentStateOnDisk, forbiddenByProjectConfig, expected) ->
             val commandLineDescription = when (disabledOnCommandLine) {
                 true -> "explicitly disabled on the command line"

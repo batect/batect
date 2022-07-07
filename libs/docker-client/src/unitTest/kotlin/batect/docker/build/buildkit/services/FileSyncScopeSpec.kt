@@ -441,7 +441,7 @@ object FileSyncScopeSpec : Spek({
                                 containsInOrder(
                                     FileSyncScopeEntry(fileInRootDirectory, "some-file.txt"),
                                     FileSyncScopeEntry(childDirectory, "the-directory"),
-                                    FileSyncScopeEntry(fileInChildDirectory, "the-directory/some-file.txt"),
+                                    FileSyncScopeEntry(fileInChildDirectory, "the-directory/some-file.txt")
                                 )
                             )
                         }
@@ -567,7 +567,7 @@ object FileSyncScopeSpec : Spek({
                                 request.contents,
                                 containsInOrder(
                                     FileSyncScopeEntry(targetFilePath, "target-file"),
-                                    FileSyncScopeEntry(symlinkPath, "the-symlink"),
+                                    FileSyncScopeEntry(symlinkPath, "the-symlink")
                                 )
                             )
                         }
@@ -588,7 +588,7 @@ object FileSyncScopeSpec : Spek({
                                 containsInOrder(
                                     FileSyncScopeEntry(targetDirectoryPath, "target-directory"),
                                     FileSyncScopeEntry(childFilePath, "target-directory/the-file"),
-                                    FileSyncScopeEntry(symlinkPath, "the-symlink"),
+                                    FileSyncScopeEntry(symlinkPath, "the-symlink")
                                 )
                             )
                         }
@@ -610,7 +610,7 @@ object FileSyncScopeSpec : Spek({
                                 containsInOrder(
                                     FileSyncScopeEntry(childDirectory, "testproj"),
                                     FileSyncScopeEntry(fileInChildDirectory, "testproj/some-file.txt"),
-                                    FileSyncScopeEntry(fileInRootDirectory, "testproj.sub"),
+                                    FileSyncScopeEntry(fileInRootDirectory, "testproj.sub")
                                 )
                             )
                         }

@@ -92,7 +92,7 @@ object GenerateShellTabCompletionScriptCommandSpec : Spek({
             setOf(
                 TestCase(Shell.Bash, { bashGenerator }, "bash-shell-completion-script"),
                 TestCase(Shell.Fish, { fishGenerator }, "fish-shell-completion-script"),
-                TestCase(Shell.Zsh, { zshGenerator }, "zsh-shell-completion-script"),
+                TestCase(Shell.Zsh, { zshGenerator }, "zsh-shell-completion-script")
             ).forEach { testCase ->
                 given("the requested shell is ${testCase.shell}") {
                     val commandLineOptions = CommandLineOptions(generateShellTabCompletionScript = testCase.shell)

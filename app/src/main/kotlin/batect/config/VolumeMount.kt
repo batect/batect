@@ -165,8 +165,11 @@ sealed class VolumeMount(
 
         @Serializable
         private enum class VolumeMountType {
-            @SerialName("local") Local,
-            @SerialName("cache") Cache
+            @SerialName("local")
+            Local,
+
+            @SerialName("cache")
+            Cache
         }
     }
 }

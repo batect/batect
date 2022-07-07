@@ -28,7 +28,7 @@ String getBuildDate() {
 }
 
 String versionInfoFileContents() {
-    "/*${rootProject.licenseText}*/\n" +
+    def contents = "/*${rootProject.licenseText}*/\n" +
         """
         |package batect
         |
@@ -50,6 +50,8 @@ String versionInfoFileContents() {
         |
         |fun LogMessageBuilder.data(key: String, value: VersionInfo) = this.data(key, value, VersionInfo.serializer())
         |""".stripMargin("|")
+
+    return contents.replace("\n", System.lineSeparator())
 }
 
 def versionInfoFile = Paths.get("$projectDir/src/main/kotlin/batect/VersionInfo.kt").toFile()

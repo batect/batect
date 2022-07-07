@@ -68,9 +68,12 @@ data class DockerContainerConfiguration(@SerialName("Healthcheck") val healthChe
 @Serializable
 data class DockerContainerHealthCheckConfig(
     @SerialName("Test") val test: List<String>? = null,
-    @SerialName("Interval") @Serializable(with = DockerDurationSerializer::class) val interval: Duration = Duration.ofSeconds(30),
-    @SerialName("Timeout") @Serializable(with = DockerDurationSerializer::class) val timeout: Duration = Duration.ofSeconds(30),
-    @SerialName("StartPeriod") @Serializable(with = DockerDurationSerializer::class) val startPeriod: Duration = Duration.ZERO,
+    @SerialName("Interval") @Serializable(with = DockerDurationSerializer::class)
+    val interval: Duration = Duration.ofSeconds(30),
+    @SerialName("Timeout") @Serializable(with = DockerDurationSerializer::class)
+    val timeout: Duration = Duration.ofSeconds(30),
+    @SerialName("StartPeriod") @Serializable(with = DockerDurationSerializer::class)
+    val startPeriod: Duration = Duration.ZERO,
     @SerialName("Retries") val retries: Int = 3
 )
 

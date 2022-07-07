@@ -67,7 +67,7 @@ object TaskSpecialisedConfigurationFactorySpec : Spek({
             val commandLineOptions = CommandLineOptions(
                 imageOverrides = mapOf(
                     container1.name to "another-image",
-                    container2.name to "another-other-image",
+                    container2.name to "another-other-image"
                 )
             )
 

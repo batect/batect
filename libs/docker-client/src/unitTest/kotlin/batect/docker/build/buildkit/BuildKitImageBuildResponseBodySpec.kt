@@ -812,74 +812,74 @@ object BuildKitImageBuildResponseBodySpec : Spek({
                             BuildProgress(
                                 setOf(
                                     ActiveImageBuildStep.Downloading(pullStaticImageStepIndex, pullStaticImageStepName, DownloadOperation.Downloading, 732L + 635 + 0 + 0, 732L + 635 + 639412 + 49),
-                                    ActiveImageBuildStep.NotDownloading(pullBaseImageStepIndex, pullBaseImageStepName),
+                                    ActiveImageBuildStep.NotDownloading(pullBaseImageStepIndex, pullBaseImageStepName)
                                 )
                             ),
                             // Line 11:
                             BuildProgress(
                                 setOf(
                                     ActiveImageBuildStep.Downloading(pullStaticImageStepIndex, pullStaticImageStepName, DownloadOperation.Downloading, 732L + 635 + 0 + 0, 732L + 635 + 639412 + 49),
-                                    ActiveImageBuildStep.Downloading(pullBaseImageStepIndex, pullBaseImageStepName, DownloadOperation.Downloading, 741L + 947 + 814 + 0, 741L + 947 + 814 + 693997),
+                                    ActiveImageBuildStep.Downloading(pullBaseImageStepIndex, pullBaseImageStepName, DownloadOperation.Downloading, 741L + 947 + 814 + 0, 741L + 947 + 814 + 693997)
                                 )
                             ),
                             // Line 12:
                             BuildProgress(
                                 setOf(
                                     ActiveImageBuildStep.Downloading(pullStaticImageStepIndex, pullStaticImageStepName, DownloadOperation.Downloading, 732L + 635 + 0 + 0, 732L + 635 + 639412 + 49),
-                                    ActiveImageBuildStep.Downloading(pullBaseImageStepIndex, pullBaseImageStepName, DownloadOperation.Downloading, 741L + 947 + 814 + 458752, 741L + 947 + 814 + 693997),
+                                    ActiveImageBuildStep.Downloading(pullBaseImageStepIndex, pullBaseImageStepName, DownloadOperation.Downloading, 741L + 947 + 814 + 458752, 741L + 947 + 814 + 693997)
                                 )
                             ),
                             // Line 13:
                             BuildProgress(
                                 setOf(
                                     ActiveImageBuildStep.Downloading(pullStaticImageStepIndex, pullStaticImageStepName, DownloadOperation.Downloading, 732L + 635 + 0 + 0, 732L + 635 + 639412 + 49),
-                                    ActiveImageBuildStep.Downloading(pullBaseImageStepIndex, pullBaseImageStepName, DownloadOperation.Extracting, 741L + 947 + 814 + 0, 741L + 947 + 814 + 693997),
+                                    ActiveImageBuildStep.Downloading(pullBaseImageStepIndex, pullBaseImageStepName, DownloadOperation.Extracting, 741L + 947 + 814 + 0, 741L + 947 + 814 + 693997)
                                 )
                             ),
                             // Line 14:
                             BuildProgress(
                                 setOf(
                                     ActiveImageBuildStep.Downloading(pullStaticImageStepIndex, pullStaticImageStepName, DownloadOperation.Downloading, 732L + 635 + 0 + 0, 732L + 635 + 639412 + 49),
-                                    pullBaseImageComplete,
+                                    pullBaseImageComplete
                                 )
                             ),
                             // Line 15:
                             BuildProgress(
                                 setOf(
                                     ActiveImageBuildStep.Downloading(pullStaticImageStepIndex, pullStaticImageStepName, DownloadOperation.Downloading, 732L + 635 + 0 + 49, 732L + 635 + 639412 + 49),
-                                    pullBaseImageComplete,
+                                    pullBaseImageComplete
                                 )
                             ),
                             // Line 16: no change
                             // Line 17:
                             BuildProgress(
                                 setOf(
-                                    ActiveImageBuildStep.Downloading(pullStaticImageStepIndex, pullStaticImageStepName, DownloadOperation.Downloading, 732L + 635 + 0 + 49, 732L + 635 + 639412 + 49),
+                                    ActiveImageBuildStep.Downloading(pullStaticImageStepIndex, pullStaticImageStepName, DownloadOperation.Downloading, 732L + 635 + 0 + 49, 732L + 635 + 639412 + 49)
                                 )
                             ),
                             // Line 18:
                             BuildProgress(
                                 setOf(
-                                    ActiveImageBuildStep.Downloading(pullStaticImageStepIndex, pullStaticImageStepName, DownloadOperation.Extracting, 732L + 635 + 0 + 0, 732L + 635 + 639412 + 49),
+                                    ActiveImageBuildStep.Downloading(pullStaticImageStepIndex, pullStaticImageStepName, DownloadOperation.Extracting, 732L + 635 + 0 + 0, 732L + 635 + 639412 + 49)
                                 )
                             ),
                             // Line 19:
                             BuildProgress(
                                 setOf(
-                                    ActiveImageBuildStep.Downloading(pullStaticImageStepIndex, pullStaticImageStepName, DownloadOperation.PullComplete, 732L + 635 + 639412 + 0, 732L + 635 + 639412 + 49),
+                                    ActiveImageBuildStep.Downloading(pullStaticImageStepIndex, pullStaticImageStepName, DownloadOperation.PullComplete, 732L + 635 + 639412 + 0, 732L + 635 + 639412 + 49)
                                 )
                             ),
                             // Line 20:
                             BuildProgress(
                                 setOf(
-                                    ActiveImageBuildStep.Downloading(pullStaticImageStepIndex, pullStaticImageStepName, DownloadOperation.Extracting, 732L + 635 + 639412 + 0, 732L + 635 + 639412 + 49),
+                                    ActiveImageBuildStep.Downloading(pullStaticImageStepIndex, pullStaticImageStepName, DownloadOperation.Extracting, 732L + 635 + 639412 + 0, 732L + 635 + 639412 + 49)
                                 )
                             ),
                             // Line 21: no change
                             // Line 22:
                             BuildProgress(
                                 setOf(
-                                    ActiveImageBuildStep.Downloading(pullStaticImageStepIndex, pullStaticImageStepName, DownloadOperation.PullComplete, 732L + 635 + 639412 + 49, 732L + 635 + 639412 + 49),
+                                    ActiveImageBuildStep.Downloading(pullStaticImageStepIndex, pullStaticImageStepName, DownloadOperation.PullComplete, 732L + 635 + 639412 + 49, 732L + 635 + 639412 + 49)
                                 )
                             ),
                             // Line 23: no change (all steps complete, wait for next update)

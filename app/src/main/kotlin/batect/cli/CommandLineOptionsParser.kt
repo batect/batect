@@ -347,7 +347,7 @@ class CommandLineOptionsParser(
         generateShellTabCompletionScript = generateShellTabCompletionScript,
         generateShellTabCompletionTaskInformation = generateShellTabCompletionTaskInformation,
         maximumLevelOfParallelism = maximumLevelOfParallelism,
-        cleanCaches = cleanCaches,
+        cleanCaches = cleanCaches
     )
 }
 

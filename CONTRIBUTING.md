@@ -22,9 +22,11 @@ issue, or start a conversation in [Discussions](https://github.com/batect/batect
 
 ## Prerequisites
 
-* JDK (version 8 or higher)
+* JDK (version 11 or higher)
 * Git (version 2.17.0 or higher)
 * Docker (any version compatible with Batect)
+
+Note that while Batect itself can run on Java 8 or higher, building Batect requires Java 11 or higher.
 
 ## Dev tooling
 

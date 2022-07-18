@@ -2,7 +2,7 @@ project_name: task-with-unhealthy-dependency-test
 
 containers:
   build-env:
-    image: alpine:3.16.0
+    image: alpine:3.16.1
 
   http-server:
     build_directory: http-server

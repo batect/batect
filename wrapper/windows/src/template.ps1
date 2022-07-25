@@ -48,7 +48,7 @@ function download() {
         # Turn off the progress bar to significantly reduce download times - see https://github.com/PowerShell/PowerShell/issues/2138#issuecomment-251165868
         $ProgressPreference = 'SilentlyContinue'
 
-        Invoke-WebRequest -Uri $DownloadUrl -OutFile $JarPath | Out-Null
+        Invoke-WebRequest -Uri $DownloadUrl -OutFile $JarPath -MaximumRetryCount 3 -RetryIntervalSec 1 | Out-Null
     } catch {
         $Message = $_.Exception.Message
 

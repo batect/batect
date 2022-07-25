@@ -42,10 +42,10 @@
         temp_file=$(mktemp)
 
         if [[ $QUIET_DOWNLOAD == 'true' ]]; then
-            curl --silent --fail --show-error --location --output "$temp_file" "$DOWNLOAD_URL"
+            curl --silent --fail --show-error --location --output "$temp_file" --retry 3 --retry-connrefused "$DOWNLOAD_URL"
         else
             echo "Downloading Batect version $VERSION from $DOWNLOAD_URL..."
-            curl -# --fail --show-error --location --output "$temp_file" "$DOWNLOAD_URL"
+            curl -# --fail --show-error --location --output "$temp_file" --retry 3 --retry-connrefused "$DOWNLOAD_URL"
         fi
 
         mv "$temp_file" "$JAR_PATH"

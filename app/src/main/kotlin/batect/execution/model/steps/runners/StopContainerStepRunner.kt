@@ -16,22 +16,28 @@
 
 package batect.execution.model.steps.runners
 
-import batect.docker.api.ContainerStopFailedException
-import batect.docker.client.ContainersClient
+import batect.dockerclient.ContainerReference
+import batect.dockerclient.ContainerStopFailedException
+import batect.dockerclient.DockerClient
 import batect.execution.model.events.ContainerStopFailedEvent
 import batect.execution.model.events.ContainerStoppedEvent
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.steps.StopContainerStep
+import kotlinx.coroutines.runBlocking
+import kotlin.time.Duration.Companion.seconds
 
 class StopContainerStepRunner(
-    private val containersClient: ContainersClient
+    private val client: DockerClient
 ) {
     fun run(step: StopContainerStep, eventSink: TaskEventSink) {
         try {
-            containersClient.stop(step.dockerContainer)
+            runBlocking {
+                client.stopContainer(ContainerReference(step.dockerContainer.id), 10.seconds)
+            }
+
             eventSink.postEvent(ContainerStoppedEvent(step.container))
         } catch (e: ContainerStopFailedException) {
-            eventSink.postEvent(ContainerStopFailedEvent(step.container, e.outputFromDocker))
+            eventSink.postEvent(ContainerStopFailedEvent(step.container, e.message ?: ""))
         }
     }
 }

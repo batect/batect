@@ -18,20 +18,23 @@ package batect.execution.model.steps.runners
 
 import batect.config.Container
 import batect.docker.DockerContainer
-import batect.docker.api.ContainerStopFailedException
-import batect.docker.client.ContainersClient
+import batect.dockerclient.ContainerReference
+import batect.dockerclient.DockerClient
 import batect.execution.model.events.ContainerStopFailedEvent
 import batect.execution.model.events.ContainerStoppedEvent
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.steps.StopContainerStep
+import batect.testutils.beforeEachTestSuspend
 import batect.testutils.createForEachTest
 import batect.testutils.imageSourceDoesNotMatter
+import batect.testutils.itSuspend
 import batect.testutils.on
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import kotlin.time.Duration.Companion.seconds
 
 object StopContainerStepRunnerSpec : Spek({
     describe("running a 'stop container' step") {
@@ -39,15 +42,15 @@ object StopContainerStepRunnerSpec : Spek({
         val dockerContainer = DockerContainer("some-id")
         val step = StopContainerStep(container, dockerContainer)
 
-        val containersClient by createForEachTest { mock<ContainersClient>() }
+        val dockerClient by createForEachTest { mock<DockerClient>() }
         val eventSink by createForEachTest { mock<TaskEventSink>() }
-        val runner by createForEachTest { StopContainerStepRunner(containersClient) }
+        val runner by createForEachTest { StopContainerStepRunner(dockerClient) }
 
         on("when stopping the container succeeds") {
             beforeEachTest { runner.run(step, eventSink) }
 
-            it("stops the container") {
-                verify(containersClient).stop(dockerContainer)
+            itSuspend("stops the container") {
+                verify(dockerClient).stopContainer(ContainerReference("some-id"), 10.seconds)
             }
 
             it("emits a 'container stopped' event") {
@@ -56,8 +59,9 @@ object StopContainerStepRunnerSpec : Spek({
         }
 
         on("when stopping the container fails") {
-            beforeEachTest {
-                whenever(containersClient.stop(dockerContainer)).thenThrow(ContainerStopFailedException("some-id", "Something went wrong"))
+            beforeEachTestSuspend {
+                whenever(dockerClient.stopContainer(ContainerReference("some-id"), 10.seconds))
+                    .thenThrow(batect.dockerclient.ContainerStopFailedException("Something went wrong"))
 
                 runner.run(step, eventSink)
             }

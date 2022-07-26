@@ -21,7 +21,6 @@ install:
 build_script:
   - ps: ./ci/Enable-LinuxContainers.ps1
   - docker version
-  - ./gradlew :libs:docker-client:integrationTest
   - ./gradlew journeyTest
 
 after_test:

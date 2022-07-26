@@ -97,7 +97,7 @@ object ExecAPISpec : Spek({
             }
 
             given("a container and exec creation request") {
-                val container = DockerContainer("abc123")
+                val container = DockerContainer("abc123", "abc123-name")
                 val request = ExecCreationRequest(false, true, true, true, emptyMap(), emptyList(), false, null, "/some/work/dir")
                 val expectedUrl = "$dockerBaseUrl/v1.37/containers/abc123/exec"
 

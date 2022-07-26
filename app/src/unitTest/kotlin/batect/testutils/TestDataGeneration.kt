@@ -30,5 +30,7 @@ fun createMockTaskStep(countsAgainstParallelismCap: Boolean = true): TaskStep =
     if (countsAgainstParallelismCap) {
         DeleteTaskNetworkStep(DockerNetwork(generateId(10)))
     } else {
-        RunContainerStep(Container(generateId(10), imageSourceDoesNotMatter()), DockerContainer(generateId(10)))
+        val id = generateId(10)
+
+        RunContainerStep(Container(generateId(10), imageSourceDoesNotMatter()), DockerContainer(id, "$id-name"))
     }

@@ -56,7 +56,7 @@ object ContainerTTYManagerSpec : Spek({
         val manager by createForEachTest { ContainerTTYManager(api, consoleDimensions, logger) }
 
         given("a container") {
-            val container = DockerContainer("the-container-id")
+            val container = DockerContainer("the-container-id", "the-container-name")
 
             describe("monitoring for terminal size changes") {
                 given("retrieving the current terminal dimensions succeeds") {

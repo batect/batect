@@ -258,7 +258,7 @@ object ContainerStartupProgressLineSpec : Spek({
 
             describe("after receiving a 'container created' notification") {
                 describe("on that notification being for this line's container") {
-                    val event = ContainerCreatedEvent(container, DockerContainer("some-id"))
+                    val event = ContainerCreatedEvent(container, DockerContainer("some-id", "some-container-name"))
 
                     on("and none of the container's dependencies being ready") {
                         beforeEachTest { line.onEventPosted(event) }
@@ -312,7 +312,7 @@ object ContainerStartupProgressLineSpec : Spek({
                 }
 
                 on("that notification being for another container") {
-                    val event = ContainerCreatedEvent(otherContainer, DockerContainer("some-id"))
+                    val event = ContainerCreatedEvent(otherContainer, DockerContainer("some-id", "some-container-name"))
                     beforeEachTest { line.onEventPosted(event) }
                     val output by runForEachTest { line.print() }
 
@@ -473,7 +473,7 @@ object ContainerStartupProgressLineSpec : Spek({
                             val taskContainerLine by createForEachTest { ContainerStartupProgressLine(containerWithoutCommand, setOf(dependencyA, dependencyB, dependencyC), true) }
 
                             beforeEachTest {
-                                taskContainerLine.onEventPosted(StepStartingEvent(RunContainerStep(containerWithoutCommand, DockerContainer("some-id"))))
+                                taskContainerLine.onEventPosted(StepStartingEvent(RunContainerStep(containerWithoutCommand, DockerContainer("some-id", "some-container-name"))))
                             }
 
                             val output by runForEachTest { taskContainerLine.print() }
@@ -488,7 +488,7 @@ object ContainerStartupProgressLineSpec : Spek({
                             val taskContainerLine by createForEachTest { ContainerStartupProgressLine(containerWithCommand, setOf(dependencyA, dependencyB, dependencyC), true) }
 
                             beforeEachTest {
-                                taskContainerLine.onEventPosted(StepStartingEvent(RunContainerStep(containerWithCommand, DockerContainer("some-id"))))
+                                taskContainerLine.onEventPosted(StepStartingEvent(RunContainerStep(containerWithCommand, DockerContainer("some-id", "some-container-name"))))
                             }
 
                             val output by runForEachTest { taskContainerLine.print() }
@@ -503,7 +503,7 @@ object ContainerStartupProgressLineSpec : Spek({
                             val taskContainerLine by createForEachTest { ContainerStartupProgressLine(containerWithCommand, setOf(dependencyA, dependencyB, dependencyC), true) }
 
                             beforeEachTest {
-                                taskContainerLine.onEventPosted(StepStartingEvent(RunContainerStep(containerWithCommand, DockerContainer("some-id"))))
+                                taskContainerLine.onEventPosted(StepStartingEvent(RunContainerStep(containerWithCommand, DockerContainer("some-id", "some-container-name"))))
                             }
 
                             val output by runForEachTest { taskContainerLine.print() }
@@ -515,7 +515,7 @@ object ContainerStartupProgressLineSpec : Spek({
                     }
 
                     on("this line's container is not the task container") {
-                        beforeEachTest { line.onEventPosted(StepStartingEvent(RunContainerStep(container, DockerContainer("some-id")))) }
+                        beforeEachTest { line.onEventPosted(StepStartingEvent(RunContainerStep(container, DockerContainer("some-id", "some-container-name")))) }
 
                         val output by runForEachTest { line.print() }
 
@@ -526,7 +526,7 @@ object ContainerStartupProgressLineSpec : Spek({
                 }
 
                 on("that notification being for another container") {
-                    val step = RunContainerStep(otherContainer, DockerContainer("some-id"))
+                    val step = RunContainerStep(otherContainer, DockerContainer("some-id", "some-container-name"))
                     beforeEachTest { line.onEventPosted(StepStartingEvent(step)) }
                     val output by runForEachTest { line.print() }
 

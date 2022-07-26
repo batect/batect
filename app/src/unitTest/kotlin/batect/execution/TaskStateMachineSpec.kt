@@ -349,8 +349,8 @@ object TaskStateMachineSpec : Spek({
                             given("at least one container has been created") {
                                 val container1 = Container("container-1", imageSourceDoesNotMatter())
                                 val container2 = Container("container-2", imageSourceDoesNotMatter())
-                                val dockerContainer1 = DockerContainer("docker-container-1")
-                                val dockerContainer2 = DockerContainer("docker-container-2")
+                                val dockerContainer1 = DockerContainer("docker-container-1", "docker-container-1-name")
+                                val dockerContainer2 = DockerContainer("docker-container-2", "docker-container-1-name")
                                 val event1 = ContainerCreatedEvent(container1, dockerContainer1)
                                 val event2 = ContainerCreatedEvent(container2, dockerContainer2)
                                 val events = setOf(failureEvent, event1, event2)

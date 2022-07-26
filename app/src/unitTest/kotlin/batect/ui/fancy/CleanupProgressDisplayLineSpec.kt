@@ -75,7 +75,7 @@ object CleanupProgressDisplayLineSpec : Spek({
 
                 beforeEachTest {
                     cleanupDisplay.onEventPosted(TaskNetworkCreatedEvent(DockerNetwork("some-network")))
-                    cleanupDisplay.onEventPosted(ContainerCreatedEvent(container, DockerContainer("some-container-id")))
+                    cleanupDisplay.onEventPosted(ContainerCreatedEvent(container, DockerContainer("some-container-id", "some-container-name")))
                 }
 
                 on("and the container hasn't been removed yet") {
@@ -116,8 +116,8 @@ object CleanupProgressDisplayLineSpec : Spek({
 
                 beforeEachTest {
                     cleanupDisplay.onEventPosted(TaskNetworkCreatedEvent(DockerNetwork("some-network")))
-                    cleanupDisplay.onEventPosted(ContainerCreatedEvent(container1, DockerContainer("container-1-id")))
-                    cleanupDisplay.onEventPosted(ContainerCreatedEvent(container2, DockerContainer("container-2-id")))
+                    cleanupDisplay.onEventPosted(ContainerCreatedEvent(container1, DockerContainer("container-1-id", "some-container-name")))
+                    cleanupDisplay.onEventPosted(ContainerCreatedEvent(container2, DockerContainer("container-2-id", "some-container-name")))
                 }
 
                 on("and neither container has been removed yet") {
@@ -160,9 +160,9 @@ object CleanupProgressDisplayLineSpec : Spek({
 
                 beforeEachTest {
                     cleanupDisplay.onEventPosted(TaskNetworkCreatedEvent(DockerNetwork("some-network")))
-                    cleanupDisplay.onEventPosted(ContainerCreatedEvent(container1, DockerContainer("container-1-id")))
-                    cleanupDisplay.onEventPosted(ContainerCreatedEvent(container2, DockerContainer("container-2-id")))
-                    cleanupDisplay.onEventPosted(ContainerCreatedEvent(container3, DockerContainer("container-3-id")))
+                    cleanupDisplay.onEventPosted(ContainerCreatedEvent(container1, DockerContainer("container-1-id", "some-container-name")))
+                    cleanupDisplay.onEventPosted(ContainerCreatedEvent(container2, DockerContainer("container-2-id", "some-container-name")))
+                    cleanupDisplay.onEventPosted(ContainerCreatedEvent(container3, DockerContainer("container-3-id", "some-container-name")))
                 }
 
                 on("and none of the containers have been removed yet") {
@@ -182,10 +182,10 @@ object CleanupProgressDisplayLineSpec : Spek({
 
                 beforeEachTest {
                     cleanupDisplay.onEventPosted(TaskNetworkCreatedEvent(DockerNetwork("some-network")))
-                    cleanupDisplay.onEventPosted(ContainerCreatedEvent(container1, DockerContainer("container-1-id")))
-                    cleanupDisplay.onEventPosted(ContainerCreatedEvent(container2, DockerContainer("container-2-id")))
-                    cleanupDisplay.onEventPosted(ContainerCreatedEvent(container3, DockerContainer("container-3-id")))
-                    cleanupDisplay.onEventPosted(ContainerCreatedEvent(container4, DockerContainer("container-4-id")))
+                    cleanupDisplay.onEventPosted(ContainerCreatedEvent(container1, DockerContainer("container-1-id", "some-container-name")))
+                    cleanupDisplay.onEventPosted(ContainerCreatedEvent(container2, DockerContainer("container-2-id", "some-container-name")))
+                    cleanupDisplay.onEventPosted(ContainerCreatedEvent(container3, DockerContainer("container-3-id", "some-container-name")))
+                    cleanupDisplay.onEventPosted(ContainerCreatedEvent(container4, DockerContainer("container-4-id", "some-container-name")))
                 }
 
                 on("and none of the containers have been removed yet") {

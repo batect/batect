@@ -43,7 +43,7 @@ object RunContainerStepRuleSpec : Spek({
             val rule = RunContainerStepRule(container, dependencies)
 
             given("the container has been created") {
-                val dockerContainer = DockerContainer("some-created-container")
+                val dockerContainer = DockerContainer("some-created-container", "some-created-container-name")
                 val events = setOf(ContainerCreatedEvent(container, dockerContainer))
 
                 on("evaluating the rule") {
@@ -67,7 +67,7 @@ object RunContainerStepRuleSpec : Spek({
 
             given("another container has been created") {
                 val otherContainer = Container("some-other-container", imageSourceDoesNotMatter())
-                val dockerContainer = DockerContainer("some-created-container")
+                val dockerContainer = DockerContainer("some-created-container", "some-created-container-name")
                 val events = setOf(ContainerCreatedEvent(otherContainer, dockerContainer))
 
                 on("evaluating the rule") {
@@ -101,7 +101,7 @@ object RunContainerStepRuleSpec : Spek({
             val events by createForEachTest { mutableSetOf<TaskEvent>() }
 
             given("the container has been created") {
-                val dockerContainer = DockerContainer("some-created-container")
+                val dockerContainer = DockerContainer("some-created-container", "some-created-container-name")
                 beforeEachTest { events.add(ContainerCreatedEvent(container, dockerContainer)) }
 
                 given("none of the dependencies have reported as ready") {

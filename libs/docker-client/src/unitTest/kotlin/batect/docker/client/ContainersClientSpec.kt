@@ -79,7 +79,7 @@ object ContainersClientSpec : Spek({
 
         describe("running a container") {
             given("a Docker container") {
-                val container = DockerContainer("the-container-id")
+                val container = DockerContainer("the-container-id", "the-container-name")
                 val outputStream by createForEachTest { mock<ContainerOutputStream>() }
                 val inputStream by createForEachTest { mock<ContainerInputStream>() }
                 val frameDimensions = Dimensions(10, 20)
@@ -341,7 +341,7 @@ object ContainersClientSpec : Spek({
 
         describe("stopping a container") {
             given("a Docker container") {
-                val container = DockerContainer("the-container-id")
+                val container = DockerContainer("the-container-id", "the-container-name")
 
                 on("stopping that container") {
                     beforeEachTest { client.stop(container) }
@@ -355,7 +355,7 @@ object ContainersClientSpec : Spek({
 
         describe("removing a container") {
             given("an existing container") {
-                val container = DockerContainer("the-container-id")
+                val container = DockerContainer("the-container-id", "the-container-name")
 
                 on("removing that container") {
                     beforeEachTest { client.remove(container) }
@@ -369,7 +369,7 @@ object ContainersClientSpec : Spek({
 
         describe("uploading files or directories to a container") {
             given("an existing container, a set of files and directories to upload and a destination within the container") {
-                val container = DockerContainer("the-container-id")
+                val container = DockerContainer("the-container-id", "the-container-name")
 
                 val itemsToUpload = setOf(
                     ContainerFile("file-1", 100, 200, "file contents".toByteArray(Charsets.UTF_8)),
@@ -392,7 +392,7 @@ object ContainersClientSpec : Spek({
             val cancellationContext by createForEachTest { mock<CancellationContext>() }
 
             given("a Docker container with no health check") {
-                val container = DockerContainer("the-container-id")
+                val container = DockerContainer("the-container-id", "the-container-name")
 
                 beforeEachTest {
                     whenever(api.inspect(container)).thenReturn(
@@ -415,7 +415,7 @@ object ContainersClientSpec : Spek({
             }
 
             given("the Docker client returns an error when checking if the container has a health check") {
-                val container = DockerContainer("the-container-id")
+                val container = DockerContainer("the-container-id", "the-container-name")
 
                 beforeEachTest {
                     whenever(api.inspect(container)).thenThrow(ContainerInspectionFailedException("Something went wrong"))
@@ -429,7 +429,7 @@ object ContainersClientSpec : Spek({
             }
 
             given("a Docker container with a health check") {
-                val container = DockerContainer("the-container-id")
+                val container = DockerContainer("the-container-id", "the-container-name")
 
                 beforeEachTest {
                     whenever(api.inspect(container)).thenReturn(
@@ -513,7 +513,7 @@ object ContainersClientSpec : Spek({
         }
 
         describe("getting the last health check result for a container") {
-            val container = DockerContainer("some-container")
+            val container = DockerContainer("some-container", "some-container-name")
 
             on("the container only having one last health check result") {
                 val info = DockerContainerInfo(

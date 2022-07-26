@@ -135,7 +135,7 @@ object CleanupStagePlannerSpec : Spek({
             }
 
             given("only a single container was created") {
-                val dockerContainer = DockerContainer("some-container-id")
+                val dockerContainer = DockerContainer("some-container-id", "some-container-name")
                 val expectedCleanupCommands = listOf("docker rm --force --volumes some-container-id", "docker network rm the-network")
 
                 beforeEachTest { events.add(ContainerCreatedEvent(taskContainer, dockerContainer)) }
@@ -216,9 +216,9 @@ object CleanupStagePlannerSpec : Spek({
             }
 
             given("all of the containers were created") {
-                val taskDockerContainer = DockerContainer("task-container-id")
-                val container1DockerContainer = DockerContainer("container-1-id")
-                val container2DockerContainer = DockerContainer("container-2-id")
+                val taskDockerContainer = DockerContainer("task-container-id", "task-container-name")
+                val container1DockerContainer = DockerContainer("container-1-id", "container-1-name")
+                val container2DockerContainer = DockerContainer("container-2-id", "container-2-name")
 
                 beforeEachTest {
                     events.add(ContainerCreatedEvent(taskContainer, taskDockerContainer))

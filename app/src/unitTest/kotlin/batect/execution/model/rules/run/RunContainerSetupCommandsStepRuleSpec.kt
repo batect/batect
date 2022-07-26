@@ -39,7 +39,7 @@ object RunContainerSetupCommandsStepRuleSpec : Spek({
         val rule = RunContainerSetupCommandsStepRule(container)
 
         given("the container has become healthy") {
-            val dockerContainer = DockerContainer("some-container-id")
+            val dockerContainer = DockerContainer("some-container-id", "some-container-name")
             val events = setOf(
                 ContainerCreatedEvent(container, dockerContainer),
                 ContainerStartedEvent(container),

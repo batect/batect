@@ -42,7 +42,7 @@ import org.spekframework.spek2.style.specification.describe
 object WaitForContainerToBecomeHealthyStepRunnerSpec : Spek({
     describe("running a 'wait for container to become healthy' step") {
         val container = Container("some-container", imageSourceDoesNotMatter())
-        val dockerContainer = DockerContainer("some-id")
+        val dockerContainer = DockerContainer("some-id", "some-name")
         val step = WaitForContainerToBecomeHealthyStep(container, dockerContainer)
 
         val containersClient by createForEachTest { mock<ContainersClient>() }

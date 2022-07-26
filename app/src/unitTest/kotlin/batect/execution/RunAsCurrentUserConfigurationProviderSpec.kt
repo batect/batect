@@ -61,7 +61,7 @@ import java.nio.file.Files
 object RunAsCurrentUserConfigurationProviderSpec : Spek({
     describe("a 'run as current user' configuration provider") {
         val containersClient by createForEachTest { mock<ContainersClient>() }
-        val dockerContainer = DockerContainer("abc-123")
+        val dockerContainer = DockerContainer("abc-123", "abc-123-name")
 
         given("the container has 'run as current user' disabled") {
             val fileSystem by createForEachTest { Jimfs.newFileSystem(Configuration.unix()) }

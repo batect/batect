@@ -34,7 +34,7 @@ import org.spekframework.spek2.style.specification.describe
 object RemoveContainerStepRuleSpec : Spek({
     describe("a remove container step rule") {
         val containerToRemove = Container("the-container", imageSourceDoesNotMatter())
-        val dockerContainerToRemove = DockerContainer("some-container-id")
+        val dockerContainerToRemove = DockerContainer("some-container-id", "some-container-name")
 
         given("the container was started") {
             val rule = RemoveContainerStepRule(containerToRemove, dockerContainerToRemove, true)
@@ -110,7 +110,7 @@ object RemoveContainerStepRuleSpec : Spek({
                         |{
                         |   "type": "${rule::class.qualifiedName}",
                         |   "container": "the-container",
-                        |   "dockerContainer": {"id": "some-container-id", "name": null},
+                        |   "dockerContainer": {"id": "some-container-id", "name": "some-container-name"},
                         |   "containerWasStarted": true,
                         |   "manualCleanupCommand": "docker rm --force --volumes some-container-id"
                         |}

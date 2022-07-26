@@ -25,7 +25,7 @@ import java.time.Duration
 data class DockerImage(val id: String)
 
 @Serializable
-data class DockerContainer(val id: String, val name: String? = null)
+data class DockerContainer(val id: String, val name: String)
 
 data class DockerContainerRunResult(val exitCode: Long)
 

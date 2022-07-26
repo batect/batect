@@ -34,7 +34,7 @@ import org.spekframework.spek2.style.specification.describe
 object StopContainerStepRuleSpec : Spek({
     describe("a stop container step rule") {
         val containerToStop = Container("the-container", imageSourceDoesNotMatter())
-        val dockerContainerToStop = DockerContainer("some-container-id")
+        val dockerContainerToStop = DockerContainer("some-container-id", "some-container-name")
 
         given("there are no containers that must be stopped first") {
             val rule = StopContainerStepRule(containerToStop, dockerContainerToStop, emptySet())
@@ -56,7 +56,7 @@ object StopContainerStepRuleSpec : Spek({
                             |{
                             |   "type": "${rule::class.qualifiedName}",
                             |   "container": "the-container",
-                            |   "dockerContainer": {"id": "some-container-id", "name": null},
+                            |   "dockerContainer": {"id": "some-container-id", "name": "some-container-name"},
                             |   "containersThatMustBeStoppedFirst": [],
                             |   "manualCleanupCommand": null
                             |}
@@ -106,7 +106,7 @@ object StopContainerStepRuleSpec : Spek({
                             |{
                             |   "type": "${rule::class.qualifiedName}",
                             |   "container": "the-container",
-                            |   "dockerContainer": {"id": "some-container-id", "name": null},
+                            |   "dockerContainer": {"id": "some-container-id", "name": "some-container-name"},
                             |   "containersThatMustBeStoppedFirst": ["container-1", "container-2"],
                             |   "manualCleanupCommand": null
                             |}

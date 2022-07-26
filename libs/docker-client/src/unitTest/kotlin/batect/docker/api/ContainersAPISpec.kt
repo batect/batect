@@ -97,7 +97,7 @@ object ContainersAPISpec : Spek({
 
         describe("starting a container") {
             given("a Docker container") {
-                val container = DockerContainer("the-container-id")
+                val container = DockerContainer("the-container-id", "the-container-name")
                 val expectedUrl = "$dockerBaseUrl/v1.37/containers/the-container-id/start"
                 val clientWithLongTimeout by createForEachTest { mock<OkHttpClient>() }
                 val longTimeoutClientBuilder by createForEachTest {
@@ -136,7 +136,7 @@ object ContainersAPISpec : Spek({
 
         describe("inspecting a container") {
             given("an existing container") {
-                val container = DockerContainer("some-container")
+                val container = DockerContainer("some-container", "some-container-name")
                 val expectedUrl = "$dockerBaseUrl/v1.37/containers/some-container/json"
 
                 given("the container has previous health check results") {
@@ -245,7 +245,7 @@ object ContainersAPISpec : Spek({
 
         describe("stopping a container") {
             given("a Docker container") {
-                val container = DockerContainer("the-container-id")
+                val container = DockerContainer("the-container-id", "the-container-name")
                 val expectedUrl = "$dockerBaseUrl/v1.37/containers/the-container-id/stop?timeout=10"
                 val clientWithLongTimeout by createForEachTest { mock<OkHttpClient>() }
                 val longTimeoutClientBuilder by createForEachTest {
@@ -293,7 +293,7 @@ object ContainersAPISpec : Spek({
 
         describe("removing a container") {
             given("a Docker container") {
-                val container = DockerContainer("the-container-id")
+                val container = DockerContainer("the-container-id", "the-container-name")
                 val expectedUrl = "$dockerBaseUrl/v1.37/containers/the-container-id?v=true&force=true"
                 val clientWithLongTimeout by createForEachTest { mock<OkHttpClient>() }
                 val longTimeoutClientBuilder by createForEachTest {
@@ -332,7 +332,7 @@ object ContainersAPISpec : Spek({
 
         describe("waiting for the next event from a container") {
             given("a Docker container and a list of event types to listen for") {
-                val container = DockerContainer("the-container-id")
+                val container = DockerContainer("the-container-id", "the-container-name")
                 val eventTypes = listOf("die", "health_status")
                 val cancellationContext by createForEachTest { mock<CancellationContext>() }
 
@@ -425,7 +425,7 @@ object ContainersAPISpec : Spek({
 
         describe("waiting for a container to exit") {
             given("a Docker container") {
-                val container = DockerContainer("the-container-id")
+                val container = DockerContainer("the-container-id", "the-container-name")
                 val cancellationContext by createForEachTest { mock<CancellationContext>() }
 
                 val expectedUrl = "$dockerBaseUrl/v1.37/containers/the-container-id/wait?condition=next-exit"
@@ -545,7 +545,7 @@ object ContainersAPISpec : Spek({
             }
 
             given("a Docker container") {
-                val container = DockerContainer("the-container-id")
+                val container = DockerContainer("the-container-id", "the-container-name")
                 val expectedHeaders = Headers.Builder()
                     .add("Connection", "Upgrade")
                     .add("Upgrade", "tcp")
@@ -665,7 +665,7 @@ object ContainersAPISpec : Spek({
 
         describe("sending a signal to a container") {
             given("a Docker container") {
-                val container = DockerContainer("the-container-id")
+                val container = DockerContainer("the-container-id", "the-container-name")
                 val signal = Signal.SIGINT
                 val expectedUrl = "$dockerBaseUrl/v1.37/containers/the-container-id/kill?signal=SIGINT"
 
@@ -690,7 +690,7 @@ object ContainersAPISpec : Spek({
 
         describe("resizing a container TTY") {
             given("a Docker container") {
-                val container = DockerContainer("the-container-id")
+                val container = DockerContainer("the-container-id", "the-container-name")
                 val dimensions = Dimensions(123, 456)
                 val expectedUrl = "$dockerBaseUrl/v1.37/containers/the-container-id/resize?h=123&w=456"
 
@@ -747,7 +747,7 @@ object ContainersAPISpec : Spek({
 
         describe("uploading files or folders to a container") {
             given("a Docker container") {
-                val container = DockerContainer("the-container-id")
+                val container = DockerContainer("the-container-id", "the-container-name")
 
                 val expectedUrl = hasScheme("http") and
                     hasHost(dockerHost) and

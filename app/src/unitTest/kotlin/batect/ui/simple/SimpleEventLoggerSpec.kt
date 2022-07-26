@@ -237,7 +237,7 @@ object SimpleEventLoggerSpec : Spek({
                             val loggerForContainerWithoutCommand by createForEachTest { SimpleEventLogger(setOf(taskContainerWithoutCommand), taskContainerWithoutCommand, failureErrorMessageFormatter, console, errorConsole, mock()) }
 
                             beforeEachTest {
-                                loggerForContainerWithoutCommand.postEvent(StepStartingEvent(RunContainerStep(taskContainerWithoutCommand, DockerContainer("not-important"))))
+                                loggerForContainerWithoutCommand.postEvent(StepStartingEvent(RunContainerStep(taskContainerWithoutCommand, DockerContainer("not-important", "some-name"))))
                             }
 
                             it("prints a message to the output without mentioning a command") {
@@ -250,7 +250,7 @@ object SimpleEventLoggerSpec : Spek({
                             val loggerForContainerWithCommand by createForEachTest { SimpleEventLogger(setOf(taskContainerWithCommand), taskContainerWithCommand, failureErrorMessageFormatter, console, errorConsole, mock()) }
 
                             beforeEachTest {
-                                loggerForContainerWithCommand.postEvent(StepStartingEvent(RunContainerStep(taskContainerWithCommand, DockerContainer("not-important"))))
+                                loggerForContainerWithCommand.postEvent(StepStartingEvent(RunContainerStep(taskContainerWithCommand, DockerContainer("not-important", "some-name"))))
                             }
 
                             it("prints a message to the output including the original command") {
@@ -261,7 +261,7 @@ object SimpleEventLoggerSpec : Spek({
 
                     on("when the step will run a dependency container") {
                         beforeEachTest {
-                            val step = RunContainerStep(container, DockerContainer("not-important"))
+                            val step = RunContainerStep(container, DockerContainer("not-important", "some-name"))
                             logger.postEvent(StepStartingEvent(step))
                         }
 

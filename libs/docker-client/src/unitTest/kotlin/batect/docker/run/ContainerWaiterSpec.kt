@@ -38,7 +38,7 @@ object ContainerWaiterSpec : Spek({
         val waiter by createForEachTest { ContainerWaiter(api) }
 
         on("starting to wait for a container to exit") {
-            val container = DockerContainer("the-container")
+            val container = DockerContainer("the-container", "the-container-name")
 
             beforeEachTest { whenever(api.waitForExit(container, cancellationContext)).doReturn(123) }
 

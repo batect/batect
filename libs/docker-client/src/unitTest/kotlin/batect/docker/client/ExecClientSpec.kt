@@ -53,7 +53,7 @@ object ExecClientSpec : Spek({
 
         describe("running a command in a running container") {
             val command = Command.parse("do the thing")
-            val container = DockerContainer("some-container-id")
+            val container = DockerContainer("some-container-id", "some-container-name")
             val environmentVariables = mapOf("THING" to "value")
             val privileged = false
             val userAndGroup = UserAndGroup(123, 456)

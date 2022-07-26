@@ -205,7 +205,7 @@ object InterleavedEventLoggerSpec : Spek({
                 describe("when a 'run container' step is starting") {
                     on("and no 'create container' step has been seen") {
                         beforeEachTest {
-                            val step = RunContainerStep(taskContainer, DockerContainer("not-important"))
+                            val step = RunContainerStep(taskContainer, DockerContainer("not-important", "some-name"))
                             logger.postEvent(StepStartingEvent(step))
                         }
 
@@ -219,7 +219,7 @@ object InterleavedEventLoggerSpec : Spek({
                             val containerWithoutCommand = taskContainer.copy(command = null)
 
                             beforeEachTest {
-                                logger.postEvent(StepStartingEvent(RunContainerStep(containerWithoutCommand, DockerContainer("not-important"))))
+                                logger.postEvent(StepStartingEvent(RunContainerStep(containerWithoutCommand, DockerContainer("not-important", "some-name"))))
                             }
 
                             it("prints a message to the output without mentioning a command") {
@@ -231,7 +231,7 @@ object InterleavedEventLoggerSpec : Spek({
                             val containerWithCommand = taskContainer.copy(command = Command.parse("do-stuff.sh"))
 
                             beforeEachTest {
-                                logger.postEvent(StepStartingEvent(RunContainerStep(containerWithCommand, DockerContainer("not-important"))))
+                                logger.postEvent(StepStartingEvent(RunContainerStep(containerWithCommand, DockerContainer("not-important", "some-name"))))
                             }
 
                             it("prints a message to the output including the original command") {

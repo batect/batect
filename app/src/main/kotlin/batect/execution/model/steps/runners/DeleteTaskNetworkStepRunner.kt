@@ -16,22 +16,27 @@
 
 package batect.execution.model.steps.runners
 
-import batect.docker.api.NetworkDeletionFailedException
-import batect.docker.client.NetworksClient
+import batect.dockerclient.DockerClient
+import batect.dockerclient.NetworkDeletionFailedException
+import batect.dockerclient.NetworkReference
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.events.TaskNetworkDeletedEvent
 import batect.execution.model.events.TaskNetworkDeletionFailedEvent
 import batect.execution.model.steps.DeleteTaskNetworkStep
+import kotlinx.coroutines.runBlocking
 
 class DeleteTaskNetworkStepRunner(
-    private val networksClient: NetworksClient
+    private val client: DockerClient
 ) {
     fun run(step: DeleteTaskNetworkStep, eventSink: TaskEventSink) {
         try {
-            networksClient.delete(step.network)
+            runBlocking {
+                client.deleteNetwork(NetworkReference(step.network.id))
+            }
+
             eventSink.postEvent(TaskNetworkDeletedEvent)
         } catch (e: NetworkDeletionFailedException) {
-            eventSink.postEvent(TaskNetworkDeletionFailedEvent(e.outputFromDocker))
+            eventSink.postEvent(TaskNetworkDeletionFailedEvent(e.message ?: ""))
         }
     }
 }

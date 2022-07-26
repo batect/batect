@@ -17,13 +17,16 @@
 package batect.execution.model.steps.runners
 
 import batect.docker.DockerNetwork
-import batect.docker.api.NetworkDeletionFailedException
-import batect.docker.client.NetworksClient
+import batect.dockerclient.DockerClient
+import batect.dockerclient.NetworkDeletionFailedException
+import batect.dockerclient.NetworkReference
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.events.TaskNetworkDeletedEvent
 import batect.execution.model.events.TaskNetworkDeletionFailedEvent
 import batect.execution.model.steps.DeleteTaskNetworkStep
+import batect.testutils.beforeEachTestSuspend
 import batect.testutils.createForEachTest
+import batect.testutils.itSuspend
 import batect.testutils.on
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
@@ -36,16 +39,16 @@ object DeleteTaskNetworkStepRunnerSpec : Spek({
         val network = DockerNetwork("some-network")
         val step = DeleteTaskNetworkStep(network)
 
-        val networksClient by createForEachTest { mock<NetworksClient>() }
+        val dockerClient by createForEachTest { mock<DockerClient>() }
         val eventSink by createForEachTest { mock<TaskEventSink>() }
 
-        val runner by createForEachTest { DeleteTaskNetworkStepRunner(networksClient) }
+        val runner by createForEachTest { DeleteTaskNetworkStepRunner(dockerClient) }
 
         on("when deleting the network succeeds") {
             beforeEachTest { runner.run(step, eventSink) }
 
-            it("deletes the network") {
-                verify(networksClient).delete(network)
+            itSuspend("deletes the network") {
+                verify(dockerClient).deleteNetwork(NetworkReference("some-network"))
             }
 
             it("emits a 'network deleted' event") {
@@ -54,8 +57,9 @@ object DeleteTaskNetworkStepRunnerSpec : Spek({
         }
 
         on("when removing the container fails") {
-            beforeEachTest {
-                whenever(networksClient.delete(network)).thenThrow(NetworkDeletionFailedException("some-network", "Something went wrong"))
+            beforeEachTestSuspend {
+                whenever(dockerClient.deleteNetwork(NetworkReference("some-network")))
+                    .thenThrow(NetworkDeletionFailedException("Something went wrong"))
 
                 runner.run(step, eventSink)
             }

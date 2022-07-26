@@ -17,21 +17,23 @@
 package batect.execution.model.steps.runners
 
 import batect.cli.CommandLineOptions
-import batect.docker.DockerException
+import batect.docker.DockerNetwork
 import batect.docker.DockerResourceNameGenerator
-import batect.docker.api.NetworkCreationFailedException
 import batect.docker.client.DockerContainerType
-import batect.docker.client.NetworksClient
+import batect.dockerclient.DockerClient
+import batect.dockerclient.DockerClientException
+import batect.dockerclient.NetworkCreationFailedException
 import batect.execution.model.events.CustomTaskNetworkCheckFailedEvent
 import batect.execution.model.events.CustomTaskNetworkCheckedEvent
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.events.TaskNetworkCreatedEvent
 import batect.execution.model.events.TaskNetworkCreationFailedEvent
+import kotlinx.coroutines.runBlocking
 
 class PrepareTaskNetworkStepRunner(
     private val nameGenerator: DockerResourceNameGenerator,
     private val containerType: DockerContainerType,
-    private val networksClient: NetworksClient,
+    private val client: DockerClient,
     private val commandLineOptions: CommandLineOptions
 ) {
     fun run(eventSink: TaskEventSink) {
@@ -50,18 +52,30 @@ class PrepareTaskNetworkStepRunner(
             }
 
             val name = nameGenerator.generateNameFor("network")
-            val network = networksClient.create(name, driver)
-            eventSink.postEvent(TaskNetworkCreatedEvent(network))
+
+            val network = runBlocking {
+                client.createNetwork(name, driver)
+            }
+
+            eventSink.postEvent(TaskNetworkCreatedEvent(DockerNetwork(network.id)))
         } catch (e: NetworkCreationFailedException) {
-            eventSink.postEvent(TaskNetworkCreationFailedEvent(e.outputFromDocker))
+            eventSink.postEvent(TaskNetworkCreationFailedEvent(e.message ?: ""))
         }
     }
 
     private fun checkExistingNetwork(eventSink: TaskEventSink, networkIdentifier: String) {
         try {
-            val network = networksClient.getByNameOrId(networkIdentifier)
-            eventSink.postEvent(CustomTaskNetworkCheckedEvent(network))
-        } catch (e: DockerException) {
+            val network = runBlocking {
+                client.getNetworkByNameOrID(networkIdentifier)
+            }
+
+            if (network == null) {
+                eventSink.postEvent(CustomTaskNetworkCheckFailedEvent(networkIdentifier, "The network '$networkIdentifier' does not exist."))
+                return
+            }
+
+            eventSink.postEvent(CustomTaskNetworkCheckedEvent(DockerNetwork(network.id)))
+        } catch (e: DockerClientException) {
             eventSink.postEvent(CustomTaskNetworkCheckFailedEvent(networkIdentifier, e.message ?: ""))
         }
     }

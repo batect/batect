@@ -14,18 +14,11 @@
     limitations under the License.
 */
 
-plugins {
-    id("batect-kotlin")
-}
+package batect.testutils
 
-dependencies {
-    implementation(platform(libs.okhttp.bom))
+import kotlinx.coroutines.runBlocking
+import org.spekframework.spek2.dsl.LifecycleAware
+import org.spekframework.spek2.style.specification.Suite
 
-    implementation(libs.kotlinx.coroutines.core)
-    implementation(libs.spek.dsl.jvm)
-    implementation(libs.hamkrest)
-    implementation(libs.jimfs)
-    implementation(libs.jnr.posix)
-    implementation("com.squareup.okhttp3:okhttp")
-    implementation(libs.mockito.kotlin)
-}
+fun LifecycleAware.beforeEachTestSuspend(f: suspend () -> Unit) = beforeEachTest { runBlocking { f() } }
+fun Suite.itSuspend(description: String, f: suspend () -> Unit) = it(description) { runBlocking { f() } }

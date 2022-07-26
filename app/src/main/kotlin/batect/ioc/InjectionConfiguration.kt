@@ -71,6 +71,7 @@ import batect.docker.pull.RegistryCredentialsProvider
 import batect.docker.run.ContainerIOStreamer
 import batect.docker.run.ContainerTTYManager
 import batect.docker.run.ContainerWaiter
+import batect.dockerclient.TLSVerification
 import batect.execution.ConfigVariablesProvider
 import batect.execution.InterruptionTrap
 import batect.execution.TaskSuggester
@@ -116,6 +117,7 @@ import batect.wrapper.WrapperCacheCleanupTask
 import com.charleskorn.okhttp.systemkeystore.useOperatingSystemCertificateTrustStore
 import jnr.ffi.Platform
 import okhttp3.OkHttpClient
+import okio.Path.Companion.toOkioPath
 import org.kodein.di.DI
 import org.kodein.di.DirectDI
 import org.kodein.di.bind
@@ -206,6 +208,23 @@ private val dockerModule = DI.Module("docker") {
         } else {
             DockerTLSConfig.DisableTLS
         }
+    }
+
+    bind<batect.dockerclient.DockerClient>() with singleton {
+        val builder = batect.dockerclient.DockerClient.Builder()
+            .withHost(commandLineOptions().dockerHost)
+            .withConfigDirectory(commandLineOptions().dockerConfigDirectory.toOkioPath())
+
+        if (commandLineOptions().dockerUseTLS) {
+            builder.withTLSConfiguration(
+                commandLineOptions().dockerTlsCACertificatePath.toOkioPath(),
+                commandLineOptions().dockerTLSCertificatePath.toOkioPath(),
+                commandLineOptions().dockerTLSKeyPath.toOkioPath(),
+                if (commandLineOptions().dockerVerifyTLS) TLSVerification.Enabled else TLSVerification.InsecureDisabled
+            )
+        }
+
+        builder.build()
     }
 }
 

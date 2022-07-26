@@ -6,6 +6,7 @@ spotless = "6.9.0"
 wire = "4.4.1"
 
 [libraries]
+batect-dockerclient = { group = "dev.batect.docker", name = "client", version = "0.2.0" }
 bouncycastle = { group = "org.bouncycastle", name = "bcpkix-jdk15on", version = "1.70" }
 commons-codec = { group = "commons-codec", name = "commons-codec", version = "1.15" }
 commons-compress = { group = "org.apache.commons", name = "commons-compress", version = "1.21" }
@@ -22,6 +23,7 @@ junit-platform = { group = "org.junit.platform", name = "junit-platform-engine",
 kaml = { group = "com.charleskorn.kaml", name = "kaml", version = "0.46.0" }
 kodein = { group = "org.kodein.di", name = "kodein-di", version = "7.14.0" }
 kotest-assertions-core = { group = "io.kotest", name = "kotest-assertions-core", version.ref = "kotest" }
+kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version = "1.6.4" }
 kotlinx-serialization-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-core", version.ref = "kotlinx-serialization" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 licensee-plugin = { group = "app.cash.licensee", name = "licensee-gradle-plugin", version = "1.5.0" }

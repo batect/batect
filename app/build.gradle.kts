@@ -40,6 +40,7 @@ dependencies {
     implementation(platform(libs.okio.bom))
     implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
 
+    implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kodein)
     implementation("com.squareup.okio:okio")
@@ -50,6 +51,7 @@ dependencies {
     implementation(libs.bouncycastle)
     implementation(libs.osplatformfinder)
     implementation(libs.okhttp.systemkeystore)
+    implementation(libs.batect.dockerclient)
 
     implementation(project(":libs:docker-client"))
     implementation(project(":libs:git-client"))

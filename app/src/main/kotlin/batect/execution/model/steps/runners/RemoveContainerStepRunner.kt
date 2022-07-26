@@ -16,22 +16,27 @@
 
 package batect.execution.model.steps.runners
 
-import batect.docker.api.ContainerRemovalFailedException
-import batect.docker.client.ContainersClient
+import batect.dockerclient.ContainerReference
+import batect.dockerclient.ContainerRemovalFailedException
+import batect.dockerclient.DockerClient
 import batect.execution.model.events.ContainerRemovalFailedEvent
 import batect.execution.model.events.ContainerRemovedEvent
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.steps.RemoveContainerStep
+import kotlinx.coroutines.runBlocking
 
 class RemoveContainerStepRunner(
-    private val containersClient: ContainersClient
+    private val client: DockerClient
 ) {
     fun run(step: RemoveContainerStep, eventSink: TaskEventSink) {
         try {
-            containersClient.remove(step.dockerContainer)
+            runBlocking {
+                client.removeContainer(ContainerReference(step.dockerContainer.id), force = true, removeVolumes = true)
+            }
+
             eventSink.postEvent(ContainerRemovedEvent(step.container))
         } catch (e: ContainerRemovalFailedException) {
-            eventSink.postEvent(ContainerRemovalFailedEvent(step.container, e.outputFromDocker))
+            eventSink.postEvent(ContainerRemovalFailedEvent(step.container, e.message ?: ""))
         }
     }
 }

@@ -18,14 +18,17 @@ package batect.execution.model.steps.runners
 
 import batect.config.Container
 import batect.docker.DockerContainer
-import batect.docker.api.ContainerRemovalFailedException
-import batect.docker.client.ContainersClient
+import batect.dockerclient.ContainerReference
+import batect.dockerclient.ContainerRemovalFailedException
+import batect.dockerclient.DockerClient
 import batect.execution.model.events.ContainerRemovalFailedEvent
 import batect.execution.model.events.ContainerRemovedEvent
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.steps.RemoveContainerStep
+import batect.testutils.beforeEachTestSuspend
 import batect.testutils.createForEachTest
 import batect.testutils.imageSourceDoesNotMatter
+import batect.testutils.itSuspend
 import batect.testutils.on
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
@@ -39,15 +42,15 @@ object RemoveContainerStepRunnerSpec : Spek({
         val dockerContainer = DockerContainer("some-id")
         val step = RemoveContainerStep(container, dockerContainer)
 
-        val containersClient by createForEachTest { mock<ContainersClient>() }
+        val dockerClient by createForEachTest { mock<DockerClient>() }
         val eventSink by createForEachTest { mock<TaskEventSink>() }
-        val runner by createForEachTest { RemoveContainerStepRunner(containersClient) }
+        val runner by createForEachTest { RemoveContainerStepRunner(dockerClient) }
 
         on("when removing the container succeeds") {
             beforeEachTest { runner.run(step, eventSink) }
 
-            it("removes the container") {
-                verify(containersClient).remove(dockerContainer)
+            itSuspend("removes the container") {
+                verify(dockerClient).removeContainer(ContainerReference("some-id"), force = true, removeVolumes = true)
             }
 
             it("emits a 'container removed' event") {
@@ -56,8 +59,9 @@ object RemoveContainerStepRunnerSpec : Spek({
         }
 
         on("when removing the container fails") {
-            beforeEachTest {
-                whenever(containersClient.remove(dockerContainer)).thenThrow(ContainerRemovalFailedException("some-id", "Something went wrong"))
+            beforeEachTestSuspend {
+                whenever(dockerClient.removeContainer(ContainerReference("some-id"), force = true, removeVolumes = true))
+                    .thenThrow(ContainerRemovalFailedException("Something went wrong"))
 
                 runner.run(step, eventSink)
             }

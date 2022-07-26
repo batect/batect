@@ -134,7 +134,7 @@ class FailureErrorMessageFormatter(private val runOptions: RunOptions, systemInf
         val neverStarted = events.none { it is ContainerStartedEvent && it.container == container }
         val exited = events.any { it is RunningContainerExitedEvent && it.container == container }
         val stopped = events.any { it is ContainerStoppedEvent && it.container == container }
-        val containerName = dockerContainer.name!!
+        val containerName = dockerContainer.name
 
         val execCommand = if (neverStarted || exited || stopped) {
             "docker start $containerName; docker exec -it $containerName <command>"

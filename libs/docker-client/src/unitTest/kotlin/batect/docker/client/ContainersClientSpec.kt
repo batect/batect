@@ -16,7 +16,6 @@
 
 package batect.docker.client
 
-import batect.docker.ContainerCreationRequest
 import batect.docker.ContainerDirectory
 import batect.docker.ContainerFile
 import batect.docker.ContainerHealthCheckException
@@ -77,26 +76,6 @@ object ContainersClientSpec : Spek({
         val ttyManager by createForEachTest { mock<ContainerTTYManager>() }
         val logger by createLoggerForEachTestWithoutCustomSerializers()
         val client by createForEachTest { ContainersClient(api, consoleManager, waiter, ioStreamer, ttyManager, logger) }
-
-        describe("creating a container") {
-            given("a container configuration and a built image") {
-                val request = mock<ContainerCreationRequest>()
-
-                on("creating the container") {
-                    beforeEachTest { whenever(api.create(request)).doReturn(DockerContainer("abc123")) }
-
-                    val result by runForEachTest { client.create(request) }
-
-                    it("sends a request to the Docker daemon to create the container") {
-                        verify(api).create(request)
-                    }
-
-                    it("returns the ID of the created container") {
-                        assertThat(result.id, equalTo("abc123"))
-                    }
-                }
-            }
-        }
 
         describe("running a container") {
             given("a Docker container") {

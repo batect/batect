@@ -70,7 +70,7 @@ import org.spekframework.spek2.style.specification.Suite
 import org.spekframework.spek2.style.specification.describe
 import java.nio.file.Files
 import java.nio.file.Path
-import java.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 object ConfigurationLoaderSpec : Spek({
     describe("a configuration loader") {
@@ -639,7 +639,7 @@ object ConfigurationLoaderSpec : Spek({
                 )
                 assertThat(container.workingDirectory, equalTo("/here"))
                 assertThat(container.portMappings, equalTo(setOf(PortMapping(1234, 5678), PortMapping(9012, 3456))))
-                assertThat(container.healthCheckConfig, equalTo(HealthCheckConfig(Duration.ofSeconds(2), 10, Duration.ofSeconds(1))))
+                assertThat(container.healthCheckConfig, equalTo(HealthCheckConfig(2.seconds, 10, 1.seconds)))
                 assertThat(container.runAsCurrentUserConfig, equalTo(RunAsCurrentUserConfig.RunAsCurrentUser("/home/something")))
                 assertThat(
                     container.volumeMounts,

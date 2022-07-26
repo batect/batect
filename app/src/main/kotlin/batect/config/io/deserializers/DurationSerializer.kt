@@ -17,19 +17,36 @@
 package batect.config.io.deserializers
 
 import batect.config.io.ConfigurationException
-import batect.logging.DurationLoggingSerializer
 import com.charleskorn.kaml.YamlInput
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
-import java.time.Duration
-import java.time.temporal.ChronoUnit
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.microseconds
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.nanoseconds
+import kotlin.time.Duration.Companion.seconds
 
-object DurationSerializer : DurationLoggingSerializer() {
+object DurationSerializer : KSerializer<Duration> {
     private const val valueRegexString = """((\d+)|(\d+\.\d*)|(\d*\.\d+))(ns|\u00b5s|\u03bcs|us|ms|s|m|h)"""
     private val fullRegex = "^([+-])?(0|($valueRegexString)+)\$".toRegex()
     private val valueRegex = valueRegexString.toRegex()
 
-    override fun serialize(encoder: Encoder, value: Duration) = super.serialize(encoder, value)
+    override val descriptor: SerialDescriptor = String.serializer().descriptor
+
+    override fun serialize(encoder: Encoder, value: Duration) {
+        val formatted = when {
+            value == Duration.ZERO -> "0"
+            value.isNegative() -> "-" + value.absoluteValue.toString()
+            else -> value.toString()
+        }
+
+        encoder.encodeString(formatted)
+    }
 
     override fun deserialize(decoder: Decoder): Duration {
         val text = decoder.decodeString()
@@ -53,27 +70,25 @@ object DurationSerializer : DurationLoggingSerializer() {
         return when (sign) {
             "" -> duration
             "+" -> duration
-            "-" -> duration.negated()
+            "-" -> duration.unaryMinus()
             else -> throw IllegalArgumentException("Invalid sign: $sign")
         }
     }
 
     private fun convertValue(value: MatchResult): Duration {
-        val numericPart = value.groupValues[1].toBigDecimal()
+        val numericPart = value.groupValues[1].toDouble()
 
-        val unit = when (val unitPart = value.groupValues[5]) {
-            "h" -> ChronoUnit.HOURS
-            "m" -> ChronoUnit.MINUTES
-            "s" -> ChronoUnit.SECONDS
-            "ms" -> ChronoUnit.MILLIS
-            "us" -> ChronoUnit.MICROS
-            "\u00b5s" -> ChronoUnit.MICROS
-            "\u03bcs" -> ChronoUnit.MICROS
-            "ns" -> ChronoUnit.NANOS
+        return when (val unitPart = value.groupValues[5]) {
+            "h" -> numericPart.hours
+            "m" -> numericPart.minutes
+            "s" -> numericPart.seconds
+            "ms" -> numericPart.milliseconds
+            "us" -> numericPart.microseconds
+            "\u00b5s" -> numericPart.microseconds
+            "\u03bcs" -> numericPart.microseconds
+            "ns" -> numericPart.nanoseconds
             else -> throw IllegalArgumentException("Unknown time unit: $unitPart")
         }
-
-        return Duration.ofNanos(numericPart.multiply(unit.duration.toNanos().toBigDecimal()).toLong())
     }
 
     private fun Sequence<Duration>.sum(): Duration = this.reduce { acc, item -> acc + item }

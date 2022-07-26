@@ -42,6 +42,7 @@ data class PortRange(val from: Int, val to: Int) {
     }
 
     val size = to - from + 1
+    val ports = this.from..this.to
 
     fun toDockerPortRange() = DockerPortRange(from, to)
 

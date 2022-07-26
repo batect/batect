@@ -28,7 +28,7 @@ import com.natpryce.hamkrest.assertion.assertThat
 import org.araqnid.hamkrest.json.equivalentTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 object TaskSpecialisedConfigurationSpec : Spek({
     describe("task-specialised configuration") {
@@ -130,7 +130,7 @@ object TaskSpecialisedConfigurationSpec : Spek({
                     setOf(DeviceMount("/dev/local", "/dev/container", "device-options")),
                     setOf(PortMapping(123, 456)),
                     setOf("other-container"),
-                    HealthCheckConfig(Duration.ofSeconds(1), 23, Duration.ofSeconds(4), Duration.ofSeconds(5), "exit 0"),
+                    HealthCheckConfig(1.seconds, 23, 4.seconds, 5.seconds, "exit 0"),
                     RunAsCurrentUserConfig.RunAsCurrentUser("/some/home/dir"),
                     true,
                     true,

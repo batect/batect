@@ -19,15 +19,13 @@ package batect.docker
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class DockerVolumeMount(val source: DockerVolumeMountSource, val containerPath: String, val options: String? = null) {
-    override fun toString(): String = if (options == null) "${source.formatted}:$containerPath" else "${source.formatted}:$containerPath:$options"
-}
+data class DockerVolumeMount(val source: DockerVolumeMountSource, val containerPath: String, val options: String? = null)
 
 @Serializable
-sealed class DockerVolumeMountSource(val formatted: String) {
+sealed class DockerVolumeMountSource {
     @Serializable
-    data class LocalPath(val path: String) : DockerVolumeMountSource(path)
+    data class LocalPath(val path: String) : DockerVolumeMountSource()
 
     @Serializable
-    data class Volume(val name: String) : DockerVolumeMountSource(name)
+    data class Volume(val name: String) : DockerVolumeMountSource()
 }

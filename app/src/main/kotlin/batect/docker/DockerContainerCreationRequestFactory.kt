@@ -18,7 +18,15 @@ package batect.docker
 
 import batect.cli.CommandLineOptions
 import batect.config.Container
+import batect.config.HealthCheckConfig
+import batect.config.PortMapping
+import batect.dockerclient.ContainerCreationSpec
+import batect.dockerclient.DeviceMount
+import batect.dockerclient.ImageReference
+import batect.dockerclient.NetworkReference
+import batect.dockerclient.VolumeReference
 import batect.primitives.mapToSet
+import okio.Path.Companion.toPath
 
 class DockerContainerCreationRequestFactory(
     private val environmentVariableProvider: DockerContainerEnvironmentVariableProvider,
@@ -27,45 +35,118 @@ class DockerContainerCreationRequestFactory(
 ) {
     fun create(
         container: Container,
-        image: DockerImage,
-        network: DockerNetwork,
+        image: ImageReference,
+        network: NetworkReference,
         volumeMounts: Set<DockerVolumeMount>,
         userAndGroup: UserAndGroup?,
         terminalType: String?,
         useTTY: Boolean,
         attachStdin: Boolean
-    ): ContainerCreationRequest {
-        val portMappings = if (commandLineOptions.disablePortMappings) {
-            emptySet()
-        } else {
-            container.portMappings.mapToSet { it.toDockerPortMapping() }
+    ): ContainerCreationSpec {
+        val builder = ContainerCreationSpec.Builder(image)
+            .withName(resourceNameGenerator.generateNameFor(container))
+            .withNetwork(network)
+            .withHostname(container.name)
+            .withNetworkAliases(container.additionalHostnames + container.name)
+            .withEnvironmentVariables(environmentVariableProvider.environmentVariablesFor(container, terminalType))
+            .withCapabilitiesAdded(container.capabilitiesToAdd.convert())
+            .withCapabilitiesDropped(container.capabilitiesToDrop.convert())
+            .withLogDriver(container.logDriver)
+            .withLoggingOptions(container.logOptions)
+            .withHealthcheckConfiguration(container.healthCheckConfig)
+
+        if (!commandLineOptions.disablePortMappings) {
+            builder.withPortMappings(container.portMappings)
         }
 
-        return ContainerCreationRequest(
-            resourceNameGenerator.generateNameFor(container),
-            image,
-            network,
-            if (container.command != null) container.command.parsedCommand else emptyList(),
-            if (container.entrypoint != null) container.entrypoint.parsedCommand else emptyList(),
-            container.name,
-            container.additionalHostnames + container.name,
-            container.additionalHosts,
-            environmentVariableProvider.environmentVariablesFor(container, terminalType),
-            container.workingDirectory,
-            volumeMounts,
-            container.deviceMounts.mapToSet { it.toDockerMount() },
-            portMappings,
-            container.healthCheckConfig.toDockerHealthCheckConfig(),
-            userAndGroup,
-            container.privileged,
-            container.enableInitProcess,
-            container.capabilitiesToAdd,
-            container.capabilitiesToDrop,
-            useTTY,
-            attachStdin,
-            container.logDriver,
-            container.logOptions,
-            container.shmSize?.bytes
-        )
+        if (container.command != null) {
+            builder.withCommand(container.command.parsedCommand)
+        }
+
+        if (container.entrypoint != null) {
+            builder.withEntrypoint(container.entrypoint.parsedCommand)
+        }
+
+        if (container.workingDirectory != null) {
+            builder.withWorkingDirectory(container.workingDirectory)
+        }
+
+        volumeMounts.forEach {
+            when (it.source) {
+                is DockerVolumeMountSource.LocalPath -> builder.withHostMount(it.source.path.toPath(), it.containerPath, it.options)
+                is DockerVolumeMountSource.Volume -> builder.withVolumeMount(VolumeReference(it.source.name), it.containerPath, it.options)
+            }
+        }
+
+        container.additionalHosts.forEach { (name, address) -> builder.withExtraHost(name, address) }
+        container.deviceMounts.forEach { builder.withDeviceMount(it.localPath.toPath(), it.containerPath, it.options ?: DeviceMount.defaultPermissions) }
+
+        if (userAndGroup != null) {
+            builder.withUserAndGroup(userAndGroup.userId, userAndGroup.groupId)
+        }
+
+        if (container.privileged) {
+            builder.withPrivileged()
+        }
+
+        if (container.enableInitProcess) {
+            builder.withInitProcess()
+        }
+
+        if (container.shmSize != null) {
+            builder.withShmSize(container.shmSize.bytes)
+        }
+
+        if (useTTY) {
+            builder.withTTY()
+        }
+
+        if (attachStdin) {
+            builder.withStdinAttached()
+        }
+
+        return builder.build()
+    }
+
+    private fun ContainerCreationSpec.Builder.withHealthcheckConfiguration(healthCheckConfig: HealthCheckConfig): ContainerCreationSpec.Builder {
+        if (healthCheckConfig.interval != null) {
+            withHealthcheckInterval(healthCheckConfig.interval)
+        }
+
+        if (healthCheckConfig.retries != null) {
+            withHealthcheckRetries(healthCheckConfig.retries)
+        }
+
+        if (healthCheckConfig.startPeriod != null) {
+            withHealthcheckStartPeriod(healthCheckConfig.startPeriod)
+        }
+
+        if (healthCheckConfig.timeout != null) {
+            withHealthcheckTimeout(healthCheckConfig.timeout)
+        }
+
+        if (healthCheckConfig.command != null) {
+            withHealthcheckCommand(healthCheckConfig.command)
+        }
+
+        return this
+    }
+
+    private fun ContainerCreationSpec.Builder.withPortMappings(portMappings: Set<PortMapping>): ContainerCreationSpec.Builder {
+        portMappings.forEach { mapping ->
+            val localPorts = mapping.local.ports
+            val containerPorts = mapping.container.ports
+
+            localPorts.zip(containerPorts).forEach { (local, container) ->
+                withExposedPort(local.toLong(), container.toLong(), mapping.protocol)
+            }
+        }
+
+        return this
+    }
+
+    private fun Set<Capability>.convert(): Set<batect.dockerclient.Capability> = mapToSet { it.convert() }
+    private fun Capability.convert(): batect.dockerclient.Capability {
+        return batect.dockerclient.Capability.valueOf(this.name)
     }
 }

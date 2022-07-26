@@ -16,8 +16,6 @@
 
 package batect.docker.api
 
-import batect.docker.ContainerCreationFailedException
-import batect.docker.ContainerCreationRequest
 import batect.docker.ContainerFilesystemItem
 import batect.docker.DockerContainer
 import batect.docker.DockerContainerInfo
@@ -31,7 +29,6 @@ import batect.docker.run.ContainerInputStream
 import batect.docker.run.ContainerOutputDecoder
 import batect.docker.run.ContainerOutputStream
 import batect.docker.toJsonArray
-import batect.logging.LogMessageBuilder
 import batect.logging.Logger
 import batect.os.Dimensions
 import batect.os.SystemInfo
@@ -58,47 +55,6 @@ class ContainersAPI(
     logger: Logger,
     private val hijackerFactory: () -> ConnectionHijacker = ::ConnectionHijacker
 ) : APIBase(httpConfig, systemInfo, logger) {
-    fun create(creationRequest: ContainerCreationRequest): DockerContainer {
-        logger.info {
-            message("Creating container.")
-            data("request", creationRequest)
-        }
-
-        val url = urlForContainers.newBuilder()
-            .addPathSegment("create")
-            .addQueryParameter("name", creationRequest.name)
-            .build()
-
-        val body = creationRequest.toJson()
-
-        val request = Request.Builder()
-            .post(jsonRequestBody(body))
-            .url(url)
-            .build()
-
-        clientWithTimeout(90, TimeUnit.SECONDS).newCall(request).execute().use { response ->
-            checkForFailure(response) { error ->
-                logger.error {
-                    message("Container creation failed.")
-                    data("error", error)
-                }
-
-                throw ContainerCreationFailedException("Output from Docker was: ${error.message}")
-            }
-
-            val parsedResponse = Json.default.parseToJsonElement(response.body!!.string()).jsonObject
-            val containerId = parsedResponse.getValue("Id").jsonPrimitive.content
-
-            logger.info {
-                message("Container created.")
-                data("containerId", containerId)
-                data("containerName", creationRequest.name)
-            }
-
-            return DockerContainer(containerId, creationRequest.name)
-        }
-    }
-
     fun start(container: DockerContainer) {
         logger.info {
             message("Starting container.")
@@ -542,8 +498,6 @@ class ContainersAPI(
     private fun urlForContainerOperation(container: DockerContainer, operation: String): HttpUrl = urlForContainer(container).newBuilder()
         .addPathSegment(operation)
         .build()
-
-    private fun LogMessageBuilder.data(key: String, value: ContainerCreationRequest) = this.data(key, value, ContainerCreationRequest.serializer())
 
     // HACK: This method is a workaround for two issues:
     // - starting with Docker 19.03.5, the /events API no longer sends new line characters between events, so we can't just read a full line of the response and parse that (see https://github.com/batect/batect/issues/393)

@@ -18,8 +18,6 @@ package batect.execution.model.steps.runners
 
 import batect.config.Container
 import batect.config.VolumeMount
-import batect.docker.ContainerCreationFailedException
-import batect.docker.ContainerCreationRequest
 import batect.docker.DockerContainer
 import batect.docker.DockerContainerCreationRequestFactory
 import batect.docker.DockerImage
@@ -27,7 +25,12 @@ import batect.docker.DockerNetwork
 import batect.docker.DockerVolumeMount
 import batect.docker.DockerVolumeMountSource
 import batect.docker.UserAndGroup
-import batect.docker.client.ContainersClient
+import batect.dockerclient.ContainerCreationFailedException
+import batect.dockerclient.ContainerCreationSpec
+import batect.dockerclient.ContainerReference
+import batect.dockerclient.DockerClient
+import batect.dockerclient.ImageReference
+import batect.dockerclient.NetworkReference
 import batect.execution.RunAsCurrentUserConfigurationException
 import batect.execution.RunAsCurrentUserConfigurationProvider
 import batect.execution.VolumeMountResolutionException
@@ -36,8 +39,10 @@ import batect.execution.model.events.ContainerCreatedEvent
 import batect.execution.model.events.ContainerCreationFailedEvent
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.steps.CreateContainerStep
+import batect.testutils.beforeEachTestSuspend
 import batect.testutils.createForEachTest
 import batect.testutils.imageSourceDoesNotMatter
+import batect.testutils.itSuspend
 import batect.testutils.on
 import batect.ui.containerio.ContainerIOStreamingOptions
 import org.mockito.kotlin.any
@@ -57,12 +62,14 @@ object CreateContainerStepRunnerSpec : Spek({
         val network = DockerNetwork("some-network")
 
         val step = CreateContainerStep(container, image, network)
-        val request = mock<ContainerCreationRequest>()
+        val spec = mock<ContainerCreationSpec> {
+            on { name } doReturn "some-container-name"
+        }
 
-        val dockerContainer = DockerContainer("some-id")
-        val containersClient by createForEachTest {
-            mock<ContainersClient> {
-                on { create(any()) } doReturn dockerContainer
+        val dockerContainer = DockerContainer("some-id", "some-container-name")
+        val dockerClient by createForEachTest {
+            mock<DockerClient> {
+                onBlocking { createContainer(any()) } doReturn ContainerReference("some-id")
             }
         }
 
@@ -84,7 +91,7 @@ object CreateContainerStepRunnerSpec : Spek({
 
         val creationRequestFactory by createForEachTest {
             mock<DockerContainerCreationRequestFactory> {
-                on { create(container, image, network, resolvedMounts, userAndGroup, "some-terminal", true, false) } doReturn request
+                on { create(container, ImageReference("some-image"), NetworkReference("some-network"), resolvedMounts, userAndGroup, "some-terminal", true, false) } doReturn spec
             }
         }
 
@@ -97,21 +104,21 @@ object CreateContainerStepRunnerSpec : Spek({
         }
 
         val eventSink by createForEachTest { mock<TaskEventSink>() }
-        val runner by createForEachTest { CreateContainerStepRunner(containersClient, volumeMountResolver, runAsCurrentUserConfigurationProvider, creationRequestFactory, ioStreamingOptions) }
+        val runner by createForEachTest { CreateContainerStepRunner(dockerClient, volumeMountResolver, runAsCurrentUserConfigurationProvider, creationRequestFactory, ioStreamingOptions) }
 
         on("when creating the container succeeds") {
             beforeEachTest {
                 runner.run(step, eventSink)
             }
 
-            it("creates the container with the provided configuration") {
-                verify(containersClient).create(request)
+            itSuspend("creates the container with the provided configuration") {
+                verify(dockerClient).createContainer(spec)
             }
 
-            it("creates any missing local volume mount directories before creating the container") {
-                inOrder(runAsCurrentUserConfigurationProvider, containersClient) {
+            itSuspend("creates any missing local volume mount directories before creating the container") {
+                inOrder(runAsCurrentUserConfigurationProvider, dockerClient) {
                     verify(runAsCurrentUserConfigurationProvider).createMissingVolumeMountDirectories(resolvedMounts, container)
-                    verify(containersClient).create(any())
+                    verify(dockerClient).createContainer(any())
                 }
             }
 
@@ -132,8 +139,8 @@ object CreateContainerStepRunnerSpec : Spek({
         }
 
         on("when creating the container fails") {
-            beforeEachTest {
-                whenever(containersClient.create(request)).doThrow(ContainerCreationFailedException("Something went wrong."))
+            beforeEachTestSuspend {
+                whenever(dockerClient.createContainer(spec)).doThrow(ContainerCreationFailedException("Something went wrong."))
 
                 runner.run(step, eventSink)
             }

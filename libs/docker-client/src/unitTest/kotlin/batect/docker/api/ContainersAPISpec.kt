@@ -16,8 +16,6 @@
 
 package batect.docker.api
 
-import batect.docker.ContainerCreationFailedException
-import batect.docker.ContainerCreationRequest
 import batect.docker.ContainerDirectory
 import batect.docker.ContainerFile
 import batect.docker.DockerContainer
@@ -30,10 +28,6 @@ import batect.docker.DockerEvent
 import batect.docker.DockerException
 import batect.docker.DockerHealthCheckResult
 import batect.docker.DockerHttpConfig
-import batect.docker.DockerImage
-import batect.docker.DockerNetwork
-import batect.docker.HealthCheckConfig
-import batect.docker.Json
 import batect.docker.run.ConnectionHijacker
 import batect.docker.run.ContainerInputStream
 import batect.docker.run.ContainerOutputDecoder
@@ -100,66 +94,6 @@ object ContainersAPISpec : Spek({
 
         val errorResponse = """{"message": "Something went wrong.\nMore details on next line."}"""
         val errorMessageWithCorrectLineEndings = "Something went wrong.SYSTEM_LINE_SEPARATORMore details on next line."
-
-        describe("creating a container") {
-            val expectedUrl = "$dockerBaseUrl/v1.37/containers/create?name=the-container"
-            val clientWithLongTimeout by createForEachTest { mock<OkHttpClient>() }
-            val longTimeoutClientBuilder by createForEachTest {
-                mock<OkHttpClient.Builder> { mock ->
-                    on { readTimeout(any(), any()) } doReturn mock
-                    on { build() } doReturn clientWithLongTimeout
-                }
-            }
-
-            beforeEachTest {
-                whenever(httpClient.newBuilder()).doReturn(longTimeoutClientBuilder)
-            }
-
-            given("a container configuration and a built image") {
-                val image = DockerImage("the-image")
-                val network = DockerNetwork("the-network")
-                val command = listOf("doStuff")
-                val entrypoint = listOf("sh")
-                val request = ContainerCreationRequest("the-container", image, network, command, entrypoint, "some-host", setOf("some-host"), emptyMap(), emptyMap(), "/some-dir", emptySet(), emptySet(), emptySet(), HealthCheckConfig(), null, false, false, emptySet(), emptySet(), true, true, "json-file", emptyMap(), null)
-
-                on("a successful creation") {
-                    val call by createForEachTest { clientWithLongTimeout.mockPost(expectedUrl, """{"Id": "abc123"}""", 201) }
-                    val result by runForEachTest { api.create(request) }
-
-                    it("creates the container") {
-                        verify(call).execute()
-                    }
-
-                    it("creates the container with the expected settings") {
-                        verify(clientWithLongTimeout).newCall(
-                            requestWithJsonBody { body ->
-                                assertThat(body, equalTo(Json.default.parseToJsonElement(request.toJson())))
-                            }
-                        )
-                    }
-
-                    it("returns the ID of the created container") {
-                        assertThat(result.id, equalTo("abc123"))
-                    }
-
-                    it("returns the name of the created container") {
-                        assertThat(result.name, equalTo("the-container"))
-                    }
-
-                    it("configures the HTTP client with a longer timeout to allow for the container to be created") {
-                        verify(longTimeoutClientBuilder).readTimeout(90, TimeUnit.SECONDS)
-                    }
-                }
-
-                on("a failed creation") {
-                    beforeEachTest { clientWithLongTimeout.mockPost(expectedUrl, errorResponse, 418) }
-
-                    it("raises an appropriate exception") {
-                        assertThat({ api.create(request) }, throws<ContainerCreationFailedException>(withMessage("Output from Docker was: $errorMessageWithCorrectLineEndings")))
-                    }
-                }
-            }
-        }
 
         describe("starting a container") {
             given("a Docker container") {

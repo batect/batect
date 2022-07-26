@@ -16,9 +16,12 @@
 
 package batect.execution.model.steps.runners
 
-import batect.docker.ContainerCreationFailedException
+import batect.docker.DockerContainer
 import batect.docker.DockerContainerCreationRequestFactory
-import batect.docker.client.ContainersClient
+import batect.dockerclient.ContainerCreationFailedException
+import batect.dockerclient.DockerClient
+import batect.dockerclient.ImageReference
+import batect.dockerclient.NetworkReference
 import batect.execution.RunAsCurrentUserConfigurationException
 import batect.execution.RunAsCurrentUserConfigurationProvider
 import batect.execution.VolumeMountResolutionException
@@ -28,9 +31,10 @@ import batect.execution.model.events.ContainerCreationFailedEvent
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.steps.CreateContainerStep
 import batect.ui.containerio.ContainerIOStreamingOptions
+import kotlinx.coroutines.runBlocking
 
 class CreateContainerStepRunner(
-    private val containersClient: ContainersClient,
+    private val client: DockerClient,
     private val volumeMountResolver: VolumeMountResolver,
     private val runAsCurrentUserConfigurationProvider: RunAsCurrentUserConfigurationProvider,
     private val creationRequestFactory: DockerContainerCreationRequestFactory,
@@ -45,10 +49,10 @@ class CreateContainerStepRunner(
 
             runAsCurrentUserConfigurationProvider.createMissingVolumeMountDirectories(resolvedMounts, container)
 
-            val creationRequest = creationRequestFactory.create(
+            val creationSpec = creationRequestFactory.create(
                 container,
-                step.image,
-                step.network,
+                ImageReference(step.image.id),
+                NetworkReference(step.network.id),
                 resolvedMounts,
                 userAndGroup,
                 ioStreamingOptions.terminalTypeForContainer(container),
@@ -56,14 +60,17 @@ class CreateContainerStepRunner(
                 ioStreamingOptions.attachStdinForContainer(container)
             )
 
-            val dockerContainer = containersClient.create(creationRequest)
+            runBlocking {
+                val containerReference = client.createContainer(creationSpec)
+                val dockerContainer = DockerContainer(containerReference.id, creationSpec.name)
 
-            try {
-                runAsCurrentUserConfigurationProvider.applyConfigurationToContainer(container, dockerContainer)
-            } finally {
-                // We always want to post that we created the container, even if we didn't finish configuring it -
-                // this ensures that we will clean it up correctly.
-                eventSink.postEvent(ContainerCreatedEvent(container, dockerContainer))
+                try {
+                    runAsCurrentUserConfigurationProvider.applyConfigurationToContainer(container, dockerContainer)
+                } finally {
+                    // We always want to post that we created the container, even if we didn't finish configuring it -
+                    // this ensures that we will clean it up correctly.
+                    eventSink.postEvent(ContainerCreatedEvent(container, dockerContainer))
+                }
             }
         } catch (e: ContainerCreationFailedException) {
             eventSink.postEvent(ContainerCreationFailedEvent(container, e.message ?: ""))

@@ -40,7 +40,7 @@ import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 object ContainerSpec : Spek({
     describe("a container") {
@@ -272,7 +272,7 @@ object ContainerSpec : Spek({
                         )
                     )
                     assertThat(result.portMappings, equalTo(setOf(PortMapping(1234, 5678), PortMapping(9012, 3456))))
-                    assertThat(result.healthCheckConfig, equalTo(HealthCheckConfig(Duration.ofSeconds(2), 10, Duration.ofSeconds(1), Duration.ofSeconds(4), "exit 0")))
+                    assertThat(result.healthCheckConfig, equalTo(HealthCheckConfig(2.seconds, 10, 1.seconds, 4.seconds, "exit 0")))
                     assertThat(result.runAsCurrentUserConfig, equalTo(RunAsCurrentUserConfig.RunAsCurrentUser("/home/something")))
                     assertThat(result.privileged, equalTo(true))
                     assertThat(result.enableInitProcess, equalTo(true))

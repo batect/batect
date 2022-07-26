@@ -14,22 +14,9 @@
     limitations under the License.
 */
 
-@file:UseSerializers(
-    DurationLoggingSerializer::class
-)
-
 package batect.docker
 
-import batect.logging.DurationLoggingSerializer
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.UseSerializers
-import java.time.Duration
 
 @Serializable
-data class HealthCheckConfig(
-    val interval: Duration? = null,
-    val retries: Int? = null,
-    val startPeriod: Duration? = null,
-    val timeout: Duration? = null,
-    val command: String? = null
-)
+data class UserAndGroup(val userId: Int, val groupId: Int)

@@ -23,29 +23,41 @@ import batect.config.Container
 import batect.config.DeviceMount
 import batect.config.HealthCheckConfig
 import batect.config.PortMapping
+import batect.dockerclient.ExposedPort
+import batect.dockerclient.ExtraHost
+import batect.dockerclient.HostMount
+import batect.dockerclient.NetworkReference
+import batect.dockerclient.VolumeMount
+import batect.dockerclient.VolumeReference
 import batect.os.Command
 import batect.testutils.given
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.on
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
+import okio.Path.Companion.toPath
 import org.mockito.kotlin.any
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 object DockerContainerCreationRequestFactorySpec : Spek({
     describe("a Docker container creation request factory") {
-        val image = DockerImage("some-image")
-        val network = DockerNetwork("some-network")
+        val image = batect.dockerclient.ImageReference("some-image")
+        val network = NetworkReference("some-network")
         val command = Command.parse("some-app some-arg")
         val entrypoint = Command.parse("sh")
         val workingDirectory = "some-specific-working-directory"
         val terminalType = "some-term"
-        val volumeMounts = setOf(DockerVolumeMount(DockerVolumeMountSource.LocalPath("local"), "remote", "mode"))
+
+        val volumeMounts = setOf(
+            DockerVolumeMount(DockerVolumeMountSource.LocalPath("local"), "remote-host", "mode"),
+            DockerVolumeMount(DockerVolumeMountSource.Volume("some-volume"), "remote-volume", "mode")
+        )
+
         val expectedEnvironmentVariables = mapOf("SOME_VAR" to "some resolved value")
 
         val environmentVariablesProvider = mock<DockerContainerEnvironmentVariableProvider> {
@@ -72,7 +84,7 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                     workingDirectory = workingDirectory,
                     deviceMounts = setOf(DeviceMount("/dev/local", "/dev/container", "options")),
                     portMappings = setOf(PortMapping(123, 456)),
-                    healthCheckConfig = HealthCheckConfig(Duration.ofSeconds(2), 10, Duration.ofSeconds(5)),
+                    healthCheckConfig = HealthCheckConfig(2.seconds, 10, 5.seconds, 7.seconds, "some-health-check-command"),
                     privileged = false,
                     enableInitProcess = true,
                     capabilitiesToAdd = setOf(Capability.NET_ADMIN),
@@ -85,7 +97,7 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                 )
 
                 val userAndGroup = UserAndGroup(123, 456)
-                val request = factory.create(
+                val spec = factory.create(
                     container,
                     image,
                     network,
@@ -97,99 +109,111 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                 )
 
                 it("populates the container name on the request") {
-                    assertThat(request.name, equalTo("the-container-name"))
+                    assertThat(spec.name, equalTo("the-container-name"))
                 }
 
                 it("populates the image on the request") {
-                    assertThat(request.image, equalTo(image))
+                    assertThat(spec.image, equalTo(image))
                 }
 
                 it("populates the network on the request") {
-                    assertThat(request.network, equalTo(network))
+                    assertThat(spec.network, equalTo(network))
                 }
 
                 it("populates the command on the request") {
-                    assertThat(request.command, equalTo(command.parsedCommand))
+                    assertThat(spec.command, equalTo(command.parsedCommand))
                 }
 
                 it("populates the entrypoint on the request") {
-                    assertThat(request.entrypoint, equalTo(entrypoint.parsedCommand))
+                    assertThat(spec.entrypoint, equalTo(entrypoint.parsedCommand))
                 }
 
                 it("populates the hostname on the request with the name of the container") {
-                    assertThat(request.hostname, equalTo(container.name))
+                    assertThat(spec.hostname, equalTo(container.name))
                 }
 
                 it("populates the network aliases on the request with the name of the container and additional hostnames from the container") {
-                    assertThat(request.networkAliases, equalTo(setOf(container.name, "some-alias")))
+                    assertThat(spec.networkAliases, equalTo(setOf(container.name, "some-alias")))
                 }
 
                 it("populates the extra hosts on the request with the additional hosts from the container") {
-                    assertThat(request.extraHosts, equalTo(container.additionalHosts))
+                    assertThat(spec.extraHosts, equalTo(setOf(ExtraHost("does.not.exist", "1.2.3.4"))))
                 }
 
                 it("populates the environment variables on the request with the environment variables from the environment variable provider") {
-                    assertThat(request.environmentVariables, equalTo(expectedEnvironmentVariables))
+                    assertThat(spec.environmentVariables, equalTo(expectedEnvironmentVariables))
                 }
 
                 it("populates the working directory on the request with the working directory provided, not from the container") {
-                    assertThat(request.workingDirectory, equalTo(workingDirectory))
+                    assertThat(spec.workingDirectory, equalTo(workingDirectory))
                 }
 
                 it("populates the volume mounts on the request with the volume mounts provided") {
-                    assertThat(request.volumeMounts, equalTo(volumeMounts))
+                    assertThat(
+                        spec.bindMounts,
+                        equalTo(
+                            setOf(
+                                HostMount("local".toPath(), "remote-host", "mode"),
+                                VolumeMount(VolumeReference("some-volume"), "remote-volume", "mode")
+                            )
+                        )
+                    )
                 }
 
                 it("populates the device mounts on the request with the device mounts from the container") {
-                    assertThat(request.deviceMounts, equalTo(setOf(DockerDeviceMount("/dev/local", "/dev/container", "options"))))
+                    assertThat(spec.deviceMounts, equalTo(setOf(batect.dockerclient.DeviceMount("/dev/local".toPath(), "/dev/container", "options"))))
                 }
 
                 it("populates the port mappings on the request with the port mappings from the container") {
-                    assertThat(request.portMappings, equalTo(setOf(DockerPortMapping(123, 456))))
+                    assertThat(spec.exposedPorts, equalTo(setOf(ExposedPort(123, 456))))
                 }
 
                 it("populates the health check configuration on the request with the health check configuration from the container") {
-                    assertThat(request.healthCheckConfig, equalTo(batect.docker.HealthCheckConfig(Duration.ofSeconds(2), 10, Duration.ofSeconds(5))))
+                    assertThat(spec.healthcheckInterval, equalTo(2.seconds))
+                    assertThat(spec.healthcheckRetries, equalTo(10))
+                    assertThat(spec.healthcheckStartPeriod, equalTo(5.seconds))
+                    assertThat(spec.healthcheckTimeout, equalTo(7.seconds))
+                    assertThat(spec.healthcheckCommand, equalTo(listOf("some-health-check-command")))
                 }
 
                 it("populates the user and group configuration on the request with the provided values") {
-                    assertThat(request.userAndGroup, equalTo(userAndGroup))
+                    assertThat(spec.userAndGroup, equalTo(batect.dockerclient.UserAndGroup(123, 456)))
                 }
 
                 it("populates the privileged mode with the setting from the container") {
-                    assertThat(request.privileged, equalTo(false))
+                    assertThat(spec.privileged, equalTo(false))
                 }
 
                 it("populates the init configuration on the request with the enable init process configuration from the container") {
-                    assertThat(request.init, equalTo(container.enableInitProcess))
+                    assertThat(spec.useInitProcess, equalTo(container.enableInitProcess))
                 }
 
                 it("populates the capabilities to add on the request with the set from the container") {
-                    assertThat(request.capabilitiesToAdd, equalTo(container.capabilitiesToAdd))
+                    assertThat(spec.capabilitiesToAdd, equalTo(setOf(batect.dockerclient.Capability.NET_ADMIN)))
                 }
 
                 it("populates the capabilities to drop on the request with the set from the container") {
-                    assertThat(request.capabilitiesToDrop, equalTo(container.capabilitiesToDrop))
+                    assertThat(spec.capabilitiesToDrop, equalTo(setOf(batect.dockerclient.Capability.KILL)))
                 }
 
                 it("populates the 'use TTY' setting on the request with the provided value") {
-                    assertThat(request.useTTY, equalTo(false))
+                    assertThat(spec.attachTTY, equalTo(false))
                 }
 
                 it("populates the stdin configuration with the provided value") {
-                    assertThat(request.attachStdin, equalTo(true))
+                    assertThat(spec.attachStdin, equalTo(true))
                 }
 
                 it("populates the log driver with the value from the container") {
-                    assertThat(request.logDriver, equalTo(container.logDriver))
+                    assertThat(spec.logDriver, equalTo(container.logDriver))
                 }
 
                 it("populates the log options with the value from the container") {
-                    assertThat(request.logOptions, equalTo(container.logOptions))
+                    assertThat(spec.loggingOptions, equalTo(container.logOptions))
                 }
 
                 it("populates the shm size with the value from the container") {
-                    assertThat(request.shmSize, equalTo(container.shmSize!!.bytes))
+                    assertThat(spec.shmSizeInBytes, equalTo(container.shmSize!!.bytes))
                 }
             }
         }
@@ -208,10 +232,10 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                     portMappings = setOf(PortMapping(123, 456))
                 )
 
-                val request = newFactory.create(container, image, network, volumeMounts, null, terminalType, useTTY = false, attachStdin = false)
+                val spec = newFactory.create(container, image, network, volumeMounts, null, terminalType, useTTY = false, attachStdin = false)
 
                 it("yields an empty port mapping") {
-                    assertThat(request.portMappings, equalTo(emptySet()))
+                    assertThat(spec.exposedPorts, equalTo(emptySet()))
                 }
             }
         }

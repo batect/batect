@@ -18,14 +18,15 @@ package batect.ui.containerio
 
 import batect.config.Container
 import batect.config.SetupCommand
+import batect.dockerclient.io.TextInput
+import batect.dockerclient.io.TextOutput
 import batect.os.Dimensions
 import okio.Sink
-import okio.Source
 
 interface ContainerIOStreamingOptions {
     fun terminalTypeForContainer(container: Container): String?
-    fun stdinForContainer(container: Container): Source?
-    fun stdoutForContainer(container: Container): Sink?
+    fun stdinForContainer(container: Container): TextInput?
+    fun stdoutForContainer(container: Container): TextOutput?
     fun stdoutForContainerSetupCommand(container: Container, setupCommand: SetupCommand, index: Int): Sink?
     fun stdoutForImageBuild(container: Container): Sink?
     fun useTTYForContainer(container: Container): Boolean

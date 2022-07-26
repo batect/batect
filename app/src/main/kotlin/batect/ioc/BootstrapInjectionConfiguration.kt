@@ -29,7 +29,6 @@ import batect.os.SystemInfo
 import batect.os.unix.UnixNativeMethods
 import batect.os.windows.WindowsNativeMethods
 import batect.telemetry.TelemetrySessionBuilder
-import com.hypirion.io.RevivableInputStream
 import jnr.ffi.Platform
 import jnr.posix.POSIX
 import jnr.posix.POSIXFactory
@@ -49,7 +48,7 @@ fun createKodeinConfiguration(outputStream: PrintStream, errorStream: PrintStrea
     bind<POSIX>() with singleton { POSIXFactory.getNativePOSIX() }
     bind<PrintStream>(StreamType.Error) with instance(errorStream)
     bind<PrintStream>(StreamType.Output) with instance(outputStream)
-    bind<RevivableInputStream>(StreamType.Input) with instance(RevivableInputStream(inputStream))
+    bind<InputStream>(StreamType.Input) with instance(inputStream)
 
     import(cliModule)
     import(dockerModule)

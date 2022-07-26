@@ -28,7 +28,6 @@ import batect.ui.interleaved.InterleavedEventLogger
 import batect.ui.interleaved.InterleavedOutput
 import batect.ui.quiet.QuietEventLogger
 import batect.ui.simple.SimpleEventLogger
-import com.hypirion.io.RevivableInputStream
 import java.io.PrintStream
 
 class EventLoggerProvider(
@@ -36,7 +35,6 @@ class EventLoggerProvider(
     private val console: Console,
     private val errorConsole: Console,
     private val stdout: PrintStream,
-    private val stdin: RevivableInputStream,
     private val startupProgressDisplayProvider: StartupProgressDisplayProvider,
     private val consoleInfo: ConsoleInfo,
     private val consoleDimensions: ConsoleDimensions,
@@ -69,7 +67,7 @@ class EventLoggerProvider(
         return SimpleEventLogger(graph.allContainers, graph.taskContainerNode.container, failureErrorMessageFormatter, console, errorConsole, createTaskContainerOnlyIOStreamingOptions(graph))
     }
 
-    private fun createTaskContainerOnlyIOStreamingOptions(graph: ContainerDependencyGraph) = TaskContainerOnlyIOStreamingOptions(graph.taskContainerNode.container, stdout, stdin, consoleInfo)
+    private fun createTaskContainerOnlyIOStreamingOptions(graph: ContainerDependencyGraph) = TaskContainerOnlyIOStreamingOptions(graph.taskContainerNode.container, stdout, consoleInfo)
 
     private fun createInterleavedLogger(task: Task, graph: ContainerDependencyGraph): InterleavedEventLogger {
         val containers = graph.allContainers

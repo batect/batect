@@ -18,20 +18,22 @@ package batect.ui.interleaved
 
 import batect.config.Container
 import batect.config.SetupCommand
+import batect.dockerclient.io.SinkTextOutput
+import batect.dockerclient.io.TextInput
+import batect.dockerclient.io.TextOutput
 import batect.os.Dimensions
 import batect.ui.ConsoleColor
 import batect.ui.containerio.ContainerIOStreamingOptions
 import batect.ui.text.Text
 import batect.ui.text.TextRun
 import okio.Sink
-import okio.Source
 
 data class InterleavedContainerIOStreamingOptions(private val output: InterleavedOutput) : ContainerIOStreamingOptions {
     override fun terminalTypeForContainer(container: Container): String? = "dumb"
     override fun useTTYForContainer(container: Container): Boolean = false
-    override fun stdinForContainer(container: Container): Source? = null
+    override fun stdinForContainer(container: Container): TextInput? = null
     override fun attachStdinForContainer(container: Container): Boolean = false
-    override fun stdoutForContainer(container: Container): Sink? = InterleavedContainerOutputSink(container, output)
+    override fun stdoutForContainer(container: Container): TextOutput? = SinkTextOutput(InterleavedContainerOutputSink(container, output))
     override fun stdoutForContainerSetupCommand(container: Container, setupCommand: SetupCommand, index: Int): Sink? =
         outputStreamWithPrefix(container, "Setup command ${index + 1} | ")
 

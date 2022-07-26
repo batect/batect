@@ -47,7 +47,6 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp")
     implementation(libs.jnr.posix)
     implementation(libs.kaml)
-    implementation(libs.hypirion.io)
     implementation(libs.bouncycastle)
     implementation(libs.osplatformfinder)
     implementation(libs.okhttp.systemkeystore)

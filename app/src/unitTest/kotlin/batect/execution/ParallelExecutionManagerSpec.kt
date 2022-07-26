@@ -237,6 +237,24 @@ object ParallelExecutionManagerSpec : Spek({
                     }
                 }
 
+                given("the exception directly signals that a coroutine within the step was cancelled") {
+                    beforeEachTest {
+                        whenever(taskStepRunner.run(eq(step), eq(executionManager))).thenThrow(kotlinx.coroutines.CancellationException("The step was cancelled"))
+                    }
+
+                    on("running the task") {
+                        beforeEachTest { executionManager.run() }
+
+                        it("does not log a task failure event to the event logger") {
+                            verify(eventLogger, never()).postEvent(any<TaskFailedEvent>())
+                        }
+
+                        it("does not log a task failure event to the state machine") {
+                            verify(stateMachine, never()).postEvent(any<TaskFailedEvent>())
+                        }
+                    }
+                }
+
                 given("the exception indirectly signals that the step was cancelled") {
                     beforeEachTest {
                         whenever(taskStepRunner.run(eq(step), eq(executionManager))).then {

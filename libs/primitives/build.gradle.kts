@@ -21,9 +21,10 @@ plugins {
 dependencies {
     implementation(platform(libs.okhttp.bom))
 
+    implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.serialization.core)
     implementation("com.squareup.okhttp3:okhttp")
-    testImplementation("com.squareup.okhttp3:mockwebserver")
 
+    testImplementation("com.squareup.okhttp3:mockwebserver")
     testImplementation(project(":libs:test-utils"))
 }

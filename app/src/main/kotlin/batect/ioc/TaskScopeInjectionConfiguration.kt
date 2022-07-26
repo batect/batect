@@ -99,7 +99,6 @@ private val uiModule = DI.Module("Task scope: ui") {
             instance(StreamType.Output),
             instance(StreamType.Error),
             instance(StreamType.Output),
-            instance(StreamType.Input),
             instance(),
             instance(),
             instance(),

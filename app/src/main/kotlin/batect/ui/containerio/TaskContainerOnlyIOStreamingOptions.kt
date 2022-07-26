@@ -18,17 +18,16 @@ package batect.ui.containerio
 
 import batect.config.Container
 import batect.config.SetupCommand
+import batect.dockerclient.io.TextInput
+import batect.dockerclient.io.TextOutput
 import batect.os.ConsoleInfo
 import batect.os.Dimensions
-import com.hypirion.io.RevivableInputStream
 import okio.Sink
-import okio.Source
 import java.io.PrintStream
 
 data class TaskContainerOnlyIOStreamingOptions(
     private val taskContainer: Container,
     private val stdout: PrintStream,
-    private val stdin: RevivableInputStream,
     private val consoleInfo: ConsoleInfo
 ) : ContainerIOStreamingOptions {
     override fun terminalTypeForContainer(container: Container): String? = consoleInfo.terminalType
@@ -36,18 +35,17 @@ data class TaskContainerOnlyIOStreamingOptions(
 
     override fun attachStdinForContainer(container: Container): Boolean = container == taskContainer
 
-    override fun stdinForContainer(container: Container): Source? {
+    override fun stdinForContainer(container: Container): TextInput? {
         if (container == taskContainer) {
-            stdin.resurrect()
-            return RevivableSource(stdin)
+            return TextInput.StandardInput
         }
 
         return null
     }
 
-    override fun stdoutForContainer(container: Container): Sink? {
+    override fun stdoutForContainer(container: Container): TextOutput? {
         if (container == taskContainer) {
-            return UncloseableSink(stdout)
+            return TextOutput.StandardOutput
         }
 
         return null

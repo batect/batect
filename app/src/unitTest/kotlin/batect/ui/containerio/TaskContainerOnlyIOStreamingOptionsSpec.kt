@@ -17,6 +17,8 @@
 package batect.ui.containerio
 
 import batect.config.Container
+import batect.dockerclient.io.TextInput
+import batect.dockerclient.io.TextOutput
 import batect.os.ConsoleInfo
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
@@ -24,13 +26,10 @@ import batect.testutils.given
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.on
 import batect.testutils.runNullableForEachTest
-import com.hypirion.io.RevivableInputStream
 import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.assertion.assertThat
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
-import org.mockito.kotlin.never
-import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
@@ -40,14 +39,13 @@ object TaskContainerOnlyIOStreamingOptionsSpec : Spek({
     describe("a set of I/O streaming options that streams just the task container") {
         val taskContainer by createForEachTest { Container("task-container", imageSourceDoesNotMatter()) }
         val stdout by createForEachTest { mock<PrintStream>() }
-        val stdin by createForEachTest { mock<RevivableInputStream>() }
         val consoleInfo by createForEachTest {
             mock<ConsoleInfo> {
                 on { terminalType } doReturn "my-terminal"
             }
         }
 
-        val options by createForEachTest { TaskContainerOnlyIOStreamingOptions(taskContainer, stdout, stdin, consoleInfo) }
+        val options by createForEachTest { TaskContainerOnlyIOStreamingOptions(taskContainer, stdout, consoleInfo) }
 
         given("the current container is the task container") {
             it("returns the current console's terminal type") {
@@ -55,18 +53,14 @@ object TaskContainerOnlyIOStreamingOptionsSpec : Spek({
             }
 
             it("returns the system's stdout stream as the stream for the container") {
-                assertThat(options.stdoutForContainer(taskContainer), equalTo(UncloseableSink(stdout)))
+                assertThat(options.stdoutForContainer(taskContainer), equalTo(TextOutput.StandardOutput))
             }
 
             on("getting the stdin source for the container") {
                 val source by runNullableForEachTest { options.stdinForContainer(taskContainer) }
 
                 it("returns the system's stdin stream") {
-                    assertThat(source, equalTo(RevivableSource(stdin)))
-                }
-
-                it("resurrects the stream before returning it") {
-                    verify(stdin).resurrect()
+                    assertThat(source, equalTo(TextInput.StandardInput))
                 }
             }
 
@@ -110,16 +104,8 @@ object TaskContainerOnlyIOStreamingOptionsSpec : Spek({
                 assertThat(options.stdoutForContainer(container), absent())
             }
 
-            on("getting the stdin source for the container") {
-                val source by runNullableForEachTest { options.stdinForContainer(container) }
-
-                it("does not return a stream") {
-                    assertThat(source, absent())
-                }
-
-                it("does not resurrect the stdin stream") {
-                    verify(stdin, never()).resurrect()
-                }
+            it("does not return a stdin stream for the container") {
+                assertThat(options.stdinForContainer(container), absent())
             }
 
             it("indicates that a TTY should not be used for the container") {

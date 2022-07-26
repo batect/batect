@@ -156,7 +156,7 @@ class ParallelExecutionManager(
                 }
             } catch (t: Throwable) {
                 when {
-                    t is CancellationException -> logCancellationException(step, t)
+                    t is CancellationException || t is kotlinx.coroutines.CancellationException -> logCancellationException(step, t)
                     t is ExecutionException && t.cause is CancellationException -> logCancellationException(step, t)
                     else -> {
                         logger.error {
@@ -177,7 +177,7 @@ class ParallelExecutionManager(
         }
     }
 
-    private fun logCancellationException(step: TaskStep, ex: Exception) {
+    private fun logCancellationException(step: TaskStep, ex: Throwable) {
         logger.info {
             message("Step was cancelled and threw an exception.")
             exception(ex)

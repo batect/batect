@@ -16,18 +16,22 @@
 
 package batect.execution.model.steps.runners
 
-import batect.docker.DockerException
-import batect.docker.client.ContainersClient
+import batect.dockerclient.ContainerReference
+import batect.dockerclient.DockerClient
+import batect.dockerclient.DockerClientException
+import batect.dockerclient.ReadyNotification
 import batect.execution.model.events.ContainerRunFailedEvent
 import batect.execution.model.events.ContainerStartedEvent
 import batect.execution.model.events.RunningContainerExitedEvent
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.steps.RunContainerStep
 import batect.primitives.CancellationContext
+import batect.primitives.runBlocking
 import batect.ui.containerio.ContainerIOStreamingOptions
+import kotlinx.coroutines.launch
 
 class RunContainerStepRunner(
-    private val containersClient: ContainersClient,
+    private val client: DockerClient,
     private val ioStreamingOptions: ContainerIOStreamingOptions,
     private val cancellationContext: CancellationContext
 ) {
@@ -36,12 +40,26 @@ class RunContainerStepRunner(
             val stdout = ioStreamingOptions.stdoutForContainer(step.container)
             val stdin = ioStreamingOptions.stdinForContainer(step.container)
 
-            val result = containersClient.run(step.dockerContainer, stdout, stdin, ioStreamingOptions.useTTYForContainer(step.container), cancellationContext, ioStreamingOptions.frameDimensions) {
-                eventSink.postEvent(ContainerStartedEvent(step.container))
-            }
+            cancellationContext.runBlocking {
+                val startedNotification = ReadyNotification()
 
-            eventSink.postEvent(RunningContainerExitedEvent(step.container, result.exitCode))
-        } catch (e: DockerException) {
+                launch {
+                    startedNotification.waitForReady()
+
+                    eventSink.postEvent(ContainerStartedEvent(step.container))
+                }
+
+                val exitCode = client.run(
+                    ContainerReference(step.dockerContainer.id),
+                    stdout,
+                    stdout,
+                    stdin,
+                    startedNotification
+                )
+
+                eventSink.postEvent(RunningContainerExitedEvent(step.container, exitCode))
+            }
+        } catch (e: DockerClientException) {
             eventSink.postEvent(ContainerRunFailedEvent(step.container, e.message ?: ""))
         }
     }

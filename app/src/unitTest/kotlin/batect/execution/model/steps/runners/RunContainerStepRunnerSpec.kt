@@ -18,18 +18,22 @@ package batect.execution.model.steps.runners
 
 import batect.config.Container
 import batect.docker.DockerContainer
-import batect.docker.DockerContainerRunResult
-import batect.docker.DockerException
-import batect.docker.client.ContainersClient
+import batect.dockerclient.ContainerReference
+import batect.dockerclient.DockerClient
+import batect.dockerclient.DockerClientException
+import batect.dockerclient.ReadyNotification
+import batect.dockerclient.io.SinkTextOutput
+import batect.dockerclient.io.SourceTextInput
 import batect.execution.model.events.ContainerRunFailedEvent
 import batect.execution.model.events.ContainerStartedEvent
 import batect.execution.model.events.RunningContainerExitedEvent
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.steps.RunContainerStep
-import batect.os.Dimensions
 import batect.primitives.CancellationContext
+import batect.testutils.beforeEachTestSuspend
 import batect.testutils.createForEachTest
 import batect.testutils.imageSourceDoesNotMatter
+import batect.testutils.itSuspend
 import batect.testutils.on
 import batect.ui.containerio.ContainerIOStreamingOptions
 import okio.Sink
@@ -51,42 +55,38 @@ object RunContainerStepRunnerSpec : Spek({
         val dockerContainer = DockerContainer("some-id", "some-name")
         val step = RunContainerStep(container, dockerContainer)
 
-        val stdout = mock<Sink>()
-        val stdin = mock<Source>()
-        val useTTY = true
-        val frameDimensions = Dimensions(20, 30)
+        val stdout = SinkTextOutput(mock<Sink>())
+        val stdin = SourceTextInput(mock<Source>())
 
-        val containersClient by createForEachTest { mock<ContainersClient>() }
+        val dockerClient by createForEachTest { mock<DockerClient>() }
 
         val ioStreamingOptions by createForEachTest {
             mock<ContainerIOStreamingOptions>() {
                 on { stdoutForContainer(container) } doReturn stdout
                 on { stdinForContainer(container) } doReturn stdin
-                on { this.frameDimensions } doReturn frameDimensions
-                on { useTTYForContainer(container) } doReturn useTTY
             }
         }
 
-        val cancellationContext by createForEachTest { mock<CancellationContext>() }
+        val cancellationContext by createForEachTest { CancellationContext() }
         val eventSink by createForEachTest { mock<TaskEventSink>() }
-        val runner by createForEachTest { RunContainerStepRunner(containersClient, ioStreamingOptions, cancellationContext) }
+        val runner by createForEachTest { RunContainerStepRunner(dockerClient, ioStreamingOptions, cancellationContext) }
 
         on("when running the container succeeds") {
-            beforeEachTest {
-                whenever(containersClient.run(any(), any(), any(), any(), any(), any(), any())).doAnswer { invocation ->
+            beforeEachTestSuspend {
+                whenever(dockerClient.run(any(), any(), any(), any(), any())).doAnswer { invocation ->
                     @Suppress("UNCHECKED_CAST")
-                    val onStartedHandler = invocation.arguments[6] as () -> Unit
+                    val startedNotification = invocation.arguments[4] as ReadyNotification
 
-                    onStartedHandler()
+                    startedNotification.markAsReady()
 
-                    DockerContainerRunResult(123)
+                    123
                 }
 
                 runner.run(step, eventSink)
             }
 
-            it("runs the container with the stdin and stdout provided by the I/O streaming options") {
-                verify(containersClient).run(eq(dockerContainer), eq(stdout), eq(stdin), eq(useTTY), eq(cancellationContext), eq(frameDimensions), any())
+            itSuspend("runs the container with the stdin and stdout provided by the I/O streaming options") {
+                verify(dockerClient).run(eq(ContainerReference("some-id")), eq(stdout), eq(stdout), eq(stdin), any())
             }
 
             it("emits a 'container started' event") {
@@ -99,8 +99,8 @@ object RunContainerStepRunnerSpec : Spek({
         }
 
         on("when running the container fails") {
-            beforeEachTest {
-                whenever(containersClient.run(any(), any(), any(), any(), any(), any(), any())).doThrow(DockerException("Something went wrong"))
+            beforeEachTestSuspend {
+                whenever(dockerClient.run(any(), any(), any(), any(), any())).doThrow(DockerClientException("Something went wrong"))
 
                 runner.run(step, eventSink)
             }

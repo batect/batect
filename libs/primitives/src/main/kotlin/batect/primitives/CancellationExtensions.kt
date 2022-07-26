@@ -16,6 +16,8 @@
 
 package batect.primitives
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.cancel
 import okhttp3.Call
 import okhttp3.Response
 import java.io.IOException
@@ -30,6 +32,16 @@ inline fun <R> Call.executeInCancellationContext(cancellationContext: Cancellati
             } else {
                 throw e
             }
+        }
+    }
+}
+
+inline fun <R> CancellationContext.runBlocking(crossinline operation: suspend CoroutineScope.() -> R): R {
+    return kotlinx.coroutines.runBlocking {
+        val coroutineScope = this
+
+        addCancellationCallback { coroutineScope.cancel() }.use {
+            operation()
         }
     }
 }

@@ -38,7 +38,6 @@ import batect.ui.interleaved.InterleavedEventLogger
 import batect.ui.interleaved.InterleavedOutput
 import batect.ui.quiet.QuietEventLogger
 import batect.ui.simple.SimpleEventLogger
-import com.hypirion.io.RevivableInputStream
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.isA
 import org.mockito.kotlin.doReturn
@@ -55,7 +54,6 @@ object EventLoggerProviderSpec : Spek({
         val console = mock<Console>()
         val errorConsole = mock<Console>()
         val stdout = mock<PrintStream>()
-        val stdin = mock<RevivableInputStream>()
         val consoleInfo by createForEachTest { mock<ConsoleInfo>() }
         val consoleDimensions by createForEachTest { mock<ConsoleDimensions>() }
 
@@ -89,7 +87,7 @@ object EventLoggerProviderSpec : Spek({
             }
 
             it("sets the I/O streaming options to the expected value") {
-                assertThat(logger.ioStreamingOptions, equalTo(TaskContainerOnlyIOStreamingOptions(taskContainer, stdout, stdin, consoleInfo)))
+                assertThat(logger.ioStreamingOptions, equalTo(TaskContainerOnlyIOStreamingOptions(taskContainer, stdout, consoleInfo)))
             }
         }
 
@@ -121,7 +119,7 @@ object EventLoggerProviderSpec : Spek({
             }
 
             it("sets the I/O streaming options to the expected value") {
-                assertThat(logger.ioStreamingOptions, equalTo(TaskContainerOnlyIOStreamingOptions(taskContainer, stdout, stdin, consoleInfo)))
+                assertThat(logger.ioStreamingOptions, equalTo(TaskContainerOnlyIOStreamingOptions(taskContainer, stdout, consoleInfo)))
             }
         }
 
@@ -153,7 +151,7 @@ object EventLoggerProviderSpec : Spek({
             }
 
             it("sets the I/O streaming options to the expected value") {
-                assertThat(logger.ioStreamingOptions, equalTo(TaskContainerOnlyIOStreamingOptions(taskContainer, stdout, stdin, consoleInfo)))
+                assertThat(logger.ioStreamingOptions, equalTo(TaskContainerOnlyIOStreamingOptions(taskContainer, stdout, consoleInfo)))
             }
         }
 
@@ -188,7 +186,7 @@ object EventLoggerProviderSpec : Spek({
 
             beforeEachTest { whenever(consoleInfo.supportsInteractivity).doReturn(true) }
 
-            val provider by createForEachTest { EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, stdout, stdin, startupProgressDisplayProvider, consoleInfo, consoleDimensions, requestedOutputStyle, false) }
+            val provider by createForEachTest { EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, stdout, startupProgressDisplayProvider, consoleInfo, consoleDimensions, requestedOutputStyle, false) }
 
             itReturnsAQuietEventLogger { provider.getEventLogger(task, graph) }
         }
@@ -198,7 +196,7 @@ object EventLoggerProviderSpec : Spek({
 
             beforeEachTest { whenever(consoleInfo.supportsInteractivity).doReturn(true) }
 
-            val provider by createForEachTest { EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, stdout, stdin, startupProgressDisplayProvider, consoleInfo, consoleDimensions, requestedOutputStyle, false) }
+            val provider by createForEachTest { EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, stdout, startupProgressDisplayProvider, consoleInfo, consoleDimensions, requestedOutputStyle, false) }
 
             itReturnsASimpleEventLogger { provider.getEventLogger(task, graph) }
         }
@@ -208,7 +206,7 @@ object EventLoggerProviderSpec : Spek({
 
             beforeEachTest { whenever(consoleInfo.supportsInteractivity).doReturn(true) }
 
-            val provider by createForEachTest { EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, stdout, stdin, startupProgressDisplayProvider, consoleInfo, consoleDimensions, requestedOutputStyle, false) }
+            val provider by createForEachTest { EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, stdout, startupProgressDisplayProvider, consoleInfo, consoleDimensions, requestedOutputStyle, false) }
 
             itReturnsAFancyEventLogger(startupProgressDisplay) { provider.getEventLogger(task, graph) }
         }
@@ -218,7 +216,7 @@ object EventLoggerProviderSpec : Spek({
 
             beforeEachTest { whenever(consoleInfo.supportsInteractivity).doReturn(true) }
 
-            val provider by createForEachTest { EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, stdout, stdin, startupProgressDisplayProvider, consoleInfo, consoleDimensions, requestedOutputStyle, false) }
+            val provider by createForEachTest { EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, stdout, startupProgressDisplayProvider, consoleInfo, consoleDimensions, requestedOutputStyle, false) }
 
             itReturnsAnInterleavedEventLogger { provider.getEventLogger(task, graph) }
         }
@@ -234,7 +232,7 @@ object EventLoggerProviderSpec : Spek({
                     whenever(consoleDimensions.current).doReturn(Dimensions(123, 456))
                 }
 
-                val provider by createForEachTest { EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, stdout, stdin, startupProgressDisplayProvider, consoleInfo, consoleDimensions, requestedOutputStyle, disableColorOutput) }
+                val provider by createForEachTest { EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, stdout, startupProgressDisplayProvider, consoleInfo, consoleDimensions, requestedOutputStyle, disableColorOutput) }
 
                 itReturnsASimpleEventLogger { provider.getEventLogger(task, graph) }
             }
@@ -248,7 +246,7 @@ object EventLoggerProviderSpec : Spek({
                     given("the console's dimensions are available") {
                         beforeEachTest { whenever(consoleDimensions.current).doReturn(Dimensions(123, 456)) }
 
-                        val provider by createForEachTest { EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, stdout, stdin, startupProgressDisplayProvider, consoleInfo, consoleDimensions, requestedOutputStyle, disableColorOutput) }
+                        val provider by createForEachTest { EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, stdout, startupProgressDisplayProvider, consoleInfo, consoleDimensions, requestedOutputStyle, disableColorOutput) }
 
                         itReturnsAFancyEventLogger(startupProgressDisplay) { provider.getEventLogger(task, graph) }
                     }
@@ -256,7 +254,7 @@ object EventLoggerProviderSpec : Spek({
                     given("the console's dimensions are not available") {
                         beforeEachTest { whenever(consoleDimensions.current).doReturn(null) }
 
-                        val provider by createForEachTest { EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, stdout, stdin, startupProgressDisplayProvider, consoleInfo, consoleDimensions, requestedOutputStyle, disableColorOutput) }
+                        val provider by createForEachTest { EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, stdout, startupProgressDisplayProvider, consoleInfo, consoleDimensions, requestedOutputStyle, disableColorOutput) }
 
                         itReturnsASimpleEventLogger { provider.getEventLogger(task, graph) }
                     }
@@ -268,7 +266,7 @@ object EventLoggerProviderSpec : Spek({
                         whenever(consoleDimensions.current).doReturn(Dimensions(123, 456))
                     }
 
-                    val provider by createForEachTest { EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, stdout, stdin, startupProgressDisplayProvider, consoleInfo, consoleDimensions, requestedOutputStyle, disableColorOutput) }
+                    val provider by createForEachTest { EventLoggerProvider(failureErrorMessageFormatter, console, errorConsole, stdout, startupProgressDisplayProvider, consoleInfo, consoleDimensions, requestedOutputStyle, disableColorOutput) }
 
                     itReturnsASimpleEventLogger { provider.getEventLogger(task, graph) }
                 }

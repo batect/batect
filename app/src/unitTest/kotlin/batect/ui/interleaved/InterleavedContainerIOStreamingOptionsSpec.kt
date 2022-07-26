@@ -18,6 +18,7 @@ package batect.ui.interleaved
 
 import batect.config.Container
 import batect.config.SetupCommand
+import batect.dockerclient.io.SinkTextOutput
 import batect.os.Command
 import batect.os.Dimensions
 import batect.testutils.createForEachTest
@@ -29,6 +30,9 @@ import batect.ui.text.Text
 import batect.ui.text.TextRun
 import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.has
+import com.natpryce.hamkrest.isA
+import com.natpryce.hamkrest.present
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 import org.spekframework.spek2.Spek
@@ -66,7 +70,14 @@ object InterleavedContainerIOStreamingOptionsSpec : Spek({
 
         on("getting the stdout stream to use") {
             it("returns an interleaved output stream") {
-                assertThat(options.stdoutForContainer(container), equalTo(InterleavedContainerOutputSink(container, output)))
+                assertThat(
+                    options.stdoutForContainer(container),
+                    present(
+                        isA<SinkTextOutput>(
+                            has(SinkTextOutput::sink, equalTo(InterleavedContainerOutputSink(container, output)))
+                        )
+                    )
+                )
             }
         }
 

@@ -17,13 +17,14 @@
 package batect.cli.commands
 
 import batect.config.ProjectPaths
-import batect.docker.DockerVolume
-import batect.docker.client.VolumesClient
+import batect.dockerclient.DockerClient
+import batect.dockerclient.VolumeReference
 import batect.execution.CacheManager
 import batect.execution.CacheType
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given
+import batect.testutils.itSuspend
 import batect.testutils.runForEachTest
 import batect.ui.Console
 import com.google.common.jimfs.Configuration
@@ -46,13 +47,13 @@ import kotlin.streams.toList
 
 object CleanupCachesCommandSpec : Spek({
     describe("a cleanup caches command") {
-        val volumesClient by createForEachTest {
-            mock<VolumesClient> {
-                on { getAll() } doReturn setOf(
-                    DockerVolume("batect-cache-this-project-abc123"),
-                    DockerVolume("batect-cache-this-project-def456"),
-                    DockerVolume("batect-cache-other-project-abc123"),
-                    DockerVolume("something-else")
+        val dockerClient by createForEachTest {
+            mock<DockerClient> {
+                onBlocking { listAllVolumes() } doReturn setOf(
+                    VolumeReference("batect-cache-this-project-abc123"),
+                    VolumeReference("batect-cache-this-project-def456"),
+                    VolumeReference("batect-cache-other-project-abc123"),
+                    VolumeReference("something-else")
                 )
             }
         }
@@ -91,31 +92,31 @@ object CleanupCachesCommandSpec : Spek({
 
         given("volumes are being used for caches") {
             val cacheType = CacheType.Volume
-            val command by createForEachTest { CleanupCachesCommand(dockerConnectivity(cacheType), volumesClient, projectPaths, console, emptySet()) }
+            val command by createForEachTest { CleanupCachesCommand(dockerConnectivity(cacheType), dockerClient, projectPaths, console, emptySet()) }
             val exitCode by runForEachTest { command.run() }
 
             it("returns a zero exit code") {
                 assertThat(exitCode, equalTo(0))
             }
 
-            it("deletes both volumes used by the project for caches") {
-                verify(volumesClient).delete(DockerVolume("batect-cache-this-project-abc123"))
-                verify(volumesClient).delete(DockerVolume("batect-cache-this-project-def456"))
+            itSuspend("deletes both volumes used by the project for caches") {
+                verify(dockerClient).deleteVolume(VolumeReference("batect-cache-this-project-abc123"))
+                verify(dockerClient).deleteVolume(VolumeReference("batect-cache-this-project-def456"))
             }
 
-            it("does not delete any other volumes") {
-                verify(volumesClient, never()).delete(DockerVolume("batect-cache-other-project-abc123"))
-                verify(volumesClient, never()).delete(DockerVolume("something-else"))
+            itSuspend("does not delete any other volumes") {
+                verify(dockerClient, never()).deleteVolume(VolumeReference("batect-cache-other-project-abc123"))
+                verify(dockerClient, never()).deleteVolume(VolumeReference("something-else"))
             }
 
-            it("prints messages to the console at appropriate moments") {
-                inOrder(console, volumesClient) {
+            itSuspend("prints messages to the console at appropriate moments") {
+                inOrder(console, dockerClient) {
                     verify(console).println("Checking for cache volumes...")
-                    verify(volumesClient).getAll()
+                    verify(dockerClient).listAllVolumes()
                     verify(console).println("Deleting volume 'batect-cache-this-project-abc123'...")
-                    verify(volumesClient).delete(DockerVolume("batect-cache-this-project-abc123"))
+                    verify(dockerClient).deleteVolume(VolumeReference("batect-cache-this-project-abc123"))
                     verify(console).println("Deleting volume 'batect-cache-this-project-def456'...")
-                    verify(volumesClient).delete(DockerVolume("batect-cache-this-project-def456"))
+                    verify(dockerClient).deleteVolume(VolumeReference("batect-cache-this-project-def456"))
                     verify(console).println("Done! Deleted 2 volumes.")
                 }
             }
@@ -138,29 +139,29 @@ object CleanupCachesCommandSpec : Spek({
         given("volumes name is provided for cache cleanup") {
             val cacheType = CacheType.Volume
             val cachesToClean = setOf("def456")
-            val command by createForEachTest { CleanupCachesCommand(dockerConnectivity(cacheType), volumesClient, projectPaths, console, cachesToClean) }
+            val command by createForEachTest { CleanupCachesCommand(dockerConnectivity(cacheType), dockerClient, projectPaths, console, cachesToClean) }
             val exitCode by runForEachTest { command.run() }
 
             it("returns a zero exit code") {
                 assertThat(exitCode, equalTo(0))
             }
 
-            it("deletes the volumes used by the project for caches which matches input cache name") {
-                verify(volumesClient).delete(DockerVolume("batect-cache-this-project-def456"))
+            itSuspend("deletes the volumes used by the project for caches which matches input cache name") {
+                verify(dockerClient).deleteVolume(VolumeReference("batect-cache-this-project-def456"))
             }
 
-            it("does not delete any other volumes") {
-                verify(volumesClient, never()).delete(DockerVolume("batect-cache-this-project-abc123"))
-                verify(volumesClient, never()).delete(DockerVolume("batect-cache-other-project-abc123"))
-                verify(volumesClient, never()).delete(DockerVolume("something-else"))
+            itSuspend("does not delete any other volumes") {
+                verify(dockerClient, never()).deleteVolume(VolumeReference("batect-cache-this-project-abc123"))
+                verify(dockerClient, never()).deleteVolume(VolumeReference("batect-cache-other-project-abc123"))
+                verify(dockerClient, never()).deleteVolume(VolumeReference("something-else"))
             }
 
-            it("prints messages to the console at appropriate moments") {
-                inOrder(console, volumesClient) {
+            itSuspend("prints messages to the console at appropriate moments") {
+                inOrder(console, dockerClient) {
                     verify(console).println("Checking for cache volumes...")
-                    verify(volumesClient).getAll()
+                    verify(dockerClient).listAllVolumes()
                     verify(console).println("Deleting volume 'batect-cache-this-project-def456'...")
-                    verify(volumesClient).delete(DockerVolume("batect-cache-this-project-def456"))
+                    verify(dockerClient).deleteVolume(VolumeReference("batect-cache-this-project-def456"))
                     verify(console).println("Done! Deleted 1 volume.")
                 }
             }
@@ -182,7 +183,7 @@ object CleanupCachesCommandSpec : Spek({
 
         given("directories are being used for caches") {
             val cacheType = CacheType.Directory
-            val command by createForEachTest { CleanupCachesCommand(dockerConnectivity(cacheType), volumesClient, projectPaths, console, emptySet()) }
+            val command by createForEachTest { CleanupCachesCommand(dockerConnectivity(cacheType), dockerClient, projectPaths, console, emptySet()) }
             val exitCode by runForEachTest { command.run() }
 
             it("returns a zero exit code") {
@@ -222,15 +223,15 @@ object CleanupCachesCommandSpec : Spek({
                 }
             }
 
-            it("does not delete any volumes") {
-                verify(volumesClient, never()).delete(any())
+            itSuspend("does not delete any volumes") {
+                verify(dockerClient, never()).deleteVolume(any())
             }
         }
 
         given("directories are being used for caches and directory relative path to cache is provided") {
             val cacheType = CacheType.Directory
             val cachesToClean = setOf("cache-with-file")
-            val command by createForEachTest { CleanupCachesCommand(dockerConnectivity(cacheType), volumesClient, projectPaths, console, cachesToClean) }
+            val command by createForEachTest { CleanupCachesCommand(dockerConnectivity(cacheType), dockerClient, projectPaths, console, cachesToClean) }
             val exitCode by runForEachTest { command.run() }
 
             it("returns a zero exit code") {
@@ -255,8 +256,8 @@ object CleanupCachesCommandSpec : Spek({
                 }
             }
 
-            it("does not delete any volumes") {
-                verify(volumesClient, never()).delete(any())
+            itSuspend("does not delete any volumes") {
+                verify(dockerClient, never()).deleteVolume(any())
             }
         }
     }

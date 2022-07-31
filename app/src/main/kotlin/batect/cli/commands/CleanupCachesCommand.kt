@@ -17,11 +17,12 @@
 package batect.cli.commands
 
 import batect.config.ProjectPaths
-import batect.docker.client.VolumesClient
+import batect.dockerclient.DockerClient
 import batect.execution.CacheManager
 import batect.execution.CacheType
 import batect.os.deleteDirectory
 import batect.ui.Console
+import kotlinx.coroutines.runBlocking
 import org.kodein.di.instance
 import java.nio.file.Files
 import kotlin.io.path.name
@@ -29,37 +30,39 @@ import kotlin.streams.toList
 
 class CleanupCachesCommand(
     private val dockerConnectivity: DockerConnectivity,
-    private val volumesClient: VolumesClient,
+    private val dockerClient: DockerClient,
     private val projectPaths: ProjectPaths,
     private val console: Console,
     private val cachesToClean: Set<String>
 ) : Command {
     override fun run(): Int = dockerConnectivity.checkAndRun { kodein ->
-        val cacheManager = kodein.instance<CacheManager>()
+        runBlocking {
+            val cacheManager = kodein.instance<CacheManager>()
 
-        when (cacheManager.cacheType) {
-            CacheType.Volume -> runForVolumes(cacheManager, cachesToClean)
-            CacheType.Directory -> runForDirectories(cachesToClean)
+            when (cacheManager.cacheType) {
+                CacheType.Volume -> runForVolumes(cacheManager, cachesToClean)
+                CacheType.Directory -> runForDirectories(cachesToClean)
+            }
+
+            0
         }
-
-        0
     }
 
-    private fun runForVolumes(cacheManager: CacheManager, cachesToClean: Set<String>) {
+    private suspend fun runForVolumes(cacheManager: CacheManager, cachesToClean: Set<String>) {
         val prefix = "batect-cache-${cacheManager.projectCacheKey}-"
 
         console.println("Checking for cache volumes...")
 
         val volumes = when {
-            cachesToClean.isNotEmpty() -> volumesClient.getAll()
+            cachesToClean.isNotEmpty() -> dockerClient.listAllVolumes()
                 .filter { it.name.startsWith(prefix) && it.name.substringAfter(prefix) in cachesToClean }
-            else -> volumesClient.getAll()
+            else -> dockerClient.listAllVolumes()
                 .filter { it.name.startsWith(prefix) }
         }
 
         volumes.forEach { volume ->
             console.println("Deleting volume '${volume.name}'...")
-            volumesClient.delete(volume)
+            dockerClient.deleteVolume(volume)
         }
 
         if (volumes.count() == 1) {

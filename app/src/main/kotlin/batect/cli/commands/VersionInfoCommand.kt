@@ -18,19 +18,22 @@ package batect.cli.commands
 
 import batect.VersionInfo
 import batect.cli.CommandLineOptionsParser
-import batect.docker.client.SystemInfoClient
+import batect.dockerclient.DockerClient
 import batect.git.GitClient
+import batect.logging.Logger
 import batect.os.SystemInfo
 import batect.updates.UpdateNotifier
+import kotlinx.coroutines.runBlocking
 import java.io.PrintStream
 
 class VersionInfoCommand(
     private val versionInfo: VersionInfo,
     private val outputStream: PrintStream,
     private val systemInfo: SystemInfo,
-    private val dockerSystemInfoClient: SystemInfoClient,
+    private val dockerClient: DockerClient,
     private val gitClient: GitClient,
-    private val updateNotifier: UpdateNotifier
+    private val updateNotifier: UpdateNotifier,
+    private val logger: Logger
 ) : Command {
     override fun run(): Int {
         outputStream.println("Batect version:    ${versionInfo.version}")
@@ -38,7 +41,7 @@ class VersionInfoCommand(
         outputStream.println("Built from commit: ${versionInfo.gitCommitHash} (commit date: ${versionInfo.gitCommitDate})")
         outputStream.println("JVM version:       ${systemInfo.jvmVersion}")
         outputStream.println("OS version:        ${systemInfo.osSummary}")
-        outputStream.println("Docker version:    ${dockerSystemInfoClient.getDockerVersionInfo()}")
+        outputStream.println("Docker version:    ${getDockerVersionInfo()}")
         outputStream.println("Git version:       ${gitClient.version}")
         outputStream.println()
         outputStream.println(CommandLineOptionsParser.helpBlurb)
@@ -47,5 +50,20 @@ class VersionInfoCommand(
         updateNotifier.run()
 
         return 0
+    }
+
+    private fun getDockerVersionInfo(): String = runBlocking {
+        try {
+            val versionInfo = dockerClient.getDaemonVersionInformation()
+
+            "${versionInfo.version} (API version: ${versionInfo.apiVersion}, minimum supported API version: ${versionInfo.minAPIVersion}, commit: ${versionInfo.gitCommit}, operating system: '${versionInfo.operatingSystem}', experimental: ${versionInfo.experimental})"
+        } catch (e: Throwable) {
+            logger.warn {
+                message("Could not get Docker version information")
+                exception(e)
+            }
+
+            "(could not get Docker version information because ${e.javaClass.simpleName} was thrown: ${e.message})"
+        }
     }
 }

@@ -173,7 +173,7 @@ private val cliModule = DI.Module("cli") {
     bind<ListTasksCommand>() with singleton { ListTasksCommand(instance(), instance(), instance(StreamType.Output)) }
     bind<RunTaskCommand>() with singleton { RunTaskCommand(instance(), instance(), instance(), instance(), instance(), instance()) }
     bind<UpgradeCommand>() with singletonWithLogger { logger -> UpgradeCommand(instance(), instance(), instance(), instance(), instance(StreamType.Output), instance(StreamType.Error), instance(), instance(), logger) }
-    bind<VersionInfoCommand>() with singleton { VersionInfoCommand(instance(), instance(StreamType.Output), instance(), instance(), instance(), instance()) }
+    bind<VersionInfoCommand>() with singletonWithLogger { logger -> VersionInfoCommand(instance(), instance(StreamType.Output), instance(), instance(), instance(), instance(), logger) }
     bind<ZshShellTabCompletionOptionGenerator>() with singleton { ZshShellTabCompletionOptionGenerator() }
     bind<ZshShellTabCompletionScriptGenerator>() with singleton { ZshShellTabCompletionScriptGenerator(instance()) }
 }

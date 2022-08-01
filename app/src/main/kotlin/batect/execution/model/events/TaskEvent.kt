@@ -141,7 +141,7 @@ object UserInterruptedExecutionEvent : TaskFailedEvent()
 data class SetupCommandExecutionErrorEvent(val container: Container, val command: SetupCommand, val message: String) : TaskFailedEvent()
 
 @Serializable
-data class SetupCommandFailedEvent(val container: Container, val command: SetupCommand, val exitCode: Int, val output: String) : TaskFailedEvent()
+data class SetupCommandFailedEvent(val container: Container, val command: SetupCommand, val exitCode: Long, val output: String) : TaskFailedEvent()
 
 fun LogMessageBuilder.data(key: String, value: TaskEvent) = this.data(key, value, TaskEvent.serializer())
 fun LogMessageBuilder.data(key: String, value: Set<TaskEvent>) = this.data(key, value, SetSerializer(TaskEvent.serializer()))

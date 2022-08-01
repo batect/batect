@@ -16,9 +16,16 @@
 
 package batect.execution.model.steps.runners
 
+import batect.config.Container
+import batect.config.SetupCommand
 import batect.docker.DockerContainerEnvironmentVariableProvider
-import batect.docker.DockerException
-import batect.docker.client.ExecClient
+import batect.docker.Tee
+import batect.dockerclient.ContainerExecSpec
+import batect.dockerclient.ContainerReference
+import batect.dockerclient.DockerClient
+import batect.dockerclient.DockerClientException
+import batect.dockerclient.UserAndGroup
+import batect.dockerclient.io.SinkTextOutput
 import batect.execution.RunAsCurrentUserConfigurationProvider
 import batect.execution.model.events.ContainerBecameReadyEvent
 import batect.execution.model.events.RunningSetupCommandEvent
@@ -28,10 +35,13 @@ import batect.execution.model.events.SetupCommandsCompletedEvent
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.steps.RunContainerSetupCommandsStep
 import batect.primitives.CancellationContext
+import batect.primitives.runBlocking
 import batect.ui.containerio.ContainerIOStreamingOptions
+import kotlinx.coroutines.runBlocking
+import okio.Buffer
 
 class RunContainerSetupCommandsStepRunner(
-    private val execClient: ExecClient,
+    private val dockerClient: DockerClient,
     private val environmentVariableProvider: DockerContainerEnvironmentVariableProvider,
     private val runAsCurrentUserConfigurationProvider: RunAsCurrentUserConfigurationProvider,
     private val cancellationContext: CancellationContext,
@@ -50,22 +60,13 @@ class RunContainerSetupCommandsStepRunner(
             try {
                 eventSink.postEvent(RunningSetupCommandEvent(step.container, command, index))
 
-                val result = execClient.run(
-                    command.command,
-                    step.dockerContainer,
-                    environmentVariables,
-                    step.container.privileged,
-                    userAndGroup,
-                    command.workingDirectory ?: step.container.workingDirectory,
-                    ioStreamingOptions.stdoutForContainerSetupCommand(step.container, command, index),
-                    cancellationContext
-                )
+                val result = runSetupCommand(command, index, environmentVariables, userAndGroup, step.container, ContainerReference(step.dockerContainer.id))
 
-                if (result.exitCode != 0) {
-                    eventSink.postEvent(SetupCommandFailedEvent(step.container, command, result.exitCode, result.output))
+                if (result.exitCode != 0L) {
+                    eventSink.postEvent(SetupCommandFailedEvent(step.container, command, result.exitCode, result.output.readUtf8()))
                     return
                 }
-            } catch (e: DockerException) {
+            } catch (e: DockerClientException) {
                 eventSink.postEvent(SetupCommandExecutionErrorEvent(step.container, command, e.message ?: ""))
                 return
             }
@@ -74,4 +75,55 @@ class RunContainerSetupCommandsStepRunner(
         eventSink.postEvent(SetupCommandsCompletedEvent(step.container))
         eventSink.postEvent(ContainerBecameReadyEvent(step.container))
     }
+
+    private fun runSetupCommand(
+        setupCommand: SetupCommand,
+        setupCommandIndex: Int,
+        environmentVariables: Map<String, String>,
+        userAndGroup: UserAndGroup?,
+        container: Container,
+        dockerContainer: ContainerReference
+    ): ExecutionResult {
+        val builder = ContainerExecSpec.Builder(dockerContainer)
+            .withCommand(setupCommand.command.parsedCommand)
+            .withEnvironmentVariables(environmentVariables)
+            .withStdoutAttached()
+            .withStderrAttached()
+            .withTTYAttached()
+
+        if (setupCommand.workingDirectory != null) {
+            builder.withWorkingDirectory(setupCommand.workingDirectory)
+        } else if (container.workingDirectory != null) {
+            builder.withWorkingDirectory(container.workingDirectory)
+        }
+
+        if (userAndGroup != null) {
+            builder.withUserAndGroup(userAndGroup)
+        }
+
+        if (container.privileged) {
+            builder.withPrivileged()
+        }
+
+        val exec = runBlocking { dockerClient.createExec(builder.build()) }
+        val uiStdout = ioStreamingOptions.stdoutForContainerSetupCommand(container, setupCommand, setupCommandIndex)
+        val stdoutBuffer = Buffer()
+        val combinedStdout = if (uiStdout == null) stdoutBuffer else Tee(uiStdout, stdoutBuffer)
+
+        val exitCode = cancellationContext.runBlocking {
+            dockerClient.startAndAttachToExec(
+                exec,
+                true,
+                SinkTextOutput(combinedStdout),
+                SinkTextOutput(combinedStdout),
+                null
+            )
+
+            dockerClient.inspectExec(exec).exitCode!!
+        }
+
+        return ExecutionResult(exitCode, stdoutBuffer)
+    }
+
+    private data class ExecutionResult(val exitCode: Long, val output: Buffer)
 }

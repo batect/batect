@@ -24,13 +24,13 @@ import batect.docker.DockerImage
 import batect.docker.DockerNetwork
 import batect.docker.DockerVolumeMount
 import batect.docker.DockerVolumeMountSource
-import batect.docker.UserAndGroup
 import batect.dockerclient.ContainerCreationFailedException
 import batect.dockerclient.ContainerCreationSpec
 import batect.dockerclient.ContainerReference
 import batect.dockerclient.DockerClient
 import batect.dockerclient.ImageReference
 import batect.dockerclient.NetworkReference
+import batect.dockerclient.UserAndGroup
 import batect.execution.RunAsCurrentUserConfigurationException
 import batect.execution.RunAsCurrentUserConfigurationProvider
 import batect.execution.VolumeMountResolutionException

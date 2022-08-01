@@ -24,6 +24,7 @@ import batect.dockerclient.ContainerCreationSpec
 import batect.dockerclient.DeviceMount
 import batect.dockerclient.ImageReference
 import batect.dockerclient.NetworkReference
+import batect.dockerclient.UserAndGroup
 import batect.dockerclient.VolumeReference
 import batect.primitives.mapToSet
 import okio.Path.Companion.toPath
@@ -82,7 +83,7 @@ class DockerContainerCreationRequestFactory(
         container.deviceMounts.forEach { builder.withDeviceMount(it.localPath.toPath(), it.containerPath, it.options ?: DeviceMount.defaultPermissions) }
 
         if (userAndGroup != null) {
-            builder.withUserAndGroup(userAndGroup.userId, userAndGroup.groupId)
+            builder.withUserAndGroup(userAndGroup)
         }
 
         if (container.privileged) {

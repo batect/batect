@@ -78,7 +78,7 @@ class FailureErrorMessageFormatter(private val runOptions: RunOptions, systemInf
         }
     }
 
-    private fun setupCommandFailedBodyText(exitCode: Int, output: String): String = if (output.isEmpty()) {
+    private fun setupCommandFailedBodyText(exitCode: Long, output: String): String = if (output.isEmpty()) {
         "The command exited with code $exitCode and did not produce any output."
     } else {
         "The command exited with code $exitCode and output:$newLine$output"

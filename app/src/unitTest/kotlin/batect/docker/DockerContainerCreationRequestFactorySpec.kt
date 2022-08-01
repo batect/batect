@@ -27,6 +27,7 @@ import batect.dockerclient.ExposedPort
 import batect.dockerclient.ExtraHost
 import batect.dockerclient.HostMount
 import batect.dockerclient.NetworkReference
+import batect.dockerclient.UserAndGroup
 import batect.dockerclient.VolumeMount
 import batect.dockerclient.VolumeReference
 import batect.os.Command

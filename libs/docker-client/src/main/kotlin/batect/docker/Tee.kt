@@ -20,7 +20,7 @@ import okio.Buffer
 import okio.Sink
 import okio.Timeout
 
-internal class Tee(private vararg val sinks: Sink) : Sink {
+public class Tee(private vararg val sinks: Sink) : Sink {
     override fun close() = sinks.forEach { it.close() }
     override fun flush() = sinks.forEach { it.flush() }
     override fun write(source: Buffer, byteCount: Long) {

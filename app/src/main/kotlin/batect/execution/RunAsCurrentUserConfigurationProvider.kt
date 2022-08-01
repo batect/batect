@@ -25,9 +25,9 @@ import batect.docker.DockerContainer
 import batect.docker.DockerException
 import batect.docker.DockerVolumeMount
 import batect.docker.DockerVolumeMountSource
-import batect.docker.UserAndGroup
 import batect.docker.client.ContainersClient
 import batect.docker.client.DockerContainerType
+import batect.dockerclient.UserAndGroup
 import batect.os.NativeMethods
 import batect.os.OperatingSystem
 import batect.os.SystemInfo

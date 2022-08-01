@@ -20,10 +20,14 @@ import batect.config.Container
 import batect.config.SetupCommand
 import batect.docker.DockerContainer
 import batect.docker.DockerContainerEnvironmentVariableProvider
-import batect.docker.DockerException
-import batect.docker.DockerExecResult
-import batect.docker.UserAndGroup
-import batect.docker.client.ExecClient
+import batect.dockerclient.ContainerExecInspectionResult
+import batect.dockerclient.ContainerExecReference
+import batect.dockerclient.ContainerExecSpec
+import batect.dockerclient.ContainerReference
+import batect.dockerclient.DockerClient
+import batect.dockerclient.DockerClientException
+import batect.dockerclient.UserAndGroup
+import batect.dockerclient.io.SinkTextOutput
 import batect.execution.RunAsCurrentUserConfigurationProvider
 import batect.execution.model.events.ContainerBecameReadyEvent
 import batect.execution.model.events.RunningSetupCommandEvent
@@ -34,19 +38,31 @@ import batect.execution.model.events.TaskEventSink
 import batect.execution.model.steps.RunContainerSetupCommandsStep
 import batect.os.Command
 import batect.primitives.CancellationContext
+import batect.testutils.beforeEachTestSuspend
 import batect.testutils.createForEachTest
+import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.imageSourceDoesNotMatter
+import batect.testutils.itSuspend
 import batect.ui.containerio.ContainerIOStreamingOptions
+import com.natpryce.hamkrest.assertion.assertThat
+import okio.Buffer
 import okio.Sink
+import okio.buffer
 import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
+import org.mockito.kotlin.argThat
+import org.mockito.kotlin.argumentCaptor
+import org.mockito.kotlin.doAnswer
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.doThrow
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.inOrder
 import org.mockito.kotlin.isA
+import org.mockito.kotlin.isNull
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
+import org.mockito.kotlin.notNull
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
@@ -55,7 +71,7 @@ import org.spekframework.spek2.style.specification.describe
 
 object RunContainerSetupCommandsStepRunnerSpec : Spek({
     describe("running a 'run setup commands' step") {
-        val execClient by createForEachTest { mock<ExecClient>() }
+        val dockerClient by createForEachTest { mock<DockerClient>() }
         val environmentVariableProvider by createForEachTest { mock<DockerContainerEnvironmentVariableProvider>() }
         val userAndGroup = UserAndGroup(456, 789)
 
@@ -67,7 +83,7 @@ object RunContainerSetupCommandsStepRunnerSpec : Spek({
         val ioStreamingOptions by createForEachTest { mock<ContainerIOStreamingOptions>() }
         val eventSink by createForEachTest { mock<TaskEventSink>() }
 
-        val runner by createForEachTest { RunContainerSetupCommandsStepRunner(execClient, environmentVariableProvider, runAsCurrentUserConfigurationProvider, cancellationContext, ioStreamingOptions) }
+        val runner by createForEachTest { RunContainerSetupCommandsStepRunner(dockerClient, environmentVariableProvider, runAsCurrentUserConfigurationProvider, cancellationContext, ioStreamingOptions) }
 
         given("the container has no setup commands") {
             val container = Container("the-container", imageSourceDoesNotMatter(), setupCommands = emptyList())
@@ -93,16 +109,28 @@ object RunContainerSetupCommandsStepRunnerSpec : Spek({
             val step = RunContainerSetupCommandsStep(container, dockerContainer)
 
             val environmentVariablesToUse = mapOf("SOME_VAR" to "some value")
-            val outputSink by createForEachTest { mock<Sink>() }
+            val outputSink by createForEachTest { Buffer() }
+            val execInstance by createForEachTest { ContainerExecReference("the-exec-instance") }
 
-            beforeEachTest {
+            beforeEachTestSuspend {
                 whenever(environmentVariableProvider.environmentVariablesFor(container, null)).doReturn(environmentVariablesToUse)
                 whenever(ioStreamingOptions.stdoutForContainerSetupCommand(container, setupCommand, 0)).thenReturn(outputSink)
+                whenever(dockerClient.createExec(any())).doReturn(execInstance)
+
+                whenever(dockerClient.startAndAttachToExec(any(), any(), any(), any(), anyOrNull())).doAnswer { invocation ->
+                    val stdout = invocation.getArgument<SinkTextOutput>(2)
+
+                    stdout.sink.buffer().use { buffer ->
+                        buffer.writeUtf8("Some output from the command")
+                    }
+
+                    Unit
+                }
             }
 
             given("the command succeeds") {
-                beforeEachTest {
-                    whenever(execClient.run(any(), any(), any(), any(), any(), any(), any(), any())).doReturn(DockerExecResult(0, "Some output from the command"))
+                beforeEachTestSuspend {
+                    whenever(dockerClient.inspectExec(execInstance)).doReturn(ContainerExecInspectionResult(0, false))
                 }
 
                 beforeEachTest { runner.run(step, eventSink) }
@@ -111,17 +139,25 @@ object RunContainerSetupCommandsStepRunnerSpec : Spek({
                     verify(eventSink).postEvent(RunningSetupCommandEvent(container, setupCommand, 0))
                 }
 
-                it("runs the command with the working directory specified on the container") {
-                    verify(execClient).run(
-                        command,
-                        dockerContainer,
-                        environmentVariablesToUse,
-                        container.privileged,
-                        userAndGroup,
-                        container.workingDirectory,
-                        outputSink,
-                        cancellationContext
-                    )
+                itSuspend("creates the exec instance with the expected configuration") {
+                    val captor = argumentCaptor<ContainerExecSpec>()
+                    verify(dockerClient).createExec(captor.capture())
+
+                    val spec = captor.firstValue
+                    assertThat(spec.command, equalTo(command.parsedCommand))
+                    assertThat(spec.container, equalTo(ContainerReference("some-container-id")))
+                    assertThat(spec.environmentVariables, equalTo(environmentVariablesToUse))
+                    assertThat(spec.privileged, equalTo(container.privileged))
+                    assertThat(spec.userAndGroup, equalTo(userAndGroup))
+                    assertThat(spec.workingDirectory, equalTo(container.workingDirectory))
+                }
+
+                itSuspend("runs the created exec instance") {
+                    verify(dockerClient).startAndAttachToExec(eq(execInstance), eq(true), notNull(), notNull(), isNull())
+                }
+
+                it("streams I/O from the exec instance to the provided output stream") {
+                    assertThat(outputSink.readUtf8(), equalTo("Some output from the command"))
                 }
 
                 it("emits a 'setup commands completed' event") {
@@ -132,24 +168,24 @@ object RunContainerSetupCommandsStepRunnerSpec : Spek({
                     verify(eventSink).postEvent(ContainerBecameReadyEvent(container))
                 }
 
-                it("emits the 'running setup command' event before running the command") {
-                    inOrder(eventSink, execClient) {
+                itSuspend("emits the 'running setup command' event before running the command") {
+                    inOrder(eventSink, dockerClient) {
                         verify(eventSink).postEvent(isA<RunningSetupCommandEvent>())
-                        verify(execClient).run(any(), any(), any(), any(), any(), any(), any(), any())
+                        verify(dockerClient).startAndAttachToExec(any(), any(), any(), any(), anyOrNull())
                     }
                 }
 
-                it("emits the 'setup commands completed' event after running the command") {
-                    inOrder(eventSink, execClient) {
-                        verify(execClient).run(any(), any(), any(), any(), any(), any(), any(), any())
+                itSuspend("emits the 'setup commands completed' event after running the command") {
+                    inOrder(eventSink, dockerClient) {
+                        verify(dockerClient).startAndAttachToExec(any(), any(), any(), any(), anyOrNull())
                         verify(eventSink).postEvent(isA<SetupCommandsCompletedEvent>())
                     }
                 }
             }
 
             given("the command returns a non-zero exit code") {
-                beforeEachTest {
-                    whenever(execClient.run(any(), any(), any(), any(), any(), any(), any(), any())).doReturn(DockerExecResult(123, "Some output from the command"))
+                beforeEachTestSuspend {
+                    whenever(dockerClient.inspectExec(execInstance)).doReturn(ContainerExecInspectionResult(123, false))
                 }
 
                 beforeEachTest { runner.run(step, eventSink) }
@@ -172,8 +208,8 @@ object RunContainerSetupCommandsStepRunnerSpec : Spek({
             }
 
             given("the command cannot be run") {
-                beforeEachTest {
-                    whenever(execClient.run(any(), any(), any(), any(), any(), any(), any(), any())).doThrow(DockerException("Something went wrong."))
+                beforeEachTestSuspend {
+                    whenever(dockerClient.startAndAttachToExec(any(), any(), any(), any(), anyOrNull())).doThrow(DockerClientException("Something went wrong."))
                 }
 
                 beforeEachTest { runner.run(step, eventSink) }
@@ -212,23 +248,15 @@ object RunContainerSetupCommandsStepRunnerSpec : Spek({
             }
 
             given("the command succeeds") {
-                beforeEachTest {
-                    whenever(execClient.run(any(), any(), any(), any(), any(), any(), any(), any())).doReturn(DockerExecResult(0, "Some output from the command"))
+                beforeEachTestSuspend {
+                    whenever(dockerClient.createExec(any())).doReturn(ContainerExecReference("some-exec-instance"))
+                    whenever(dockerClient.inspectExec(any())).doReturn(ContainerExecInspectionResult(0, false))
                 }
 
                 beforeEachTest { runner.run(step, eventSink) }
 
-                it("runs the command with the working directory specified on the setup command") {
-                    verify(execClient).run(
-                        command,
-                        dockerContainer,
-                        environmentVariablesToUse,
-                        container.privileged,
-                        userAndGroup,
-                        setupCommand.workingDirectory,
-                        outputSink,
-                        cancellationContext
-                    )
+                itSuspend("runs the command with the working directory specified on the setup command") {
+                    verify(dockerClient).createExec(argThat { workingDirectory == setupCommand.workingDirectory })
                 }
             }
         }
@@ -245,38 +273,39 @@ object RunContainerSetupCommandsStepRunnerSpec : Spek({
             val step = RunContainerSetupCommandsStep(container, dockerContainer)
 
             val environmentVariablesToUse = mapOf("SOME_VAR" to "some value")
-            val outputSink1 by createForEachTest { mock<Sink>() }
-            val outputSink2 by createForEachTest { mock<Sink>() }
-            val outputSink3 by createForEachTest { mock<Sink>() }
+            val execInstance1 = ContainerExecReference("command-1-exec")
+            val execInstance2 = ContainerExecReference("command-2-exec")
+            val execInstance3 = ContainerExecReference("command-3-exec")
 
-            beforeEachTest {
+            beforeEachTestSuspend {
                 whenever(environmentVariableProvider.environmentVariablesFor(container, null)).doReturn(environmentVariablesToUse)
-                whenever(ioStreamingOptions.stdoutForContainerSetupCommand(container, setupCommand1, 0)).doReturn(outputSink1)
-                whenever(ioStreamingOptions.stdoutForContainerSetupCommand(container, setupCommand2, 1)).doReturn(outputSink2)
-                whenever(ioStreamingOptions.stdoutForContainerSetupCommand(container, setupCommand3, 2)).doReturn(outputSink3)
+
+                whenever(dockerClient.createExec(argThat { command == command1.parsedCommand })).doReturn(execInstance1)
+                whenever(dockerClient.createExec(argThat { command == command2.parsedCommand })).doReturn(execInstance2)
+                whenever(dockerClient.createExec(argThat { command == command3.parsedCommand })).doReturn(execInstance3)
             }
 
             given("all of them succeed") {
-                beforeEachTest {
-                    whenever(execClient.run(any(), any(), any(), any(), any(), any(), any(), any())).doReturn(DockerExecResult(0, "Some output from the command"))
+                beforeEachTestSuspend {
+                    whenever(dockerClient.inspectExec(any())).doReturn(ContainerExecInspectionResult(0, false))
                 }
 
                 beforeEachTest { runner.run(step, eventSink) }
 
-                it("emits a 'running setup command' event before running each command in the order provided") {
-                    inOrder(eventSink, execClient) {
+                itSuspend("emits a 'running setup command' event before running each command in the order provided") {
+                    inOrder(eventSink, dockerClient) {
                         verify(eventSink).postEvent(RunningSetupCommandEvent(container, setupCommand1, 0))
-                        verify(execClient).run(command1, dockerContainer, environmentVariablesToUse, container.privileged, userAndGroup, container.workingDirectory, outputSink1, cancellationContext)
+                        verify(dockerClient).startAndAttachToExec(eq(execInstance1), any(), any(), any(), anyOrNull())
                         verify(eventSink).postEvent(RunningSetupCommandEvent(container, setupCommand2, 1))
-                        verify(execClient).run(command2, dockerContainer, environmentVariablesToUse, container.privileged, userAndGroup, container.workingDirectory, outputSink2, cancellationContext)
+                        verify(dockerClient).startAndAttachToExec(eq(execInstance2), any(), any(), any(), anyOrNull())
                         verify(eventSink).postEvent(RunningSetupCommandEvent(container, setupCommand3, 2))
-                        verify(execClient).run(command3, dockerContainer, environmentVariablesToUse, container.privileged, userAndGroup, container.workingDirectory, outputSink3, cancellationContext)
+                        verify(dockerClient).startAndAttachToExec(eq(execInstance3), any(), any(), any(), anyOrNull())
                     }
                 }
 
-                it("emits 'setup commands completed' and 'container ready' events after running the last command") {
-                    inOrder(eventSink, execClient) {
-                        verify(execClient).run(command3, dockerContainer, environmentVariablesToUse, container.privileged, userAndGroup, container.workingDirectory, outputSink3, cancellationContext)
+                itSuspend("emits 'setup commands completed' and 'container ready' events after running the last command") {
+                    inOrder(eventSink, dockerClient) {
+                        verify(dockerClient).startAndAttachToExec(eq(execInstance3), any(), any(), any(), anyOrNull())
                         verify(eventSink).postEvent(SetupCommandsCompletedEvent(container))
                         verify(eventSink).postEvent(ContainerBecameReadyEvent(container))
                     }
@@ -284,14 +313,24 @@ object RunContainerSetupCommandsStepRunnerSpec : Spek({
             }
 
             given("one of them fails") {
-                beforeEachTest {
-                    whenever(execClient.run(eq(command1), any(), any(), any(), any(), any(), any(), any())).doReturn(DockerExecResult(0, "Some output from the command"))
-                    whenever(execClient.run(eq(command3), any(), any(), any(), any(), any(), any(), any())).doReturn(DockerExecResult(0, "Some output from the command"))
+                beforeEachTestSuspend {
+                    whenever(dockerClient.inspectExec(execInstance1)).doReturn(ContainerExecInspectionResult(0, false))
+                    whenever(dockerClient.inspectExec(execInstance3)).doReturn(ContainerExecInspectionResult(0, false))
                 }
 
                 given("one of them fails with a non-zero exit code") {
-                    beforeEachTest {
-                        whenever(execClient.run(eq(command2), any(), any(), any(), any(), any(), any(), any())).doReturn(DockerExecResult(123, "Some output from the failing command"))
+                    beforeEachTestSuspend {
+                        whenever(dockerClient.startAndAttachToExec(eq(execInstance2), any(), any(), any(), anyOrNull())).doAnswer { invocation ->
+                            val stdout = invocation.getArgument<SinkTextOutput>(2)
+
+                            stdout.sink.buffer().use { buffer ->
+                                buffer.writeUtf8("Some output from the failing command")
+                            }
+
+                            Unit
+                        }
+
+                        whenever(dockerClient.inspectExec(execInstance2)).doReturn(ContainerExecInspectionResult(123, false))
                     }
 
                     beforeEachTest { runner.run(step, eventSink) }
@@ -316,14 +355,14 @@ object RunContainerSetupCommandsStepRunnerSpec : Spek({
                         verify(eventSink, never()).postEvent(isA<ContainerBecameReadyEvent>())
                     }
 
-                    it("does not run subsequent commands") {
-                        verify(execClient, never()).run(command3, dockerContainer, environmentVariablesToUse, container.privileged, userAndGroup, container.workingDirectory, outputSink3, cancellationContext)
+                    itSuspend("does not run subsequent commands") {
+                        verify(dockerClient, never()).startAndAttachToExec(eq(execInstance3), any(), any(), any(), anyOrNull())
                     }
                 }
 
                 given("one of them fails because the command cannot be run") {
-                    beforeEachTest {
-                        whenever(execClient.run(eq(command2), any(), any(), any(), any(), any(), any(), any())).doThrow(DockerException("Something went wrong."))
+                    beforeEachTestSuspend {
+                        whenever(dockerClient.startAndAttachToExec(eq(execInstance2), any(), any(), any(), anyOrNull())).doThrow(DockerClientException("Something went wrong."))
                     }
 
                     beforeEachTest { runner.run(step, eventSink) }
@@ -348,8 +387,8 @@ object RunContainerSetupCommandsStepRunnerSpec : Spek({
                         verify(eventSink, never()).postEvent(isA<ContainerBecameReadyEvent>())
                     }
 
-                    it("does not run subsequent commands") {
-                        verify(execClient, never()).run(command3, dockerContainer, environmentVariablesToUse, container.privileged, userAndGroup, container.workingDirectory, outputSink3, cancellationContext)
+                    itSuspend("does not run subsequent commands") {
+                        verify(dockerClient, never()).startAndAttachToExec(eq(execInstance3), any(), any(), any(), anyOrNull())
                     }
                 }
             }

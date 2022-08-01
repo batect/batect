@@ -27,12 +27,14 @@ data class InterleavedContainerOutputSink(val container: Container, val output: 
     private val buffer = StringBuilder()
 
     override fun write(source: Buffer, byteCount: Long) {
-        val text = source.readString(byteCount, Charsets.UTF_8)
-        buffer.append(text)
+        synchronized(buffer) {
+            val text = source.readString(byteCount, Charsets.UTF_8)
+            buffer.append(text)
 
-        while (buffer.contains('\n')) {
-            val endOfLine = buffer.indexOf('\n')
-            writeLine(endOfLine)
+            while (buffer.contains('\n')) {
+                val endOfLine = buffer.indexOf('\n')
+                writeLine(endOfLine)
+            }
         }
     }
 

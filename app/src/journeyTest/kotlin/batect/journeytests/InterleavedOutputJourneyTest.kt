@@ -27,7 +27,7 @@ import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
 object InterleavedOutputJourneyTest : Spek({
-    describe("when simple output mode is enabled") {
+    describe("when interleaved output mode is enabled") {
         val runner by createForGroup { ApplicationRunner("container-with-dependency") }
 
         on("running a task") {

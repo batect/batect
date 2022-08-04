@@ -20,7 +20,6 @@ import batect.config.Container
 import batect.config.SetupCommand
 import batect.dockerclient.io.SinkTextOutput
 import batect.os.Command
-import batect.os.Dimensions
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.imageSourceDoesNotMatter
@@ -84,12 +83,6 @@ object InterleavedContainerIOStreamingOptionsSpec : Spek({
         on("determining if a TTY should be used for a container") {
             it("returns that a TTY should not be used") {
                 assertThat(options.useTTYForContainer(container), equalTo(false))
-            }
-        }
-
-        on("getting the frame dimensions") {
-            it("returns a value that includes the width of the output's prefix") {
-                assertThat(options.frameDimensions, equalTo(Dimensions(height = 0, width = 23)))
             }
         }
 

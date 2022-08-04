@@ -20,7 +20,6 @@ import batect.config.Container
 import batect.config.SetupCommand
 import batect.dockerclient.io.TextInput
 import batect.dockerclient.io.TextOutput
-import batect.os.Dimensions
 import okio.Sink
 
 interface ContainerIOStreamingOptions {
@@ -31,6 +30,4 @@ interface ContainerIOStreamingOptions {
     fun stdoutForImageBuild(container: Container): Sink?
     fun useTTYForContainer(container: Container): Boolean
     fun attachStdinForContainer(container: Container): Boolean
-
-    val frameDimensions: Dimensions
 }

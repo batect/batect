@@ -21,7 +21,6 @@ import batect.config.SetupCommand
 import batect.dockerclient.io.TextInput
 import batect.dockerclient.io.TextOutput
 import batect.os.ConsoleInfo
-import batect.os.Dimensions
 import okio.Sink
 import java.io.PrintStream
 
@@ -31,8 +30,6 @@ data class TaskContainerOnlyIOStreamingOptions(
     private val consoleInfo: ConsoleInfo
 ) : ContainerIOStreamingOptions {
     override fun terminalTypeForContainer(container: Container): String? = consoleInfo.terminalType
-    override val frameDimensions = Dimensions(0, 0)
-
     override fun attachStdinForContainer(container: Container): Boolean = container == taskContainer
 
     override fun stdinForContainer(container: Container): TextInput? {
@@ -53,6 +50,5 @@ data class TaskContainerOnlyIOStreamingOptions(
 
     override fun stdoutForContainerSetupCommand(container: Container, setupCommand: SetupCommand, index: Int): Sink? = null
     override fun stdoutForImageBuild(container: Container): Sink? = null
-
     override fun useTTYForContainer(container: Container): Boolean = consoleInfo.stdoutIsTTY && container == taskContainer
 }

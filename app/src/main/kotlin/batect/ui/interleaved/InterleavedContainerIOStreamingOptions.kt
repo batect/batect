@@ -21,7 +21,6 @@ import batect.config.SetupCommand
 import batect.dockerclient.io.SinkTextOutput
 import batect.dockerclient.io.TextInput
 import batect.dockerclient.io.TextOutput
-import batect.os.Dimensions
 import batect.ui.ConsoleColor
 import batect.ui.containerio.ContainerIOStreamingOptions
 import batect.ui.text.Text
@@ -41,6 +40,4 @@ data class InterleavedContainerIOStreamingOptions(private val output: Interleave
 
     private fun outputStreamWithPrefix(container: Container, prefix: String) =
         InterleavedContainerOutputSink(container, output, TextRun(Text(prefix, ConsoleColor.White)))
-
-    override val frameDimensions = Dimensions(0, output.prefixWidth)
 }

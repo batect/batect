@@ -195,9 +195,7 @@ object ContainersClientSpec : Spek({
                                 val cancellationContextThatImmediatelyCancels by createForEachTest {
                                     mock<CancellationContext> {
                                         on { addCancellationCallback(any()) } doAnswer { invocation ->
-                                            @Suppress("UNCHECKED_CAST")
-                                            val callback = invocation.arguments[0] as CancellationCallback
-
+                                            val callback = invocation.getArgument<CancellationCallback>(0)
                                             callback()
 
                                             AutoCloseable { }

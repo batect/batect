@@ -107,8 +107,7 @@ object CancellationExtensionsSpec : Spek({
 
                 beforeEachTest {
                     whenever(cancellationContext.addCancellationCallback(any())).doAnswer { invocation ->
-                        @Suppress("UNCHECKED_CAST")
-                        val cancellationCallback = invocation.arguments[0] as CancellationCallback
+                        val cancellationCallback = invocation.getArgument<CancellationCallback>(0)
 
                         cancellationCallback.invoke()
 

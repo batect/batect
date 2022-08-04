@@ -74,8 +74,7 @@ object RunContainerStepRunnerSpec : Spek({
         on("when running the container succeeds") {
             beforeEachTestSuspend {
                 whenever(dockerClient.run(any(), any(), any(), any(), any())).doAnswer { invocation ->
-                    @Suppress("UNCHECKED_CAST")
-                    val startedNotification = invocation.arguments[4] as ReadyNotification
+                    val startedNotification = invocation.getArgument<ReadyNotification>(4)
 
                     startedNotification.markAsReady()
 

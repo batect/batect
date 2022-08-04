@@ -22,7 +22,7 @@ import batect.cli.commands.Command
 import batect.os.HostEnvironmentVariables
 import batect.primitives.filterToSet
 import batect.telemetry.AttributeValue
-import batect.telemetry.TelemetrySessionBuilder
+import batect.telemetry.TelemetryCaptor
 import java.io.PrintStream
 
 // This class is tested primarily by the tests in the app/src/completionTest directory.
@@ -34,7 +34,7 @@ class GenerateShellTabCompletionScriptCommand(
     private val zshGenerator: ZshShellTabCompletionScriptGenerator,
     private val outputStream: PrintStream,
     private val environmentVariables: HostEnvironmentVariables,
-    private val telemetrySessionBuilder: TelemetrySessionBuilder
+    private val telemetryCaptor: TelemetryCaptor
 ) : Command {
     override fun run(): Int {
         addTelemetryEvent()
@@ -44,7 +44,7 @@ class GenerateShellTabCompletionScriptCommand(
     }
 
     private fun addTelemetryEvent() {
-        telemetrySessionBuilder.addEvent(
+        telemetryCaptor.addEvent(
             "GeneratedShellTabCompletionScript",
             mapOf(
                 "shell" to AttributeValue(commandLineOptions.generateShellTabCompletionScript?.toString()),

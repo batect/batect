@@ -32,7 +32,7 @@ import java.util.Properties
 import kotlin.reflect.KClass
 
 class EnvironmentTelemetryCollector(
-    private val telemetrySessionBuilder: TelemetrySessionBuilder,
+    private val telemetryCaptor: TelemetryCaptor,
     private val hostEnvironmentVariables: HostEnvironmentVariables,
     private val gitClient: GitClient,
     private val consoleInfo: ConsoleInfo,
@@ -54,72 +54,72 @@ class EnvironmentTelemetryCollector(
     }
 
     private fun addCommandAttributes(commandType: KClass<out Command>) {
-        telemetrySessionBuilder.addAttribute("commandType", commandType.simpleName!!)
+        telemetryCaptor.addAttribute("commandType", commandType.simpleName!!)
     }
 
     private fun addCommandLineOptionAttributes() {
-        telemetrySessionBuilder.addAttribute("usingNonDefaultConfigurationFileName", commandLineOptions.configurationFileName.fileName.toString() != "batect.yml")
-        telemetrySessionBuilder.addAttribute("usingConfigVariablesFile", commandLineOptions.configVariablesSourceFile != null)
-        telemetrySessionBuilder.addAttribute("requestedOutputStyle", commandLineOptions.requestedOutputStyle?.toString()?.lowercase())
-        telemetrySessionBuilder.addAttribute("colorOutputDisabled", commandLineOptions.disableColorOutput)
-        telemetrySessionBuilder.addAttribute("updateNotificationsDisabled", commandLineOptions.disableUpdateNotification)
-        telemetrySessionBuilder.addAttribute("wrapperCacheCleanupDisabled", commandLineOptions.disableWrapperCacheCleanup)
-        telemetrySessionBuilder.addAttribute("cleanupAfterSuccessDisabled", commandLineOptions.disableCleanupAfterSuccess)
-        telemetrySessionBuilder.addAttribute("cleanupAfterFailureDisabled", commandLineOptions.disableCleanupAfterFailure)
-        telemetrySessionBuilder.addAttribute("proxyEnvironmentVariablePropagationDisabled", commandLineOptions.dontPropagateProxyEnvironmentVariables)
-        telemetrySessionBuilder.addAttribute("additionalTaskCommandArgumentCount", commandLineOptions.additionalTaskCommandArguments.count())
-        telemetrySessionBuilder.addAttribute("commandLineConfigVariableOverrideCount", commandLineOptions.configVariableOverrides.size)
-        telemetrySessionBuilder.addAttribute("commandLineImageOverrideCount", commandLineOptions.imageOverrides.size)
-        telemetrySessionBuilder.addAttribute("usingTLSForDockerConnection", commandLineOptions.dockerUseTLS)
-        telemetrySessionBuilder.addAttribute("verifyingTLSForDockerConnection", commandLineOptions.dockerVerifyTLS)
-        telemetrySessionBuilder.addAttribute("usingExistingDockerNetwork", commandLineOptions.existingNetworkToUse != null)
-        telemetrySessionBuilder.addAttribute("skippingPrerequisites", commandLineOptions.skipPrerequisites)
-        telemetrySessionBuilder.addAttribute("maximumLevelOfParallelism", commandLineOptions.maximumLevelOfParallelism)
+        telemetryCaptor.addAttribute("usingNonDefaultConfigurationFileName", commandLineOptions.configurationFileName.fileName.toString() != "batect.yml")
+        telemetryCaptor.addAttribute("usingConfigVariablesFile", commandLineOptions.configVariablesSourceFile != null)
+        telemetryCaptor.addAttribute("requestedOutputStyle", commandLineOptions.requestedOutputStyle?.toString()?.lowercase())
+        telemetryCaptor.addAttribute("colorOutputDisabled", commandLineOptions.disableColorOutput)
+        telemetryCaptor.addAttribute("updateNotificationsDisabled", commandLineOptions.disableUpdateNotification)
+        telemetryCaptor.addAttribute("wrapperCacheCleanupDisabled", commandLineOptions.disableWrapperCacheCleanup)
+        telemetryCaptor.addAttribute("cleanupAfterSuccessDisabled", commandLineOptions.disableCleanupAfterSuccess)
+        telemetryCaptor.addAttribute("cleanupAfterFailureDisabled", commandLineOptions.disableCleanupAfterFailure)
+        telemetryCaptor.addAttribute("proxyEnvironmentVariablePropagationDisabled", commandLineOptions.dontPropagateProxyEnvironmentVariables)
+        telemetryCaptor.addAttribute("additionalTaskCommandArgumentCount", commandLineOptions.additionalTaskCommandArguments.count())
+        telemetryCaptor.addAttribute("commandLineConfigVariableOverrideCount", commandLineOptions.configVariableOverrides.size)
+        telemetryCaptor.addAttribute("commandLineImageOverrideCount", commandLineOptions.imageOverrides.size)
+        telemetryCaptor.addAttribute("usingTLSForDockerConnection", commandLineOptions.dockerUseTLS)
+        telemetryCaptor.addAttribute("verifyingTLSForDockerConnection", commandLineOptions.dockerVerifyTLS)
+        telemetryCaptor.addAttribute("usingExistingDockerNetwork", commandLineOptions.existingNetworkToUse != null)
+        telemetryCaptor.addAttribute("skippingPrerequisites", commandLineOptions.skipPrerequisites)
+        telemetryCaptor.addAttribute("maximumLevelOfParallelism", commandLineOptions.maximumLevelOfParallelism)
     }
 
     private fun addConsoleAttributes() {
-        telemetrySessionBuilder.addAttribute("terminal", hostEnvironmentVariables["TERM"])
-        telemetrySessionBuilder.addAttribute("shell", hostEnvironmentVariables["SHELL"]?.substringAfterLast('/'))
-        telemetrySessionBuilder.addAttribute("stdinIsTTY", consoleInfo.stdinIsTTY)
-        telemetrySessionBuilder.addAttribute("stdoutIsTTY", consoleInfo.stdoutIsTTY)
-        telemetrySessionBuilder.addAttribute("consoleSupportsInteractivity", consoleInfo.supportsInteractivity)
+        telemetryCaptor.addAttribute("terminal", hostEnvironmentVariables["TERM"])
+        telemetryCaptor.addAttribute("shell", hostEnvironmentVariables["SHELL"]?.substringAfterLast('/'))
+        telemetryCaptor.addAttribute("stdinIsTTY", consoleInfo.stdinIsTTY)
+        telemetryCaptor.addAttribute("stdoutIsTTY", consoleInfo.stdoutIsTTY)
+        telemetryCaptor.addAttribute("consoleSupportsInteractivity", consoleInfo.supportsInteractivity)
     }
 
     private fun addOSAttributes() {
-        telemetrySessionBuilder.addAttribute("osName", systemInfo.osName)
-        telemetrySessionBuilder.addAttribute("osArchitecture", systemInfo.osArchitecture)
-        telemetrySessionBuilder.addAttribute("osVersion", systemInfo.osVersion)
-        telemetrySessionBuilder.addAttribute("osDetails", systemInfo.osDetails)
+        telemetryCaptor.addAttribute("osName", systemInfo.osName)
+        telemetryCaptor.addAttribute("osArchitecture", systemInfo.osArchitecture)
+        telemetryCaptor.addAttribute("osVersion", systemInfo.osVersion)
+        telemetryCaptor.addAttribute("osDetails", systemInfo.osDetails)
     }
 
     private fun addJVMAttributes() {
-        telemetrySessionBuilder.addAttribute("jvmVendor", systemProperties.getProperty("java.vendor"))
-        telemetrySessionBuilder.addAttribute("jvmName", systemProperties.getProperty("java.vm.name"))
-        telemetrySessionBuilder.addAttribute("jvmVersion", systemProperties.getProperty("java.version"))
+        telemetryCaptor.addAttribute("jvmVendor", systemProperties.getProperty("java.vendor"))
+        telemetryCaptor.addAttribute("jvmName", systemProperties.getProperty("java.vm.name"))
+        telemetryCaptor.addAttribute("jvmVersion", systemProperties.getProperty("java.version"))
 
         val jvmStartTime = ZonedDateTime.ofInstant(Instant.ofEpochMilli(runtimeMXBean.startTime), ZoneOffset.UTC)
-        telemetrySessionBuilder.addAttribute("jvmStartTime", jvmStartTime.toString())
+        telemetryCaptor.addAttribute("jvmStartTime", jvmStartTime.toString())
     }
 
     private fun addGitAttributes() {
         when (val result = gitClient.version) {
-            is GitVersionRetrievalResult.Succeeded -> telemetrySessionBuilder.addAttribute("gitVersion", result.version)
-            is GitVersionRetrievalResult.Failed -> telemetrySessionBuilder.addNullAttribute("gitVersion")
+            is GitVersionRetrievalResult.Succeeded -> telemetryCaptor.addAttribute("gitVersion", result.version)
+            is GitVersionRetrievalResult.Failed -> telemetryCaptor.addNullAttribute("gitVersion")
         }
     }
 
     private fun addWrapperAttributes() {
         when (hostEnvironmentVariables["BATECT_WRAPPER_DID_DOWNLOAD"]) {
-            "true" -> telemetrySessionBuilder.addAttribute("wrapperDidDownload", true)
-            "false" -> telemetrySessionBuilder.addAttribute("wrapperDidDownload", false)
-            else -> telemetrySessionBuilder.addNullAttribute("wrapperDidDownload")
+            "true" -> telemetryCaptor.addAttribute("wrapperDidDownload", true)
+            "false" -> telemetryCaptor.addAttribute("wrapperDidDownload", false)
+            else -> telemetryCaptor.addNullAttribute("wrapperDidDownload")
         }
     }
 
     private fun addCIAttributes() {
         val detectionResult = ciEnvironmentDetector.detect()
 
-        telemetrySessionBuilder.addAttribute("suspectRunningOnCI", detectionResult.suspectRunningOnCI)
-        telemetrySessionBuilder.addAttribute("suspectedCISystem", detectionResult.suspectedCISystem)
+        telemetryCaptor.addAttribute("suspectRunningOnCI", detectionResult.suspectRunningOnCI)
+        telemetryCaptor.addAttribute("suspectedCISystem", detectionResult.suspectedCISystem)
     }
 }

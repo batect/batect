@@ -262,7 +262,7 @@ object TelemetrySessionBuilderSpec : Spek({
                 val session by createForEachTest {
                     timeNow = spanStartTime
 
-                    builder.addSpan("MySpan") { span ->
+                    builder.addSpan("MySpan", timeSource) { span ->
                         span.addAttribute("thingType", "stuff")
                         span.addAttribute("thingCount", 12)
                         span.addAttribute("thingEnabled", false)
@@ -285,7 +285,7 @@ object TelemetrySessionBuilderSpec : Spek({
                     val exceptionToThrow = RuntimeException("Something went wrong.")
 
                     try {
-                        builder.addSpan("MySpan") { span ->
+                        builder.addSpan("MySpan", timeSource) { span ->
                             span.addAttribute("thingType", "stuff")
                             span.addAttribute("thingCount", 12)
                             span.addAttribute("thingEnabled", false)

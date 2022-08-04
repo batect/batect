@@ -20,7 +20,7 @@ import batect.VersionInfo
 import batect.logging.Logger
 import batect.logging.data
 import batect.os.HostEnvironmentVariables
-import batect.telemetry.TelemetrySessionBuilder
+import batect.telemetry.TelemetryCaptor
 import batect.telemetry.addUnhandledExceptionEvent
 import batect.ui.Console
 import batect.ui.text.Text
@@ -43,7 +43,7 @@ class UpgradeCommand(
     private val console: Console,
     private val errorConsole: Console,
     private val environmentVariables: HostEnvironmentVariables,
-    private val telemetrySessionBuilder: TelemetrySessionBuilder,
+    private val telemetryCaptor: TelemetryCaptor,
     private val logger: Logger
 ) : Command {
     override fun run(): Int {
@@ -112,7 +112,7 @@ class UpgradeCommand(
 
             return updateInfo
         } catch (e: UpdateInfoDownloadException) {
-            telemetrySessionBuilder.addUnhandledExceptionEvent(e, isUserFacing = true)
+            telemetryCaptor.addUnhandledExceptionEvent(e, isUserFacing = true)
 
             errorConsole.println(Text.red("Downloading update information failed: ${e.message}"))
             return null
@@ -153,7 +153,7 @@ class UpgradeCommand(
                 exception(e)
             }
 
-            telemetrySessionBuilder.addUnhandledExceptionEvent(e, isUserFacing = true)
+            telemetryCaptor.addUnhandledExceptionEvent(e, isUserFacing = true)
 
             errorConsole.println(Text.red("Download failed. Could not download ${script.downloadUrl}: ${e.message}"))
             return null

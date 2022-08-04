@@ -40,8 +40,9 @@ import batect.os.PathResolver
 import batect.os.PathResolverFactory
 import batect.primitives.flatMapToSet
 import batect.primitives.mapToSet
+import batect.telemetry.TelemetryCaptor
 import batect.telemetry.TelemetryConsent
-import batect.telemetry.TelemetrySessionBuilder
+import batect.telemetry.addSpan
 import batect.utils.asHumanReadableList
 import com.charleskorn.kaml.EmptyYamlDocumentException
 import com.charleskorn.kaml.PolymorphismStyle
@@ -56,13 +57,13 @@ import java.nio.file.Path
 class ConfigurationLoader(
     private val includeResolver: IncludeResolver,
     private val pathResolverFactory: PathResolverFactory,
-    private val telemetrySessionBuilder: TelemetrySessionBuilder,
+    private val telemetryCaptor: TelemetryCaptor,
     private val telemetryConsent: TelemetryConsent,
     private val defaultGitRepositoryCacheNotificationListener: GitRepositoryCacheNotificationListener,
     private val logger: Logger
 ) {
     fun loadConfig(rootConfigFilePath: Path, gitRepositoryCacheNotificationListener: GitRepositoryCacheNotificationListener = defaultGitRepositoryCacheNotificationListener): ConfigurationLoadResult {
-        return telemetrySessionBuilder.addSpan("LoadConfiguration") { span ->
+        return telemetryCaptor.addSpan("LoadConfiguration") { span ->
             val absolutePathToRootConfigFile = rootConfigFilePath.toAbsolutePath()
 
             logger.info {

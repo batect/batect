@@ -20,7 +20,7 @@ import batect.cli.CommandLineOptions
 import batect.config.Container
 import batect.config.Task
 import batect.config.TaskRunConfiguration
-import batect.telemetry.TelemetrySessionBuilder
+import batect.telemetry.TestTelemetryCaptor
 import batect.testutils.createForEachTest
 import batect.testutils.given
 import batect.testutils.imageSourceDoesNotMatter
@@ -33,6 +33,7 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.throws
+import kotlinx.serialization.json.JsonPrimitive
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.inOrder
 import org.mockito.kotlin.mock
@@ -55,7 +56,7 @@ object SessionRunnerSpec : Spek({
         val taskRunner by createForEachTest { mock<TaskRunner>() }
         val console by createForEachTest { mock<Console>() }
         val imageTaggingValidator by createForEachTest { mock<ImageTaggingValidator>() }
-        val telemetrySessionBuilder by createForEachTest { mock<TelemetrySessionBuilder>() }
+        val telemetryCaptor by createForEachTest { TestTelemetryCaptor() }
 
         given("the task has no prerequisites") {
             val commandLineOptions = baseCommandLineOptions.copy(requestedOutputStyle = OutputStyle.Fancy)
@@ -72,7 +73,7 @@ object SessionRunnerSpec : Spek({
                     whenever(taskRunner.run(mainTask, runOptionsForMainTask)).thenReturn(TaskRunResult(0, containers))
                 }
 
-                val runner by createForEachTest { SessionRunner(taskExecutionOrderResolver, commandLineOptions, taskRunner, console, imageTaggingValidator, telemetrySessionBuilder) }
+                val runner by createForEachTest { SessionRunner(taskExecutionOrderResolver, commandLineOptions, taskRunner, console, imageTaggingValidator, telemetryCaptor) }
 
                 given("the task tags all images requested by command line options") {
                     beforeEachTest {
@@ -94,7 +95,7 @@ object SessionRunnerSpec : Spek({
                     }
 
                     it("reports the total number of tasks required to execute the task") {
-                        verify(telemetrySessionBuilder).addAttribute("totalTasksToExecute", 1)
+                        assertThat(telemetryCaptor.allAttributes["totalTasksToExecute"], equalTo(JsonPrimitive(1)))
                     }
 
                     it("reports the containers run to the image tagging validator") {
@@ -120,7 +121,7 @@ object SessionRunnerSpec : Spek({
                     whenever(taskRunner.run(mainTask, runOptionsForMainTask)).thenReturn(TaskRunResult(expectedTaskExitCode, emptySet()))
                 }
 
-                val runner by createForEachTest { SessionRunner(taskExecutionOrderResolver, commandLineOptions, taskRunner, console, imageTaggingValidator, telemetrySessionBuilder) }
+                val runner by createForEachTest { SessionRunner(taskExecutionOrderResolver, commandLineOptions, taskRunner, console, imageTaggingValidator, telemetryCaptor) }
                 val exitCode by runForEachTest { runner.runTaskAndPrerequisites(taskName) }
 
                 it("runs the task") {
@@ -159,7 +160,7 @@ object SessionRunnerSpec : Spek({
 
                 given("quiet output mode is not being used") {
                     val commandLineOptions = baseCommandLineOptions.copy(requestedOutputStyle = OutputStyle.Fancy)
-                    val runner by createForEachTest { SessionRunner(taskExecutionOrderResolver, commandLineOptions, taskRunner, console, imageTaggingValidator, telemetrySessionBuilder) }
+                    val runner by createForEachTest { SessionRunner(taskExecutionOrderResolver, commandLineOptions, taskRunner, console, imageTaggingValidator, telemetryCaptor) }
 
                     val exitCode by runForEachTest { runner.runTaskAndPrerequisites(taskName) }
 
@@ -184,7 +185,7 @@ object SessionRunnerSpec : Spek({
                     }
 
                     it("reports the total number of tasks required to execute the task") {
-                        verify(telemetrySessionBuilder).addAttribute("totalTasksToExecute", 2)
+                        assertThat(telemetryCaptor.allAttributes["totalTasksToExecute"], equalTo(JsonPrimitive(2)))
                     }
 
                     it("reports the containers run as part of the prerequisite task to the image tagging validator") {
@@ -198,7 +199,7 @@ object SessionRunnerSpec : Spek({
 
                 given("quiet output mode is being used") {
                     val commandLineOptions = baseCommandLineOptions.copy(requestedOutputStyle = OutputStyle.Quiet)
-                    val runner by createForEachTest { SessionRunner(taskExecutionOrderResolver, commandLineOptions, taskRunner, console, imageTaggingValidator, telemetrySessionBuilder) }
+                    val runner by createForEachTest { SessionRunner(taskExecutionOrderResolver, commandLineOptions, taskRunner, console, imageTaggingValidator, telemetryCaptor) }
 
                     beforeEachTest { runner.runTaskAndPrerequisites(taskName) }
 
@@ -218,7 +219,7 @@ object SessionRunnerSpec : Spek({
                 }
 
                 val commandLineOptions = baseCommandLineOptions.copy(requestedOutputStyle = OutputStyle.Fancy)
-                val runner by createForEachTest { SessionRunner(taskExecutionOrderResolver, commandLineOptions, taskRunner, console, imageTaggingValidator, telemetrySessionBuilder) }
+                val runner by createForEachTest { SessionRunner(taskExecutionOrderResolver, commandLineOptions, taskRunner, console, imageTaggingValidator, telemetryCaptor) }
                 val exitCode by runForEachTest { runner.runTaskAndPrerequisites(taskName) }
 
                 it("runs the dependency task") {

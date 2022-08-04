@@ -44,7 +44,8 @@ import batect.os.SystemInfo
 import batect.primitives.CancellationContext
 import batect.primitives.runBlocking
 import batect.proxies.ProxyEnvironmentVariablesProvider
-import batect.telemetry.TelemetrySessionBuilder
+import batect.telemetry.TelemetryCaptor
+import batect.telemetry.addSpan
 import batect.ui.containerio.ContainerIOStreamingOptions
 import okio.Buffer
 import okio.Path.Companion.toOkioPath
@@ -63,7 +64,7 @@ class BuildImageStepRunner(
     private val commandLineOptions: CommandLineOptions,
     private val builderVersion: BuilderVersion,
     private val systemInfo: SystemInfo,
-    private val telemetrySessionBuilder: TelemetrySessionBuilder
+    private val telemetryCaptor: TelemetryCaptor
 ) {
     fun run(step: BuildImageStep, eventSink: TaskEventSink) {
         val stdoutBuffer = Buffer()
@@ -73,7 +74,7 @@ class BuildImageStepRunner(
             val uiStdout = ioStreamingOptions.stdoutForImageBuild(step.container)
             val combinedStdout = if (uiStdout == null) stdoutBuffer else Tee(uiStdout, stdoutBuffer)
 
-            val image = telemetrySessionBuilder.addSpan("BuildImage") {
+            val image = telemetryCaptor.addSpan("BuildImage") {
                 cancellationContext.runBlocking {
                     val reporter = ImageBuildProgressAggregator()
 

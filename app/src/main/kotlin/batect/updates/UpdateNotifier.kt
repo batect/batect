@@ -21,6 +21,7 @@ import batect.cli.CommandLineOptionsParser
 import batect.logging.Logger
 import batect.logging.data
 import batect.telemetry.AttributeValue
+import batect.telemetry.TelemetryCaptor
 import batect.telemetry.TelemetrySessionBuilder
 import batect.telemetry.addUnhandledExceptionEvent
 import batect.ui.Console
@@ -33,7 +34,7 @@ class UpdateNotifier(
     private val updateInfoUpdater: UpdateInfoUpdater,
     private val versionInfo: VersionInfo,
     private val console: Console,
-    private val telemetrySessionBuilder: TelemetrySessionBuilder,
+    private val telemetryCaptor: TelemetryCaptor,
     private val logger: Logger,
     private val timeSource: () -> ZonedDateTime
 ) {
@@ -67,7 +68,7 @@ class UpdateNotifier(
                 exception(e)
             }
 
-            telemetrySessionBuilder.addUnhandledExceptionEvent(e, isUserFacing = false)
+            telemetryCaptor.addUnhandledExceptionEvent(e, isUserFacing = false)
 
             null
         }
@@ -89,7 +90,7 @@ class UpdateNotifier(
                 data("availableVersion", versionInfo.version)
             }
 
-            telemetrySessionBuilder.addEvent(
+            telemetryCaptor.addEvent(
                 "UpdateAvailableNotificationShown",
                 mapOf(
                     "currentVersion" to AttributeValue(versionInfo.version.toString()),

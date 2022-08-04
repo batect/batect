@@ -49,8 +49,7 @@ import batect.os.PathType
 import batect.os.SystemInfo
 import batect.primitives.CancellationContext
 import batect.proxies.ProxyEnvironmentVariablesProvider
-import batect.telemetry.TelemetrySessionBuilder
-import batect.telemetry.TelemetrySpanBuilder
+import batect.telemetry.TestTelemetryCaptor
 import batect.testutils.beforeEachTestSuspend
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
@@ -60,15 +59,14 @@ import batect.testutils.on
 import batect.testutils.pathResolutionContextDoesNotMatter
 import batect.ui.containerio.ContainerIOStreamingOptions
 import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.hasSize
 import okio.Buffer
 import okio.Path.Companion.toOkioPath
 import okio.buffer
 import org.mockito.kotlin.any
 import org.mockito.kotlin.argWhere
-import org.mockito.kotlin.doAnswer
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.doThrow
-import org.mockito.kotlin.eq
 import org.mockito.kotlin.isA
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
@@ -124,16 +122,7 @@ object BuildImageStepRunnerSpec : Spek({
             on { lineSeparator } doReturn "SYSTEM_LINE_SEPARATOR"
         }
 
-        val telemetrySessionBuilder by createForEachTest {
-            mock<TelemetrySessionBuilder> {
-                onGeneric { addSpan<ImageReference>(any(), any()) } doAnswer { invocation ->
-                    @Suppress("UNCHECKED_CAST")
-                    val process = invocation.arguments[1] as ((TelemetrySpanBuilder) -> ImageReference)
-                    process(mock())
-                }
-            }
-        }
-
+        val telemetryCaptor by createForEachTest { TestTelemetryCaptor() }
         val expressionEvaluationContext = ExpressionEvaluationContext(HostEnvironmentVariables("SOME_ENV_VAR" to "some env var value"), emptyMap())
         val eventSink by createForEachTest { mock<TaskEventSink>() }
         val commandLineOptions = CommandLineOptions(dontPropagateProxyEnvironmentVariables = false, imageTags = mapOf(container.name to setOf("some-extra-image-tag")))
@@ -150,7 +139,7 @@ object BuildImageStepRunnerSpec : Spek({
                 commandLineOptions,
                 builderVersion,
                 systemInfo,
-                telemetrySessionBuilder
+                telemetryCaptor
             )
         }
 
@@ -225,7 +214,10 @@ object BuildImageStepRunnerSpec : Spek({
                     }
 
                     it("records a span in telemetry for the image build") {
-                        verify(telemetrySessionBuilder).addSpan(eq("BuildImage"), any())
+                        assertThat(telemetryCaptor.allSpans, hasSize(equalTo(1)))
+
+                        val span = telemetryCaptor.allSpans.single()
+                        assertThat(span.type, equalTo("BuildImage"))
                     }
                 }
 
@@ -283,7 +275,7 @@ object BuildImageStepRunnerSpec : Spek({
                         commandLineOptionsWithProxyEnvironmentVariablePropagationDisabled,
                         builderVersion,
                         systemInfo,
-                        telemetrySessionBuilder
+                        telemetryCaptor
                     )
                 }
 

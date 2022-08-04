@@ -20,7 +20,7 @@ import batect.VersionInfo
 import batect.logging.Logger
 import batect.logging.data
 import batect.primitives.Version
-import batect.telemetry.TelemetrySessionBuilder
+import batect.telemetry.TelemetryCaptor
 import batect.telemetry.addUnhandledExceptionEvent
 import java.time.ZonedDateTime
 import kotlin.concurrent.thread
@@ -29,7 +29,7 @@ class WrapperCacheCleanupTask(
     private val enabled: Boolean,
     private val wrapperCache: WrapperCache,
     private val versionInfo: VersionInfo,
-    private val telemetrySessionBuilder: TelemetrySessionBuilder,
+    private val telemetryCaptor: TelemetryCaptor,
     private val logger: Logger,
     private val threadRunner: ThreadRunner = defaultThreadRunner,
     private val timeSource: TimeSource = ZonedDateTime::now
@@ -115,7 +115,7 @@ class WrapperCacheCleanupTask(
                 data("version", wrapperVersion.version)
             }
 
-            telemetrySessionBuilder.addUnhandledExceptionEvent(e, isUserFacing = false)
+            telemetryCaptor.addUnhandledExceptionEvent(e, isUserFacing = false)
         }
     }
 

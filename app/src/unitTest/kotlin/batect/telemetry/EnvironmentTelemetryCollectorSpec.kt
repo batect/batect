@@ -24,12 +24,15 @@ import batect.os.ConsoleInfo
 import batect.os.HostEnvironmentVariables
 import batect.os.SystemInfo
 import batect.testutils.createForEachTest
+import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.osIndependentPath
 import batect.ui.OutputStyle
+import com.natpryce.hamkrest.assertion.assertThat
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonPrimitive
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
-import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.Suite
@@ -39,7 +42,7 @@ import java.util.Properties
 
 object EnvironmentTelemetryCollectorSpec : Spek({
     describe("an environment telemetry collector") {
-        val telemetrySessionBuilder by createForEachTest { mock<TelemetrySessionBuilder>() }
+        val telemetryCaptor by createForEachTest { TestTelemetryCaptor() }
         val gitClient by createForEachTest { mock<GitClient>() }
         val systemProperties by createForEachTest { Properties() }
         val ciEnvironmentDetector by createForEachTest {
@@ -80,7 +83,7 @@ object EnvironmentTelemetryCollectorSpec : Spek({
         }
 
         fun Suite.createEnvironmentCollector(hostEnvironmentVariables: HostEnvironmentVariables, commandLineOptions: CommandLineOptions = CommandLineOptions()) =
-            createForEachTest { EnvironmentTelemetryCollector(telemetrySessionBuilder, hostEnvironmentVariables, gitClient, consoleInfo, commandLineOptions, ciEnvironmentDetector, systemInfo, runtimeMXBean, systemProperties) }
+            createForEachTest { EnvironmentTelemetryCollector(telemetryCaptor, hostEnvironmentVariables, gitClient, consoleInfo, commandLineOptions, ciEnvironmentDetector, systemInfo, runtimeMXBean, systemProperties) }
 
         given("the SHELL environment variable is set") {
             val shell = "/usr/local/bin/my-awesome-shell"
@@ -107,125 +110,125 @@ object EnvironmentTelemetryCollectorSpec : Spek({
                                 }
 
                                 it("reports the user's shell, taking only the last segment of the path") {
-                                    verify(telemetrySessionBuilder).addAttribute("shell", "my-awesome-shell")
+                                    assertThat(telemetryCaptor.allAttributes["shell"], equalTo(JsonPrimitive("my-awesome-shell")))
                                 }
 
                                 it("reports the user's terminal") {
-                                    verify(telemetrySessionBuilder).addAttribute("terminal", "xterm-9000color")
+                                    assertThat(telemetryCaptor.allAttributes["terminal"], equalTo(JsonPrimitive("xterm-9000color")))
                                 }
 
                                 it("reports the Git version") {
-                                    verify(telemetrySessionBuilder).addAttribute("gitVersion", "1.2.3")
+                                    assertThat(telemetryCaptor.allAttributes["gitVersion"], equalTo(JsonPrimitive("1.2.3")))
                                 }
 
                                 it("reports details of the operating system") {
-                                    verify(telemetrySessionBuilder).addAttribute("osName", "My Cool OS")
-                                    verify(telemetrySessionBuilder).addAttribute("osVersion", "2020.08")
-                                    verify(telemetrySessionBuilder).addAttribute("osArchitecture", "x86_64")
-                                    verify(telemetrySessionBuilder).addAttribute("osDetails", "Ubuntu Linux 20.04")
+                                    assertThat(telemetryCaptor.allAttributes["osName"], equalTo(JsonPrimitive("My Cool OS")))
+                                    assertThat(telemetryCaptor.allAttributes["osVersion"], equalTo(JsonPrimitive("2020.08")))
+                                    assertThat(telemetryCaptor.allAttributes["osArchitecture"], equalTo(JsonPrimitive("x86_64")))
+                                    assertThat(telemetryCaptor.allAttributes["osDetails"], equalTo(JsonPrimitive("Ubuntu Linux 20.04")))
                                 }
 
                                 it("reports details of the JVM") {
-                                    verify(telemetrySessionBuilder).addAttribute("jvmVendor", "JVMs R Us")
-                                    verify(telemetrySessionBuilder).addAttribute("jvmName", "64-Bit Server VM")
-                                    verify(telemetrySessionBuilder).addAttribute("jvmVersion", "2020.1")
+                                    assertThat(telemetryCaptor.allAttributes["jvmVendor"], equalTo(JsonPrimitive("JVMs R Us")))
+                                    assertThat(telemetryCaptor.allAttributes["jvmName"], equalTo(JsonPrimitive("64-Bit Server VM")))
+                                    assertThat(telemetryCaptor.allAttributes["jvmVersion"], equalTo(JsonPrimitive("2020.1")))
                                 }
 
                                 it("reports the type of command being run") {
-                                    verify(telemetrySessionBuilder).addAttribute("commandType", "VersionInfoCommand")
+                                    assertThat(telemetryCaptor.allAttributes["commandType"], equalTo(JsonPrimitive("VersionInfoCommand")))
                                 }
 
                                 it("reports that the wrapper downloaded the JAR for this invocation") {
-                                    verify(telemetrySessionBuilder).addAttribute("wrapperDidDownload", true)
+                                    assertThat(telemetryCaptor.allAttributes["wrapperDidDownload"], equalTo(JsonPrimitive(true)))
                                 }
 
                                 it("reports the time the JVM started, in UTC") {
-                                    verify(telemetrySessionBuilder).addAttribute("jvmStartTime", "2020-08-11T09:39:47.193Z")
+                                    assertThat(telemetryCaptor.allAttributes["jvmStartTime"], equalTo(JsonPrimitive("2020-08-11T09:39:47.193Z")))
                                 }
 
                                 it("reports whether stdin is a TTY") {
-                                    verify(telemetrySessionBuilder).addAttribute("stdinIsTTY", false)
+                                    assertThat(telemetryCaptor.allAttributes["stdinIsTTY"], equalTo(JsonPrimitive(false)))
                                 }
 
                                 it("reports whether stdout is a TTY") {
-                                    verify(telemetrySessionBuilder).addAttribute("stdoutIsTTY", true)
+                                    assertThat(telemetryCaptor.allAttributes["stdoutIsTTY"], equalTo(JsonPrimitive(true)))
                                 }
 
                                 it("reports whether interactivity is supported") {
-                                    verify(telemetrySessionBuilder).addAttribute("consoleSupportsInteractivity", true)
+                                    assertThat(telemetryCaptor.allAttributes["consoleSupportsInteractivity"], equalTo(JsonPrimitive(true)))
                                 }
 
                                 it("reports that a custom configuration file name is not being used") {
-                                    verify(telemetrySessionBuilder).addAttribute("usingNonDefaultConfigurationFileName", false)
+                                    assertThat(telemetryCaptor.allAttributes["usingNonDefaultConfigurationFileName"], equalTo(JsonPrimitive(false)))
                                 }
 
                                 it("reports that a config variables file is not being used") {
-                                    verify(telemetrySessionBuilder).addAttribute("usingConfigVariablesFile", false)
+                                    assertThat(telemetryCaptor.allAttributes["usingConfigVariablesFile"], equalTo(JsonPrimitive(false)))
                                 }
 
                                 it("reports the requested output style") {
-                                    verify(telemetrySessionBuilder).addAttribute("requestedOutputStyle", null as String?)
+                                    assertThat(telemetryCaptor.allAttributes["requestedOutputStyle"], equalTo(JsonNull))
                                 }
 
                                 it("reports that color output has not been disabled") {
-                                    verify(telemetrySessionBuilder).addAttribute("colorOutputDisabled", false)
+                                    assertThat(telemetryCaptor.allAttributes["colorOutputDisabled"], equalTo(JsonPrimitive(false)))
                                 }
 
                                 it("reports that update notifications have not been disabled") {
-                                    verify(telemetrySessionBuilder).addAttribute("updateNotificationsDisabled", false)
+                                    assertThat(telemetryCaptor.allAttributes["updateNotificationsDisabled"], equalTo(JsonPrimitive(false)))
                                 }
 
                                 it("reports that wrapper cache cleanup has not been disabled") {
-                                    verify(telemetrySessionBuilder).addAttribute("wrapperCacheCleanupDisabled", false)
+                                    assertThat(telemetryCaptor.allAttributes["wrapperCacheCleanupDisabled"], equalTo(JsonPrimitive(false)))
                                 }
 
                                 it("reports that cleanup after success has not been disabled") {
-                                    verify(telemetrySessionBuilder).addAttribute("cleanupAfterSuccessDisabled", false)
+                                    assertThat(telemetryCaptor.allAttributes["cleanupAfterSuccessDisabled"], equalTo(JsonPrimitive(false)))
                                 }
 
                                 it("reports that cleanup after failure has not been disabled") {
-                                    verify(telemetrySessionBuilder).addAttribute("cleanupAfterFailureDisabled", false)
+                                    assertThat(telemetryCaptor.allAttributes["cleanupAfterFailureDisabled"], equalTo(JsonPrimitive(false)))
                                 }
 
                                 it("reports that proxy environment variable propagation has not been disabled") {
-                                    verify(telemetrySessionBuilder).addAttribute("proxyEnvironmentVariablePropagationDisabled", false)
+                                    assertThat(telemetryCaptor.allAttributes["proxyEnvironmentVariablePropagationDisabled"], equalTo(JsonPrimitive(false)))
                                 }
 
                                 it("reports the number of additional task command arguments") {
-                                    verify(telemetrySessionBuilder).addAttribute("additionalTaskCommandArgumentCount", 0)
+                                    assertThat(telemetryCaptor.allAttributes["additionalTaskCommandArgumentCount"], equalTo(JsonPrimitive(0)))
                                 }
 
                                 it("reports the number of command line config variable overrides") {
-                                    verify(telemetrySessionBuilder).addAttribute("commandLineConfigVariableOverrideCount", 0)
+                                    assertThat(telemetryCaptor.allAttributes["commandLineConfigVariableOverrideCount"], equalTo(JsonPrimitive(0)))
                                 }
 
                                 it("reports the number of command line image overrides") {
-                                    verify(telemetrySessionBuilder).addAttribute("commandLineImageOverrideCount", 0)
+                                    assertThat(telemetryCaptor.allAttributes["commandLineImageOverrideCount"], equalTo(JsonPrimitive(0)))
                                 }
 
                                 it("reports that TLS is not being used for the connection to Docker") {
-                                    verify(telemetrySessionBuilder).addAttribute("usingTLSForDockerConnection", false)
+                                    assertThat(telemetryCaptor.allAttributes["usingTLSForDockerConnection"], equalTo(JsonPrimitive(false)))
                                 }
 
                                 it("reports that TLS is not being verified for the connection to Docker") {
-                                    verify(telemetrySessionBuilder).addAttribute("verifyingTLSForDockerConnection", false)
+                                    assertThat(telemetryCaptor.allAttributes["verifyingTLSForDockerConnection"], equalTo(JsonPrimitive(false)))
                                 }
 
                                 it("reports that an existing Docker network is not being used") {
-                                    verify(telemetrySessionBuilder).addAttribute("usingExistingDockerNetwork", false)
+                                    assertThat(telemetryCaptor.allAttributes["usingExistingDockerNetwork"], equalTo(JsonPrimitive(false)))
                                 }
 
                                 it("reports that prerequisites are not being skipped") {
-                                    verify(telemetrySessionBuilder).addAttribute("skippingPrerequisites", false)
+                                    assertThat(telemetryCaptor.allAttributes["skippingPrerequisites"], equalTo(JsonPrimitive(false)))
                                 }
 
                                 it("reports that no maximum level of parallelism is set") {
-                                    verify(telemetrySessionBuilder).addAttribute("maximumLevelOfParallelism", null as Int?)
+                                    assertThat(telemetryCaptor.allAttributes["maximumLevelOfParallelism"], equalTo(JsonNull))
                                 }
 
                                 it("reports that no CI system was detected") {
-                                    verify(telemetrySessionBuilder).addAttribute("suspectRunningOnCI", false)
-                                    verify(telemetrySessionBuilder).addAttribute("suspectedCISystem", null as String?)
+                                    assertThat(telemetryCaptor.allAttributes["suspectRunningOnCI"], equalTo(JsonPrimitive(false)))
+                                    assertThat(telemetryCaptor.allAttributes["suspectedCISystem"], equalTo(JsonNull))
                                 }
                             }
 
@@ -237,11 +240,11 @@ object EnvironmentTelemetryCollectorSpec : Spek({
                                 }
 
                                 it("reports that a CI system was detected") {
-                                    verify(telemetrySessionBuilder).addAttribute("suspectRunningOnCI", true)
+                                    assertThat(telemetryCaptor.allAttributes["suspectRunningOnCI"], equalTo(JsonPrimitive(true)))
                                 }
 
                                 it("reports the CI system name") {
-                                    verify(telemetrySessionBuilder).addAttribute("suspectedCISystem", "My CI System")
+                                    assertThat(telemetryCaptor.allAttributes["suspectedCISystem"], equalTo(JsonPrimitive("My CI System")))
                                 }
                             }
                         }
@@ -254,7 +257,7 @@ object EnvironmentTelemetryCollectorSpec : Spek({
                             }
 
                             it("reports the Git version as unknown") {
-                                verify(telemetrySessionBuilder).addNullAttribute("gitVersion")
+                                assertThat(telemetryCaptor.allAttributes["gitVersion"], equalTo(JsonNull))
                             }
                         }
                     }
@@ -285,71 +288,71 @@ object EnvironmentTelemetryCollectorSpec : Spek({
                         beforeEachTest { environmentCollector.collect(commandType) }
 
                         it("reports that a custom configuration file name is being used") {
-                            verify(telemetrySessionBuilder).addAttribute("usingNonDefaultConfigurationFileName", true)
+                            assertThat(telemetryCaptor.allAttributes["usingNonDefaultConfigurationFileName"], equalTo(JsonPrimitive(true)))
                         }
 
                         it("reports that a config variables file is being used") {
-                            verify(telemetrySessionBuilder).addAttribute("usingConfigVariablesFile", true)
+                            assertThat(telemetryCaptor.allAttributes["usingConfigVariablesFile"], equalTo(JsonPrimitive(true)))
                         }
 
                         it("reports the requested output style") {
-                            verify(telemetrySessionBuilder).addAttribute("requestedOutputStyle", "fancy")
+                            assertThat(telemetryCaptor.allAttributes["requestedOutputStyle"], equalTo(JsonPrimitive("fancy")))
                         }
 
                         it("reports that color output has been disabled") {
-                            verify(telemetrySessionBuilder).addAttribute("colorOutputDisabled", true)
+                            assertThat(telemetryCaptor.allAttributes["colorOutputDisabled"], equalTo(JsonPrimitive(true)))
                         }
 
                         it("reports that update notifications have been disabled") {
-                            verify(telemetrySessionBuilder).addAttribute("updateNotificationsDisabled", true)
+                            assertThat(telemetryCaptor.allAttributes["updateNotificationsDisabled"], equalTo(JsonPrimitive(true)))
                         }
 
                         it("reports that wrapper cache cleanup has been disabled") {
-                            verify(telemetrySessionBuilder).addAttribute("wrapperCacheCleanupDisabled", true)
+                            assertThat(telemetryCaptor.allAttributes["wrapperCacheCleanupDisabled"], equalTo(JsonPrimitive(true)))
                         }
 
                         it("reports that cleanup after success has been disabled") {
-                            verify(telemetrySessionBuilder).addAttribute("cleanupAfterSuccessDisabled", true)
+                            assertThat(telemetryCaptor.allAttributes["cleanupAfterSuccessDisabled"], equalTo(JsonPrimitive(true)))
                         }
 
                         it("reports that cleanup after failure has been disabled") {
-                            verify(telemetrySessionBuilder).addAttribute("cleanupAfterFailureDisabled", true)
+                            assertThat(telemetryCaptor.allAttributes["cleanupAfterFailureDisabled"], equalTo(JsonPrimitive(true)))
                         }
 
                         it("reports that proxy environment variable propagation has been disabled") {
-                            verify(telemetrySessionBuilder).addAttribute("proxyEnvironmentVariablePropagationDisabled", true)
+                            assertThat(telemetryCaptor.allAttributes["proxyEnvironmentVariablePropagationDisabled"], equalTo(JsonPrimitive(true)))
                         }
 
                         it("reports the number of additional task command arguments") {
-                            verify(telemetrySessionBuilder).addAttribute("additionalTaskCommandArgumentCount", 2)
+                            assertThat(telemetryCaptor.allAttributes["additionalTaskCommandArgumentCount"], equalTo(JsonPrimitive(2)))
                         }
 
                         it("reports the number of command line config variable overrides") {
-                            verify(telemetrySessionBuilder).addAttribute("commandLineConfigVariableOverrideCount", 2)
+                            assertThat(telemetryCaptor.allAttributes["commandLineConfigVariableOverrideCount"], equalTo(JsonPrimitive(2)))
                         }
 
                         it("reports the number of command line image overrides") {
-                            verify(telemetrySessionBuilder).addAttribute("commandLineImageOverrideCount", 1)
+                            assertThat(telemetryCaptor.allAttributes["commandLineImageOverrideCount"], equalTo(JsonPrimitive(1)))
                         }
 
                         it("reports that TLS is being used for the connection to Docker") {
-                            verify(telemetrySessionBuilder).addAttribute("usingTLSForDockerConnection", true)
+                            assertThat(telemetryCaptor.allAttributes["usingTLSForDockerConnection"], equalTo(JsonPrimitive(true)))
                         }
 
                         it("reports that TLS is being verified for the connection to Docker") {
-                            verify(telemetrySessionBuilder).addAttribute("verifyingTLSForDockerConnection", true)
+                            assertThat(telemetryCaptor.allAttributes["verifyingTLSForDockerConnection"], equalTo(JsonPrimitive(true)))
                         }
 
                         it("reports that an existing Docker network is being used") {
-                            verify(telemetrySessionBuilder).addAttribute("usingExistingDockerNetwork", true)
+                            assertThat(telemetryCaptor.allAttributes["usingExistingDockerNetwork"], equalTo(JsonPrimitive(true)))
                         }
 
                         it("reports that prerequisites are being skipped") {
-                            verify(telemetrySessionBuilder).addAttribute("skippingPrerequisites", true)
+                            assertThat(telemetryCaptor.allAttributes["skippingPrerequisites"], equalTo(JsonPrimitive(true)))
                         }
 
                         it("reports the configured maximum level of parallelism") {
-                            verify(telemetrySessionBuilder).addAttribute("maximumLevelOfParallelism", 3)
+                            assertThat(telemetryCaptor.allAttributes["maximumLevelOfParallelism"], equalTo(JsonPrimitive(3)))
                         }
                     }
                 }
@@ -361,7 +364,7 @@ object EnvironmentTelemetryCollectorSpec : Spek({
                     beforeEachTest { environmentCollector.collect(commandType) }
 
                     it("reports that the wrapper did not download the JAR for this invocation") {
-                        verify(telemetrySessionBuilder).addAttribute("wrapperDidDownload", false)
+                        assertThat(telemetryCaptor.allAttributes["wrapperDidDownload"], equalTo(JsonPrimitive(false)))
                     }
                 }
 
@@ -372,7 +375,7 @@ object EnvironmentTelemetryCollectorSpec : Spek({
                     beforeEachTest { environmentCollector.collect(commandType) }
 
                     it("reports the download status as unknown") {
-                        verify(telemetrySessionBuilder).addNullAttribute("wrapperDidDownload")
+                        assertThat(telemetryCaptor.allAttributes["wrapperDidDownload"], equalTo(JsonNull))
                     }
                 }
 
@@ -382,7 +385,7 @@ object EnvironmentTelemetryCollectorSpec : Spek({
                     beforeEachTest { environmentCollector.collect(commandType) }
 
                     it("reports the download status as unknown") {
-                        verify(telemetrySessionBuilder).addNullAttribute("wrapperDidDownload")
+                        assertThat(telemetryCaptor.allAttributes["wrapperDidDownload"], equalTo(JsonNull))
                     }
                 }
             }
@@ -394,7 +397,7 @@ object EnvironmentTelemetryCollectorSpec : Spek({
                 beforeEachTest { environmentCollector.collect(commandType) }
 
                 it("reports the user's terminal as unknown") {
-                    verify(telemetrySessionBuilder).addAttribute("terminal", null as String?)
+                    assertThat(telemetryCaptor.allAttributes["terminal"], equalTo(JsonNull))
                 }
             }
         }
@@ -406,7 +409,7 @@ object EnvironmentTelemetryCollectorSpec : Spek({
             beforeEachTest { environmentCollector.collect(commandType) }
 
             it("reports the user's shell as unknown") {
-                verify(telemetrySessionBuilder).addAttribute("shell", null as String?)
+                assertThat(telemetryCaptor.allAttributes["shell"], equalTo(JsonNull))
             }
         }
     }

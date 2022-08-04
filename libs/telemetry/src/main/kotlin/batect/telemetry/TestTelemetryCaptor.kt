@@ -16,20 +16,12 @@
 
 package batect.telemetry
 
-import batect.primitives.ApplicationVersionInfoProvider
+import kotlinx.serialization.json.JsonPrimitive
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
-import java.util.UUID
 import java.util.concurrent.ConcurrentLinkedQueue
 
-class TelemetrySessionBuilder(
-    private val versionInfo: ApplicationVersionInfoProvider,
-    private val timeSource: TimeSource = ZonedDateTime::now
-) : TelemetryCaptor {
-    private val sessionId: UUID = UUID.randomUUID()
-    private val sessionStartTime: ZonedDateTime = nowInUTC()
-    private val applicationId: String = "batect"
-    private val applicationVersion: String = versionInfo.version.toString()
+class TestTelemetryCaptor : TelemetryCaptor {
     private val attributesBuilder = TelemetryAttributeSetBuilder()
     private val events = ConcurrentLinkedQueue<TelemetryEvent>()
     private val spans = ConcurrentLinkedQueue<TelemetrySpan>()
@@ -49,24 +41,14 @@ class TelemetrySessionBuilder(
         spans.add(span)
     }
 
-    // Why is TelemetryConfigurationStore passed in here rather than passed in as a constructor parameter?
-    // We want to construct this class as early as possible in the application's lifetime - before we've parsed CLI options
-    // or anything like that. TelemetryConfigurationStore isn't available until much later, so we have to pass it in.
-    fun build(telemetryConfigurationStore: TelemetryConfigurationStore): TelemetrySession {
-        val userId = telemetryConfigurationStore.currentConfiguration.userId
+    val allAttributes: Map<String, JsonPrimitive>
+        get() = attributesBuilder.build()
 
-        return TelemetrySession(
-            sessionId,
-            userId,
-            sessionStartTime,
-            nowInUTC(),
-            applicationId,
-            applicationVersion,
-            attributesBuilder.build(),
-            events.toList(),
-            spans.toList()
-        )
-    }
+    val allEvents: List<TelemetryEvent>
+        get() = events.toList()
 
-    private fun nowInUTC(): ZonedDateTime = timeSource().withZoneSameInstant(ZoneOffset.UTC)
+    val allSpans: List<TelemetrySpan>
+        get() = spans.toList()
+
+    private fun nowInUTC(): ZonedDateTime = ZonedDateTime.now().withZoneSameInstant(ZoneOffset.UTC)
 }

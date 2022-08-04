@@ -18,14 +18,14 @@ package batect.config.includes
 
 import batect.logging.LogMessageBuilder
 import batect.logging.Logger
-import batect.telemetry.TelemetrySessionBuilder
+import batect.telemetry.TelemetryCaptor
 import batect.telemetry.addUnhandledExceptionEvent
 import java.time.ZonedDateTime
 import kotlin.concurrent.thread
 
 class GitRepositoryCacheCleanupTask(
     private val cache: GitRepositoryCache,
-    private val telemetrySessionBuilder: TelemetrySessionBuilder,
+    private val telemetryCaptor: TelemetryCaptor,
     private val logger: Logger,
     private val threadRunner: ThreadRunner = defaultThreadRunner,
     private val timeSource: TimeSource = ZonedDateTime::now
@@ -71,7 +71,7 @@ class GitRepositoryCacheCleanupTask(
                 exception(e)
             }
 
-            telemetrySessionBuilder.addUnhandledExceptionEvent(e, isUserFacing = false)
+            telemetryCaptor.addUnhandledExceptionEvent(e, isUserFacing = false)
         }
     }
 

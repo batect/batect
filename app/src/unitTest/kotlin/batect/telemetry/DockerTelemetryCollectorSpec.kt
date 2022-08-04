@@ -25,9 +25,11 @@ import batect.execution.CacheManager
 import batect.execution.CacheType
 import batect.primitives.Version
 import batect.testutils.createForEachTest
+import batect.testutils.equalTo
+import com.natpryce.hamkrest.assertion.assertThat
+import kotlinx.serialization.json.JsonPrimitive
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
-import org.mockito.kotlin.verify
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -45,39 +47,39 @@ object DockerTelemetryCollectorSpec : Spek({
             }
         }
 
-        val telemetrySessionBuilder by createForEachTest { mock<TelemetrySessionBuilder>() }
-        val dockerTelemetryCollector by createForEachTest { DockerTelemetryCollector(dockerHttpConfig, cacheManager, telemetrySessionBuilder) }
+        val telemetryCaptor by createForEachTest { TestTelemetryCaptor() }
+        val dockerTelemetryCollector by createForEachTest { DockerTelemetryCollector(dockerHttpConfig, cacheManager, telemetryCaptor) }
 
         describe("when collecting telemetry") {
             val checkResult = DockerConnectivityCheckResult.Succeeded(DockerContainerType.Linux, Version(19, 3, 1), batect.docker.api.BuilderVersion.BuildKit, false)
             beforeEachTest { dockerTelemetryCollector.collectTelemetry(checkResult, BuilderVersion.Legacy) }
 
             it("adds the Docker version as an attribute on the telemetry session") {
-                verify(telemetrySessionBuilder).addAttribute("dockerVersion", "19.3.1")
+                assertThat(telemetryCaptor.allAttributes["dockerVersion"], equalTo(JsonPrimitive("19.3.1")))
             }
 
             it("adds the Docker container type as an attribute on the telemetry session") {
-                verify(telemetrySessionBuilder).addAttribute("dockerContainerType", "Linux")
+                assertThat(telemetryCaptor.allAttributes["dockerContainerType"], equalTo(JsonPrimitive("Linux")))
             }
 
             it("adds the daemon's preferred builder version as an attribute on the telemetry session") {
-                verify(telemetrySessionBuilder).addAttribute("dockerDaemonPreferredBuilderVersion", "BuildKit")
+                assertThat(telemetryCaptor.allAttributes["dockerDaemonPreferredBuilderVersion"], equalTo(JsonPrimitive("BuildKit")))
             }
 
             it("adds the in-use builder version as an attribute on the telemetry session") {
-                verify(telemetrySessionBuilder).addAttribute("dockerBuilderVersionInUse", "Legacy")
+                assertThat(telemetryCaptor.allAttributes["dockerBuilderVersionInUse"], equalTo(JsonPrimitive("Legacy")))
             }
 
             it("adds the daemon's experimental status as an attribute on the telemetry session") {
-                verify(telemetrySessionBuilder).addAttribute("dockerDaemonExperimentalFeaturesEnabled", false)
+                assertThat(telemetryCaptor.allAttributes["dockerDaemonExperimentalFeaturesEnabled"], equalTo(JsonPrimitive(false)))
             }
 
             it("adds the Docker connection type as an attribute on the telemetry session") {
-                verify(telemetrySessionBuilder).addAttribute("dockerConnectionType", "TCP")
+                assertThat(telemetryCaptor.allAttributes["dockerConnectionType"], equalTo(JsonPrimitive("TCP")))
             }
 
             it("adds the cache type as an attribute on the telemetry session") {
-                verify(telemetrySessionBuilder).addAttribute("cacheType", "Directory")
+                assertThat(telemetryCaptor.allAttributes["cacheType"], equalTo(JsonPrimitive("Directory")))
             }
         }
     }

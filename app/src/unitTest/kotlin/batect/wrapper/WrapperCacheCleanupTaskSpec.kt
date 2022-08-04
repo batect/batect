@@ -18,10 +18,9 @@ package batect.wrapper
 
 import batect.VersionInfo
 import batect.primitives.Version
-import batect.telemetry.AttributeValue
 import batect.telemetry.CommonAttributes
 import batect.telemetry.CommonEvents
-import batect.telemetry.TelemetrySessionBuilder
+import batect.telemetry.TestTelemetryCaptor
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
 import batect.testutils.equalTo
@@ -31,6 +30,8 @@ import batect.testutils.runForEachTest
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.hasSize
+import kotlinx.serialization.json.JsonPrimitive
 import org.mockito.kotlin.any
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.doThrow
@@ -53,14 +54,14 @@ object WrapperCacheCleanupTaskSpec : Spek({
             }
         }
 
-        val telemetrySessionBuilder by createForEachTest { mock<TelemetrySessionBuilder>() }
+        val telemetryCaptor by createForEachTest { TestTelemetryCaptor() }
         val logger by createLoggerForEachTest()
         val now = ZonedDateTime.of(2020, 5, 13, 6, 30, 0, 0, ZoneOffset.UTC)
         val timeSource: TimeSource = { now }
 
         given("cleaning up the wrapper cache is enabled") {
             val threadRunner: ThreadRunner = { block -> block() }
-            val cleanupTask by createForEachTest { WrapperCacheCleanupTask(true, wrapperCache, versionInfo, telemetrySessionBuilder, logger, threadRunner, timeSource) }
+            val cleanupTask by createForEachTest { WrapperCacheCleanupTask(true, wrapperCache, versionInfo, telemetryCaptor, logger, threadRunner, timeSource) }
 
             fun runTaskWithCachedVersions(vararg versions: CachedWrapperVersion) {
                 whenever(wrapperCache.getCachedVersions()).doReturn(versions.toSet())
@@ -257,14 +258,12 @@ object WrapperCacheCleanupTaskSpec : Spek({
                             }
 
                             it("reports the exception in telemetry") {
-                                verify(telemetrySessionBuilder).addEvent(
-                                    CommonEvents.UnhandledException,
-                                    mapOf(
-                                        CommonAttributes.Exception to AttributeValue(exception),
-                                        CommonAttributes.ExceptionCaughtAt to AttributeValue("batect.wrapper.WrapperCacheCleanupTask.processCachedWrapper"),
-                                        CommonAttributes.IsUserFacingException to AttributeValue(false)
-                                    )
-                                )
+                                assertThat(telemetryCaptor.allEvents, hasSize(equalTo(1)))
+
+                                val event = telemetryCaptor.allEvents.single()
+                                assertThat(event.type, equalTo(CommonEvents.UnhandledException))
+                                assertThat(event.attributes[CommonAttributes.ExceptionCaughtAt], equalTo(JsonPrimitive("batect.wrapper.WrapperCacheCleanupTask.processCachedWrapper")))
+                                assertThat(event.attributes[CommonAttributes.IsUserFacingException], equalTo(JsonPrimitive(false)))
                             }
                         }
 
@@ -283,14 +282,12 @@ object WrapperCacheCleanupTaskSpec : Spek({
                             }
 
                             it("reports the exception in telemetry") {
-                                verify(telemetrySessionBuilder).addEvent(
-                                    CommonEvents.UnhandledException,
-                                    mapOf(
-                                        CommonAttributes.Exception to AttributeValue(exception),
-                                        CommonAttributes.ExceptionCaughtAt to AttributeValue("batect.wrapper.WrapperCacheCleanupTask.processCachedWrapper"),
-                                        CommonAttributes.IsUserFacingException to AttributeValue(false)
-                                    )
-                                )
+                                assertThat(telemetryCaptor.allEvents, hasSize(equalTo(1)))
+
+                                val event = telemetryCaptor.allEvents.single()
+                                assertThat(event.type, equalTo(CommonEvents.UnhandledException))
+                                assertThat(event.attributes[CommonAttributes.ExceptionCaughtAt], equalTo(JsonPrimitive("batect.wrapper.WrapperCacheCleanupTask.processCachedWrapper")))
+                                assertThat(event.attributes[CommonAttributes.IsUserFacingException], equalTo(JsonPrimitive(false)))
                             }
                         }
                     }
@@ -335,7 +332,7 @@ object WrapperCacheCleanupTaskSpec : Spek({
                 block()
             }
 
-            val cleanupTask by createForEachTest { WrapperCacheCleanupTask(false, wrapperCache, versionInfo, telemetrySessionBuilder, logger, threadRunner, timeSource) }
+            val cleanupTask by createForEachTest { WrapperCacheCleanupTask(false, wrapperCache, versionInfo, telemetryCaptor, logger, threadRunner, timeSource) }
 
             beforeEachTest { threadStarted = false }
 

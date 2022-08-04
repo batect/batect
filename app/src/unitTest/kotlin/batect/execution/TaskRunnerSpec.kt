@@ -22,8 +22,7 @@ import batect.config.TaskRunConfiguration
 import batect.execution.model.events.TaskNetworkDeletedEvent
 import batect.ioc.TaskKodein
 import batect.ioc.TaskKodeinFactory
-import batect.telemetry.TelemetrySessionBuilder
-import batect.telemetry.TelemetrySpanBuilder
+import batect.telemetry.TestTelemetryCaptor
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
 import batect.testutils.given
@@ -35,13 +34,14 @@ import batect.ui.EventLogger
 import batect.ui.text.Text
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
+import com.natpryce.hamkrest.hasSize
 import com.natpryce.hamkrest.isEmpty
+import kotlinx.serialization.json.JsonPrimitive
 import org.kodein.di.DI
 import org.kodein.di.bind
 import org.kodein.di.instance
 import org.mockito.kotlin.any
 import org.mockito.kotlin.argThat
-import org.mockito.kotlin.doAnswer
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.inOrder
@@ -66,20 +66,9 @@ object TaskRunnerSpec : Spek({
         }
 
         val console by createForEachTest { mock<Console>() }
-        val telemetrySpanBuilder by createForEachTest { mock<TelemetrySpanBuilder>() }
-
-        @Suppress("UNCHECKED_CAST")
-        val telemetrySessionBuilder by createForEachTest {
-            mock<TelemetrySessionBuilder> {
-                onGeneric { addSpan<TaskRunResult>(any(), any()) } doAnswer { invocation ->
-                    val process = invocation.arguments[1] as ((TelemetrySpanBuilder) -> TaskRunResult)
-                    process(telemetrySpanBuilder)
-                }
-            }
-        }
-
+        val telemetryCaptor by createForEachTest { TestTelemetryCaptor() }
         val logger by createLoggerForEachTest()
-        val taskRunner by createForEachTest { TaskRunner(taskKodeinFactory, interruptionTrap, console, telemetrySessionBuilder, logger) }
+        val taskRunner by createForEachTest { TaskRunner(taskKodeinFactory, interruptionTrap, console, telemetryCaptor, logger) }
 
         describe("running a task") {
             given("the task has a container to run") {
@@ -176,16 +165,13 @@ object TaskRunnerSpec : Spek({
                                 verifyNoInteractions(console)
                             }
 
-                            it("starts a telemetry span for the task") {
-                                verify(telemetrySessionBuilder).addSpan(eq("RunTask"), any())
-                            }
+                            it("creates a telemetry span for the task and includes the number of containers in the task") {
+                                assertThat(telemetryCaptor.allSpans, hasSize(equalTo(1)))
 
-                            it("marks the span as not being for a task that only has prerequisites") {
-                                verify(telemetrySpanBuilder).addAttribute("taskOnlyHasPrerequisites", false)
-                            }
-
-                            it("reports the number of containers in the task in telemetry") {
-                                verify(telemetrySpanBuilder).addAttribute("containersInTask", 3)
+                                val span = telemetryCaptor.allSpans.single()
+                                assertThat(span.type, equalTo("RunTask"))
+                                assertThat(span.attributes["taskOnlyHasPrerequisites"], equalTo(JsonPrimitive(false)))
+                                assertThat(span.attributes["containersInTask"], equalTo(JsonPrimitive(3)))
                             }
                         }
                     }
@@ -288,12 +274,12 @@ object TaskRunnerSpec : Spek({
                         verify(console).println(Text.white(Text("The task ") + Text.bold("some-task") + Text(" only defines prerequisite tasks, nothing more to do.")))
                     }
 
-                    it("starts a telemetry span for the task") {
-                        verify(telemetrySessionBuilder).addSpan(eq("RunTask"), any())
-                    }
+                    it("creates a telemetry span for the task and includes the fact that the task only has prerequisites") {
+                        assertThat(telemetryCaptor.allSpans, hasSize(equalTo(1)))
 
-                    it("marks the span as being for a task that only has prerequisites") {
-                        verify(telemetrySpanBuilder).addAttribute("taskOnlyHasPrerequisites", true)
+                        val span = telemetryCaptor.allSpans.single()
+                        assertThat(span.type, equalTo("RunTask"))
+                        assertThat(span.attributes["taskOnlyHasPrerequisites"], equalTo(JsonPrimitive(true)))
                     }
                 }
             }

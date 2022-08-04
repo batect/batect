@@ -18,10 +18,9 @@ package batect.config.includes
 
 import batect.logging.Logger
 import batect.logging.Severity
-import batect.telemetry.AttributeValue
 import batect.telemetry.CommonAttributes
 import batect.telemetry.CommonEvents
-import batect.telemetry.TelemetrySessionBuilder
+import batect.telemetry.TestTelemetryCaptor
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given
@@ -34,6 +33,8 @@ import batect.testutils.logging.withSeverity
 import batect.testutils.osIndependentPath
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.hasSize
+import kotlinx.serialization.json.JsonPrimitive
 import org.mockito.kotlin.any
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.doThrow
@@ -49,7 +50,7 @@ import java.time.ZonedDateTime
 object GitRepositoryCacheCleanupTaskSpec : Spek({
     describe("a Git repository cache cleanup task") {
         val cache by createForEachTest { mock<GitRepositoryCache>() }
-        val telemetrySessionBuilder by createForEachTest { mock<TelemetrySessionBuilder>() }
+        val telemetryCaptor by createForEachTest { TestTelemetryCaptor() }
         val logSink by createForEachTest { InMemoryLogSink() }
         val logger by createForEachTest { Logger("Test logger", logSink) }
         val now = ZonedDateTime.of(2020, 5, 13, 6, 30, 0, 0, ZoneOffset.UTC)
@@ -63,7 +64,7 @@ object GitRepositoryCacheCleanupTaskSpec : Spek({
             }
         }
 
-        val cleanupTask by createForEachTest { GitRepositoryCacheCleanupTask(cache, telemetrySessionBuilder, logger, threadRunner, timeSource) }
+        val cleanupTask by createForEachTest { GitRepositoryCacheCleanupTask(cache, telemetryCaptor, logger, threadRunner, timeSource) }
 
         beforeEachTest { ranOnThread = false }
 
@@ -159,14 +160,12 @@ object GitRepositoryCacheCleanupTaskSpec : Spek({
                 }
 
                 it("reports the exception in telemetry") {
-                    verify(telemetrySessionBuilder).addEvent(
-                        CommonEvents.UnhandledException,
-                        mapOf(
-                            CommonAttributes.Exception to AttributeValue(exception),
-                            CommonAttributes.ExceptionCaughtAt to AttributeValue("batect.config.includes.GitRepositoryCacheCleanupTask.delete"),
-                            CommonAttributes.IsUserFacingException to AttributeValue(false)
-                        )
-                    )
+                    assertThat(telemetryCaptor.allEvents, hasSize(equalTo(1)))
+
+                    val event = telemetryCaptor.allEvents.single()
+                    assertThat(event.type, equalTo(CommonEvents.UnhandledException))
+                    assertThat(event.attributes[CommonAttributes.ExceptionCaughtAt], equalTo(JsonPrimitive("batect.config.includes.GitRepositoryCacheCleanupTask.delete")))
+                    assertThat(event.attributes[CommonAttributes.IsUserFacingException], equalTo(JsonPrimitive(false)))
                 }
             }
         }
@@ -226,14 +225,12 @@ object GitRepositoryCacheCleanupTaskSpec : Spek({
                 }
 
                 it("reports the exception in telemetry") {
-                    verify(telemetrySessionBuilder).addEvent(
-                        CommonEvents.UnhandledException,
-                        mapOf(
-                            CommonAttributes.Exception to AttributeValue(exception),
-                            CommonAttributes.ExceptionCaughtAt to AttributeValue("batect.config.includes.GitRepositoryCacheCleanupTask.delete"),
-                            CommonAttributes.IsUserFacingException to AttributeValue(false)
-                        )
-                    )
+                    assertThat(telemetryCaptor.allEvents, hasSize(equalTo(1)))
+
+                    val event = telemetryCaptor.allEvents.single()
+                    assertThat(event.type, equalTo(CommonEvents.UnhandledException))
+                    assertThat(event.attributes[CommonAttributes.ExceptionCaughtAt], equalTo(JsonPrimitive("batect.config.includes.GitRepositoryCacheCleanupTask.delete")))
+                    assertThat(event.attributes[CommonAttributes.IsUserFacingException], equalTo(JsonPrimitive(false)))
                 }
             }
         }

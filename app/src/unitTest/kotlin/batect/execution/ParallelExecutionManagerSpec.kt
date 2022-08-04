@@ -23,10 +23,9 @@ import batect.execution.model.events.TaskEventSink
 import batect.execution.model.events.TaskFailedEvent
 import batect.execution.model.steps.TaskStepRunner
 import batect.primitives.CancellationException
-import batect.telemetry.AttributeValue
 import batect.telemetry.CommonAttributes
 import batect.telemetry.CommonEvents
-import batect.telemetry.TelemetrySessionBuilder
+import batect.telemetry.TestTelemetryCaptor
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
 import batect.testutils.createMockTaskStep
@@ -36,6 +35,8 @@ import batect.ui.EventLogger
 import batect.ui.containerio.ContainerIOStreamingOptions
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
+import com.natpryce.hamkrest.hasSize
+import kotlinx.serialization.json.JsonPrimitive
 import org.mockito.kotlin.any
 import org.mockito.kotlin.doAnswer
 import org.mockito.kotlin.doReturn
@@ -64,12 +65,12 @@ object ParallelExecutionManagerSpec : Spek({
 
         val taskStepRunner by createForEachTest { mock<TaskStepRunner>() }
         val stateMachine by createForEachTest { mock<TaskStateMachine>() }
-        val telemetrySessionBuilder by createForEachTest { mock<TelemetrySessionBuilder>() }
+        val telemetryCaptor by createForEachTest { TestTelemetryCaptor() }
         val logger by createLoggerForEachTest()
 
         given("there is no maximum level of parallelism set") {
             val maximumLevelOfParallelism: Int? = null
-            val executionManager by createForEachTest { ParallelExecutionManager(eventLogger, taskStepRunner, stateMachine, telemetrySessionBuilder, maximumLevelOfParallelism, logger) }
+            val executionManager by createForEachTest { ParallelExecutionManager(eventLogger, taskStepRunner, stateMachine, telemetryCaptor, maximumLevelOfParallelism, logger) }
 
             given("a single step is provided by the state machine") {
                 val step by createForEachTest { createMockTaskStep() }
@@ -207,14 +208,11 @@ object ParallelExecutionManagerSpec : Spek({
                         }
 
                         it("reports the exception in telemetry") {
-                            verify(telemetrySessionBuilder).addEvent(
-                                CommonEvents.UnhandledException,
-                                mapOf(
-                                    CommonAttributes.Exception to AttributeValue(exception),
-                                    CommonAttributes.ExceptionCaughtAt to AttributeValue("batect.execution.ParallelExecutionManager.runStep\$lambda-3"),
-                                    CommonAttributes.IsUserFacingException to AttributeValue(true)
-                                )
-                            )
+                            assertThat(telemetryCaptor.allEvents, hasSize(equalTo(1)))
+
+                            val event = telemetryCaptor.allEvents.single()
+                            assertThat(event.type, equalTo(CommonEvents.UnhandledException))
+                            assertThat(event.attributes[CommonAttributes.ExceptionCaughtAt], equalTo(JsonPrimitive("batect.execution.ParallelExecutionManager.runStep\$lambda-3")))
                         }
                     }
                 }
@@ -391,8 +389,8 @@ object ParallelExecutionManagerSpec : Spek({
         }
 
         given("there is a maximum level of parallelism set") {
-            val maximumLevelOfParallelism: Int? = 2
-            val executionManager by createForEachTest { ParallelExecutionManager(eventLogger, taskStepRunner, stateMachine, telemetrySessionBuilder, maximumLevelOfParallelism, logger) }
+            val maximumLevelOfParallelism = 2
+            val executionManager by createForEachTest { ParallelExecutionManager(eventLogger, taskStepRunner, stateMachine, telemetryCaptor, maximumLevelOfParallelism, logger) }
 
             given("the state machine provides more steps than the configured level of parallelism initially") {
                 val stepsRunningInParallel by createForEachTest { AtomicInteger(0) }

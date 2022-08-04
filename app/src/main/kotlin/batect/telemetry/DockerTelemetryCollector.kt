@@ -24,15 +24,15 @@ import batect.execution.CacheManager
 class DockerTelemetryCollector(
     private val dockerHttpConfig: DockerHttpConfig,
     private val cacheManager: CacheManager,
-    private val telemetrySessionBuilder: TelemetrySessionBuilder
+    private val telemetryCaptor: TelemetryCaptor
 ) {
     fun collectTelemetry(result: DockerConnectivityCheckResult.Succeeded, builderVersion: BuilderVersion) {
-        telemetrySessionBuilder.addAttribute("dockerBuilderVersionInUse", builderVersion.toString())
-        telemetrySessionBuilder.addAttribute("dockerContainerType", result.containerType.toString())
-        telemetrySessionBuilder.addAttribute("dockerConnectionType", dockerHttpConfig.connectionType.toString())
-        telemetrySessionBuilder.addAttribute("dockerDaemonPreferredBuilderVersion", result.builderVersion.toString())
-        telemetrySessionBuilder.addAttribute("dockerDaemonExperimentalFeaturesEnabled", result.experimentalFeaturesEnabled)
-        telemetrySessionBuilder.addAttribute("dockerVersion", result.dockerVersion.toString())
-        telemetrySessionBuilder.addAttribute("cacheType", cacheManager.cacheType.toString())
+        telemetryCaptor.addAttribute("dockerBuilderVersionInUse", builderVersion.toString())
+        telemetryCaptor.addAttribute("dockerContainerType", result.containerType.toString())
+        telemetryCaptor.addAttribute("dockerConnectionType", dockerHttpConfig.connectionType.toString())
+        telemetryCaptor.addAttribute("dockerDaemonPreferredBuilderVersion", result.builderVersion.toString())
+        telemetryCaptor.addAttribute("dockerDaemonExperimentalFeaturesEnabled", result.experimentalFeaturesEnabled)
+        telemetryCaptor.addAttribute("dockerVersion", result.dockerVersion.toString())
+        telemetryCaptor.addAttribute("cacheType", cacheManager.cacheType.toString())
     }
 }

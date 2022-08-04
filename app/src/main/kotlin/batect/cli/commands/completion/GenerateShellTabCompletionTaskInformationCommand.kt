@@ -24,7 +24,7 @@ import batect.config.io.ConfigurationLoadResult
 import batect.config.io.ConfigurationLoader
 import batect.os.HostEnvironmentVariables
 import batect.telemetry.AttributeValue
-import batect.telemetry.TelemetrySessionBuilder
+import batect.telemetry.TelemetryCaptor
 import okio.ByteString.Companion.toByteString
 import java.io.PrintStream
 import java.nio.file.Files
@@ -35,7 +35,7 @@ class GenerateShellTabCompletionTaskInformationCommand(
     private val commandLineOptions: CommandLineOptions,
     private val outputStream: PrintStream,
     private val configurationLoader: ConfigurationLoader,
-    private val telemetrySessionBuilder: TelemetrySessionBuilder,
+    private val telemetryCaptor: TelemetryCaptor,
     private val hostEnvironmentVariables: HostEnvironmentVariables
 ) : Command {
     override fun run(): Int {
@@ -48,7 +48,7 @@ class GenerateShellTabCompletionTaskInformationCommand(
     }
 
     private fun recordTelemetryEvent() {
-        telemetrySessionBuilder.addEvent(
+        telemetryCaptor.addEvent(
             "GeneratedShellTabCompletionTaskInformation",
             mapOf(
                 "shell" to AttributeValue(commandLineOptions.generateShellTabCompletionTaskInformation.toString()),

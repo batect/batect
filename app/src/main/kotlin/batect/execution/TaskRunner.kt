@@ -20,8 +20,9 @@ import batect.config.Container
 import batect.config.Task
 import batect.ioc.TaskKodeinFactory
 import batect.logging.Logger
-import batect.telemetry.TelemetrySessionBuilder
+import batect.telemetry.TelemetryCaptor
 import batect.telemetry.TelemetrySpanBuilder
+import batect.telemetry.addSpan
 import batect.ui.Console
 import batect.ui.EventLogger
 import batect.ui.text.Text
@@ -33,11 +34,11 @@ data class TaskRunner(
     private val taskKodeinFactory: TaskKodeinFactory,
     private val interruptionTrap: InterruptionTrap,
     private val console: Console,
-    private val telemetrySessionBuilder: TelemetrySessionBuilder,
+    private val telemetryCaptor: TelemetryCaptor,
     private val logger: Logger
 ) {
     fun run(task: Task, runOptions: RunOptions): TaskRunResult {
-        return telemetrySessionBuilder.addSpan("RunTask") { span ->
+        return telemetryCaptor.addSpan("RunTask") { span ->
             runWithTelemetry(task, runOptions, span)
         }
     }

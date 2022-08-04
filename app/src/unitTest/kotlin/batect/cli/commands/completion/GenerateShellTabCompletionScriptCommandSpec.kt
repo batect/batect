@@ -21,15 +21,16 @@ import batect.cli.CommandLineOptionsParser
 import batect.cli.options.OptionDefinition
 import batect.cli.options.OptionParser
 import batect.os.HostEnvironmentVariables
-import batect.telemetry.AttributeValue
-import batect.telemetry.TelemetrySessionBuilder
+import batect.telemetry.TestTelemetryCaptor
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.runForEachTest
 import batect.testutils.withMessage
 import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.hasSize
 import com.natpryce.hamkrest.throws
+import kotlinx.serialization.json.JsonPrimitive
 import org.mockito.kotlin.any
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
@@ -77,7 +78,7 @@ object GenerateShellTabCompletionScriptCommandSpec : Spek({
             }
         }
 
-        val telemetrySessionBuilder by createForEachTest { mock<TelemetrySessionBuilder>() }
+        val telemetryCaptor by createForEachTest { TestTelemetryCaptor() }
 
         given("the 'BATECT_COMPLETION_PROXY_REGISTER_AS' environment variable is set") {
             val environmentVariables by createForEachTest {
@@ -106,7 +107,7 @@ object GenerateShellTabCompletionScriptCommandSpec : Spek({
                             zshGenerator,
                             PrintStream(outputStream),
                             environmentVariables,
-                            telemetrySessionBuilder
+                            telemetryCaptor
                         )
                     }
 
@@ -125,13 +126,12 @@ object GenerateShellTabCompletionScriptCommandSpec : Spek({
                     }
 
                     it("records an event in telemetry with the shell name and proxy completion script version") {
-                        verify(telemetrySessionBuilder).addEvent(
-                            "GeneratedShellTabCompletionScript",
-                            mapOf(
-                                "shell" to AttributeValue(testCase.shell.name),
-                                "proxyCompletionScriptVersion" to AttributeValue("4.5.6")
-                            )
-                        )
+                        assertThat(telemetryCaptor.allEvents, hasSize(equalTo(1)))
+
+                        val event = telemetryCaptor.allEvents.single()
+                        assertThat(event.type, equalTo("GeneratedShellTabCompletionScript"))
+                        assertThat(event.attributes["shell"], equalTo(JsonPrimitive(testCase.shell.name)))
+                        assertThat(event.attributes["proxyCompletionScriptVersion"], equalTo(JsonPrimitive("4.5.6")))
                     }
                 }
             }
@@ -149,7 +149,7 @@ object GenerateShellTabCompletionScriptCommandSpec : Spek({
                     zshGenerator,
                     PrintStream(outputStream),
                     environmentVariables,
-                    telemetrySessionBuilder
+                    telemetryCaptor
                 )
             }
 

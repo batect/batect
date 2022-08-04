@@ -41,8 +41,7 @@ import batect.os.Command
 import batect.os.DefaultPathResolutionContext
 import batect.os.PathResolverFactory
 import batect.telemetry.TelemetryConsent
-import batect.telemetry.TelemetrySessionBuilder
-import batect.telemetry.TelemetrySpanBuilder
+import batect.telemetry.TestTelemetryCaptor
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
 import batect.testutils.equalTo
@@ -56,9 +55,11 @@ import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.has
+import com.natpryce.hamkrest.hasSize
 import com.natpryce.hamkrest.isEmpty
 import com.natpryce.hamkrest.isEmptyString
 import com.natpryce.hamkrest.throws
+import kotlinx.serialization.json.JsonPrimitive
 import org.mockito.kotlin.any
 import org.mockito.kotlin.doAnswer
 import org.mockito.kotlin.doThrow
@@ -97,22 +98,11 @@ object ConfigurationLoaderSpec : Spek({
         }
 
         val pathResolverFactory by createForEachTest { PathResolverFactory(fileSystem) }
-        val telemetrySpanBuilder by createForEachTest { mock<TelemetrySpanBuilder>() }
         val telemetryConsent by createForEachTest { mock<TelemetryConsent>() }
-
-        @Suppress("UNCHECKED_CAST")
-        val telemetrySessionBuilder by createForEachTest {
-            mock<TelemetrySessionBuilder> {
-                on { addSpan<ConfigurationLoadResult>(any(), any()) } doAnswer { invocation ->
-                    val process = invocation.arguments[1] as ((TelemetrySpanBuilder) -> ConfigurationLoadResult)
-                    process(telemetrySpanBuilder)
-                }
-            }
-        }
-
+        val telemetryCaptor by createForEachTest { TestTelemetryCaptor() }
         val logger by createLoggerForEachTest()
         val testFileName = "/theTestFile.yml"
-        val loader by createForEachTest { ConfigurationLoader(includeResolver, pathResolverFactory, telemetrySessionBuilder, telemetryConsent, gitRepositoryCacheNotificationListener, logger) }
+        val loader by createForEachTest { ConfigurationLoader(includeResolver, pathResolverFactory, telemetryCaptor, telemetryConsent, gitRepositoryCacheNotificationListener, logger) }
 
         fun createFile(path: Path, contents: String) {
             val directory = path.parent
@@ -138,24 +128,30 @@ object ConfigurationLoaderSpec : Spek({
         }
 
         fun Suite.itReportsTelemetryAboutTheConfigurationFile(containerCount: Int = 0, taskCount: Int = 0, configVariableCount: Int = 0, fileIncludeCount: Int = 0, gitIncludeCount: Int = 0) {
+            it("reports a telemetry span for loading the configuration file") {
+                assertThat(telemetryCaptor.allSpans, hasSize(equalTo(1)))
+            }
+
+            val span by lazy { telemetryCaptor.allSpans.single() }
+
             it("reports the number of containers loaded") {
-                verify(telemetrySpanBuilder).addAttribute("containerCount", containerCount)
+                assertThat(span.attributes["containerCount"], equalTo(JsonPrimitive(containerCount)))
             }
 
             it("reports the number of task loaded") {
-                verify(telemetrySpanBuilder).addAttribute("taskCount", taskCount)
+                assertThat(span.attributes["taskCount"], equalTo(JsonPrimitive(taskCount)))
             }
 
             it("reports the number of config variables loaded") {
-                verify(telemetrySpanBuilder).addAttribute("configVariableCount", configVariableCount)
+                assertThat(span.attributes["configVariableCount"], equalTo(JsonPrimitive(configVariableCount)))
             }
 
             it("reports the number of file includes loaded") {
-                verify(telemetrySpanBuilder).addAttribute("fileIncludeCount", fileIncludeCount)
+                assertThat(span.attributes["fileIncludeCount"], equalTo(JsonPrimitive(fileIncludeCount)))
             }
 
             it("reports the number of Git includes loaded") {
-                verify(telemetrySpanBuilder).addAttribute("gitIncludeCount", gitIncludeCount)
+                assertThat(span.attributes["gitIncludeCount"], equalTo(JsonPrimitive(gitIncludeCount)))
             }
         }
 

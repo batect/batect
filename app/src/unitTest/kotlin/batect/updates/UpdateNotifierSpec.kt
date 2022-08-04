@@ -18,14 +18,17 @@ package batect.updates
 
 import batect.VersionInfo
 import batect.primitives.Version
-import batect.telemetry.AttributeValue
 import batect.telemetry.CommonAttributes
 import batect.telemetry.CommonEvents
-import batect.telemetry.TelemetrySessionBuilder
+import batect.telemetry.TestTelemetryCaptor
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
+import batect.testutils.equalTo
 import batect.testutils.on
 import batect.ui.Console
+import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.hasSize
+import kotlinx.serialization.json.JsonPrimitive
 import org.mockito.kotlin.inOrder
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
@@ -43,7 +46,7 @@ object UpdateNotifierSpec : Spek({
         val updateInfoUpdater by createForEachTest { mock<UpdateInfoUpdater>() }
         val versionInfo by createForEachTest { mock<VersionInfo>() }
         val console by createForEachTest { mock<Console>() }
-        val telemetrySessionBuilder by createForEachTest { mock<TelemetrySessionBuilder>() }
+        val telemetryCaptor by createForEachTest { TestTelemetryCaptor() }
         val logger by createLoggerForEachTest()
         var currentTime = ZonedDateTime.of(0, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC)
 
@@ -53,7 +56,7 @@ object UpdateNotifierSpec : Spek({
 
         on("when the update notification is disabled") {
             beforeEachTest {
-                val updateNotifier = UpdateNotifier(true, updateInfoStorage, updateInfoUpdater, versionInfo, console, telemetrySessionBuilder, logger, { currentTime })
+                val updateNotifier = UpdateNotifier(true, updateInfoStorage, updateInfoUpdater, versionInfo, console, telemetryCaptor, logger, { currentTime })
                 updateNotifier.run()
             }
 
@@ -71,7 +74,7 @@ object UpdateNotifierSpec : Spek({
         }
 
         describe("when the update notification is enabled") {
-            val updateNotifier by createForEachTest { UpdateNotifier(false, updateInfoStorage, updateInfoUpdater, versionInfo, console, telemetrySessionBuilder, logger, { currentTime }) }
+            val updateNotifier by createForEachTest { UpdateNotifier(false, updateInfoStorage, updateInfoUpdater, versionInfo, console, telemetryCaptor, logger, { currentTime }) }
 
             on("when no cached update information is available") {
                 beforeEachTest {
@@ -105,14 +108,12 @@ object UpdateNotifierSpec : Spek({
                 }
 
                 it("reports the exception in telemetry") {
-                    verify(telemetrySessionBuilder).addEvent(
-                        CommonEvents.UnhandledException,
-                        mapOf(
-                            CommonAttributes.Exception to AttributeValue(exception),
-                            CommonAttributes.ExceptionCaughtAt to AttributeValue("batect.updates.UpdateNotifier.tryToLoadCachedInfo"),
-                            CommonAttributes.IsUserFacingException to AttributeValue(false)
-                        )
-                    )
+                    assertThat(telemetryCaptor.allEvents, hasSize(equalTo(1)))
+
+                    val event = telemetryCaptor.allEvents.single()
+                    assertThat(event.type, equalTo(CommonEvents.UnhandledException))
+                    assertThat(event.attributes[CommonAttributes.ExceptionCaughtAt], equalTo(JsonPrimitive("batect.updates.UpdateNotifier.tryToLoadCachedInfo")))
+                    assertThat(event.attributes[CommonAttributes.IsUserFacingException], equalTo(JsonPrimitive(false)))
                 }
             }
 
@@ -175,13 +176,12 @@ object UpdateNotifierSpec : Spek({
                         }
 
                         it("reports an event in telemetry") {
-                            verify(telemetrySessionBuilder).addEvent(
-                                "UpdateAvailableNotificationShown",
-                                mapOf(
-                                    "currentVersion" to AttributeValue("0.2.0"),
-                                    "newVersion" to AttributeValue("0.3.0")
-                                )
-                            )
+                            assertThat(telemetryCaptor.allEvents, hasSize(equalTo(1)))
+
+                            val event = telemetryCaptor.allEvents.single()
+                            assertThat(event.type, equalTo("UpdateAvailableNotificationShown"))
+                            assertThat(event.attributes["currentVersion"], equalTo(JsonPrimitive("0.2.0")))
+                            assertThat(event.attributes["newVersion"], equalTo(JsonPrimitive("0.3.0")))
                         }
 
                         it("does not trigger an update of the cached update info") {
@@ -245,13 +245,12 @@ object UpdateNotifierSpec : Spek({
                         }
 
                         it("reports an event in telemetry") {
-                            verify(telemetrySessionBuilder).addEvent(
-                                "UpdateAvailableNotificationShown",
-                                mapOf(
-                                    "currentVersion" to AttributeValue("0.2.0"),
-                                    "newVersion" to AttributeValue("0.3.0")
-                                )
-                            )
+                            assertThat(telemetryCaptor.allEvents, hasSize(equalTo(1)))
+
+                            val event = telemetryCaptor.allEvents.single()
+                            assertThat(event.type, equalTo("UpdateAvailableNotificationShown"))
+                            assertThat(event.attributes["currentVersion"], equalTo(JsonPrimitive("0.2.0")))
+                            assertThat(event.attributes["newVersion"], equalTo(JsonPrimitive("0.3.0")))
                         }
                     }
                 }

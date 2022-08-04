@@ -19,10 +19,9 @@ package batect.cli.commands
 import batect.VersionInfo
 import batect.os.HostEnvironmentVariables
 import batect.primitives.Version
-import batect.telemetry.AttributeValue
 import batect.telemetry.CommonAttributes
 import batect.telemetry.CommonEvents
-import batect.telemetry.TelemetrySessionBuilder
+import batect.telemetry.TestTelemetryCaptor
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
 import batect.testutils.given
@@ -39,6 +38,8 @@ import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
+import com.natpryce.hamkrest.hasSize
+import kotlinx.serialization.json.JsonPrimitive
 import okhttp3.Call
 import okhttp3.OkHttpClient
 import org.mockito.kotlin.any
@@ -60,7 +61,7 @@ object UpgradeCommandSpec : Spek({
         val httpClient by createForEachTest { mock<OkHttpClient>() }
         val console by createForEachTest { mock<Console>() }
         val errorConsole by createForEachTest { mock<Console>() }
-        val telemetrySessionBuilder by createForEachTest { mock<TelemetrySessionBuilder>() }
+        val telemetryCaptor by createForEachTest { TestTelemetryCaptor() }
         val logger by createLoggerForEachTest()
 
         given("the application was launched without using the wrapper script") {
@@ -70,7 +71,7 @@ object UpgradeCommandSpec : Spek({
             val environmentVariables = HostEnvironmentVariables()
 
             on("running the command") {
-                val command by createForEachTest { UpgradeCommand(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, environmentVariables, telemetrySessionBuilder, logger) }
+                val command by createForEachTest { UpgradeCommand(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, environmentVariables, telemetryCaptor, logger) }
                 val exitCode by runForEachTest { command.run() }
 
                 it("returns a non-zero exit code") {
@@ -131,7 +132,7 @@ object UpgradeCommandSpec : Spek({
                             }
 
                             on("running the command") {
-                                val command by createForEachTest { UpgradeCommand(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, environmentVariables, telemetrySessionBuilder, logger) }
+                                val command by createForEachTest { UpgradeCommand(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, environmentVariables, telemetryCaptor, logger) }
                                 val exitCode by runForEachTest { command.run() }
 
                                 it("returns a zero exit code") {
@@ -173,7 +174,7 @@ object UpgradeCommandSpec : Spek({
                             }
 
                             on("running the command") {
-                                val command by createForEachTest { UpgradeCommand(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, environmentVariables, telemetrySessionBuilder, logger) }
+                                val command by createForEachTest { UpgradeCommand(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, environmentVariables, telemetryCaptor, logger) }
                                 val exitCode by runForEachTest { command.run() }
 
                                 it("returns a non-zero exit code") {
@@ -209,7 +210,7 @@ object UpgradeCommandSpec : Spek({
                             }
 
                             on("running the command") {
-                                val command by createForEachTest { UpgradeCommand(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, environmentVariables, telemetrySessionBuilder, logger) }
+                                val command by createForEachTest { UpgradeCommand(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, environmentVariables, telemetryCaptor, logger) }
                                 val exitCode by runForEachTest { command.run() }
 
                                 it("returns a non-zero exit code") {
@@ -232,14 +233,12 @@ object UpgradeCommandSpec : Spek({
                                 }
 
                                 it("reports the exception in telemetry") {
-                                    verify(telemetrySessionBuilder).addEvent(
-                                        CommonEvents.UnhandledException,
-                                        mapOf(
-                                            CommonAttributes.Exception to AttributeValue(exception),
-                                            CommonAttributes.ExceptionCaughtAt to AttributeValue("batect.cli.commands.UpgradeCommand.downloadNewScript"),
-                                            CommonAttributes.IsUserFacingException to AttributeValue(true)
-                                        )
-                                    )
+                                    assertThat(telemetryCaptor.allEvents, hasSize(equalTo(1)))
+
+                                    val event = telemetryCaptor.allEvents.single()
+                                    assertThat(event.type, equalTo(CommonEvents.UnhandledException))
+                                    assertThat(event.attributes[CommonAttributes.ExceptionCaughtAt], equalTo(JsonPrimitive("batect.cli.commands.UpgradeCommand.downloadNewScript")))
+                                    assertThat(event.attributes[CommonAttributes.IsUserFacingException], equalTo(JsonPrimitive(true)))
                                 }
                             }
                         }
@@ -251,7 +250,7 @@ object UpgradeCommandSpec : Spek({
                         }
 
                         on("running the command") {
-                            val command by createForEachTest { UpgradeCommand(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, environmentVariables, telemetrySessionBuilder, logger) }
+                            val command by createForEachTest { UpgradeCommand(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, environmentVariables, telemetryCaptor, logger) }
                             val exitCode by runForEachTest { command.run() }
 
                             it("returns a zero exit code") {
@@ -274,7 +273,7 @@ object UpgradeCommandSpec : Spek({
                         }
 
                         on("running the command") {
-                            val command by createForEachTest { UpgradeCommand(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, environmentVariables, telemetrySessionBuilder, logger) }
+                            val command by createForEachTest { UpgradeCommand(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, environmentVariables, telemetryCaptor, logger) }
                             val exitCode by runForEachTest { command.run() }
 
                             it("returns a zero exit code") {
@@ -305,7 +304,7 @@ object UpgradeCommandSpec : Spek({
                         }
 
                         on("running the command") {
-                            val command by createForEachTest { UpgradeCommand(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, environmentVariables, telemetrySessionBuilder, logger) }
+                            val command by createForEachTest { UpgradeCommand(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, environmentVariables, telemetryCaptor, logger) }
                             val exitCode by runForEachTest { command.run() }
 
                             it("returns a non-zero exit code") {
@@ -330,7 +329,7 @@ object UpgradeCommandSpec : Spek({
                         }
 
                         on("running the command") {
-                            val command by createForEachTest { UpgradeCommand(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, environmentVariables, telemetrySessionBuilder, logger) }
+                            val command by createForEachTest { UpgradeCommand(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, environmentVariables, telemetryCaptor, logger) }
                             val exitCode by runForEachTest { command.run() }
 
                             it("returns a zero exit code") {
@@ -353,7 +352,7 @@ object UpgradeCommandSpec : Spek({
                         }
 
                         on("running the command") {
-                            val command by createForEachTest { UpgradeCommand(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, environmentVariables, telemetrySessionBuilder, logger) }
+                            val command by createForEachTest { UpgradeCommand(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, environmentVariables, telemetryCaptor, logger) }
                             val exitCode by runForEachTest { command.run() }
 
                             it("returns a zero exit code") {
@@ -383,7 +382,7 @@ object UpgradeCommandSpec : Spek({
                 val versionInfo = mock<VersionInfo>()
 
                 on("running the command") {
-                    val command by createForEachTest { UpgradeCommand(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, environmentVariables, telemetrySessionBuilder, logger) }
+                    val command by createForEachTest { UpgradeCommand(updateInfoDownloader, versionInfo, httpClient, fileSystem, console, errorConsole, environmentVariables, telemetryCaptor, logger) }
                     val exitCode by runForEachTest { command.run() }
 
                     it("returns a non-zero exit code") {
@@ -395,14 +394,12 @@ object UpgradeCommandSpec : Spek({
                     }
 
                     it("reports the exception in telemetry") {
-                        verify(telemetrySessionBuilder).addEvent(
-                            CommonEvents.UnhandledException,
-                            mapOf(
-                                CommonAttributes.Exception to AttributeValue(exception),
-                                CommonAttributes.ExceptionCaughtAt to AttributeValue("batect.cli.commands.UpgradeCommand.tryToDownloadLatestVersionInfo"),
-                                CommonAttributes.IsUserFacingException to AttributeValue(true)
-                            )
-                        )
+                        assertThat(telemetryCaptor.allEvents, hasSize(equalTo(1)))
+
+                        val event = telemetryCaptor.allEvents.single()
+                        assertThat(event.type, equalTo(CommonEvents.UnhandledException))
+                        assertThat(event.attributes[CommonAttributes.ExceptionCaughtAt], equalTo(JsonPrimitive("batect.cli.commands.UpgradeCommand.tryToDownloadLatestVersionInfo")))
+                        assertThat(event.attributes[CommonAttributes.IsUserFacingException], equalTo(JsonPrimitive(true)))
                     }
                 }
             }

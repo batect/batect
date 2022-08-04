@@ -19,11 +19,11 @@ package batect.updates
 import batect.logging.Logger
 import batect.logging.Severity
 import batect.primitives.Version
-import batect.telemetry.AttributeValue
 import batect.telemetry.CommonAttributes
 import batect.telemetry.CommonEvents
-import batect.telemetry.TelemetrySessionBuilder
+import batect.telemetry.TestTelemetryCaptor
 import batect.testutils.createForEachTest
+import batect.testutils.equalTo
 import batect.testutils.logging.InMemoryLogSink
 import batect.testutils.logging.hasMessage
 import batect.testutils.logging.withException
@@ -32,6 +32,8 @@ import batect.testutils.logging.withSeverity
 import batect.testutils.on
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.hasSize
+import kotlinx.serialization.json.JsonPrimitive
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
@@ -53,7 +55,7 @@ object UpdateInfoUpdaterSpec : Spek({
 
         val updateInfoDownloader by createForEachTest { mock<UpdateInfoDownloader>() }
         val updateInfoStorage by createForEachTest { mock<UpdateInfoStorage>() }
-        val telemetrySessionBuilder by createForEachTest { mock<TelemetrySessionBuilder>() }
+        val telemetryCaptor by createForEachTest { TestTelemetryCaptor() }
         val logSink by createForEachTest { InMemoryLogSink() }
         val logger by createForEachTest { Logger("some.source", logSink) }
         var backgroundProcess: BackgroundProcess? = null
@@ -61,7 +63,7 @@ object UpdateInfoUpdaterSpec : Spek({
             backgroundProcess = code
         }
 
-        val updateInfoUpdater by createForEachTest { UpdateInfoUpdater(updateInfoDownloader, updateInfoStorage, telemetrySessionBuilder, logger, threadRunner) }
+        val updateInfoUpdater by createForEachTest { UpdateInfoUpdater(updateInfoDownloader, updateInfoStorage, telemetryCaptor, logger, threadRunner) }
 
         beforeEachTest {
             backgroundProcess = null
@@ -114,14 +116,12 @@ object UpdateInfoUpdaterSpec : Spek({
             }
 
             it("reports the exception in telemetry") {
-                verify(telemetrySessionBuilder).addEvent(
-                    CommonEvents.UnhandledException,
-                    mapOf(
-                        CommonAttributes.Exception to AttributeValue(exception),
-                        CommonAttributes.ExceptionCaughtAt to AttributeValue("batect.updates.UpdateInfoUpdater\$updateCachedInfo\$1.invoke"),
-                        CommonAttributes.IsUserFacingException to AttributeValue(false)
-                    )
-                )
+                assertThat(telemetryCaptor.allEvents, hasSize(equalTo(1)))
+
+                val event = telemetryCaptor.allEvents.single()
+                assertThat(event.type, equalTo(CommonEvents.UnhandledException))
+                assertThat(event.attributes[CommonAttributes.ExceptionCaughtAt], equalTo(JsonPrimitive("batect.updates.UpdateInfoUpdater\$updateCachedInfo\$1.invoke")))
+                assertThat(event.attributes[CommonAttributes.IsUserFacingException], equalTo(JsonPrimitive(false)))
             }
         }
 
@@ -148,14 +148,12 @@ object UpdateInfoUpdaterSpec : Spek({
             }
 
             it("reports the exception in telemetry") {
-                verify(telemetrySessionBuilder).addEvent(
-                    CommonEvents.UnhandledException,
-                    mapOf(
-                        CommonAttributes.Exception to AttributeValue(exception),
-                        CommonAttributes.ExceptionCaughtAt to AttributeValue("batect.updates.UpdateInfoUpdater\$updateCachedInfo\$1.invoke"),
-                        CommonAttributes.IsUserFacingException to AttributeValue(false)
-                    )
-                )
+                assertThat(telemetryCaptor.allEvents, hasSize(equalTo(1)))
+
+                val event = telemetryCaptor.allEvents.single()
+                assertThat(event.type, equalTo(CommonEvents.UnhandledException))
+                assertThat(event.attributes[CommonAttributes.ExceptionCaughtAt], equalTo(JsonPrimitive("batect.updates.UpdateInfoUpdater\$updateCachedInfo\$1.invoke")))
+                assertThat(event.attributes[CommonAttributes.IsUserFacingException], equalTo(JsonPrimitive(false)))
             }
         }
     }

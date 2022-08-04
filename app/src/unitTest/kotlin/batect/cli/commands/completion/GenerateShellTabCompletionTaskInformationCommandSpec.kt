@@ -24,17 +24,17 @@ import batect.config.includes.SilentGitRepositoryCacheNotificationListener
 import batect.config.io.ConfigurationLoadResult
 import batect.config.io.ConfigurationLoader
 import batect.os.HostEnvironmentVariables
-import batect.telemetry.AttributeValue
-import batect.telemetry.TelemetrySessionBuilder
+import batect.telemetry.TestTelemetryCaptor
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.runForEachTest
 import batect.testutils.withPlatformSpecificLineSeparator
 import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.hasSize
+import kotlinx.serialization.json.JsonPrimitive
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
-import org.mockito.kotlin.verify
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.io.ByteArrayOutputStream
@@ -74,7 +74,7 @@ object GenerateShellTabCompletionTaskInformationCommandSpec : Spek({
         }
 
         val output by createForEachTest { ByteArrayOutputStream() }
-        val telemetrySessionBuilder by createForEachTest { mock<TelemetrySessionBuilder>() }
+        val telemetryCaptor by createForEachTest { TestTelemetryCaptor() }
         val hostEnvironmentVariables = HostEnvironmentVariables("BATECT_COMPLETION_PROXY_VERSION" to "4.5.6")
 
         beforeEachTest {
@@ -89,7 +89,7 @@ object GenerateShellTabCompletionTaskInformationCommandSpec : Spek({
 
         describe("when run for Bash") {
             val commandLineOptions by createForEachTest { CommandLineOptions(configurationFileName = configurationFileName, generateShellTabCompletionTaskInformation = Shell.Bash) }
-            val command by createForEachTest { GenerateShellTabCompletionTaskInformationCommand(commandLineOptions, PrintStream(output), configurationLoader, telemetrySessionBuilder, hostEnvironmentVariables) }
+            val command by createForEachTest { GenerateShellTabCompletionTaskInformationCommand(commandLineOptions, PrintStream(output), configurationLoader, telemetryCaptor, hostEnvironmentVariables) }
             val exitCode by runForEachTest { command.run() }
 
             it("returns a zero exit code") {
@@ -121,19 +121,18 @@ object GenerateShellTabCompletionTaskInformationCommandSpec : Spek({
             }
 
             it("records an event in telemetry with the shell name and proxy completion script version") {
-                verify(telemetrySessionBuilder).addEvent(
-                    "GeneratedShellTabCompletionTaskInformation",
-                    mapOf(
-                        "shell" to AttributeValue("Bash"),
-                        "proxyCompletionScriptVersion" to AttributeValue("4.5.6")
-                    )
-                )
+                assertThat(telemetryCaptor.allEvents, hasSize(equalTo(1)))
+
+                val event = telemetryCaptor.allEvents.single()
+                assertThat(event.type, equalTo("GeneratedShellTabCompletionTaskInformation"))
+                assertThat(event.attributes["shell"], equalTo(JsonPrimitive("Bash")))
+                assertThat(event.attributes["proxyCompletionScriptVersion"], equalTo(JsonPrimitive("4.5.6")))
             }
         }
 
         describe("when run for Fish") {
             val commandLineOptions by createForEachTest { CommandLineOptions(configurationFileName = configurationFileName, generateShellTabCompletionTaskInformation = Shell.Fish) }
-            val command by createForEachTest { GenerateShellTabCompletionTaskInformationCommand(commandLineOptions, PrintStream(output), configurationLoader, telemetrySessionBuilder, hostEnvironmentVariables) }
+            val command by createForEachTest { GenerateShellTabCompletionTaskInformationCommand(commandLineOptions, PrintStream(output), configurationLoader, telemetryCaptor, hostEnvironmentVariables) }
             val exitCode by runForEachTest { command.run() }
 
             it("returns a zero exit code") {
@@ -167,19 +166,18 @@ object GenerateShellTabCompletionTaskInformationCommandSpec : Spek({
             }
 
             it("records an event in telemetry with the shell name and proxy completion script version") {
-                verify(telemetrySessionBuilder).addEvent(
-                    "GeneratedShellTabCompletionTaskInformation",
-                    mapOf(
-                        "shell" to AttributeValue("Fish"),
-                        "proxyCompletionScriptVersion" to AttributeValue("4.5.6")
-                    )
-                )
+                assertThat(telemetryCaptor.allEvents, hasSize(equalTo(1)))
+
+                val event = telemetryCaptor.allEvents.single()
+                assertThat(event.type, equalTo("GeneratedShellTabCompletionTaskInformation"))
+                assertThat(event.attributes["shell"], equalTo(JsonPrimitive("Fish")))
+                assertThat(event.attributes["proxyCompletionScriptVersion"], equalTo(JsonPrimitive("4.5.6")))
             }
         }
 
         describe("when run for zsh") {
             val commandLineOptions by createForEachTest { CommandLineOptions(configurationFileName = configurationFileName, generateShellTabCompletionTaskInformation = Shell.Zsh) }
-            val command by createForEachTest { GenerateShellTabCompletionTaskInformationCommand(commandLineOptions, PrintStream(output), configurationLoader, telemetrySessionBuilder, hostEnvironmentVariables) }
+            val command by createForEachTest { GenerateShellTabCompletionTaskInformationCommand(commandLineOptions, PrintStream(output), configurationLoader, telemetryCaptor, hostEnvironmentVariables) }
             val exitCode by runForEachTest { command.run() }
 
             it("returns a zero exit code") {
@@ -211,13 +209,12 @@ object GenerateShellTabCompletionTaskInformationCommandSpec : Spek({
             }
 
             it("records an event in telemetry with the shell name and proxy completion script version") {
-                verify(telemetrySessionBuilder).addEvent(
-                    "GeneratedShellTabCompletionTaskInformation",
-                    mapOf(
-                        "shell" to AttributeValue("Zsh"),
-                        "proxyCompletionScriptVersion" to AttributeValue("4.5.6")
-                    )
-                )
+                assertThat(telemetryCaptor.allEvents, hasSize(equalTo(1)))
+
+                val event = telemetryCaptor.allEvents.single()
+                assertThat(event.type, equalTo("GeneratedShellTabCompletionTaskInformation"))
+                assertThat(event.attributes["shell"], equalTo(JsonPrimitive("Zsh")))
+                assertThat(event.attributes["proxyCompletionScriptVersion"], equalTo(JsonPrimitive("4.5.6")))
             }
         }
     }

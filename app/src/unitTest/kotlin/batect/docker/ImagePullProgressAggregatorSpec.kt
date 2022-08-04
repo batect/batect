@@ -14,10 +14,11 @@
     limitations under the License.
 */
 
-package batect.docker.pull
+package batect.docker
 
-import batect.docker.DownloadOperation
-import batect.docker.Json
+import batect.docker.pull.ImagePullProgress
+import batect.dockerclient.ImagePullProgressDetail
+import batect.dockerclient.ImagePullProgressUpdate
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given
@@ -25,13 +26,12 @@ import batect.testutils.on
 import batect.testutils.runNullableForEachTest
 import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.assertion.assertThat
-import kotlinx.serialization.json.jsonObject
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
-object ImagePullProgressReporterSpec : Spek({
-    describe("a Docker image pull progress reporter") {
-        val reporter by createForEachTest { ImagePullProgressReporter() }
+object ImagePullProgressAggregatorSpec : Spek({
+    describe("a Docker image pull progress aggregator") {
+        val aggregator by createForEachTest { ImagePullProgressAggregator() }
 
         // This is the rough idea:
         // - we should show nothing if we have no layer information at all
@@ -42,18 +42,17 @@ object ImagePullProgressReporterSpec : Spek({
         // - we should show 'pull complete' only if all layers are pull complete OR if all layers are download complete or later and at least one is pull complete and none are extracting
 
         mapOf(
-            "an empty event" to "{}",
-            "an 'image pull starting' event" to """{"status":"Pulling from library/node","id":"10-stretch"}""",
-            "a 'layer already exists' event" to """{"status":"Already exists","progressDetail":{},"id":"55cbf04beb70"}""",
-            "a 'layer pull starting' event" to """{"status":"Pulling fs layer","progressDetail":{},"id":"d6cd23cd1a2c"}""",
-            "a 'waiting to pull layer' event" to """{"status":"Waiting","progressDetail":{},"id":"4c60885e4f94"}""",
-            "an 'image digest' event" to """{"status":"Digest: sha256:e6b798f4eeb4e6334d195cdeabc18d07dc5158aa88ad5d83670462852b431a71"}""",
-            "a 'downloaded newer image' event" to """{"status":"Status: Downloaded newer image for node:10-stretch"}""",
-            "an 'image up to date' event" to """{"status":"Status: Image is up to date for node:10-stretch"}"""
-        ).forEach { (description, json) ->
+            "an 'image pull starting' event" to ImagePullProgressUpdate("Pulling from library/node", null, "10-stretch"),
+            "a 'layer already exists' event" to ImagePullProgressUpdate("Already exists", null, "55cbf04beb70"),
+            "a 'layer pull starting' event" to ImagePullProgressUpdate("Pulling fs layer", null, "d6cd23cd1a2c"),
+            "a 'waiting to pull layer' event" to ImagePullProgressUpdate("Waiting", null, "4c60885e4f94"),
+            "an 'image digest' event" to ImagePullProgressUpdate("Digest: sha256:e6b798f4eeb4e6334d195cdeabc18d07dc5158aa88ad5d83670462852b431a71", null, ""),
+            "a 'downloaded newer image' event" to ImagePullProgressUpdate("Status: Downloaded newer image for node:10-stretch", null, ""),
+            "an 'image up to date' event" to ImagePullProgressUpdate("Status: Image is up to date for node:10-stretch", null, "")
+        ).forEach { (description, raw) ->
             given(description) {
                 on("processing the event") {
-                    val progressUpdate by runNullableForEachTest { reporter.processRawProgressUpdate(json) }
+                    val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
 
                     it("does not return an update") {
                         assertThat(progressUpdate, absent())
@@ -63,10 +62,10 @@ object ImagePullProgressReporterSpec : Spek({
         }
 
         given("a single 'layer downloading' event") {
-            val json = """{"status":"Downloading","progressDetail":{"current":329,"total":4159},"id":"d6cd23cd1a2c"}"""
+            val raw = ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(329, 4159), "d6cd23cd1a2c")
 
             on("processing the event") {
-                val progressUpdate by runNullableForEachTest { reporter.processRawProgressUpdate(json) }
+                val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
 
                 it("returns an appropriate progress update") {
                     assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 329, 4159)))
@@ -75,10 +74,10 @@ object ImagePullProgressReporterSpec : Spek({
         }
 
         given("a single 'layer extracting' event") {
-            val json = """{"status":"Extracting","progressDetail":{"current":329,"total":4159},"id":"d6cd23cd1a2c"}"""
+            val raw = ImagePullProgressUpdate("Extracting", ImagePullProgressDetail(329, 4159), "d6cd23cd1a2c")
 
             on("processing the event") {
-                val progressUpdate by runNullableForEachTest { reporter.processRawProgressUpdate(json) }
+                val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
 
                 it("returns an appropriate progress update") {
                     assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Extracting, 329, 4159)))
@@ -87,10 +86,10 @@ object ImagePullProgressReporterSpec : Spek({
         }
 
         given("a single 'verifying checksum' event without any previous events for that layer") {
-            val json = """{"status":"Verifying Checksum","progressDetail":{},"id":"d6cd23cd1a2c"}"""
+            val raw = ImagePullProgressUpdate("Verifying Checksum", null, "d6cd23cd1a2c")
 
             on("processing the event") {
-                val progressUpdate by runNullableForEachTest { reporter.processRawProgressUpdate(json) }
+                val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
 
                 it("returns an appropriate progress update") {
                     assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.VerifyingChecksum, 0, 0)))
@@ -100,12 +99,12 @@ object ImagePullProgressReporterSpec : Spek({
 
         given("a single 'layer downloading' event has been processed") {
             beforeEachTest {
-                reporter.processRawProgressUpdate("""{"status":"Downloading","progressDetail":{"current":329,"total":4159},"id":"d6cd23cd1a2c"}""")
+                aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(329, 4159), "d6cd23cd1a2c"))
             }
 
             on("processing another 'layer downloading' event for the same layer") {
-                val json = """{"status":"Downloading","progressDetail":{"current":900,"total":4159},"id":"d6cd23cd1a2c"}"""
-                val progressUpdate by runNullableForEachTest { reporter.processRawProgressUpdate(json) }
+                val raw = ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(900, 4159), "d6cd23cd1a2c")
+                val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
 
                 it("returns an appropriate progress update") {
                     assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 900, 4159)))
@@ -113,8 +112,8 @@ object ImagePullProgressReporterSpec : Spek({
             }
 
             on("processing another 'layer downloading' event for the same layer that does not result in updated information") {
-                val json = """{"status":"Downloading","progressDetail":{"current":329,"total":4159},"id":"d6cd23cd1a2c"}"""
-                val progressUpdate by runNullableForEachTest { reporter.processRawProgressUpdate(json) }
+                val raw = ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(329, 4159), "d6cd23cd1a2c")
+                val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
 
                 it("does not return an update") {
                     assertThat(progressUpdate, absent())
@@ -124,8 +123,8 @@ object ImagePullProgressReporterSpec : Spek({
             on("processing a 'verifying checksum' event for the same layer") {
                 // Note that the 'status' field for a 'verifying checksum' event has the C capitalised, while
                 // every other kind of event uses lowercase for later words in the description.
-                val json = """{"status":"Verifying Checksum","progressDetail":{},"id":"d6cd23cd1a2c"}"""
-                val progressUpdate by runNullableForEachTest { reporter.processRawProgressUpdate(json) }
+                val raw = ImagePullProgressUpdate("Verifying Checksum", null, "d6cd23cd1a2c")
+                val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
 
                 it("returns an appropriate progress update") {
                     assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.VerifyingChecksum, 0, 4159)))
@@ -133,8 +132,8 @@ object ImagePullProgressReporterSpec : Spek({
             }
 
             on("processing a 'download complete' event for the same layer") {
-                val json = """{"status":"Download complete","progressDetail":{},"id":"d6cd23cd1a2c"}"""
-                val progressUpdate by runNullableForEachTest { reporter.processRawProgressUpdate(json) }
+                val raw = ImagePullProgressUpdate("Download complete", null, "d6cd23cd1a2c")
+                val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
 
                 it("returns an appropriate progress update") {
                     assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.DownloadComplete, 4159, 4159)))
@@ -142,8 +141,8 @@ object ImagePullProgressReporterSpec : Spek({
             }
 
             on("processing an 'extracting' event for the same layer") {
-                val json = """{"status":"Extracting","progressDetail":{"current":1000,"total":4159},"id":"d6cd23cd1a2c"}"""
-                val progressUpdate by runNullableForEachTest { reporter.processRawProgressUpdate(json) }
+                val raw = ImagePullProgressUpdate("Extracting", ImagePullProgressDetail(1000, 4159), "d6cd23cd1a2c")
+                val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
 
                 it("returns an appropriate progress update") {
                     assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Extracting, 1000, 4159)))
@@ -151,8 +150,8 @@ object ImagePullProgressReporterSpec : Spek({
             }
 
             on("processing a 'pull complete' event for the same layer") {
-                val json = """{"status":"Pull complete","progressDetail":{},"id":"d6cd23cd1a2c"}"""
-                val progressUpdate by runNullableForEachTest { reporter.processRawProgressUpdate(json) }
+                val raw = ImagePullProgressUpdate("Pull complete", null, "d6cd23cd1a2c")
+                val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
 
                 it("returns an appropriate progress update") {
                     assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.PullComplete, 4159, 4159)))
@@ -160,8 +159,8 @@ object ImagePullProgressReporterSpec : Spek({
             }
 
             on("processing a 'layer downloading' event for another layer") {
-                val json = """{"status":"Downloading","progressDetail":{"current":900,"total":7000},"id":"b59856e9f0ab"}"""
-                val progressUpdate by runNullableForEachTest { reporter.processRawProgressUpdate(json) }
+                val raw = ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(900, 7000), "b59856e9f0ab")
+                val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
 
                 it("returns a progress update combining the state of both layers") {
                     assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 329L + 900, 4159L + 7000)))
@@ -170,17 +169,17 @@ object ImagePullProgressReporterSpec : Spek({
 
             given("a 'layer downloading' event for another layer has been processed") {
                 beforeEachTest {
-                    reporter.processRawProgressUpdate("""{"status":"Downloading","progressDetail":{"current":900,"total":7000},"id":"b59856e9f0ab"}""")
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(900, 7000), "b59856e9f0ab"))
                 }
 
                 mapOf(
-                    "verifying checksum" to """{"status":"Verifying Checksum","progressDetail":{},"id":"b59856e9f0ab"}""",
-                    "download complete" to """{"status":"Download complete","progressDetail":{},"id":"b59856e9f0ab"}""",
-                    "extracting" to """{"status":"Extracting","progressDetail":{"current":1000,"total":7000},"id":"b59856e9f0ab"}""",
-                    "pull complete" to """{"status":"Pull complete","progressDetail":{},"id":"b59856e9f0ab"}"""
-                ).forEach { (eventType, json) ->
+                    "verifying checksum" to ImagePullProgressUpdate("Verifying Checksum", null, "b59856e9f0ab"),
+                    "download complete" to ImagePullProgressUpdate("Download complete", null, "b59856e9f0ab"),
+                    "extracting" to ImagePullProgressUpdate("Extracting", ImagePullProgressDetail(1000, 7000), "b59856e9f0ab"),
+                    "pull complete" to ImagePullProgressUpdate("Pull complete", null, "b59856e9f0ab")
+                ).forEach { (eventType, raw) ->
                     on("processing a '$eventType' event for that other layer") {
-                        val progressUpdate by runNullableForEachTest { reporter.processRawProgressUpdate(json) }
+                        val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
 
                         it("returns a progress update combining the state of both layers") {
                             assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 329L + 7000, 4159L + 7000)))
@@ -191,12 +190,12 @@ object ImagePullProgressReporterSpec : Spek({
 
             given("a 'pull complete' event has been processed") {
                 beforeEachTest {
-                    reporter.processRawProgressUpdate("""{"status":"Pull complete","progressDetail":{},"id":"d6cd23cd1a2c"}""")
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("Pull complete", null, "d6cd23cd1a2c"))
                 }
 
                 on("processing a 'layer downloading' event for another layer") {
-                    val json = """{"status":"Downloading","progressDetail":{"current":900,"total":7000},"id":"b59856e9f0ab"}"""
-                    val progressUpdate by runNullableForEachTest { reporter.processRawProgressUpdate(json) }
+                    val raw = ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(900, 7000), "b59856e9f0ab")
+                    val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
 
                     it("returns a progress update combining the state of both layers") {
                         assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 4159L + 900, 4159L + 7000)))
@@ -206,12 +205,12 @@ object ImagePullProgressReporterSpec : Spek({
 
             given("a 'download complete' event has been processed") {
                 beforeEachTest {
-                    reporter.processRawProgressUpdate("""{"status":"Download complete","progressDetail":{},"id":"d6cd23cd1a2c"}""")
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("Download complete", null, "d6cd23cd1a2c"))
                 }
 
                 on("processing an 'extracting' event for another layer") {
-                    val json = """{"status":"Extracting","progressDetail":{"current":900,"total":7000},"id":"b59856e9f0ab"}"""
-                    val progressUpdate by runNullableForEachTest { reporter.processRawProgressUpdate(json) }
+                    val raw = ImagePullProgressUpdate("Extracting", ImagePullProgressDetail(900, 7000), "b59856e9f0ab")
+                    val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
 
                     it("returns a progress update combining the state of both layers") {
                         assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Extracting, 900, 4159L + 7000)))
@@ -222,12 +221,12 @@ object ImagePullProgressReporterSpec : Spek({
 
         given("a single 'verifying checksum' event has been processed") {
             beforeEachTest {
-                reporter.processRawProgressUpdate("""{"status":"Verifying Checksum","progressDetail":{},"id":"d6cd23cd1a2c"}""")
+                aggregator.processProgressUpdate(ImagePullProgressUpdate("Verifying Checksum", null, "d6cd23cd1a2c"))
             }
 
             on("processing another 'verifying checksum' event for the same layer") {
-                val json = """{"status":"Verifying Checksum","progressDetail":{},"id":"d6cd23cd1a2c"}"""
-                val progressUpdate by runNullableForEachTest { reporter.processRawProgressUpdate(json) }
+                val raw = ImagePullProgressUpdate("Verifying Checksum", null, "d6cd23cd1a2c")
+                val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
 
                 it("does not return an update") {
                     assertThat(progressUpdate, absent())
@@ -235,8 +234,8 @@ object ImagePullProgressReporterSpec : Spek({
             }
 
             on("processing a 'layer downloading' event for the same layer") {
-                val json = """{"status":"Downloading","progressDetail":{"current":900,"total":4159},"id":"d6cd23cd1a2c"}"""
-                val progressUpdate by runNullableForEachTest { reporter.processRawProgressUpdate(json) }
+                val raw = ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(900, 4159), "d6cd23cd1a2c")
+                val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
 
                 it("returns an appropriate progress update") {
                     assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 900, 4159)))
@@ -246,8 +245,8 @@ object ImagePullProgressReporterSpec : Spek({
 
         given("all layers are downloading") {
             val progressUpdate by runNullableForEachTest {
-                reporter.processRawProgressUpdate("""{"status":"Downloading","progressDetail":{"current":300,"total":4000},"id":"d6cd23cd1a2c"}""")
-                reporter.processRawProgressUpdate("""{"status":"Downloading","progressDetail":{"current":600,"total":3000},"id":"55cbf04beb70"}""")
+                aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(300, 4000), "d6cd23cd1a2c"))
+                aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(600, 3000), "55cbf04beb70"))
             }
 
             it("returns a progress update that indicates the image is downloading") {
@@ -257,9 +256,9 @@ object ImagePullProgressReporterSpec : Spek({
 
         given("some layers are downloading and some have finished downloading") {
             val progressUpdate by runNullableForEachTest {
-                reporter.processRawProgressUpdate("""{"status":"Downloading","progressDetail":{"current":300,"total":4000},"id":"d6cd23cd1a2c"}""")
-                reporter.processRawProgressUpdate("""{"status":"Download complete","progressDetail":{},"id":"d6cd23cd1a2c"}""")
-                reporter.processRawProgressUpdate("""{"status":"Downloading","progressDetail":{"current":600,"total":3000},"id":"55cbf04beb70"}""")
+                aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(300, 4000), "d6cd23cd1a2c"))
+                aggregator.processProgressUpdate(ImagePullProgressUpdate("Download complete", null, "d6cd23cd1a2c"))
+                aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(600, 3000), "55cbf04beb70"))
             }
 
             it("returns a progress update that indicates the image is downloading") {
@@ -269,8 +268,8 @@ object ImagePullProgressReporterSpec : Spek({
 
         given("some layers are downloading and some are extracting") {
             val progressUpdate by runNullableForEachTest {
-                reporter.processRawProgressUpdate("""{"status":"Downloading","progressDetail":{"current":300,"total":4000},"id":"d6cd23cd1a2c"}""")
-                reporter.processRawProgressUpdate("""{"status":"Extracting","progressDetail":{"current":600,"total":3000},"id":"55cbf04beb70"}""")
+                aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(300, 4000), "d6cd23cd1a2c"))
+                aggregator.processProgressUpdate(ImagePullProgressUpdate("Extracting", ImagePullProgressDetail(600, 3000), "55cbf04beb70"))
             }
 
             it("returns a progress update that indicates the image is downloading") {
@@ -280,11 +279,11 @@ object ImagePullProgressReporterSpec : Spek({
 
         given("some layers are downloading, some are verifying checksums and some have finished downloading") {
             val progressUpdate by runNullableForEachTest {
-                reporter.processRawProgressUpdate("""{"status":"Downloading","progressDetail":{"current":50,"total":9000},"id":"4c60885e4f94"}""")
-                reporter.processRawProgressUpdate("""{"status":"Downloading","progressDetail":{"current":300,"total":4000},"id":"d6cd23cd1a2c"}""")
-                reporter.processRawProgressUpdate("""{"status":"Verifying Checksum","progressDetail":{},"id":"d6cd23cd1a2c"}""")
-                reporter.processRawProgressUpdate("""{"status":"Downloading","progressDetail":{"current":600,"total":3000},"id":"55cbf04beb70"}""")
-                reporter.processRawProgressUpdate("""{"status":"Download complete","progressDetail":{},"id":"55cbf04beb70"}""")
+                aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(50, 9000), "4c60885e4f94"))
+                aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(300, 4000), "d6cd23cd1a2c"))
+                aggregator.processProgressUpdate(ImagePullProgressUpdate("Verifying Checksum", null, "d6cd23cd1a2c"))
+                aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(600, 3000), "55cbf04beb70"))
+                aggregator.processProgressUpdate(ImagePullProgressUpdate("Download complete", null, "55cbf04beb70"))
             }
 
             it("returns a progress update that indicates the image is downloading") {
@@ -294,10 +293,10 @@ object ImagePullProgressReporterSpec : Spek({
 
         given("some layers are verifying checksums and some have finished downloading") {
             val progressUpdate by runNullableForEachTest {
-                reporter.processRawProgressUpdate("""{"status":"Downloading","progressDetail":{"current":300,"total":4000},"id":"d6cd23cd1a2c"}""")
-                reporter.processRawProgressUpdate("""{"status":"Verifying Checksum","progressDetail":{},"id":"d6cd23cd1a2c"}""")
-                reporter.processRawProgressUpdate("""{"status":"Downloading","progressDetail":{"current":600,"total":3000},"id":"55cbf04beb70"}""")
-                reporter.processRawProgressUpdate("""{"status":"Download complete","progressDetail":{},"id":"55cbf04beb70"}""")
+                aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(300, 4000), "d6cd23cd1a2c"))
+                aggregator.processProgressUpdate(ImagePullProgressUpdate("Verifying Checksum", null, "d6cd23cd1a2c"))
+                aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(600, 3000), "55cbf04beb70"))
+                aggregator.processProgressUpdate(ImagePullProgressUpdate("Download complete", null, "55cbf04beb70"))
             }
 
             it("returns a progress update that indicates the checksum is being verified") {
@@ -307,10 +306,10 @@ object ImagePullProgressReporterSpec : Spek({
 
         given("some layers have finished downloading and some are extracting") {
             val progressUpdate by runNullableForEachTest {
-                reporter.processRawProgressUpdate("""{"status":"Downloading","progressDetail":{"current":300,"total":4000},"id":"d6cd23cd1a2c"}""")
-                reporter.processRawProgressUpdate("""{"status":"Extracting","progressDetail":{"current":700,"total":4000},"id":"d6cd23cd1a2c"}""")
-                reporter.processRawProgressUpdate("""{"status":"Downloading","progressDetail":{"current":600,"total":3000},"id":"55cbf04beb70"}""")
-                reporter.processRawProgressUpdate("""{"status":"Download complete","progressDetail":{},"id":"55cbf04beb70"}""")
+                aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(300, 4000), "d6cd23cd1a2c"))
+                aggregator.processProgressUpdate(ImagePullProgressUpdate("Extracting", ImagePullProgressDetail(700, 4000), "d6cd23cd1a2c"))
+                aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(600, 3000), "55cbf04beb70"))
+                aggregator.processProgressUpdate(ImagePullProgressUpdate("Download complete", null, "55cbf04beb70"))
             }
 
             it("returns a progress update that indicates the image is extracting") {
@@ -320,10 +319,10 @@ object ImagePullProgressReporterSpec : Spek({
 
         given("all layers have finished downloading") {
             val progressUpdate by runNullableForEachTest {
-                reporter.processRawProgressUpdate("""{"status":"Downloading","progressDetail":{"current":300,"total":4000},"id":"d6cd23cd1a2c"}""")
-                reporter.processRawProgressUpdate("""{"status":"Download complete","progressDetail":{},"id":"d6cd23cd1a2c"}""")
-                reporter.processRawProgressUpdate("""{"status":"Downloading","progressDetail":{"current":600,"total":3000},"id":"55cbf04beb70"}""")
-                reporter.processRawProgressUpdate("""{"status":"Download complete","progressDetail":{},"id":"55cbf04beb70"}""")
+                aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(300, 4000), "d6cd23cd1a2c"))
+                aggregator.processProgressUpdate(ImagePullProgressUpdate("Download complete", null, "d6cd23cd1a2c"))
+                aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(600, 3000), "55cbf04beb70"))
+                aggregator.processProgressUpdate(ImagePullProgressUpdate("Download complete", null, "55cbf04beb70"))
             }
 
             it("returns a progress update that indicates the image has finished downloading") {
@@ -333,10 +332,10 @@ object ImagePullProgressReporterSpec : Spek({
 
         given("some layers have finished downloading and some have finished pulling") {
             val progressUpdate by runNullableForEachTest {
-                reporter.processRawProgressUpdate("""{"status":"Downloading","progressDetail":{"current":300,"total":4000},"id":"d6cd23cd1a2c"}""")
-                reporter.processRawProgressUpdate("""{"status":"Download complete","progressDetail":{},"id":"d6cd23cd1a2c"}""")
-                reporter.processRawProgressUpdate("""{"status":"Downloading","progressDetail":{"current":600,"total":3000},"id":"55cbf04beb70"}""")
-                reporter.processRawProgressUpdate("""{"status":"Pull complete","progressDetail":{},"id":"55cbf04beb70"}""")
+                aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(300, 4000), "d6cd23cd1a2c"))
+                aggregator.processProgressUpdate(ImagePullProgressUpdate("Download complete", null, "d6cd23cd1a2c"))
+                aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(600, 3000), "55cbf04beb70"))
+                aggregator.processProgressUpdate(ImagePullProgressUpdate("Pull complete", null, "55cbf04beb70"))
             }
 
             it("returns a progress update that indicates the image has partly finished pulling") {
@@ -346,10 +345,10 @@ object ImagePullProgressReporterSpec : Spek({
 
         given("some layers are extracting and some have finished pulling") {
             val progressUpdate by runNullableForEachTest {
-                reporter.processRawProgressUpdate("""{"status":"Downloading","progressDetail":{"current":300,"total":4000},"id":"d6cd23cd1a2c"}""")
-                reporter.processRawProgressUpdate("""{"status":"Extracting","progressDetail":{"current":700,"total":4000},"id":"d6cd23cd1a2c"}""")
-                reporter.processRawProgressUpdate("""{"status":"Downloading","progressDetail":{"current":600,"total":3000},"id":"55cbf04beb70"}""")
-                reporter.processRawProgressUpdate("""{"status":"Pull complete","progressDetail":{},"id":"55cbf04beb70"}""")
+                aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(300, 4000), "d6cd23cd1a2c"))
+                aggregator.processProgressUpdate(ImagePullProgressUpdate("Extracting", ImagePullProgressDetail(700, 4000), "d6cd23cd1a2c"))
+                aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(600, 3000), "55cbf04beb70"))
+                aggregator.processProgressUpdate(ImagePullProgressUpdate("Pull complete", null, "55cbf04beb70"))
             }
 
             it("returns a progress update that indicates the image is extracting") {
@@ -359,10 +358,10 @@ object ImagePullProgressReporterSpec : Spek({
 
         given("all layers have finished pulling") {
             val progressUpdate by runNullableForEachTest {
-                reporter.processRawProgressUpdate("""{"status":"Downloading","progressDetail":{"current":300,"total":4000},"id":"d6cd23cd1a2c"}""")
-                reporter.processRawProgressUpdate("""{"status":"Pull complete","progressDetail":{},"id":"d6cd23cd1a2c"}""")
-                reporter.processRawProgressUpdate("""{"status":"Downloading","progressDetail":{"current":600,"total":3000},"id":"55cbf04beb70"}""")
-                reporter.processRawProgressUpdate("""{"status":"Pull complete","progressDetail":{},"id":"55cbf04beb70"}""")
+                aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(300, 4000), "d6cd23cd1a2c"))
+                aggregator.processProgressUpdate(ImagePullProgressUpdate("Pull complete", null, "d6cd23cd1a2c"))
+                aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(600, 3000), "55cbf04beb70"))
+                aggregator.processProgressUpdate(ImagePullProgressUpdate("Pull complete", null, "55cbf04beb70"))
             }
 
             it("returns a progress update that indicates the image has finished pulling") {
@@ -371,9 +370,3 @@ object ImagePullProgressReporterSpec : Spek({
         }
     }
 })
-
-private fun ImagePullProgressReporter.processRawProgressUpdate(json: String): ImagePullProgress? {
-    val parsedJson = Json.default.parseToJsonElement(json).jsonObject
-
-    return this.processProgressUpdate(parsedJson)
-}

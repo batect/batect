@@ -68,7 +68,7 @@ object DockerConnectivitySpec : Spek({
         val errorConsole by createForEachTest { mock<Console>() }
         val connectivity by createForEachTest { DockerConnectivity(dockerConfigurationKodeinFactory, systemInfoClient, errorConsole, commandLineOptions) }
 
-        fun Suite.itRunsTheTaskWithBuilder(checkResult: DockerConnectivityCheckResult.Succeeded, expectedBuilderVersion: BuilderVersion) {
+        fun Suite.itRunsTheTaskWithBuilder(checkResult: DockerConnectivityCheckResult.Succeeded, expectedBuilderVersion: batect.dockerclient.BuilderVersion) {
             var ranTask = false
             var kodeinSeenInTask: DirectDI? = null
 
@@ -145,13 +145,13 @@ object DockerConnectivitySpec : Spek({
                 given("the builder reports that it prefers the legacy builder") {
                     val checkResult = DockerConnectivityCheckResult.Succeeded(containerType, Version(19, 3, 1), BuilderVersion.Legacy, true)
 
-                    itRunsTheTaskWithBuilder(checkResult, BuilderVersion.Legacy)
+                    itRunsTheTaskWithBuilder(checkResult, batect.dockerclient.BuilderVersion.Legacy)
                 }
 
                 given("the builder reports that it prefers BuildKit") {
                     val checkResult = DockerConnectivityCheckResult.Succeeded(containerType, Version(19, 3, 1), BuilderVersion.BuildKit, true)
 
-                    itRunsTheTaskWithBuilder(checkResult, BuilderVersion.BuildKit)
+                    itRunsTheTaskWithBuilder(checkResult, batect.dockerclient.BuilderVersion.BuildKit)
                 }
             }
 
@@ -160,7 +160,7 @@ object DockerConnectivitySpec : Spek({
 
                 val checkResult = DockerConnectivityCheckResult.Succeeded(containerType, Version(19, 3, 1), BuilderVersion.BuildKit, true)
 
-                itRunsTheTaskWithBuilder(checkResult, BuilderVersion.Legacy)
+                itRunsTheTaskWithBuilder(checkResult, batect.dockerclient.BuilderVersion.Legacy)
             }
 
             given("the user has requested BuildKit") {
@@ -170,7 +170,7 @@ object DockerConnectivitySpec : Spek({
                     val dockerVersion = Version(18, 9, 0)
                     val checkResult = DockerConnectivityCheckResult.Succeeded(containerType, dockerVersion, BuilderVersion.Legacy, false)
 
-                    itRunsTheTaskWithBuilder(checkResult, BuilderVersion.BuildKit)
+                    itRunsTheTaskWithBuilder(checkResult, batect.dockerclient.BuilderVersion.BuildKit)
                 }
 
                 given("the user is running a version of the Docker daemon that supports BuildKit but only if experimental features are enabled") {
@@ -179,7 +179,7 @@ object DockerConnectivitySpec : Spek({
                     given("experimental features are enabled") {
                         val checkResult = DockerConnectivityCheckResult.Succeeded(containerType, dockerVersion, BuilderVersion.Legacy, true)
 
-                        itRunsTheTaskWithBuilder(checkResult, BuilderVersion.BuildKit)
+                        itRunsTheTaskWithBuilder(checkResult, batect.dockerclient.BuilderVersion.BuildKit)
                     }
 
                     given("experimental features are disabled") {

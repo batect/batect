@@ -16,8 +16,8 @@
 
 package batect.ioc
 
-import batect.docker.api.BuilderVersion
 import batect.docker.client.DockerContainerType
+import batect.dockerclient.BuilderVersion
 import batect.testutils.createForEachTest
 import batect.testutils.on
 import com.natpryce.hamkrest.assertion.assertThat

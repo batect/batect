@@ -18,9 +18,9 @@ package batect.telemetry
 
 import batect.docker.ConnectionType
 import batect.docker.DockerHttpConfig
-import batect.docker.api.BuilderVersion
 import batect.docker.client.DockerConnectivityCheckResult
 import batect.docker.client.DockerContainerType
+import batect.dockerclient.BuilderVersion
 import batect.execution.CacheManager
 import batect.execution.CacheType
 import batect.primitives.Version
@@ -49,7 +49,7 @@ object DockerTelemetryCollectorSpec : Spek({
         val dockerTelemetryCollector by createForEachTest { DockerTelemetryCollector(dockerHttpConfig, cacheManager, telemetrySessionBuilder) }
 
         describe("when collecting telemetry") {
-            val checkResult = DockerConnectivityCheckResult.Succeeded(DockerContainerType.Linux, Version(19, 3, 1), BuilderVersion.BuildKit, false)
+            val checkResult = DockerConnectivityCheckResult.Succeeded(DockerContainerType.Linux, Version(19, 3, 1), batect.docker.api.BuilderVersion.BuildKit, false)
             beforeEachTest { dockerTelemetryCollector.collectTelemetry(checkResult, BuilderVersion.Legacy) }
 
             it("adds the Docker version as an attribute on the telemetry session") {

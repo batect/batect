@@ -18,9 +18,9 @@ package batect.cli.commands
 
 import batect.cli.CommandLineOptions
 import batect.cli.CommandLineOptionsParser
-import batect.docker.api.BuilderVersion
 import batect.docker.client.DockerConnectivityCheckResult
 import batect.docker.client.SystemInfoClient
+import batect.dockerclient.BuilderVersion
 import batect.ioc.DockerConfigurationKodeinFactory
 import batect.primitives.Version
 import batect.primitives.VersionComparisonMode
@@ -45,7 +45,10 @@ class DockerConnectivity(
 
     private fun handleSuccessfulConnectivityCheck(connectivityCheckResult: DockerConnectivityCheckResult.Succeeded, task: TaskWithKodein): Int {
         val builderVersion = when (commandLineOptions.enableBuildKit) {
-            null -> connectivityCheckResult.builderVersion
+            null -> when (connectivityCheckResult.builderVersion) {
+                batect.docker.api.BuilderVersion.BuildKit -> BuilderVersion.BuildKit
+                batect.docker.api.BuilderVersion.Legacy -> BuilderVersion.Legacy
+            }
             false -> BuilderVersion.Legacy
             true -> {
                 if (connectivityCheckResult.dockerVersion.compareTo(minimumDockerVersionWithBuildKitSupport, VersionComparisonMode.DockerStyle) < 0) {

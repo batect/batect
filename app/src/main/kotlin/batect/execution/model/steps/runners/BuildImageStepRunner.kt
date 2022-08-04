@@ -22,29 +22,39 @@ import batect.config.Expression
 import batect.config.ExpressionEvaluationContext
 import batect.config.ExpressionEvaluationException
 import batect.config.TaskSpecialisedConfiguration
-import batect.docker.ImageBuildFailedException
-import batect.docker.api.BuilderVersion
-import batect.docker.build.BuildProgress
-import batect.docker.client.ImageBuildRequest
-import batect.docker.client.ImagesClient
+import batect.docker.DockerImage
+import batect.docker.ImageBuildProgressAggregator
+import batect.docker.Tee
+import batect.dockerclient.BuilderVersion
+import batect.dockerclient.DockerClient
+import batect.dockerclient.DockerClientException
+import batect.dockerclient.ImageBuildFailedException
+import batect.dockerclient.ImageBuildSpec
+import batect.dockerclient.io.SinkTextOutput
 import batect.execution.model.events.ImageBuildFailedEvent
 import batect.execution.model.events.ImageBuildProgressEvent
 import batect.execution.model.events.ImageBuiltEvent
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.steps.BuildImageStep
+import batect.os.PathResolutionContext
 import batect.os.PathResolutionResult
 import batect.os.PathResolverFactory
 import batect.os.PathType
 import batect.os.SystemInfo
 import batect.primitives.CancellationContext
+import batect.primitives.runBlocking
 import batect.proxies.ProxyEnvironmentVariablesProvider
 import batect.telemetry.TelemetrySessionBuilder
 import batect.ui.containerio.ContainerIOStreamingOptions
+import okio.Buffer
+import okio.Path.Companion.toOkioPath
+import java.nio.file.Files
+import java.nio.file.LinkOption
 import java.nio.file.Path
 
 class BuildImageStepRunner(
     private val config: TaskSpecialisedConfiguration,
-    private val imagesClient: ImagesClient,
+    private val dockerClient: DockerClient,
     private val proxyEnvironmentVariablesProvider: ProxyEnvironmentVariablesProvider,
     private val pathResolverFactory: PathResolverFactory,
     private val expressionEvaluationContext: ExpressionEvaluationContext,
@@ -56,35 +66,73 @@ class BuildImageStepRunner(
     private val telemetrySessionBuilder: TelemetrySessionBuilder
 ) {
     fun run(step: BuildImageStep, eventSink: TaskEventSink) {
+        val stdoutBuffer = Buffer()
+
         try {
-            val onStatusUpdate = { p: BuildProgress ->
-                eventSink.postEvent(ImageBuildProgressEvent(step.container, p))
-            }
-
-            val buildConfig = step.container.imageSource as BuildImage
-            val buildArgs = buildTimeProxyEnvironmentVariablesForOptions() + substituteBuildArgs(buildConfig.buildArgs)
-            val imageTags = commandLineOptions.imageTags.getOrDefault(step.container.name, emptySet()) + imageTagFor(step)
-
-            val request = ImageBuildRequest(
-                resolveBuildDirectory(buildConfig),
-                buildArgs,
-                buildConfig.dockerfilePath,
-                buildConfig.pathResolutionContext,
-                imageTags,
-                buildConfig.imagePullPolicy.forciblyPull,
-                buildConfig.targetStage
-            )
+            val spec = createImageBuildSpec(step)
+            val uiStdout = ioStreamingOptions.stdoutForImageBuild(step.container)
+            val combinedStdout = if (uiStdout == null) stdoutBuffer else Tee(uiStdout, stdoutBuffer)
 
             val image = telemetrySessionBuilder.addSpan("BuildImage") {
-                imagesClient.build(request, builderVersion, ioStreamingOptions.stdoutForImageBuild(step.container), cancellationContext, onStatusUpdate)
+                cancellationContext.runBlocking {
+                    val reporter = ImageBuildProgressAggregator()
+
+                    dockerClient.buildImage(spec, SinkTextOutput(combinedStdout)) { event ->
+                        val progressUpdate = reporter.processProgressUpdate(event)
+
+                        if (progressUpdate != null) {
+                            eventSink.postEvent(ImageBuildProgressEvent(step.container, progressUpdate))
+                        }
+                    }
+                }
             }
 
-            eventSink.postEvent(ImageBuiltEvent(step.container, image))
-        } catch (e: ImageBuildFailedException) {
-            val message = e.message ?: ""
+            eventSink.postEvent(ImageBuiltEvent(step.container, DockerImage(image.id)))
+        } catch (e: DockerClientException) {
+            val output = stdoutBuffer.readUtf8()
+            val messageBuilder = StringBuilder()
 
-            eventSink.postEvent(ImageBuildFailedEvent(step.container, message.replace("\n", systemInfo.lineSeparator)))
+            if (e.message != null) {
+                messageBuilder.append(e.message)
+            }
+
+            if (output.isNotBlank()) {
+                if (messageBuilder.isNotEmpty()) {
+                    messageBuilder.append(" ")
+                }
+
+                messageBuilder.append("Output from Docker was:\n")
+                messageBuilder.append(output)
+            }
+
+            val message = messageBuilder.replace("\n".toRegex(), systemInfo.lineSeparator)
+
+            eventSink.postEvent(ImageBuildFailedEvent(step.container, message))
         }
+    }
+
+    private fun createImageBuildSpec(step: BuildImageStep): ImageBuildSpec {
+        val buildConfig = step.container.imageSource as BuildImage
+        val buildArgs = buildTimeProxyEnvironmentVariablesForOptions() + substituteBuildArgs(buildConfig.buildArgs)
+        val imageTags = commandLineOptions.imageTags.getOrDefault(step.container.name, emptySet()) + imageTagFor(step)
+        val buildDirectory = resolveBuildDirectory(buildConfig)
+        val dockerfilePath = resolveDockerfilePath(buildDirectory, buildConfig.dockerfilePath, buildConfig.pathResolutionContext)
+
+        val builder = ImageBuildSpec.Builder(buildDirectory.toOkioPath())
+            .withBuildArgs(buildArgs)
+            .withDockerfile(dockerfilePath.toOkioPath())
+            .withImageTags(imageTags)
+            .withBuilder(builderVersion)
+
+        if (buildConfig.imagePullPolicy.forciblyPull) {
+            builder.withBaseImageAlwaysPulled()
+        }
+
+        if (buildConfig.targetStage != null) {
+            builder.withTargetBuildStage(buildConfig.targetStage)
+        }
+
+        return builder.build()
     }
 
     private fun resolveBuildDirectory(source: BuildImage): Path {
@@ -101,6 +149,32 @@ class BuildImageStepRunner(
         }
     }
 
+    private fun evaluateBuildDirectory(expression: Expression): String {
+        try {
+            return expression.evaluate(expressionEvaluationContext)
+        } catch (e: ExpressionEvaluationException) {
+            throw ImageBuildFailedException("The value for the build directory cannot be evaluated: ${e.message}", e)
+        }
+    }
+
+    private fun resolveDockerfilePath(buildDirectory: Path, relativeDockerfilePath: String, pathResolutionContext: PathResolutionContext): Path {
+        val resolvedDockerfilePath = buildDirectory.resolve(relativeDockerfilePath)
+
+        if (!Files.exists(resolvedDockerfilePath)) {
+            throw ImageBuildFailedException("The Dockerfile '$relativeDockerfilePath' does not exist in the build directory ${pathResolutionContext.getPathForDisplay(buildDirectory)}")
+        }
+
+        if (!Files.isRegularFile(resolvedDockerfilePath)) {
+            throw ImageBuildFailedException("The Dockerfile '$relativeDockerfilePath' is not a file.")
+        }
+
+        if (!resolvedDockerfilePath.toRealPath(LinkOption.NOFOLLOW_LINKS).startsWith(buildDirectory.toRealPath(LinkOption.NOFOLLOW_LINKS))) {
+            throw ImageBuildFailedException("The Dockerfile '$relativeDockerfilePath' is not a child of the build directory ${pathResolutionContext.getPathForDisplay(buildDirectory)}")
+        }
+
+        return resolvedDockerfilePath
+    }
+
     private fun substituteBuildArgs(original: Map<String, Expression>): Map<String, String> =
         original.mapValues { (name, value) -> evaluateBuildArgValue(name, value) }
 
@@ -109,14 +183,6 @@ class BuildImageStepRunner(
             return expression.evaluate(expressionEvaluationContext)
         } catch (e: ExpressionEvaluationException) {
             throw ImageBuildFailedException("The value for the build arg '$name' cannot be evaluated: ${e.message}", e)
-        }
-    }
-
-    private fun evaluateBuildDirectory(expression: Expression): String {
-        try {
-            return expression.evaluate(expressionEvaluationContext)
-        } catch (e: ExpressionEvaluationException) {
-            throw ImageBuildFailedException("The value for the build directory cannot be evaluated: ${e.message}", e)
         }
     }
 

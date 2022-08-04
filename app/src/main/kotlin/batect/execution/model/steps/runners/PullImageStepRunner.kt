@@ -16,28 +16,53 @@
 
 package batect.execution.model.steps.runners
 
-import batect.docker.ImagePullFailedException
-import batect.docker.client.ImagesClient
+import batect.config.PullImage
+import batect.docker.DockerImage
+import batect.docker.ImagePullProgressAggregator
+import batect.dockerclient.DockerClient
+import batect.dockerclient.DockerClientException
+import batect.dockerclient.ImageReference
 import batect.execution.model.events.ImagePullFailedEvent
 import batect.execution.model.events.ImagePullProgressEvent
 import batect.execution.model.events.ImagePulledEvent
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.steps.PullImageStep
 import batect.primitives.CancellationContext
+import batect.primitives.runBlocking
 
 class PullImageStepRunner(
-    private val imagesClient: ImagesClient,
+    private val dockerClient: DockerClient,
     private val cancellationContext: CancellationContext
 ) {
     fun run(step: PullImageStep, eventSink: TaskEventSink) {
         try {
-            val image = imagesClient.pull(step.source.imageName, step.source.imagePullPolicy.forciblyPull, cancellationContext) { progressUpdate ->
-                eventSink.postEvent(ImagePullProgressEvent(step.source, progressUpdate))
+            val image = cancellationContext.runBlocking {
+                pullImage(step.source, eventSink)
             }
 
-            eventSink.postEvent(ImagePulledEvent(step.source, image))
-        } catch (e: ImagePullFailedException) {
+            eventSink.postEvent(ImagePulledEvent(step.source, DockerImage(image.id)))
+        } catch (e: DockerClientException) {
             eventSink.postEvent(ImagePullFailedEvent(step.source, e.message ?: ""))
+        }
+    }
+
+    private suspend fun pullImage(source: PullImage, eventSink: TaskEventSink): ImageReference {
+        if (!source.imagePullPolicy.forciblyPull) {
+            val existingImage = dockerClient.getImage(source.imageName)
+
+            if (existingImage != null) {
+                return existingImage
+            }
+        }
+
+        val reporter = ImagePullProgressAggregator()
+
+        return dockerClient.pullImage(source.imageName) { event ->
+            val progressUpdate = reporter.processProgressUpdate(event)
+
+            if (progressUpdate != null) {
+                eventSink.postEvent(ImagePullProgressEvent(source, progressUpdate))
+            }
         }
     }
 }

@@ -27,11 +27,15 @@ import batect.config.ImagePullPolicy
 import batect.config.LiteralValue
 import batect.config.TaskSpecialisedConfiguration
 import batect.docker.DockerImage
-import batect.docker.ImageBuildFailedException
-import batect.docker.api.BuilderVersion
 import batect.docker.build.ActiveImageBuildStep
 import batect.docker.build.BuildProgress
-import batect.docker.client.ImagesClient
+import batect.dockerclient.BuilderVersion
+import batect.dockerclient.DockerClient
+import batect.dockerclient.ImageBuildFailedException
+import batect.dockerclient.ImageBuildProgressReceiver
+import batect.dockerclient.ImageReference
+import batect.dockerclient.StepStarting
+import batect.dockerclient.io.SinkTextOutput
 import batect.execution.model.events.ImageBuildFailedEvent
 import batect.execution.model.events.ImageBuildProgressEvent
 import batect.execution.model.events.ImageBuiltEvent
@@ -47,45 +51,54 @@ import batect.primitives.CancellationContext
 import batect.proxies.ProxyEnvironmentVariablesProvider
 import batect.telemetry.TelemetrySessionBuilder
 import batect.telemetry.TelemetrySpanBuilder
+import batect.testutils.beforeEachTestSuspend
 import batect.testutils.createForEachTest
+import batect.testutils.equalTo
 import batect.testutils.given
+import batect.testutils.itSuspend
 import batect.testutils.on
-import batect.testutils.osIndependentPath
 import batect.testutils.pathResolutionContextDoesNotMatter
 import batect.ui.containerio.ContainerIOStreamingOptions
-import okio.Sink
+import com.natpryce.hamkrest.assertion.assertThat
+import okio.Buffer
+import okio.Path.Companion.toOkioPath
+import okio.buffer
 import org.mockito.kotlin.any
-import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.argWhere
 import org.mockito.kotlin.doAnswer
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.doThrow
 import org.mockito.kotlin.eq
+import org.mockito.kotlin.isA
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.nio.file.Paths
 
 object BuildImageStepRunnerSpec : Spek({
     describe("running a 'build image' step") {
         val pathResolutionContext = pathResolutionContextDoesNotMatter()
         val buildDirectory = LiteralValue("/some-build-dir")
-        val resolvedBuildDirectory = osIndependentPath("/resolved/build-dir")
         val buildArgs = mapOf("some_arg" to LiteralValue("some_value"), "SOME_PROXY_CONFIG" to LiteralValue("overridden"), "SOME_HOST_VAR" to EnvironmentVariableReference("SOME_ENV_VAR"))
-        val dockerfilePath = "some-Dockerfile-path"
+        val dockerfilePath = "some-Dockerfile"
         val targetStage = "some-target-stage"
         val container = Container("some-container", BuildImage(buildDirectory, pathResolutionContext, buildArgs, dockerfilePath, targetStage = targetStage))
         val step = BuildImageStep(container)
-        val outputSink by createForEachTest { mock<Sink>() }
+        val outputSink by createForEachTest { Buffer() }
         val builderVersion = BuilderVersion.BuildKit
 
         val config = TaskSpecialisedConfiguration("some-project")
-        val imagesClient by createForEachTest { mock<ImagesClient>() }
+        val dockerClient by createForEachTest { mock<DockerClient>() }
         val proxyVariables = mapOf("SOME_PROXY_CONFIG" to "some_proxy", "SOME_OTHER_PROXY_CONFIG" to "some_other_value")
         val proxyEnvironmentVariablesProvider = mock<ProxyEnvironmentVariablesProvider> {
             on { getProxyEnvironmentVariables(emptySet()) } doReturn proxyVariables
         }
+
+        val resolvedBuildDirectory = Paths.get("src", "unitTest", "kotlin", "batect", "execution", "model", "steps", "runners", "test-fixtures", "build-context").toAbsolutePath()
+        val resolvedDockerfile = resolvedBuildDirectory.resolve(dockerfilePath)
 
         val pathResolver by createForEachTest {
             mock<PathResolver> {
@@ -99,7 +112,7 @@ object BuildImageStepRunnerSpec : Spek({
             }
         }
 
-        val cancellationContext by createForEachTest { mock<CancellationContext>() }
+        val cancellationContext by createForEachTest { CancellationContext() }
 
         val ioStreamingOptions by createForEachTest {
             mock<ContainerIOStreamingOptions> {
@@ -113,9 +126,9 @@ object BuildImageStepRunnerSpec : Spek({
 
         val telemetrySessionBuilder by createForEachTest {
             mock<TelemetrySessionBuilder> {
-                onGeneric { addSpan<DockerImage>(any(), any()) } doAnswer { invocation ->
+                onGeneric { addSpan<ImageReference>(any(), any()) } doAnswer { invocation ->
                     @Suppress("UNCHECKED_CAST")
-                    val process = invocation.arguments[1] as ((TelemetrySpanBuilder) -> DockerImage)
+                    val process = invocation.arguments[1] as ((TelemetrySpanBuilder) -> ImageReference)
                     process(mock())
                 }
             }
@@ -128,7 +141,7 @@ object BuildImageStepRunnerSpec : Spek({
         val runner by createForEachTest {
             BuildImageStepRunner(
                 config,
-                imagesClient,
+                dockerClient,
                 proxyEnvironmentVariablesProvider,
                 pathResolverFactory,
                 expressionEvaluationContext,
@@ -143,19 +156,20 @@ object BuildImageStepRunnerSpec : Spek({
 
         describe("when building the image succeeds") {
             on("and propagating proxy-related environment variables is enabled") {
-                val image = DockerImage("some-image")
-                val update1 = BuildProgress(emptySet())
-                val update2 = BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(0, "First step")))
+                val image = ImageReference("some-image")
 
                 describe("regardless of the image pull policy") {
-                    beforeEachTest {
-                        whenever(imagesClient.build(any(), any(), anyOrNull(), any(), any()))
+                    beforeEachTestSuspend {
+                        whenever(dockerClient.buildImage(any(), any(), any()))
                             .then { invocation ->
-                                @Suppress("UNCHECKED_CAST")
-                                val onStatusUpdate = invocation.arguments[4] as (BuildProgress) -> Unit
+                                val output = invocation.getArgument<SinkTextOutput>(1)
 
-                                onStatusUpdate(update1)
-                                onStatusUpdate(update2)
+                                output.sink.buffer().use { buffer ->
+                                    buffer.writeUtf8("Some output from the build process\nAnother line of output")
+                                }
+
+                                val onStatusUpdate = invocation.getArgument<ImageBuildProgressReceiver>(2)
+                                onStatusUpdate(StepStarting(1, "First step"))
 
                                 image
                             }
@@ -163,34 +177,31 @@ object BuildImageStepRunnerSpec : Spek({
                         runner.run(step, eventSink)
                     }
 
-                    it("passes the resolved build directory, Dockerfile path, build target and path resolution context to the image build") {
-                        verify(imagesClient).build(
-                            argWhere {
-                                it.buildDirectory == resolvedBuildDirectory &&
-                                    it.relativeDockerfilePath == dockerfilePath &&
-                                    it.targetStage == targetStage &&
-                                    it.pathResolutionContext == pathResolutionContext
-                            },
-                            any(),
-                            any(),
-                            any(),
-                            any()
-                        )
+                    itSuspend("runs the build with the resolved build directory") {
+                        verify(dockerClient).buildImage(argWhere { it.contextDirectory == resolvedBuildDirectory.toOkioPath() }, any(), any())
                     }
 
-                    it("generates a tag for the image based on the project and container names, and includes any additional image tags provided on the command line") {
-                        verify(imagesClient).build(argWhere { it.imageTags == setOf("some-project-some-container", "some-extra-image-tag") }, any(), any(), any(), any())
+                    itSuspend("runs the build with the resolved Dockerfile") {
+                        verify(dockerClient).buildImage(argWhere { it.pathToDockerfile == resolvedDockerfile.toOkioPath() }, any(), any())
                     }
 
-                    it("passes the output sink and cancellation context to the image build") {
-                        verify(imagesClient).build(any(), any(), eq(outputSink), eq(cancellationContext), any())
+                    itSuspend("runs the build with the specified target stage") {
+                        verify(dockerClient).buildImage(argWhere { it.targetBuildStage == targetStage }, any(), any())
                     }
 
-                    it("runs the build with the specified image builder") {
-                        verify(imagesClient).build(any(), eq(builderVersion), any(), any(), any())
+                    itSuspend("generates a tag for the image based on the project and container names, and includes any additional image tags provided on the command line") {
+                        verify(dockerClient).buildImage(argWhere { it.imageTags == setOf("some-project-some-container", "some-extra-image-tag") }, any(), any())
                     }
 
-                    it("passes the image build args provided by the user as well as any proxy-related build args, with user-provided build args overriding the generated proxy-related build args, and with the cache setup command included") {
+                    it("propagates output to the provided stdout stream") {
+                        assertThat(outputSink.readUtf8(), equalTo("Some output from the build process\nAnother line of output"))
+                    }
+
+                    itSuspend("runs the build with the specified image builder") {
+                        verify(dockerClient).buildImage(argWhere { it.builder == builderVersion }, any(), any())
+                    }
+
+                    itSuspend("passes the image build args provided by the user as well as any proxy-related build args, with user-provided build args overriding the generated proxy-related build args, and with the cache setup command included") {
                         val expectedArgs = mapOf(
                             "some_arg" to "some_value",
                             "SOME_PROXY_CONFIG" to "overridden",
@@ -198,16 +209,19 @@ object BuildImageStepRunnerSpec : Spek({
                             "SOME_HOST_VAR" to "some env var value"
                         )
 
-                        verify(imagesClient).build(argWhere { it.buildArgs == expectedArgs }, any(), anyOrNull(), any(), any())
+                        verify(dockerClient).buildImage(argWhere { it.buildArgs == expectedArgs }, any(), any())
                     }
 
                     it("emits a 'image build progress' event for each update received from Docker") {
-                        verify(eventSink).postEvent(ImageBuildProgressEvent(container, update1))
-                        verify(eventSink).postEvent(ImageBuildProgressEvent(container, update2))
+                        verify(eventSink).postEvent(ImageBuildProgressEvent(container, BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(1, "First step")))))
                     }
 
                     it("emits a 'image built' event") {
-                        verify(eventSink).postEvent(ImageBuiltEvent(container, image))
+                        verify(eventSink).postEvent(ImageBuiltEvent(container, DockerImage("some-image")))
+                    }
+
+                    it("does not emit any 'image build failed' events") {
+                        verify(eventSink, never()).postEvent(isA<ImageBuildFailedEvent>())
                     }
 
                     it("records a span in telemetry for the image build") {
@@ -216,43 +230,51 @@ object BuildImageStepRunnerSpec : Spek({
                 }
 
                 given("the image pull policy is set to 'if not present'") {
-                    val containerWithImagePullPolicy = Container("some-container", BuildImage(buildDirectory, pathResolutionContext, imagePullPolicy = ImagePullPolicy.IfNotPresent))
+                    val containerWithImagePullPolicy = Container("some-container", BuildImage(buildDirectory, pathResolutionContext, dockerfilePath = dockerfilePath, imagePullPolicy = ImagePullPolicy.IfNotPresent))
                     val stepWithImagePullPolicy = BuildImageStep(containerWithImagePullPolicy)
 
-                    beforeEachTest {
-                        whenever(imagesClient.build(any(), any(), anyOrNull(), any(), any())).doReturn(image)
+                    beforeEachTestSuspend {
+                        whenever(dockerClient.buildImage(any(), any(), any())).thenReturn(image)
 
                         runner.run(stepWithImagePullPolicy, eventSink)
                     }
 
-                    it("calls the Docker API with forcibly pulling the image disabled") {
-                        verify(imagesClient).build(argWhere { it.forcePull == false }, any(), anyOrNull(), any(), any())
+                    itSuspend("calls the Docker API with forcibly pulling the image disabled") {
+                        verify(dockerClient).buildImage(argWhere { it.alwaysPullBaseImages == false }, any(), any())
+                    }
+
+                    it("does not emit any 'image build failed' events") {
+                        verify(eventSink, never()).postEvent(isA<ImageBuildFailedEvent>())
                     }
                 }
 
                 given("the image pull policy is set to 'always'") {
-                    val containerWithImagePullPolicy = Container("some-container", BuildImage(buildDirectory, pathResolutionContext, imagePullPolicy = ImagePullPolicy.Always))
+                    val containerWithImagePullPolicy = Container("some-container", BuildImage(buildDirectory, pathResolutionContext, dockerfilePath = dockerfilePath, imagePullPolicy = ImagePullPolicy.Always))
                     val stepWithImagePullPolicy = BuildImageStep(containerWithImagePullPolicy)
 
-                    beforeEachTest {
-                        whenever(imagesClient.build(any(), any(), anyOrNull(), any(), any())).doReturn(image)
+                    beforeEachTestSuspend {
+                        whenever(dockerClient.buildImage(any(), any(), any())).thenReturn(image)
 
                         runner.run(stepWithImagePullPolicy, eventSink)
                     }
 
-                    it("calls the Docker API with forcibly pulling the image enabled") {
-                        verify(imagesClient).build(argWhere { it.forcePull == true }, any(), anyOrNull(), any(), any())
+                    itSuspend("calls the Docker API with forcibly pulling the image enabled") {
+                        verify(dockerClient).buildImage(argWhere { it.alwaysPullBaseImages == true }, any(), any())
+                    }
+
+                    it("does not emit any 'image build failed' events") {
+                        verify(eventSink, never()).postEvent(isA<ImageBuildFailedEvent>())
                     }
                 }
             }
 
             on("and propagating proxy-related environment variables is disabled") {
-                val image = DockerImage("some-image")
+                val image = ImageReference("some-image")
                 val commandLineOptionsWithProxyEnvironmentVariablePropagationDisabled = CommandLineOptions(dontPropagateProxyEnvironmentVariables = true)
                 val runnerWithProxyEnvironmentVariablePropagationDisabled by createForEachTest {
                     BuildImageStepRunner(
                         config,
-                        imagesClient,
+                        dockerClient,
                         proxyEnvironmentVariablesProvider,
                         pathResolverFactory,
                         expressionEvaluationContext,
@@ -265,38 +287,62 @@ object BuildImageStepRunnerSpec : Spek({
                     )
                 }
 
-                beforeEachTest {
-                    whenever(imagesClient.build(any(), any(), anyOrNull(), any(), any())).thenReturn(image)
+                beforeEachTestSuspend {
+                    whenever(dockerClient.buildImage(any(), any(), any())).thenReturn(image)
 
                     runnerWithProxyEnvironmentVariablePropagationDisabled.run(step, eventSink)
                 }
 
-                it("does not pass the proxy-related environment variables as image build arguments, but does still pass the user-provided build args with any environment variable references resolved") {
+                itSuspend("does not pass the proxy-related environment variables as image build arguments, but does still pass the user-provided build args with any environment variable references resolved") {
                     val expectedArgs = mapOf(
                         "some_arg" to "some_value",
                         "SOME_PROXY_CONFIG" to "overridden",
                         "SOME_HOST_VAR" to "some env var value"
                     )
 
-                    verify(imagesClient).build(argWhere { it.buildArgs == expectedArgs }, any(), anyOrNull(), any(), any())
+                    verify(dockerClient).buildImage(argWhere { it.buildArgs == expectedArgs }, any(), any())
                 }
 
                 it("emits a 'image built' event") {
-                    verify(eventSink).postEvent(ImageBuiltEvent(container, image))
+                    verify(eventSink).postEvent(ImageBuiltEvent(container, DockerImage("some-image")))
+                }
+
+                it("does not emit any 'image build failed' events") {
+                    verify(eventSink, never()).postEvent(isA<ImageBuildFailedEvent>())
                 }
             }
         }
 
         on("when building the image fails") {
-            beforeEachTest {
-                whenever(imagesClient.build(any(), any(), anyOrNull(), any(), any()))
-                    .thenThrow(ImageBuildFailedException("Something went wrong.\nMore details on this line."))
+            on("when the build does not produce any output") {
+                beforeEachTestSuspend {
+                    whenever(dockerClient.buildImage(any(), any(), any())).thenThrow(ImageBuildFailedException("Something went wrong."))
 
-                runner.run(step, eventSink)
+                    runner.run(step, eventSink)
+                }
+
+                it("emits a 'image build failed' event") {
+                    verify(eventSink).postEvent(ImageBuildFailedEvent(container, "Something went wrong."))
+                }
             }
 
-            it("emits a 'image build failed' event with all line breaks replaced with the system line separator") {
-                verify(eventSink).postEvent(ImageBuildFailedEvent(container, "Something went wrong.SYSTEM_LINE_SEPARATORMore details on this line."))
+            on("when the build does produce some output") {
+                beforeEachTestSuspend {
+                    whenever(dockerClient.buildImage(any(), any(), any())).thenAnswer { invocation ->
+                        val output = invocation.getArgument<SinkTextOutput>(1)
+                        output.sink.buffer().use { buffer ->
+                            buffer.writeUtf8("Some output from the build process\nAnother line of output")
+                        }
+
+                        throw ImageBuildFailedException("Something went wrong.")
+                    }
+
+                    runner.run(step, eventSink)
+                }
+
+                it("emits a 'image build failed' event with all line breaks replaced with the system line separator") {
+                    verify(eventSink).postEvent(ImageBuildFailedEvent(container, "Something went wrong. Output from Docker was:SYSTEM_LINE_SEPARATORSome output from the build processSYSTEM_LINE_SEPARATORAnother line of output"))
+                }
             }
         }
 
@@ -367,6 +413,51 @@ object BuildImageStepRunnerSpec : Spek({
 
             it("emits a 'image build failed' event") {
                 verify(eventSink).postEvent(ImageBuildFailedEvent(containerWithInvalidBuildDirectory, "The value for the build directory cannot be evaluated: Couldn't evaluate expression."))
+            }
+        }
+
+        describe("when the Dockerfile path is not valid") {
+            beforeEachTest {
+                whenever(pathResolutionContext.getPathForDisplay(any())).doReturn("(a description of the build directory)")
+            }
+
+            on("when the Dockerfile does not exist") {
+                val containerWithNonExistentDockerfile = Container("some-container", BuildImage(buildDirectory, pathResolutionContext, dockerfilePath = "this-dockerfile-does-not-exist"))
+                val stepWithNonExistentDockerfile = BuildImageStep(containerWithNonExistentDockerfile)
+
+                beforeEachTest {
+                    runner.run(stepWithNonExistentDockerfile, eventSink)
+                }
+
+                it("emits a 'image build failed' event") {
+                    verify(eventSink).postEvent(ImageBuildFailedEvent(containerWithNonExistentDockerfile, "The Dockerfile 'this-dockerfile-does-not-exist' does not exist in the build directory (a description of the build directory)"))
+                }
+            }
+
+            on("when the Dockerfile is not a file") {
+                val containerWithNonFileDockerfile = Container("some-container", BuildImage(buildDirectory, pathResolutionContext, dockerfilePath = "../build-context"))
+                val stepWithNonFileDockerfile = BuildImageStep(containerWithNonFileDockerfile)
+
+                beforeEachTest {
+                    runner.run(stepWithNonFileDockerfile, eventSink)
+                }
+
+                it("emits a 'image build failed' event") {
+                    verify(eventSink).postEvent(ImageBuildFailedEvent(containerWithNonFileDockerfile, "The Dockerfile '../build-context' is not a file."))
+                }
+            }
+
+            on("when the Dockerfile is not in the context directory") {
+                val containerWithExternalDockerfile = Container("some-container", BuildImage(buildDirectory, pathResolutionContext, dockerfilePath = "../Dockerfile-outside-context"))
+                val stepWithExternalDockerfile = BuildImageStep(containerWithExternalDockerfile)
+
+                beforeEachTest {
+                    runner.run(stepWithExternalDockerfile, eventSink)
+                }
+
+                it("emits a 'image build failed' event") {
+                    verify(eventSink).postEvent(ImageBuildFailedEvent(containerWithExternalDockerfile, "The Dockerfile '../Dockerfile-outside-context' is not a child of the build directory (a description of the build directory)"))
+                }
             }
         }
     }

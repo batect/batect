@@ -48,7 +48,6 @@ import batect.docker.DockerHttpConfig
 import batect.docker.DockerTLSConfig
 import batect.docker.api.ContainersAPI
 import batect.docker.api.ExecAPI
-import batect.docker.api.ImagesAPI
 import batect.docker.api.NetworksAPI
 import batect.docker.api.SessionsAPI
 import batect.docker.api.SystemInfoAPI
@@ -62,7 +61,6 @@ import batect.docker.build.legacy.ImageBuildContextFactory
 import batect.docker.client.ContainersClient
 import batect.docker.client.DockerClient
 import batect.docker.client.ExecClient
-import batect.docker.client.ImagesClient
 import batect.docker.client.NetworksClient
 import batect.docker.client.SystemInfoClient
 import batect.docker.client.VolumesClient
@@ -231,7 +229,6 @@ private val dockerModule = DI.Module("docker") {
 private val dockerApiModule = DI.Module("docker.api") {
     bind<ContainersAPI>() with singletonWithLogger { logger -> ContainersAPI(instance(), instance(), logger) }
     bind<ExecAPI>() with singletonWithLogger { logger -> ExecAPI(instance(), instance(), logger) }
-    bind<ImagesAPI>() with singletonWithLogger { logger -> ImagesAPI(instance(), instance(), logger) }
     bind<NetworksAPI>() with singletonWithLogger { logger -> NetworksAPI(instance(), instance(), logger) }
     bind<SessionsAPI>() with singletonWithLogger { logger -> SessionsAPI(instance(), instance(), logger) }
     bind<SystemInfoAPI>() with singletonWithLogger { logger -> SystemInfoAPI(instance(), instance(), logger) }
@@ -250,11 +247,10 @@ private val dockerBuildModule = DI.Module("docker.build") {
 private val dockerClientModule = DI.Module("docker.client") {
     bind<ContainersClient>() with singletonWithLogger { logger -> ContainersClient(instance(), instance(), instance(), instance(), instance(), logger) }
     bind<ExecClient>() with singletonWithLogger { logger -> ExecClient(instance(), instance(), logger) }
-    bind<ImagesClient>() with singletonWithLogger { logger -> ImagesClient(instance(), instance(), instance(), instance(), instance(), instance(), logger) }
     bind<NetworksClient>() with singleton { NetworksClient(instance()) }
     bind<SystemInfoClient>() with singletonWithLogger { logger -> SystemInfoClient(instance(), instance(), logger) }
     bind<VolumesClient>() with singleton { VolumesClient(instance()) }
-    bind<DockerClient>() with singleton { DockerClient(instance(), instance(), instance(), instance(), instance(), instance()) }
+    bind<DockerClient>() with singleton { DockerClient(instance(), instance(), instance(), instance(), instance()) }
 }
 
 private val gitModule = DI.Module("git") {

@@ -14,23 +14,19 @@
     limitations under the License.
 */
 
-package batect.docker.pull
+package batect.docker
 
-import batect.docker.DownloadOperation
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
-import kotlinx.serialization.json.long
+import batect.docker.pull.ImagePullProgress
+import batect.dockerclient.ImagePullProgressUpdate
 
-class ImagePullProgressReporter {
+class ImagePullProgressAggregator {
     private val layerStates = mutableMapOf<String, LayerStatus>()
     private var lastProgressUpdate: ImagePullProgress? = null
 
-    fun processProgressUpdate(progressUpdate: JsonObject): ImagePullProgress? {
-        val status = progressUpdate["status"]?.jsonPrimitive?.content ?: return null
-        val currentOperation = operationForName(status) ?: return null
+    fun processProgressUpdate(progressUpdate: ImagePullProgressUpdate): ImagePullProgress? {
+        val currentOperation = operationForName(progressUpdate.message) ?: return null
 
-        val layerId = progressUpdate.getValue("id").jsonPrimitive.content
+        val layerId = progressUpdate.id
         val previousState = layerStates[layerId]
         layerStates[layerId] = computeNewStateForLayer(previousState, currentOperation, progressUpdate)
 
@@ -44,10 +40,9 @@ class ImagePullProgressReporter {
         return null
     }
 
-    private fun computeNewStateForLayer(previousState: LayerStatus?, currentOperation: DownloadOperation, progressUpdate: JsonObject): LayerStatus {
-        val progressDetail = progressUpdate.getValue("progressDetail").jsonObject
-        val completedBytes = progressDetail["current"]?.jsonPrimitive?.long
-        val totalBytes = progressDetail["total"]?.jsonPrimitive?.long
+    private fun computeNewStateForLayer(previousState: LayerStatus?, currentOperation: DownloadOperation, progressUpdate: ImagePullProgressUpdate): LayerStatus {
+        val completedBytes = progressUpdate.detail?.current
+        val totalBytes = progressUpdate.detail?.total
 
         val completedBytesToUse = when {
             completedBytes != null -> completedBytes

@@ -61,136 +61,102 @@ object ImagePullProgressAggregatorSpec : Spek({
             }
         }
 
-        given("a single 'layer downloading' event") {
-            val raw = ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(329, 4159), "d6cd23cd1a2c")
-
-            on("processing the event") {
-                val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
-
-                it("returns an appropriate progress update") {
-                    assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 329, 4159)))
-                }
-            }
-        }
-
-        given("a single 'layer extracting' event") {
-            val raw = ImagePullProgressUpdate("Extracting", ImagePullProgressDetail(329, 4159), "d6cd23cd1a2c")
-
-            on("processing the event") {
-                val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
-
-                it("returns an appropriate progress update") {
-                    assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Extracting, 329, 4159)))
-                }
-            }
-        }
-
-        given("a single 'verifying checksum' event without any previous events for that layer") {
-            val raw = ImagePullProgressUpdate("Verifying Checksum", null, "d6cd23cd1a2c")
-
-            on("processing the event") {
-                val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
-
-                it("returns an appropriate progress update") {
-                    assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.VerifyingChecksum, 0, 0)))
-                }
-            }
-        }
-
-        given("a single 'layer downloading' event has been processed") {
-            beforeEachTest {
-                aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(329, 4159), "d6cd23cd1a2c"))
-            }
-
-            on("processing another 'layer downloading' event for the same layer") {
-                val raw = ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(900, 4159), "d6cd23cd1a2c")
-                val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
-
-                it("returns an appropriate progress update") {
-                    assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 900, 4159)))
-                }
-            }
-
-            on("processing another 'layer downloading' event for the same layer that does not result in updated information") {
+        given("the image is not being pulled in the context of a BuildKit image build") {
+            given("a single 'layer downloading' event") {
                 val raw = ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(329, 4159), "d6cd23cd1a2c")
-                val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
 
-                it("does not return an update") {
-                    assertThat(progressUpdate, absent())
-                }
-            }
+                on("processing the event") {
+                    val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
 
-            on("processing a 'verifying checksum' event for the same layer") {
-                // Note that the 'status' field for a 'verifying checksum' event has the C capitalised, while
-                // every other kind of event uses lowercase for later words in the description.
-                val raw = ImagePullProgressUpdate("Verifying Checksum", null, "d6cd23cd1a2c")
-                val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
-
-                it("returns an appropriate progress update") {
-                    assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.VerifyingChecksum, 0, 4159)))
-                }
-            }
-
-            on("processing a 'download complete' event for the same layer") {
-                val raw = ImagePullProgressUpdate("Download complete", null, "d6cd23cd1a2c")
-                val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
-
-                it("returns an appropriate progress update") {
-                    assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.DownloadComplete, 4159, 4159)))
-                }
-            }
-
-            on("processing an 'extracting' event for the same layer") {
-                val raw = ImagePullProgressUpdate("Extracting", ImagePullProgressDetail(1000, 4159), "d6cd23cd1a2c")
-                val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
-
-                it("returns an appropriate progress update") {
-                    assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Extracting, 1000, 4159)))
-                }
-            }
-
-            on("processing a 'pull complete' event for the same layer") {
-                val raw = ImagePullProgressUpdate("Pull complete", null, "d6cd23cd1a2c")
-                val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
-
-                it("returns an appropriate progress update") {
-                    assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.PullComplete, 4159, 4159)))
-                }
-            }
-
-            on("processing a 'layer downloading' event for another layer") {
-                val raw = ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(900, 7000), "b59856e9f0ab")
-                val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
-
-                it("returns a progress update combining the state of both layers") {
-                    assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 329L + 900, 4159L + 7000)))
-                }
-            }
-
-            given("a 'layer downloading' event for another layer has been processed") {
-                beforeEachTest {
-                    aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(900, 7000), "b59856e9f0ab"))
-                }
-
-                mapOf(
-                    "verifying checksum" to ImagePullProgressUpdate("Verifying Checksum", null, "b59856e9f0ab"),
-                    "download complete" to ImagePullProgressUpdate("Download complete", null, "b59856e9f0ab"),
-                    "extracting" to ImagePullProgressUpdate("Extracting", ImagePullProgressDetail(1000, 7000), "b59856e9f0ab"),
-                    "pull complete" to ImagePullProgressUpdate("Pull complete", null, "b59856e9f0ab")
-                ).forEach { (eventType, raw) ->
-                    on("processing a '$eventType' event for that other layer") {
-                        val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
-
-                        it("returns a progress update combining the state of both layers") {
-                            assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 329L + 7000, 4159L + 7000)))
-                        }
+                    it("returns an appropriate progress update") {
+                        assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 329, 4159)))
                     }
                 }
             }
 
-            given("a 'pull complete' event has been processed") {
+            given("a single 'layer extracting' event") {
+                val raw = ImagePullProgressUpdate("Extracting", ImagePullProgressDetail(329, 4159), "d6cd23cd1a2c")
+
+                on("processing the event") {
+                    val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
+
+                    it("returns an appropriate progress update") {
+                        assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Extracting, 329, 4159)))
+                    }
+                }
+            }
+
+            given("a single 'verifying checksum' event without any previous events for that layer") {
+                val raw = ImagePullProgressUpdate("Verifying Checksum", null, "d6cd23cd1a2c")
+
+                on("processing the event") {
+                    val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
+
+                    it("returns an appropriate progress update") {
+                        assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.VerifyingChecksum, 0, 0)))
+                    }
+                }
+            }
+
+            given("a single 'layer downloading' event has been processed") {
                 beforeEachTest {
-                    aggregator.processProgressUpdate(ImagePullProgressUpdate("Pull complete", null, "d6cd23cd1a2c"))
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(329, 4159), "d6cd23cd1a2c"))
+                }
+
+                on("processing another 'layer downloading' event for the same layer") {
+                    val raw = ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(900, 4159), "d6cd23cd1a2c")
+                    val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
+
+                    it("returns an appropriate progress update") {
+                        assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 900, 4159)))
+                    }
+                }
+
+                on("processing another 'layer downloading' event for the same layer that does not result in updated information") {
+                    val raw = ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(329, 4159), "d6cd23cd1a2c")
+                    val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
+
+                    it("does not return an update") {
+                        assertThat(progressUpdate, absent())
+                    }
+                }
+
+                on("processing a 'verifying checksum' event for the same layer") {
+                    // Note that the 'status' field for a 'verifying checksum' event has the C capitalised, while
+                    // every other kind of event uses lowercase for later words in the description.
+                    val raw = ImagePullProgressUpdate("Verifying Checksum", null, "d6cd23cd1a2c")
+                    val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
+
+                    it("returns an appropriate progress update") {
+                        assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.VerifyingChecksum, 0, 4159)))
+                    }
+                }
+
+                on("processing a 'download complete' event for the same layer") {
+                    val raw = ImagePullProgressUpdate("Download complete", null, "d6cd23cd1a2c")
+                    val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
+
+                    it("returns an appropriate progress update") {
+                        assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.DownloadComplete, 4159, 4159)))
+                    }
+                }
+
+                on("processing an 'extracting' event for the same layer") {
+                    val raw = ImagePullProgressUpdate("Extracting", ImagePullProgressDetail(1000, 4159), "d6cd23cd1a2c")
+                    val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
+
+                    it("returns an appropriate progress update") {
+                        assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Extracting, 1000, 4159)))
+                    }
+                }
+
+                on("processing a 'pull complete' event for the same layer") {
+                    val raw = ImagePullProgressUpdate("Pull complete", null, "d6cd23cd1a2c")
+                    val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
+
+                    it("returns an appropriate progress update") {
+                        assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.PullComplete, 4159, 4159)))
+                    }
                 }
 
                 on("processing a 'layer downloading' event for another layer") {
@@ -198,174 +164,402 @@ object ImagePullProgressAggregatorSpec : Spek({
                     val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
 
                     it("returns a progress update combining the state of both layers") {
-                        assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 4159L + 900, 4159L + 7000)))
+                        assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 329L + 900, 4159L + 7000)))
+                    }
+                }
+
+                given("a 'layer downloading' event for another layer has been processed") {
+                    beforeEachTest {
+                        aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(900, 7000), "b59856e9f0ab"))
+                    }
+
+                    mapOf(
+                        "verifying checksum" to ImagePullProgressUpdate("Verifying Checksum", null, "b59856e9f0ab"),
+                        "download complete" to ImagePullProgressUpdate("Download complete", null, "b59856e9f0ab"),
+                        "extracting" to ImagePullProgressUpdate("Extracting", ImagePullProgressDetail(1000, 7000), "b59856e9f0ab"),
+                        "pull complete" to ImagePullProgressUpdate("Pull complete", null, "b59856e9f0ab")
+                    ).forEach { (eventType, raw) ->
+                        on("processing a '$eventType' event for that other layer") {
+                            val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
+
+                            it("returns a progress update combining the state of both layers") {
+                                assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 329L + 7000, 4159L + 7000)))
+                            }
+                        }
+                    }
+                }
+
+                given("a 'pull complete' event has been processed") {
+                    beforeEachTest {
+                        aggregator.processProgressUpdate(ImagePullProgressUpdate("Pull complete", null, "d6cd23cd1a2c"))
+                    }
+
+                    on("processing a 'layer downloading' event for another layer") {
+                        val raw = ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(900, 7000), "b59856e9f0ab")
+                        val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
+
+                        it("returns a progress update combining the state of both layers") {
+                            assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 4159L + 900, 4159L + 7000)))
+                        }
+                    }
+                }
+
+                given("a 'download complete' event has been processed") {
+                    beforeEachTest {
+                        aggregator.processProgressUpdate(ImagePullProgressUpdate("Download complete", null, "d6cd23cd1a2c"))
+                    }
+
+                    on("processing an 'extracting' event for another layer") {
+                        val raw = ImagePullProgressUpdate("Extracting", ImagePullProgressDetail(900, 7000), "b59856e9f0ab")
+                        val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
+
+                        it("returns a progress update combining the state of both layers") {
+                            assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Extracting, 900, 4159L + 7000)))
+                        }
                     }
                 }
             }
 
-            given("a 'download complete' event has been processed") {
+            given("a single 'verifying checksum' event has been processed") {
                 beforeEachTest {
-                    aggregator.processProgressUpdate(ImagePullProgressUpdate("Download complete", null, "d6cd23cd1a2c"))
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("Verifying Checksum", null, "d6cd23cd1a2c"))
                 }
 
-                on("processing an 'extracting' event for another layer") {
-                    val raw = ImagePullProgressUpdate("Extracting", ImagePullProgressDetail(900, 7000), "b59856e9f0ab")
+                on("processing another 'verifying checksum' event for the same layer") {
+                    val raw = ImagePullProgressUpdate("Verifying Checksum", null, "d6cd23cd1a2c")
+                    val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
+
+                    it("does not return an update") {
+                        assertThat(progressUpdate, absent())
+                    }
+                }
+
+                on("processing a 'layer downloading' event for the same layer") {
+                    val raw = ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(900, 4159), "d6cd23cd1a2c")
+                    val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
+
+                    it("returns an appropriate progress update") {
+                        assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 900, 4159)))
+                    }
+                }
+            }
+
+            given("all layers are downloading") {
+                val progressUpdate by runNullableForEachTest {
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(300, 4000), "d6cd23cd1a2c"))
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(600, 3000), "55cbf04beb70"))
+                }
+
+                it("returns a progress update that indicates the image is downloading") {
+                    assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 900, 7000)))
+                }
+            }
+
+            given("some layers are downloading and some have finished downloading") {
+                val progressUpdate by runNullableForEachTest {
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(300, 4000), "d6cd23cd1a2c"))
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("Download complete", null, "d6cd23cd1a2c"))
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(600, 3000), "55cbf04beb70"))
+                }
+
+                it("returns a progress update that indicates the image is downloading") {
+                    assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 4600, 7000)))
+                }
+            }
+
+            given("some layers are downloading and some are extracting") {
+                val progressUpdate by runNullableForEachTest {
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(300, 4000), "d6cd23cd1a2c"))
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("Extracting", ImagePullProgressDetail(600, 3000), "55cbf04beb70"))
+                }
+
+                it("returns a progress update that indicates the image is downloading") {
+                    assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 3300, 7000)))
+                }
+            }
+
+            given("some layers are downloading, some are verifying checksums and some have finished downloading") {
+                val progressUpdate by runNullableForEachTest {
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(50, 9000), "4c60885e4f94"))
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(300, 4000), "d6cd23cd1a2c"))
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("Verifying Checksum", null, "d6cd23cd1a2c"))
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(600, 3000), "55cbf04beb70"))
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("Download complete", null, "55cbf04beb70"))
+                }
+
+                it("returns a progress update that indicates the image is downloading") {
+                    assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 7050, 16000)))
+                }
+            }
+
+            given("some layers are verifying checksums and some have finished downloading") {
+                val progressUpdate by runNullableForEachTest {
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(300, 4000), "d6cd23cd1a2c"))
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("Verifying Checksum", null, "d6cd23cd1a2c"))
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(600, 3000), "55cbf04beb70"))
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("Download complete", null, "55cbf04beb70"))
+                }
+
+                it("returns a progress update that indicates the checksum is being verified") {
+                    assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.VerifyingChecksum, 3000, 7000)))
+                }
+            }
+
+            given("some layers have finished downloading and some are extracting") {
+                val progressUpdate by runNullableForEachTest {
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(300, 4000), "d6cd23cd1a2c"))
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("Extracting", ImagePullProgressDetail(700, 4000), "d6cd23cd1a2c"))
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(600, 3000), "55cbf04beb70"))
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("Download complete", null, "55cbf04beb70"))
+                }
+
+                it("returns a progress update that indicates the image is extracting") {
+                    assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Extracting, 700, 7000)))
+                }
+            }
+
+            given("all layers have finished downloading") {
+                val progressUpdate by runNullableForEachTest {
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(300, 4000), "d6cd23cd1a2c"))
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("Download complete", null, "d6cd23cd1a2c"))
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(600, 3000), "55cbf04beb70"))
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("Download complete", null, "55cbf04beb70"))
+                }
+
+                it("returns a progress update that indicates the image has finished downloading") {
+                    assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.DownloadComplete, 7000, 7000)))
+                }
+            }
+
+            given("some layers have finished downloading and some have finished pulling") {
+                val progressUpdate by runNullableForEachTest {
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(300, 4000), "d6cd23cd1a2c"))
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("Download complete", null, "d6cd23cd1a2c"))
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(600, 3000), "55cbf04beb70"))
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("Pull complete", null, "55cbf04beb70"))
+                }
+
+                it("returns a progress update that indicates the image has partly finished pulling") {
+                    assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.PullComplete, 3000, 7000)))
+                }
+            }
+
+            given("some layers are extracting and some have finished pulling") {
+                val progressUpdate by runNullableForEachTest {
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(300, 4000), "d6cd23cd1a2c"))
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("Extracting", ImagePullProgressDetail(700, 4000), "d6cd23cd1a2c"))
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(600, 3000), "55cbf04beb70"))
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("Pull complete", null, "55cbf04beb70"))
+                }
+
+                it("returns a progress update that indicates the image is extracting") {
+                    assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Extracting, 3700, 7000)))
+                }
+            }
+
+            given("all layers have finished pulling") {
+                val progressUpdate by runNullableForEachTest {
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(300, 4000), "d6cd23cd1a2c"))
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("Pull complete", null, "d6cd23cd1a2c"))
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(600, 3000), "55cbf04beb70"))
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("Pull complete", null, "55cbf04beb70"))
+                }
+
+                it("returns a progress update that indicates the image has finished pulling") {
+                    assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.PullComplete, 7000, 7000)))
+                }
+            }
+        }
+
+        given("the image is being pulled in the context of a BuildKit image build") {
+            // The image pull updates emitted during a BuildKit image build are a bit different to the legacy builder:
+            // - The names used for each step are different ('downloading' instead of 'Downloading', 'extract' instead of 'Extracting' etc.)
+            // - There is no 'verifying checksum' step.
+            // - There is no 'pull complete' step.
+            // - No progress information is reported during extraction. Instead, one layer is extracted at a time and when the next starts,
+            //   it is safe to assume the previous layer has completed.
+
+            given("a single 'layer downloading' event") {
+                val raw = ImagePullProgressUpdate("downloading", ImagePullProgressDetail(329, 4159), "d6cd23cd1a2c")
+
+                on("processing the event") {
+                    val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
+
+                    it("returns an appropriate progress update") {
+                        assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 329, 4159)))
+                    }
+                }
+            }
+
+            given("a single 'layer extracting' event") {
+                val raw = ImagePullProgressUpdate("extract", ImagePullProgressDetail(0, 0), "d6cd23cd1a2c")
+
+                on("processing the event") {
+                    val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
+
+                    it("returns an appropriate progress update") {
+                        assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Extracting, 0, 0)))
+                    }
+                }
+            }
+
+            given("a single 'layer downloading' event has been processed") {
+                beforeEachTest {
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("downloading", ImagePullProgressDetail(329, 4159), "d6cd23cd1a2c"))
+                }
+
+                on("processing another 'layer downloading' event for the same layer") {
+                    val raw = ImagePullProgressUpdate("downloading", ImagePullProgressDetail(900, 4159), "d6cd23cd1a2c")
+                    val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
+
+                    it("returns an appropriate progress update") {
+                        assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 900, 4159)))
+                    }
+                }
+
+                on("processing another 'layer downloading' event for the same layer that does not result in updated information") {
+                    val raw = ImagePullProgressUpdate("downloading", ImagePullProgressDetail(329, 4159), "d6cd23cd1a2c")
+                    val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
+
+                    it("does not return an update") {
+                        assertThat(progressUpdate, absent())
+                    }
+                }
+
+                on("processing a 'download complete' event for the same layer") {
+                    val raw = ImagePullProgressUpdate("done", null, "d6cd23cd1a2c")
+                    val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
+
+                    it("returns an appropriate progress update") {
+                        assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.DownloadComplete, 4159, 4159)))
+                    }
+                }
+
+                on("processing an 'extracting' event for the same layer") {
+                    val raw = ImagePullProgressUpdate("extract", ImagePullProgressDetail(0, 0), "d6cd23cd1a2c")
+                    val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
+
+                    it("returns an appropriate progress update") {
+                        assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Extracting, 0, 4159)))
+                    }
+                }
+
+                on("processing a 'layer downloading' event for another layer") {
+                    val raw = ImagePullProgressUpdate("downloading", ImagePullProgressDetail(900, 7000), "b59856e9f0ab")
                     val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
 
                     it("returns a progress update combining the state of both layers") {
-                        assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Extracting, 900, 4159L + 7000)))
+                        assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 329L + 900, 4159L + 7000)))
+                    }
+                }
+
+                given("a 'layer downloading' event for another layer has been processed") {
+                    beforeEachTest {
+                        aggregator.processProgressUpdate(ImagePullProgressUpdate("downloading", ImagePullProgressDetail(900, 7000), "b59856e9f0ab"))
+                    }
+
+                    mapOf(
+                        "download complete" to ImagePullProgressUpdate("done", null, "b59856e9f0ab"),
+                        "extracting" to ImagePullProgressUpdate("extract", ImagePullProgressDetail(0, 0), "b59856e9f0ab")
+                    ).forEach { (eventType, raw) ->
+                        on("processing a '$eventType' event for that other layer") {
+                            val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
+
+                            it("returns a progress update combining the state of both layers") {
+                                assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 329L + 7000, 4159L + 7000)))
+                            }
+                        }
+                    }
+                }
+
+                given("a 'download complete' event has been processed") {
+                    beforeEachTest {
+                        aggregator.processProgressUpdate(ImagePullProgressUpdate("done", null, "d6cd23cd1a2c"))
+                    }
+
+                    on("processing an 'extracting' event for another layer") {
+                        val raw = ImagePullProgressUpdate("extract", ImagePullProgressDetail(0, 0), "b59856e9f0ab")
+                        val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
+
+                        it("returns a progress update combining the state of both layers") {
+                            assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Extracting, 0, 4159)))
+                        }
                     }
                 }
             }
-        }
 
-        given("a single 'verifying checksum' event has been processed") {
-            beforeEachTest {
-                aggregator.processProgressUpdate(ImagePullProgressUpdate("Verifying Checksum", null, "d6cd23cd1a2c"))
-            }
+            given("all layers are downloading") {
+                val progressUpdate by runNullableForEachTest {
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("downloading", ImagePullProgressDetail(300, 4000), "d6cd23cd1a2c"))
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("downloading", ImagePullProgressDetail(600, 3000), "55cbf04beb70"))
+                }
 
-            on("processing another 'verifying checksum' event for the same layer") {
-                val raw = ImagePullProgressUpdate("Verifying Checksum", null, "d6cd23cd1a2c")
-                val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
-
-                it("does not return an update") {
-                    assertThat(progressUpdate, absent())
+                it("returns a progress update that indicates the image is downloading") {
+                    assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 900, 7000)))
                 }
             }
 
-            on("processing a 'layer downloading' event for the same layer") {
-                val raw = ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(900, 4159), "d6cd23cd1a2c")
-                val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
+            given("some layers are downloading and some have finished downloading") {
+                val progressUpdate by runNullableForEachTest {
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("downloading", ImagePullProgressDetail(300, 4000), "d6cd23cd1a2c"))
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("done", null, "d6cd23cd1a2c"))
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("downloading", ImagePullProgressDetail(600, 3000), "55cbf04beb70"))
+                }
 
-                it("returns an appropriate progress update") {
-                    assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 900, 4159)))
+                it("returns a progress update that indicates the image is downloading") {
+                    assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 4600, 7000)))
                 }
             }
-        }
 
-        given("all layers are downloading") {
-            val progressUpdate by runNullableForEachTest {
-                aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(300, 4000), "d6cd23cd1a2c"))
-                aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(600, 3000), "55cbf04beb70"))
+            given("some layers are downloading and some are extracting") {
+                val progressUpdate by runNullableForEachTest {
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("downloading", ImagePullProgressDetail(300, 4000), "d6cd23cd1a2c"))
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("downloading", ImagePullProgressDetail(0, 3000), "55cbf04beb70"))
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("extract", ImagePullProgressDetail(0, 0), "55cbf04beb70"))
+                }
+
+                it("returns a progress update that indicates the image is downloading") {
+                    assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 3300, 7000)))
+                }
             }
 
-            it("returns a progress update that indicates the image is downloading") {
-                assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 900, 7000)))
-            }
-        }
+            given("some layers have finished downloading and some are extracting") {
+                val progressUpdate by runNullableForEachTest {
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("downloading", ImagePullProgressDetail(300, 4000), "d6cd23cd1a2c"))
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("extract", ImagePullProgressDetail(0, 0), "d6cd23cd1a2c"))
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("downloading", ImagePullProgressDetail(600, 3000), "55cbf04beb70"))
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("done", null, "55cbf04beb70"))
+                }
 
-        given("some layers are downloading and some have finished downloading") {
-            val progressUpdate by runNullableForEachTest {
-                aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(300, 4000), "d6cd23cd1a2c"))
-                aggregator.processProgressUpdate(ImagePullProgressUpdate("Download complete", null, "d6cd23cd1a2c"))
-                aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(600, 3000), "55cbf04beb70"))
-            }
-
-            it("returns a progress update that indicates the image is downloading") {
-                assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 4600, 7000)))
-            }
-        }
-
-        given("some layers are downloading and some are extracting") {
-            val progressUpdate by runNullableForEachTest {
-                aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(300, 4000), "d6cd23cd1a2c"))
-                aggregator.processProgressUpdate(ImagePullProgressUpdate("Extracting", ImagePullProgressDetail(600, 3000), "55cbf04beb70"))
+                it("returns a progress update that indicates the image is extracting") {
+                    assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Extracting, 0, 7000)))
+                }
             }
 
-            it("returns a progress update that indicates the image is downloading") {
-                assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 3300, 7000)))
-            }
-        }
+            given("all layers have finished downloading") {
+                val progressUpdate by runNullableForEachTest {
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("downloading", ImagePullProgressDetail(300, 4000), "d6cd23cd1a2c"))
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("done", null, "d6cd23cd1a2c"))
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("downloading", ImagePullProgressDetail(600, 3000), "55cbf04beb70"))
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("done", null, "55cbf04beb70"))
+                }
 
-        given("some layers are downloading, some are verifying checksums and some have finished downloading") {
-            val progressUpdate by runNullableForEachTest {
-                aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(50, 9000), "4c60885e4f94"))
-                aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(300, 4000), "d6cd23cd1a2c"))
-                aggregator.processProgressUpdate(ImagePullProgressUpdate("Verifying Checksum", null, "d6cd23cd1a2c"))
-                aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(600, 3000), "55cbf04beb70"))
-                aggregator.processProgressUpdate(ImagePullProgressUpdate("Download complete", null, "55cbf04beb70"))
-            }
-
-            it("returns a progress update that indicates the image is downloading") {
-                assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 7050, 16000)))
-            }
-        }
-
-        given("some layers are verifying checksums and some have finished downloading") {
-            val progressUpdate by runNullableForEachTest {
-                aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(300, 4000), "d6cd23cd1a2c"))
-                aggregator.processProgressUpdate(ImagePullProgressUpdate("Verifying Checksum", null, "d6cd23cd1a2c"))
-                aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(600, 3000), "55cbf04beb70"))
-                aggregator.processProgressUpdate(ImagePullProgressUpdate("Download complete", null, "55cbf04beb70"))
+                it("returns a progress update that indicates the image has finished downloading") {
+                    assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.DownloadComplete, 7000, 7000)))
+                }
             }
 
-            it("returns a progress update that indicates the checksum is being verified") {
-                assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.VerifyingChecksum, 3000, 7000)))
-            }
-        }
+            given("some layers have finished extracting and another is still extracting") {
+                val progressUpdate by runNullableForEachTest {
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("downloading", ImagePullProgressDetail(300, 4000), "d6cd23cd1a2c"))
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("extract", ImagePullProgressDetail(0, 0), "d6cd23cd1a2c"))
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("downloading", ImagePullProgressDetail(600, 3000), "55cbf04beb70"))
+                    aggregator.processProgressUpdate(ImagePullProgressUpdate("extract", ImagePullProgressDetail(0, 0), "55cbf04beb70"))
+                }
 
-        given("some layers have finished downloading and some are extracting") {
-            val progressUpdate by runNullableForEachTest {
-                aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(300, 4000), "d6cd23cd1a2c"))
-                aggregator.processProgressUpdate(ImagePullProgressUpdate("Extracting", ImagePullProgressDetail(700, 4000), "d6cd23cd1a2c"))
-                aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(600, 3000), "55cbf04beb70"))
-                aggregator.processProgressUpdate(ImagePullProgressUpdate("Download complete", null, "55cbf04beb70"))
-            }
-
-            it("returns a progress update that indicates the image is extracting") {
-                assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Extracting, 700, 7000)))
-            }
-        }
-
-        given("all layers have finished downloading") {
-            val progressUpdate by runNullableForEachTest {
-                aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(300, 4000), "d6cd23cd1a2c"))
-                aggregator.processProgressUpdate(ImagePullProgressUpdate("Download complete", null, "d6cd23cd1a2c"))
-                aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(600, 3000), "55cbf04beb70"))
-                aggregator.processProgressUpdate(ImagePullProgressUpdate("Download complete", null, "55cbf04beb70"))
-            }
-
-            it("returns a progress update that indicates the image has finished downloading") {
-                assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.DownloadComplete, 7000, 7000)))
-            }
-        }
-
-        given("some layers have finished downloading and some have finished pulling") {
-            val progressUpdate by runNullableForEachTest {
-                aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(300, 4000), "d6cd23cd1a2c"))
-                aggregator.processProgressUpdate(ImagePullProgressUpdate("Download complete", null, "d6cd23cd1a2c"))
-                aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(600, 3000), "55cbf04beb70"))
-                aggregator.processProgressUpdate(ImagePullProgressUpdate("Pull complete", null, "55cbf04beb70"))
-            }
-
-            it("returns a progress update that indicates the image has partly finished pulling") {
-                assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.PullComplete, 3000, 7000)))
-            }
-        }
-
-        given("some layers are extracting and some have finished pulling") {
-            val progressUpdate by runNullableForEachTest {
-                aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(300, 4000), "d6cd23cd1a2c"))
-                aggregator.processProgressUpdate(ImagePullProgressUpdate("Extracting", ImagePullProgressDetail(700, 4000), "d6cd23cd1a2c"))
-                aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(600, 3000), "55cbf04beb70"))
-                aggregator.processProgressUpdate(ImagePullProgressUpdate("Pull complete", null, "55cbf04beb70"))
-            }
-
-            it("returns a progress update that indicates the image is extracting") {
-                assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Extracting, 3700, 7000)))
-            }
-        }
-
-        given("all layers have finished pulling") {
-            val progressUpdate by runNullableForEachTest {
-                aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(300, 4000), "d6cd23cd1a2c"))
-                aggregator.processProgressUpdate(ImagePullProgressUpdate("Pull complete", null, "d6cd23cd1a2c"))
-                aggregator.processProgressUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(600, 3000), "55cbf04beb70"))
-                aggregator.processProgressUpdate(ImagePullProgressUpdate("Pull complete", null, "55cbf04beb70"))
-            }
-
-            it("returns a progress update that indicates the image has finished pulling") {
-                assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.PullComplete, 7000, 7000)))
+                it("returns a progress update that indicates the image is extracting") {
+                    assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Extracting, 4000, 7000)))
+                }
             }
         }
     }

@@ -30,6 +30,10 @@ class ImagePullProgressAggregator {
         val previousState = layerStates[layerId]
         layerStates[layerId] = computeNewStateForLayer(previousState, currentOperation, progressUpdate)
 
+        if (progressUpdate.message == buildKitExtractionStepName) {
+            markOtherExtractingLayersAsComplete(layerId)
+        }
+
         val overallProgress = computeOverallProgress()
 
         if (overallProgress != lastProgressUpdate) {
@@ -51,12 +55,25 @@ class ImagePullProgressAggregator {
         }
 
         val totalBytesToUse = when {
-            totalBytes != null -> totalBytes
+            totalBytes != null && totalBytes != 0L -> totalBytes
             previousState != null -> previousState.totalBytes
             else -> 0
         }
 
         return LayerStatus(currentOperation, completedBytesToUse, totalBytesToUse)
+    }
+
+    private fun markOtherExtractingLayersAsComplete(currentlyExtractingLayerID: String) {
+        layerStates
+            .filterKeys { it != currentlyExtractingLayerID }
+            .filterValues { it.currentOperation == DownloadOperation.Extracting }
+            .forEach { (key, value) ->
+                layerStates[key] = value.copy(
+                    currentOperation = DownloadOperation.PullComplete,
+                    completedBytes = value.totalBytes,
+                    totalBytes = value.totalBytes
+                )
+            }
     }
 
     private fun computeOverallProgress(): ImagePullProgress {
@@ -80,10 +97,10 @@ class ImagePullProgressAggregator {
     }
 
     private fun operationForName(name: String): DownloadOperation? = when (name) {
-        "Downloading" -> DownloadOperation.Downloading
+        "Downloading", "downloading" -> DownloadOperation.Downloading
         "Verifying Checksum" -> DownloadOperation.VerifyingChecksum
-        "Download complete" -> DownloadOperation.DownloadComplete
-        "Extracting" -> DownloadOperation.Extracting
+        "Download complete", "done" -> DownloadOperation.DownloadComplete
+        "Extracting", buildKitExtractionStepName -> DownloadOperation.Extracting
         "Pull complete" -> DownloadOperation.PullComplete
         else -> null
     }
@@ -104,5 +121,9 @@ class ImagePullProgressAggregator {
         }
 
         return sum
+    }
+
+    companion object {
+        private const val buildKitExtractionStepName = "extract"
     }
 }

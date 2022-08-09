@@ -14,11 +14,14 @@
     limitations under the License.
 */
 
-package batect.docker.client
+package batect.docker
 
-class DockerClient(
-    val containers: ContainersClient,
-    val exec: ExecClient,
-    val networks: NetworksClient,
-    val volumes: VolumesClient
-)
+import batect.docker.client.DockerContainerType
+import batect.dockerclient.BuilderVersion
+import batect.primitives.Version
+
+sealed class DockerConnectivityCheckResult {
+    data class Succeeded(val containerType: DockerContainerType, val dockerVersion: Version, val builderVersion: BuilderVersion, val experimentalFeaturesEnabled: Boolean) : DockerConnectivityCheckResult()
+
+    data class Failed(val message: String) : DockerConnectivityCheckResult()
+}

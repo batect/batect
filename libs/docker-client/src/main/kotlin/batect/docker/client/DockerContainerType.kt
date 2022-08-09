@@ -16,9 +16,7 @@
 
 package batect.docker.client
 
-class DockerClient(
-    val containers: ContainersClient,
-    val exec: ExecClient,
-    val networks: NetworksClient,
-    val volumes: VolumesClient
-)
+enum class DockerContainerType {
+    Linux,
+    Windows
+}

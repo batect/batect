@@ -16,18 +16,18 @@
 
 package batect.docker
 
-import batect.docker.client.DockerVersionInfoRetrievalResult
-import batect.docker.client.SystemInfoClient
+import batect.dockerclient.DockerClient
 import batect.os.OperatingSystem
 import batect.os.SystemInfo
 import batect.primitives.Version
 import batect.primitives.VersionComparisonMode
+import kotlinx.coroutines.runBlocking
 
 class DockerHostNameResolver(
     private val systemInfo: SystemInfo,
-    private val dockerSystemInfoClient: SystemInfoClient
+    private val dockerClient: DockerClient
 ) {
-    private val dockerVersionInfoRetrievalResult by lazy { dockerSystemInfoClient.getDockerVersionInfo() }
+    private val dockerVersionInfoRetrievalResult by lazy { runBlocking { dockerClient.getDaemonVersionInformation() } }
 
     fun resolveNameOfDockerHost(): DockerHostNameResolutionResult = when (systemInfo.operatingSystem) {
         OperatingSystem.Mac -> getDockerHostName("mac")
@@ -36,10 +36,9 @@ class DockerHostNameResolver(
     }
 
     private fun getDockerHostName(operatingSystemPart: String): DockerHostNameResolutionResult {
-        val version = (dockerVersionInfoRetrievalResult as? DockerVersionInfoRetrievalResult.Succeeded)?.info?.version
+        val version = Version.parse(dockerVersionInfoRetrievalResult.version)
 
         return when {
-            version == null -> DockerHostNameResolutionResult.NotSupported
             version.isGreaterThanOrEqualToDockerVersion(Version(18, 3, 0)) -> DockerHostNameResolutionResult.Resolved("host.docker.internal")
             version.isGreaterThanOrEqualToDockerVersion(Version(17, 12, 0)) -> DockerHostNameResolutionResult.Resolved("docker.for.$operatingSystemPart.host.internal")
             version.isGreaterThanOrEqualToDockerVersion(Version(17, 6, 0)) -> DockerHostNameResolutionResult.Resolved("docker.for.$operatingSystemPart.localhost")

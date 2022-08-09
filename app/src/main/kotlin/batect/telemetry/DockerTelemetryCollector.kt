@@ -16,8 +16,8 @@
 
 package batect.telemetry
 
+import batect.docker.DockerConnectivityCheckResult
 import batect.docker.DockerHttpConfig
-import batect.docker.client.DockerConnectivityCheckResult
 import batect.dockerclient.BuilderVersion
 import batect.execution.CacheManager
 

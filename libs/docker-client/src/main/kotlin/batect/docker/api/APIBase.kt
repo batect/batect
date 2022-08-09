@@ -18,7 +18,6 @@ package batect.docker.api
 
 import batect.docker.DockerHttpConfig
 import batect.docker.Json
-import batect.docker.minimumDockerAPIVersion
 import batect.logging.Logger
 import batect.os.SystemInfo
 import kotlinx.serialization.json.jsonObject
@@ -35,7 +34,7 @@ abstract class APIBase(
     protected val logger: Logger
 ) {
     protected val baseUrl: HttpUrl = httpConfig.baseUrl.newBuilder()
-        .addPathSegment("v$minimumDockerAPIVersion")
+        .addPathSegment("v1.37")
         .build()
 
     protected fun clientWithTimeout(quantity: Long, unit: TimeUnit): OkHttpClient = httpConfig.client.newBuilder()

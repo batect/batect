@@ -17,26 +17,34 @@
 package batect.cli.commands
 
 import batect.cli.CommandLineOptions
-import batect.docker.api.BuilderVersion
-import batect.docker.client.DockerConnectivityCheckResult
+import batect.docker.DockerConnectivityCheckResult
 import batect.docker.client.DockerContainerType
-import batect.docker.client.SystemInfoClient
+import batect.dockerclient.BuilderVersion
+import batect.dockerclient.DaemonVersionInformation
+import batect.dockerclient.DockerClient
+import batect.dockerclient.DockerClientException
+import batect.dockerclient.PingResponse
 import batect.ioc.DockerConfigurationKodeinFactory
 import batect.primitives.Version
 import batect.telemetry.DockerTelemetryCollector
+import batect.telemetry.TestTelemetryCaptor
+import batect.testutils.beforeEachTestSuspend
 import batect.testutils.createForEachTest
+import batect.testutils.createLoggerForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.runForEachTest
 import batect.ui.Console
 import batect.ui.text.Text
 import com.natpryce.hamkrest.assertion.assertThat
+import kotlinx.coroutines.runBlocking
 import org.kodein.di.DI
 import org.kodein.di.DirectDI
 import org.kodein.di.bind
 import org.kodein.di.instance
 import org.mockito.kotlin.any
 import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.doThrow
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
@@ -64,18 +72,36 @@ object DockerConnectivitySpec : Spek({
             }
         }
 
-        val systemInfoClient by createForEachTest { mock<SystemInfoClient>() }
+        val dockerClient by createForEachTest { mock<DockerClient>() }
         val errorConsole by createForEachTest { mock<Console>() }
-        val connectivity by createForEachTest { DockerConnectivity(dockerConfigurationKodeinFactory, systemInfoClient, errorConsole, commandLineOptions) }
+        val telemetryCaptor by createForEachTest { TestTelemetryCaptor() }
+        val logger by createLoggerForEachTest()
+        val connectivity by createForEachTest {
+            DockerConnectivity(
+                dockerConfigurationKodeinFactory,
+                dockerClient,
+                errorConsole,
+                commandLineOptions,
+                telemetryCaptor,
+                logger
+            )
+        }
 
-        fun Suite.itRunsTheTaskWithBuilder(checkResult: DockerConnectivityCheckResult.Succeeded, expectedBuilderVersion: batect.dockerclient.BuilderVersion) {
+        fun setUpScenario(version: String, builderVersion: BuilderVersion, experimental: Boolean): DockerConnectivityCheckResult.Succeeded {
+            runBlocking {
+                whenever(dockerClient.ping()).doReturn(PingResponse("", "linux", experimental, builderVersion))
+                whenever(dockerClient.getDaemonVersionInformation()).doReturn(DaemonVersionInformation(version, "1.37", "", "", "linux", "", experimental))
+            }
+
+            return DockerConnectivityCheckResult.Succeeded(DockerContainerType.Linux, Version.parse(version), builderVersion, experimental)
+        }
+
+        fun Suite.itRunsTheTaskWithBuilder(version: String, builderVersion: BuilderVersion, experimental: Boolean, expectedBuilderVersion: BuilderVersion) {
             var ranTask = false
             var kodeinSeenInTask: DirectDI? = null
+            val checkResult by createForEachTest { setUpScenario(version, builderVersion, experimental) }
 
-            beforeEachTest {
-                ranTask = false
-                whenever(systemInfoClient.checkConnectivity()).doReturn(checkResult)
-            }
+            beforeEachTest { ranTask = false }
 
             val exitCode by runForEachTest {
                 connectivity.checkAndRun { kodein ->
@@ -110,12 +136,11 @@ object DockerConnectivitySpec : Spek({
             }
         }
 
-        fun Suite.itDoesNotRunTheTaskAndFailsWithError(checkResult: DockerConnectivityCheckResult, expectedErrorMessage: String) {
+        fun Suite.itDoesNotRunTheTaskAndFailsWithError(expectedErrorMessage: String) {
             var ranTask = false
 
             beforeEachTest {
                 ranTask = false
-                whenever(systemInfoClient.checkConnectivity()).doReturn(checkResult)
             }
 
             val exitCode by runForEachTest {
@@ -138,70 +163,79 @@ object DockerConnectivitySpec : Spek({
             }
         }
 
-        given("the connectivity check succeeds") {
+        given("the Docker daemon is compatible with Batect") {
             given("the user has not provided a builder preference") {
                 beforeEachTest { whenever(commandLineOptions.enableBuildKit).doReturn(null) }
 
                 given("the builder reports that it prefers the legacy builder") {
-                    val checkResult = DockerConnectivityCheckResult.Succeeded(containerType, Version(19, 3, 1), BuilderVersion.Legacy, true)
-
-                    itRunsTheTaskWithBuilder(checkResult, batect.dockerclient.BuilderVersion.Legacy)
+                    itRunsTheTaskWithBuilder("19.3.1", BuilderVersion.Legacy, true, BuilderVersion.Legacy)
                 }
 
                 given("the builder reports that it prefers BuildKit") {
-                    val checkResult = DockerConnectivityCheckResult.Succeeded(containerType, Version(19, 3, 1), BuilderVersion.BuildKit, true)
-
-                    itRunsTheTaskWithBuilder(checkResult, batect.dockerclient.BuilderVersion.BuildKit)
+                    itRunsTheTaskWithBuilder("19.3.1", BuilderVersion.BuildKit, true, BuilderVersion.BuildKit)
                 }
             }
 
             given("the user has explicitly disabled BuildKit") {
                 beforeEachTest { whenever(commandLineOptions.enableBuildKit).doReturn(false) }
 
-                val checkResult = DockerConnectivityCheckResult.Succeeded(containerType, Version(19, 3, 1), BuilderVersion.BuildKit, true)
-
-                itRunsTheTaskWithBuilder(checkResult, batect.dockerclient.BuilderVersion.Legacy)
+                itRunsTheTaskWithBuilder("19.3.1", BuilderVersion.BuildKit, true, BuilderVersion.Legacy)
             }
 
             given("the user has requested BuildKit") {
                 beforeEachTest { whenever(commandLineOptions.enableBuildKit).doReturn(true) }
 
                 given("the user is running a version of the Docker daemon that supports BuildKit without experimental features being enabled") {
-                    val dockerVersion = Version(18, 9, 0)
-                    val checkResult = DockerConnectivityCheckResult.Succeeded(containerType, dockerVersion, BuilderVersion.Legacy, false)
-
-                    itRunsTheTaskWithBuilder(checkResult, batect.dockerclient.BuilderVersion.BuildKit)
+                    itRunsTheTaskWithBuilder("18.9.0", BuilderVersion.Legacy, false, BuilderVersion.BuildKit)
                 }
 
                 given("the user is running a version of the Docker daemon that supports BuildKit but only if experimental features are enabled") {
-                    val dockerVersion = Version(18, 6, 0)
+                    val dockerVersion = "18.6.0"
 
                     given("experimental features are enabled") {
-                        val checkResult = DockerConnectivityCheckResult.Succeeded(containerType, dockerVersion, BuilderVersion.Legacy, true)
-
-                        itRunsTheTaskWithBuilder(checkResult, batect.dockerclient.BuilderVersion.BuildKit)
+                        itRunsTheTaskWithBuilder(dockerVersion, BuilderVersion.Legacy, true, BuilderVersion.BuildKit)
                     }
 
                     given("experimental features are disabled") {
-                        val checkResult = DockerConnectivityCheckResult.Succeeded(containerType, dockerVersion, BuilderVersion.Legacy, false)
+                        beforeEachTest {
+                            setUpScenario(dockerVersion, BuilderVersion.Legacy, false)
+                        }
 
-                        itDoesNotRunTheTaskAndFailsWithError(checkResult, "BuildKit has been enabled with --enable-buildkit or the DOCKER_BUILDKIT environment variable, but the current version of Docker requires experimental features to be enabled to use BuildKit and experimental features are currently disabled.")
+                        itDoesNotRunTheTaskAndFailsWithError("BuildKit has been enabled with --enable-buildkit or the DOCKER_BUILDKIT environment variable, but the current version of Docker requires experimental features to be enabled to use BuildKit and experimental features are currently disabled.")
                     }
                 }
 
                 given("the user is running a version of the Docker daemon that does not support BuildKit") {
-                    val dockerVersion = Version(17, 6, 0)
-                    val checkResult = DockerConnectivityCheckResult.Succeeded(containerType, dockerVersion, BuilderVersion.BuildKit, true)
+                    beforeEachTest { setUpScenario("17.6.0", BuilderVersion.BuildKit, true) }
 
-                    itDoesNotRunTheTaskAndFailsWithError(checkResult, "BuildKit has been enabled with --enable-buildkit or the DOCKER_BUILDKIT environment variable, but the current version of Docker does not support BuildKit, even with experimental features enabled.")
+                    itDoesNotRunTheTaskAndFailsWithError("BuildKit has been enabled with --enable-buildkit or the DOCKER_BUILDKIT environment variable, but the current version of Docker does not support BuildKit, even with experimental features enabled.")
                 }
             }
         }
 
-        given("the connectivity check fails") {
-            val checkResult = DockerConnectivityCheckResult.Failed("Something went wrong.")
+        given("the Docker daemon is not compatible with Batect") {
+            beforeEachTestSuspend {
+                whenever(dockerClient.getDaemonVersionInformation())
+                    .doReturn(DaemonVersionInformation("1.2.3", "1.36", "", "", "", "", false))
+            }
 
-            itDoesNotRunTheTaskAndFailsWithError(checkResult, "Docker is not installed, not running or not compatible with Batect: Something went wrong.")
+            itDoesNotRunTheTaskAndFailsWithError("Docker is not installed, not running or not compatible with Batect: Batect requires Docker 18.03.1 or later, but version 1.2.3 is installed.")
+        }
+
+        given("pinging the Docker daemon fails") {
+            beforeEachTestSuspend {
+                whenever(dockerClient.ping()).doThrow(DockerClientException("Something went wrong."))
+            }
+
+            itDoesNotRunTheTaskAndFailsWithError("Docker is not installed, not running or not compatible with Batect: Something went wrong.")
+        }
+
+        given("getting version information from the Docker daemon fails") {
+            beforeEachTestSuspend {
+                whenever(dockerClient.getDaemonVersionInformation()).doThrow(DockerClientException("Something went wrong."))
+            }
+
+            itDoesNotRunTheTaskAndFailsWithError("Docker is not installed, not running or not compatible with Batect: Something went wrong.")
         }
     }
 })

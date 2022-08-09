@@ -18,19 +18,23 @@ package batect.logging
 
 import batect.VersionInfo
 import batect.data
-import batect.docker.client.SystemInfoClient
+import batect.docker.toHumanReadableString
+import batect.dockerclient.DockerClient
 import batect.git.GitClient
 import batect.os.ConsoleInfo
 import batect.os.HostEnvironmentVariables
 import batect.os.SystemInfo
 import batect.os.data
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
+import kotlin.time.Duration.Companion.seconds
 
 class ApplicationInfoLogger(
     private val logger: Logger,
     private val versionInfo: VersionInfo,
     private val systemInfo: SystemInfo,
     private val consoleInfo: ConsoleInfo,
-    private val dockerSystemInfoClient: SystemInfoClient,
+    private val dockerClient: DockerClient,
     private val gitClient: GitClient,
     private val environmentVariables: HostEnvironmentVariables
 ) {
@@ -41,9 +45,25 @@ class ApplicationInfoLogger(
             data("versionInfo", versionInfo)
             data("systemInfo", systemInfo)
             data("consoleInfo", consoleInfo)
-            data("dockerVersionInfo", dockerSystemInfoClient.getDockerVersionInfo().toString())
+            data("dockerVersionInfo", getDockerVersionInfo())
             data("gitVersion", gitClient.version.toString())
             data("environment", environmentVariables)
         }
     }
+
+    private fun getDockerVersionInfo(): String =
+        runBlocking {
+            try {
+                withTimeout(2.seconds) {
+                    dockerClient.getDaemonVersionInformation().toHumanReadableString()
+                }
+            } catch (e: Throwable) {
+                logger.warn {
+                    message("Could not get Docker version information")
+                    exception(e)
+                }
+
+                "(could not get Docker version information because ${e.javaClass.name} was thrown)"
+            }
+        }
 }

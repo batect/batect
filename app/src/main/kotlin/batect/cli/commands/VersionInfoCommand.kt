@@ -18,6 +18,7 @@ package batect.cli.commands
 
 import batect.VersionInfo
 import batect.cli.CommandLineOptionsParser
+import batect.docker.toHumanReadableString
 import batect.dockerclient.DockerClient
 import batect.git.GitClient
 import batect.logging.Logger
@@ -56,7 +57,7 @@ class VersionInfoCommand(
         try {
             val versionInfo = dockerClient.getDaemonVersionInformation()
 
-            "${versionInfo.version} (API version: ${versionInfo.apiVersion}, minimum supported API version: ${versionInfo.minAPIVersion}, commit: ${versionInfo.gitCommit}, operating system: '${versionInfo.operatingSystem}', experimental: ${versionInfo.experimental})"
+            versionInfo.toHumanReadableString()
         } catch (e: Throwable) {
             logger.warn {
                 message("Could not get Docker version information")

@@ -81,7 +81,7 @@ object VersionInfoCommandSpec : Spek({
                         |Built from commit: THE BUILD COMMIT (commit date: COMMIT DATE)
                         |JVM version:       THE JVM VERSION
                         |OS version:        THE OS VERSION
-                        |Docker version:    20.10.11 (API version: 1.41, minimum supported API version: 1.12, commit: abc123, operating system: 'linux', experimental: false)
+                        |Docker version:    20.10.11 (API version: 1.41, minimum supported API version: 1.12, commit: abc123, operating system: 'linux', architecture: 'amd64', experimental: false)
                         |Git version:       (GIT VERSION INFO)
                         |
                         |For documentation and further information on Batect, visit https://github.com/batect/batect.

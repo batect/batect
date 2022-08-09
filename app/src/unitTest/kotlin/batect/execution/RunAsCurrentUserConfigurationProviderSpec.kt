@@ -186,8 +186,8 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                             verify(dockerClient).uploadToContainer(
                                 ContainerReference(dockerContainer.id),
                                 setOf(
-                                    UploadFile("passwd", 0, 0, passwdContent.toByteArray(Charsets.UTF_8)),
-                                    UploadFile("group", 0, 0, groupContent.toByteArray(Charsets.UTF_8))
+                                    UploadFile("passwd", 0, 0, "644".toInt(8), passwdContent.toByteArray(Charsets.UTF_8)),
+                                    UploadFile("group", 0, 0, "644".toInt(8), groupContent.toByteArray(Charsets.UTF_8))
                                 ),
                                 "/etc"
                             )
@@ -197,7 +197,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                             verify(dockerClient).uploadToContainer(
                                 ContainerReference(dockerContainer.id),
                                 setOf(
-                                    UploadDirectory("some-user", 0, 0)
+                                    UploadDirectory("some-user", 0, 0, "755".toInt(8))
                                 ),
                                 "/home"
                             )
@@ -207,7 +207,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                             verify(dockerClient).uploadToContainer(
                                 ContainerReference(dockerContainer.id),
                                 setOf(
-                                    UploadDirectory("first-cache", 0, 0)
+                                    UploadDirectory("first-cache", 0, 0, "755".toInt(8))
                                 ),
                                 "/caches"
                             )
@@ -271,8 +271,8 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                                 verify(dockerClient).uploadToContainer(
                                     ContainerReference(dockerContainer.id),
                                     setOf(
-                                        UploadFile("passwd", 0, 0, passwdContent.toByteArray(Charsets.UTF_8)),
-                                        UploadFile("group", 0, 0, groupContent.toByteArray(Charsets.UTF_8))
+                                        UploadFile("passwd", 0, 0, "644".toInt(8), passwdContent.toByteArray(Charsets.UTF_8)),
+                                        UploadFile("group", 0, 0, "644".toInt(8), groupContent.toByteArray(Charsets.UTF_8))
                                     ),
                                     "/etc"
                                 )
@@ -282,7 +282,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                                 verify(dockerClient).uploadToContainer(
                                     ContainerReference(dockerContainer.id),
                                     setOf(
-                                        UploadDirectory("some-user", 123, 456)
+                                        UploadDirectory("some-user", 123, 456, "755".toInt(8))
                                     ),
                                     "/home"
                                 )
@@ -292,7 +292,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                                 verify(dockerClient).uploadToContainer(
                                     ContainerReference(dockerContainer.id),
                                     setOf(
-                                        UploadDirectory("first-cache", 123, 456)
+                                        UploadDirectory("first-cache", 123, 456, "755".toInt(8))
                                     ),
                                     "/caches"
                                 )
@@ -318,7 +318,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                                 verify(dockerClient).uploadToContainer(
                                     ContainerReference(dockerContainer.id),
                                     setOf(
-                                        UploadDirectory("my-home", 123, 456)
+                                        UploadDirectory("my-home", 123, 456, "755".toInt(8))
                                     ),
                                     "/"
                                 )
@@ -351,7 +351,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                                 verify(dockerClient).uploadToContainer(
                                     ContainerReference(dockerContainer.id),
                                     setOf(
-                                        UploadDirectory("some-user", 123, 456)
+                                        UploadDirectory("some-user", 123, 456, "755".toInt(8))
                                     ),
                                     "/home"
                                 )
@@ -361,7 +361,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                                 verify(dockerClient).uploadToContainer(
                                     ContainerReference(dockerContainer.id),
                                     setOf(
-                                        UploadDirectory("first-cache", 123, 456)
+                                        UploadDirectory("first-cache", 123, 456, "755".toInt(8))
                                     ),
                                     "/caches"
                                 )
@@ -379,7 +379,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                                 verify(dockerClient).uploadToContainer(
                                     ContainerReference(dockerContainer.id),
                                     setOf(
-                                        UploadDirectory("first-cache", 123, 456)
+                                        UploadDirectory("first-cache", 123, 456, "755".toInt(8))
                                     ),
                                     "/"
                                 )
@@ -443,8 +443,8 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                             verify(dockerClient).uploadToContainer(
                                 ContainerReference(dockerContainer.id),
                                 setOf(
-                                    UploadFile("passwd", 0, 0, passwdContent.toByteArray(Charsets.UTF_8)),
-                                    UploadFile("group", 0, 0, groupContent.toByteArray(Charsets.UTF_8))
+                                    UploadFile("passwd", 0, 0, "644".toInt(8), passwdContent.toByteArray(Charsets.UTF_8)),
+                                    UploadFile("group", 0, 0, "644".toInt(8), groupContent.toByteArray(Charsets.UTF_8))
                                 ),
                                 "/etc"
                             )
@@ -454,7 +454,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                             verify(dockerClient).uploadToContainer(
                                 ContainerReference(dockerContainer.id),
                                 setOf(
-                                    UploadDirectory("some-user", 0, 0)
+                                    UploadDirectory("some-user", 0, 0, "755".toInt(8))
                                 ),
                                 "/home"
                             )
@@ -464,7 +464,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                             verify(dockerClient).uploadToContainer(
                                 ContainerReference(dockerContainer.id),
                                 setOf(
-                                    UploadDirectory("first-cache", 0, 0)
+                                    UploadDirectory("first-cache", 0, 0, "755".toInt(8))
                                 ),
                                 "/caches"
                             )

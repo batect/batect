@@ -106,8 +106,8 @@ class RunAsCurrentUserConfigurationProvider(
         dockerClient.uploadToContainer(
             ContainerReference(dockerContainer.id),
             setOf(
-                UploadFile("passwd", 0, 0, passwdContents.toByteArray(Charsets.UTF_8)),
-                UploadFile("group", 0, 0, groupContents.toByteArray(Charsets.UTF_8))
+                UploadFile("passwd", 0, 0, "644".toInt(8), passwdContents.toByteArray(Charsets.UTF_8)),
+                UploadFile("group", 0, 0, "644".toInt(8), groupContents.toByteArray(Charsets.UTF_8))
             ),
             "/etc"
         )
@@ -136,7 +136,7 @@ class RunAsCurrentUserConfigurationProvider(
     private suspend fun uploadDirectory(path: String, dockerContainer: DockerContainer) {
         dockerClient.uploadToContainer(
             ContainerReference(dockerContainer.id),
-            setOf(UploadDirectory(leafDirectoryNameOf(path), userId, groupId)),
+            setOf(UploadDirectory(leafDirectoryNameOf(path), userId, groupId, "755".toInt(8))),
             parentDirectoryOf(path)
         )
     }

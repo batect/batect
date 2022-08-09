@@ -18,44 +18,99 @@ package batect.execution.model.steps.runners
 
 import batect.docker.ContainerHealthCheckException
 import batect.docker.DockerContainer
-import batect.docker.client.ContainersClient
-import batect.docker.client.HealthStatus
+import batect.dockerclient.DockerClient
+import batect.dockerclient.DockerClientException
+import batect.dockerclient.Event
+import batect.dockerclient.EventHandlerAction
 import batect.execution.model.events.ContainerBecameHealthyEvent
 import batect.execution.model.events.ContainerDidNotBecomeHealthyEvent
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.steps.WaitForContainerToBecomeHealthyStep
 import batect.os.SystemInfo
 import batect.primitives.CancellationContext
+import batect.primitives.runBlocking
+import kotlinx.datetime.Instant
 
 class WaitForContainerToBecomeHealthyStepRunner(
-    private val containersClient: ContainersClient,
+    private val dockerClient: DockerClient,
     private val cancellationContext: CancellationContext,
     private val systemInfo: SystemInfo
 ) {
     fun run(step: WaitForContainerToBecomeHealthyStep, eventSink: TaskEventSink) {
         try {
-            val event = when (containersClient.waitForHealthStatus(step.dockerContainer, cancellationContext)) {
-                HealthStatus.NoHealthCheck -> ContainerBecameHealthyEvent(step.container)
-                HealthStatus.BecameHealthy -> ContainerBecameHealthyEvent(step.container)
-                HealthStatus.BecameUnhealthy -> ContainerDidNotBecomeHealthyEvent(step.container, containerBecameUnhealthyMessage(step.dockerContainer))
-                HealthStatus.Exited -> ContainerDidNotBecomeHealthyEvent(step.container, "The container exited before becoming healthy.")
-            }
+            cancellationContext.runBlocking {
+                if (!checkIfContainerHasHealthCheck(step.dockerContainer)) {
+                    eventSink.postEvent(ContainerBecameHealthyEvent(step.container))
+                    return@runBlocking
+                }
 
-            eventSink.postEvent(event)
+                val event = when (waitForHealthStatus(step.dockerContainer)) {
+                    HealthStatus.BecameHealthy -> ContainerBecameHealthyEvent(step.container)
+                    HealthStatus.BecameUnhealthy -> ContainerDidNotBecomeHealthyEvent(step.container, containerBecameUnhealthyMessage(step.dockerContainer))
+                    HealthStatus.Exited -> ContainerDidNotBecomeHealthyEvent(step.container, "The container exited before becoming healthy.")
+                }
+
+                eventSink.postEvent(event)
+            }
         } catch (e: ContainerHealthCheckException) {
+            eventSink.postEvent(ContainerDidNotBecomeHealthyEvent(step.container, "Waiting for the container's health status failed: ${e.message}"))
+        } catch (e: DockerClientException) {
             eventSink.postEvent(ContainerDidNotBecomeHealthyEvent(step.container, "Waiting for the container's health status failed: ${e.message}"))
         }
     }
 
-    private fun containerBecameUnhealthyMessage(container: DockerContainer): String {
-        val lastHealthCheckResult = containersClient.getLastHealthCheckResult(container)
+    private suspend fun checkIfContainerHasHealthCheck(container: DockerContainer): Boolean {
+        val inspectionResult = dockerClient.inspectContainer(container.id)
+        val healthcheck = inspectionResult.config.healthcheck
+
+        return healthcheck != null && healthcheck.test.isNotEmpty()
+    }
+
+    private suspend fun waitForHealthStatus(container: DockerContainer): HealthStatus {
+        val filters = mapOf(
+            "event" to setOf("die", "health_status"),
+            "container" to setOf(container.id)
+        )
+
+        var eventReceived: Event? = null
+
+        dockerClient.streamEvents(beginningOfTime, null, filters) { event ->
+            eventReceived = event
+            EventHandlerAction.Stop
+        }
+
+        if (eventReceived == null) {
+            throw ContainerHealthCheckException("Container did not emit any events.")
+        }
+
+        return when (val status = eventReceived!!.action) {
+            "health_status: healthy" -> HealthStatus.BecameHealthy
+            "health_status: unhealthy" -> HealthStatus.BecameUnhealthy
+            "die" -> HealthStatus.Exited
+            else -> throw ContainerHealthCheckException("Unexpected event received: $status")
+        }
+    }
+
+    private suspend fun containerBecameUnhealthyMessage(container: DockerContainer): String {
+        val inspectionResult = dockerClient.inspectContainer(container.id)
+        val lastHealthCheckResult = inspectionResult.state.health!!.log.last()
 
         val message = when {
-            lastHealthCheckResult.exitCode == 0 -> "The most recent health check exited with code 0, which usually indicates that the container became healthy just after the timeout period expired."
+            lastHealthCheckResult.exitCode == 0L -> "The most recent health check exited with code 0, which usually indicates that the container became healthy just after the timeout period expired."
             lastHealthCheckResult.output.isEmpty() -> "The last health check exited with code ${lastHealthCheckResult.exitCode} but did not produce any output."
             else -> "The last health check exited with code ${lastHealthCheckResult.exitCode} and output:\n${lastHealthCheckResult.output.trim()}".replace("\n", systemInfo.lineSeparator)
         }
 
         return "The configured health check did not indicate that the container was healthy within the timeout period. $message"
     }
+
+    companion object {
+        private val beginningOfTime: Instant = Instant.fromEpochMilliseconds(0)
+    }
+}
+
+private enum class HealthStatus {
+    BecameHealthy,
+    BecameUnhealthy,
+    Exited
 }

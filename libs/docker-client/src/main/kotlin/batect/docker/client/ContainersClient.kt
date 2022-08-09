@@ -17,13 +17,9 @@
 package batect.docker.client
 
 import batect.docker.ContainerFilesystemItem
-import batect.docker.ContainerHealthCheckException
 import batect.docker.DockerContainer
-import batect.docker.DockerContainerInfo
 import batect.docker.DockerContainerRunResult
 import batect.docker.DockerException
-import batect.docker.DockerHealthCheckResult
-import batect.docker.api.ContainerInspectionFailedException
 import batect.docker.api.ContainersAPI
 import batect.docker.data
 import batect.docker.run.ContainerIOStreamer
@@ -37,7 +33,6 @@ import batect.os.Dimensions
 import batect.primitives.CancellationContext
 import okio.Sink
 import okio.Source
-import java.time.Duration
 
 class ContainersClient(
     private val api: ContainersAPI,
@@ -126,68 +121,4 @@ class ContainersClient(
             data("container", container)
         }
     }
-
-    fun waitForHealthStatus(container: DockerContainer, cancellationContext: CancellationContext): HealthStatus {
-        logger.info {
-            message("Checking health status of container.")
-            data("container", container)
-        }
-
-        try {
-            val info = api.inspect(container)
-
-            if (!hasHealthCheck(info)) {
-                logger.warn {
-                    message("Container has no health check.")
-                }
-
-                return HealthStatus.NoHealthCheck
-            }
-
-            val healthCheckInfo = info.config.healthCheck
-            val checkPeriod = (healthCheckInfo.interval + healthCheckInfo.timeout).multipliedBy(healthCheckInfo.retries.toLong())
-            val overheadMargin = Duration.ofSeconds(1)
-            val timeout = healthCheckInfo.startPeriod + checkPeriod + overheadMargin
-            val event = api.waitForNextEvent(container, setOf("die", "health_status"), timeout, cancellationContext)
-
-            logger.info {
-                message("Received event notification from Docker.")
-                data("event", event)
-            }
-
-            return when {
-                event.status == "health_status: healthy" -> HealthStatus.BecameHealthy
-                event.status == "health_status: unhealthy" -> HealthStatus.BecameUnhealthy
-                event.status == "die" -> HealthStatus.Exited
-                else -> throw ContainerHealthCheckException("Unexpected event received: ${event.status}")
-            }
-        } catch (e: ContainerInspectionFailedException) {
-            throw ContainerHealthCheckException("Checking if container '${container.id}' has a health check failed: ${e.message}", e)
-        } catch (e: DockerException) {
-            throw ContainerHealthCheckException("Waiting for health status of container '${container.id}' failed: ${e.message}", e)
-        }
-    }
-
-    private fun hasHealthCheck(info: DockerContainerInfo): Boolean = info.config.healthCheck.test != null
-
-    fun getLastHealthCheckResult(container: DockerContainer): DockerHealthCheckResult {
-        try {
-            val info = api.inspect(container)
-
-            if (info.state.health == null) {
-                throw ContainerHealthCheckException("Could not get the last health check result for container '${container.id}'. The container does not have a health check.")
-            }
-
-            return info.state.health.log.last()
-        } catch (e: ContainerInspectionFailedException) {
-            throw ContainerHealthCheckException("Could not get the last health check result for container '${container.id}': ${e.message}", e)
-        }
-    }
-}
-
-enum class HealthStatus {
-    NoHealthCheck,
-    BecameHealthy,
-    BecameUnhealthy,
-    Exited
 }

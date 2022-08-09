@@ -19,18 +19,20 @@ package batect.execution
 import batect.config.CacheMount
 import batect.config.Container
 import batect.config.RunAsCurrentUserConfig
-import batect.docker.ContainerDirectory
-import batect.docker.ContainerFile
 import batect.docker.DockerContainer
-import batect.docker.DockerException
 import batect.docker.DockerVolumeMount
 import batect.docker.DockerVolumeMountSource
-import batect.docker.client.ContainersClient
 import batect.docker.client.DockerContainerType
+import batect.dockerclient.ContainerReference
+import batect.dockerclient.DockerClient
+import batect.dockerclient.DockerClientException
+import batect.dockerclient.UploadDirectory
+import batect.dockerclient.UploadFile
 import batect.dockerclient.UserAndGroup
 import batect.os.NativeMethods
 import batect.os.OperatingSystem
 import batect.os.SystemInfo
+import kotlinx.coroutines.runBlocking
 import java.nio.file.FileSystem
 import java.nio.file.Files
 
@@ -39,7 +41,7 @@ class RunAsCurrentUserConfigurationProvider(
     private val nativeMethods: NativeMethods,
     private val fileSystem: FileSystem,
     private val containerType: DockerContainerType,
-    private val containersClient: ContainersClient
+    private val dockerClient: DockerClient
 ) {
     private val userId: Int by lazy {
         when (systemInfo.operatingSystem) {
@@ -87,29 +89,31 @@ class RunAsCurrentUserConfigurationProvider(
         }
 
         try {
-            uploadFilesForConfiguration(configuration, dockerContainer)
-            uploadHomeDirectoryForConfiguration(configuration, container, dockerContainer)
-            uploadCacheDirectories(container, dockerContainer)
-        } catch (e: DockerException) {
+            runBlocking {
+                uploadFilesForConfiguration(configuration, dockerContainer)
+                uploadHomeDirectoryForConfiguration(configuration, container, dockerContainer)
+                uploadCacheDirectories(container, dockerContainer)
+            }
+        } catch (e: DockerClientException) {
             throw RunAsCurrentUserConfigurationException("Could not apply 'run as current user' configuration to container '${container.name}': ${e.message}", e)
         }
     }
 
-    private fun uploadFilesForConfiguration(configuration: RunAsCurrentUserConfig.RunAsCurrentUser, dockerContainer: DockerContainer) {
+    private suspend fun uploadFilesForConfiguration(configuration: RunAsCurrentUserConfig.RunAsCurrentUser, dockerContainer: DockerContainer) {
         val passwdContents = generatePasswdFile(configuration)
         val groupContents = generateGroupFile()
 
-        containersClient.upload(
-            dockerContainer,
+        dockerClient.uploadToContainer(
+            ContainerReference(dockerContainer.id),
             setOf(
-                ContainerFile("passwd", 0, 0, passwdContents.toByteArray(Charsets.UTF_8)),
-                ContainerFile("group", 0, 0, groupContents.toByteArray(Charsets.UTF_8))
+                UploadFile("passwd", 0, 0, passwdContents.toByteArray(Charsets.UTF_8)),
+                UploadFile("group", 0, 0, groupContents.toByteArray(Charsets.UTF_8))
             ),
             "/etc"
         )
     }
 
-    private fun uploadHomeDirectoryForConfiguration(configuration: RunAsCurrentUserConfig.RunAsCurrentUser, container: Container, dockerContainer: DockerContainer) {
+    private suspend fun uploadHomeDirectoryForConfiguration(configuration: RunAsCurrentUserConfig.RunAsCurrentUser, container: Container, dockerContainer: DockerContainer) {
         if (!configuration.homeDirectory.startsWith("/")) {
             throw RunAsCurrentUserConfigurationException("Container '${container.name}' has an invalid home directory configured: '${configuration.homeDirectory}' is not an absolute path.")
         }
@@ -117,7 +121,7 @@ class RunAsCurrentUserConfigurationProvider(
         uploadDirectory(configuration.homeDirectory, dockerContainer)
     }
 
-    private fun uploadCacheDirectories(container: Container, dockerContainer: DockerContainer) {
+    private suspend fun uploadCacheDirectories(container: Container, dockerContainer: DockerContainer) {
         val cacheMounts = container.volumeMounts.filterIsInstance<CacheMount>()
 
         cacheMounts.forEach { cacheMount ->
@@ -129,10 +133,10 @@ class RunAsCurrentUserConfigurationProvider(
         }
     }
 
-    private fun uploadDirectory(path: String, dockerContainer: DockerContainer) {
-        containersClient.upload(
-            dockerContainer,
-            setOf(ContainerDirectory(leafDirectoryNameOf(path), userId.toLong(), groupId.toLong())),
+    private suspend fun uploadDirectory(path: String, dockerContainer: DockerContainer) {
+        dockerClient.uploadToContainer(
+            ContainerReference(dockerContainer.id),
+            setOf(UploadDirectory(leafDirectoryNameOf(path), userId, groupId)),
             parentDirectoryOf(path)
         )
     }
@@ -189,7 +193,7 @@ class RunAsCurrentUserConfigurationProvider(
             val parentMount = mounts.findClosestParentMount(mount)
 
             if (parentMount != null && parentMount.source is DockerVolumeMountSource.LocalPath) {
-                val source = parentMount.source as DockerVolumeMountSource.LocalPath
+                val source = parentMount.source
                 val thisPath = mount.containerPath.splitToPathSegments()
                 val parentPath = parentMount.containerPath.splitToPathSegments()
 

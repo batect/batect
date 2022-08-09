@@ -6,7 +6,7 @@ spotless = "6.9.0"
 wire = "4.4.1"
 
 [libraries]
-batect-dockerclient = { group = "dev.batect.docker", name = "client", version = "0.4.1" }
+batect-dockerclient = { group = "dev.batect.docker", name = "client", version = "0.4.2" }
 bouncycastle = { group = "org.bouncycastle", name = "bcpkix-jdk15on", version = "1.70" }
 commons-codec = { group = "commons-codec", name = "commons-codec", version = "1.15" }
 commons-compress = { group = "org.apache.commons", name = "commons-compress", version = "1.21" }

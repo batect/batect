@@ -19,22 +19,25 @@ package batect.execution
 import batect.config.CacheMount
 import batect.config.Container
 import batect.config.RunAsCurrentUserConfig
-import batect.docker.ContainerDirectory
-import batect.docker.ContainerFile
 import batect.docker.DockerContainer
-import batect.docker.DockerException
 import batect.docker.DockerVolumeMount
 import batect.docker.DockerVolumeMountSource
-import batect.docker.client.ContainersClient
 import batect.docker.client.DockerContainerType
+import batect.dockerclient.ContainerReference
+import batect.dockerclient.DockerClient
+import batect.dockerclient.DockerClientException
+import batect.dockerclient.UploadDirectory
+import batect.dockerclient.UploadFile
 import batect.dockerclient.UserAndGroup
 import batect.os.NativeMethods
 import batect.os.OperatingSystem
 import batect.os.SystemInfo
+import batect.testutils.beforeEachTestSuspend
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.imageSourceDoesNotMatter
+import batect.testutils.itSuspend
 import batect.testutils.on
 import batect.testutils.runForEachTest
 import batect.testutils.runNullableForEachTest
@@ -60,7 +63,7 @@ import java.nio.file.Files
 
 object RunAsCurrentUserConfigurationProviderSpec : Spek({
     describe("a 'run as current user' configuration provider") {
-        val containersClient by createForEachTest { mock<ContainersClient>() }
+        val dockerClient by createForEachTest { mock<DockerClient>() }
         val dockerContainer = DockerContainer("abc-123", "abc-123-name")
 
         given("the container has 'run as current user' disabled") {
@@ -78,13 +81,13 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
 
             DockerContainerType.values().forEach { containerType ->
                 given("$containerType containers are in use") {
-                    val provider by createForEachTest { RunAsCurrentUserConfigurationProvider(systemInfo, nativeMethods, fileSystem, containerType, containersClient) }
+                    val provider by createForEachTest { RunAsCurrentUserConfigurationProvider(systemInfo, nativeMethods, fileSystem, containerType, dockerClient) }
 
                     on("applying the configuration to the container") {
                         runForEachTest { provider.applyConfigurationToContainer(container, dockerContainer) }
 
                         it("does not upload any files or directories to the container") {
-                            verifyNoInteractions(containersClient)
+                            verifyNoInteractions(dockerClient)
                         }
                     }
 
@@ -116,7 +119,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
 
                 given("Linux containers are in use") {
                     val containerType = DockerContainerType.Linux
-                    val provider by createForEachTest { RunAsCurrentUserConfigurationProvider(systemInfo, nativeMethods, fileSystem, containerType, containersClient) }
+                    val provider by createForEachTest { RunAsCurrentUserConfigurationProvider(systemInfo, nativeMethods, fileSystem, containerType, dockerClient) }
 
                     beforeEachTest { provider.createMissingVolumeMountDirectories(volumeMounts, container) }
 
@@ -127,7 +130,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
 
                 given("Windows containers are in use") {
                     val containerType = DockerContainerType.Windows
-                    val provider by createForEachTest { RunAsCurrentUserConfigurationProvider(systemInfo, nativeMethods, fileSystem, containerType, containersClient) }
+                    val provider by createForEachTest { RunAsCurrentUserConfigurationProvider(systemInfo, nativeMethods, fileSystem, containerType, dockerClient) }
 
                     beforeEachTest { provider.createMissingVolumeMountDirectories(volumeMounts, container) }
 
@@ -166,45 +169,45 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                 }
 
                 given("Linux containers are being used") {
-                    val provider by createForEachTest { RunAsCurrentUserConfigurationProvider(systemInfo, nativeMethods, fileSystem, DockerContainerType.Linux, containersClient) }
+                    val provider by createForEachTest { RunAsCurrentUserConfigurationProvider(systemInfo, nativeMethods, fileSystem, DockerContainerType.Linux, dockerClient) }
 
                     on("applying configuration to the container") {
                         runForEachTest { provider.applyConfigurationToContainer(container, dockerContainer) }
 
-                        it("uploads /etc/passwd and /etc/group files for the root user and group to the container") {
+                        itSuspend("uploads /etc/passwd and /etc/group files for the root user and group to the container") {
                             val passwdContent = """
-                                    |root:x:0:0:root:/home/some-user:/bin/sh
+                                |root:x:0:0:root:/home/some-user:/bin/sh
                             """.trimMargin()
 
                             val groupContent = """
-                                    |root:x:0:root
+                                |root:x:0:root
                             """.trimMargin()
 
-                            verify(containersClient).upload(
-                                dockerContainer,
+                            verify(dockerClient).uploadToContainer(
+                                ContainerReference(dockerContainer.id),
                                 setOf(
-                                    ContainerFile("passwd", 0, 0, passwdContent.toByteArray(Charsets.UTF_8)),
-                                    ContainerFile("group", 0, 0, groupContent.toByteArray(Charsets.UTF_8))
+                                    UploadFile("passwd", 0, 0, passwdContent.toByteArray(Charsets.UTF_8)),
+                                    UploadFile("group", 0, 0, groupContent.toByteArray(Charsets.UTF_8))
                                 ),
                                 "/etc"
                             )
                         }
 
-                        it("uploads the configured home directory to the container, with the owner and group set to root") {
-                            verify(containersClient).upload(
-                                dockerContainer,
+                        itSuspend("uploads the configured home directory to the container, with the owner and group set to root") {
+                            verify(dockerClient).uploadToContainer(
+                                ContainerReference(dockerContainer.id),
                                 setOf(
-                                    ContainerDirectory("some-user", 0, 0)
+                                    UploadDirectory("some-user", 0, 0)
                                 ),
                                 "/home"
                             )
                         }
 
-                        it("uploads the configured cache directory to the container, with the owner and group set to root") {
-                            verify(containersClient).upload(
-                                dockerContainer,
+                        itSuspend("uploads the configured cache directory to the container, with the owner and group set to root") {
+                            verify(dockerClient).uploadToContainer(
+                                ContainerReference(dockerContainer.id),
                                 setOf(
-                                    ContainerDirectory("first-cache", 0, 0)
+                                    UploadDirectory("first-cache", 0, 0)
                                 ),
                                 "/caches"
                             )
@@ -221,7 +224,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                 }
 
                 given("Windows containers are being used") {
-                    val provider by createForEachTest { RunAsCurrentUserConfigurationProvider(systemInfo, nativeMethods, fileSystem, DockerContainerType.Windows, containersClient) }
+                    val provider by createForEachTest { RunAsCurrentUserConfigurationProvider(systemInfo, nativeMethods, fileSystem, DockerContainerType.Windows, dockerClient) }
 
                     on("applying configuration to the container") {
                         it("throws an appropriate exception") {
@@ -248,13 +251,13 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                         on { getGroupName() } doReturn "the-user's-group"
                     }
 
-                    val provider by createForEachTest { RunAsCurrentUserConfigurationProvider(systemInfo, nativeMethods, fileSystem, DockerContainerType.Linux, containersClient) }
+                    val provider by createForEachTest { RunAsCurrentUserConfigurationProvider(systemInfo, nativeMethods, fileSystem, DockerContainerType.Linux, dockerClient) }
 
                     given("the configured home directory is in a subdirectory of the filesystem") {
                         on("applying configuration to the container") {
                             runForEachTest { provider.applyConfigurationToContainer(container, dockerContainer) }
 
-                            it("uploads /etc/passwd and /etc/group files for the root user and group and the current user's user and group to the container") {
+                            itSuspend("uploads /etc/passwd and /etc/group files for the root user and group and the current user's user and group to the container") {
                                 val passwdContent = """
                                     |root:x:0:0:root:/root:/bin/sh
                                     |the-user:x:123:456:the-user:/home/some-user:/bin/sh
@@ -265,31 +268,31 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                                     |the-user's-group:x:456:the-user
                                 """.trimMargin()
 
-                                verify(containersClient).upload(
-                                    dockerContainer,
+                                verify(dockerClient).uploadToContainer(
+                                    ContainerReference(dockerContainer.id),
                                     setOf(
-                                        ContainerFile("passwd", 0, 0, passwdContent.toByteArray(Charsets.UTF_8)),
-                                        ContainerFile("group", 0, 0, groupContent.toByteArray(Charsets.UTF_8))
+                                        UploadFile("passwd", 0, 0, passwdContent.toByteArray(Charsets.UTF_8)),
+                                        UploadFile("group", 0, 0, groupContent.toByteArray(Charsets.UTF_8))
                                     ),
                                     "/etc"
                                 )
                             }
 
-                            it("uploads the configured home directory to the container, with the owner and group set to the current user's user and group") {
-                                verify(containersClient).upload(
-                                    dockerContainer,
+                            itSuspend("uploads the configured home directory to the container, with the owner and group set to the current user's user and group") {
+                                verify(dockerClient).uploadToContainer(
+                                    ContainerReference(dockerContainer.id),
                                     setOf(
-                                        ContainerDirectory("some-user", 123, 456)
+                                        UploadDirectory("some-user", 123, 456)
                                     ),
                                     "/home"
                                 )
                             }
 
-                            it("uploads the configured cache directory to the container, with the owner and group set to the current user's user and group") {
-                                verify(containersClient).upload(
-                                    dockerContainer,
+                            itSuspend("uploads the configured cache directory to the container, with the owner and group set to the current user's user and group") {
+                                verify(dockerClient).uploadToContainer(
+                                    ContainerReference(dockerContainer.id),
                                     setOf(
-                                        ContainerDirectory("first-cache", 123, 456)
+                                        UploadDirectory("first-cache", 123, 456)
                                     ),
                                     "/caches"
                                 )
@@ -311,11 +314,11 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                         on("applying configuration to the container") {
                             runForEachTest { provider.applyConfigurationToContainer(containerWithHomeDirectoryInRoot, dockerContainer) }
 
-                            it("uploads the configured home directory to the container, with the owner and group set to the current user's user and group") {
-                                verify(containersClient).upload(
-                                    dockerContainer,
+                            itSuspend("uploads the configured home directory to the container, with the owner and group set to the current user's user and group") {
+                                verify(dockerClient).uploadToContainer(
+                                    ContainerReference(dockerContainer.id),
                                     setOf(
-                                        ContainerDirectory("my-home", 123, 456)
+                                        UploadDirectory("my-home", 123, 456)
                                     ),
                                     "/"
                                 )
@@ -344,21 +347,21 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                         on("applying configuration to the container") {
                             runForEachTest { provider.applyConfigurationToContainer(containerWithTrailingSlashes, dockerContainer) }
 
-                            it("uploads the configured home directory to the container, with the owner and group set to the current user's user and group") {
-                                verify(containersClient).upload(
-                                    dockerContainer,
+                            itSuspend("uploads the configured home directory to the container, with the owner and group set to the current user's user and group") {
+                                verify(dockerClient).uploadToContainer(
+                                    ContainerReference(dockerContainer.id),
                                     setOf(
-                                        ContainerDirectory("some-user", 123, 456)
+                                        UploadDirectory("some-user", 123, 456)
                                     ),
                                     "/home"
                                 )
                             }
 
-                            it("uploads the configured cache directory to the container, with the owner and group set to the current user's user and group") {
-                                verify(containersClient).upload(
-                                    dockerContainer,
+                            itSuspend("uploads the configured cache directory to the container, with the owner and group set to the current user's user and group") {
+                                verify(dockerClient).uploadToContainer(
+                                    ContainerReference(dockerContainer.id),
                                     setOf(
-                                        ContainerDirectory("first-cache", 123, 456)
+                                        UploadDirectory("first-cache", 123, 456)
                                     ),
                                     "/caches"
                                 )
@@ -372,11 +375,11 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                         on("applying configuration to the container") {
                             runForEachTest { provider.applyConfigurationToContainer(containerWithCacheDirectoryInRoot, dockerContainer) }
 
-                            it("uploads the configured cache directory to the container, with the owner and group set to the current user's user and group") {
-                                verify(containersClient).upload(
-                                    dockerContainer,
+                            itSuspend("uploads the configured cache directory to the container, with the owner and group set to the current user's user and group") {
+                                verify(dockerClient).uploadToContainer(
+                                    ContainerReference(dockerContainer.id),
                                     setOf(
-                                        ContainerDirectory("first-cache", 123, 456)
+                                        UploadDirectory("first-cache", 123, 456)
                                     ),
                                     "/"
                                 )
@@ -395,10 +398,10 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                     }
 
                     given("uploading to the container fails") {
-                        val exception = DockerException("Something went wrong.")
+                        val exception = DockerClientException("Something went wrong.")
 
-                        beforeEachTest {
-                            whenever(containersClient.upload(any(), any(), any())).thenThrow(exception)
+                        beforeEachTestSuspend {
+                            whenever(dockerClient.uploadToContainer(any(), any(), any())).thenThrow(exception)
                         }
 
                         on("applying configuration to the container") {
@@ -423,12 +426,12 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                         on { getGroupName() } doReturn "root"
                     }
 
-                    val provider by createForEachTest { RunAsCurrentUserConfigurationProvider(systemInfo, nativeMethods, fileSystem, DockerContainerType.Linux, containersClient) }
+                    val provider by createForEachTest { RunAsCurrentUserConfigurationProvider(systemInfo, nativeMethods, fileSystem, DockerContainerType.Linux, dockerClient) }
 
                     on("applying configuration to the container") {
                         runForEachTest { provider.applyConfigurationToContainer(container, dockerContainer) }
 
-                        it("uploads /etc/passwd and /etc/group files for the root user and group to the container") {
+                        itSuspend("uploads /etc/passwd and /etc/group files for the root user and group to the container") {
                             val passwdContent = """
                                     |root:x:0:0:root:/home/some-user:/bin/sh
                             """.trimMargin()
@@ -437,31 +440,31 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                                     |root:x:0:root
                             """.trimMargin()
 
-                            verify(containersClient).upload(
-                                dockerContainer,
+                            verify(dockerClient).uploadToContainer(
+                                ContainerReference(dockerContainer.id),
                                 setOf(
-                                    ContainerFile("passwd", 0, 0, passwdContent.toByteArray(Charsets.UTF_8)),
-                                    ContainerFile("group", 0, 0, groupContent.toByteArray(Charsets.UTF_8))
+                                    UploadFile("passwd", 0, 0, passwdContent.toByteArray(Charsets.UTF_8)),
+                                    UploadFile("group", 0, 0, groupContent.toByteArray(Charsets.UTF_8))
                                 ),
                                 "/etc"
                             )
                         }
 
-                        it("uploads the configured home directory to the container, with the owner and group set to root") {
-                            verify(containersClient).upload(
-                                dockerContainer,
+                        itSuspend("uploads the configured home directory to the container, with the owner and group set to root") {
+                            verify(dockerClient).uploadToContainer(
+                                ContainerReference(dockerContainer.id),
                                 setOf(
-                                    ContainerDirectory("some-user", 0, 0)
+                                    UploadDirectory("some-user", 0, 0)
                                 ),
                                 "/home"
                             )
                         }
 
-                        it("uploads the configured cache directory to the container, with the owner and group set to root") {
-                            verify(containersClient).upload(
-                                dockerContainer,
+                        itSuspend("uploads the configured cache directory to the container, with the owner and group set to root") {
+                            verify(dockerClient).uploadToContainer(
+                                ContainerReference(dockerContainer.id),
                                 setOf(
-                                    ContainerDirectory("first-cache", 0, 0)
+                                    UploadDirectory("first-cache", 0, 0)
                                 ),
                                 "/caches"
                             )

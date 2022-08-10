@@ -8,7 +8,7 @@ spotless = "6.9.0"
 batect-dockerclient = { group = "dev.batect.docker", name = "client", version = "0.5.0" }
 bouncycastle = { group = "org.bouncycastle", name = "bcpkix-jdk15on", version = "1.70" }
 commons-codec = { group = "commons-codec", name = "commons-codec", version = "1.15" }
-google-cloud-storage = { group = "com.google.cloud", name = "google-cloud-storage", version = "2.11.2" }
+google-cloud-storage = { group = "com.google.cloud", name = "google-cloud-storage", version = "2.11.3" }
 hamkrest = { group = "com.natpryce", name = "hamkrest", version = "1.8.0.1" }
 hamkrestjson = { group = "org.araqnid.hamkrest", name = "hamkrest-json", version = "1.1.2" }
 jackson-yaml = { group = "com.fasterxml.jackson.dataformat", name = "jackson-dataformat-yaml", version = "2.13.3" }

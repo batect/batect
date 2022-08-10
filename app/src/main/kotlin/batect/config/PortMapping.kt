@@ -18,7 +18,6 @@ package batect.config
 
 import batect.config.io.ConfigurationException
 import batect.config.io.deserializers.SimpleStringOrObjectSerializer
-import batect.docker.DockerPortMapping
 import batect.utils.pluralize
 import com.charleskorn.kaml.YamlInput
 import com.charleskorn.kaml.YamlPath
@@ -37,8 +36,6 @@ data class PortMapping(
     override fun toString(): String {
         return "$local:$container"
     }
-
-    fun toDockerPortMapping() = DockerPortMapping(local.toDockerPortRange(), container.toDockerPortRange(), protocol)
 
     companion object {
         const val defaultProtocol = "tcp"

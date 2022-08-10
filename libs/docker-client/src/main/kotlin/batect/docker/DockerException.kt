@@ -21,10 +21,7 @@ open class DockerException(message: String, cause: Throwable?) : RuntimeExceptio
 }
 
 class ContainerCreationFailedException(message: String, cause: Throwable? = null) : DockerException(message, cause)
-class ExecFailedException(message: String, cause: Throwable? = null) : DockerException(message, cause)
 class ContainerHealthCheckException(message: String, cause: Throwable? = null) : DockerException(message, cause)
-class ImageBuildFailedException(message: String, cause: Throwable? = null) : DockerException(message, cause)
-class ImagePullFailedException(message: String, cause: Throwable? = null) : DockerException(message, cause)
 class DockerRegistryCredentialsException(message: String, cause: Throwable? = null) : DockerException(message, cause)
 open class InvalidDockerConfigurationException(message: String) : DockerException(message)
 class InvalidDockerTLSConfigurationException(message: String) : InvalidDockerConfigurationException(message)

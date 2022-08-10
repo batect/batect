@@ -16,7 +16,7 @@
 
 package batect.ioc
 
-import batect.docker.client.DockerContainerType
+import batect.docker.DockerContainerType
 import batect.dockerclient.BuilderVersion
 import org.kodein.di.DirectDI
 import org.kodein.di.bind

@@ -16,10 +16,8 @@
 
 package batect.telemetry
 
-import batect.docker.ConnectionType
 import batect.docker.DockerConnectivityCheckResult
-import batect.docker.DockerHttpConfig
-import batect.docker.client.DockerContainerType
+import batect.docker.DockerContainerType
 import batect.dockerclient.BuilderVersion
 import batect.execution.CacheManager
 import batect.execution.CacheType
@@ -35,12 +33,6 @@ import org.spekframework.spek2.style.specification.describe
 
 object DockerTelemetryCollectorSpec : Spek({
     describe("a Docker telemetry collector") {
-        val dockerHttpConfig by createForEachTest {
-            mock<DockerHttpConfig> {
-                on { connectionType } doReturn ConnectionType.TCP
-            }
-        }
-
         val cacheManager by createForEachTest {
             mock<CacheManager> {
                 on { cacheType } doReturn CacheType.Directory
@@ -48,7 +40,7 @@ object DockerTelemetryCollectorSpec : Spek({
         }
 
         val telemetryCaptor by createForEachTest { TestTelemetryCaptor() }
-        val dockerTelemetryCollector by createForEachTest { DockerTelemetryCollector(dockerHttpConfig, cacheManager, telemetryCaptor) }
+        val dockerTelemetryCollector by createForEachTest { DockerTelemetryCollector(cacheManager, telemetryCaptor) }
 
         describe("when collecting telemetry") {
             val checkResult = DockerConnectivityCheckResult.Succeeded(DockerContainerType.Linux, Version(19, 3, 1), BuilderVersion.BuildKit, false)
@@ -72,10 +64,6 @@ object DockerTelemetryCollectorSpec : Spek({
 
             it("adds the daemon's experimental status as an attribute on the telemetry session") {
                 assertThat(telemetryCaptor.allAttributes["dockerDaemonExperimentalFeaturesEnabled"], equalTo(JsonPrimitive(false)))
-            }
-
-            it("adds the Docker connection type as an attribute on the telemetry session") {
-                assertThat(telemetryCaptor.allAttributes["dockerConnectionType"], equalTo(JsonPrimitive("TCP")))
             }
 
             it("adds the cache type as an attribute on the telemetry session") {

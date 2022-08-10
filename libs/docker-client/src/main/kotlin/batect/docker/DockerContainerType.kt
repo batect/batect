@@ -16,19 +16,7 @@
 
 package batect.docker
 
-import kotlinx.serialization.Serializable
-
-@Serializable
-data class DockerDeviceMount(
-    val localPath: String,
-    val containerPath: String,
-    val options: String? = null
-) {
-    override fun toString(): String {
-        return if (options == null) {
-            "$localPath:$containerPath"
-        } else {
-            "$localPath:$containerPath:$options"
-        }
-    }
+enum class DockerContainerType {
+    Linux,
+    Windows
 }

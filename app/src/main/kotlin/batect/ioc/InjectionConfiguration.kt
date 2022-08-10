@@ -45,30 +45,7 @@ import batect.config.includes.IncludeResolver
 import batect.config.io.ConfigurationLoader
 import batect.docker.DockerClientFactory
 import batect.docker.DockerHostNameResolver
-import batect.docker.DockerHttpConfig
-import batect.docker.DockerTLSConfig
-import batect.docker.api.ContainersAPI
-import batect.docker.api.ExecAPI
-import batect.docker.api.NetworksAPI
-import batect.docker.api.SessionsAPI
-import batect.docker.api.SystemInfoAPI
-import batect.docker.api.VolumesAPI
-import batect.docker.build.buildkit.BuildKitSessionFactory
-import batect.docker.build.buildkit.services.HealthService
-import batect.docker.build.buildkit.services.StatFactory
-import batect.docker.build.legacy.DockerIgnoreParser
-import batect.docker.build.legacy.DockerfileParser
-import batect.docker.build.legacy.ImageBuildContextFactory
-import batect.docker.client.ContainersClient
-import batect.docker.client.DockerClient
-import batect.docker.client.ExecClient
-import batect.docker.client.NetworksClient
-import batect.docker.client.VolumesClient
-import batect.docker.pull.RegistryCredentialsConfigurationFile
-import batect.docker.pull.RegistryCredentialsProvider
-import batect.docker.run.ContainerIOStreamer
-import batect.docker.run.ContainerTTYManager
-import batect.docker.run.ContainerWaiter
+import batect.dockerclient.DockerClient
 import batect.execution.ConfigVariablesProvider
 import batect.execution.InterruptionTrap
 import batect.execution.TaskSuggester
@@ -184,56 +161,9 @@ private val configModule = DI.Module("config") {
 }
 
 private val dockerModule = DI.Module("docker") {
-    import(dockerApiModule)
-    import(dockerBuildModule)
-    import(dockerClientModule)
-
-    bind<ContainerIOStreamer>() with singleton { ContainerIOStreamer() }
-    bind<ContainerTTYManager>() with singletonWithLogger { logger -> ContainerTTYManager(instance(), instance(), logger) }
-    bind<ContainerWaiter>() with singleton { ContainerWaiter(instance()) }
     bind<DockerHostNameResolver>() with singleton { DockerHostNameResolver(instance(), instance()) }
-    bind<DockerHttpConfig>() with singleton { DockerHttpConfig(instance(), commandLineOptions().dockerHost, instance(), instance()) }
-    bind<RegistryCredentialsConfigurationFile>() with singletonWithLogger { logger -> RegistryCredentialsConfigurationFile(instance(), commandLineOptions().dockerConfigDirectory, logger) }
-    bind<RegistryCredentialsProvider>() with singleton { RegistryCredentialsProvider(instance()) }
-
-    bind<DockerTLSConfig>() with singleton {
-        val options = commandLineOptions()
-
-        if (options.dockerUseTLS) {
-            DockerTLSConfig.EnableTLS(options.dockerVerifyTLS, options.dockerTlsCACertificatePath, options.dockerTLSCertificatePath, options.dockerTLSKeyPath)
-        } else {
-            DockerTLSConfig.DisableTLS
-        }
-    }
-
     bind<DockerClientFactory>() with singleton { DockerClientFactory(instance()) }
-    bind<batect.dockerclient.DockerClient>() with singleton { instance<DockerClientFactory>().createBuilder().build() }
-}
-
-private val dockerApiModule = DI.Module("docker.api") {
-    bind<ContainersAPI>() with singletonWithLogger { logger -> ContainersAPI(instance(), instance(), logger) }
-    bind<ExecAPI>() with singletonWithLogger { logger -> ExecAPI(instance(), instance(), logger) }
-    bind<NetworksAPI>() with singletonWithLogger { logger -> NetworksAPI(instance(), instance(), logger) }
-    bind<SessionsAPI>() with singletonWithLogger { logger -> SessionsAPI(instance(), instance(), logger) }
-    bind<SystemInfoAPI>() with singletonWithLogger { logger -> SystemInfoAPI(instance(), instance(), logger) }
-    bind<VolumesAPI>() with singletonWithLogger { logger -> VolumesAPI(instance(), instance(), logger) }
-}
-
-private val dockerBuildModule = DI.Module("docker.build") {
-    bind<BuildKitSessionFactory>() with singleton { BuildKitSessionFactory(instance(), instance(), instance(), instance(), instance(), instance()) }
-    bind<DockerfileParser>() with singleton { DockerfileParser() }
-    bind<DockerIgnoreParser>() with singleton { DockerIgnoreParser() }
-    bind<HealthService>() with singleton { HealthService() }
-    bind<ImageBuildContextFactory>() with singleton { ImageBuildContextFactory(instance()) }
-    bind<StatFactory>() with singleton { StatFactory.create(instance()) }
-}
-
-private val dockerClientModule = DI.Module("docker.client") {
-    bind<ContainersClient>() with singletonWithLogger { logger -> ContainersClient(instance(), instance(), instance(), instance(), instance(), logger) }
-    bind<ExecClient>() with singletonWithLogger { logger -> ExecClient(instance(), instance(), logger) }
-    bind<NetworksClient>() with singleton { NetworksClient(instance()) }
-    bind<VolumesClient>() with singleton { VolumesClient(instance()) }
-    bind<DockerClient>() with singleton { DockerClient(instance(), instance(), instance(), instance()) }
+    bind<DockerClient>() with singleton { instance<DockerClientFactory>().createBuilder().build() }
 }
 
 private val gitModule = DI.Module("git") {

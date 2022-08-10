@@ -16,7 +16,7 @@
 
 package batect.ioc
 
-import batect.docker.client.DockerContainerType
+import batect.docker.DockerContainerType
 import batect.dockerclient.BuilderVersion
 import batect.testutils.createForEachTest
 import batect.testutils.on

@@ -17,9 +17,7 @@
 package batect.docker
 
 import batect.logging.LogMessageBuilder
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import java.time.Duration
 
 @Serializable
 data class DockerImage(val id: String)
@@ -27,121 +25,9 @@ data class DockerImage(val id: String)
 @Serializable
 data class DockerContainer(val id: String, val name: String)
 
-data class DockerContainerRunResult(val exitCode: Long)
-
 @Serializable
 data class DockerNetwork(val id: String)
 
-@Serializable
-data class DockerVolume(
-    @SerialName("Name") val name: String
-)
-
-@Serializable
-data class DockerEvent(val status: String)
-
-@Serializable
-data class DockerContainerInfo(
-    @SerialName("State") val state: DockerContainerState,
-    @SerialName("Config") val config: DockerContainerConfiguration
-)
-
-@Serializable
-data class DockerContainerState(
-    @SerialName("Health") val health: DockerContainerHealthCheckState? = null
-)
-
-@Serializable
-data class DockerContainerHealthCheckState(
-    @SerialName("Log") val log: List<DockerHealthCheckResult>
-)
-
-@Serializable
-data class DockerHealthCheckResult(
-    @SerialName("ExitCode") val exitCode: Int,
-    @SerialName("Output") val output: String
-)
-
-@Serializable
-data class DockerContainerConfiguration(@SerialName("Healthcheck") val healthCheck: DockerContainerHealthCheckConfig)
-
-@Serializable
-data class DockerContainerHealthCheckConfig(
-    @SerialName("Test") val test: List<String>? = null,
-    @SerialName("Interval") @Serializable(with = DockerDurationSerializer::class)
-    val interval: Duration = Duration.ofSeconds(30),
-    @SerialName("Timeout") @Serializable(with = DockerDurationSerializer::class)
-    val timeout: Duration = Duration.ofSeconds(30),
-    @SerialName("StartPeriod") @Serializable(with = DockerDurationSerializer::class)
-    val startPeriod: Duration = Duration.ZERO,
-    @SerialName("Retries") val retries: Int = 3
-)
-
-@Serializable
-data class DockerExecInstance(
-    @SerialName("Id") val id: String
-)
-
-@Serializable
-data class DockerExecInstanceInfo(
-    @SerialName("ExitCode") val exitCode: Int?,
-    @SerialName("Running") val running: Boolean
-)
-
-@Serializable
-data class DockerExecResult(
-    val exitCode: Int,
-    val output: String
-)
-
-@Serializable
-sealed class ContainerFilesystemItem() {
-    abstract val path: String
-    abstract val uid: Long
-    abstract val gid: Long
-}
-
-@Serializable
-data class ContainerFile(
-    override val path: String,
-    override val uid: Long,
-    override val gid: Long,
-    val contents: ByteArray
-) : ContainerFilesystemItem() {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as ContainerFile
-
-        if (path != other.path) return false
-        if (uid != other.uid) return false
-        if (gid != other.gid) return false
-        if (!contents.contentEquals(other.contents)) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = path.hashCode()
-        result = 31 * result + uid.hashCode()
-        result = 31 * result + gid.hashCode()
-        result = 31 * result + contents.contentHashCode()
-        return result
-    }
-}
-
-@Serializable
-data class ContainerDirectory(
-    override val path: String,
-    override val uid: Long,
-    override val gid: Long
-) : ContainerFilesystemItem()
-
 fun LogMessageBuilder.data(key: String, value: DockerImage) = this.data(key, value, DockerImage.serializer())
 fun LogMessageBuilder.data(key: String, value: DockerContainer) = this.data(key, value, DockerContainer.serializer())
-fun LogMessageBuilder.data(key: String, value: DockerVolume) = this.data(key, value, DockerVolume.serializer())
 fun LogMessageBuilder.data(key: String, value: DockerNetwork) = this.data(key, value, DockerNetwork.serializer())
-fun LogMessageBuilder.data(key: String, value: DockerEvent) = this.data(key, value, DockerEvent.serializer())
-fun LogMessageBuilder.data(key: String, value: DockerExecInstance) = this.data(key, value, DockerExecInstance.serializer())
-fun LogMessageBuilder.data(key: String, value: DockerExecResult) = this.data(key, value, DockerExecResult.serializer())

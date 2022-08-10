@@ -20,9 +20,9 @@ import batect.config.CacheMount
 import batect.config.Container
 import batect.config.RunAsCurrentUserConfig
 import batect.docker.DockerContainer
+import batect.docker.DockerContainerType
 import batect.docker.DockerVolumeMount
 import batect.docker.DockerVolumeMountSource
-import batect.docker.client.DockerContainerType
 import batect.dockerclient.ContainerReference
 import batect.dockerclient.DockerClient
 import batect.dockerclient.DockerClientException

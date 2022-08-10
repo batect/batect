@@ -18,7 +18,7 @@ package batect.execution
 
 import batect.cli.CommandLineOptions
 import batect.config.ProjectPaths
-import batect.docker.client.DockerContainerType
+import batect.docker.DockerContainerType
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given

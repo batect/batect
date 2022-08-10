@@ -18,7 +18,6 @@ package batect.config
 
 import batect.config.io.ConfigurationException
 import batect.config.io.deserializers.SimpleStringOrObjectSerializer
-import batect.docker.DockerDeviceMount
 import com.charleskorn.kaml.YamlInput
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -36,8 +35,6 @@ data class DeviceMount(
             "$localPath:$containerPath:$options"
         }
     }
-
-    fun toDockerMount() = DockerDeviceMount(localPath, containerPath, options)
 }
 
 object DeviceMountConfigSerializer : SimpleStringOrObjectSerializer<DeviceMount>(DeviceMount.serializer()) {

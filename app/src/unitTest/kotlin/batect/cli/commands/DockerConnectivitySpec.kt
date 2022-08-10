@@ -18,7 +18,7 @@ package batect.cli.commands
 
 import batect.cli.CommandLineOptions
 import batect.docker.DockerConnectivityCheckResult
-import batect.docker.client.DockerContainerType
+import batect.docker.DockerContainerType
 import batect.dockerclient.BuilderVersion
 import batect.dockerclient.DaemonVersionInformation
 import batect.dockerclient.DockerClient

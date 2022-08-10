@@ -17,9 +17,9 @@
 package batect.execution.model.steps.runners
 
 import batect.cli.CommandLineOptions
+import batect.docker.DockerContainerType
 import batect.docker.DockerNetwork
 import batect.docker.DockerResourceNameGenerator
-import batect.docker.client.DockerContainerType
 import batect.dockerclient.DockerClient
 import batect.dockerclient.NetworkCreationFailedException
 import batect.dockerclient.NetworkReference

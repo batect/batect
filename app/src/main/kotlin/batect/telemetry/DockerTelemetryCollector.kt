@@ -17,19 +17,16 @@
 package batect.telemetry
 
 import batect.docker.DockerConnectivityCheckResult
-import batect.docker.DockerHttpConfig
 import batect.dockerclient.BuilderVersion
 import batect.execution.CacheManager
 
 class DockerTelemetryCollector(
-    private val dockerHttpConfig: DockerHttpConfig,
     private val cacheManager: CacheManager,
     private val telemetryCaptor: TelemetryCaptor
 ) {
     fun collectTelemetry(result: DockerConnectivityCheckResult.Succeeded, builderVersion: BuilderVersion) {
         telemetryCaptor.addAttribute("dockerBuilderVersionInUse", builderVersion.toString())
         telemetryCaptor.addAttribute("dockerContainerType", result.containerType.toString())
-        telemetryCaptor.addAttribute("dockerConnectionType", dockerHttpConfig.connectionType.toString())
         telemetryCaptor.addAttribute("dockerDaemonPreferredBuilderVersion", result.builderVersion.toString())
         telemetryCaptor.addAttribute("dockerDaemonExperimentalFeaturesEnabled", result.experimentalFeaturesEnabled)
         telemetryCaptor.addAttribute("dockerVersion", result.dockerVersion.toString())

@@ -16,7 +16,6 @@
 
 package batect.docker
 
-import batect.docker.client.DockerContainerType
 import batect.dockerclient.BuilderVersion
 import batect.primitives.Version
 

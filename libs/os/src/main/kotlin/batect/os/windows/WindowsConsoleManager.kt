@@ -36,25 +36,4 @@ class WindowsConsoleManager(
 
         nativeMethods.enableConsoleEscapeSequences()
     }
-
-    override fun enterRawMode(): AutoCloseable {
-        if (!consoleInfo.stdinIsTTY) {
-            logger.info {
-                message("STDIN is not a TTY, won't enter raw mode.")
-            }
-
-            return AutoCloseable { }
-        }
-
-        val existingState = nativeMethods.enableConsoleRawMode()
-
-        return TerminalStateRestorer(existingState, nativeMethods)
-    }
-}
-
-data class TerminalStateRestorer(
-    private val previousState: Int,
-    private val nativeMethods: WindowsNativeMethods
-) : AutoCloseable {
-    override fun close() = nativeMethods.restoreConsoleMode(previousState)
 }

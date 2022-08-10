@@ -18,13 +18,8 @@ package batect.os.windows
 
 import batect.os.ConsoleInfo
 import batect.testutils.createForEachTest
-import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.logging.createLoggerForEachTestWithoutCustomSerializers
-import batect.testutils.on
-import batect.testutils.runForEachTest
-import com.natpryce.hamkrest.assertion.assertThat
-import org.mockito.kotlin.any
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
@@ -56,56 +51,6 @@ object WindowsConsoleManagerSpec : Spek({
 
                 it("does not call the Windows API to enable console escape sequences") {
                     verify(nativeMethods, never()).enableConsoleEscapeSequences()
-                }
-            }
-        }
-
-        describe("entering and exiting raw mode") {
-            given("the terminal is a TTY") {
-                beforeEachTest { whenever(consoleInfo.stdinIsTTY).doReturn(true) }
-
-                describe("entering raw mode") {
-                    beforeEachTest { whenever(nativeMethods.enableConsoleRawMode()).thenReturn(123) }
-
-                    val restorer by runForEachTest { consoleManager.enterRawMode() }
-
-                    it("calls the Windows API to enter raw mode") {
-                        verify(nativeMethods).enableConsoleRawMode()
-                    }
-
-                    it("returns an object that can be used to restore the terminal to its previous state") {
-                        assertThat(restorer, equalTo(TerminalStateRestorer(123, nativeMethods)))
-                    }
-                }
-
-                describe("exiting raw mode") {
-                    val restorer by createForEachTest { TerminalStateRestorer(456, nativeMethods) }
-
-                    beforeEachTest { restorer.close() }
-
-                    it("calls the Windows API to restore the previous state") {
-                        verify(nativeMethods).restoreConsoleMode(456)
-                    }
-                }
-            }
-
-            given("the terminal is not a TTY") {
-                beforeEachTest { whenever(consoleInfo.stdinIsTTY).doReturn(false) }
-
-                on("entering raw mode") {
-                    beforeEachTest { consoleManager.enterRawMode() }
-
-                    it("does not invoke the Windows API") {
-                        verify(nativeMethods, never()).enableConsoleRawMode()
-                    }
-                }
-
-                on("exiting raw mode") {
-                    beforeEachTest { consoleManager.enterRawMode().use { } }
-
-                    it("does not invoke the Windows API") {
-                        verify(nativeMethods, never()).restoreConsoleMode(any())
-                    }
                 }
             }
         }

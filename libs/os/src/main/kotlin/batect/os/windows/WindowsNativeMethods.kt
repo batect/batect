@@ -122,22 +122,6 @@ class WindowsNativeMethods(
         }
     }
 
-    // This is based on MakeRaw from term_windows.go in the Docker CLI.
-    fun enableConsoleRawMode(): Int = updateConsoleMode(WindowsLibC.STD_INPUT_HANDLE) { currentMode ->
-        (
-            currentMode
-                or ENABLE_EXTENDED_FLAGS
-                or ENABLE_INSERT_MODE
-                or ENABLE_QUICK_EDIT_MODE
-                or ENABLE_VIRTUAL_TERMINAL_INPUT
-                and ENABLE_ECHO_INPUT.inv()
-                and ENABLE_LINE_INPUT.inv()
-                and ENABLE_MOUSE_INPUT.inv()
-                and ENABLE_WINDOW_INPUT.inv()
-                and ENABLE_PROCESSED_INPUT.inv()
-            )
-    }
-
     private fun updateConsoleMode(handle: Int, transform: (Int) -> Int): Int {
         val console = win32.GetStdHandle(handle)
 
@@ -158,18 +142,6 @@ class WindowsNativeMethods(
         }
 
         return currentConsoleMode.toInt()
-    }
-
-    fun restoreConsoleMode(previousMode: Int) {
-        val console = win32.GetStdHandle(WindowsLibC.STD_INPUT_HANDLE)
-
-        if (!console.isValid) {
-            throwWindowsNativeMethodFailed(Win32::GetStdHandle, posix)
-        }
-
-        if (!win32.SetConsoleMode(console, previousMode)) {
-            throwWindowsNativeMethodFailed(Win32::SetConsoleMode, posix)
-        }
     }
 
     override fun getUserName(): String {
@@ -243,16 +215,6 @@ class WindowsNativeMethods(
 
     companion object {
         private const val ERROR_INVALID_HANDLE: Int = 0x00000006
-
-        private const val ENABLE_ECHO_INPUT: Int = 0x4
-        private const val ENABLE_LINE_INPUT: Int = 0x2
-        private const val ENABLE_MOUSE_INPUT: Int = 0x10
-        private const val ENABLE_WINDOW_INPUT: Int = 0x8
-        private const val ENABLE_PROCESSED_INPUT: Int = 0x1
-        private const val ENABLE_EXTENDED_FLAGS: Int = 0x80
-        private const val ENABLE_INSERT_MODE: Int = 0x20
-        private const val ENABLE_QUICK_EDIT_MODE: Int = 0x40
-        private const val ENABLE_VIRTUAL_TERMINAL_INPUT: Int = 0x200
 
         private const val ENABLE_VIRTUAL_TERMINAL_PROCESSING: Int = 0x4
         private const val DISABLE_NEWLINE_AUTO_RETURN: Int = 0x8

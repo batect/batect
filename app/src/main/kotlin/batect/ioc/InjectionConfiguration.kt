@@ -64,7 +64,6 @@ import batect.os.NativeMethods
 import batect.os.ProcessRunner
 import batect.os.SignalListener
 import batect.os.SystemInfo
-import batect.os.unix.ApplicationResolver
 import batect.os.unix.UnixConsoleManager
 import batect.os.windows.WindowsConsoleManager
 import batect.proxies.ProxyEnvironmentVariablePreprocessor
@@ -217,8 +216,7 @@ private val telemetryModule = DI.Module("telemetry") {
 }
 
 private val unixModule = DI.Module("os.unix") {
-    bind<ApplicationResolver>() with singleton { ApplicationResolver(instance()) }
-    bind<ConsoleManager>() with singletonWithLogger { logger -> UnixConsoleManager(instance(), instance(), instance(), logger) }
+    bind<ConsoleManager>() with singleton { UnixConsoleManager() }
 }
 
 private val windowsModule = DI.Module("os.windows") {

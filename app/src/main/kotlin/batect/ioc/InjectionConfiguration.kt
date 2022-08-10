@@ -43,6 +43,7 @@ import batect.config.includes.GitRepositoryCacheCleanupTask
 import batect.config.includes.GitRepositoryCacheNotificationListener
 import batect.config.includes.IncludeResolver
 import batect.config.io.ConfigurationLoader
+import batect.docker.DockerClientFactory
 import batect.docker.DockerHostNameResolver
 import batect.docker.DockerHttpConfig
 import batect.docker.DockerTLSConfig
@@ -68,7 +69,6 @@ import batect.docker.pull.RegistryCredentialsProvider
 import batect.docker.run.ContainerIOStreamer
 import batect.docker.run.ContainerTTYManager
 import batect.docker.run.ContainerWaiter
-import batect.dockerclient.TLSVerification
 import batect.execution.ConfigVariablesProvider
 import batect.execution.InterruptionTrap
 import batect.execution.TaskSuggester
@@ -114,13 +114,11 @@ import batect.wrapper.WrapperCacheCleanupTask
 import com.charleskorn.okhttp.systemkeystore.useOperatingSystemCertificateTrustStore
 import jnr.ffi.Platform
 import okhttp3.OkHttpClient
-import okio.Path.Companion.toOkioPath
 import org.kodein.di.DI
 import org.kodein.di.DirectDI
 import org.kodein.di.bind
 import org.kodein.di.instance
 import org.kodein.di.singleton
-import java.nio.file.Files
 
 val rootModule = DI.Module("root") {
     import(cliModule)
@@ -208,30 +206,8 @@ private val dockerModule = DI.Module("docker") {
         }
     }
 
-    bind<batect.dockerclient.DockerClient>() with singleton {
-        val options = commandLineOptions()
-
-        val builder = batect.dockerclient.DockerClient.Builder()
-            .withHost(options.dockerHost)
-
-        // If the user has specified a config directory, that is validated by CommandLineOptionsParser.
-        // However, if we're using the default value, then no validation is performed, so there's a chance
-        // the directory does not exist in this case.
-        if (Files.exists(options.dockerConfigDirectory)) {
-            builder.withConfigDirectory(options.dockerConfigDirectory.toOkioPath())
-        }
-
-        if (options.dockerUseTLS) {
-            builder.withTLSConfiguration(
-                options.dockerTlsCACertificatePath.toOkioPath(),
-                options.dockerTLSCertificatePath.toOkioPath(),
-                options.dockerTLSKeyPath.toOkioPath(),
-                if (options.dockerVerifyTLS) TLSVerification.Enabled else TLSVerification.InsecureDisabled
-            )
-        }
-
-        builder.build()
-    }
+    bind<DockerClientFactory>() with singleton { DockerClientFactory(instance()) }
+    bind<batect.dockerclient.DockerClient>() with singleton { instance<DockerClientFactory>().createBuilder().build() }
 }
 
 private val dockerApiModule = DI.Module("docker.api") {

@@ -26,6 +26,7 @@ import batect.execution.model.events.TaskEventSink
 import batect.execution.model.steps.StopContainerStep
 import batect.testutils.beforeEachTestSuspend
 import batect.testutils.createForEachTest
+import batect.testutils.createLoggerForEachTest
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.itSuspend
 import batect.testutils.on
@@ -44,7 +45,8 @@ object StopContainerStepRunnerSpec : Spek({
 
         val dockerClient by createForEachTest { mock<DockerClient>() }
         val eventSink by createForEachTest { mock<TaskEventSink>() }
-        val runner by createForEachTest { StopContainerStepRunner(dockerClient) }
+        val logger by createLoggerForEachTest()
+        val runner by createForEachTest { StopContainerStepRunner(dockerClient, logger) }
 
         on("when stopping the container succeeds") {
             beforeEachTest { runner.run(step, eventSink) }

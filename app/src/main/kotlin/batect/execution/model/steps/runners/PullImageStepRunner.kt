@@ -27,12 +27,14 @@ import batect.execution.model.events.ImagePullProgressEvent
 import batect.execution.model.events.ImagePulledEvent
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.steps.PullImageStep
+import batect.logging.Logger
 import batect.primitives.CancellationContext
 import batect.primitives.runBlocking
 
 class PullImageStepRunner(
     private val dockerClient: DockerClient,
-    private val cancellationContext: CancellationContext
+    private val cancellationContext: CancellationContext,
+    private val logger: Logger
 ) {
     fun run(step: PullImageStep, eventSink: TaskEventSink) {
         try {
@@ -42,6 +44,12 @@ class PullImageStepRunner(
 
             eventSink.postEvent(ImagePulledEvent(step.source, DockerImage(image.id)))
         } catch (e: DockerClientException) {
+            logger.error {
+                message("Pulling image failed.")
+                exception(e)
+                data("imageName", step.source.imageName)
+            }
+
             eventSink.postEvent(ImagePullFailedEvent(step.source, e.message ?: ""))
         }
     }

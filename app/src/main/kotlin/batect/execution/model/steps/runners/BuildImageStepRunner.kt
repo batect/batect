@@ -36,6 +36,7 @@ import batect.execution.model.events.ImageBuildProgressEvent
 import batect.execution.model.events.ImageBuiltEvent
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.steps.BuildImageStep
+import batect.logging.Logger
 import batect.os.PathResolutionContext
 import batect.os.PathResolutionResult
 import batect.os.PathResolverFactory
@@ -64,7 +65,8 @@ class BuildImageStepRunner(
     private val commandLineOptions: CommandLineOptions,
     private val builderVersion: BuilderVersion,
     private val systemInfo: SystemInfo,
-    private val telemetryCaptor: TelemetryCaptor
+    private val telemetryCaptor: TelemetryCaptor,
+    private val logger: Logger
 ) {
     fun run(step: BuildImageStep, eventSink: TaskEventSink) {
         val stdoutBuffer = Buffer()
@@ -107,6 +109,11 @@ class BuildImageStepRunner(
             }
 
             val message = messageBuilder.replace("\n".toRegex(), systemInfo.lineSeparator)
+
+            logger.error {
+                message("Building image failed.")
+                exception(e)
+            }
 
             eventSink.postEvent(ImageBuildFailedEvent(step.container, message))
         }

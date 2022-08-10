@@ -52,6 +52,7 @@ import batect.proxies.ProxyEnvironmentVariablesProvider
 import batect.telemetry.TestTelemetryCaptor
 import batect.testutils.beforeEachTestSuspend
 import batect.testutils.createForEachTest
+import batect.testutils.createLoggerForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.itSuspend
@@ -126,6 +127,7 @@ object BuildImageStepRunnerSpec : Spek({
         val expressionEvaluationContext = ExpressionEvaluationContext(HostEnvironmentVariables("SOME_ENV_VAR" to "some env var value"), emptyMap())
         val eventSink by createForEachTest { mock<TaskEventSink>() }
         val commandLineOptions = CommandLineOptions(dontPropagateProxyEnvironmentVariables = false, imageTags = mapOf(container.name to setOf("some-extra-image-tag")))
+        val logger by createLoggerForEachTest()
 
         val runner by createForEachTest {
             BuildImageStepRunner(
@@ -139,7 +141,8 @@ object BuildImageStepRunnerSpec : Spek({
                 commandLineOptions,
                 builderVersion,
                 systemInfo,
-                telemetryCaptor
+                telemetryCaptor,
+                logger
             )
         }
 
@@ -275,7 +278,8 @@ object BuildImageStepRunnerSpec : Spek({
                         commandLineOptionsWithProxyEnvironmentVariablePropagationDisabled,
                         builderVersion,
                         systemInfo,
-                        telemetryCaptor
+                        telemetryCaptor,
+                        logger
                     )
                 }
 

@@ -30,6 +30,7 @@ import batect.execution.model.events.ContainerCreatedEvent
 import batect.execution.model.events.ContainerCreationFailedEvent
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.steps.CreateContainerStep
+import batect.logging.Logger
 import batect.ui.containerio.ContainerIOStreamingOptions
 import kotlinx.coroutines.runBlocking
 
@@ -38,7 +39,8 @@ class CreateContainerStepRunner(
     private val volumeMountResolver: VolumeMountResolver,
     private val runAsCurrentUserConfigurationProvider: RunAsCurrentUserConfigurationProvider,
     private val creationRequestFactory: DockerContainerCreationRequestFactory,
-    private val ioStreamingOptions: ContainerIOStreamingOptions
+    private val ioStreamingOptions: ContainerIOStreamingOptions,
+    private val logger: Logger
 ) {
     fun run(step: CreateContainerStep, eventSink: TaskEventSink) {
         val container = step.container
@@ -73,10 +75,25 @@ class CreateContainerStepRunner(
                 }
             }
         } catch (e: ContainerCreationFailedException) {
+            logger.error {
+                message("Creating container failed.")
+                exception(e)
+            }
+
             eventSink.postEvent(ContainerCreationFailedEvent(container, e.message ?: ""))
         } catch (e: VolumeMountResolutionException) {
+            logger.error {
+                message("Resolving volume mounts failed.")
+                exception(e)
+            }
+
             eventSink.postEvent(ContainerCreationFailedEvent(container, e.message ?: ""))
         } catch (e: RunAsCurrentUserConfigurationException) {
+            logger.error {
+                message("Applying 'run as current user' configuration failed.")
+                exception(e)
+            }
+
             eventSink.postEvent(ContainerCreationFailedEvent(container, e.message ?: ""))
         }
     }

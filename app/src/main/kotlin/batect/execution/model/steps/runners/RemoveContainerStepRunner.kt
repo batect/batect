@@ -23,10 +23,12 @@ import batect.execution.model.events.ContainerRemovalFailedEvent
 import batect.execution.model.events.ContainerRemovedEvent
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.steps.RemoveContainerStep
+import batect.logging.Logger
 import kotlinx.coroutines.runBlocking
 
 class RemoveContainerStepRunner(
-    private val client: DockerClient
+    private val client: DockerClient,
+    private val logger: Logger
 ) {
     fun run(step: RemoveContainerStep, eventSink: TaskEventSink) {
         try {
@@ -36,6 +38,12 @@ class RemoveContainerStepRunner(
 
             eventSink.postEvent(ContainerRemovedEvent(step.container))
         } catch (e: ContainerRemovalFailedException) {
+            logger.error {
+                message("Removing container failed.")
+                exception(e)
+                data("containerId", step.dockerContainer.id)
+            }
+
             eventSink.postEvent(ContainerRemovalFailedEvent(step.container, e.message ?: ""))
         }
     }

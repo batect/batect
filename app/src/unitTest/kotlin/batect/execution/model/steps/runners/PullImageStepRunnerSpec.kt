@@ -36,6 +36,7 @@ import batect.execution.model.steps.PullImageStep
 import batect.primitives.CancellationContext
 import batect.testutils.beforeEachTestSuspend
 import batect.testutils.createForEachTest
+import batect.testutils.createLoggerForEachTest
 import batect.testutils.given
 import batect.testutils.itSuspend
 import batect.testutils.on
@@ -54,8 +55,9 @@ object PullImageStepRunnerSpec : Spek({
         val dockerClient by createForEachTest { mock<DockerClient>() }
         val cancellationContext by createForEachTest { mock<CancellationContext>() }
         val eventSink by createForEachTest { mock<TaskEventSink>() }
+        val logger by createLoggerForEachTest()
 
-        val runner by createForEachTest { PullImageStepRunner(dockerClient, cancellationContext) }
+        val runner by createForEachTest { PullImageStepRunner(dockerClient, cancellationContext, logger) }
 
         on("when pulling the image succeeds") {
             val image = DockerImage("some-image")

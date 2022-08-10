@@ -26,6 +26,7 @@ import batect.execution.model.events.ContainerBecameHealthyEvent
 import batect.execution.model.events.ContainerDidNotBecomeHealthyEvent
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.steps.WaitForContainerToBecomeHealthyStep
+import batect.logging.Logger
 import batect.os.SystemInfo
 import batect.primitives.CancellationContext
 import batect.primitives.runBlocking
@@ -34,7 +35,8 @@ import kotlinx.datetime.Instant
 class WaitForContainerToBecomeHealthyStepRunner(
     private val dockerClient: DockerClient,
     private val cancellationContext: CancellationContext,
-    private val systemInfo: SystemInfo
+    private val systemInfo: SystemInfo,
+    private val logger: Logger
 ) {
     fun run(step: WaitForContainerToBecomeHealthyStep, eventSink: TaskEventSink) {
         try {
@@ -53,8 +55,20 @@ class WaitForContainerToBecomeHealthyStepRunner(
                 eventSink.postEvent(event)
             }
         } catch (e: ContainerHealthCheckException) {
+            logger.error {
+                message("Waiting for container to become healthy failed.")
+                exception(e)
+                data("containerId", step.dockerContainer.id)
+            }
+
             eventSink.postEvent(ContainerDidNotBecomeHealthyEvent(step.container, "Waiting for the container's health status failed: ${e.message}"))
         } catch (e: DockerClientException) {
+            logger.error {
+                message("Waiting for container to become healthy failed.")
+                exception(e)
+                data("containerId", step.dockerContainer.id)
+            }
+
             eventSink.postEvent(ContainerDidNotBecomeHealthyEvent(step.container, "Waiting for the container's health status failed: ${e.message}"))
         }
     }

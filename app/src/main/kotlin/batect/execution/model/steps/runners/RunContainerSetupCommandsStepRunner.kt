@@ -34,6 +34,7 @@ import batect.execution.model.events.SetupCommandFailedEvent
 import batect.execution.model.events.SetupCommandsCompletedEvent
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.steps.RunContainerSetupCommandsStep
+import batect.logging.Logger
 import batect.primitives.CancellationContext
 import batect.primitives.runBlocking
 import batect.ui.containerio.ContainerIOStreamingOptions
@@ -45,7 +46,8 @@ class RunContainerSetupCommandsStepRunner(
     private val environmentVariableProvider: DockerContainerEnvironmentVariableProvider,
     private val runAsCurrentUserConfigurationProvider: RunAsCurrentUserConfigurationProvider,
     private val cancellationContext: CancellationContext,
-    private val ioStreamingOptions: ContainerIOStreamingOptions
+    private val ioStreamingOptions: ContainerIOStreamingOptions,
+    private val logger: Logger
 ) {
     fun run(step: RunContainerSetupCommandsStep, eventSink: TaskEventSink) {
         if (step.container.setupCommands.isEmpty()) {
@@ -67,6 +69,13 @@ class RunContainerSetupCommandsStepRunner(
                     return
                 }
             } catch (e: DockerClientException) {
+                logger.error {
+                    message("Running setup command failed.")
+                    exception(e)
+                    data("containerId", step.dockerContainer.id)
+                    data("commandIndex", index)
+                }
+
                 eventSink.postEvent(SetupCommandExecutionErrorEvent(step.container, command, e.message ?: ""))
                 return
             }

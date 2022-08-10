@@ -26,6 +26,7 @@ import batect.execution.model.events.TaskNetworkDeletionFailedEvent
 import batect.execution.model.steps.DeleteTaskNetworkStep
 import batect.testutils.beforeEachTestSuspend
 import batect.testutils.createForEachTest
+import batect.testutils.createLoggerForEachTest
 import batect.testutils.itSuspend
 import batect.testutils.on
 import org.mockito.kotlin.mock
@@ -41,8 +42,9 @@ object DeleteTaskNetworkStepRunnerSpec : Spek({
 
         val dockerClient by createForEachTest { mock<DockerClient>() }
         val eventSink by createForEachTest { mock<TaskEventSink>() }
+        val logger by createLoggerForEachTest()
 
-        val runner by createForEachTest { DeleteTaskNetworkStepRunner(dockerClient) }
+        val runner by createForEachTest { DeleteTaskNetworkStepRunner(dockerClient, logger) }
 
         on("when deleting the network succeeds") {
             beforeEachTest { runner.run(step, eventSink) }

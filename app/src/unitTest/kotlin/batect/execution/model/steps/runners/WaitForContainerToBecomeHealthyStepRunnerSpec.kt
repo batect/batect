@@ -40,6 +40,7 @@ import batect.os.SystemInfo
 import batect.primitives.CancellationContext
 import batect.testutils.beforeEachTestSuspend
 import batect.testutils.createForEachTest
+import batect.testutils.createLoggerForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.imageSourceDoesNotMatter
@@ -75,7 +76,8 @@ object WaitForContainerToBecomeHealthyStepRunnerSpec : Spek({
         }
 
         val eventSink by createForEachTest { mock<TaskEventSink>() }
-        val runner by createForEachTest { WaitForContainerToBecomeHealthyStepRunner(dockerClient, cancellationContext, systemInfo) }
+        val logger by createLoggerForEachTest()
+        val runner by createForEachTest { WaitForContainerToBecomeHealthyStepRunner(dockerClient, cancellationContext, systemInfo, logger) }
 
         fun createDummyInspectionResult(config: ContainerHealthcheckConfig?, state: ContainerHealthState?): ContainerInspectionResult =
             ContainerInspectionResult(

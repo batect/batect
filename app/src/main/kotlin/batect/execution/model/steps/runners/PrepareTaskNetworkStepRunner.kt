@@ -28,13 +28,15 @@ import batect.execution.model.events.CustomTaskNetworkCheckedEvent
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.events.TaskNetworkCreatedEvent
 import batect.execution.model.events.TaskNetworkCreationFailedEvent
+import batect.logging.Logger
 import kotlinx.coroutines.runBlocking
 
 class PrepareTaskNetworkStepRunner(
     private val nameGenerator: DockerResourceNameGenerator,
     private val containerType: DockerContainerType,
     private val client: DockerClient,
-    private val commandLineOptions: CommandLineOptions
+    private val commandLineOptions: CommandLineOptions,
+    private val logger: Logger
 ) {
     fun run(eventSink: TaskEventSink) {
         if (commandLineOptions.existingNetworkToUse == null) {
@@ -59,6 +61,11 @@ class PrepareTaskNetworkStepRunner(
 
             eventSink.postEvent(TaskNetworkCreatedEvent(DockerNetwork(network.id)))
         } catch (e: NetworkCreationFailedException) {
+            logger.error {
+                message("Creating network failed.")
+                exception(e)
+            }
+
             eventSink.postEvent(TaskNetworkCreationFailedEvent(e.message ?: ""))
         }
     }
@@ -76,6 +83,11 @@ class PrepareTaskNetworkStepRunner(
 
             eventSink.postEvent(CustomTaskNetworkCheckedEvent(DockerNetwork(network.id)))
         } catch (e: DockerClientException) {
+            logger.error {
+                message("Checking existing network failed.")
+                exception(e)
+            }
+
             eventSink.postEvent(CustomTaskNetworkCheckFailedEvent(networkIdentifier, e.message ?: ""))
         }
     }

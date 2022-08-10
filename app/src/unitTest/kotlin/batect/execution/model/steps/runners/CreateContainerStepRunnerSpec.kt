@@ -41,6 +41,7 @@ import batect.execution.model.events.TaskEventSink
 import batect.execution.model.steps.CreateContainerStep
 import batect.testutils.beforeEachTestSuspend
 import batect.testutils.createForEachTest
+import batect.testutils.createLoggerForEachTest
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.itSuspend
 import batect.testutils.on
@@ -104,7 +105,8 @@ object CreateContainerStepRunnerSpec : Spek({
         }
 
         val eventSink by createForEachTest { mock<TaskEventSink>() }
-        val runner by createForEachTest { CreateContainerStepRunner(dockerClient, volumeMountResolver, runAsCurrentUserConfigurationProvider, creationRequestFactory, ioStreamingOptions) }
+        val logger by createLoggerForEachTest()
+        val runner by createForEachTest { CreateContainerStepRunner(dockerClient, volumeMountResolver, runAsCurrentUserConfigurationProvider, creationRequestFactory, ioStreamingOptions, logger) }
 
         on("when creating the container succeeds") {
             beforeEachTest {

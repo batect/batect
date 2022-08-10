@@ -23,10 +23,12 @@ import batect.execution.model.events.TaskEventSink
 import batect.execution.model.events.TaskNetworkDeletedEvent
 import batect.execution.model.events.TaskNetworkDeletionFailedEvent
 import batect.execution.model.steps.DeleteTaskNetworkStep
+import batect.logging.Logger
 import kotlinx.coroutines.runBlocking
 
 class DeleteTaskNetworkStepRunner(
-    private val client: DockerClient
+    private val client: DockerClient,
+    private val logger: Logger
 ) {
     fun run(step: DeleteTaskNetworkStep, eventSink: TaskEventSink) {
         try {
@@ -36,6 +38,11 @@ class DeleteTaskNetworkStepRunner(
 
             eventSink.postEvent(TaskNetworkDeletedEvent)
         } catch (e: NetworkDeletionFailedException) {
+            logger.error {
+                message("Deleting task network failed.")
+                exception(e)
+            }
+
             eventSink.postEvent(TaskNetworkDeletionFailedEvent(e.message ?: ""))
         }
     }

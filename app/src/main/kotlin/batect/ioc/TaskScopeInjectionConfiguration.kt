@@ -76,16 +76,16 @@ private val executionModule = DI.Module("Task scope: execution") {
 }
 
 private val runnersModule = DI.Module("Task scope: execution.model.steps.runners") {
-    bind<BuildImageStepRunner>() with scoped(TaskScope).singleton { BuildImageStepRunner(instance(), instance(), instance(), instance(), instance(), instance(), instance(), instance(), instance(), instance(), instance()) }
-    bind<CreateContainerStepRunner>() with scoped(TaskScope).singleton { CreateContainerStepRunner(instance(), instance(), instance(), instance(), instance()) }
-    bind<PrepareTaskNetworkStepRunner>() with scoped(TaskScope).singleton { PrepareTaskNetworkStepRunner(instance(), instance(), instance(), instance()) }
-    bind<DeleteTaskNetworkStepRunner>() with scoped(TaskScope).singleton { DeleteTaskNetworkStepRunner(instance()) }
-    bind<PullImageStepRunner>() with scoped(TaskScope).singleton { PullImageStepRunner(instance(), instance()) }
-    bind<RemoveContainerStepRunner>() with scoped(TaskScope).singleton { RemoveContainerStepRunner(instance()) }
-    bind<RunContainerSetupCommandsStepRunner>() with scoped(TaskScope).singleton { RunContainerSetupCommandsStepRunner(instance(), instance(), instance(), instance(), instance()) }
-    bind<RunContainerStepRunner>() with scoped(TaskScope).singleton { RunContainerStepRunner(instance(), instance(), instance()) }
-    bind<StopContainerStepRunner>() with scoped(TaskScope).singleton { StopContainerStepRunner(instance()) }
-    bind<WaitForContainerToBecomeHealthyStepRunner>() with scoped(TaskScope).singleton { WaitForContainerToBecomeHealthyStepRunner(instance(), instance(), instance()) }
+    bind<BuildImageStepRunner>() with scoped(TaskScope).singletonWithLogger { logger -> BuildImageStepRunner(instance(), instance(), instance(), instance(), instance(), instance(), instance(), instance(), instance(), instance(), instance(), logger) }
+    bind<CreateContainerStepRunner>() with scoped(TaskScope).singletonWithLogger { logger -> CreateContainerStepRunner(instance(), instance(), instance(), instance(), instance(), logger) }
+    bind<PrepareTaskNetworkStepRunner>() with scoped(TaskScope).singletonWithLogger { logger -> PrepareTaskNetworkStepRunner(instance(), instance(), instance(), instance(), logger) }
+    bind<DeleteTaskNetworkStepRunner>() with scoped(TaskScope).singletonWithLogger { logger -> DeleteTaskNetworkStepRunner(instance(), logger) }
+    bind<PullImageStepRunner>() with scoped(TaskScope).singletonWithLogger { logger -> PullImageStepRunner(instance(), instance(), logger) }
+    bind<RemoveContainerStepRunner>() with scoped(TaskScope).singletonWithLogger { logger -> RemoveContainerStepRunner(instance(), logger) }
+    bind<RunContainerSetupCommandsStepRunner>() with scoped(TaskScope).singletonWithLogger { logger -> RunContainerSetupCommandsStepRunner(instance(), instance(), instance(), instance(), instance(), logger) }
+    bind<RunContainerStepRunner>() with scoped(TaskScope).singletonWithLogger { logger -> RunContainerStepRunner(instance(), instance(), instance(), logger) }
+    bind<StopContainerStepRunner>() with scoped(TaskScope).singletonWithLogger { logger -> StopContainerStepRunner(instance(), logger) }
+    bind<WaitForContainerToBecomeHealthyStepRunner>() with scoped(TaskScope).singletonWithLogger { logger -> WaitForContainerToBecomeHealthyStepRunner(instance(), instance(), instance(), logger) }
 }
 
 private val uiModule = DI.Module("Task scope: ui") {

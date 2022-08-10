@@ -27,6 +27,7 @@ import batect.execution.model.events.TaskEventSink
 import batect.execution.model.steps.RemoveContainerStep
 import batect.testutils.beforeEachTestSuspend
 import batect.testutils.createForEachTest
+import batect.testutils.createLoggerForEachTest
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.itSuspend
 import batect.testutils.on
@@ -44,7 +45,8 @@ object RemoveContainerStepRunnerSpec : Spek({
 
         val dockerClient by createForEachTest { mock<DockerClient>() }
         val eventSink by createForEachTest { mock<TaskEventSink>() }
-        val runner by createForEachTest { RemoveContainerStepRunner(dockerClient) }
+        val logger by createLoggerForEachTest()
+        val runner by createForEachTest { RemoveContainerStepRunner(dockerClient, logger) }
 
         on("when removing the container succeeds") {
             beforeEachTest { runner.run(step, eventSink) }

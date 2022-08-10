@@ -31,6 +31,7 @@ import batect.execution.model.events.TaskNetworkCreatedEvent
 import batect.execution.model.events.TaskNetworkCreationFailedEvent
 import batect.testutils.beforeEachTestSuspend
 import batect.testutils.createForEachTest
+import batect.testutils.createLoggerForEachTest
 import batect.testutils.given
 import batect.testutils.itSuspend
 import org.mockito.kotlin.any
@@ -52,6 +53,7 @@ object PrepareTaskNetworkStepRunnerSpec : Spek({
 
         val dockerClient by createForEachTest { mock<DockerClient>() }
         val eventSink by createForEachTest { mock<TaskEventSink>() }
+        val logger by createLoggerForEachTest()
 
         given("no network to use is provided on the command line") {
             val commandLineOptions = CommandLineOptions(existingNetworkToUse = null)
@@ -64,7 +66,7 @@ object PrepareTaskNetworkStepRunnerSpec : Spek({
                 }
 
                 given("the active container type is Linux") {
-                    val runner by createForEachTest { PrepareTaskNetworkStepRunner(nameGenerator, DockerContainerType.Linux, dockerClient, commandLineOptions) }
+                    val runner by createForEachTest { PrepareTaskNetworkStepRunner(nameGenerator, DockerContainerType.Linux, dockerClient, commandLineOptions, logger) }
 
                     beforeEachTest {
                         runner.run(eventSink)
@@ -80,7 +82,7 @@ object PrepareTaskNetworkStepRunnerSpec : Spek({
                 }
 
                 given("the active container type is Windows") {
-                    val runner by createForEachTest { PrepareTaskNetworkStepRunner(nameGenerator, DockerContainerType.Windows, dockerClient, commandLineOptions) }
+                    val runner by createForEachTest { PrepareTaskNetworkStepRunner(nameGenerator, DockerContainerType.Windows, dockerClient, commandLineOptions, logger) }
 
                     beforeEachTest {
                         runner.run(eventSink)
@@ -97,7 +99,7 @@ object PrepareTaskNetworkStepRunnerSpec : Spek({
             }
 
             given("creating the network fails") {
-                val runner by createForEachTest { PrepareTaskNetworkStepRunner(nameGenerator, DockerContainerType.Linux, dockerClient, commandLineOptions) }
+                val runner by createForEachTest { PrepareTaskNetworkStepRunner(nameGenerator, DockerContainerType.Linux, dockerClient, commandLineOptions, logger) }
 
                 beforeEachTestSuspend {
                     whenever(dockerClient.createNetwork(any(), any())).doThrow(NetworkCreationFailedException("Something went wrong."))
@@ -113,7 +115,7 @@ object PrepareTaskNetworkStepRunnerSpec : Spek({
 
         given("a network to use is provided on the command line") {
             val commandLineOptions = CommandLineOptions(existingNetworkToUse = "my-network")
-            val runner by createForEachTest { PrepareTaskNetworkStepRunner(nameGenerator, DockerContainerType.Linux, dockerClient, commandLineOptions) }
+            val runner by createForEachTest { PrepareTaskNetworkStepRunner(nameGenerator, DockerContainerType.Linux, dockerClient, commandLineOptions, logger) }
 
             given("the network exists") {
                 beforeEachTestSuspend {

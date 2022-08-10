@@ -40,6 +40,7 @@ import batect.os.Command
 import batect.primitives.CancellationContext
 import batect.testutils.beforeEachTestSuspend
 import batect.testutils.createForEachTest
+import batect.testutils.createLoggerForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given
 import batect.testutils.imageSourceDoesNotMatter
@@ -82,8 +83,18 @@ object RunContainerSetupCommandsStepRunnerSpec : Spek({
         val cancellationContext by createForEachTest { mock<CancellationContext>() }
         val ioStreamingOptions by createForEachTest { mock<ContainerIOStreamingOptions>() }
         val eventSink by createForEachTest { mock<TaskEventSink>() }
+        val logger by createLoggerForEachTest()
 
-        val runner by createForEachTest { RunContainerSetupCommandsStepRunner(dockerClient, environmentVariableProvider, runAsCurrentUserConfigurationProvider, cancellationContext, ioStreamingOptions) }
+        val runner by createForEachTest {
+            RunContainerSetupCommandsStepRunner(
+                dockerClient,
+                environmentVariableProvider,
+                runAsCurrentUserConfigurationProvider,
+                cancellationContext,
+                ioStreamingOptions,
+                logger
+            )
+        }
 
         given("the container has no setup commands") {
             val container = Container("the-container", imageSourceDoesNotMatter(), setupCommands = emptyList())

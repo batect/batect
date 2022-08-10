@@ -25,6 +25,7 @@ import batect.execution.model.events.ContainerStartedEvent
 import batect.execution.model.events.RunningContainerExitedEvent
 import batect.execution.model.events.TaskEventSink
 import batect.execution.model.steps.RunContainerStep
+import batect.logging.Logger
 import batect.primitives.CancellationContext
 import batect.primitives.runBlocking
 import batect.ui.containerio.ContainerIOStreamingOptions
@@ -33,7 +34,8 @@ import kotlinx.coroutines.launch
 class RunContainerStepRunner(
     private val client: DockerClient,
     private val ioStreamingOptions: ContainerIOStreamingOptions,
-    private val cancellationContext: CancellationContext
+    private val cancellationContext: CancellationContext,
+    private val logger: Logger
 ) {
     fun run(step: RunContainerStep, eventSink: TaskEventSink) {
         try {
@@ -60,6 +62,12 @@ class RunContainerStepRunner(
                 eventSink.postEvent(RunningContainerExitedEvent(step.container, exitCode))
             }
         } catch (e: DockerClientException) {
+            logger.error {
+                message("Running container failed.")
+                exception(e)
+                data("containerId", step.dockerContainer.id)
+            }
+
             eventSink.postEvent(ContainerRunFailedEvent(step.container, e.message ?: ""))
         }
     }

@@ -32,6 +32,7 @@ import batect.execution.model.steps.RunContainerStep
 import batect.primitives.CancellationContext
 import batect.testutils.beforeEachTestSuspend
 import batect.testutils.createForEachTest
+import batect.testutils.createLoggerForEachTest
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.itSuspend
 import batect.testutils.on
@@ -69,7 +70,8 @@ object RunContainerStepRunnerSpec : Spek({
 
         val cancellationContext by createForEachTest { CancellationContext() }
         val eventSink by createForEachTest { mock<TaskEventSink>() }
-        val runner by createForEachTest { RunContainerStepRunner(dockerClient, ioStreamingOptions, cancellationContext) }
+        val logger by createLoggerForEachTest()
+        val runner by createForEachTest { RunContainerStepRunner(dockerClient, ioStreamingOptions, cancellationContext, logger) }
 
         on("when running the container succeeds") {
             beforeEachTestSuspend {

@@ -41,25 +41,6 @@
     },
     {
       "fileMatch": [
-        "protobuf.gradle$"
-      ],
-      "matchStrings": [
-        "def buildKitVersion = \"(?<currentValue>v[\\d.]*)\""
-      ],
-      "datasourceTemplate": "github-releases",
-      "depNameTemplate": "moby/buildkit"
-    },
-    {
-      "fileMatch": [
-        "protobuf.gradle$"
-      ],
-      "matchStrings": [
-        "\"github.com/(?<depName>[a-z]+/[a-z]+?)/(.*).proto\"\\s+,\\s+\"(?<currentValue>v[\\d.]*)\""
-      ],
-      "datasourceTemplate": "github-releases"
-    },
-    {
-      "fileMatch": [
         "journeyTest/(.*)/(.*).kt$"
       ],
       "matchStrings": ["val .* = \"(?<depName>[a-zA-Z0-9]+):(?<currentValue>[a-zA-Z0-9.]+)\"\\s*\\/\\/\\s*renovate:docker-image"],
@@ -77,11 +58,6 @@
     }
   ],
   "packageRules": [
-    {
-      "groupName": "Wire",
-      "matchPackagePatterns": ["^com\\.squareup\\.wire:"],
-      "matchDatasources": ["maven"]
-    },
     {
       "groupName": "Spek",
       "matchPackagePatterns": ["^org\\.spekframework\\.spek2:"],

@@ -15,40 +15,17 @@
 */
 
 plugins {
-    alias(libs.plugins.wire)
     id("batect-kotlin")
-    id("de.undercouch.download")
 }
 
 dependencies {
-    implementation(platform(libs.okhttp.bom))
-    implementation("org.jetbrains.kotlin:kotlin-reflect")
+    implementation(platform(libs.okio.bom))
     implementation(libs.kotlinx.serialization.json)
-    implementation(libs.jnr.posix)
-    implementation("com.squareup.okhttp3:okhttp")
-    implementation(libs.commons.compress)
-    implementation(libs.bouncycastle)
-    implementation(libs.wire.grpc.client)
+    implementation("com.squareup.okio:okio")
 
     implementation(project(":libs:logging"))
     implementation(project(":libs:os"))
-    implementation(project(":libs:sockets"))
-    implementation(project(":libs:telemetry"))
     implementation(project(":libs:primitives"))
 
-    testImplementation(libs.jimfs)
-    testImplementation(libs.hamkrestjson)
-
-    testImplementation(project(":libs:logging-test-utils"))
     testImplementation(project(":libs:test-utils"))
 }
-
-checkUnitTestLayout {
-    ignoreFileNameCheck.set(
-        fileTree("src/unitTest/kotlin") {
-            include("batect/docker/api/Assertions.kt")
-        }
-    )
-}
-
-apply(from = "gradle/protobuf.gradle")

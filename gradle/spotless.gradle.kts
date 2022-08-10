@@ -105,15 +105,3 @@ configure<SpotlessExtension> {
 tasks.named("spotlessKotlin") {
     mustRunAfter(project("app").tasks.named("generateVersionInfoFile"))
 }
-
-listOf(
-    "spotlessGradle",
-    "spotlessJava",
-    "spotlessKotlin",
-    "spotlessKotlinGradle",
-    "spotlessMisc"
-).forEach {
-    tasks.named(it) {
-        mustRunAfter(project("libs").project("docker-client").tasks.named("generateMainProtos"))
-    }
-}

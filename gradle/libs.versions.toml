@@ -3,13 +3,11 @@ kotest = "5.4.1"
 kotlinx-serialization = "1.3.3"
 spek = "2.0.18"
 spotless = "6.9.0"
-wire = "4.4.1"
 
 [libraries]
 batect-dockerclient = { group = "dev.batect.docker", name = "client", version = "0.5.0" }
 bouncycastle = { group = "org.bouncycastle", name = "bcpkix-jdk15on", version = "1.70" }
 commons-codec = { group = "commons-codec", name = "commons-codec", version = "1.15" }
-commons-compress = { group = "org.apache.commons", name = "commons-compress", version = "1.21" }
 google-cloud-storage = { group = "com.google.cloud", name = "google-cloud-storage", version = "2.11.2" }
 hamkrest = { group = "com.natpryce", name = "hamkrest", version = "1.8.0.1" }
 hamkrestjson = { group = "org.araqnid.hamkrest", name = "hamkrest-json", version = "1.1.2" }
@@ -36,11 +34,9 @@ osplatformfinder = { group = "org.graylog.repackaged", name = "os-platform-finde
 spek-dsl-jvm = { group = "org.spekframework.spek2", name = "spek-dsl-jvm", version.ref = "spek" }
 spek-runner-junit5 = { group = "org.spekframework.spek2", name = "spek-runner-junit5", version.ref = "spek" }
 spotless-plugin = { group = "com.diffplug.spotless", name = "spotless-plugin-gradle", version.ref = "spotless" }
-wire-grpc-client = { group = "com.squareup.wire", name = "wire-grpc-client", version.ref = "wire" }
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version = "1.7.10" }
 reckon = { id = "org.ajoberstar.reckon", version = "0.16.1" }
 shadow = { id = "com.github.johnrengelman.shadow", version = "7.1.2" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
-wire = { id = "com.squareup.wire", version.ref = "wire" }

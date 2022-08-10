@@ -41,13 +41,6 @@ val noHeaders = Headers.Builder().build()
 fun OkHttpClient.mockGet(url: String, responseBody: String, statusCode: Int = 200, responseHeaders: Headers = noHeaders): Call =
     mock("GET", url, responseBody, statusCode, responseHeaders = responseHeaders)
 
-fun OkHttpClient.mockPost(url: String, responseBody: String, statusCode: Int = 200): Call = mock("POST", url, responseBody, statusCode)
-fun OkHttpClient.mockPost(urlMatcher: Matcher<HttpUrl>, responseBody: String, statusCode: Int = 200): Call = mock("POST", urlMatcher, responseBody, statusCode)
-fun OkHttpClient.mockPut(url: String, responseBody: String, statusCode: Int = 200): Call = mock("PUT", url, responseBody, statusCode)
-fun OkHttpClient.mockPut(urlMatcher: Matcher<HttpUrl>, responseBody: String, statusCode: Int = 200): Call = mock("PUT", urlMatcher, responseBody, statusCode)
-fun OkHttpClient.mockDelete(url: String, responseBody: String, statusCode: Int = 200): Call = mock("DELETE", url, responseBody, statusCode)
-fun OkHttpClient.mockDelete(urlMatcher: Matcher<HttpUrl>, responseBody: String, statusCode: Int = 200): Call = mock("DELETE", urlMatcher, responseBody, statusCode)
-
 fun OkHttpClient.mock(
     method: String,
     url: String,
@@ -133,6 +126,4 @@ fun OkHttpClient.mock(method: String, url: String, response: Response): Call {
 }
 
 // These exist to resolve the ambiguity when referring to deprecated methods and their new property counterparts above.
-private fun Request.headerSet() = this.headers
-private fun Request.urlValue() = this.url
 private fun Request.methodValue() = this.method

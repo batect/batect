@@ -24,14 +24,10 @@ classes/
 out
 *.iml
 
-### NodeJS
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+.DS_Store
 
 
-### batect-specific
+### Batect-specific
 
 # Don't include the dynamically-generated version info file.
 app/src/main/kotlin/batect/VersionInfo.kt

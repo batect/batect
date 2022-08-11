@@ -186,7 +186,7 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
                     it("throws an appropriate exception") {
                         assertThat(
                             { provider.environmentVariablesFor(container, terminalType) },
-                            throws<ContainerCreationFailedException>(withMessage("The value for the environment variable 'SOME_VAR' cannot be evaluated: Couldn't evaluate expression."))
+                            throws<ExpressionEvaluationException>(withMessage("The value for the environment variable 'SOME_VAR' cannot be evaluated: Couldn't evaluate expression."))
                         )
                     }
                 }

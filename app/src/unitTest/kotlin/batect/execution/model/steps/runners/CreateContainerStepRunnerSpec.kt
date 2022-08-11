@@ -17,6 +17,7 @@
 package batect.execution.model.steps.runners
 
 import batect.config.Container
+import batect.config.ExpressionEvaluationException
 import batect.config.VolumeMount
 import batect.docker.DockerContainer
 import batect.docker.DockerContainerCreationRequestFactory
@@ -47,6 +48,7 @@ import batect.testutils.itSuspend
 import batect.testutils.on
 import batect.ui.containerio.ContainerIOStreamingOptions
 import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.doThrow
 import org.mockito.kotlin.inOrder
@@ -177,6 +179,19 @@ object CreateContainerStepRunnerSpec : Spek({
 
             it("still emits a 'container created' event") {
                 verify(eventSink).postEvent(ContainerCreatedEvent(container, dockerContainer))
+            }
+        }
+
+        on("when evaluating an expression for the container's configuration fails") {
+            beforeEachTest {
+                whenever(creationRequestFactory.create(any(), any(), any(), any(), anyOrNull(), anyOrNull(), any(), any()))
+                    .doThrow(ExpressionEvaluationException("Something went wrong."))
+
+                runner.run(step, eventSink)
+            }
+
+            it("emits a 'container creation failed' event") {
+                verify(eventSink).postEvent(ContainerCreationFailedEvent(container, "Something went wrong."))
             }
         }
     }

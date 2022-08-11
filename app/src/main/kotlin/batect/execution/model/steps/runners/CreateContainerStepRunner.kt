@@ -16,6 +16,7 @@
 
 package batect.execution.model.steps.runners
 
+import batect.config.ExpressionEvaluationException
 import batect.docker.DockerContainer
 import batect.docker.DockerContainerCreationRequestFactory
 import batect.dockerclient.ContainerCreationFailedException
@@ -74,6 +75,13 @@ class CreateContainerStepRunner(
                     eventSink.postEvent(ContainerCreatedEvent(container, dockerContainer))
                 }
             }
+        } catch (e: ExpressionEvaluationException) {
+            logger.error {
+                message("Evaluating expression failed.")
+                exception(e)
+            }
+
+            eventSink.postEvent(ContainerCreationFailedEvent(container, e.message ?: ""))
         } catch (e: ContainerCreationFailedException) {
             logger.error {
                 message("Creating container failed.")

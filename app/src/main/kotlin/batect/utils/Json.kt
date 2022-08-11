@@ -39,10 +39,6 @@ object Json {
         ignoreUnknownKeys = true
     }
 
-    val withoutDefaults = Json {
-        encodeDefaults = false
-    }
-
     val forLogging = Json {
         encodeDefaults = true
         serializersModule = loggingModule

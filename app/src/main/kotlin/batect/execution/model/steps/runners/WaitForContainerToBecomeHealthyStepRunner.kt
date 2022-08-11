@@ -16,7 +16,6 @@
 
 package batect.execution.model.steps.runners
 
-import batect.docker.ContainerHealthCheckException
 import batect.docker.DockerContainer
 import batect.dockerclient.DockerClient
 import batect.dockerclient.DockerClientException
@@ -128,3 +127,5 @@ private enum class HealthStatus {
     BecameUnhealthy,
     Exited
 }
+
+private class ContainerHealthCheckException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)

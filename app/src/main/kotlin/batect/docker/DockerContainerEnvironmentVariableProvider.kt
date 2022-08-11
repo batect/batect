@@ -60,7 +60,7 @@ class DockerContainerEnvironmentVariableProvider(
         try {
             return expression.evaluate(expressionEvaluationContext)
         } catch (e: ExpressionEvaluationException) {
-            throw ContainerCreationFailedException("The value for the environment variable '$name' cannot be evaluated: ${e.message}", e)
+            throw ExpressionEvaluationException("The value for the environment variable '$name' cannot be evaluated: ${e.message}", e)
         }
     }
 }

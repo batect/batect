@@ -325,5 +325,5 @@ data class ConcatenatedExpression(val expressions: Iterable<Expression>, overrid
     }
 }
 
-class ExpressionEvaluationException(message: String) : RuntimeException(message)
+class ExpressionEvaluationException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)
 class InvalidExpressionException(val source: String, val detail: String) : IllegalArgumentException("Invalid expression '$source': $detail")

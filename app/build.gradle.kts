@@ -52,7 +52,6 @@ dependencies {
     implementation(libs.okhttp.systemkeystore)
     implementation(libs.batect.dockerclient)
 
-    implementation(project(":libs:docker-client"))
     implementation(project(":libs:git-client"))
     implementation(project(":libs:io"))
     implementation(project(":libs:logging"))

@@ -18,7 +18,6 @@ rootProject.name = "batect"
 
 include(":app")
 include(":libs")
-include(":libs:docker-client")
 include(":libs:git-client")
 include(":libs:io")
 include(":libs:logging")

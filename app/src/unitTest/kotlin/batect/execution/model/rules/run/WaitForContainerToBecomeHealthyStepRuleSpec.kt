@@ -18,6 +18,7 @@ package batect.execution.model.rules.run
 
 import batect.config.Container
 import batect.docker.DockerContainer
+import batect.dockerclient.ContainerReference
 import batect.execution.model.events.ContainerCreatedEvent
 import batect.execution.model.events.ContainerStartedEvent
 import batect.execution.model.rules.TaskStepRuleEvaluationResult
@@ -38,7 +39,7 @@ object WaitForContainerToBecomeHealthyStepRuleSpec : Spek({
         val rule = WaitForContainerToBecomeHealthyStepRule(container)
 
         given("the container has started") {
-            val dockerContainer = DockerContainer("some-container-id", "some-container-name")
+            val dockerContainer = DockerContainer(ContainerReference("some-container-id"), "some-container-name")
             val events = setOf(
                 ContainerCreatedEvent(container, dockerContainer),
                 ContainerStartedEvent(container)

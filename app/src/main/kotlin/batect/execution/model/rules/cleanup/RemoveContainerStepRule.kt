@@ -43,7 +43,7 @@ data class RemoveContainerStepRule(
     private fun containerHasStopped(pastEvents: Set<TaskEvent>): Boolean =
         pastEvents.contains(ContainerStoppedEvent(container))
 
-    override val manualCleanupCommand: String = "docker rm --force --volumes ${dockerContainer.id}"
+    override val manualCleanupCommand: String = "docker rm --force --volumes ${dockerContainer.reference.id}"
 
     @Transient
     override val manualCleanupSortOrder: ManualCleanupSortOrder = ManualCleanupSortOrder.RemoveContainers

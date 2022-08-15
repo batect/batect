@@ -40,7 +40,7 @@ import kotlin.time.Duration.Companion.seconds
 object StopContainerStepRunnerSpec : Spek({
     describe("running a 'stop container' step") {
         val container = Container("some-container", imageSourceDoesNotMatter())
-        val dockerContainer = DockerContainer("some-id", "some-name")
+        val dockerContainer = DockerContainer(ContainerReference("some-id"), "some-name")
         val step = StopContainerStep(container, dockerContainer)
 
         val dockerClient by createForEachTest { mock<DockerClient>() }

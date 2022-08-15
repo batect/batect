@@ -18,6 +18,7 @@ package batect.execution
 
 import batect.config.Container
 import batect.docker.DockerContainer
+import batect.dockerclient.ContainerReference
 import batect.dockerclient.NetworkReference
 import batect.execution.model.events.ContainerCreatedEvent
 import batect.execution.model.events.RunningContainerExitedEvent
@@ -349,8 +350,8 @@ object TaskStateMachineSpec : Spek({
                             given("at least one container has been created") {
                                 val container1 = Container("container-1", imageSourceDoesNotMatter())
                                 val container2 = Container("container-2", imageSourceDoesNotMatter())
-                                val dockerContainer1 = DockerContainer("docker-container-1", "docker-container-1-name")
-                                val dockerContainer2 = DockerContainer("docker-container-2", "docker-container-1-name")
+                                val dockerContainer1 = DockerContainer(ContainerReference("docker-container-1"), "docker-container-1-name")
+                                val dockerContainer2 = DockerContainer(ContainerReference("docker-container-2"), "docker-container-1-name")
                                 val event1 = ContainerCreatedEvent(container1, dockerContainer1)
                                 val event2 = ContainerCreatedEvent(container2, dockerContainer2)
                                 val events = setOf(failureEvent, event1, event2)

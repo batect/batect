@@ -22,6 +22,7 @@ import batect.config.LiteralValue
 import batect.config.PullImage
 import batect.config.SetupCommand
 import batect.docker.DockerContainer
+import batect.dockerclient.ContainerReference
 import batect.dockerclient.ImageReference
 import batect.execution.PostTaskManualCleanup
 import batect.execution.model.events.ContainerBecameHealthyEvent
@@ -237,7 +238,7 @@ object SimpleEventLoggerSpec : Spek({
                             val loggerForContainerWithoutCommand by createForEachTest { SimpleEventLogger(setOf(taskContainerWithoutCommand), taskContainerWithoutCommand, failureErrorMessageFormatter, console, errorConsole, mock()) }
 
                             beforeEachTest {
-                                loggerForContainerWithoutCommand.postEvent(StepStartingEvent(RunContainerStep(taskContainerWithoutCommand, DockerContainer("not-important", "some-name"))))
+                                loggerForContainerWithoutCommand.postEvent(StepStartingEvent(RunContainerStep(taskContainerWithoutCommand, DockerContainer(ContainerReference("not-important"), "some-name"))))
                             }
 
                             it("prints a message to the output without mentioning a command") {
@@ -250,7 +251,7 @@ object SimpleEventLoggerSpec : Spek({
                             val loggerForContainerWithCommand by createForEachTest { SimpleEventLogger(setOf(taskContainerWithCommand), taskContainerWithCommand, failureErrorMessageFormatter, console, errorConsole, mock()) }
 
                             beforeEachTest {
-                                loggerForContainerWithCommand.postEvent(StepStartingEvent(RunContainerStep(taskContainerWithCommand, DockerContainer("not-important", "some-name"))))
+                                loggerForContainerWithCommand.postEvent(StepStartingEvent(RunContainerStep(taskContainerWithCommand, DockerContainer(ContainerReference("not-important"), "some-name"))))
                             }
 
                             it("prints a message to the output including the original command") {
@@ -261,7 +262,7 @@ object SimpleEventLoggerSpec : Spek({
 
                     on("when the step will run a dependency container") {
                         beforeEachTest {
-                            val step = RunContainerStep(container, DockerContainer("not-important", "some-name"))
+                            val step = RunContainerStep(container, DockerContainer(ContainerReference("not-important"), "some-name"))
                             logger.postEvent(StepStartingEvent(step))
                         }
 

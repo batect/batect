@@ -16,6 +16,7 @@
 
 package batect.docker
 
+import batect.dockerclient.ContainerReference
 import batect.dockerclient.ImageReference
 import batect.dockerclient.NetworkReference
 import kotlinx.serialization.KSerializer
@@ -24,6 +25,20 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
+
+object ContainerReferenceSerializer : KSerializer<ContainerReference> {
+    override val descriptor: SerialDescriptor = buildClassSerialDescriptor("ContainerReference") {
+        element("id", String.serializer().descriptor)
+    }
+
+    override fun deserialize(decoder: Decoder): ContainerReference = throw UnsupportedOperationException()
+
+    override fun serialize(encoder: Encoder, value: ContainerReference) {
+        val output = encoder.beginStructure(descriptor)
+        output.encodeStringElement(descriptor, 0, value.id)
+        output.endStructure(descriptor)
+    }
+}
 
 object ImageReferenceSerializer : KSerializer<ImageReference> {
     override val descriptor: SerialDescriptor = buildClassSerialDescriptor("ImageReference") {

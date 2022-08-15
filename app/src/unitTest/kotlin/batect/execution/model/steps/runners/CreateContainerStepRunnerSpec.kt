@@ -67,7 +67,7 @@ object CreateContainerStepRunnerSpec : Spek({
             on { name } doReturn "some-container-name"
         }
 
-        val dockerContainer = DockerContainer("some-id", "some-container-name")
+        val dockerContainer = DockerContainer(ContainerReference("some-id"), "some-container-name")
         val dockerClient by createForEachTest {
             mock<DockerClient> {
                 onBlocking { createContainer(any()) } doReturn ContainerReference("some-id")

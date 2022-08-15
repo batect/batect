@@ -66,7 +66,7 @@ import kotlin.time.Duration.Companion.seconds
 object WaitForContainerToBecomeHealthyStepRunnerSpec : Spek({
     describe("running a 'wait for container to become healthy' step") {
         val container = Container("some-container", imageSourceDoesNotMatter())
-        val dockerContainer = DockerContainer("some-id", "some-name")
+        val dockerContainer = DockerContainer(ContainerReference("some-id"), "some-name")
         val step = WaitForContainerToBecomeHealthyStep(container, dockerContainer)
 
         val dockerClient by createForEachTest { mock<DockerClient>() }
@@ -90,7 +90,7 @@ object WaitForContainerToBecomeHealthyStepRunnerSpec : Spek({
 
         given("the container has no health check") {
             beforeEachTestSuspend {
-                whenever(dockerClient.inspectContainer("some-id"))
+                whenever(dockerClient.inspectContainer(ContainerReference("some-id")))
                     .doReturn(createDummyInspectionResult(ContainerHealthcheckConfig(emptyList(), 0.seconds, 0.seconds, 0.seconds, 0), null))
             }
 
@@ -112,7 +112,7 @@ object WaitForContainerToBecomeHealthyStepRunnerSpec : Spek({
         given("the container has a health check") {
             fun setUpHealthCheckResult(exitCode: Long, output: String) {
                 runBlocking {
-                    whenever(dockerClient.inspectContainer("some-id")).doReturn(
+                    whenever(dockerClient.inspectContainer(ContainerReference("some-id"))).doReturn(
                         createDummyInspectionResult(
                             ContainerHealthcheckConfig(listOf("healthcheck.sh"), null, null, null, null),
                             ContainerHealthState(

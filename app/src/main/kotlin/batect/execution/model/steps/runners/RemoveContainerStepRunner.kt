@@ -16,7 +16,6 @@
 
 package batect.execution.model.steps.runners
 
-import batect.dockerclient.ContainerReference
 import batect.dockerclient.ContainerRemovalFailedException
 import batect.dockerclient.DockerClient
 import batect.execution.model.events.ContainerRemovalFailedEvent
@@ -33,7 +32,7 @@ class RemoveContainerStepRunner(
     fun run(step: RemoveContainerStep, eventSink: TaskEventSink) {
         try {
             runBlocking {
-                client.removeContainer(ContainerReference(step.dockerContainer.id), force = true, removeVolumes = true)
+                client.removeContainer(step.dockerContainer.reference, force = true, removeVolumes = true)
             }
 
             eventSink.postEvent(ContainerRemovedEvent(step.container))
@@ -41,7 +40,7 @@ class RemoveContainerStepRunner(
             logger.error {
                 message("Removing container failed.")
                 exception(e)
-                data("containerId", step.dockerContainer.id)
+                data("containerId", step.dockerContainer.reference.id)
             }
 
             eventSink.postEvent(ContainerRemovalFailedEvent(step.container, e.message ?: ""))

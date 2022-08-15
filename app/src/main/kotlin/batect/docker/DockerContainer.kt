@@ -16,10 +16,14 @@
 
 package batect.docker
 
+import batect.dockerclient.ContainerReference
 import batect.logging.LogMessageBuilder
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class DockerContainer(val id: String, val name: String)
+data class DockerContainer(
+    @Serializable(with = ContainerReferenceSerializer::class) val reference: ContainerReference,
+    val name: String
+)
 
 fun LogMessageBuilder.data(key: String, value: DockerContainer) = this.data(key, value, DockerContainer.serializer())

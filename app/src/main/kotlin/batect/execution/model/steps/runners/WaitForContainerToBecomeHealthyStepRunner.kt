@@ -57,7 +57,7 @@ class WaitForContainerToBecomeHealthyStepRunner(
             logger.error {
                 message("Waiting for container to become healthy failed.")
                 exception(e)
-                data("containerId", step.dockerContainer.id)
+                data("containerId", step.dockerContainer.reference.id)
             }
 
             eventSink.postEvent(ContainerDidNotBecomeHealthyEvent(step.container, "Waiting for the container's health status failed: ${e.message}"))
@@ -65,7 +65,7 @@ class WaitForContainerToBecomeHealthyStepRunner(
             logger.error {
                 message("Waiting for container to become healthy failed.")
                 exception(e)
-                data("containerId", step.dockerContainer.id)
+                data("containerId", step.dockerContainer.reference.id)
             }
 
             eventSink.postEvent(ContainerDidNotBecomeHealthyEvent(step.container, "Waiting for the container's health status failed: ${e.message}"))
@@ -73,7 +73,7 @@ class WaitForContainerToBecomeHealthyStepRunner(
     }
 
     private suspend fun checkIfContainerHasHealthCheck(container: DockerContainer): Boolean {
-        val inspectionResult = dockerClient.inspectContainer(container.id)
+        val inspectionResult = dockerClient.inspectContainer(container.reference)
         val healthcheck = inspectionResult.config.healthcheck
 
         return healthcheck != null && healthcheck.test.isNotEmpty()
@@ -82,7 +82,7 @@ class WaitForContainerToBecomeHealthyStepRunner(
     private suspend fun waitForHealthStatus(container: DockerContainer): HealthStatus {
         val filters = mapOf(
             "event" to setOf("die", "health_status"),
-            "container" to setOf(container.id)
+            "container" to setOf(container.reference.id)
         )
 
         var eventReceived: Event? = null
@@ -105,7 +105,7 @@ class WaitForContainerToBecomeHealthyStepRunner(
     }
 
     private suspend fun containerBecameUnhealthyMessage(container: DockerContainer): String {
-        val inspectionResult = dockerClient.inspectContainer(container.id)
+        val inspectionResult = dockerClient.inspectContainer(container.reference)
         val lastHealthCheckResult = inspectionResult.state.health!!.log.last()
 
         val message = when {

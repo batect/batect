@@ -98,7 +98,7 @@ object RunContainerSetupCommandsStepRunnerSpec : Spek({
 
         given("the container has no setup commands") {
             val container = Container("the-container", imageSourceDoesNotMatter(), setupCommands = emptyList())
-            val dockerContainer = DockerContainer("some-container-id", "some-container-name")
+            val dockerContainer = DockerContainer(ContainerReference("some-container-id"), "some-container-name")
             val step = RunContainerSetupCommandsStep(container, dockerContainer)
 
             beforeEachTest { runner.run(step, eventSink) }
@@ -116,7 +116,7 @@ object RunContainerSetupCommandsStepRunnerSpec : Spek({
             val command = Command.parse("./do the-thing")
             val setupCommand = SetupCommand(command)
             val container = Container("the-container", imageSourceDoesNotMatter(), setupCommands = listOf(setupCommand), workingDirectory = "/some/work/dir")
-            val dockerContainer = DockerContainer("some-container-id", "some-container-name")
+            val dockerContainer = DockerContainer(ContainerReference("some-container-id"), "some-container-name")
             val step = RunContainerSetupCommandsStep(container, dockerContainer)
 
             val environmentVariablesToUse = mapOf("SOME_VAR" to "some value")
@@ -247,7 +247,7 @@ object RunContainerSetupCommandsStepRunnerSpec : Spek({
             val command = Command.parse("./do the-thing")
             val setupCommand = SetupCommand(command, "/some/other/command/work/dir")
             val container = Container("the-container", imageSourceDoesNotMatter(), setupCommands = listOf(setupCommand), workingDirectory = "/some/container/work/dir")
-            val dockerContainer = DockerContainer("some-container-id", "some-container-name")
+            val dockerContainer = DockerContainer(ContainerReference("some-container-id"), "some-container-name")
             val step = RunContainerSetupCommandsStep(container, dockerContainer)
 
             val environmentVariablesToUse = mapOf("SOME_VAR" to "some value")
@@ -280,7 +280,7 @@ object RunContainerSetupCommandsStepRunnerSpec : Spek({
             val setupCommand2 = SetupCommand(command2)
             val setupCommand3 = SetupCommand(command3)
             val container = Container("the-container", imageSourceDoesNotMatter(), setupCommands = listOf(setupCommand1, setupCommand2, setupCommand3), workingDirectory = "/some/work/dir")
-            val dockerContainer = DockerContainer("some-container-id", "some-container-name")
+            val dockerContainer = DockerContainer(ContainerReference("some-container-id"), "some-container-name")
             val step = RunContainerSetupCommandsStep(container, dockerContainer)
 
             val environmentVariablesToUse = mapOf("SOME_VAR" to "some value")

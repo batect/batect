@@ -18,6 +18,7 @@ package batect.ui.fancy
 
 import batect.config.Container
 import batect.docker.DockerContainer
+import batect.dockerclient.ContainerReference
 import batect.dockerclient.NetworkReference
 import batect.execution.PostTaskManualCleanup
 import batect.execution.model.events.ContainerBecameHealthyEvent
@@ -85,7 +86,7 @@ object FancyEventLoggerSpec : Spek({
 
             describe("when event is a notification that a container is starting") {
                 on("the event being a notification that the task container is starting") {
-                    val dockerContainer = DockerContainer("some-id", "some-name")
+                    val dockerContainer = DockerContainer(ContainerReference("some-id"), "some-name")
                     val event by createForEachTest { StepStartingEvent(RunContainerStep(taskContainer, dockerContainer)) }
                     beforeEachTest { logger.postEvent(event) }
 
@@ -104,7 +105,7 @@ object FancyEventLoggerSpec : Spek({
 
                 on("the event being a notification that another container is starting") {
                     val container = Container("some-container", imageSourceDoesNotMatter())
-                    val dockerContainer = DockerContainer("some-id", "some-name")
+                    val dockerContainer = DockerContainer(ContainerReference("some-id"), "some-name")
                     val event by createForEachTest { StepStartingEvent(RunContainerStep(container, dockerContainer)) }
                     beforeEachTest { logger.postEvent(event) }
 
@@ -130,7 +131,7 @@ object FancyEventLoggerSpec : Spek({
                     val event by createForEachTest { RunningContainerExitedEvent(taskContainer, 123) }
 
                     beforeEachTest {
-                        logger.postEvent(StepStartingEvent(RunContainerStep(taskContainer, DockerContainer("some-id", "some-name"))))
+                        logger.postEvent(StepStartingEvent(RunContainerStep(taskContainer, DockerContainer(ContainerReference("some-id"), "some-name"))))
                         reset(startupProgressDisplay)
                         reset(cleanupProgressDisplay)
 
@@ -163,7 +164,7 @@ object FancyEventLoggerSpec : Spek({
                     val event by createForEachTest { RunningContainerExitedEvent(container, 123) }
 
                     beforeEachTest {
-                        logger.postEvent(StepStartingEvent(RunContainerStep(container, DockerContainer("some-id", "some-name"))))
+                        logger.postEvent(StepStartingEvent(RunContainerStep(container, DockerContainer(ContainerReference("some-id"), "some-name"))))
                         reset(startupProgressDisplay)
                         reset(cleanupProgressDisplay)
 
@@ -180,7 +181,7 @@ object FancyEventLoggerSpec : Spek({
                 val event = ContainerRemovedEvent(Container("some-container", imageSourceDoesNotMatter()))
 
                 beforeEachTest {
-                    logger.postEvent(StepStartingEvent(RunContainerStep(taskContainer, DockerContainer("some-id", "some-name"))))
+                    logger.postEvent(StepStartingEvent(RunContainerStep(taskContainer, DockerContainer(ContainerReference("some-id"), "some-name"))))
                     logger.postEvent(RunningContainerExitedEvent(taskContainer, 123))
                     reset(startupProgressDisplay)
                     reset(cleanupProgressDisplay)

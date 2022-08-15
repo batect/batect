@@ -62,7 +62,7 @@ class RunContainerSetupCommandsStepRunner(
             try {
                 eventSink.postEvent(RunningSetupCommandEvent(step.container, command, index))
 
-                val result = runSetupCommand(command, index, environmentVariables, userAndGroup, step.container, ContainerReference(step.dockerContainer.id))
+                val result = runSetupCommand(command, index, environmentVariables, userAndGroup, step.container, step.dockerContainer.reference)
 
                 if (result.exitCode != 0L) {
                     eventSink.postEvent(SetupCommandFailedEvent(step.container, command, result.exitCode, result.output.readUtf8()))
@@ -72,7 +72,7 @@ class RunContainerSetupCommandsStepRunner(
                 logger.error {
                     message("Running setup command failed.")
                     exception(e)
-                    data("containerId", step.dockerContainer.id)
+                    data("containerId", step.dockerContainer.reference.id)
                     data("commandIndex", index)
                 }
 

@@ -16,7 +16,6 @@
 
 package batect.execution.model.steps.runners
 
-import batect.dockerclient.ContainerReference
 import batect.dockerclient.DockerClient
 import batect.dockerclient.DockerClientException
 import batect.dockerclient.ReadyNotification
@@ -52,7 +51,7 @@ class RunContainerStepRunner(
                 }
 
                 val exitCode = client.run(
-                    ContainerReference(step.dockerContainer.id),
+                    step.dockerContainer.reference,
                     stdout,
                     stdout,
                     stdin,
@@ -65,7 +64,7 @@ class RunContainerStepRunner(
             logger.error {
                 message("Running container failed.")
                 exception(e)
-                data("containerId", step.dockerContainer.id)
+                data("containerId", step.dockerContainer.reference.id)
             }
 
             eventSink.postEvent(ContainerRunFailedEvent(step.container, e.message ?: ""))

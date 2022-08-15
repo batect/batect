@@ -53,7 +53,7 @@ import org.spekframework.spek2.style.specification.describe
 object RunContainerStepRunnerSpec : Spek({
     describe("running a 'run container' step") {
         val container = Container("some-container", imageSourceDoesNotMatter())
-        val dockerContainer = DockerContainer("some-id", "some-name")
+        val dockerContainer = DockerContainer(ContainerReference("some-id"), "some-name")
         val step = RunContainerStep(container, dockerContainer)
 
         val stdout = SinkTextOutput(mock<Sink>())

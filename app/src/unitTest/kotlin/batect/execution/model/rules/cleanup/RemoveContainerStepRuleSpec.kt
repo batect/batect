@@ -18,6 +18,7 @@ package batect.execution.model.rules.cleanup
 
 import batect.config.Container
 import batect.docker.DockerContainer
+import batect.dockerclient.ContainerReference
 import batect.execution.model.events.ContainerStoppedEvent
 import batect.execution.model.rules.TaskStepRuleEvaluationResult
 import batect.execution.model.steps.RemoveContainerStep
@@ -34,7 +35,7 @@ import org.spekframework.spek2.style.specification.describe
 object RemoveContainerStepRuleSpec : Spek({
     describe("a remove container step rule") {
         val containerToRemove = Container("the-container", imageSourceDoesNotMatter())
-        val dockerContainerToRemove = DockerContainer("some-container-id", "some-container-name")
+        val dockerContainerToRemove = DockerContainer(ContainerReference("some-container-id"), "some-container-name")
 
         given("the container was started") {
             val rule = RemoveContainerStepRule(containerToRemove, dockerContainerToRemove, true)
@@ -110,7 +111,7 @@ object RemoveContainerStepRuleSpec : Spek({
                         |{
                         |   "type": "${rule::class.qualifiedName}",
                         |   "container": "the-container",
-                        |   "dockerContainer": {"id": "some-container-id", "name": "some-container-name"},
+                        |   "dockerContainer": {"reference": {"id": "some-container-id"}, "name": "some-container-name"},
                         |   "containerWasStarted": true,
                         |   "manualCleanupCommand": "docker rm --force --volumes some-container-id"
                         |}

@@ -65,7 +65,7 @@ class CreateContainerStepRunner(
 
             runBlocking {
                 val containerReference = client.createContainer(creationSpec)
-                val dockerContainer = DockerContainer(containerReference.id, creationSpec.name!!)
+                val dockerContainer = DockerContainer(containerReference, creationSpec.name!!)
 
                 try {
                     runAsCurrentUserConfigurationProvider.applyConfigurationToContainer(container, dockerContainer)

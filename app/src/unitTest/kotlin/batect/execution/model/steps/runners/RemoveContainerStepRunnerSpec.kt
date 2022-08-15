@@ -40,7 +40,7 @@ import org.spekframework.spek2.style.specification.describe
 object RemoveContainerStepRunnerSpec : Spek({
     describe("running a 'remove container' step") {
         val container = Container("some-container", imageSourceDoesNotMatter())
-        val dockerContainer = DockerContainer("some-id", "some-name")
+        val dockerContainer = DockerContainer(ContainerReference("some-id"), "some-name")
         val step = RemoveContainerStep(container, dockerContainer)
 
         val dockerClient by createForEachTest { mock<DockerClient>() }

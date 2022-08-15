@@ -18,6 +18,7 @@ package batect.execution.model.events
 
 import batect.config.Container
 import batect.docker.DockerContainer
+import batect.dockerclient.ContainerReference
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.logRepresentationOf
 import batect.testutils.on
@@ -29,7 +30,7 @@ import org.spekframework.spek2.style.specification.describe
 object ContainerCreatedEventSpec : Spek({
     describe("a 'container created' event") {
         val container = Container("container-1", imageSourceDoesNotMatter())
-        val dockerContainer = DockerContainer("docker-container-1", "docker-container-1-name")
+        val dockerContainer = DockerContainer(ContainerReference("docker-container-1"), "docker-container-1-name")
         val event = ContainerCreatedEvent(container, dockerContainer)
 
         on("attaching it to a log message") {
@@ -41,7 +42,7 @@ object ContainerCreatedEventSpec : Spek({
                         |{
                         |   "type": "${event::class.qualifiedName}",
                         |   "container": "container-1",
-                        |   "dockerContainer": {"id": "docker-container-1", "name": "docker-container-1-name"}
+                        |   "dockerContainer": {"reference": {"id": "docker-container-1"}, "name": "docker-container-1-name"}
                         |}
                         """.trimMargin()
                     )

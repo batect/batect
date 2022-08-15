@@ -20,6 +20,7 @@ package batect.testutils
 
 import batect.config.Container
 import batect.docker.DockerContainer
+import batect.dockerclient.ContainerReference
 import batect.dockerclient.NetworkReference
 import batect.execution.model.steps.DeleteTaskNetworkStep
 import batect.execution.model.steps.RunContainerStep
@@ -30,7 +31,9 @@ fun createMockTaskStep(countsAgainstParallelismCap: Boolean = true): TaskStep =
     if (countsAgainstParallelismCap) {
         DeleteTaskNetworkStep(NetworkReference(generateId(10)))
     } else {
-        val id = generateId(10)
+        val container = Container(generateId(10), imageSourceDoesNotMatter())
+        val dockerReference = generateId(10)
+        val dockerContainer = DockerContainer(ContainerReference(dockerReference), "$dockerReference-name")
 
-        RunContainerStep(Container(generateId(10), imageSourceDoesNotMatter()), DockerContainer(id, "$id-name"))
+        RunContainerStep(container, dockerContainer)
     }

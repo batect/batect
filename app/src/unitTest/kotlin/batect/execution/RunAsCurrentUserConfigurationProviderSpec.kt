@@ -64,7 +64,7 @@ import java.nio.file.Files
 object RunAsCurrentUserConfigurationProviderSpec : Spek({
     describe("a 'run as current user' configuration provider") {
         val dockerClient by createForEachTest { mock<DockerClient>() }
-        val dockerContainer = DockerContainer("abc-123", "abc-123-name")
+        val dockerContainer = DockerContainer(ContainerReference("abc-123"), "abc-123-name")
 
         given("the container has 'run as current user' disabled") {
             val fileSystem by createForEachTest { Jimfs.newFileSystem(Configuration.unix()) }
@@ -184,7 +184,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                             """.trimMargin()
 
                             verify(dockerClient).uploadToContainer(
-                                ContainerReference(dockerContainer.id),
+                                dockerContainer.reference,
                                 setOf(
                                     UploadFile("passwd", 0, 0, "644".toInt(8), passwdContent.toByteArray(Charsets.UTF_8)),
                                     UploadFile("group", 0, 0, "644".toInt(8), groupContent.toByteArray(Charsets.UTF_8))
@@ -195,7 +195,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
 
                         itSuspend("uploads the configured home directory to the container, with the owner and group set to root") {
                             verify(dockerClient).uploadToContainer(
-                                ContainerReference(dockerContainer.id),
+                                dockerContainer.reference,
                                 setOf(
                                     UploadDirectory("some-user", 0, 0, "755".toInt(8))
                                 ),
@@ -205,7 +205,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
 
                         itSuspend("uploads the configured cache directory to the container, with the owner and group set to root") {
                             verify(dockerClient).uploadToContainer(
-                                ContainerReference(dockerContainer.id),
+                                dockerContainer.reference,
                                 setOf(
                                     UploadDirectory("first-cache", 0, 0, "755".toInt(8))
                                 ),
@@ -269,7 +269,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                                 """.trimMargin()
 
                                 verify(dockerClient).uploadToContainer(
-                                    ContainerReference(dockerContainer.id),
+                                    dockerContainer.reference,
                                     setOf(
                                         UploadFile("passwd", 0, 0, "644".toInt(8), passwdContent.toByteArray(Charsets.UTF_8)),
                                         UploadFile("group", 0, 0, "644".toInt(8), groupContent.toByteArray(Charsets.UTF_8))
@@ -280,7 +280,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
 
                             itSuspend("uploads the configured home directory to the container, with the owner and group set to the current user's user and group") {
                                 verify(dockerClient).uploadToContainer(
-                                    ContainerReference(dockerContainer.id),
+                                    dockerContainer.reference,
                                     setOf(
                                         UploadDirectory("some-user", 123, 456, "755".toInt(8))
                                     ),
@@ -290,7 +290,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
 
                             itSuspend("uploads the configured cache directory to the container, with the owner and group set to the current user's user and group") {
                                 verify(dockerClient).uploadToContainer(
-                                    ContainerReference(dockerContainer.id),
+                                    dockerContainer.reference,
                                     setOf(
                                         UploadDirectory("first-cache", 123, 456, "755".toInt(8))
                                     ),
@@ -316,7 +316,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
 
                             itSuspend("uploads the configured home directory to the container, with the owner and group set to the current user's user and group") {
                                 verify(dockerClient).uploadToContainer(
-                                    ContainerReference(dockerContainer.id),
+                                    dockerContainer.reference,
                                     setOf(
                                         UploadDirectory("my-home", 123, 456, "755".toInt(8))
                                     ),
@@ -349,7 +349,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
 
                             itSuspend("uploads the configured home directory to the container, with the owner and group set to the current user's user and group") {
                                 verify(dockerClient).uploadToContainer(
-                                    ContainerReference(dockerContainer.id),
+                                    dockerContainer.reference,
                                     setOf(
                                         UploadDirectory("some-user", 123, 456, "755".toInt(8))
                                     ),
@@ -359,7 +359,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
 
                             itSuspend("uploads the configured cache directory to the container, with the owner and group set to the current user's user and group") {
                                 verify(dockerClient).uploadToContainer(
-                                    ContainerReference(dockerContainer.id),
+                                    dockerContainer.reference,
                                     setOf(
                                         UploadDirectory("first-cache", 123, 456, "755".toInt(8))
                                     ),
@@ -377,7 +377,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
 
                             itSuspend("uploads the configured cache directory to the container, with the owner and group set to the current user's user and group") {
                                 verify(dockerClient).uploadToContainer(
-                                    ContainerReference(dockerContainer.id),
+                                    dockerContainer.reference,
                                     setOf(
                                         UploadDirectory("first-cache", 123, 456, "755".toInt(8))
                                     ),
@@ -441,7 +441,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                             """.trimMargin()
 
                             verify(dockerClient).uploadToContainer(
-                                ContainerReference(dockerContainer.id),
+                                dockerContainer.reference,
                                 setOf(
                                     UploadFile("passwd", 0, 0, "644".toInt(8), passwdContent.toByteArray(Charsets.UTF_8)),
                                     UploadFile("group", 0, 0, "644".toInt(8), groupContent.toByteArray(Charsets.UTF_8))
@@ -452,7 +452,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
 
                         itSuspend("uploads the configured home directory to the container, with the owner and group set to root") {
                             verify(dockerClient).uploadToContainer(
-                                ContainerReference(dockerContainer.id),
+                                dockerContainer.reference,
                                 setOf(
                                     UploadDirectory("some-user", 0, 0, "755".toInt(8))
                                 ),
@@ -462,7 +462,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
 
                         itSuspend("uploads the configured cache directory to the container, with the owner and group set to root") {
                             verify(dockerClient).uploadToContainer(
-                                ContainerReference(dockerContainer.id),
+                                dockerContainer.reference,
                                 setOf(
                                     UploadDirectory("first-cache", 0, 0, "755".toInt(8))
                                 ),

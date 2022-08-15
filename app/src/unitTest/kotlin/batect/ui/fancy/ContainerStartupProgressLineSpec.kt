@@ -26,6 +26,7 @@ import batect.docker.DownloadOperation
 import batect.docker.build.ActiveImageBuildStep
 import batect.docker.build.BuildProgress
 import batect.docker.pull.ImagePullProgress
+import batect.dockerclient.ContainerReference
 import batect.dockerclient.ImageReference
 import batect.dockerclient.NetworkReference
 import batect.execution.model.events.ContainerBecameHealthyEvent
@@ -258,7 +259,7 @@ object ContainerStartupProgressLineSpec : Spek({
 
             describe("after receiving a 'container created' notification") {
                 describe("on that notification being for this line's container") {
-                    val event = ContainerCreatedEvent(container, DockerContainer("some-id", "some-container-name"))
+                    val event = ContainerCreatedEvent(container, DockerContainer(ContainerReference("some-id"), "some-container-name"))
 
                     on("and none of the container's dependencies being ready") {
                         beforeEachTest { line.onEventPosted(event) }
@@ -312,7 +313,7 @@ object ContainerStartupProgressLineSpec : Spek({
                 }
 
                 on("that notification being for another container") {
-                    val event = ContainerCreatedEvent(otherContainer, DockerContainer("some-id", "some-container-name"))
+                    val event = ContainerCreatedEvent(otherContainer, DockerContainer(ContainerReference("some-id"), "some-container-name"))
                     beforeEachTest { line.onEventPosted(event) }
                     val output by runForEachTest { line.print() }
 
@@ -473,7 +474,7 @@ object ContainerStartupProgressLineSpec : Spek({
                             val taskContainerLine by createForEachTest { ContainerStartupProgressLine(containerWithoutCommand, setOf(dependencyA, dependencyB, dependencyC), true) }
 
                             beforeEachTest {
-                                taskContainerLine.onEventPosted(StepStartingEvent(RunContainerStep(containerWithoutCommand, DockerContainer("some-id", "some-container-name"))))
+                                taskContainerLine.onEventPosted(StepStartingEvent(RunContainerStep(containerWithoutCommand, DockerContainer(ContainerReference("some-id"), "some-container-name"))))
                             }
 
                             val output by runForEachTest { taskContainerLine.print() }
@@ -488,7 +489,7 @@ object ContainerStartupProgressLineSpec : Spek({
                             val taskContainerLine by createForEachTest { ContainerStartupProgressLine(containerWithCommand, setOf(dependencyA, dependencyB, dependencyC), true) }
 
                             beforeEachTest {
-                                taskContainerLine.onEventPosted(StepStartingEvent(RunContainerStep(containerWithCommand, DockerContainer("some-id", "some-container-name"))))
+                                taskContainerLine.onEventPosted(StepStartingEvent(RunContainerStep(containerWithCommand, DockerContainer(ContainerReference("some-id"), "some-container-name"))))
                             }
 
                             val output by runForEachTest { taskContainerLine.print() }
@@ -503,7 +504,7 @@ object ContainerStartupProgressLineSpec : Spek({
                             val taskContainerLine by createForEachTest { ContainerStartupProgressLine(containerWithCommand, setOf(dependencyA, dependencyB, dependencyC), true) }
 
                             beforeEachTest {
-                                taskContainerLine.onEventPosted(StepStartingEvent(RunContainerStep(containerWithCommand, DockerContainer("some-id", "some-container-name"))))
+                                taskContainerLine.onEventPosted(StepStartingEvent(RunContainerStep(containerWithCommand, DockerContainer(ContainerReference("some-id"), "some-container-name"))))
                             }
 
                             val output by runForEachTest { taskContainerLine.print() }
@@ -515,7 +516,7 @@ object ContainerStartupProgressLineSpec : Spek({
                     }
 
                     on("this line's container is not the task container") {
-                        beforeEachTest { line.onEventPosted(StepStartingEvent(RunContainerStep(container, DockerContainer("some-id", "some-container-name")))) }
+                        beforeEachTest { line.onEventPosted(StepStartingEvent(RunContainerStep(container, DockerContainer(ContainerReference("some-id"), "some-container-name")))) }
 
                         val output by runForEachTest { line.print() }
 
@@ -526,7 +527,7 @@ object ContainerStartupProgressLineSpec : Spek({
                 }
 
                 on("that notification being for another container") {
-                    val step = RunContainerStep(otherContainer, DockerContainer("some-id", "some-container-name"))
+                    val step = RunContainerStep(otherContainer, DockerContainer(ContainerReference("some-id"), "some-container-name"))
                     beforeEachTest { line.onEventPosted(StepStartingEvent(step)) }
                     val output by runForEachTest { line.print() }
 

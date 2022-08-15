@@ -20,6 +20,7 @@ import batect.config.Container
 import batect.config.PullImage
 import batect.config.SetupCommand
 import batect.docker.DockerContainer
+import batect.dockerclient.ContainerReference
 import batect.execution.CleanupOption
 import batect.execution.PostTaskManualCleanup
 import batect.execution.RunOptions
@@ -262,7 +263,7 @@ object FailureErrorMessageFormatterSpec : Spek({
                             val container = Container("http-server", imageSourceDoesNotMatter())
 
                             val events = setOf(
-                                ContainerCreatedEvent(container, DockerContainer("http-server-container-id", "http-server-container-name")),
+                                ContainerCreatedEvent(container, DockerContainer(ContainerReference("http-server-container-id"), "http-server-container-name")),
                                 ContainerStartedEvent(container)
                             )
 
@@ -328,7 +329,7 @@ object FailureErrorMessageFormatterSpec : Spek({
                         given("the container never started") {
                             val container = Container("http-server", imageSourceDoesNotMatter())
                             val events = setOf(
-                                ContainerCreatedEvent(container, DockerContainer("http-server-container-id", "http-server-container-name"))
+                                ContainerCreatedEvent(container, DockerContainer(ContainerReference("http-server-container-id"), "http-server-container-name"))
                             )
 
                             given("there is one cleanup command") {
@@ -355,7 +356,7 @@ object FailureErrorMessageFormatterSpec : Spek({
                         given("the container exited") {
                             val container = Container("http-server", imageSourceDoesNotMatter())
                             val events = setOf(
-                                ContainerCreatedEvent(container, DockerContainer("http-server-container-id", "http-server-container-name")),
+                                ContainerCreatedEvent(container, DockerContainer(ContainerReference("http-server-container-id"), "http-server-container-name")),
                                 ContainerStartedEvent(container),
                                 RunningContainerExitedEvent(container, 123)
                             )
@@ -384,7 +385,7 @@ object FailureErrorMessageFormatterSpec : Spek({
                         given("the container was stopped") {
                             val container = Container("http-server", imageSourceDoesNotMatter())
                             val events = setOf(
-                                ContainerCreatedEvent(container, DockerContainer("http-server-container-id", "http-server-container-name")),
+                                ContainerCreatedEvent(container, DockerContainer(ContainerReference("http-server-container-id"), "http-server-container-name")),
                                 ContainerStartedEvent(container),
                                 ContainerStoppedEvent(container)
                             )
@@ -416,9 +417,9 @@ object FailureErrorMessageFormatterSpec : Spek({
                         val container2 = Container("database", imageSourceDoesNotMatter())
 
                         val events = setOf(
-                            ContainerCreatedEvent(container1, DockerContainer("http-server-container-id", "http-server-container-name")),
+                            ContainerCreatedEvent(container1, DockerContainer(ContainerReference("http-server-container-id"), "http-server-container-name")),
                             ContainerStartedEvent(container1),
-                            ContainerCreatedEvent(container2, DockerContainer("database-container-id", "database-container-name")),
+                            ContainerCreatedEvent(container2, DockerContainer(ContainerReference("database-container-id"), "database-container-name")),
                             ContainerStartedEvent(container2)
                         )
 

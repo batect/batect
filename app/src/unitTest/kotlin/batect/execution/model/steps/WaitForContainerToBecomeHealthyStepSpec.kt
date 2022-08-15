@@ -18,6 +18,7 @@ package batect.execution.model.steps
 
 import batect.config.Container
 import batect.docker.DockerContainer
+import batect.dockerclient.ContainerReference
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.logRepresentationOf
 import batect.testutils.on
@@ -29,7 +30,7 @@ import org.spekframework.spek2.style.specification.describe
 object WaitForContainerToBecomeHealthyStepSpec : Spek({
     describe("a 'wait for container to become healthy' step") {
         val container = Container("the-container", imageSourceDoesNotMatter())
-        val dockerContainer = DockerContainer("the-container-id", "the-container-name")
+        val dockerContainer = DockerContainer(ContainerReference("the-container-id"), "the-container-name")
         val step = WaitForContainerToBecomeHealthyStep(container, dockerContainer)
 
         on("attaching it to a log message") {
@@ -41,7 +42,7 @@ object WaitForContainerToBecomeHealthyStepSpec : Spek({
                         |{
                         |   "type": "${step::class.qualifiedName}",
                         |   "container": "the-container",
-                        |   "dockerContainer": {"id": "the-container-id", "name": "the-container-name"}
+                        |   "dockerContainer": {"reference": {"id": "the-container-id"}, "name": "the-container-name"}
                         |}
                         """.trimMargin()
                     )

@@ -18,6 +18,7 @@ package batect.execution.model.rules.cleanup
 
 import batect.config.Container
 import batect.docker.DockerContainer
+import batect.dockerclient.ContainerReference
 import batect.execution.model.events.ContainerStoppedEvent
 import batect.execution.model.rules.TaskStepRuleEvaluationResult
 import batect.execution.model.steps.StopContainerStep
@@ -34,7 +35,7 @@ import org.spekframework.spek2.style.specification.describe
 object StopContainerStepRuleSpec : Spek({
     describe("a stop container step rule") {
         val containerToStop = Container("the-container", imageSourceDoesNotMatter())
-        val dockerContainerToStop = DockerContainer("some-container-id", "some-container-name")
+        val dockerContainerToStop = DockerContainer(ContainerReference("some-container-id"), "some-container-name")
 
         given("there are no containers that must be stopped first") {
             val rule = StopContainerStepRule(containerToStop, dockerContainerToStop, emptySet())
@@ -56,7 +57,7 @@ object StopContainerStepRuleSpec : Spek({
                             |{
                             |   "type": "${rule::class.qualifiedName}",
                             |   "container": "the-container",
-                            |   "dockerContainer": {"id": "some-container-id", "name": "some-container-name"},
+                            |   "dockerContainer": {"reference": {"id": "some-container-id"}, "name": "some-container-name"},
                             |   "containersThatMustBeStoppedFirst": [],
                             |   "manualCleanupCommand": null
                             |}
@@ -106,7 +107,7 @@ object StopContainerStepRuleSpec : Spek({
                             |{
                             |   "type": "${rule::class.qualifiedName}",
                             |   "container": "the-container",
-                            |   "dockerContainer": {"id": "some-container-id", "name": "some-container-name"},
+                            |   "dockerContainer": {"reference": {"id": "some-container-id"}, "name": "some-container-name"},
                             |   "containersThatMustBeStoppedFirst": ["container-1", "container-2"],
                             |   "manualCleanupCommand": null
                             |}

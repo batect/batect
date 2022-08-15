@@ -16,7 +16,6 @@
 
 package batect.execution.model.steps.runners
 
-import batect.dockerclient.ContainerReference
 import batect.dockerclient.ContainerStopFailedException
 import batect.dockerclient.DockerClient
 import batect.execution.model.events.ContainerStopFailedEvent
@@ -34,7 +33,7 @@ class StopContainerStepRunner(
     fun run(step: StopContainerStep, eventSink: TaskEventSink) {
         try {
             runBlocking {
-                client.stopContainer(ContainerReference(step.dockerContainer.id), 10.seconds)
+                client.stopContainer(step.dockerContainer.reference, 10.seconds)
             }
 
             eventSink.postEvent(ContainerStoppedEvent(step.container))
@@ -42,7 +41,7 @@ class StopContainerStepRunner(
             logger.error {
                 message("Stopping container failed.")
                 exception(e)
-                data("containerId", step.dockerContainer.id)
+                data("containerId", step.dockerContainer.reference.id)
             }
 
             eventSink.postEvent(ContainerStopFailedEvent(step.container, e.message ?: ""))

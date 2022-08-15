@@ -26,8 +26,8 @@ import batect.config.ExpressionEvaluationException
 import batect.config.ImagePullPolicy
 import batect.config.LiteralValue
 import batect.config.TaskSpecialisedConfiguration
-import batect.docker.build.ActiveImageBuildStep
-import batect.docker.build.BuildProgress
+import batect.docker.ActiveImageBuildStep
+import batect.docker.AggregatedImageBuildProgress
 import batect.dockerclient.BuilderVersion
 import batect.dockerclient.DockerClient
 import batect.dockerclient.ImageBuildFailedException
@@ -204,7 +204,7 @@ object BuildImageStepRunnerSpec : Spek({
                     }
 
                     it("emits a 'image build progress' event for each update received from Docker") {
-                        verify(eventSink).postEvent(ImageBuildProgressEvent(container, BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(1, "First step")))))
+                        verify(eventSink).postEvent(ImageBuildProgressEvent(container, AggregatedImageBuildProgress(setOf(ActiveImageBuildStep.NotDownloading(1, "First step")))))
                     }
 
                     it("emits a 'image built' event") {

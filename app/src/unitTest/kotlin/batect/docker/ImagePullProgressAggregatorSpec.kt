@@ -16,7 +16,6 @@
 
 package batect.docker
 
-import batect.docker.pull.ImagePullProgress
 import batect.dockerclient.ImagePullProgressDetail
 import batect.dockerclient.ImagePullProgressUpdate
 import batect.testutils.createForEachTest
@@ -69,7 +68,7 @@ object ImagePullProgressAggregatorSpec : Spek({
                     val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
 
                     it("returns an appropriate progress update") {
-                        assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 329, 4159)))
+                        assertThat(progressUpdate, equalTo(AggregatedImagePullProgress(DownloadOperation.Downloading, 329, 4159)))
                     }
                 }
             }
@@ -81,7 +80,7 @@ object ImagePullProgressAggregatorSpec : Spek({
                     val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
 
                     it("returns an appropriate progress update") {
-                        assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Extracting, 329, 4159)))
+                        assertThat(progressUpdate, equalTo(AggregatedImagePullProgress(DownloadOperation.Extracting, 329, 4159)))
                     }
                 }
             }
@@ -93,7 +92,7 @@ object ImagePullProgressAggregatorSpec : Spek({
                     val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
 
                     it("returns an appropriate progress update") {
-                        assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.VerifyingChecksum, 0, 0)))
+                        assertThat(progressUpdate, equalTo(AggregatedImagePullProgress(DownloadOperation.VerifyingChecksum, 0, 0)))
                     }
                 }
             }
@@ -108,7 +107,7 @@ object ImagePullProgressAggregatorSpec : Spek({
                     val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
 
                     it("returns an appropriate progress update") {
-                        assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 900, 4159)))
+                        assertThat(progressUpdate, equalTo(AggregatedImagePullProgress(DownloadOperation.Downloading, 900, 4159)))
                     }
                 }
 
@@ -128,7 +127,7 @@ object ImagePullProgressAggregatorSpec : Spek({
                     val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
 
                     it("returns an appropriate progress update") {
-                        assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.VerifyingChecksum, 0, 4159)))
+                        assertThat(progressUpdate, equalTo(AggregatedImagePullProgress(DownloadOperation.VerifyingChecksum, 0, 4159)))
                     }
                 }
 
@@ -137,7 +136,7 @@ object ImagePullProgressAggregatorSpec : Spek({
                     val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
 
                     it("returns an appropriate progress update") {
-                        assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.DownloadComplete, 4159, 4159)))
+                        assertThat(progressUpdate, equalTo(AggregatedImagePullProgress(DownloadOperation.DownloadComplete, 4159, 4159)))
                     }
                 }
 
@@ -146,7 +145,7 @@ object ImagePullProgressAggregatorSpec : Spek({
                     val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
 
                     it("returns an appropriate progress update") {
-                        assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Extracting, 1000, 4159)))
+                        assertThat(progressUpdate, equalTo(AggregatedImagePullProgress(DownloadOperation.Extracting, 1000, 4159)))
                     }
                 }
 
@@ -155,7 +154,7 @@ object ImagePullProgressAggregatorSpec : Spek({
                     val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
 
                     it("returns an appropriate progress update") {
-                        assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.PullComplete, 4159, 4159)))
+                        assertThat(progressUpdate, equalTo(AggregatedImagePullProgress(DownloadOperation.PullComplete, 4159, 4159)))
                     }
                 }
 
@@ -164,7 +163,7 @@ object ImagePullProgressAggregatorSpec : Spek({
                     val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
 
                     it("returns a progress update combining the state of both layers") {
-                        assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 329L + 900, 4159L + 7000)))
+                        assertThat(progressUpdate, equalTo(AggregatedImagePullProgress(DownloadOperation.Downloading, 329L + 900, 4159L + 7000)))
                     }
                 }
 
@@ -183,7 +182,7 @@ object ImagePullProgressAggregatorSpec : Spek({
                             val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
 
                             it("returns a progress update combining the state of both layers") {
-                                assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 329L + 7000, 4159L + 7000)))
+                                assertThat(progressUpdate, equalTo(AggregatedImagePullProgress(DownloadOperation.Downloading, 329L + 7000, 4159L + 7000)))
                             }
                         }
                     }
@@ -199,7 +198,7 @@ object ImagePullProgressAggregatorSpec : Spek({
                         val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
 
                         it("returns a progress update combining the state of both layers") {
-                            assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 4159L + 900, 4159L + 7000)))
+                            assertThat(progressUpdate, equalTo(AggregatedImagePullProgress(DownloadOperation.Downloading, 4159L + 900, 4159L + 7000)))
                         }
                     }
                 }
@@ -214,7 +213,7 @@ object ImagePullProgressAggregatorSpec : Spek({
                         val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
 
                         it("returns a progress update combining the state of both layers") {
-                            assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Extracting, 900, 4159L + 7000)))
+                            assertThat(progressUpdate, equalTo(AggregatedImagePullProgress(DownloadOperation.Extracting, 900, 4159L + 7000)))
                         }
                     }
                 }
@@ -239,7 +238,7 @@ object ImagePullProgressAggregatorSpec : Spek({
                     val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
 
                     it("returns an appropriate progress update") {
-                        assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 900, 4159)))
+                        assertThat(progressUpdate, equalTo(AggregatedImagePullProgress(DownloadOperation.Downloading, 900, 4159)))
                     }
                 }
             }
@@ -251,7 +250,7 @@ object ImagePullProgressAggregatorSpec : Spek({
                 }
 
                 it("returns a progress update that indicates the image is downloading") {
-                    assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 900, 7000)))
+                    assertThat(progressUpdate, equalTo(AggregatedImagePullProgress(DownloadOperation.Downloading, 900, 7000)))
                 }
             }
 
@@ -263,7 +262,7 @@ object ImagePullProgressAggregatorSpec : Spek({
                 }
 
                 it("returns a progress update that indicates the image is downloading") {
-                    assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 4600, 7000)))
+                    assertThat(progressUpdate, equalTo(AggregatedImagePullProgress(DownloadOperation.Downloading, 4600, 7000)))
                 }
             }
 
@@ -274,7 +273,7 @@ object ImagePullProgressAggregatorSpec : Spek({
                 }
 
                 it("returns a progress update that indicates the image is downloading") {
-                    assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 3300, 7000)))
+                    assertThat(progressUpdate, equalTo(AggregatedImagePullProgress(DownloadOperation.Downloading, 3300, 7000)))
                 }
             }
 
@@ -288,7 +287,7 @@ object ImagePullProgressAggregatorSpec : Spek({
                 }
 
                 it("returns a progress update that indicates the image is downloading") {
-                    assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 7050, 16000)))
+                    assertThat(progressUpdate, equalTo(AggregatedImagePullProgress(DownloadOperation.Downloading, 7050, 16000)))
                 }
             }
 
@@ -301,7 +300,7 @@ object ImagePullProgressAggregatorSpec : Spek({
                 }
 
                 it("returns a progress update that indicates the checksum is being verified") {
-                    assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.VerifyingChecksum, 3000, 7000)))
+                    assertThat(progressUpdate, equalTo(AggregatedImagePullProgress(DownloadOperation.VerifyingChecksum, 3000, 7000)))
                 }
             }
 
@@ -314,7 +313,7 @@ object ImagePullProgressAggregatorSpec : Spek({
                 }
 
                 it("returns a progress update that indicates the image is extracting") {
-                    assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Extracting, 700, 7000)))
+                    assertThat(progressUpdate, equalTo(AggregatedImagePullProgress(DownloadOperation.Extracting, 700, 7000)))
                 }
             }
 
@@ -327,7 +326,7 @@ object ImagePullProgressAggregatorSpec : Spek({
                 }
 
                 it("returns a progress update that indicates the image has finished downloading") {
-                    assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.DownloadComplete, 7000, 7000)))
+                    assertThat(progressUpdate, equalTo(AggregatedImagePullProgress(DownloadOperation.DownloadComplete, 7000, 7000)))
                 }
             }
 
@@ -340,7 +339,7 @@ object ImagePullProgressAggregatorSpec : Spek({
                 }
 
                 it("returns a progress update that indicates the image has partly finished pulling") {
-                    assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.PullComplete, 3000, 7000)))
+                    assertThat(progressUpdate, equalTo(AggregatedImagePullProgress(DownloadOperation.PullComplete, 3000, 7000)))
                 }
             }
 
@@ -353,7 +352,7 @@ object ImagePullProgressAggregatorSpec : Spek({
                 }
 
                 it("returns a progress update that indicates the image is extracting") {
-                    assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Extracting, 3700, 7000)))
+                    assertThat(progressUpdate, equalTo(AggregatedImagePullProgress(DownloadOperation.Extracting, 3700, 7000)))
                 }
             }
 
@@ -366,7 +365,7 @@ object ImagePullProgressAggregatorSpec : Spek({
                 }
 
                 it("returns a progress update that indicates the image has finished pulling") {
-                    assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.PullComplete, 7000, 7000)))
+                    assertThat(progressUpdate, equalTo(AggregatedImagePullProgress(DownloadOperation.PullComplete, 7000, 7000)))
                 }
             }
         }
@@ -386,7 +385,7 @@ object ImagePullProgressAggregatorSpec : Spek({
                     val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
 
                     it("returns an appropriate progress update") {
-                        assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 329, 4159)))
+                        assertThat(progressUpdate, equalTo(AggregatedImagePullProgress(DownloadOperation.Downloading, 329, 4159)))
                     }
                 }
             }
@@ -398,7 +397,7 @@ object ImagePullProgressAggregatorSpec : Spek({
                     val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
 
                     it("returns an appropriate progress update") {
-                        assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Extracting, 0, 0)))
+                        assertThat(progressUpdate, equalTo(AggregatedImagePullProgress(DownloadOperation.Extracting, 0, 0)))
                     }
                 }
             }
@@ -413,7 +412,7 @@ object ImagePullProgressAggregatorSpec : Spek({
                     val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
 
                     it("returns an appropriate progress update") {
-                        assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 900, 4159)))
+                        assertThat(progressUpdate, equalTo(AggregatedImagePullProgress(DownloadOperation.Downloading, 900, 4159)))
                     }
                 }
 
@@ -431,7 +430,7 @@ object ImagePullProgressAggregatorSpec : Spek({
                     val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
 
                     it("returns an appropriate progress update") {
-                        assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.DownloadComplete, 4159, 4159)))
+                        assertThat(progressUpdate, equalTo(AggregatedImagePullProgress(DownloadOperation.DownloadComplete, 4159, 4159)))
                     }
                 }
 
@@ -440,7 +439,7 @@ object ImagePullProgressAggregatorSpec : Spek({
                     val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
 
                     it("returns an appropriate progress update") {
-                        assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Extracting, 0, 4159)))
+                        assertThat(progressUpdate, equalTo(AggregatedImagePullProgress(DownloadOperation.Extracting, 0, 4159)))
                     }
                 }
 
@@ -449,7 +448,7 @@ object ImagePullProgressAggregatorSpec : Spek({
                     val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
 
                     it("returns a progress update combining the state of both layers") {
-                        assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 329L + 900, 4159L + 7000)))
+                        assertThat(progressUpdate, equalTo(AggregatedImagePullProgress(DownloadOperation.Downloading, 329L + 900, 4159L + 7000)))
                     }
                 }
 
@@ -466,7 +465,7 @@ object ImagePullProgressAggregatorSpec : Spek({
                             val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
 
                             it("returns a progress update combining the state of both layers") {
-                                assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 329L + 7000, 4159L + 7000)))
+                                assertThat(progressUpdate, equalTo(AggregatedImagePullProgress(DownloadOperation.Downloading, 329L + 7000, 4159L + 7000)))
                             }
                         }
                     }
@@ -482,7 +481,7 @@ object ImagePullProgressAggregatorSpec : Spek({
                         val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
 
                         it("returns a progress update combining the state of both layers") {
-                            assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Extracting, 0, 4159)))
+                            assertThat(progressUpdate, equalTo(AggregatedImagePullProgress(DownloadOperation.Extracting, 0, 4159)))
                         }
                     }
                 }
@@ -495,7 +494,7 @@ object ImagePullProgressAggregatorSpec : Spek({
                 }
 
                 it("returns a progress update that indicates the image is downloading") {
-                    assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 900, 7000)))
+                    assertThat(progressUpdate, equalTo(AggregatedImagePullProgress(DownloadOperation.Downloading, 900, 7000)))
                 }
             }
 
@@ -507,7 +506,7 @@ object ImagePullProgressAggregatorSpec : Spek({
                 }
 
                 it("returns a progress update that indicates the image is downloading") {
-                    assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 4600, 7000)))
+                    assertThat(progressUpdate, equalTo(AggregatedImagePullProgress(DownloadOperation.Downloading, 4600, 7000)))
                 }
             }
 
@@ -519,7 +518,7 @@ object ImagePullProgressAggregatorSpec : Spek({
                 }
 
                 it("returns a progress update that indicates the image is downloading") {
-                    assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Downloading, 3300, 7000)))
+                    assertThat(progressUpdate, equalTo(AggregatedImagePullProgress(DownloadOperation.Downloading, 3300, 7000)))
                 }
             }
 
@@ -532,7 +531,7 @@ object ImagePullProgressAggregatorSpec : Spek({
                 }
 
                 it("returns a progress update that indicates the image is extracting") {
-                    assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Extracting, 0, 7000)))
+                    assertThat(progressUpdate, equalTo(AggregatedImagePullProgress(DownloadOperation.Extracting, 0, 7000)))
                 }
             }
 
@@ -545,7 +544,7 @@ object ImagePullProgressAggregatorSpec : Spek({
                 }
 
                 it("returns a progress update that indicates the image has finished downloading") {
-                    assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.DownloadComplete, 7000, 7000)))
+                    assertThat(progressUpdate, equalTo(AggregatedImagePullProgress(DownloadOperation.DownloadComplete, 7000, 7000)))
                 }
             }
 
@@ -558,7 +557,7 @@ object ImagePullProgressAggregatorSpec : Spek({
                 }
 
                 it("returns a progress update that indicates the image is extracting") {
-                    assertThat(progressUpdate, equalTo(ImagePullProgress(DownloadOperation.Extracting, 4000, 7000)))
+                    assertThat(progressUpdate, equalTo(AggregatedImagePullProgress(DownloadOperation.Extracting, 4000, 7000)))
                 }
             }
         }

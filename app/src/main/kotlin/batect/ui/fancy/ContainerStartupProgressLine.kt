@@ -20,8 +20,8 @@ import batect.config.BuildImage
 import batect.config.Container
 import batect.config.PullImage
 import batect.config.SetupCommand
-import batect.docker.build.BuildProgress
-import batect.docker.pull.ImagePullProgress
+import batect.docker.AggregatedImageBuildProgress
+import batect.docker.AggregatedImagePullProgress
 import batect.execution.model.events.ContainerBecameHealthyEvent
 import batect.execution.model.events.ContainerBecameReadyEvent
 import batect.execution.model.events.ContainerCreatedEvent
@@ -44,9 +44,9 @@ import batect.ui.text.TextRun
 
 data class ContainerStartupProgressLine(val container: Container, val dependencies: Set<Container>, val isTaskContainer: Boolean) {
     private var isBuilding = false
-    private var lastBuildProgressUpdate: BuildProgress? = null
+    private var lastBuildProgressUpdate: AggregatedImageBuildProgress? = null
     private var isPulling = false
-    private var lastProgressUpdate: ImagePullProgress? = null
+    private var lastProgressUpdate: AggregatedImagePullProgress? = null
     private var hasBeenBuilt = false
     private var hasBeenPulled = false
     private var isCreating = false

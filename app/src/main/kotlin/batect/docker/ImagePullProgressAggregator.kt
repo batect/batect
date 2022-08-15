@@ -16,14 +16,13 @@
 
 package batect.docker
 
-import batect.docker.pull.ImagePullProgress
 import batect.dockerclient.ImagePullProgressUpdate
 
 class ImagePullProgressAggregator {
     private val layerStates = mutableMapOf<String, LayerStatus>()
-    private var lastProgressUpdate: ImagePullProgress? = null
+    private var lastProgressUpdate: AggregatedImagePullProgress? = null
 
-    fun processProgressUpdate(progressUpdate: ImagePullProgressUpdate): ImagePullProgress? {
+    fun processProgressUpdate(progressUpdate: ImagePullProgressUpdate): AggregatedImagePullProgress? {
         val currentOperation = operationForName(progressUpdate.message) ?: return null
 
         val layerId = progressUpdate.id
@@ -76,7 +75,7 @@ class ImagePullProgressAggregator {
             }
     }
 
-    private fun computeOverallProgress(): ImagePullProgress {
+    private fun computeOverallProgress(): AggregatedImagePullProgress {
         val anyLayerIsExtractingOrComplete = layerStates.values.any { it.currentOperation >= DownloadOperation.Extracting }
         val allLayersHaveFinishedDownloading = layerStates.values.all { it.currentOperation >= DownloadOperation.DownloadComplete }
         val extractionPhase = anyLayerIsExtractingOrComplete && allLayersHaveFinishedDownloading
@@ -93,7 +92,7 @@ class ImagePullProgressAggregator {
         val overallCompletedBytes = layersInCurrentOperation.sumBy { it.completedBytes } + layersFinishedCurrentOperation.sumBy { it.totalBytes }
         val overallTotalBytes = layerStates.values.sumBy { it.totalBytes }
 
-        return ImagePullProgress(currentOperation, overallCompletedBytes, overallTotalBytes)
+        return AggregatedImagePullProgress(currentOperation, overallCompletedBytes, overallTotalBytes)
     }
 
     private fun operationForName(name: String): DownloadOperation? = when (name) {

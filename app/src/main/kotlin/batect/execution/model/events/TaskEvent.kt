@@ -26,11 +26,11 @@ package batect.execution.model.events
 import batect.config.Container
 import batect.config.PullImage
 import batect.config.SetupCommand
+import batect.docker.AggregatedImageBuildProgress
+import batect.docker.AggregatedImagePullProgress
 import batect.docker.DockerContainer
 import batect.docker.ImageReferenceSerializer
 import batect.docker.NetworkReferenceSerializer
-import batect.docker.build.BuildProgress
-import batect.docker.pull.ImagePullProgress
 import batect.dockerclient.ImageReference
 import batect.dockerclient.NetworkReference
 import batect.execution.model.steps.TaskStep
@@ -66,7 +66,7 @@ data class ContainerStartedEvent(val container: Container) : TaskEvent()
 data class ContainerStoppedEvent(val container: Container) : TaskEvent()
 
 @Serializable
-data class ImageBuildProgressEvent(val container: Container, val buildProgress: BuildProgress) : TaskEvent(isInformationalEvent = true)
+data class ImageBuildProgressEvent(val container: Container, val buildProgress: AggregatedImageBuildProgress) : TaskEvent(isInformationalEvent = true)
 
 @Serializable
 data class ImageBuiltEvent(val container: Container, val image: ImageReference) : TaskEvent()
@@ -75,7 +75,7 @@ data class ImageBuiltEvent(val container: Container, val image: ImageReference) 
 data class ImagePulledEvent(val source: PullImage, val image: ImageReference) : TaskEvent()
 
 @Serializable
-data class ImagePullProgressEvent(val source: PullImage, val progress: ImagePullProgress) : TaskEvent(isInformationalEvent = true)
+data class ImagePullProgressEvent(val source: PullImage, val progress: AggregatedImagePullProgress) : TaskEvent(isInformationalEvent = true)
 
 @Serializable
 data class RunningContainerExitedEvent(val container: Container, val exitCode: Long) : TaskEvent()

@@ -14,15 +14,13 @@
     limitations under the License.
 */
 
-package batect.docker.build
+package batect.docker
 
-import batect.docker.DownloadOperation
-import batect.docker.humanReadableStringForDownloadProgress
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class BuildProgress(val activeSteps: Set<ActiveImageBuildStep>) {
+data class AggregatedImageBuildProgress(val activeSteps: Set<ActiveImageBuildStep>) {
     fun toHumanReadableString(): String {
         if (activeSteps.isEmpty()) {
             return "building..."

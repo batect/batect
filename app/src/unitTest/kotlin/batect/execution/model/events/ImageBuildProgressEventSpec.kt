@@ -17,9 +17,9 @@
 package batect.execution.model.events
 
 import batect.config.Container
+import batect.docker.ActiveImageBuildStep
+import batect.docker.AggregatedImageBuildProgress
 import batect.docker.DownloadOperation
-import batect.docker.build.ActiveImageBuildStep
-import batect.docker.build.BuildProgress
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.logRepresentationOf
 import batect.testutils.on
@@ -31,7 +31,7 @@ import org.spekframework.spek2.style.specification.describe
 object ImageBuildProgressEventSpec : Spek({
     describe("an 'image build progress' event") {
         val container = Container("the-container", imageSourceDoesNotMatter())
-        val progress = BuildProgress(
+        val progress = AggregatedImageBuildProgress(
             setOf(
                 ActiveImageBuildStep.NotDownloading(3, "step 4 of 10: RUN the-thing.sh"),
                 ActiveImageBuildStep.Downloading(7, "step 8 of 10: FROM postgres:13.0", DownloadOperation.Extracting, 12, 20)

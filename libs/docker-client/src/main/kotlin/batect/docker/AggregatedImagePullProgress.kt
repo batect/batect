@@ -14,13 +14,11 @@
     limitations under the License.
 */
 
-package batect.docker.pull
+package batect.docker
 
-import batect.docker.DownloadOperation
-import batect.docker.humanReadableStringForDownloadProgress
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class ImagePullProgress(val currentOperation: DownloadOperation, val completedBytes: Long, val totalBytes: Long) {
+data class AggregatedImagePullProgress(val currentOperation: DownloadOperation, val completedBytes: Long, val totalBytes: Long) {
     fun toStringForDisplay(): String = humanReadableStringForDownloadProgress(currentOperation, completedBytes, totalBytes)
 }

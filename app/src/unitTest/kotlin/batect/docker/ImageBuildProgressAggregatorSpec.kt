@@ -16,8 +16,6 @@
 
 package batect.docker
 
-import batect.docker.build.ActiveImageBuildStep
-import batect.docker.build.BuildProgress
 import batect.dockerclient.BuildComplete
 import batect.dockerclient.BuildFailed
 import batect.dockerclient.ImagePullProgressDetail
@@ -74,7 +72,7 @@ object ImageBuildProgressAggregatorSpec : Spek({
                 assertThat(
                     nextUpdate,
                     equalTo(
-                        BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(1, "FROM postgres:13.0")))
+                        AggregatedImageBuildProgress(setOf(ActiveImageBuildStep.NotDownloading(1, "FROM postgres:13.0")))
                     )
                 )
             }
@@ -88,7 +86,7 @@ object ImageBuildProgressAggregatorSpec : Spek({
             }
 
             it("emits a new update with no steps running") {
-                assertThat(nextUpdate, equalTo(BuildProgress(emptySet())))
+                assertThat(nextUpdate, equalTo(AggregatedImageBuildProgress(emptySet())))
             }
         }
 
@@ -105,7 +103,7 @@ object ImageBuildProgressAggregatorSpec : Spek({
                 assertThat(
                     nextUpdate,
                     equalTo(
-                        BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(1, "FROM postgres:13.0")))
+                        AggregatedImageBuildProgress(setOf(ActiveImageBuildStep.NotDownloading(1, "FROM postgres:13.0")))
                     )
                 )
             }
@@ -123,7 +121,7 @@ object ImageBuildProgressAggregatorSpec : Spek({
                 assertThat(
                     nextUpdate,
                     equalTo(
-                        BuildProgress(
+                        AggregatedImageBuildProgress(
                             setOf(
                                 ActiveImageBuildStep.NotDownloading(1, "FROM postgres:13.0"),
                                 ActiveImageBuildStep.NotDownloading(2, "HEALTHCHECK --interval=0.1s CMD echo -n \\\"Hello from the healthcheck\\\"")
@@ -146,7 +144,7 @@ object ImageBuildProgressAggregatorSpec : Spek({
                 assertThat(
                     nextUpdate,
                     equalTo(
-                        BuildProgress(setOf(ActiveImageBuildStep.NotDownloading(2, "FROM postgres:14.0")))
+                        AggregatedImageBuildProgress(setOf(ActiveImageBuildStep.NotDownloading(2, "FROM postgres:14.0")))
                     )
                 )
             }
@@ -164,7 +162,7 @@ object ImageBuildProgressAggregatorSpec : Spek({
                 assertThat(
                     nextUpdate,
                     equalTo(
-                        BuildProgress(
+                        AggregatedImageBuildProgress(
                             setOf(
                                 ActiveImageBuildStep.Downloading(1, "ADD http://httpbin.org/get test.txt", DownloadOperation.Downloading, 329, 4159)
                             )
@@ -186,7 +184,7 @@ object ImageBuildProgressAggregatorSpec : Spek({
                 assertThat(
                     nextUpdate,
                     equalTo(
-                        BuildProgress(
+                        AggregatedImageBuildProgress(
                             setOf(
                                 ActiveImageBuildStep.Downloading(1, "ADD http://httpbin.org/get test.txt", DownloadOperation.Downloading, 329, null)
                             )
@@ -210,7 +208,7 @@ object ImageBuildProgressAggregatorSpec : Spek({
                 assertThat(
                     nextUpdate,
                     equalTo(
-                        BuildProgress(
+                        AggregatedImageBuildProgress(
                             setOf(
                                 ActiveImageBuildStep.Downloading(1, "ADD http://httpbin.org/get test.txt", DownloadOperation.Downloading, 329, 4159),
                                 ActiveImageBuildStep.Downloading(2, "ADD http://httpbin.org/get test2.txt", DownloadOperation.Downloading, 100, 2059)
@@ -233,7 +231,7 @@ object ImageBuildProgressAggregatorSpec : Spek({
                 assertThat(
                     nextUpdate,
                     equalTo(
-                        BuildProgress(
+                        AggregatedImageBuildProgress(
                             setOf(
                                 ActiveImageBuildStep.Downloading(1, "FROM postgres:13.0", DownloadOperation.Downloading, 123, 456)
                             )
@@ -257,7 +255,7 @@ object ImageBuildProgressAggregatorSpec : Spek({
                 assertThat(
                     nextUpdate,
                     equalTo(
-                        BuildProgress(
+                        AggregatedImageBuildProgress(
                             setOf(
                                 ActiveImageBuildStep.Downloading(1, "FROM postgres:13.0", DownloadOperation.Downloading, 123 + 789, 456 + 1000)
                             )
@@ -281,7 +279,7 @@ object ImageBuildProgressAggregatorSpec : Spek({
                 assertThat(
                     nextUpdate,
                     equalTo(
-                        BuildProgress(
+                        AggregatedImageBuildProgress(
                             setOf(
                                 ActiveImageBuildStep.Downloading(1, "FROM postgres:13.0", DownloadOperation.Downloading, 123, 456),
                                 ActiveImageBuildStep.Downloading(2, "FROM postgres:14.0", DownloadOperation.Downloading, 789, 1000)

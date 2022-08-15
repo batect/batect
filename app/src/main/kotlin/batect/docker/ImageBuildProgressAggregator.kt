@@ -16,8 +16,6 @@
 
 package batect.docker
 
-import batect.docker.build.ActiveImageBuildStep
-import batect.docker.build.BuildProgress
 import batect.dockerclient.BuildComplete
 import batect.dockerclient.BuildFailed
 import batect.dockerclient.ImageBuildContextUploadProgress
@@ -33,7 +31,7 @@ import batect.primitives.mapToSet
 class ImageBuildProgressAggregator {
     private val activeSteps = mutableMapOf<Long, StepState>()
 
-    fun processProgressUpdate(progressUpdate: ImageBuildProgressUpdate): BuildProgress? {
+    fun processProgressUpdate(progressUpdate: ImageBuildProgressUpdate): AggregatedImageBuildProgress? {
         return when (progressUpdate) {
             is StepOutput -> null
             is BuildComplete -> null
@@ -47,19 +45,19 @@ class ImageBuildProgressAggregator {
         }
     }
 
-    private fun processStepStarting(progressUpdate: StepStarting): BuildProgress {
+    private fun processStepStarting(progressUpdate: StepStarting): AggregatedImageBuildProgress {
         activeSteps[progressUpdate.stepNumber] = StepState(progressUpdate.stepNumber, progressUpdate.stepName)
 
         return calculateCurrentProgress()
     }
 
-    private fun processStepFinished(progressUpdate: StepFinished): BuildProgress {
+    private fun processStepFinished(progressUpdate: StepFinished): AggregatedImageBuildProgress {
         activeSteps.remove(progressUpdate.stepNumber)
 
         return calculateCurrentProgress()
     }
 
-    private fun processStepDownloadProgressUpdate(progressUpdate: StepDownloadProgressUpdate): BuildProgress {
+    private fun processStepDownloadProgressUpdate(progressUpdate: StepDownloadProgressUpdate): AggregatedImageBuildProgress {
         val previousValue = activeSteps.getValue(progressUpdate.stepNumber)
         val totalBytes = if (progressUpdate.totalBytes <= 0) null else progressUpdate.totalBytes
         val updatedValue = previousValue.copy(detail = StepDetail.Downloading(progressUpdate.bytesDownloaded, totalBytes))
@@ -68,7 +66,7 @@ class ImageBuildProgressAggregator {
         return calculateCurrentProgress()
     }
 
-    private fun processStepPullProgressUpdate(progressUpdate: StepPullProgressUpdate): BuildProgress {
+    private fun processStepPullProgressUpdate(progressUpdate: StepPullProgressUpdate): AggregatedImageBuildProgress {
         val previousValue = activeSteps.getValue(progressUpdate.stepNumber)
         val aggregator = if (previousValue.detail is StepDetail.PullingImage) previousValue.detail.aggregator else ImagePullProgressAggregator()
         val updatedAggregation = aggregator.processProgressUpdate(progressUpdate.pullProgress)
@@ -81,10 +79,10 @@ class ImageBuildProgressAggregator {
         return calculateCurrentProgress()
     }
 
-    private fun calculateCurrentProgress(): BuildProgress {
+    private fun calculateCurrentProgress(): AggregatedImageBuildProgress {
         val steps = activeSteps.values.mapToSet { it.toActiveImageBuildStep() }
 
-        return BuildProgress(steps)
+        return AggregatedImageBuildProgress(steps)
     }
 
     private data class StepState(val stepNumber: Long, val name: String, val detail: StepDetail? = null) {

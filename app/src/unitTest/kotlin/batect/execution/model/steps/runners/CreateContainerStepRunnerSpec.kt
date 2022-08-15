@@ -21,12 +21,11 @@ import batect.config.ExpressionEvaluationException
 import batect.config.VolumeMount
 import batect.docker.DockerContainer
 import batect.docker.DockerContainerCreationRequestFactory
-import batect.docker.DockerVolumeMount
-import batect.docker.DockerVolumeMountSource
 import batect.dockerclient.ContainerCreationFailedException
 import batect.dockerclient.ContainerCreationSpec
 import batect.dockerclient.ContainerReference
 import batect.dockerclient.DockerClient
+import batect.dockerclient.HostMount
 import batect.dockerclient.ImageReference
 import batect.dockerclient.NetworkReference
 import batect.dockerclient.UserAndGroup
@@ -45,6 +44,7 @@ import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.itSuspend
 import batect.testutils.on
 import batect.ui.containerio.ContainerIOStreamingOptions
+import okio.Path.Companion.toPath
 import org.mockito.kotlin.any
 import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.doReturn
@@ -74,7 +74,7 @@ object CreateContainerStepRunnerSpec : Spek({
             }
         }
 
-        val resolvedMounts = setOf(DockerVolumeMount(DockerVolumeMountSource.LocalPath("/local-container"), "/remote-container", "some-options-from-container"))
+        val resolvedMounts = setOf(HostMount("/local-container".toPath(), "/remote-container", "some-options-from-container"))
 
         val volumeMountResolver by createForEachTest {
             mock<VolumeMountResolver> {

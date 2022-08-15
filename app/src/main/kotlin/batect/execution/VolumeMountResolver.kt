@@ -23,11 +23,14 @@ import batect.config.LiteralValue
 import batect.config.LocalMount
 import batect.config.ProjectPaths
 import batect.config.VolumeMount
-import batect.docker.DockerVolumeMount
-import batect.docker.DockerVolumeMountSource
+import batect.dockerclient.BindMount
+import batect.dockerclient.HostMount
+import batect.dockerclient.VolumeReference
 import batect.os.PathResolutionResult
 import batect.os.PathResolverFactory
 import batect.primitives.mapToSet
+import okio.Path.Companion.toOkioPath
+import okio.Path.Companion.toPath
 import java.nio.file.Files
 
 class VolumeMountResolver(
@@ -36,24 +39,24 @@ class VolumeMountResolver(
     private val cacheManager: CacheManager,
     private val projectPaths: ProjectPaths
 ) {
-    fun resolve(mounts: Set<VolumeMount>): Set<DockerVolumeMount> = mounts.mapToSet {
+    fun resolve(mounts: Set<VolumeMount>): Set<BindMount> = mounts.mapToSet {
         when (it) {
             is LocalMount -> resolve(it)
             is CacheMount -> resolve(it)
         }
     }
 
-    fun resolve(mount: LocalMount): DockerVolumeMount {
+    fun resolve(mount: LocalMount): HostMount {
         val evaluatedLocalPath = evaluateLocalPath(mount)
 
         if (evaluatedLocalPath == "/var/run/docker.sock") {
-            return DockerVolumeMount(DockerVolumeMountSource.LocalPath(evaluatedLocalPath), mount.containerPath, mount.options)
+            return HostMount(evaluatedLocalPath.toPath(), mount.containerPath, mount.options)
         }
 
         val pathResolver = pathResolverFactory.createResolver(mount.pathResolutionContext)
 
         return when (val resolvedLocalPath = pathResolver.resolve(evaluatedLocalPath)) {
-            is PathResolutionResult.Resolved -> DockerVolumeMount(DockerVolumeMountSource.LocalPath(resolvedLocalPath.absolutePath.toString()), mount.containerPath, mount.options)
+            is PathResolutionResult.Resolved -> HostMount(resolvedLocalPath.absolutePath.toOkioPath(), mount.containerPath, mount.options)
             else -> {
                 val expressionDisplay = if (mount.localPath is LiteralValue) {
                     "'${mount.localPath.value}'"
@@ -74,13 +77,17 @@ class VolumeMountResolver(
         }
     }
 
-    fun resolve(mount: CacheMount): DockerVolumeMount = when (cacheManager.cacheType) {
-        CacheType.Volume -> DockerVolumeMount(DockerVolumeMountSource.Volume("batect-cache-${cacheManager.projectCacheKey}-${mount.name}"), mount.containerPath, mount.options)
+    fun resolve(mount: CacheMount): BindMount = when (cacheManager.cacheType) {
+        CacheType.Volume -> batect.dockerclient.VolumeMount(
+            VolumeReference("batect-cache-${cacheManager.projectCacheKey}-${mount.name}"),
+            mount.containerPath,
+            mount.options
+        )
         CacheType.Directory -> {
             val path = projectPaths.cacheDirectory.resolve(mount.name)
             Files.createDirectories(path)
 
-            DockerVolumeMount(DockerVolumeMountSource.LocalPath(path.toString()), mount.containerPath, mount.options)
+            HostMount(path.toOkioPath(), mount.containerPath, mount.options)
         }
     }
 }

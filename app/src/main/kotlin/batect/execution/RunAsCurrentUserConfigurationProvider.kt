@@ -21,10 +21,10 @@ import batect.config.Container
 import batect.config.RunAsCurrentUserConfig
 import batect.docker.DockerContainer
 import batect.docker.DockerContainerType
-import batect.docker.DockerVolumeMount
-import batect.docker.DockerVolumeMountSource
+import batect.dockerclient.BindMount
 import batect.dockerclient.DockerClient
 import batect.dockerclient.DockerClientException
+import batect.dockerclient.HostMount
 import batect.dockerclient.UploadDirectory
 import batect.dockerclient.UploadFile
 import batect.dockerclient.UserAndGroup
@@ -175,13 +175,13 @@ class RunAsCurrentUserConfigurationProvider(
         }
     }
 
-    fun createMissingVolumeMountDirectories(mounts: Set<DockerVolumeMount>, container: Container) {
+    fun createMissingVolumeMountDirectories(mounts: Set<BindMount>, container: Container) {
         if (containerType == DockerContainerType.Linux && container.runAsCurrentUserConfig is RunAsCurrentUserConfig.RunAsDefaultContainerUser) {
             return
         }
 
-        mounts.map { it.source }.filterIsInstance<DockerVolumeMountSource.LocalPath>().forEach { mount ->
-            val path = fileSystem.getPath(mount.path)
+        mounts.filterIsInstance<HostMount>().forEach { mount ->
+            val path = fileSystem.getPath(mount.localPath.toString())
 
             if (!Files.exists(path)) {
                 Files.createDirectories(path)
@@ -191,19 +191,19 @@ class RunAsCurrentUserConfigurationProvider(
         mounts.forEach { mount ->
             val parentMount = mounts.findClosestParentMount(mount)
 
-            if (parentMount != null && parentMount.source is DockerVolumeMountSource.LocalPath) {
-                val source = parentMount.source
+            if (parentMount != null && parentMount is HostMount) {
+                val source = parentMount.localPath
                 val thisPath = mount.containerPath.splitToPathSegments()
                 val parentPath = parentMount.containerPath.splitToPathSegments()
 
                 val directoriesToCreate = parentPath.relativePathTo(thisPath)
-                val path = fileSystem.getPath(source.path, *directoriesToCreate.toTypedArray())
+                val path = fileSystem.getPath(source.toString(), *directoriesToCreate.toTypedArray())
                 Files.createDirectories(path)
             }
         }
     }
 
-    private fun Set<DockerVolumeMount>.findClosestParentMount(mount: DockerVolumeMount): DockerVolumeMount? {
+    private fun Set<BindMount>.findClosestParentMount(mount: BindMount): BindMount? {
         val thisPath = mount.containerPath.splitToPathSegments()
 
         return this

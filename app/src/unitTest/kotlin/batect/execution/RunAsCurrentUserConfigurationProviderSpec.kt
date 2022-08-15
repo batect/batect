@@ -21,14 +21,15 @@ import batect.config.Container
 import batect.config.RunAsCurrentUserConfig
 import batect.docker.DockerContainer
 import batect.docker.DockerContainerType
-import batect.docker.DockerVolumeMount
-import batect.docker.DockerVolumeMountSource
 import batect.dockerclient.ContainerReference
 import batect.dockerclient.DockerClient
 import batect.dockerclient.DockerClientException
+import batect.dockerclient.HostMount
 import batect.dockerclient.UploadDirectory
 import batect.dockerclient.UploadFile
 import batect.dockerclient.UserAndGroup
+import batect.dockerclient.VolumeMount
+import batect.dockerclient.VolumeReference
 import batect.os.NativeMethods
 import batect.os.OperatingSystem
 import batect.os.SystemInfo
@@ -50,6 +51,7 @@ import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.isEmpty
 import com.natpryce.hamkrest.throws
+import okio.Path.Companion.toPath
 import org.mockito.kotlin.any
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.doThrow
@@ -106,10 +108,10 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                 val fileThatExists = "/existing/file"
                 val directoryThatDoesNotExist = "/new/directory"
                 val volumeMounts = setOf(
-                    DockerVolumeMount(DockerVolumeMountSource.LocalPath(directoryThatExists), "/container/existing-directory", null),
-                    DockerVolumeMount(DockerVolumeMountSource.LocalPath(fileThatExists), "/container/existing-file", null),
-                    DockerVolumeMount(DockerVolumeMountSource.LocalPath(directoryThatDoesNotExist), "/container/new-directory", null),
-                    DockerVolumeMount(DockerVolumeMountSource.Volume("my-volume"), "/container/volume", null)
+                    HostMount(directoryThatExists.toPath(), "/container/existing-directory", null),
+                    HostMount(fileThatExists.toPath(), "/container/existing-file", null),
+                    HostMount(directoryThatDoesNotExist.toPath(), "/container/new-directory", null),
+                    VolumeMount(VolumeReference("my-volume"), "/container/volume", null)
                 )
 
                 beforeEachTest {
@@ -491,10 +493,10 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                         val fileThatExists = "/existing/file"
                         val directoryThatDoesNotExist = "/new/directory"
                         val volumeMounts = setOf(
-                            DockerVolumeMount(DockerVolumeMountSource.LocalPath(directoryThatExists), "/container/existing-directory", null),
-                            DockerVolumeMount(DockerVolumeMountSource.LocalPath(fileThatExists), "/container/existing-file", null),
-                            DockerVolumeMount(DockerVolumeMountSource.LocalPath(directoryThatDoesNotExist), "/container/new-directory", null),
-                            DockerVolumeMount(DockerVolumeMountSource.Volume("my-volume"), "/container/volume", null)
+                            HostMount(directoryThatExists.toPath(), "/container/existing-directory", null),
+                            HostMount(fileThatExists.toPath(), "/container/existing-file", null),
+                            HostMount(directoryThatDoesNotExist.toPath(), "/container/new-directory", null),
+                            VolumeMount(VolumeReference("my-volume"), "/container/volume", null)
                         )
 
                         beforeEachTest {
@@ -514,8 +516,8 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                         val innerLocalPath = "/local/source/inner"
 
                         val volumeMounts = setOf(
-                            DockerVolumeMount(DockerVolumeMountSource.LocalPath(outerLocalPath), "/container/local-mount", null),
-                            DockerVolumeMount(DockerVolumeMountSource.LocalPath(innerLocalPath), "/container/local-mount/path", null)
+                            HostMount(outerLocalPath.toPath(), "/container/local-mount", null),
+                            HostMount(innerLocalPath.toPath(), "/container/local-mount/path", null)
                         )
 
                         beforeEachTest { provider.createMissingVolumeMountDirectories(volumeMounts, container) }
@@ -533,8 +535,8 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                     given("a volume mount and a local mount that do not have overlapping container paths") {
                         val localPath = "/local/source"
                         val volumeMounts = setOf(
-                            DockerVolumeMount(DockerVolumeMountSource.LocalPath(localPath), "/container/local-mount", null),
-                            DockerVolumeMount(DockerVolumeMountSource.Volume("my-volume"), "/container/volume", null)
+                            HostMount(localPath.toPath(), "/container/local-mount", null),
+                            VolumeMount(VolumeReference("my-volume"), "/container/volume", null)
                         )
 
                         beforeEachTest { provider.createMissingVolumeMountDirectories(volumeMounts, container) }
@@ -551,8 +553,8 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                     given("a volume mount and a local mount where the local path is mounted inside the volume mount's container path") {
                         val localPath = "/local/source"
                         val volumeMounts = setOf(
-                            DockerVolumeMount(DockerVolumeMountSource.LocalPath(localPath), "/container/volume/local-mount", null),
-                            DockerVolumeMount(DockerVolumeMountSource.Volume("my-volume"), "/container/volume", null)
+                            HostMount(localPath.toPath(), "/container/volume/local-mount", null),
+                            VolumeMount(VolumeReference("my-volume"), "/container/volume", null)
                         )
 
                         beforeEachTest { provider.createMissingVolumeMountDirectories(volumeMounts, container) }
@@ -569,8 +571,8 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                     given("a volume is mounted within a local mount's container path") {
                         val localPath = "/local/source"
                         val volumeMounts = setOf(
-                            DockerVolumeMount(DockerVolumeMountSource.LocalPath(localPath), "/container/local-mount", null),
-                            DockerVolumeMount(DockerVolumeMountSource.Volume("my-volume"), "/container/local-mount/volume", null)
+                            HostMount(localPath.toPath(), "/container/local-mount", null),
+                            VolumeMount(VolumeReference("my-volume"), "/container/local-mount/volume", null)
                         )
 
                         beforeEachTest { provider.createMissingVolumeMountDirectories(volumeMounts, container) }
@@ -587,8 +589,8 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                     given("a volume is mounted nested within a local mount's container path") {
                         val localPath = "/local/source"
                         val volumeMounts = setOf(
-                            DockerVolumeMount(DockerVolumeMountSource.LocalPath(localPath), "/container/local-mount", null),
-                            DockerVolumeMount(DockerVolumeMountSource.Volume("my-volume"), "/container/local-mount/path/to/volume", null)
+                            HostMount(localPath.toPath(), "/container/local-mount", null),
+                            VolumeMount(VolumeReference("my-volume"), "/container/local-mount/path/to/volume", null)
                         )
 
                         beforeEachTest { provider.createMissingVolumeMountDirectories(volumeMounts, container) }
@@ -607,9 +609,9 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                         val innerLocalPath = "/local/source/inner"
 
                         val volumeMounts = setOf(
-                            DockerVolumeMount(DockerVolumeMountSource.LocalPath(outerLocalPath), "/container/local-mount", null),
-                            DockerVolumeMount(DockerVolumeMountSource.LocalPath(innerLocalPath), "/container/local-mount/path", null),
-                            DockerVolumeMount(DockerVolumeMountSource.Volume("my-volume"), "/container/local-mount/path/to/volume", null)
+                            HostMount(outerLocalPath.toPath(), "/container/local-mount", null),
+                            HostMount(innerLocalPath.toPath(), "/container/local-mount/path", null),
+                            VolumeMount(VolumeReference("my-volume"), "/container/local-mount/path/to/volume", null)
                         )
 
                         beforeEachTest { provider.createMissingVolumeMountDirectories(volumeMounts, container) }
@@ -631,9 +633,9 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                     given("a volume is mounted within a second volume's container path, and that second volume is mounted inside a local mount's container path") {
                         val localPath = "/local/source"
                         val volumeMounts = setOf(
-                            DockerVolumeMount(DockerVolumeMountSource.LocalPath(localPath), "/container/local-mount", null),
-                            DockerVolumeMount(DockerVolumeMountSource.Volume("volume-1"), "/container/local-mount/volume-1", null),
-                            DockerVolumeMount(DockerVolumeMountSource.Volume("volume-2"), "/container/local-mount/volume-1/volume-2", null)
+                            HostMount(localPath.toPath(), "/container/local-mount", null),
+                            VolumeMount(VolumeReference("volume-1"), "/container/local-mount/volume-1", null),
+                            VolumeMount(VolumeReference("volume-2"), "/container/local-mount/volume-1/volume-2", null)
                         )
 
                         beforeEachTest { provider.createMissingVolumeMountDirectories(volumeMounts, container) }
@@ -654,9 +656,9 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                     given("a volume is mounted within a local mount's container path, and that local mount is mounted within a second volume's container path") {
                         val localPath = "/local/source"
                         val volumeMounts = setOf(
-                            DockerVolumeMount(DockerVolumeMountSource.Volume("volume-1"), "/container/volume-1", null),
-                            DockerVolumeMount(DockerVolumeMountSource.LocalPath(localPath), "/container/volume-1/local-mount", null),
-                            DockerVolumeMount(DockerVolumeMountSource.Volume("volume-2"), "/container/volume-1/local-mount/volume-2", null)
+                            VolumeMount(VolumeReference("volume-1"), "/container/volume-1", null),
+                            HostMount(localPath.toPath(), "/container/volume-1/local-mount", null),
+                            VolumeMount(VolumeReference("volume-2"), "/container/volume-1/local-mount/volume-2", null)
                         )
 
                         beforeEachTest { provider.createMissingVolumeMountDirectories(volumeMounts, container) }

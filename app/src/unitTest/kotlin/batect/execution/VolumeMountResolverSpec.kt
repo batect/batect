@@ -22,8 +22,9 @@ import batect.config.ExpressionEvaluationContext
 import batect.config.LiteralValue
 import batect.config.LocalMount
 import batect.config.ProjectPaths
-import batect.docker.DockerVolumeMount
-import batect.docker.DockerVolumeMountSource
+import batect.dockerclient.HostMount
+import batect.dockerclient.VolumeMount
+import batect.dockerclient.VolumeReference
 import batect.os.HostEnvironmentVariables
 import batect.os.PathResolutionContext
 import batect.os.PathResolutionResult
@@ -38,6 +39,7 @@ import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.throws
+import okio.Path.Companion.toPath
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
@@ -87,10 +89,10 @@ object VolumeMountResolverSpec : Spek({
                         resolver.resolve(mounts),
                         equalTo(
                             setOf(
-                                DockerVolumeMount(DockerVolumeMountSource.LocalPath("/resolved/file"), "/container-1"),
-                                DockerVolumeMount(DockerVolumeMountSource.LocalPath("/resolved/directory"), "/container-2", "options-2"),
-                                DockerVolumeMount(DockerVolumeMountSource.LocalPath("/resolved/other"), "/container-3"),
-                                DockerVolumeMount(DockerVolumeMountSource.LocalPath("/resolved/does-not-exist"), "/container-4")
+                                HostMount("/resolved/file".toPath(), "/container-1"),
+                                HostMount("/resolved/directory".toPath(), "/container-2", "options-2"),
+                                HostMount("/resolved/other".toPath(), "/container-3"),
+                                HostMount("/resolved/does-not-exist".toPath(), "/container-4")
                             )
                         )
                     )
@@ -109,7 +111,7 @@ object VolumeMountResolverSpec : Spek({
                         resolver.resolve(mounts),
                         equalTo(
                             setOf(
-                                DockerVolumeMount(DockerVolumeMountSource.LocalPath("/var/run/docker.sock"), "/container-1", "some-options")
+                                HostMount("/var/run/docker.sock".toPath(), "/container-1", "some-options")
                             )
                         )
                     )
@@ -181,8 +183,8 @@ object VolumeMountResolverSpec : Spek({
                             resolver.resolve(mounts),
                             equalTo(
                                 setOf(
-                                    DockerVolumeMount(DockerVolumeMountSource.Volume("batect-cache-abc123-cache-1"), "/container-1"),
-                                    DockerVolumeMount(DockerVolumeMountSource.Volume("batect-cache-abc123-cache-2"), "/container-2", "options-2")
+                                    VolumeMount(VolumeReference("batect-cache-abc123-cache-1"), "/container-1"),
+                                    VolumeMount(VolumeReference("batect-cache-abc123-cache-2"), "/container-2", "options-2")
                                 )
                             )
                         )
@@ -206,8 +208,8 @@ object VolumeMountResolverSpec : Spek({
                             resolvedMounts,
                             equalTo(
                                 setOf(
-                                    DockerVolumeMount(DockerVolumeMountSource.LocalPath("/caches/cache-1"), "/container-1"),
-                                    DockerVolumeMount(DockerVolumeMountSource.LocalPath("/caches/cache-2"), "/container-2", "options-2")
+                                    HostMount("/caches/cache-1".toPath(), "/container-1"),
+                                    HostMount("/caches/cache-2".toPath(), "/container-2", "options-2")
                                 )
                             )
                         )

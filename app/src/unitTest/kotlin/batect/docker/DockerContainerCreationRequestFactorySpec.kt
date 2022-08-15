@@ -56,8 +56,8 @@ object DockerContainerCreationRequestFactorySpec : Spek({
         val terminalType = "some-term"
 
         val volumeMounts = setOf(
-            DockerVolumeMount(DockerVolumeMountSource.LocalPath("local"), "remote-host", "mode"),
-            DockerVolumeMount(DockerVolumeMountSource.Volume("some-volume"), "remote-volume", "mode")
+            HostMount("local".toPath(), "remote-host", "mode"),
+            VolumeMount(VolumeReference("some-volume"), "remote-volume", "mode")
         )
 
         val expectedEnvironmentVariables = mapOf("SOME_VAR" to "some resolved value")

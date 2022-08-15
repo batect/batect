@@ -21,12 +21,14 @@ import batect.config.Capability
 import batect.config.Container
 import batect.config.HealthCheckConfig
 import batect.config.PortMapping
+import batect.dockerclient.BindMount
 import batect.dockerclient.ContainerCreationSpec
 import batect.dockerclient.DeviceMount
+import batect.dockerclient.HostMount
 import batect.dockerclient.ImageReference
 import batect.dockerclient.NetworkReference
 import batect.dockerclient.UserAndGroup
-import batect.dockerclient.VolumeReference
+import batect.dockerclient.VolumeMount
 import batect.primitives.mapToSet
 import okio.Path.Companion.toPath
 
@@ -39,7 +41,7 @@ class DockerContainerCreationRequestFactory(
         container: Container,
         image: ImageReference,
         network: NetworkReference,
-        volumeMounts: Set<DockerVolumeMount>,
+        volumeMounts: Set<BindMount>,
         userAndGroup: UserAndGroup?,
         terminalType: String?,
         useTTY: Boolean,
@@ -74,9 +76,9 @@ class DockerContainerCreationRequestFactory(
         }
 
         volumeMounts.forEach {
-            when (it.source) {
-                is DockerVolumeMountSource.LocalPath -> builder.withHostMount(it.source.path.toPath(), it.containerPath, it.options)
-                is DockerVolumeMountSource.Volume -> builder.withVolumeMount(VolumeReference(it.source.name), it.containerPath, it.options)
+            when (it) {
+                is HostMount -> builder.withHostMount(it)
+                is VolumeMount -> builder.withVolumeMount(it)
             }
         }
 

@@ -19,7 +19,7 @@ package batect.execution.model.rules.run
 import batect.config.BuildImage
 import batect.config.Container
 import batect.config.PullImage
-import batect.docker.DockerImage
+import batect.dockerclient.ImageReference
 import batect.dockerclient.NetworkReference
 import batect.execution.model.events.ImageBuiltEvent
 import batect.execution.model.events.ImagePulledEvent
@@ -56,7 +56,7 @@ data class CreateContainerStepRule(
         pastEvents.singleInstanceOrNull<TaskNetworkReadyEvent>()
             ?.network
 
-    private fun findImage(pastEvents: Set<TaskEvent>): DockerImage? {
+    private fun findImage(pastEvents: Set<TaskEvent>): ImageReference? {
         return when (container.imageSource) {
             is PullImage ->
                 pastEvents

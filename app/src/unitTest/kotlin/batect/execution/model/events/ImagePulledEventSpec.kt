@@ -17,7 +17,7 @@
 package batect.execution.model.events
 
 import batect.config.PullImage
-import batect.docker.DockerImage
+import batect.dockerclient.ImageReference
 import batect.testutils.logRepresentationOf
 import batect.testutils.on
 import com.natpryce.hamkrest.assertion.assertThat
@@ -28,7 +28,7 @@ import org.spekframework.spek2.style.specification.describe
 object ImagePulledEventSpec : Spek({
     describe("an 'image pulled' event") {
         val source = PullImage("image-1")
-        val image = DockerImage("image-1-id")
+        val image = ImageReference("image-1-id")
         val event = ImagePulledEvent(source, image)
 
         on("attaching it to a log message") {

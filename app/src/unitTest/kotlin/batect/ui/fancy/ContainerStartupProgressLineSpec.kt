@@ -22,11 +22,11 @@ import batect.config.LiteralValue
 import batect.config.PullImage
 import batect.config.SetupCommand
 import batect.docker.DockerContainer
-import batect.docker.DockerImage
 import batect.docker.DownloadOperation
 import batect.docker.build.ActiveImageBuildStep
 import batect.docker.build.BuildProgress
 import batect.docker.pull.ImagePullProgress
+import batect.dockerclient.ImageReference
 import batect.dockerclient.NetworkReference
 import batect.execution.model.events.ContainerBecameHealthyEvent
 import batect.execution.model.events.ContainerBecameReadyEvent
@@ -149,7 +149,7 @@ object ContainerStartupProgressLineSpec : Spek({
 
             describe("after receiving an 'image built' notification") {
                 describe("and that notification being for this line's container") {
-                    val event = ImageBuiltEvent(container, DockerImage("some-image"))
+                    val event = ImageBuiltEvent(container, ImageReference("some-image"))
 
                     on("when the task network is ready") {
                         beforeEachTest {
@@ -175,7 +175,7 @@ object ContainerStartupProgressLineSpec : Spek({
                 }
 
                 on("that notification being for another container") {
-                    val event = ImageBuiltEvent(otherContainer, DockerImage("some-image"))
+                    val event = ImageBuiltEvent(otherContainer, ImageReference("some-image"))
                     beforeEachTest { line.onEventPosted(event) }
                     val output by runForEachTest { line.print() }
 
@@ -186,7 +186,7 @@ object ContainerStartupProgressLineSpec : Spek({
             }
 
             on("after receiving a 'image pull completed' notification") {
-                val event = ImagePulledEvent(PullImage("some-image"), DockerImage("some-image"))
+                val event = ImagePulledEvent(PullImage("some-image"), ImageReference("some-image"))
                 beforeEachTest { line.onEventPosted(event) }
                 val output by runForEachTest { line.print() }
 
@@ -222,7 +222,7 @@ object ContainerStartupProgressLineSpec : Spek({
 
                 on("when the image has been built") {
                     beforeEachTest {
-                        line.onEventPosted(ImageBuiltEvent(container, DockerImage("some-image")))
+                        line.onEventPosted(ImageBuiltEvent(container, ImageReference("some-image")))
                         line.onEventPosted(event)
                     }
 
@@ -236,7 +236,7 @@ object ContainerStartupProgressLineSpec : Spek({
 
             describe("after receiving a 'creating container' notification") {
                 on("that notification being for this line's container") {
-                    val step = CreateContainerStep(container, DockerImage("some-image"), NetworkReference("some-network"))
+                    val step = CreateContainerStep(container, ImageReference("some-image"), NetworkReference("some-network"))
                     beforeEachTest { line.onEventPosted(StepStartingEvent(step)) }
                     val output by runForEachTest { line.print() }
 
@@ -246,7 +246,7 @@ object ContainerStartupProgressLineSpec : Spek({
                 }
 
                 on("that notification being for another container") {
-                    val step = CreateContainerStep(otherContainer, DockerImage("some-image"), NetworkReference("some-network"))
+                    val step = CreateContainerStep(otherContainer, ImageReference("some-image"), NetworkReference("some-network"))
                     beforeEachTest { line.onEventPosted(StepStartingEvent(step)) }
                     val output by runForEachTest { line.print() }
 
@@ -602,7 +602,7 @@ object ContainerStartupProgressLineSpec : Spek({
 
             describe("after receiving an 'image pulled' notification") {
                 describe("and that notification being for this line's container's image") {
-                    val event = ImagePulledEvent(imageSource, DockerImage("some-image"))
+                    val event = ImagePulledEvent(imageSource, ImageReference("some-image"))
 
                     on("when the task network has already been created") {
                         beforeEachTest {
@@ -628,7 +628,7 @@ object ContainerStartupProgressLineSpec : Spek({
                 }
 
                 on("that notification being for another image") {
-                    val event = ImagePulledEvent(otherImageSource, DockerImage("some-other-image"))
+                    val event = ImagePulledEvent(otherImageSource, ImageReference("some-other-image"))
                     beforeEachTest { line.onEventPosted(event) }
                     val output by runForEachTest { line.print() }
 
@@ -679,7 +679,7 @@ object ContainerStartupProgressLineSpec : Spek({
 
                 on("when the image has been pulled") {
                     beforeEachTest {
-                        line.onEventPosted(ImagePulledEvent(imageSource, DockerImage("some-image")))
+                        line.onEventPosted(ImagePulledEvent(imageSource, ImageReference("some-image")))
                         line.onEventPosted(event)
                     }
 

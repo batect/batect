@@ -20,7 +20,7 @@ import batect.config.BuildImage
 import batect.config.Container
 import batect.config.LiteralValue
 import batect.config.PullImage
-import batect.docker.DockerImage
+import batect.dockerclient.ImageReference
 import batect.dockerclient.NetworkReference
 import batect.execution.model.events.ImageBuiltEvent
 import batect.execution.model.events.ImagePulledEvent
@@ -61,7 +61,7 @@ object CreateContainerStepRuleSpec : Spek({
                 beforeEachTest { events.add(networkReadyEvent) }
 
                 given("the image for the container has been pulled") {
-                    val image = DockerImage("some-image-id")
+                    val image = ImageReference("some-image-id")
                     beforeEachTest { events.add(ImagePulledEvent(imageSource, image)) }
 
                     on("evaluating the rule") {
@@ -74,7 +74,7 @@ object CreateContainerStepRuleSpec : Spek({
                 }
 
                 given("an image has been pulled for another container") {
-                    beforeEachTest { events.add(ImagePulledEvent(PullImage("some-other-image"), DockerImage("some-other-image-id"))) }
+                    beforeEachTest { events.add(ImagePulledEvent(PullImage("some-other-image"), ImageReference("some-other-image-id"))) }
 
                     on("evaluating the rule") {
                         val result by runForEachTest { rule.evaluate(events) }
@@ -121,7 +121,7 @@ object CreateContainerStepRuleSpec : Spek({
                 beforeEachTest { events.add(networkReadyEvent) }
 
                 given("the image for the container has been built") {
-                    val image = DockerImage("the-built-image")
+                    val image = ImageReference("the-built-image")
                     beforeEachTest { events.add(ImageBuiltEvent(container, image)) }
 
                     on("evaluating the rule") {
@@ -135,7 +135,7 @@ object CreateContainerStepRuleSpec : Spek({
 
                 given("an image has been built for another container") {
                     val otherContainer = Container("the-other-container", imageSourceDoesNotMatter())
-                    beforeEachTest { events.add(ImageBuiltEvent(otherContainer, DockerImage("some-other-image"))) }
+                    beforeEachTest { events.add(ImageBuiltEvent(otherContainer, ImageReference("some-other-image"))) }
 
                     on("evaluating the rule") {
                         val result by runForEachTest { rule.evaluate(events) }

@@ -17,6 +17,7 @@
 @file:UseSerializers(
     ContainerNameOnlySerializer::class,
     PathSerializer::class,
+    ImageReferenceSerializer::class,
     NetworkReferenceSerializer::class
 )
 
@@ -25,8 +26,9 @@ package batect.execution.model.steps
 import batect.config.Container
 import batect.config.PullImage
 import batect.docker.DockerContainer
-import batect.docker.DockerImage
+import batect.docker.ImageReferenceSerializer
 import batect.docker.NetworkReferenceSerializer
+import batect.dockerclient.ImageReference
 import batect.dockerclient.NetworkReference
 import batect.logging.ContainerNameOnlySerializer
 import batect.logging.LogMessageBuilder
@@ -52,7 +54,7 @@ object PrepareTaskNetworkStep : TaskStep()
 @Serializable
 data class CreateContainerStep(
     val container: Container,
-    val image: DockerImage,
+    val image: ImageReference,
     val network: NetworkReference
 ) : TaskStep()
 

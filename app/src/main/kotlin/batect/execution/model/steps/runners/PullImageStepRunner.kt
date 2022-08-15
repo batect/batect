@@ -17,7 +17,6 @@
 package batect.execution.model.steps.runners
 
 import batect.config.PullImage
-import batect.docker.DockerImage
 import batect.docker.ImagePullProgressAggregator
 import batect.dockerclient.DockerClient
 import batect.dockerclient.DockerClientException
@@ -42,7 +41,7 @@ class PullImageStepRunner(
                 pullImage(step.source, eventSink)
             }
 
-            eventSink.postEvent(ImagePulledEvent(step.source, DockerImage(image.id)))
+            eventSink.postEvent(ImagePulledEvent(step.source, image))
         } catch (e: DockerClientException) {
             logger.error {
                 message("Pulling image failed.")

@@ -26,7 +26,6 @@ import batect.config.ExpressionEvaluationException
 import batect.config.ImagePullPolicy
 import batect.config.LiteralValue
 import batect.config.TaskSpecialisedConfiguration
-import batect.docker.DockerImage
 import batect.docker.build.ActiveImageBuildStep
 import batect.docker.build.BuildProgress
 import batect.dockerclient.BuilderVersion
@@ -209,7 +208,7 @@ object BuildImageStepRunnerSpec : Spek({
                     }
 
                     it("emits a 'image built' event") {
-                        verify(eventSink).postEvent(ImageBuiltEvent(container, DockerImage("some-image")))
+                        verify(eventSink).postEvent(ImageBuiltEvent(container, image))
                     }
 
                     it("does not emit any 'image build failed' events") {
@@ -300,7 +299,7 @@ object BuildImageStepRunnerSpec : Spek({
                 }
 
                 it("emits a 'image built' event") {
-                    verify(eventSink).postEvent(ImageBuiltEvent(container, DockerImage("some-image")))
+                    verify(eventSink).postEvent(ImageBuiltEvent(container, image))
                 }
 
                 it("does not emit any 'image build failed' events") {

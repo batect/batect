@@ -17,6 +17,7 @@
 @file:UseSerializers(
     ContainerNameOnlySerializer::class,
     PathSerializer::class,
+    ImageReferenceSerializer::class,
     NetworkReferenceSerializer::class
 )
 
@@ -26,10 +27,11 @@ import batect.config.Container
 import batect.config.PullImage
 import batect.config.SetupCommand
 import batect.docker.DockerContainer
-import batect.docker.DockerImage
+import batect.docker.ImageReferenceSerializer
 import batect.docker.NetworkReferenceSerializer
 import batect.docker.build.BuildProgress
 import batect.docker.pull.ImagePullProgress
+import batect.dockerclient.ImageReference
 import batect.dockerclient.NetworkReference
 import batect.execution.model.steps.TaskStep
 import batect.logging.ContainerNameOnlySerializer
@@ -67,10 +69,10 @@ data class ContainerStoppedEvent(val container: Container) : TaskEvent()
 data class ImageBuildProgressEvent(val container: Container, val buildProgress: BuildProgress) : TaskEvent(isInformationalEvent = true)
 
 @Serializable
-data class ImageBuiltEvent(val container: Container, val image: DockerImage) : TaskEvent()
+data class ImageBuiltEvent(val container: Container, val image: ImageReference) : TaskEvent()
 
 @Serializable
-data class ImagePulledEvent(val source: PullImage, val image: DockerImage) : TaskEvent()
+data class ImagePulledEvent(val source: PullImage, val image: ImageReference) : TaskEvent()
 
 @Serializable
 data class ImagePullProgressEvent(val source: PullImage, val progress: ImagePullProgress) : TaskEvent(isInformationalEvent = true)

@@ -14,12 +14,10 @@
     limitations under the License.
 */
 
-@file:Suppress("ktlint:filename")
-
 package batect.docker
 
+import batect.dockerclient.ImageReference
 import batect.dockerclient.NetworkReference
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.descriptors.SerialDescriptor
@@ -27,7 +25,20 @@ import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 
-@OptIn(ExperimentalSerializationApi::class)
+object ImageReferenceSerializer : KSerializer<ImageReference> {
+    override val descriptor: SerialDescriptor = buildClassSerialDescriptor("ImageReference") {
+        element("id", String.serializer().descriptor)
+    }
+
+    override fun deserialize(decoder: Decoder): ImageReference = throw UnsupportedOperationException()
+
+    override fun serialize(encoder: Encoder, value: ImageReference) {
+        val output = encoder.beginStructure(descriptor)
+        output.encodeStringElement(descriptor, 0, value.id)
+        output.endStructure(descriptor)
+    }
+}
+
 object NetworkReferenceSerializer : KSerializer<NetworkReference> {
     override val descriptor: SerialDescriptor = buildClassSerialDescriptor("NetworkReference") {
         element("id", String.serializer().descriptor)

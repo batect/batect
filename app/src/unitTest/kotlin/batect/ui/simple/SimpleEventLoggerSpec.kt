@@ -22,7 +22,7 @@ import batect.config.LiteralValue
 import batect.config.PullImage
 import batect.config.SetupCommand
 import batect.docker.DockerContainer
-import batect.docker.DockerImage
+import batect.dockerclient.ImageReference
 import batect.execution.PostTaskManualCleanup
 import batect.execution.model.events.ContainerBecameHealthyEvent
 import batect.execution.model.events.ContainerStartedEvent
@@ -91,7 +91,7 @@ object SimpleEventLoggerSpec : Spek({
 
             on("when an 'image built' event is posted") {
                 beforeEachTest {
-                    val event = ImageBuiltEvent(otherContainer, DockerImage("abc-123"))
+                    val event = ImageBuiltEvent(otherContainer, ImageReference("abc-123"))
                     logger.postEvent(event)
                 }
 
@@ -102,7 +102,7 @@ object SimpleEventLoggerSpec : Spek({
 
             on("when an 'image pulled' event is posted") {
                 beforeEachTest {
-                    val event = ImagePulledEvent(PullImage("the-cool-image:1.2.3"), DockerImage("the-cool-image-id"))
+                    val event = ImagePulledEvent(PullImage("the-cool-image:1.2.3"), ImageReference("the-cool-image-id"))
                     logger.postEvent(event)
                 }
 

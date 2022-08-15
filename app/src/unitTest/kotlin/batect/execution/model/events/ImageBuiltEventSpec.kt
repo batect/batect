@@ -17,7 +17,7 @@
 package batect.execution.model.events
 
 import batect.config.Container
-import batect.docker.DockerImage
+import batect.dockerclient.ImageReference
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.logRepresentationOf
 import batect.testutils.on
@@ -29,7 +29,7 @@ import org.spekframework.spek2.style.specification.describe
 object ImageBuiltEventSpec : Spek({
     describe("an 'image built' event") {
         val container = Container("the-container", imageSourceDoesNotMatter())
-        val image = DockerImage("image-1")
+        val image = ImageReference("image-1")
         val event = ImageBuiltEvent(container, image)
 
         on("attaching it to a log message") {

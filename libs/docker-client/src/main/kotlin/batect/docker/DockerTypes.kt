@@ -20,10 +20,6 @@ import batect.logging.LogMessageBuilder
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class DockerImage(val id: String)
-
-@Serializable
 data class DockerContainer(val id: String, val name: String)
 
-fun LogMessageBuilder.data(key: String, value: DockerImage) = this.data(key, value, DockerImage.serializer())
 fun LogMessageBuilder.data(key: String, value: DockerContainer) = this.data(key, value, DockerContainer.serializer())

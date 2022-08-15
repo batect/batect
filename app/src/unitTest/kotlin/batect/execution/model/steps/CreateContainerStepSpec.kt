@@ -17,7 +17,7 @@
 package batect.execution.model.steps
 
 import batect.config.Container
-import batect.docker.DockerImage
+import batect.dockerclient.ImageReference
 import batect.dockerclient.NetworkReference
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.logRepresentationOf
@@ -30,7 +30,7 @@ import org.spekframework.spek2.style.specification.describe
 object CreateContainerStepSpec : Spek({
     describe("a 'create container' step") {
         val container = Container("the-container", imageSourceDoesNotMatter())
-        val image = DockerImage("the-image")
+        val image = ImageReference("the-image")
         val network = NetworkReference("the-network")
         val step = CreateContainerStep(container, image, network)
 

@@ -22,7 +22,6 @@ import batect.config.Expression
 import batect.config.ExpressionEvaluationContext
 import batect.config.ExpressionEvaluationException
 import batect.config.TaskSpecialisedConfiguration
-import batect.docker.DockerImage
 import batect.docker.ImageBuildProgressAggregator
 import batect.docker.Tee
 import batect.dockerclient.BuilderVersion
@@ -90,7 +89,7 @@ class BuildImageStepRunner(
                 }
             }
 
-            eventSink.postEvent(ImageBuiltEvent(step.container, DockerImage(image.id)))
+            eventSink.postEvent(ImageBuiltEvent(step.container, image))
         } catch (e: DockerClientException) {
             val output = stdoutBuffer.readUtf8()
             val messageBuilder = StringBuilder()

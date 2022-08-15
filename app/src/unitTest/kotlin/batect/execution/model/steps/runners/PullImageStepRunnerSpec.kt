@@ -18,7 +18,6 @@ package batect.execution.model.steps.runners
 
 import batect.config.ImagePullPolicy
 import batect.config.PullImage
-import batect.docker.DockerImage
 import batect.docker.DownloadOperation
 import batect.docker.pull.ImagePullProgress
 import batect.dockerclient.DockerClient
@@ -60,7 +59,7 @@ object PullImageStepRunnerSpec : Spek({
         val runner by createForEachTest { PullImageStepRunner(dockerClient, cancellationContext, logger) }
 
         on("when pulling the image succeeds") {
-            val image = DockerImage("some-image")
+            val image = ImageReference("some-image")
             val update1 = ImagePullProgress(DownloadOperation.Downloading, 10, 20)
             val update2 = ImagePullProgress(DownloadOperation.Downloading, 15, 20)
 
@@ -71,7 +70,7 @@ object PullImageStepRunnerSpec : Spek({
                     onStatusUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(10, 20), "abc123"))
                     onStatusUpdate(ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(15, 20), "abc123"))
 
-                    ImageReference("some-image")
+                    image
                 }
             }
 
@@ -98,7 +97,7 @@ object PullImageStepRunnerSpec : Spek({
 
                 given("the image is already present") {
                     beforeEachTestSuspend {
-                        whenever(dockerClient.getImage(any())).doReturn(ImageReference("some-image"))
+                        whenever(dockerClient.getImage(any())).doReturn(image)
 
                         runner.run(step, eventSink)
                     }

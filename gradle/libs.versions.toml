@@ -16,7 +16,7 @@ jimfs = { group = "com.google.jimfs", name = "jimfs", version = "1.2" }
 jnr-posix = { group = "com.github.jnr", name = "jnr-posix", version = "3.1.15" }
 jsonschemavalidator = { group = "com.github.java-json-tools", name = "json-schema-validator", version = "2.2.14" }
 junit-platform = { group = "org.junit.platform", name = "junit-platform-engine", version = "1.9.0" }
-kaml = { group = "com.charleskorn.kaml", name = "kaml", version = "0.46.0" }
+kaml = { group = "com.charleskorn.kaml", name = "kaml", version = "0.47.0" }
 kodein = { group = "org.kodein.di", name = "kodein-di", version = "7.14.0" }
 kotest-assertions-core = { group = "io.kotest", name = "kotest-assertions-core", version.ref = "kotest" }
 kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version = "1.6.4" }

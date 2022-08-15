@@ -14,10 +14,14 @@
     limitations under the License.
 */
 
+@file:UseSerializers(
+    NetworkReferenceSerializer::class
+)
 package batect.execution.model.rules.cleanup
 
 import batect.config.Container
-import batect.docker.DockerNetwork
+import batect.docker.NetworkReferenceSerializer
+import batect.dockerclient.NetworkReference
 import batect.execution.model.events.ContainerRemovedEvent
 import batect.execution.model.events.TaskEvent
 import batect.execution.model.rules.TaskStepRuleEvaluationResult
@@ -26,10 +30,11 @@ import batect.logging.ContainerNameSetSerializer
 import batect.primitives.mapToSet
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
+import kotlinx.serialization.UseSerializers
 
 @Serializable
 data class DeleteTaskNetworkStepRule(
-    val network: DockerNetwork,
+    val network: NetworkReference,
     @Serializable(with = ContainerNameSetSerializer::class) val containersThatMustBeRemovedFirst: Set<Container>
 ) : CleanupTaskStepRule() {
     override fun evaluate(pastEvents: Set<TaskEvent>): TaskStepRuleEvaluationResult {

@@ -18,7 +18,7 @@ package batect.ui.fancy
 
 import batect.config.Container
 import batect.docker.DockerContainer
-import batect.docker.DockerNetwork
+import batect.dockerclient.NetworkReference
 import batect.execution.model.events.ContainerCreatedEvent
 import batect.execution.model.events.ContainerRemovedEvent
 import batect.execution.model.events.TaskNetworkCreatedEvent
@@ -48,7 +48,7 @@ object CleanupProgressDisplayLineSpec : Spek({
 
             describe("when there is only the network to clean up") {
                 beforeEachTest {
-                    cleanupDisplay.onEventPosted(TaskNetworkCreatedEvent(DockerNetwork("some-network")))
+                    cleanupDisplay.onEventPosted(TaskNetworkCreatedEvent(NetworkReference("some-network")))
                 }
 
                 on("and the network hasn't been removed yet") {
@@ -74,7 +74,7 @@ object CleanupProgressDisplayLineSpec : Spek({
                 val container = Container("some-container", imageSourceDoesNotMatter())
 
                 beforeEachTest {
-                    cleanupDisplay.onEventPosted(TaskNetworkCreatedEvent(DockerNetwork("some-network")))
+                    cleanupDisplay.onEventPosted(TaskNetworkCreatedEvent(NetworkReference("some-network")))
                     cleanupDisplay.onEventPosted(ContainerCreatedEvent(container, DockerContainer("some-container-id", "some-container-name")))
                 }
 
@@ -115,7 +115,7 @@ object CleanupProgressDisplayLineSpec : Spek({
                 val container2 = Container("container-2", imageSourceDoesNotMatter())
 
                 beforeEachTest {
-                    cleanupDisplay.onEventPosted(TaskNetworkCreatedEvent(DockerNetwork("some-network")))
+                    cleanupDisplay.onEventPosted(TaskNetworkCreatedEvent(NetworkReference("some-network")))
                     cleanupDisplay.onEventPosted(ContainerCreatedEvent(container1, DockerContainer("container-1-id", "some-container-name")))
                     cleanupDisplay.onEventPosted(ContainerCreatedEvent(container2, DockerContainer("container-2-id", "some-container-name")))
                 }
@@ -159,7 +159,7 @@ object CleanupProgressDisplayLineSpec : Spek({
                 val container3 = Container("container-3", imageSourceDoesNotMatter())
 
                 beforeEachTest {
-                    cleanupDisplay.onEventPosted(TaskNetworkCreatedEvent(DockerNetwork("some-network")))
+                    cleanupDisplay.onEventPosted(TaskNetworkCreatedEvent(NetworkReference("some-network")))
                     cleanupDisplay.onEventPosted(ContainerCreatedEvent(container1, DockerContainer("container-1-id", "some-container-name")))
                     cleanupDisplay.onEventPosted(ContainerCreatedEvent(container2, DockerContainer("container-2-id", "some-container-name")))
                     cleanupDisplay.onEventPosted(ContainerCreatedEvent(container3, DockerContainer("container-3-id", "some-container-name")))
@@ -181,7 +181,7 @@ object CleanupProgressDisplayLineSpec : Spek({
                 val container4 = Container("container-4", imageSourceDoesNotMatter())
 
                 beforeEachTest {
-                    cleanupDisplay.onEventPosted(TaskNetworkCreatedEvent(DockerNetwork("some-network")))
+                    cleanupDisplay.onEventPosted(TaskNetworkCreatedEvent(NetworkReference("some-network")))
                     cleanupDisplay.onEventPosted(ContainerCreatedEvent(container1, DockerContainer("container-1-id", "some-container-name")))
                     cleanupDisplay.onEventPosted(ContainerCreatedEvent(container2, DockerContainer("container-2-id", "some-container-name")))
                     cleanupDisplay.onEventPosted(ContainerCreatedEvent(container3, DockerContainer("container-3-id", "some-container-name")))

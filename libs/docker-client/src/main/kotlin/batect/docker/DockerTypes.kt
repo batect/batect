@@ -25,9 +25,5 @@ data class DockerImage(val id: String)
 @Serializable
 data class DockerContainer(val id: String, val name: String)
 
-@Serializable
-data class DockerNetwork(val id: String)
-
 fun LogMessageBuilder.data(key: String, value: DockerImage) = this.data(key, value, DockerImage.serializer())
 fun LogMessageBuilder.data(key: String, value: DockerContainer) = this.data(key, value, DockerContainer.serializer())
-fun LogMessageBuilder.data(key: String, value: DockerNetwork) = this.data(key, value, DockerNetwork.serializer())

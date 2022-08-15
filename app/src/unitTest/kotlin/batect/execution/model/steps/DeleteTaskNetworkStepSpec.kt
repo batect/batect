@@ -16,7 +16,7 @@
 
 package batect.execution.model.steps
 
-import batect.docker.DockerNetwork
+import batect.dockerclient.NetworkReference
 import batect.testutils.logRepresentationOf
 import batect.testutils.on
 import com.natpryce.hamkrest.assertion.assertThat
@@ -26,7 +26,7 @@ import org.spekframework.spek2.style.specification.describe
 
 object DeleteTaskNetworkStepSpec : Spek({
     describe("a 'delete task network' step") {
-        val network = DockerNetwork("the-network")
+        val network = NetworkReference("the-network")
         val step = DeleteTaskNetworkStep(network)
 
         on("attaching it to a log message") {

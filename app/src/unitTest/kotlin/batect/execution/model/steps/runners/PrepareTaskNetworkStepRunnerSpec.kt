@@ -18,7 +18,6 @@ package batect.execution.model.steps.runners
 
 import batect.cli.CommandLineOptions
 import batect.docker.DockerContainerType
-import batect.docker.DockerNetwork
 import batect.docker.DockerResourceNameGenerator
 import batect.dockerclient.DockerClient
 import batect.dockerclient.NetworkCreationFailedException
@@ -73,7 +72,7 @@ object PrepareTaskNetworkStepRunnerSpec : Spek({
                     }
 
                     it("emits a 'network created' event") {
-                        verify(eventSink).postEvent(TaskNetworkCreatedEvent(DockerNetwork("some-network")))
+                        verify(eventSink).postEvent(TaskNetworkCreatedEvent(NetworkReference("some-network")))
                     }
 
                     itSuspend("creates the network with the 'bridge' driver and name from the resource name generator") {
@@ -89,7 +88,7 @@ object PrepareTaskNetworkStepRunnerSpec : Spek({
                     }
 
                     it("emits a 'network created' event") {
-                        verify(eventSink).postEvent(TaskNetworkCreatedEvent(DockerNetwork("some-network")))
+                        verify(eventSink).postEvent(TaskNetworkCreatedEvent(NetworkReference("some-network")))
                     }
 
                     itSuspend("creates the network with the 'nat' driver") {
@@ -125,7 +124,7 @@ object PrepareTaskNetworkStepRunnerSpec : Spek({
                 }
 
                 it("emits a 'custom network checked' event") {
-                    verify(eventSink).postEvent(CustomTaskNetworkCheckedEvent(DockerNetwork("the-network-id")))
+                    verify(eventSink).postEvent(CustomTaskNetworkCheckedEvent(NetworkReference("the-network-id")))
                 }
             }
 

@@ -16,7 +16,7 @@
 
 package batect.ui.fancy
 
-import batect.docker.DockerNetwork
+import batect.dockerclient.NetworkReference
 import batect.execution.model.events.TaskNetworkCreatedEvent
 import batect.os.ConsoleDimensions
 import batect.os.Dimensions
@@ -59,7 +59,7 @@ object StartupProgressDisplaySpec : Spek({
         val display by createForEachTest { StartupProgressDisplay(listOf(line1, line2), consoleDimensions) }
 
         on("receiving an event") {
-            val event = TaskNetworkCreatedEvent(DockerNetwork("some-id"))
+            val event = TaskNetworkCreatedEvent(NetworkReference("some-id"))
             beforeEachTest { display.onEventPosted(event) }
 
             it("forwards it to each progress line") {

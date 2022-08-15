@@ -16,7 +16,7 @@
 
 package batect.execution.model.events
 
-import batect.docker.DockerNetwork
+import batect.dockerclient.NetworkReference
 import batect.testutils.logRepresentationOf
 import batect.testutils.on
 import com.natpryce.hamkrest.assertion.assertThat
@@ -26,7 +26,7 @@ import org.spekframework.spek2.style.specification.describe
 
 object CustomTaskNetworkCheckedEventSpec : Spek({
     describe("a 'custom task network checked' event") {
-        val network = DockerNetwork("some-network")
+        val network = NetworkReference("some-network")
         val event = CustomTaskNetworkCheckedEvent(network)
 
         on("attaching it to a log message") {

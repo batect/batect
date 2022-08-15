@@ -18,7 +18,7 @@ package batect.execution
 
 import batect.config.Container
 import batect.docker.DockerContainer
-import batect.docker.DockerNetwork
+import batect.dockerclient.NetworkReference
 import batect.execution.model.events.ContainerCreatedEvent
 import batect.execution.model.events.RunningContainerExitedEvent
 import batect.execution.model.events.TaskFailedEvent
@@ -143,7 +143,7 @@ object TaskStateMachineSpec : Spek({
                             beforeEachTest { whenever(runStage.popNextStep(any(), eq(stepsStillRunning))).doReturn(StepReady(step)) }
 
                             on("getting the next step to execute") {
-                                val events = setOf(TaskNetworkCreatedEvent(DockerNetwork("some-network")), TaskNetworkDeletedEvent)
+                                val events = setOf(TaskNetworkCreatedEvent(NetworkReference("some-network")), TaskNetworkDeletedEvent)
 
                                 beforeEachTest { events.forEach { stateMachine.postEvent(it) } }
 
@@ -195,7 +195,7 @@ object TaskStateMachineSpec : Spek({
                     }
 
                     given("the run stage is complete") {
-                        val event = TaskNetworkCreatedEvent(DockerNetwork("some-network"))
+                        val event = TaskNetworkCreatedEvent(NetworkReference("some-network"))
 
                         regardlessOfWhetherThereAreStepsRunning { stepsStillRunning ->
                             beforeEachTest {
@@ -394,7 +394,7 @@ object TaskStateMachineSpec : Spek({
 
             given("the cleanup stage is active") {
                 given("the task did not fail") {
-                    val previousEvents = setOf(TaskNetworkCreatedEvent(DockerNetwork("some-network")), TaskNetworkDeletedEvent)
+                    val previousEvents = setOf(TaskNetworkCreatedEvent(NetworkReference("some-network")), TaskNetworkDeletedEvent)
 
                     beforeEachTest {
                         whenever(runStage.popNextStep(emptySet(), false)).doReturn(StageComplete)

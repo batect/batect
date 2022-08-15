@@ -16,7 +16,8 @@
 
 @file:UseSerializers(
     ContainerNameOnlySerializer::class,
-    PathSerializer::class
+    PathSerializer::class,
+    NetworkReferenceSerializer::class
 )
 
 package batect.execution.model.steps
@@ -25,7 +26,8 @@ import batect.config.Container
 import batect.config.PullImage
 import batect.docker.DockerContainer
 import batect.docker.DockerImage
-import batect.docker.DockerNetwork
+import batect.docker.NetworkReferenceSerializer
+import batect.dockerclient.NetworkReference
 import batect.logging.ContainerNameOnlySerializer
 import batect.logging.LogMessageBuilder
 import batect.logging.PathSerializer
@@ -51,7 +53,7 @@ object PrepareTaskNetworkStep : TaskStep()
 data class CreateContainerStep(
     val container: Container,
     val image: DockerImage,
-    val network: DockerNetwork
+    val network: NetworkReference
 ) : TaskStep()
 
 @Serializable
@@ -75,6 +77,6 @@ data class StopContainerStep(val container: Container, val dockerContainer: Dock
 data class RemoveContainerStep(val container: Container, val dockerContainer: DockerContainer) : CleanupStep()
 
 @Serializable
-data class DeleteTaskNetworkStep(val network: DockerNetwork) : CleanupStep()
+data class DeleteTaskNetworkStep(val network: NetworkReference) : CleanupStep()
 
 fun LogMessageBuilder.data(name: String, step: TaskStep) = this.data(name, step, TaskStep.serializer())

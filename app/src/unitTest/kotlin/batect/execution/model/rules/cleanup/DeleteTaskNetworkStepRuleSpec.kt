@@ -17,7 +17,7 @@
 package batect.execution.model.rules.cleanup
 
 import batect.config.Container
-import batect.docker.DockerNetwork
+import batect.dockerclient.NetworkReference
 import batect.execution.model.events.ContainerRemovedEvent
 import batect.execution.model.rules.TaskStepRuleEvaluationResult
 import batect.execution.model.steps.DeleteTaskNetworkStep
@@ -33,7 +33,7 @@ import org.spekframework.spek2.style.specification.describe
 
 object DeleteTaskNetworkStepRuleSpec : Spek({
     describe("a delete task network step rule") {
-        val network = DockerNetwork("the-network")
+        val network = NetworkReference("the-network")
 
         given("there are no containers that must be removed first") {
             val rule = DeleteTaskNetworkStepRule(network, emptySet())

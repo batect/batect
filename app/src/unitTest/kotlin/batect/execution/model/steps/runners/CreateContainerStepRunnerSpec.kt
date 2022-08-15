@@ -22,7 +22,6 @@ import batect.config.VolumeMount
 import batect.docker.DockerContainer
 import batect.docker.DockerContainerCreationRequestFactory
 import batect.docker.DockerImage
-import batect.docker.DockerNetwork
 import batect.docker.DockerVolumeMount
 import batect.docker.DockerVolumeMountSource
 import batect.dockerclient.ContainerCreationFailedException
@@ -62,7 +61,7 @@ object CreateContainerStepRunnerSpec : Spek({
     describe("running a 'create container' step") {
         val container = Container("some-container", imageSourceDoesNotMatter())
         val image = DockerImage("some-image")
-        val network = DockerNetwork("some-network")
+        val network = NetworkReference("some-network")
 
         val step = CreateContainerStep(container, image, network)
         val spec = mock<ContainerCreationSpec> {

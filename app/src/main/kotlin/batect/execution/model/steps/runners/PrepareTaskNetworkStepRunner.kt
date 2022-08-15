@@ -18,7 +18,6 @@ package batect.execution.model.steps.runners
 
 import batect.cli.CommandLineOptions
 import batect.docker.DockerContainerType
-import batect.docker.DockerNetwork
 import batect.docker.DockerResourceNameGenerator
 import batect.dockerclient.DockerClient
 import batect.dockerclient.DockerClientException
@@ -59,7 +58,7 @@ class PrepareTaskNetworkStepRunner(
                 client.createNetwork(name, driver)
             }
 
-            eventSink.postEvent(TaskNetworkCreatedEvent(DockerNetwork(network.id)))
+            eventSink.postEvent(TaskNetworkCreatedEvent(network))
         } catch (e: NetworkCreationFailedException) {
             logger.error {
                 message("Creating network failed.")
@@ -81,7 +80,7 @@ class PrepareTaskNetworkStepRunner(
                 return
             }
 
-            eventSink.postEvent(CustomTaskNetworkCheckedEvent(DockerNetwork(network.id)))
+            eventSink.postEvent(CustomTaskNetworkCheckedEvent(network))
         } catch (e: DockerClientException) {
             logger.error {
                 message("Checking existing network failed.")

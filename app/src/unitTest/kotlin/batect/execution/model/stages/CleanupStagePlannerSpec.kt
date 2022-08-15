@@ -26,7 +26,7 @@ import batect.config.TaskMap
 import batect.config.TaskRunConfiguration
 import batect.config.TaskSpecialisedConfiguration
 import batect.docker.DockerContainer
-import batect.docker.DockerNetwork
+import batect.dockerclient.NetworkReference
 import batect.execution.CleanupOption
 import batect.execution.ContainerDependencyGraph
 import batect.execution.model.events.ContainerCreatedEvent
@@ -95,7 +95,7 @@ object CleanupStagePlannerSpec : Spek({
         }
 
         given("the task network was created") {
-            val network = DockerNetwork("the-network")
+            val network = NetworkReference("the-network")
 
             beforeEachTest { events.add(TaskNetworkCreatedEvent(network)) }
 

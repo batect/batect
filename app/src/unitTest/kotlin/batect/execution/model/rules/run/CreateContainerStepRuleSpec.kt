@@ -21,7 +21,7 @@ import batect.config.Container
 import batect.config.LiteralValue
 import batect.config.PullImage
 import batect.docker.DockerImage
-import batect.docker.DockerNetwork
+import batect.dockerclient.NetworkReference
 import batect.execution.model.events.ImageBuiltEvent
 import batect.execution.model.events.ImagePulledEvent
 import batect.execution.model.events.TaskEvent
@@ -53,7 +53,7 @@ object CreateContainerStepRuleSpec : Spek({
             val rule = CreateContainerStepRule(container)
 
             given("the task network is ready") {
-                val dockerNetwork = DockerNetwork("the-network")
+                val dockerNetwork = NetworkReference("the-network")
                 val networkReadyEvent = mock<TaskNetworkReadyEvent> {
                     on { network } doReturn dockerNetwork
                 }
@@ -113,7 +113,7 @@ object CreateContainerStepRuleSpec : Spek({
             val rule = CreateContainerStepRule(container)
 
             given("the task network is ready") {
-                val dockerNetwork = DockerNetwork("the-network")
+                val dockerNetwork = NetworkReference("the-network")
                 val networkReadyEvent = mock<TaskNetworkReadyEvent> {
                     on { network } doReturn dockerNetwork
                 }

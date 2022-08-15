@@ -16,7 +16,6 @@
 
 package batect.execution.model.steps.runners
 
-import batect.docker.DockerNetwork
 import batect.dockerclient.DockerClient
 import batect.dockerclient.NetworkDeletionFailedException
 import batect.dockerclient.NetworkReference
@@ -37,7 +36,7 @@ import org.spekframework.spek2.style.specification.describe
 
 object DeleteTaskNetworkStepRunnerSpec : Spek({
     describe("running a 'delete task network' step") {
-        val network = DockerNetwork("some-network")
+        val network = NetworkReference("some-network")
         val step = DeleteTaskNetworkStep(network)
 
         val dockerClient by createForEachTest { mock<DockerClient>() }

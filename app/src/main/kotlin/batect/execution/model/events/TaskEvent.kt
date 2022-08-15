@@ -16,7 +16,8 @@
 
 @file:UseSerializers(
     ContainerNameOnlySerializer::class,
-    PathSerializer::class
+    PathSerializer::class,
+    NetworkReferenceSerializer::class
 )
 
 package batect.execution.model.events
@@ -26,9 +27,10 @@ import batect.config.PullImage
 import batect.config.SetupCommand
 import batect.docker.DockerContainer
 import batect.docker.DockerImage
-import batect.docker.DockerNetwork
+import batect.docker.NetworkReferenceSerializer
 import batect.docker.build.BuildProgress
 import batect.docker.pull.ImagePullProgress
+import batect.dockerclient.NetworkReference
 import batect.execution.model.steps.TaskStep
 import batect.logging.ContainerNameOnlySerializer
 import batect.logging.LogMessageBuilder
@@ -87,14 +89,14 @@ data class StepStartingEvent(val step: TaskStep) : TaskEvent(true)
 
 @Serializable
 sealed class TaskNetworkReadyEvent : TaskEvent() {
-    abstract val network: DockerNetwork
+    abstract val network: NetworkReference
 }
 
 @Serializable
-data class TaskNetworkCreatedEvent(override val network: DockerNetwork) : TaskNetworkReadyEvent()
+data class TaskNetworkCreatedEvent(override val network: NetworkReference) : TaskNetworkReadyEvent()
 
 @Serializable
-data class CustomTaskNetworkCheckedEvent(override val network: DockerNetwork) : TaskNetworkReadyEvent()
+data class CustomTaskNetworkCheckedEvent(override val network: NetworkReference) : TaskNetworkReadyEvent()
 
 @Serializable
 object TaskNetworkDeletedEvent : TaskEvent()

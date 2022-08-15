@@ -18,7 +18,7 @@ package batect.execution.model.steps
 
 import batect.config.Container
 import batect.docker.DockerImage
-import batect.docker.DockerNetwork
+import batect.dockerclient.NetworkReference
 import batect.testutils.imageSourceDoesNotMatter
 import batect.testutils.logRepresentationOf
 import batect.testutils.on
@@ -31,7 +31,7 @@ object CreateContainerStepSpec : Spek({
     describe("a 'create container' step") {
         val container = Container("the-container", imageSourceDoesNotMatter())
         val image = DockerImage("the-image")
-        val network = DockerNetwork("the-network")
+        val network = NetworkReference("the-network")
         val step = CreateContainerStep(container, image, network)
 
         on("attaching it to a log message") {

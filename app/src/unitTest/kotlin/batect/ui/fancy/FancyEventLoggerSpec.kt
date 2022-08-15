@@ -18,7 +18,7 @@ package batect.ui.fancy
 
 import batect.config.Container
 import batect.docker.DockerContainer
-import batect.docker.DockerNetwork
+import batect.dockerclient.NetworkReference
 import batect.execution.PostTaskManualCleanup
 import batect.execution.model.events.ContainerBecameHealthyEvent
 import batect.execution.model.events.ContainerRemovedEvent
@@ -332,7 +332,7 @@ object FancyEventLoggerSpec : Spek({
 
                 given("clean up has already started") {
                     beforeEachTest {
-                        val step = DeleteTaskNetworkStep(DockerNetwork("some-network-id"))
+                        val step = DeleteTaskNetworkStep(NetworkReference("some-network-id"))
                         logger.postEvent(StepStartingEvent(step))
                         reset(errorConsole)
                         reset(console)

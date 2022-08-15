@@ -20,7 +20,7 @@ import batect.config.BuildImage
 import batect.config.Container
 import batect.config.PullImage
 import batect.docker.DockerImage
-import batect.docker.DockerNetwork
+import batect.dockerclient.NetworkReference
 import batect.execution.model.events.ImageBuiltEvent
 import batect.execution.model.events.ImagePulledEvent
 import batect.execution.model.events.TaskEvent
@@ -52,7 +52,7 @@ data class CreateContainerStepRule(
         )
     }
 
-    private fun findNetwork(pastEvents: Set<TaskEvent>): DockerNetwork? =
+    private fun findNetwork(pastEvents: Set<TaskEvent>): NetworkReference? =
         pastEvents.singleInstanceOrNull<TaskNetworkReadyEvent>()
             ?.network
 

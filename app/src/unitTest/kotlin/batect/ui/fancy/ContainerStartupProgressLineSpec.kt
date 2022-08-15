@@ -23,11 +23,11 @@ import batect.config.PullImage
 import batect.config.SetupCommand
 import batect.docker.DockerContainer
 import batect.docker.DockerImage
-import batect.docker.DockerNetwork
 import batect.docker.DownloadOperation
 import batect.docker.build.ActiveImageBuildStep
 import batect.docker.build.BuildProgress
 import batect.docker.pull.ImagePullProgress
+import batect.dockerclient.NetworkReference
 import batect.execution.model.events.ContainerBecameHealthyEvent
 import batect.execution.model.events.ContainerBecameReadyEvent
 import batect.execution.model.events.ContainerCreatedEvent
@@ -236,7 +236,7 @@ object ContainerStartupProgressLineSpec : Spek({
 
             describe("after receiving a 'creating container' notification") {
                 on("that notification being for this line's container") {
-                    val step = CreateContainerStep(container, DockerImage("some-image"), DockerNetwork("some-network"))
+                    val step = CreateContainerStep(container, DockerImage("some-image"), NetworkReference("some-network"))
                     beforeEachTest { line.onEventPosted(StepStartingEvent(step)) }
                     val output by runForEachTest { line.print() }
 
@@ -246,7 +246,7 @@ object ContainerStartupProgressLineSpec : Spek({
                 }
 
                 on("that notification being for another container") {
-                    val step = CreateContainerStep(otherContainer, DockerImage("some-image"), DockerNetwork("some-network"))
+                    val step = CreateContainerStep(otherContainer, DockerImage("some-image"), NetworkReference("some-network"))
                     beforeEachTest { line.onEventPosted(StepStartingEvent(step)) }
                     val output by runForEachTest { line.print() }
 
@@ -606,7 +606,7 @@ object ContainerStartupProgressLineSpec : Spek({
 
                     on("when the task network has already been created") {
                         beforeEachTest {
-                            line.onEventPosted(TaskNetworkCreatedEvent(DockerNetwork("some-network")))
+                            line.onEventPosted(TaskNetworkCreatedEvent(NetworkReference("some-network")))
                             line.onEventPosted(event)
                         }
 
@@ -639,7 +639,7 @@ object ContainerStartupProgressLineSpec : Spek({
             }
 
             describe("after receiving a 'task network created' notification") {
-                val event = TaskNetworkCreatedEvent(DockerNetwork("some-network"))
+                val event = TaskNetworkCreatedEvent(NetworkReference("some-network"))
 
                 on("when the image pull has not started yet") {
                     beforeEachTest { line.onEventPosted(event) }

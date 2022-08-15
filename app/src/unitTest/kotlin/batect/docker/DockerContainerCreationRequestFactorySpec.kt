@@ -19,6 +19,7 @@ package batect.docker
 import batect.cli.CommandLineOptions
 import batect.config.BinarySize
 import batect.config.BinaryUnit
+import batect.config.Capability
 import batect.config.Container
 import batect.config.DeviceMount
 import batect.config.HealthCheckConfig

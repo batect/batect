@@ -17,7 +17,6 @@
 package batect.config
 
 import batect.config.io.deserializers.PathDeserializer
-import batect.docker.Capability
 import batect.os.Command
 import batect.os.PathResolutionContext
 import batect.os.PathResolutionResult

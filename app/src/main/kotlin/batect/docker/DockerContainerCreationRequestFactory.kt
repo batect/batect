@@ -17,6 +17,7 @@
 package batect.docker
 
 import batect.cli.CommandLineOptions
+import batect.config.Capability
 import batect.config.Container
 import batect.config.HealthCheckConfig
 import batect.config.PortMapping

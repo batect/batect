@@ -21,7 +21,6 @@ import batect.config.io.deserializers.CommandSerializer
 import batect.config.io.deserializers.DependencySetSerializer
 import batect.config.io.deserializers.EnvironmentSerializer
 import batect.config.io.deserializers.PathDeserializer
-import batect.docker.Capability
 import batect.os.Command
 import batect.os.PathResolutionResult
 import com.charleskorn.kaml.YamlInput

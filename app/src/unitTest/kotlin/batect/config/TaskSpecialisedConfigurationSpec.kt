@@ -16,7 +16,6 @@
 
 package batect.config
 
-import batect.docker.Capability
 import batect.os.Command
 import batect.os.DefaultPathResolutionContext
 import batect.testutils.createForEachTest

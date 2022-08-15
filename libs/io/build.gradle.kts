@@ -19,5 +19,7 @@ plugins {
 }
 
 dependencies {
+    implementation(platform(libs.okio.bom))
+    implementation("com.squareup.okio:okio")
     implementation(project(":libs:os"))
 }

@@ -14,7 +14,7 @@
     limitations under the License.
 */
 
-package batect.docker
+package batect.io
 
 import okio.Buffer
 import okio.Sink

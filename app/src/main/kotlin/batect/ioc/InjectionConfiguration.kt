@@ -43,7 +43,7 @@ import batect.config.includes.GitRepositoryCacheCleanupTask
 import batect.config.includes.GitRepositoryCacheNotificationListener
 import batect.config.includes.IncludeResolver
 import batect.config.io.ConfigurationLoader
-import batect.docker.DockerClientFactory
+import batect.docker.DockerClientConfigurationFactory
 import batect.docker.DockerHostNameResolver
 import batect.dockerclient.DockerClient
 import batect.execution.ConfigVariablesProvider
@@ -161,8 +161,8 @@ private val configModule = DI.Module("config") {
 
 private val dockerModule = DI.Module("docker") {
     bind<DockerHostNameResolver>() with singleton { DockerHostNameResolver(instance(), instance()) }
-    bind<DockerClientFactory>() with singleton { DockerClientFactory(instance()) }
-    bind<DockerClient>() with singleton { instance<DockerClientFactory>().createBuilder().build() }
+    bind<DockerClientConfigurationFactory>() with singleton { DockerClientConfigurationFactory(instance()) }
+    bind<DockerClient>() with singleton { DockerClient.create(instance<DockerClientConfigurationFactory>().createConfiguration()) }
 }
 
 private val gitModule = DI.Module("git") {

@@ -17,37 +17,35 @@
 package batect.docker
 
 import batect.cli.CommandLineOptions
-import batect.dockerclient.DockerClient
-import batect.dockerclient.TLSVerification
+import batect.dockerclient.DockerClientConfiguration
 import okio.Path.Companion.toOkioPath
 import java.nio.file.Files
 
-// FIXME: this has no tests, because there's no easy way to examine the configured
-// options for DockerClient.Builder().
-class DockerClientFactory(
+class DockerClientConfigurationFactory(
     private val commandLineOptions: CommandLineOptions
 ) {
-    fun createBuilder(): DockerClient.Builder {
-        val builder = DockerClient.Builder()
-            .withHost(commandLineOptions.dockerHost)
-            .doNotUseDefaultConfigurationFromEnvironment()
+    fun createConfiguration(): DockerClientConfiguration {
+        val builder = DockerClientConfiguration.Builder(commandLineOptions.dockerHost)
 
         // If the user has specified a config directory, that is validated by CommandLineOptionsParser.
         // However, if we're using the default value, then no validation is performed, so there's a chance
         // the directory does not exist in this case.
         if (Files.exists(commandLineOptions.dockerConfigDirectory)) {
-            builder.withConfigDirectory(commandLineOptions.dockerConfigDirectory.toOkioPath())
+            builder.withConfigurationDirectory(commandLineOptions.dockerConfigDirectory.toOkioPath())
         }
 
         if (commandLineOptions.dockerUseTLS) {
             builder.withTLSConfiguration(
                 commandLineOptions.dockerTlsCACertificatePath.toOkioPath(),
                 commandLineOptions.dockerTLSCertificatePath.toOkioPath(),
-                commandLineOptions.dockerTLSKeyPath.toOkioPath(),
-                if (commandLineOptions.dockerVerifyTLS) TLSVerification.Enabled else TLSVerification.InsecureDisabled
+                commandLineOptions.dockerTLSKeyPath.toOkioPath()
             )
+
+            if (!commandLineOptions.dockerVerifyTLS) {
+                builder.withDaemonIdentityVerificationDisabled()
+            }
         }
 
-        return builder
+        return builder.build()
     }
 }

@@ -5,7 +5,7 @@ spek = "2.0.19"
 spotless = "6.9.1"
 
 [libraries]
-batect-dockerclient = { group = "dev.batect.docker", name = "client", version = "0.5.0" }
+batect-dockerclient = { group = "dev.batect.docker", name = "client", version = "0.6.0" }
 bouncycastle = { group = "org.bouncycastle", name = "bcpkix-jdk15on", version = "1.70" }
 commons-codec = { group = "commons-codec", name = "commons-codec", version = "1.15" }
 google-cloud-storage = { group = "com.google.cloud", name = "google-cloud-storage", version = "2.11.3" }

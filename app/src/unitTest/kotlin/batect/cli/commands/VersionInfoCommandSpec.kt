@@ -17,6 +17,7 @@
 package batect.cli.commands
 
 import batect.VersionInfo
+import batect.docker.DockerClientFactory
 import batect.dockerclient.DaemonVersionInformation
 import batect.dockerclient.DockerClient
 import batect.dockerclient.DockerClientException
@@ -68,7 +69,11 @@ object VersionInfoCommandSpec : Spek({
                 onBlocking { getDaemonVersionInformation() } doReturn DaemonVersionInformation("20.10.11", "1.41", "1.12", "abc123", "linux", "amd64", false)
             }
 
-            val command by createForEachTest { VersionInfoCommand(versionInfo, PrintStream(outputStream), systemInfo, dockerClient, gitClient, updateNotifier, logger) }
+            val dockerClientFactory = mock<DockerClientFactory> {
+                on { create() } doReturn dockerClient
+            }
+
+            val command by createForEachTest { VersionInfoCommand(versionInfo, PrintStream(outputStream), systemInfo, dockerClientFactory, gitClient, updateNotifier, logger) }
             val exitCode by runForEachTest { command.run() }
 
             it("prints version information") {
@@ -106,7 +111,11 @@ object VersionInfoCommandSpec : Spek({
                 onBlocking { getDaemonVersionInformation() } doThrow DockerClientException("Could not get version information")
             }
 
-            val command by createForEachTest { VersionInfoCommand(versionInfo, PrintStream(outputStream), systemInfo, dockerClient, gitClient, updateNotifier, logger) }
+            val dockerClientFactory = mock<DockerClientFactory> {
+                on { create() } doReturn dockerClient
+            }
+
+            val command by createForEachTest { VersionInfoCommand(versionInfo, PrintStream(outputStream), systemInfo, dockerClientFactory, gitClient, updateNotifier, logger) }
             val exitCode by runForEachTest { command.run() }
 
             it("prints version information") {
@@ -120,6 +129,44 @@ object VersionInfoCommandSpec : Spek({
                         |JVM version:       THE JVM VERSION
                         |OS version:        THE OS VERSION
                         |Docker version:    (could not get Docker version information because DockerClientException was thrown: Could not get version information)
+                        |Git version:       (GIT VERSION INFO)
+                        |
+                        |For documentation and further information on Batect, visit https://github.com/batect/batect.
+                        |
+                        |
+                        """.trimMargin().withPlatformSpecificLineSeparator()
+                    )
+                )
+            }
+
+            it("returns a zero exit code") {
+                assertThat(exitCode, equalTo(0))
+            }
+
+            it("notifies the user of any updates") {
+                verify(updateNotifier).run()
+            }
+        }
+
+        on("when creating the Docker client fails") {
+            val dockerClientFactory = mock<DockerClientFactory> {
+                on { create() } doThrow DockerClientException("Could not create client")
+            }
+
+            val command by createForEachTest { VersionInfoCommand(versionInfo, PrintStream(outputStream), systemInfo, dockerClientFactory, gitClient, updateNotifier, logger) }
+            val exitCode by runForEachTest { command.run() }
+
+            it("prints version information") {
+                assertThat(
+                    outputStream.toString(),
+                    equalTo(
+                        """
+                        |Batect version:    1.2.3
+                        |Built:             THE BUILD DATE
+                        |Built from commit: THE BUILD COMMIT (commit date: COMMIT DATE)
+                        |JVM version:       THE JVM VERSION
+                        |OS version:        THE OS VERSION
+                        |Docker version:    (could not get Docker version information because DockerClientException was thrown: Could not create client)
                         |Git version:       (GIT VERSION INFO)
                         |
                         |For documentation and further information on Batect, visit https://github.com/batect/batect.

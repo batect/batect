@@ -16,8 +16,12 @@
 
 package batect.ioc
 
+import batect.docker.DockerHostNameResolver
 import batect.execution.CacheManager
 import batect.execution.RunAsCurrentUserConfigurationProvider
+import batect.logging.singletonWithLogger
+import batect.proxies.ProxyEnvironmentVariablePreprocessor
+import batect.proxies.ProxyEnvironmentVariablesProvider
 import batect.telemetry.DockerTelemetryCollector
 import org.kodein.di.DI
 import org.kodein.di.bind
@@ -27,6 +31,10 @@ import org.kodein.di.singleton
 val dockerConfigurationModule = DI.Module("Docker configuration scope: root") {
     bind<CacheManager>() with singleton { CacheManager(instance(), instance(), instance()) }
     bind<DockerTelemetryCollector>() with singleton { DockerTelemetryCollector(instance(), instance()) }
+    bind<DockerHostNameResolver>() with singleton { DockerHostNameResolver(instance(), instance()) }
     bind<RunAsCurrentUserConfigurationProvider>() with singleton { RunAsCurrentUserConfigurationProvider(instance(), instance(), instance(), instance(), instance()) }
     bind<SessionKodeinFactory>() with singleton { SessionKodeinFactory(directDI) }
+
+    bind<ProxyEnvironmentVariablesProvider>() with singleton { ProxyEnvironmentVariablesProvider(instance(), instance()) }
+    bind<ProxyEnvironmentVariablePreprocessor>() with singletonWithLogger { logger -> ProxyEnvironmentVariablePreprocessor(instance(), logger) }
 }

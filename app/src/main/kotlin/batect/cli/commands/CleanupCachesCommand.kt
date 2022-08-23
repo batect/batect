@@ -30,17 +30,17 @@ import kotlin.streams.toList
 
 class CleanupCachesCommand(
     private val dockerConnectivity: DockerConnectivity,
-    private val dockerClient: DockerClient,
     private val projectPaths: ProjectPaths,
     private val console: Console,
     private val cachesToClean: Set<String>
 ) : Command {
     override fun run(): Int = dockerConnectivity.checkAndRun { kodein ->
         runBlocking {
+            val dockerClient = kodein.instance<DockerClient>()
             val cacheManager = kodein.instance<CacheManager>()
 
             when (cacheManager.cacheType) {
-                CacheType.Volume -> runForVolumes(cacheManager, cachesToClean)
+                CacheType.Volume -> runForVolumes(dockerClient, cacheManager, cachesToClean)
                 CacheType.Directory -> runForDirectories(cachesToClean)
             }
 
@@ -48,7 +48,7 @@ class CleanupCachesCommand(
         }
     }
 
-    private suspend fun runForVolumes(cacheManager: CacheManager, cachesToClean: Set<String>) {
+    private suspend fun runForVolumes(dockerClient: DockerClient, cacheManager: CacheManager, cachesToClean: Set<String>) {
         val prefix = "batect-cache-${cacheManager.projectCacheKey}-"
 
         console.println("Checking for cache volumes...")

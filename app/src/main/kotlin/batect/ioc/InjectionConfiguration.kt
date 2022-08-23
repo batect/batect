@@ -44,8 +44,7 @@ import batect.config.includes.GitRepositoryCacheNotificationListener
 import batect.config.includes.IncludeResolver
 import batect.config.io.ConfigurationLoader
 import batect.docker.DockerClientConfigurationFactory
-import batect.docker.DockerHostNameResolver
-import batect.dockerclient.DockerClient
+import batect.docker.DockerClientFactory
 import batect.execution.ConfigVariablesProvider
 import batect.execution.InterruptionTrap
 import batect.execution.TaskSuggester
@@ -66,8 +65,6 @@ import batect.os.SignalListener
 import batect.os.SystemInfo
 import batect.os.unix.UnixConsoleManager
 import batect.os.windows.WindowsConsoleManager
-import batect.proxies.ProxyEnvironmentVariablePreprocessor
-import batect.proxies.ProxyEnvironmentVariablesProvider
 import batect.telemetry.AbacusClient
 import batect.telemetry.CIEnvironmentDetector
 import batect.telemetry.EnvironmentTelemetryCollector
@@ -106,7 +103,6 @@ val rootModule = DI.Module("root") {
     import(executionModule)
     import(loggingModule)
     import(osModule)
-    import(proxiesModule)
     import(telemetryModule)
     import(uiModule)
     import(updatesModule)
@@ -132,7 +128,7 @@ val rootModule = DI.Module("root") {
 private val cliModule = DI.Module("cli") {
     bind<BashShellTabCompletionScriptGenerator>() with singleton { BashShellTabCompletionScriptGenerator() }
     bind<BackgroundTaskManager>() with singleton { BackgroundTaskManager(instance(), instance(), instance()) }
-    bind<CleanupCachesCommand>() with singleton { CleanupCachesCommand(instance(), instance(), instance(), instance(StreamType.Output), commandLineOptions().cleanCaches) }
+    bind<CleanupCachesCommand>() with singleton { CleanupCachesCommand(instance(), instance(), instance(StreamType.Output), commandLineOptions().cleanCaches) }
     bind<CommandFactory>() with singleton { CommandFactory() }
     bind<DisableTelemetryCommand>() with singleton { DisableTelemetryCommand(instance(), instance(), instance(StreamType.Output)) }
     bind<DockerConnectivity>() with singletonWithLogger { logger -> DockerConnectivity(instance(), instance(), instance(StreamType.Error), instance(), instance(), logger) }
@@ -160,9 +156,8 @@ private val configModule = DI.Module("config") {
 }
 
 private val dockerModule = DI.Module("docker") {
-    bind<DockerHostNameResolver>() with singleton { DockerHostNameResolver(instance(), instance()) }
     bind<DockerClientConfigurationFactory>() with singleton { DockerClientConfigurationFactory(instance()) }
-    bind<DockerClient>() with singleton { DockerClient.create(instance<DockerClientConfigurationFactory>().createConfiguration()) }
+    bind<DockerClientFactory>() with singleton { DockerClientFactory(instance()) }
 }
 
 private val gitModule = DI.Module("git") {
@@ -184,7 +179,7 @@ private val executionModule = DI.Module("execution") {
 }
 
 private val loggingModule = DI.Module("logging") {
-    bind<ApplicationInfoLogger>() with singletonWithLogger { logger -> ApplicationInfoLogger(logger, instance(), instance(), instance(), instance(), instance(), instance()) }
+    bind<ApplicationInfoLogger>() with singletonWithLogger { logger -> ApplicationInfoLogger(logger, instance(), instance(), instance(), instance(), instance()) }
     bind<HttpLoggingInterceptor>() with singletonWithLogger { logger -> HttpLoggingInterceptor(logger) }
     bind<LoggerFactory>() with singleton { LoggerFactory(instance()) }
     bind<LogMessageWriter>() with singleton { LogMessageWriter(Json.forLogging) }
@@ -196,11 +191,6 @@ private val osModule = DI.Module("os") {
     bind<ConsoleInfo>() with singletonWithLogger { logger -> ConsoleInfo(instance(), instance(), instance(), logger) }
     bind<ProcessRunner>() with singletonWithLogger { logger -> ProcessRunner(logger) }
     bind<SignalListener>() with singleton { SignalListener(instance()) }
-}
-
-private val proxiesModule = DI.Module("proxies") {
-    bind<ProxyEnvironmentVariablePreprocessor>() with singletonWithLogger { logger -> ProxyEnvironmentVariablePreprocessor(instance(), logger) }
-    bind<ProxyEnvironmentVariablesProvider>() with singleton { ProxyEnvironmentVariablesProvider(instance(), instance()) }
 }
 
 private val telemetryModule = DI.Module("telemetry") {

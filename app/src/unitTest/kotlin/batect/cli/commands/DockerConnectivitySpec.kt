@@ -17,6 +17,7 @@
 package batect.cli.commands
 
 import batect.cli.CommandLineOptions
+import batect.docker.DockerClientFactory
 import batect.docker.DockerConnectivityCheckResult
 import batect.docker.DockerContainerType
 import batect.dockerclient.BuilderVersion
@@ -68,18 +69,24 @@ object DockerConnectivitySpec : Spek({
 
         val dockerConfigurationKodeinFactory by createForEachTest {
             mock<DockerConfigurationKodeinFactory> {
-                on { create(eq(containerType), any()) } doReturn kodeinFromFactory
+                on { create(any(), any(), any()) } doReturn kodeinFromFactory
             }
         }
 
         val dockerClient by createForEachTest { mock<DockerClient>() }
+        val dockerClientFactory by createForEachTest {
+            mock<DockerClientFactory> {
+                on { create() } doReturn(dockerClient)
+            }
+        }
+
         val errorConsole by createForEachTest { mock<Console>() }
         val telemetryCaptor by createForEachTest { TestTelemetryCaptor() }
         val logger by createLoggerForEachTest()
         val connectivity by createForEachTest {
             DockerConnectivity(
                 dockerConfigurationKodeinFactory,
-                dockerClient,
+                dockerClientFactory,
                 errorConsole,
                 commandLineOptions,
                 telemetryCaptor,
@@ -131,8 +138,16 @@ object DockerConnectivitySpec : Spek({
                 verify(dockerTelemetryCollector).collectTelemetry(checkResult, expectedBuilderVersion)
             }
 
+            it("creates the Kodein context with the Docker client created by the factory") {
+                verify(dockerConfigurationKodeinFactory).create(eq(dockerClient), any(), any())
+            }
+
+            it("creates the Kodein context with the container type reported by the daemon") {
+                verify(dockerConfigurationKodeinFactory).create(any(), eq(containerType), any())
+            }
+
             it("creates the Kodein context with the expected builder version") {
-                verify(dockerConfigurationKodeinFactory).create(any(), eq(expectedBuilderVersion))
+                verify(dockerConfigurationKodeinFactory).create(any(), any(), eq(expectedBuilderVersion))
             }
         }
 
@@ -211,6 +226,14 @@ object DockerConnectivitySpec : Spek({
                     itDoesNotRunTheTaskAndFailsWithError("BuildKit has been enabled with --enable-buildkit or the DOCKER_BUILDKIT environment variable, but the current version of Docker does not support BuildKit, even with experimental features enabled.")
                 }
             }
+        }
+
+        given("the Docker client cannot be created") {
+            beforeEachTest {
+                whenever(dockerClientFactory.create()).doThrow(DockerClientException("Cannot create client, something went wrong."))
+            }
+
+            itDoesNotRunTheTaskAndFailsWithError("Could not establish connection to Docker daemon: Cannot create client, something went wrong.")
         }
 
         given("the Docker daemon is not compatible with Batect") {

@@ -86,13 +86,14 @@ object CleanupCachesCommandSpec : Spek({
             return fakeDockerConnectivity(
                 DI.direct {
                     bind<CacheManager>() with instance(cacheManager)
+                    bind<DockerClient>() with instance(dockerClient)
                 }
             )
         }
 
         given("volumes are being used for caches") {
             val cacheType = CacheType.Volume
-            val command by createForEachTest { CleanupCachesCommand(dockerConnectivity(cacheType), dockerClient, projectPaths, console, emptySet()) }
+            val command by createForEachTest { CleanupCachesCommand(dockerConnectivity(cacheType), projectPaths, console, emptySet()) }
             val exitCode by runForEachTest { command.run() }
 
             it("returns a zero exit code") {
@@ -139,7 +140,7 @@ object CleanupCachesCommandSpec : Spek({
         given("volumes name is provided for cache cleanup") {
             val cacheType = CacheType.Volume
             val cachesToClean = setOf("def456")
-            val command by createForEachTest { CleanupCachesCommand(dockerConnectivity(cacheType), dockerClient, projectPaths, console, cachesToClean) }
+            val command by createForEachTest { CleanupCachesCommand(dockerConnectivity(cacheType), projectPaths, console, cachesToClean) }
             val exitCode by runForEachTest { command.run() }
 
             it("returns a zero exit code") {
@@ -183,7 +184,7 @@ object CleanupCachesCommandSpec : Spek({
 
         given("directories are being used for caches") {
             val cacheType = CacheType.Directory
-            val command by createForEachTest { CleanupCachesCommand(dockerConnectivity(cacheType), dockerClient, projectPaths, console, emptySet()) }
+            val command by createForEachTest { CleanupCachesCommand(dockerConnectivity(cacheType), projectPaths, console, emptySet()) }
             val exitCode by runForEachTest { command.run() }
 
             it("returns a zero exit code") {
@@ -231,7 +232,7 @@ object CleanupCachesCommandSpec : Spek({
         given("directories are being used for caches and directory relative path to cache is provided") {
             val cacheType = CacheType.Directory
             val cachesToClean = setOf("cache-with-file")
-            val command by createForEachTest { CleanupCachesCommand(dockerConnectivity(cacheType), dockerClient, projectPaths, console, cachesToClean) }
+            val command by createForEachTest { CleanupCachesCommand(dockerConnectivity(cacheType), projectPaths, console, cachesToClean) }
             val exitCode by runForEachTest { command.run() }
 
             it("returns a zero exit code") {

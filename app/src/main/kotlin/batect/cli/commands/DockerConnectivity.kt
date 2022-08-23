@@ -18,8 +18,10 @@ package batect.cli.commands
 
 import batect.cli.CommandLineOptions
 import batect.cli.CommandLineOptionsParser
+import batect.docker.DockerClientFactory
 import batect.docker.DockerConnectivityCheckResult
 import batect.docker.DockerContainerType
+import batect.docker.toHumanReadableString
 import batect.dockerclient.BuilderVersion
 import batect.dockerclient.DockerClient
 import batect.dockerclient.DockerClientException
@@ -39,20 +41,41 @@ import org.kodein.di.instance
 
 class DockerConnectivity(
     private val dockerConfigurationKodeinFactory: DockerConfigurationKodeinFactory,
-    private val dockerClient: DockerClient,
+    private val dockerClientFactory: DockerClientFactory,
     private val errorConsole: Console,
     private val commandLineOptions: CommandLineOptions,
     private val telemetryCaptor: TelemetryCaptor,
     private val logger: Logger
 ) {
     fun checkAndRun(task: TaskWithKodein): Int {
-        return when (val connectivityCheckResult = checkConnectivity()) {
-            is DockerConnectivityCheckResult.Succeeded -> handleSuccessfulConnectivityCheck(connectivityCheckResult, task)
+        val client = try {
+            createClient()
+        } catch (e: Throwable) {
+            return handleCreatingClientFailed(e)
+        }
+
+        return when (val connectivityCheckResult = checkConnectivity(client)) {
+            is DockerConnectivityCheckResult.Succeeded -> handleSuccessfulConnectivityCheck(connectivityCheckResult, client, task)
             is DockerConnectivityCheckResult.Failed -> handleFailedConnectivityCheck(connectivityCheckResult)
         }
     }
 
-    private fun handleSuccessfulConnectivityCheck(connectivityCheckResult: DockerConnectivityCheckResult.Succeeded, task: TaskWithKodein): Int {
+    private fun createClient(): DockerClient {
+        return dockerClientFactory.create()
+    }
+
+    private fun handleCreatingClientFailed(exception: Throwable): Int {
+        logger.error {
+            message("Could not create Docker client.")
+            exception(exception)
+        }
+
+        telemetryCaptor.addUnhandledExceptionEvent(exception, isUserFacing = true)
+
+        return error("Could not establish connection to Docker daemon: ${exception.message}")
+    }
+
+    private fun handleSuccessfulConnectivityCheck(connectivityCheckResult: DockerConnectivityCheckResult.Succeeded, dockerClient: DockerClient, task: TaskWithKodein): Int {
         val builderVersion = when (commandLineOptions.enableBuildKit) {
             null -> connectivityCheckResult.builderVersion
             false -> BuilderVersion.Legacy
@@ -61,11 +84,7 @@ class DockerConnectivity(
                     return error("BuildKit has been enabled with --${CommandLineOptionsParser.enableBuildKitFlagName} or the ${CommandLineOptionsParser.enableBuildKitEnvironmentVariableName} environment variable, but the current version of Docker does not support BuildKit, even with experimental features enabled.")
                 }
 
-                if (connectivityCheckResult.dockerVersion.compareTo(
-                        minimumDockerVersionWithNonExperimentalBuildKitSupport,
-                        VersionComparisonMode.DockerStyle
-                    ) < 0 && !connectivityCheckResult.experimentalFeaturesEnabled
-                ) {
+                if (connectivityCheckResult.dockerVersion.compareTo(minimumDockerVersionWithNonExperimentalBuildKitSupport, VersionComparisonMode.DockerStyle) < 0 && !connectivityCheckResult.experimentalFeaturesEnabled) {
                     return error("BuildKit has been enabled with --${CommandLineOptionsParser.enableBuildKitFlagName} or the ${CommandLineOptionsParser.enableBuildKitEnvironmentVariableName} environment variable, but the current version of Docker requires experimental features to be enabled to use BuildKit and experimental features are currently disabled.")
                 }
 
@@ -73,7 +92,7 @@ class DockerConnectivity(
             }
         }
 
-        val kodein = dockerConfigurationKodeinFactory.create(connectivityCheckResult.containerType, builderVersion)
+        val kodein = dockerConfigurationKodeinFactory.create(dockerClient, connectivityCheckResult.containerType, builderVersion)
         kodein.instance<DockerTelemetryCollector>().collectTelemetry(connectivityCheckResult, builderVersion)
 
         return task(kodein)
@@ -88,7 +107,7 @@ class DockerConnectivity(
         return -1
     }
 
-    private fun checkConnectivity(): DockerConnectivityCheckResult =
+    private fun checkConnectivity(dockerClient: DockerClient): DockerConnectivityCheckResult =
         runBlocking {
             try {
                 val pingResponse = dockerClient.ping()
@@ -104,6 +123,11 @@ class DockerConnectivity(
 
                 if (osType == null) {
                     return@runBlocking DockerConnectivityCheckResult.Failed("Batect requires Docker to be running in Linux or Windows containers mode.")
+                }
+
+                logger.info {
+                    message("Created Docker client and successfully connected.")
+                    data("dockerVersionInfo", versionInfo.toHumanReadableString())
                 }
 
                 DockerConnectivityCheckResult.Succeeded(

@@ -18,6 +18,7 @@ package batect.ioc
 
 import batect.docker.DockerContainerType
 import batect.dockerclient.BuilderVersion
+import batect.dockerclient.DockerClient
 import batect.testutils.createForEachTest
 import batect.testutils.on
 import com.natpryce.hamkrest.assertion.assertThat
@@ -25,6 +26,7 @@ import com.natpryce.hamkrest.equalTo
 import org.kodein.di.DI
 import org.kodein.di.bind
 import org.kodein.di.instance
+import org.mockito.kotlin.mock
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -34,15 +36,20 @@ object DockerConfigurationKodeinFactorySpec : Spek({
             bind<String>("some string") with instance("The string value")
         }
 
+        val client = mock<DockerClient>()
         val containerType = DockerContainerType.Linux
         val builderVersion = BuilderVersion.BuildKit
         val factory by createForEachTest { DockerConfigurationKodeinFactory(baseKodein) }
 
         on("creating a Docker configuration Kodein context") {
-            val extendedKodein by createForEachTest { factory.create(containerType, builderVersion) }
+            val extendedKodein by createForEachTest { factory.create(client, containerType, builderVersion) }
 
             it("includes the configuration from the original instance") {
                 assertThat(extendedKodein.instance<String>("some string"), equalTo("The string value"))
+            }
+
+            it("includes the Docker client provided") {
+                assertThat(extendedKodein.instance<DockerClient>(), equalTo(client))
             }
 
             it("includes the container type for the current Docker daemon") {

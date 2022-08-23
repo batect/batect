@@ -18,8 +18,8 @@ package batect.cli.commands
 
 import batect.VersionInfo
 import batect.cli.CommandLineOptionsParser
+import batect.docker.DockerClientFactory
 import batect.docker.toHumanReadableString
-import batect.dockerclient.DockerClient
 import batect.git.GitClient
 import batect.logging.Logger
 import batect.os.SystemInfo
@@ -31,7 +31,7 @@ class VersionInfoCommand(
     private val versionInfo: VersionInfo,
     private val outputStream: PrintStream,
     private val systemInfo: SystemInfo,
-    private val dockerClient: DockerClient,
+    private val dockerClientFactory: DockerClientFactory,
     private val gitClient: GitClient,
     private val updateNotifier: UpdateNotifier,
     private val logger: Logger
@@ -55,6 +55,7 @@ class VersionInfoCommand(
 
     private fun getDockerVersionInfo(): String = runBlocking {
         try {
+            val dockerClient = dockerClientFactory.create()
             val versionInfo = dockerClient.getDaemonVersionInformation()
 
             versionInfo.toHumanReadableString()

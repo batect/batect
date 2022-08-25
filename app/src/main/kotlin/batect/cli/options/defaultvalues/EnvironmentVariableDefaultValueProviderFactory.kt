@@ -55,7 +55,10 @@ class EnvironmentVariableDefaultValueProviderFactory(private val environment: Ho
             get() = if (environment.containsKey(name)) OptionValueSource.Environment else OptionValueSource.Default
 
         private val fallbackDescription = if (fallback == null) {
-            ""
+            when (fallbackDisplay) {
+                null.toString() -> ""
+                else -> " or $fallbackDisplay if $name is not set"
+            }
         } else {
             " or '$fallbackDisplay' if $name is not set"
         }

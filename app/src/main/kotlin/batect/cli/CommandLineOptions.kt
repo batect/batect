@@ -56,13 +56,7 @@ data class CommandLineOptions(
     val configVariableOverrides: Map<String, String> = emptyMap(),
     val imageOverrides: Map<String, String> = emptyMap(),
     val imageTags: Map<String, Set<String>> = emptyMap(),
-    val dockerHost: String = "tcp://set-to-default-value-in/CommandLineOptionsParser",
-    val dockerUseTLS: Boolean = false,
-    val dockerVerifyTLS: Boolean = false,
-    val dockerTlsCACertificatePath: Path = Paths.get("set-to-default-value-in", "CommandLineOptionsParser"),
-    val dockerTLSCertificatePath: Path = Paths.get("set-to-default-value-in", "CommandLineOptionsParser"),
-    val dockerTLSKeyPath: Path = Paths.get("set-to-default-value-in", "CommandLineOptionsParser"),
-    val dockerConfigDirectory: Path = Paths.get("set-to-default-value-in", "CommandLineOptionsParser"),
+    val docker: DockerCommandLineOptions = DockerCommandLineOptions(),
     val cacheType: CacheType = CacheType.Volume,
     val existingNetworkToUse: String? = null,
     val skipPrerequisites: Boolean = false,
@@ -87,3 +81,14 @@ data class CommandLineOptions(
         import(rootModule)
     }.direct
 }
+
+data class DockerCommandLineOptions(
+    val contextName: String = "default",
+    val host: String = "tcp://set-to-default-value-in/CommandLineOptionsParser",
+    val useTLS: Boolean = false,
+    val verifyTLS: Boolean = false,
+    val tlsCACertificatePath: Path = Paths.get("set-to-default-value-in", "CommandLineOptionsParser"),
+    val tlsCertificatePath: Path = Paths.get("set-to-default-value-in", "CommandLineOptionsParser"),
+    val tlsKeyPath: Path = Paths.get("set-to-default-value-in", "CommandLineOptionsParser"),
+    val configDirectory: Path = Paths.get("set-to-default-value-in", "CommandLineOptionsParser")
+)

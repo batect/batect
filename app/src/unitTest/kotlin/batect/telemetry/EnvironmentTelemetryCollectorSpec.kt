@@ -206,14 +206,6 @@ object EnvironmentTelemetryCollectorSpec : Spek({
                                     assertThat(telemetryCaptor.allAttributes["commandLineImageOverrideCount"], equalTo(JsonPrimitive(0)))
                                 }
 
-                                it("reports that TLS is not being used for the connection to Docker") {
-                                    assertThat(telemetryCaptor.allAttributes["usingTLSForDockerConnection"], equalTo(JsonPrimitive(false)))
-                                }
-
-                                it("reports that TLS is not being verified for the connection to Docker") {
-                                    assertThat(telemetryCaptor.allAttributes["verifyingTLSForDockerConnection"], equalTo(JsonPrimitive(false)))
-                                }
-
                                 it("reports that an existing Docker network is not being used") {
                                     assertThat(telemetryCaptor.allAttributes["usingExistingDockerNetwork"], equalTo(JsonPrimitive(false)))
                                 }
@@ -276,8 +268,6 @@ object EnvironmentTelemetryCollectorSpec : Spek({
                             additionalTaskCommandArguments = listOf("some", "args"),
                             configVariableOverrides = mapOf("var" to "value", "other-var" to "other value"),
                             imageOverrides = mapOf("container-1" to "image-1"),
-                            dockerUseTLS = true,
-                            dockerVerifyTLS = true,
                             existingNetworkToUse = "some-network",
                             skipPrerequisites = true,
                             maximumLevelOfParallelism = 3
@@ -333,14 +323,6 @@ object EnvironmentTelemetryCollectorSpec : Spek({
 
                         it("reports the number of command line image overrides") {
                             assertThat(telemetryCaptor.allAttributes["commandLineImageOverrideCount"], equalTo(JsonPrimitive(1)))
-                        }
-
-                        it("reports that TLS is being used for the connection to Docker") {
-                            assertThat(telemetryCaptor.allAttributes["usingTLSForDockerConnection"], equalTo(JsonPrimitive(true)))
-                        }
-
-                        it("reports that TLS is being verified for the connection to Docker") {
-                            assertThat(telemetryCaptor.allAttributes["verifyingTLSForDockerConnection"], equalTo(JsonPrimitive(true)))
                         }
 
                         it("reports that an existing Docker network is being used") {

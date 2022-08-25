@@ -19,6 +19,7 @@ package batect.cli
 import batect.cli.commands.completion.Shell
 import batect.cli.options.defaultvalues.EnvironmentVariableDefaultValueProviderFactory
 import batect.docker.DockerHttpConfigDefaults
+import batect.dockerclient.DockerCLIContext
 import batect.execution.CacheType
 import batect.os.HostEnvironmentVariables
 import batect.os.PathResolutionResult
@@ -35,6 +36,9 @@ import com.google.common.jimfs.Jimfs
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.has
+import com.natpryce.hamkrest.isA
+import okio.Path.Companion.toOkioPath
+import okio.Path.Companion.toPath
 import org.mockito.kotlin.any
 import org.mockito.kotlin.doAnswer
 import org.mockito.kotlin.doReturn
@@ -62,8 +66,6 @@ object CommandLineOptionsParserSpec : Spek({
             on { createResolverForCurrentDirectory() } doReturn pathResolver
         }
 
-        val environmentVariableDefaultValueProviderFactory = EnvironmentVariableDefaultValueProviderFactory(HostEnvironmentVariables())
-
         val defaultDockerHost = "http://some-docker-host"
         val dockerHttpConfigDefaults = mock<DockerHttpConfigDefaults> {
             on { this.defaultDockerHost } doReturn defaultDockerHost
@@ -73,18 +75,47 @@ object CommandLineOptionsParserSpec : Spek({
             on { homeDirectory } doReturn fileSystem.getPath("home-dir")
         }
 
+        fun parse(
+            args: List<String>,
+            environmentVariables: HostEnvironmentVariables = HostEnvironmentVariables(),
+            activeDockerContextResolver: ActiveDockerContextResolver = { DockerCLIContext.default }
+        ): CommandLineOptionsParsingResult {
+            val parser = CommandLineOptionsParser(
+                pathResolverFactory,
+                EnvironmentVariableDefaultValueProviderFactory(environmentVariables),
+                dockerHttpConfigDefaults,
+                systemInfo,
+                activeDockerContextResolver
+            )
+
+            return parser.parse(args)
+        }
+
+        fun parseAndExpectSuccess(
+            args: List<String>,
+            environmentVariables: HostEnvironmentVariables = HostEnvironmentVariables(),
+            activeDockerContextResolver: ActiveDockerContextResolver = { DockerCLIContext.default }
+        ): CommandLineOptions {
+            val result = parse(args, environmentVariables, activeDockerContextResolver)
+            assertThat(result, isA<CommandLineOptionsParsingResult.Succeeded>())
+
+            return (result as CommandLineOptionsParsingResult.Succeeded).options
+        }
+
         val defaultCommandLineOptions = CommandLineOptions(
             configVariablesSourceFile = fileSystem.getPath("/resolved/batect.local.yml"),
-            dockerHost = defaultDockerHost,
-            dockerConfigDirectory = fileSystem.getPath("home-dir", ".docker"),
-            dockerTlsCACertificatePath = fileSystem.getPath("home-dir", ".docker", "ca.pem"),
-            dockerTLSCertificatePath = fileSystem.getPath("home-dir", ".docker", "cert.pem"),
-            dockerTLSKeyPath = fileSystem.getPath("home-dir", ".docker", "key.pem")
+            docker = DockerCommandLineOptions(
+                host = defaultDockerHost,
+                configDirectory = fileSystem.getPath("home-dir", ".docker"),
+                tlsCACertificatePath = fileSystem.getPath("home-dir", ".docker", "ca.pem"),
+                tlsCertificatePath = fileSystem.getPath("home-dir", ".docker", "cert.pem"),
+                tlsKeyPath = fileSystem.getPath("home-dir", ".docker", "key.pem")
+            )
         )
 
         given("no arguments") {
             on("parsing the command line") {
-                val result = CommandLineOptionsParser(pathResolverFactory, environmentVariableDefaultValueProviderFactory, dockerHttpConfigDefaults, systemInfo).parse(emptyList())
+                val result = parse(emptyList())
 
                 it("returns an error message") {
                     assertThat(
@@ -102,16 +133,14 @@ object CommandLineOptionsParserSpec : Spek({
 
         given("a single argument for the task name") {
             on("parsing the command line") {
-                val result = CommandLineOptionsParser(pathResolverFactory, environmentVariableDefaultValueProviderFactory, dockerHttpConfigDefaults, systemInfo).parse(listOf("some-task"))
+                val result = parseAndExpectSuccess(listOf("some-task"))
 
                 it("returns a set of options with just the task name populated") {
                     assertThat(
                         result,
                         equalTo(
-                            CommandLineOptionsParsingResult.Succeeded(
-                                defaultCommandLineOptions.copy(
-                                    taskName = "some-task"
-                                )
+                            defaultCommandLineOptions.copy(
+                                taskName = "some-task"
                             )
                         )
                     )
@@ -121,7 +150,7 @@ object CommandLineOptionsParserSpec : Spek({
 
         given("multiple arguments without a '--' prefix") {
             on("parsing the command line") {
-                val result = CommandLineOptionsParser(pathResolverFactory, environmentVariableDefaultValueProviderFactory, dockerHttpConfigDefaults, systemInfo).parse(listOf("some-task", "some-extra-arg"))
+                val result = parse(listOf("some-task", "some-extra-arg"))
 
                 it("returns an error message") {
                     assertThat(
@@ -140,17 +169,15 @@ object CommandLineOptionsParserSpec : Spek({
 
         given("multiple arguments with a '--' prefix") {
             on("parsing the command line") {
-                val result = CommandLineOptionsParser(pathResolverFactory, environmentVariableDefaultValueProviderFactory, dockerHttpConfigDefaults, systemInfo).parse(listOf("some-task", "--", "some-extra-arg"))
+                val result = parseAndExpectSuccess(listOf("some-task", "--", "some-extra-arg"))
 
                 it("returns a set of options with the task name and additional arguments populated") {
                     assertThat(
                         result,
                         equalTo(
-                            CommandLineOptionsParsingResult.Succeeded(
-                                defaultCommandLineOptions.copy(
-                                    taskName = "some-task",
-                                    additionalTaskCommandArguments = listOf("some-extra-arg")
-                                )
+                            defaultCommandLineOptions.copy(
+                                taskName = "some-task",
+                                additionalTaskCommandArguments = listOf("some-extra-arg")
                             )
                         )
                     )
@@ -160,17 +187,15 @@ object CommandLineOptionsParserSpec : Spek({
 
         given("a flag followed by a single argument") {
             on("parsing the command line") {
-                val result = CommandLineOptionsParser(pathResolverFactory, environmentVariableDefaultValueProviderFactory, dockerHttpConfigDefaults, systemInfo).parse(listOf("--no-color", "some-task"))
+                val result = parseAndExpectSuccess(listOf("--no-color", "some-task"))
 
                 it("returns a set of options with the task name populated and the flag set") {
                     assertThat(
                         result,
                         equalTo(
-                            CommandLineOptionsParsingResult.Succeeded(
-                                defaultCommandLineOptions.copy(
-                                    disableColorOutput = true,
-                                    taskName = "some-task"
-                                )
+                            defaultCommandLineOptions.copy(
+                                disableColorOutput = true,
+                                taskName = "some-task"
                             )
                         )
                     )
@@ -180,7 +205,7 @@ object CommandLineOptionsParserSpec : Spek({
 
         given("a flag followed by multiple arguments") {
             on("parsing the command line") {
-                val result = CommandLineOptionsParser(pathResolverFactory, environmentVariableDefaultValueProviderFactory, dockerHttpConfigDefaults, systemInfo).parse(listOf("--no-color", "some-task", "some-extra-arg"))
+                val result = parse(listOf("--no-color", "some-task", "some-extra-arg"))
 
                 it("returns an error message") {
                     assertThat(
@@ -199,7 +224,7 @@ object CommandLineOptionsParserSpec : Spek({
 
         given("colour output has been disabled and fancy output mode has been selected") {
             on("parsing the command line") {
-                val result = CommandLineOptionsParser(pathResolverFactory, environmentVariableDefaultValueProviderFactory, dockerHttpConfigDefaults, systemInfo).parse(listOf("--no-color", "--output=fancy", "some-task", "some-extra-arg"))
+                val result = parse(listOf("--no-color", "--output=fancy", "some-task", "some-extra-arg"))
 
                 it("returns an error message") {
                     assertThat(result, equalTo(CommandLineOptionsParsingResult.Failed("Fancy output mode cannot be used when color output has been disabled.")))
@@ -209,7 +234,7 @@ object CommandLineOptionsParserSpec : Spek({
 
         given("--tag-image and --override-image are used for the same container") {
             on("parsing the command line") {
-                val result = CommandLineOptionsParser(pathResolverFactory, environmentVariableDefaultValueProviderFactory, dockerHttpConfigDefaults, systemInfo).parse(listOf("--tag-image", "some-container=some-container:abc123", "--override-image", "some-container=some-other-container:abc123", "some-task"))
+                val result = parse(listOf("--tag-image", "some-container=some-container:abc123", "--override-image", "some-container=some-other-container:abc123", "some-task"))
 
                 it("returns an error message") {
                     assertThat(result, equalTo(CommandLineOptionsParsingResult.Failed("Cannot both tag the built image for container 'some-container' and also override the image for that container.")))
@@ -246,50 +271,63 @@ object CommandLineOptionsParserSpec : Spek({
             listOf("--no-proxy-vars", "some-task") to defaultCommandLineOptions.copy(dontPropagateProxyEnvironmentVariables = true, taskName = "some-task"),
             listOf("--config-var", "a=b", "--config-var", "c=d", "some-task") to defaultCommandLineOptions.copy(configVariableOverrides = mapOf("a" to "b", "c" to "d"), taskName = "some-task"),
             listOf("--override-image", "container-1=image-1", "--override-image", "container-2=image-2", "some-task") to defaultCommandLineOptions.copy(imageOverrides = mapOf("container-1" to "image-1", "container-2" to "image-2"), taskName = "some-task"),
-            listOf("--docker-host=some-host", "some-task") to defaultCommandLineOptions.copy(dockerHost = "some-host", taskName = "some-task"),
-            listOf("--docker-tls", "some-task") to defaultCommandLineOptions.copy(dockerUseTLS = true, taskName = "some-task"),
-            listOf("--docker-tls-verify", "some-task") to defaultCommandLineOptions.copy(dockerUseTLS = true, dockerVerifyTLS = true, taskName = "some-task"),
-            listOf("--docker-tls-ca-cert=some-ca-cert", "some-task") to defaultCommandLineOptions.copy(dockerTlsCACertificatePath = fileSystem.getPath("/resolved/some-ca-cert"), taskName = "some-task"),
-            listOf("--docker-tls-cert=some-cert", "some-task") to defaultCommandLineOptions.copy(dockerTLSCertificatePath = fileSystem.getPath("/resolved/some-cert"), taskName = "some-task"),
-            listOf("--docker-tls-key=some-key", "some-task") to defaultCommandLineOptions.copy(dockerTLSKeyPath = fileSystem.getPath("/resolved/some-key"), taskName = "some-task"),
+            listOf("--docker-host=some-host", "some-task") to defaultCommandLineOptions.copy(docker = defaultCommandLineOptions.docker.copy(host = "some-host"), taskName = "some-task"),
+            listOf("--docker-context=some-context", "some-task") to defaultCommandLineOptions.copy(docker = defaultCommandLineOptions.docker.copy(contextName = "some-context"), taskName = "some-task"),
+            listOf("--docker-tls", "some-task") to defaultCommandLineOptions.copy(docker = defaultCommandLineOptions.docker.copy(useTLS = true), taskName = "some-task"),
+            listOf("--docker-tls-verify", "some-task") to defaultCommandLineOptions.copy(docker = defaultCommandLineOptions.docker.copy(useTLS = true, verifyTLS = true), taskName = "some-task"),
+            listOf("--docker-tls-ca-cert=some-ca-cert", "some-task") to defaultCommandLineOptions.copy(docker = defaultCommandLineOptions.docker.copy(tlsCACertificatePath = fileSystem.getPath("/resolved/some-ca-cert")), taskName = "some-task"),
+            listOf("--docker-tls-cert=some-cert", "some-task") to defaultCommandLineOptions.copy(docker = defaultCommandLineOptions.docker.copy(tlsCertificatePath = fileSystem.getPath("/resolved/some-cert")), taskName = "some-task"),
+            listOf("--docker-tls-key=some-key", "some-task") to defaultCommandLineOptions.copy(docker = defaultCommandLineOptions.docker.copy(tlsKeyPath = fileSystem.getPath("/resolved/some-key")), taskName = "some-task"),
             listOf("--docker-cert-path=some-cert-dir", "some-task") to defaultCommandLineOptions.copy(
-                dockerTlsCACertificatePath = fileSystem.getPath("/resolved/some-cert-dir/ca.pem"),
-                dockerTLSCertificatePath = fileSystem.getPath("/resolved/some-cert-dir/cert.pem"),
-                dockerTLSKeyPath = fileSystem.getPath("/resolved/some-cert-dir/key.pem"),
+                docker = defaultCommandLineOptions.docker.copy(
+                    tlsCACertificatePath = fileSystem.getPath("/resolved/some-cert-dir/ca.pem"),
+                    tlsCertificatePath = fileSystem.getPath("/resolved/some-cert-dir/cert.pem"),
+                    tlsKeyPath = fileSystem.getPath("/resolved/some-cert-dir/key.pem")
+                ),
                 taskName = "some-task"
             ),
             listOf("--docker-config=some-config-dir", "some-task") to defaultCommandLineOptions.copy(
-                dockerConfigDirectory = fileSystem.getPath("/resolved/some-config-dir"),
-                dockerTlsCACertificatePath = fileSystem.getPath("/resolved/some-config-dir/ca.pem"),
-                dockerTLSCertificatePath = fileSystem.getPath("/resolved/some-config-dir/cert.pem"),
-                dockerTLSKeyPath = fileSystem.getPath("/resolved/some-config-dir/key.pem"),
+                docker = defaultCommandLineOptions.docker.copy(
+                    configDirectory = fileSystem.getPath("/resolved/some-config-dir"),
+                    tlsCACertificatePath = fileSystem.getPath("/resolved/some-config-dir/ca.pem"),
+                    tlsCertificatePath = fileSystem.getPath("/resolved/some-config-dir/cert.pem"),
+                    tlsKeyPath = fileSystem.getPath("/resolved/some-config-dir/key.pem")
+                ),
                 taskName = "some-task"
             ),
             listOf("--docker-cert-path=some-cert-dir", "--docker-config=some-config-dir", "some-task") to defaultCommandLineOptions.copy(
-                dockerConfigDirectory = fileSystem.getPath("/resolved/some-config-dir"),
-                dockerTlsCACertificatePath = fileSystem.getPath("/resolved/some-cert-dir/ca.pem"),
-                dockerTLSCertificatePath = fileSystem.getPath("/resolved/some-cert-dir/cert.pem"),
-                dockerTLSKeyPath = fileSystem.getPath("/resolved/some-cert-dir/key.pem"),
+                docker = defaultCommandLineOptions.docker.copy(
+                    configDirectory = fileSystem.getPath("/resolved/some-config-dir"),
+                    tlsCACertificatePath = fileSystem.getPath("/resolved/some-cert-dir/ca.pem"),
+                    tlsCertificatePath = fileSystem.getPath("/resolved/some-cert-dir/cert.pem"),
+                    tlsKeyPath = fileSystem.getPath("/resolved/some-cert-dir/key.pem")
+                ),
                 taskName = "some-task"
             ),
             listOf("--docker-cert-path=some-cert-dir", "--docker-tls-ca-cert=some-ca-cert", "--docker-tls-cert=some-cert", "--docker-tls-key=some-key", "some-task") to defaultCommandLineOptions.copy(
-                dockerTlsCACertificatePath = fileSystem.getPath("/resolved/some-ca-cert"),
-                dockerTLSCertificatePath = fileSystem.getPath("/resolved/some-cert"),
-                dockerTLSKeyPath = fileSystem.getPath("/resolved/some-key"),
+                docker = defaultCommandLineOptions.docker.copy(
+                    tlsCACertificatePath = fileSystem.getPath("/resolved/some-ca-cert"),
+                    tlsCertificatePath = fileSystem.getPath("/resolved/some-cert"),
+                    tlsKeyPath = fileSystem.getPath("/resolved/some-key")
+                ),
                 taskName = "some-task"
             ),
             listOf("--docker-config=some-config-dir", "--docker-tls-ca-cert=some-ca-cert", "--docker-tls-cert=some-cert", "--docker-tls-key=some-key", "some-task") to defaultCommandLineOptions.copy(
-                dockerConfigDirectory = fileSystem.getPath("/resolved/some-config-dir"),
-                dockerTlsCACertificatePath = fileSystem.getPath("/resolved/some-ca-cert"),
-                dockerTLSCertificatePath = fileSystem.getPath("/resolved/some-cert"),
-                dockerTLSKeyPath = fileSystem.getPath("/resolved/some-key"),
+                docker = defaultCommandLineOptions.docker.copy(
+                    configDirectory = fileSystem.getPath("/resolved/some-config-dir"),
+                    tlsCACertificatePath = fileSystem.getPath("/resolved/some-ca-cert"),
+                    tlsCertificatePath = fileSystem.getPath("/resolved/some-cert"),
+                    tlsKeyPath = fileSystem.getPath("/resolved/some-key")
+                ),
                 taskName = "some-task"
             ),
             listOf("--docker-cert-path=some-cert-dir", "--docker-config=some-config-dir", "--docker-tls-ca-cert=some-ca-cert", "--docker-tls-cert=some-cert", "--docker-tls-key=some-key", "some-task") to defaultCommandLineOptions.copy(
-                dockerConfigDirectory = fileSystem.getPath("/resolved/some-config-dir"),
-                dockerTlsCACertificatePath = fileSystem.getPath("/resolved/some-ca-cert"),
-                dockerTLSCertificatePath = fileSystem.getPath("/resolved/some-cert"),
-                dockerTLSKeyPath = fileSystem.getPath("/resolved/some-key"),
+                docker = defaultCommandLineOptions.docker.copy(
+                    configDirectory = fileSystem.getPath("/resolved/some-config-dir"),
+                    tlsCACertificatePath = fileSystem.getPath("/resolved/some-ca-cert"),
+                    tlsCertificatePath = fileSystem.getPath("/resolved/some-cert"),
+                    tlsKeyPath = fileSystem.getPath("/resolved/some-key")
+                ),
                 taskName = "some-task"
             ),
             listOf("--cache-type=volume", "some-task") to defaultCommandLineOptions.copy(cacheType = CacheType.Volume, taskName = "some-task"),
@@ -312,29 +350,136 @@ object CommandLineOptionsParserSpec : Spek({
         ).forEach { (args, expectedResult) ->
             given("the arguments $args") {
                 on("parsing the command line") {
-                    val result = CommandLineOptionsParser(pathResolverFactory, environmentVariableDefaultValueProviderFactory, dockerHttpConfigDefaults, systemInfo).parse(args)
+                    val result = parseAndExpectSuccess(args)
 
                     it("returns a set of options with the expected options populated") {
-                        assertThat(result, equalTo(CommandLineOptionsParsingResult.Succeeded(expectedResult)))
+                        assertThat(result, equalTo(expectedResult))
+                    }
+                }
+            }
+        }
+
+        setOf("--docker-host", "--docker-tls-ca-cert", "--docker-tls-cert", "--docker-tls-key").forEach { option ->
+            given("--docker-context and $option are both provided") {
+                on("parsing the command line") {
+                    val result = parse(listOf("--docker-context=some-context", "$option=some-value", "some-task"))
+
+                    it("returns an error message") {
+                        assertThat(result, equalTo(CommandLineOptionsParsingResult.Failed("Cannot use both --docker-context and $option.")))
+                    }
+                }
+            }
+        }
+
+        given("--docker-context and --docker-cert-path are both provided") {
+            on("parsing the command line") {
+                val result = parse(listOf("--docker-context=some-context", "--docker-cert-path=some-dir", "some-task"))
+
+                it("returns an error message") {
+                    assertThat(result, equalTo(CommandLineOptionsParsingResult.Failed("Cannot use both --docker-context and --docker-cert-path.")))
+                }
+            }
+        }
+
+        setOf("--docker-tls", "--docker-tls-verify").forEach { option ->
+            given("--docker-context and $option are both provided") {
+                on("parsing the command line") {
+                    val result = parse(listOf("--docker-context=some-context", "$option", "some-task"))
+
+                    it("returns an error message") {
+                        assertThat(result, equalTo(CommandLineOptionsParsingResult.Failed("Cannot use both --docker-context and $option.")))
+                    }
+                }
+            }
+        }
+
+        describe("configuring the active Docker context") {
+            val activeContextResolver: ActiveDockerContextResolver = { path ->
+                when (path) {
+                    defaultCommandLineOptions.docker.configDirectory.toOkioPath() -> DockerCLIContext("default-configuration-directory-active-context")
+                    "/resolved/non-default-docker-config-dir".toPath() -> DockerCLIContext("non-default-configuration-directory-active-context")
+                    else -> throw UnsupportedOperationException("Unknown path: $path")
+                }
+            }
+
+            given("the --docker-context command line option is present") {
+                val args = listOf("--docker-context=cli-context", "some-task")
+                val environmentVariables = HostEnvironmentVariables("DOCKER_CONTEXT" to "env-context", "DOCKER_HOST" to "some://env.sock")
+                val result = parseAndExpectSuccess(args, environmentVariables, activeContextResolver)
+
+                it("uses the context name provided on the command line") {
+                    assertThat(result.docker.contextName, equalTo("cli-context"))
+                }
+            }
+
+            given("the --docker-context command line option is not present") {
+                given("the --docker-host command line option is present") {
+                    val args = listOf("--docker-host=some://cli.sock", "some-task")
+                    val environmentVariables = HostEnvironmentVariables("DOCKER_CONTEXT" to "env-context", "DOCKER_HOST" to "some://env.sock")
+                    val result = parseAndExpectSuccess(args, environmentVariables, activeContextResolver)
+
+                    it("uses the default context name, ignoring the DOCKER_CONTEXT environment variable") {
+                        assertThat(result.docker.contextName, equalTo(DockerCLIContext.default.name))
+                    }
+
+                    it("uses the host from the command line") {
+                        assertThat(result.docker.host, equalTo("some://cli.sock"))
+                    }
+                }
+
+                given("the --docker-host command line option is not present") {
+                    given("the DOCKER_HOST environment variable is set") {
+                        val args = listOf("some-task")
+                        val environmentVariables = HostEnvironmentVariables("DOCKER_CONTEXT" to "env-context", "DOCKER_HOST" to "some://env.sock")
+                        val result = parseAndExpectSuccess(args, environmentVariables, activeContextResolver)
+
+                        it("uses the default context name, ignoring the DOCKER_CONTEXT environment variable") {
+                            assertThat(result.docker.contextName, equalTo(DockerCLIContext.default.name))
+                        }
+
+                        it("uses the host from the DOCKER_HOST environment variable") {
+                            assertThat(result.docker.host, equalTo("some://env.sock"))
+                        }
+                    }
+
+                    given("the DOCKER_HOST environment variable is not set") {
+                        given("the DOCKER_CONTEXT environment variable is set") {
+                            val args = listOf("some-task")
+                            val environmentVariables = HostEnvironmentVariables("DOCKER_CONTEXT" to "env-context")
+                            val result = parseAndExpectSuccess(args, environmentVariables, activeContextResolver)
+
+                            it("uses the context name from the DOCKER_CONTEXT environment variable") {
+                                assertThat(result.docker.contextName, equalTo("env-context"))
+                            }
+                        }
+
+                        given("the DOCKER_CONTEXT environment variable is not set") {
+                            val environmentVariables = HostEnvironmentVariables()
+
+                            given("a Docker configuration directory is set") {
+                                val args = listOf("--docker-config=non-default-docker-config-dir", "some-task")
+                                val result = parseAndExpectSuccess(args, environmentVariables, activeContextResolver)
+
+                                it("uses the active context from the provided Docker configuration directory") {
+                                    assertThat(result.docker.contextName, equalTo("non-default-configuration-directory-active-context"))
+                                }
+                            }
+
+                            given("a Docker configuration directory is not set") {
+                                val args = listOf("some-task")
+                                val result = parseAndExpectSuccess(args, environmentVariables, activeContextResolver)
+
+                                it("uses the active context from the default Docker configuration directory") {
+                                    assertThat(result.docker.contextName, equalTo("default-configuration-directory-active-context"))
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
 
         describe("configuring Docker file locations") {
-            fun parseWithEnvironmentVariables(args: List<String>, environmentVariables: HostEnvironmentVariables): CommandLineOptions {
-                val parser = CommandLineOptionsParser(
-                    pathResolverFactory,
-                    EnvironmentVariableDefaultValueProviderFactory(environmentVariables),
-                    dockerHttpConfigDefaults,
-                    systemInfo
-                )
-
-                val result = parser.parse(args)
-
-                return (result as CommandLineOptionsParsingResult.Succeeded).options
-            }
-
             fun Suite.itParsesArgumentsWith(
                 environmentVariables: HostEnvironmentVariables,
                 topLevelArgs: List<String>,
@@ -349,60 +494,60 @@ object CommandLineOptionsParserSpec : Spek({
 
                 given("no specific file arguments are provided") {
                     val args = topLevelArgs + listOf("some-task")
-                    val result = parseWithEnvironmentVariables(args, environmentVariables)
+                    val result = parseAndExpectSuccess(args, environmentVariables)
 
                     it("returns a set of options with the $configDirectoryDescription and certificate files within the $certificatesDirectoryDescription") {
                         assertThat(
-                            result,
-                            hasDockerConfigDirectory(expectedConfigDirectory)
-                                and hasDockerTlsCACertificatePath(expectedTlsCACertificatePath)
-                                and hasDockerTLSCertificatePath(expectedTLSCertificatePath)
-                                and hasDockerTLSKeyPath(expectedTLSKey)
+                            result.docker,
+                            hasConfigDirectory(expectedConfigDirectory)
+                                and hasTlsCACertificatePath(expectedTlsCACertificatePath)
+                                and hasTLSCertificatePath(expectedTLSCertificatePath)
+                                and hasTLSKeyPath(expectedTLSKey)
                         )
                     }
                 }
 
                 given("the --docker-tls-ca-cert argument is provided") {
                     val args = topLevelArgs + listOf("--docker-tls-ca-cert=some-tls-ca-cert", "some-task")
-                    val result = parseWithEnvironmentVariables(args, environmentVariables)
+                    val result = parseAndExpectSuccess(args, environmentVariables)
 
                     it("returns a set of options with the value for the TLS CA certificate file from the argument") {
                         assertThat(
-                            result,
-                            hasDockerConfigDirectory(expectedConfigDirectory)
-                                and hasDockerTlsCACertificatePath(fileSystem.getPath("/resolved/some-tls-ca-cert"))
-                                and hasDockerTLSCertificatePath(expectedTLSCertificatePath)
-                                and hasDockerTLSKeyPath(expectedTLSKey)
+                            result.docker,
+                            hasConfigDirectory(expectedConfigDirectory)
+                                and hasTlsCACertificatePath(fileSystem.getPath("/resolved/some-tls-ca-cert"))
+                                and hasTLSCertificatePath(expectedTLSCertificatePath)
+                                and hasTLSKeyPath(expectedTLSKey)
                         )
                     }
                 }
 
                 given("the --docker-tls-cert argument is provided") {
                     val args = topLevelArgs + listOf("--docker-tls-cert=some-tls-cert", "some-task")
-                    val result = parseWithEnvironmentVariables(args, environmentVariables)
+                    val result = parseAndExpectSuccess(args, environmentVariables)
 
                     it("returns a set of options with the value for the TLS certificate file from the argument") {
                         assertThat(
-                            result,
-                            hasDockerConfigDirectory(expectedConfigDirectory)
-                                and hasDockerTlsCACertificatePath(expectedTlsCACertificatePath)
-                                and hasDockerTLSCertificatePath(fileSystem.getPath("/resolved/some-tls-cert"))
-                                and hasDockerTLSKeyPath(expectedTLSKey)
+                            result.docker,
+                            hasConfigDirectory(expectedConfigDirectory)
+                                and hasTlsCACertificatePath(expectedTlsCACertificatePath)
+                                and hasTLSCertificatePath(fileSystem.getPath("/resolved/some-tls-cert"))
+                                and hasTLSKeyPath(expectedTLSKey)
                         )
                     }
                 }
 
                 given("the --docker-tls-key argument is provided") {
                     val args = topLevelArgs + listOf("--docker-tls-key=some-tls-key", "some-task")
-                    val result = parseWithEnvironmentVariables(args, environmentVariables)
+                    val result = parseAndExpectSuccess(args, environmentVariables)
 
                     it("returns a set of options with the value for the TLS key file from the argument") {
                         assertThat(
-                            result,
-                            hasDockerConfigDirectory(expectedConfigDirectory)
-                                and hasDockerTlsCACertificatePath(expectedTlsCACertificatePath)
-                                and hasDockerTLSCertificatePath(expectedTLSCertificatePath)
-                                and hasDockerTLSKeyPath(fileSystem.getPath("/resolved/some-tls-key"))
+                            result.docker,
+                            hasConfigDirectory(expectedConfigDirectory)
+                                and hasTlsCACertificatePath(expectedTlsCACertificatePath)
+                                and hasTLSCertificatePath(expectedTLSCertificatePath)
+                                and hasTLSKeyPath(fileSystem.getPath("/resolved/some-tls-key"))
                         )
                     }
                 }
@@ -413,7 +558,7 @@ object CommandLineOptionsParserSpec : Spek({
 
                 given("the --docker-config argument is not provided") {
                     val configDirectoryArgument = emptyList<String>()
-                    val expectedConfigDirectory = defaultCommandLineOptions.dockerConfigDirectory
+                    val expectedConfigDirectory = defaultCommandLineOptions.docker.configDirectory
                     val configDirectoryDescription = "the default Docker config directory"
 
                     given("the DOCKER_CERT_PATH environment variable is not set") {
@@ -695,7 +840,7 @@ object CommandLineOptionsParserSpec : Spek({
     }
 })
 
-private fun hasDockerConfigDirectory(expected: Path) = has("Docker config directory", CommandLineOptions::dockerConfigDirectory, equalTo(expected))
-private fun hasDockerTlsCACertificatePath(expected: Path) = has("Docker TLS CA certificate path", CommandLineOptions::dockerTlsCACertificatePath, equalTo(expected))
-private fun hasDockerTLSCertificatePath(expected: Path) = has("Docker TLS certificate path", CommandLineOptions::dockerTLSCertificatePath, equalTo(expected))
-private fun hasDockerTLSKeyPath(expected: Path) = has("Docker TLS key path", CommandLineOptions::dockerTLSKeyPath, equalTo(expected))
+private fun hasConfigDirectory(expected: Path) = has("Docker config directory", DockerCommandLineOptions::configDirectory, equalTo(expected))
+private fun hasTlsCACertificatePath(expected: Path) = has("Docker TLS CA certificate path", DockerCommandLineOptions::tlsCACertificatePath, equalTo(expected))
+private fun hasTLSCertificatePath(expected: Path) = has("Docker TLS certificate path", DockerCommandLineOptions::tlsCertificatePath, equalTo(expected))
+private fun hasTLSKeyPath(expected: Path) = has("Docker TLS key path", DockerCommandLineOptions::tlsKeyPath, equalTo(expected))

@@ -34,8 +34,6 @@ import org.spekframework.spek2.style.specification.describe
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
-import java.nio.file.Files
-import java.nio.file.Paths
 
 object InjectionConfigurationSpec : Spek({
     describe("Kodein injection configuration") {
@@ -43,11 +41,8 @@ object InjectionConfigurationSpec : Spek({
         val task = Task("the-task", TaskRunConfiguration(container.name))
         val rawConfig = RawConfiguration("project", TaskMap(task), ContainerMap(container))
 
-        val dockerConfigDirectory = Paths.get(System.getProperty("user.home")).resolve(".docker")
-        Files.createDirectories(dockerConfigDirectory)
-
         val baseConfiguration = createKodeinConfiguration(PrintStream(ByteArrayOutputStream()), PrintStream(ByteArrayOutputStream()), ByteArrayInputStream(ByteArray(0)))
-        val afterCommandLineOptions = CommandLineOptions(taskName = task.name, dockerConfigDirectory = dockerConfigDirectory).extend(baseConfiguration)
+        val afterCommandLineOptions = CommandLineOptions(taskName = task.name).extend(baseConfiguration)
         val inDockerDaemonContext = afterCommandLineOptions.instance<DockerConfigurationKodeinFactory>().create(mock(), mock(), mock())
         val inSessionContext = inDockerDaemonContext.instance<SessionKodeinFactory>().create(rawConfig)
         val inTaskContext = inSessionContext.instance<TaskKodeinFactory>().create(task, mock())

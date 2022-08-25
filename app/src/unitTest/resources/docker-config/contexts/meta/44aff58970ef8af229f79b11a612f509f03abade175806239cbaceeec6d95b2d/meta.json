@@ -1,0 +1,1 @@
+{"Name":"no-tls","Metadata":{"Description":"no-tls"},"Endpoints":{"docker":{"Host":"unix:///Users/theuser/some/docker.sock","SkipTLSVerify":false}}}

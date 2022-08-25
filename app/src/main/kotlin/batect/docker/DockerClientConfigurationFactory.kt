@@ -17,6 +17,7 @@
 package batect.docker
 
 import batect.cli.CommandLineOptions
+import batect.dockerclient.DockerCLIContext
 import batect.dockerclient.DockerClientConfiguration
 import okio.Path.Companion.toOkioPath
 import java.nio.file.Files
@@ -25,27 +26,41 @@ class DockerClientConfigurationFactory(
     private val commandLineOptions: CommandLineOptions
 ) {
     fun createConfiguration(): DockerClientConfiguration {
-        val builder = DockerClientConfiguration.Builder(commandLineOptions.dockerHost)
+        return when (commandLineOptions.docker.contextName) {
+            DockerCLIContext.default.name -> createDefaultConfiguration()
+            else -> loadContext()
+        }
+    }
+
+    private fun createDefaultConfiguration(): DockerClientConfiguration {
+        val options = commandLineOptions.docker
+        val builder = DockerClientConfiguration.Builder(options.host)
 
         // If the user has specified a config directory, that is validated by CommandLineOptionsParser.
         // However, if we're using the default value, then no validation is performed, so there's a chance
         // the directory does not exist in this case.
-        if (Files.exists(commandLineOptions.dockerConfigDirectory)) {
-            builder.withConfigurationDirectory(commandLineOptions.dockerConfigDirectory.toOkioPath())
+        if (Files.exists(options.configDirectory)) {
+            builder.withConfigurationDirectory(options.configDirectory.toOkioPath())
         }
 
-        if (commandLineOptions.dockerUseTLS) {
+        if (options.useTLS) {
             builder.withTLSConfiguration(
-                commandLineOptions.dockerTlsCACertificatePath.toOkioPath(),
-                commandLineOptions.dockerTLSCertificatePath.toOkioPath(),
-                commandLineOptions.dockerTLSKeyPath.toOkioPath()
+                options.tlsCACertificatePath.toOkioPath(),
+                options.tlsCertificatePath.toOkioPath(),
+                options.tlsKeyPath.toOkioPath()
             )
 
-            if (!commandLineOptions.dockerVerifyTLS) {
+            if (!options.verifyTLS) {
                 builder.withDaemonIdentityVerificationDisabled()
             }
         }
 
         return builder.build()
+    }
+
+    private fun loadContext(): DockerClientConfiguration {
+        val options = commandLineOptions.docker
+
+        return DockerClientConfiguration.fromCLIContext(DockerCLIContext(options.contextName), options.configDirectory.toOkioPath())
     }
 }

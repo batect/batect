@@ -26,10 +26,12 @@ import batect.cli.options.ValueConverters
 import batect.cli.options.defaultvalues.EnvironmentVariableDefaultValueProviderFactory
 import batect.cli.options.defaultvalues.FileDefaultValueProvider
 import batect.docker.DockerHttpConfigDefaults
+import batect.dockerclient.DockerCLIContext
 import batect.execution.CacheType
 import batect.os.PathResolverFactory
 import batect.os.SystemInfo
 import batect.ui.OutputStyle
+import okio.Path.Companion.toOkioPath
 import java.nio.file.Path
 import java.nio.file.Paths
 
@@ -37,7 +39,8 @@ class CommandLineOptionsParser(
     pathResolverFactory: PathResolverFactory,
     environmentVariableDefaultValueProviderFactory: EnvironmentVariableDefaultValueProviderFactory,
     dockerHttpConfigDefaults: DockerHttpConfigDefaults,
-    systemInfo: SystemInfo
+    systemInfo: SystemInfo,
+    private val activeDockerContextResolver: ActiveDockerContextResolver = DockerCLIContext.Companion::getSelectedCLIContext
 ) : OptionParserContainer {
     override val optionParser: OptionParser = OptionParser()
 
@@ -145,12 +148,24 @@ class CommandLineOptionsParser(
         ValueConverters.enum()
     )
 
-    private val dockerHost: String by valueOption(
+    val dockerHostOption = valueOption(
         dockerConnectionOptionsGroup,
         "docker-host",
         "Docker host to use, in the format 'unix:///var/run/docker.sock', 'npipe:////./pipe/docker_engine' or 'tcp://1.2.3.4:5678'.",
         environmentVariableDefaultValueProviderFactory.create("DOCKER_HOST", dockerHttpConfigDefaults.defaultDockerHost, ValueConverters.string)
     )
+
+    private val dockerHost: String by dockerHostOption
+
+    val dockerContextOption = valueOption(
+        dockerConnectionOptionsGroup,
+        "docker-context",
+        "Docker CLI context to use.",
+        environmentVariableDefaultValueProviderFactory.create("DOCKER_CONTEXT", null, "the active Docker context", ValueConverters.string),
+        ValueConverters.string
+    )
+
+    private val dockerContext: String? by dockerContextOption
 
     private val dockerUseTLSOption = flagOption(
         dockerConnectionOptionsGroup,
@@ -245,11 +260,16 @@ class CommandLineOptionsParser(
     fun parse(args: Iterable<String>): CommandLineOptionsParsingResult {
         return when (val result = optionParser.parseOptions(args)) {
             is OptionsParsingResult.InvalidOptions -> CommandLineOptionsParsingResult.Failed(result.message)
-            is OptionsParsingResult.ReadOptions -> parseTaskName(args.drop(result.argumentsConsumed))
+            is OptionsParsingResult.ReadOptions -> {
+                when (val error = validate()) {
+                    null -> parseTaskName(args.drop(result.argumentsConsumed))
+                    else -> error
+                }
+            }
         }
     }
 
-    private fun parseTaskName(remainingArgs: Iterable<String>): CommandLineOptionsParsingResult {
+    private fun validate(): CommandLineOptionsParsingResult.Failed? {
         if (requestedOutputStyle == OutputStyle.Fancy && disableColorOutput) {
             return CommandLineOptionsParsingResult.Failed("Fancy output mode cannot be used when color output has been disabled.")
         }
@@ -260,6 +280,28 @@ class CommandLineOptionsParser(
             return CommandLineOptionsParsingResult.Failed("Cannot both tag the built image for container '${taggedAndOverriddenImages.first()}' and also override the image for that container.")
         }
 
+        if (dockerContextOption.valueSource == OptionValueSource.CommandLine) {
+            val forbiddenOptionsWithDockerContext = setOf(
+                dockerHostOption,
+                dockerUseTLSOption,
+                dockerVerifyTLSOption,
+                dockerTLSCACertificatePathOption,
+                dockerTLSCertificatePathOption,
+                dockerTLSKeyPathOption,
+                dockerCertificateDirectoryOption
+            )
+
+            forbiddenOptionsWithDockerContext.forEach {
+                if (it.valueSource == OptionValueSource.CommandLine) {
+                    return CommandLineOptionsParsingResult.Failed("Cannot use both ${dockerContextOption.longOption} and ${it.longOption}.")
+                }
+            }
+        }
+
+        return null
+    }
+
+    private fun parseTaskName(remainingArgs: Iterable<String>): CommandLineOptionsParsingResult {
         if (
             showHelp ||
             showVersionInfo ||
@@ -308,6 +350,22 @@ class CommandLineOptionsParser(
         else -> path
     }
 
+    private fun resolveDockerContext(): String {
+        if (dockerContextOption.valueSource == OptionValueSource.CommandLine) {
+            return dockerContext!!
+        }
+
+        if (dockerHostOption.valueSource != OptionValueSource.Default) {
+            return DockerCLIContext.default.name
+        }
+
+        if (dockerContext != null) {
+            return dockerContext!!
+        }
+
+        return activeDockerContextResolver(dockerConfigDirectory.toOkioPath()).name
+    }
+
     private fun createOptionsObject(taskName: String?, additionalTaskCommandArguments: Iterable<String>) = CommandLineOptions(
         showHelp = showHelp,
         showVersionInfo = showVersionInfo,
@@ -332,13 +390,16 @@ class CommandLineOptionsParser(
         taskName = taskName,
         additionalTaskCommandArguments = additionalTaskCommandArguments,
         configVariableOverrides = configVariableOverrides,
-        dockerHost = dockerHost,
-        dockerUseTLS = dockerUseTLS || dockerVerifyTLS,
-        dockerVerifyTLS = dockerVerifyTLS,
-        dockerTLSKeyPath = resolvePathToDockerCertificate(dockerTLSKeyPath, dockerTLSKeyPathOption.valueSource, "key.pem"),
-        dockerTLSCertificatePath = resolvePathToDockerCertificate(dockerTLSCertificatePath, dockerTLSCertificatePathOption.valueSource, "cert.pem"),
-        dockerTlsCACertificatePath = resolvePathToDockerCertificate(dockerTlsCACertificatePath, dockerTLSCACertificatePathOption.valueSource, "ca.pem"),
-        dockerConfigDirectory = dockerConfigDirectory,
+        docker = DockerCommandLineOptions(
+            contextName = resolveDockerContext(),
+            host = dockerHost,
+            useTLS = dockerUseTLS || dockerVerifyTLS,
+            verifyTLS = dockerVerifyTLS,
+            tlsKeyPath = resolvePathToDockerCertificate(dockerTLSKeyPath, dockerTLSKeyPathOption.valueSource, "key.pem"),
+            tlsCertificatePath = resolvePathToDockerCertificate(dockerTLSCertificatePath, dockerTLSCertificatePathOption.valueSource, "cert.pem"),
+            tlsCACertificatePath = resolvePathToDockerCertificate(dockerTlsCACertificatePath, dockerTLSCACertificatePathOption.valueSource, "ca.pem"),
+            configDirectory = dockerConfigDirectory
+        ),
         cacheType = cacheType,
         existingNetworkToUse = existingNetworkToUse,
         skipPrerequisites = skipPrerequisites,
@@ -355,3 +416,5 @@ sealed class CommandLineOptionsParsingResult {
     data class Succeeded(val options: CommandLineOptions) : CommandLineOptionsParsingResult()
     data class Failed(val message: String) : CommandLineOptionsParsingResult()
 }
+
+typealias ActiveDockerContextResolver = (okio.Path) -> DockerCLIContext

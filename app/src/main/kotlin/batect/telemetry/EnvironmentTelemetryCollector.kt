@@ -70,8 +70,6 @@ class EnvironmentTelemetryCollector(
         telemetryCaptor.addAttribute("additionalTaskCommandArgumentCount", commandLineOptions.additionalTaskCommandArguments.count())
         telemetryCaptor.addAttribute("commandLineConfigVariableOverrideCount", commandLineOptions.configVariableOverrides.size)
         telemetryCaptor.addAttribute("commandLineImageOverrideCount", commandLineOptions.imageOverrides.size)
-        telemetryCaptor.addAttribute("usingTLSForDockerConnection", commandLineOptions.dockerUseTLS)
-        telemetryCaptor.addAttribute("verifyingTLSForDockerConnection", commandLineOptions.dockerVerifyTLS)
         telemetryCaptor.addAttribute("usingExistingDockerNetwork", commandLineOptions.existingNetworkToUse != null)
         telemetryCaptor.addAttribute("skippingPrerequisites", commandLineOptions.skipPrerequisites)
         telemetryCaptor.addAttribute("maximumLevelOfParallelism", commandLineOptions.maximumLevelOfParallelism)

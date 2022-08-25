@@ -28,6 +28,7 @@ class CompletionTestBase(ABC):
             "--disable-ports",
             "--docker-cert-path",
             "--docker-config",
+            "--docker-context",
             "--docker-host",
             "--docker-tls",
             "--docker-tls-ca-cert",

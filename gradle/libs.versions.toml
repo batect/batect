@@ -6,6 +6,7 @@ google-cloud-storage = "2.11.3"
 hamkrest = "1.8.0.1"
 hamkrestjson = "1.1.2"
 jackson-yaml = "2.13.3"
+jgit = "6.2.0.202206071550-r"
 jimfs = "1.2"
 jnr-posix = "3.1.15"
 jsonschemavalidator = "2.2.14"
@@ -37,6 +38,7 @@ google-cloud-storage = { group = "com.google.cloud", name = "google-cloud-storag
 hamkrest = { group = "com.natpryce", name = "hamkrest", version.ref = "hamkrest" }
 hamkrestjson = { group = "org.araqnid.hamkrest", name = "hamkrest-json", version.ref = "hamkrestjson" }
 jackson-yaml = { group = "com.fasterxml.jackson.dataformat", name = "jackson-dataformat-yaml", version.ref = "jackson-yaml" }
+jgit = { module = "org.eclipse.jgit:org.eclipse.jgit", version.ref = "jgit" }
 jimfs = { group = "com.google.jimfs", name = "jimfs", version.ref = "jimfs" }
 jnr-posix = { group = "com.github.jnr", name = "jnr-posix", version.ref = "jnr-posix" }
 jsonschemavalidator = { group = "com.github.java-json-tools", name = "json-schema-validator", version.ref = "jsonschemavalidator" }

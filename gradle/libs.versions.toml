@@ -1,41 +1,66 @@
 [versions]
+batect-dockerclient = "0.6.0"
+bouncycastle = "1.70"
+commons-codec = "1.15"
+google-cloud-storage = "2.11.3"
+hamkrest = "1.8.0.1"
+hamkrestjson = "1.1.2"
+jackson-yaml = "2.13.3"
+jimfs = "1.2"
+jnr-posix = "3.1.15"
+jsonschemavalidator = "2.2.14"
+junit-platform = "1.9.0"
+kaml = "0.47.0"
 kotest = "5.4.2"
+kodein = "7.14.0"
+kotlin-jvm = "1.7.10"
+kotlinx-coroutines-core = "1.6.4"
+kotlinx-datetime = "0.4.0"
 kotlinx-serialization = "1.4.0"
+licensee-plugin = "1.5.0"
+mockito-core = "4.7.0"
+mockito-kotlin = "4.0.0"
+okhttp-bom = "4.10.0"
+okhttp-systemkeystore = "1.0.0"
+okio-bom = "3.2.0"
+osplatformfinder = "1.2.3"
+reckon = "0.16.1"
+shadow = "7.1.2"
 spek = "2.0.19"
 spotless = "6.10.0"
 
 [libraries]
-batect-dockerclient = { group = "dev.batect.docker", name = "client", version = "0.6.0" }
-bouncycastle = { group = "org.bouncycastle", name = "bcpkix-jdk15on", version = "1.70" }
-commons-codec = { group = "commons-codec", name = "commons-codec", version = "1.15" }
-google-cloud-storage = { group = "com.google.cloud", name = "google-cloud-storage", version = "2.11.3" }
-hamkrest = { group = "com.natpryce", name = "hamkrest", version = "1.8.0.1" }
-hamkrestjson = { group = "org.araqnid.hamkrest", name = "hamkrest-json", version = "1.1.2" }
-jackson-yaml = { group = "com.fasterxml.jackson.dataformat", name = "jackson-dataformat-yaml", version = "2.13.3" }
-jimfs = { group = "com.google.jimfs", name = "jimfs", version = "1.2" }
-jnr-posix = { group = "com.github.jnr", name = "jnr-posix", version = "3.1.15" }
-jsonschemavalidator = { group = "com.github.java-json-tools", name = "json-schema-validator", version = "2.2.14" }
-junit-platform = { group = "org.junit.platform", name = "junit-platform-engine", version = "1.9.0" }
-kaml = { group = "com.charleskorn.kaml", name = "kaml", version = "0.47.0" }
-kodein = { group = "org.kodein.di", name = "kodein-di", version = "7.14.0" }
+batect-dockerclient = { group = "dev.batect.docker", name = "client", version.ref = "batect-dockerclient" }
+bouncycastle = { group = "org.bouncycastle", name = "bcpkix-jdk15on", version.ref = "bouncycastle" }
+commons-codec = { group = "commons-codec", name = "commons-codec", version.ref = "commons-codec" }
+google-cloud-storage = { group = "com.google.cloud", name = "google-cloud-storage", version.ref = "google-cloud-storage" }
+hamkrest = { group = "com.natpryce", name = "hamkrest", version.ref = "hamkrest" }
+hamkrestjson = { group = "org.araqnid.hamkrest", name = "hamkrest-json", version.ref = "hamkrestjson" }
+jackson-yaml = { group = "com.fasterxml.jackson.dataformat", name = "jackson-dataformat-yaml", version.ref = "jackson-yaml" }
+jimfs = { group = "com.google.jimfs", name = "jimfs", version.ref = "jimfs" }
+jnr-posix = { group = "com.github.jnr", name = "jnr-posix", version.ref = "jnr-posix" }
+jsonschemavalidator = { group = "com.github.java-json-tools", name = "json-schema-validator", version.ref = "jsonschemavalidator" }
+junit-platform = { group = "org.junit.platform", name = "junit-platform-engine", version.ref = "junit-platform" }
+kaml = { group = "com.charleskorn.kaml", name = "kaml", version.ref = "kaml" }
+kodein = { group = "org.kodein.di", name = "kodein-di", version.ref = "kodein" }
 kotest-assertions-core = { group = "io.kotest", name = "kotest-assertions-core", version.ref = "kotest" }
-kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version = "1.6.4" }
-kotlinx-datetime = { group = "org.jetbrains.kotlinx", name = "kotlinx-datetime", version = "0.4.0" }
+kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "kotlinx-coroutines-core" }
+kotlinx-datetime = { group = "org.jetbrains.kotlinx", name = "kotlinx-datetime", version.ref = "kotlinx-datetime" }
 kotlinx-serialization-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-core", version.ref = "kotlinx-serialization" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
-licensee-plugin = { group = "app.cash.licensee", name = "licensee-gradle-plugin", version = "1.5.0" }
-mockito-core = { group = "org.mockito", name = "mockito-core", version = "4.7.0" }
-mockito-kotlin = { group = "org.mockito.kotlin", name = "mockito-kotlin", version = "4.0.0" }
-okhttp-bom = { group = "com.squareup.okhttp3", name = "okhttp-bom", version = "4.10.0" }
-okhttp-systemkeystore = { group = "com.charleskorn.okhttp.systemkeystore", name = "okhttp-system-keystore", version = "1.0.0" }
-okio-bom = { group = "com.squareup.okio", name = "okio-bom", version = "3.2.0" }
-osplatformfinder = { group = "org.graylog.repackaged", name = "os-platform-finder", version = "1.2.3" }
+licensee-plugin = { group = "app.cash.licensee", name = "licensee-gradle-plugin", version.ref = "licensee-plugin" }
+mockito-core = { group = "org.mockito", name = "mockito-core", version.ref = "mockito-core" }
+mockito-kotlin = { group = "org.mockito.kotlin", name = "mockito-kotlin", version.ref = "mockito-kotlin" }
+okhttp-bom = { group = "com.squareup.okhttp3", name = "okhttp-bom", version.ref = "okhttp-bom" }
+okhttp-systemkeystore = { group = "com.charleskorn.okhttp.systemkeystore", name = "okhttp-system-keystore", version.ref = "okhttp-systemkeystore" }
+okio-bom = { group = "com.squareup.okio", name = "okio-bom", version.ref = "okio-bom" }
+osplatformfinder = { group = "org.graylog.repackaged", name = "os-platform-finder", version.ref = "osplatformfinder" }
 spek-dsl-jvm = { group = "org.spekframework.spek2", name = "spek-dsl-jvm", version.ref = "spek" }
 spek-runner-junit5 = { group = "org.spekframework.spek2", name = "spek-runner-junit5", version.ref = "spek" }
 spotless-plugin = { group = "com.diffplug.spotless", name = "spotless-plugin-gradle", version.ref = "spotless" }
 
 [plugins]
-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version = "1.7.10" }
-reckon = { id = "org.ajoberstar.reckon", version = "0.16.1" }
-shadow = { id = "com.github.johnrengelman.shadow", version = "7.1.2" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin-jvm" }
+reckon = { id = "org.ajoberstar.reckon", version.ref = "reckon" }
+shadow = { id = "com.github.johnrengelman.shadow", version.ref = "shadow" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }

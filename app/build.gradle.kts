@@ -14,6 +14,8 @@
     limitations under the License.
 */
 
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
 plugins {
     alias(libs.plugins.shadow)
     id("batect-kotlin")
@@ -94,6 +96,19 @@ checkUnitTestLayout {
 apply {
     from("gradle/completionTest.gradle.kts")
     from("gradle/journeyTest.gradle")
-    from("gradle/shadow.gradle")
-    from("gradle/versionInfo.gradle")
+    from("gradle/versionInfo.gradle.kts")
+}
+
+// See https://github.com/johnrengelman/shadow/issues/389#issuecomment-440431318 for an explanation of this.
+tasks.withType<AbstractArchiveTask>().configureEach {
+    isPreserveFileTimestamps = false
+    isReproducibleFileOrder = true
+}
+
+tasks.withType<Jar>().configureEach {
+    archiveVersion.set(project.version.toString())
+}
+
+tasks.withType<ShadowJar>().configureEach {
+    archiveClassifier.set("")
 }

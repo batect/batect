@@ -25,10 +25,14 @@ repositories {
     mavenCentral()
 }
 
+reckon {
+    scopeFromProp()
+    stageFromProp("dev", "final")
+}
+
 apply(from = "$rootDir/gradle/spotless.gradle.kts")
 apply(from = "$rootDir/gradle/updateInfoUpload.gradle.kts")
-apply(from = "$rootDir/gradle/utilities.gradle")
-apply(from = "$rootDir/gradle/versioning.gradle")
+apply(from = "$rootDir/gradle/versioning.gradle.kts")
 
 tasks {
     register<Sync>("assembleRelease") {

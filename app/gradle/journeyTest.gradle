@@ -75,6 +75,8 @@ tasks.register("journeyTestLinuxContainersNonParallelisable", JourneyTest) {
     onlyIf { !project.properties.containsKey("windowsContainers") }
 }
 
+// This task is intended to be a lifecycle task (a shortcut to running the other Linux journey test tasks). It doesn't
+// run any tests itself, and so shouldn't be a JourneyTest.
 tasks.register("journeyTestLinuxContainers") {
     description "Runs the journey tests for Linux containers."
     group "Verification"

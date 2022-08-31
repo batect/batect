@@ -75,7 +75,7 @@ tasks.register("journeyTestLinuxContainersNonParallelisable", JourneyTest) {
     onlyIf { !project.properties.containsKey("windowsContainers") }
 }
 
-tasks.register("journeyTestLinuxContainers") {
+tasks.register("journeyTestLinuxContainers", JourneyTest) {
     description "Runs the journey tests for Linux containers."
     group "Verification"
 

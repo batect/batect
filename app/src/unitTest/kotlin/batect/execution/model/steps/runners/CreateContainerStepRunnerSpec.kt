@@ -20,7 +20,7 @@ import batect.config.Container
 import batect.config.ExpressionEvaluationException
 import batect.config.VolumeMount
 import batect.docker.DockerContainer
-import batect.docker.DockerContainerCreationRequestFactory
+import batect.docker.DockerContainerCreationSpecFactory
 import batect.dockerclient.ContainerCreationFailedException
 import batect.dockerclient.ContainerCreationSpec
 import batect.dockerclient.ContainerReference
@@ -91,7 +91,7 @@ object CreateContainerStepRunnerSpec : Spek({
         }
 
         val creationRequestFactory by createForEachTest {
-            mock<DockerContainerCreationRequestFactory> {
+            mock<DockerContainerCreationSpecFactory> {
                 on { create(container, ImageReference("some-image"), NetworkReference("some-network"), resolvedMounts, userAndGroup, "some-terminal", true, false) } doReturn spec
             }
         }

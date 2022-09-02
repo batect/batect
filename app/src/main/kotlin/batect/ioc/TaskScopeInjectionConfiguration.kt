@@ -16,7 +16,7 @@
 
 package batect.ioc
 
-import batect.docker.DockerContainerCreationRequestFactory
+import batect.docker.DockerContainerCreationSpecFactory
 import batect.docker.DockerContainerEnvironmentVariableProvider
 import batect.docker.DockerResourceNameGenerator
 import batect.execution.ContainerDependencyGraph
@@ -56,7 +56,7 @@ val taskScopeModule = DI.Module("Task scope: root") {
 }
 
 private val dockerModule = DI.Module("Task scope: docker") {
-    bind<DockerContainerCreationRequestFactory>() with scoped(TaskScope).singleton { DockerContainerCreationRequestFactory(instance(), instance(), instance()) }
+    bind<DockerContainerCreationSpecFactory>() with scoped(TaskScope).singleton { DockerContainerCreationSpecFactory(instance(), instance(), instance()) }
     bind<DockerContainerEnvironmentVariableProvider>() with scoped(TaskScope).singleton { DockerContainerEnvironmentVariableProvider(instance(), instance(), instance(), instance()) }
     bind<DockerResourceNameGenerator>() with scoped(TaskScope).singleton { DockerResourceNameGenerator(instance()) }
 }

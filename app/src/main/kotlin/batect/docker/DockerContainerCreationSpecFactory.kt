@@ -32,7 +32,7 @@ import batect.dockerclient.VolumeMount
 import batect.primitives.mapToSet
 import okio.Path.Companion.toPath
 
-class DockerContainerCreationRequestFactory(
+class DockerContainerCreationSpecFactory(
     private val environmentVariableProvider: DockerContainerEnvironmentVariableProvider,
     private val resourceNameGenerator: DockerResourceNameGenerator,
     private val commandLineOptions: CommandLineOptions
@@ -58,6 +58,7 @@ class DockerContainerCreationRequestFactory(
             .withLogDriver(container.logDriver)
             .withLoggingOptions(container.logOptions)
             .withHealthcheckConfiguration(container.healthCheckConfig)
+            .withLabels(container.labels)
 
         if (!commandLineOptions.disablePortMappings) {
             builder.withPortMappings(container.portMappings)

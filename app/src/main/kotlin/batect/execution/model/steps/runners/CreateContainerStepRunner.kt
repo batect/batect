@@ -18,7 +18,7 @@ package batect.execution.model.steps.runners
 
 import batect.config.ExpressionEvaluationException
 import batect.docker.DockerContainer
-import batect.docker.DockerContainerCreationRequestFactory
+import batect.docker.DockerContainerCreationSpecFactory
 import batect.dockerclient.ContainerCreationFailedException
 import batect.dockerclient.DockerClient
 import batect.dockerclient.ImageReference
@@ -39,7 +39,7 @@ class CreateContainerStepRunner(
     private val client: DockerClient,
     private val volumeMountResolver: VolumeMountResolver,
     private val runAsCurrentUserConfigurationProvider: RunAsCurrentUserConfigurationProvider,
-    private val creationRequestFactory: DockerContainerCreationRequestFactory,
+    private val creationRequestFactory: DockerContainerCreationSpecFactory,
     private val ioStreamingOptions: ContainerIOStreamingOptions,
     private val logger: Logger
 ) {

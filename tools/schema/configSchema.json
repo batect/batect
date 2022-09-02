@@ -158,6 +158,13 @@
           "description": "Size of /dev/shm (shared memory for IPC) for the container",
           "type": "string",
           "pattern": "^\\d+\\s*[mkg]?b?$"
+        },
+        "labels": {
+          "description": "Labels to apply to the container",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
         }
       },
       "oneOf": [

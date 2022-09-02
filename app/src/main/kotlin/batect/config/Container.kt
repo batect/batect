@@ -63,7 +63,8 @@ data class Container(
     val setupCommands: List<SetupCommand> = emptyList(),
     val logDriver: String = defaultLogDriver,
     val logOptions: Map<String, String> = emptyMap(),
-    val shmSize: BinarySize? = null
+    val shmSize: BinarySize? = null,
+    val labels: Map<String, String> = emptyMap()
 ) {
     @OptIn(ExperimentalSerializationApi::class)
     companion object : KSerializer<Container> {
@@ -95,6 +96,7 @@ data class Container(
         private const val logOptionsFieldName = "log_options"
         private const val imagePullPolicyFieldName = "image_pull_policy"
         private const val shmSizeFieldName = "shm_size"
+        private const val labelsFieldName = "labels"
 
         override val descriptor: SerialDescriptor = buildClassSerialDescriptor("Container") {
             element(buildDirectoryFieldName, String.serializer().descriptor, isOptional = true)
@@ -123,6 +125,7 @@ data class Container(
             element(logOptionsFieldName, MapSerializer(String.serializer(), String.serializer()).descriptor, isOptional = true)
             element(imagePullPolicyFieldName, ImagePullPolicy.serializer().descriptor, isOptional = true)
             element(shmSizeFieldName, BinarySize.serializer().descriptor, isOptional = true)
+            element(labelsFieldName, MapSerializer(String.serializer(), String.serializer()).descriptor, isOptional = true)
         }
 
         private val buildDirectoryFieldIndex = descriptor.getElementIndex(buildDirectoryFieldName)
@@ -151,6 +154,7 @@ data class Container(
         private val logOptionsFieldIndex = descriptor.getElementIndex(logOptionsFieldName)
         private val imagePullPolicyFieldIndex = descriptor.getElementIndex(imagePullPolicyFieldName)
         private val shmSizeFieldIndex = descriptor.getElementIndex(shmSizeFieldName)
+        private val labelsFieldIndex = descriptor.getElementIndex(labelsFieldName)
 
         override fun deserialize(decoder: Decoder): Container {
             val input = decoder.beginStructure(descriptor) as YamlInput
@@ -185,6 +189,7 @@ data class Container(
             var logOptions = emptyMap<String, String>()
             var imagePullPolicy = ImagePullPolicy.IfNotPresent
             var shmSize: BinarySize? = null
+            var labels = emptyMap<String, String>()
 
             loop@ while (true) {
                 when (val i = input.decodeElementIndex(descriptor)) {
@@ -215,6 +220,7 @@ data class Container(
                     logOptionsFieldIndex -> logOptions = input.decodeSerializableElement(descriptor, i, MapSerializer(String.serializer(), String.serializer()))
                     imagePullPolicyFieldIndex -> imagePullPolicy = input.decodeSerializableElement(descriptor, i, ImagePullPolicy.serializer())
                     shmSizeFieldIndex -> shmSize = input.decodeSerializableElement(descriptor, i, BinarySize.serializer())
+                    labelsFieldIndex -> labels = input.decodeSerializableElement(descriptor, i, MapSerializer(String.serializer(), String.serializer()))
 
                     else -> throw SerializationException("Unknown index $i")
                 }
@@ -242,7 +248,8 @@ data class Container(
                 setupCommands,
                 logDriver,
                 logOptions,
-                shmSize
+                shmSize,
+                labels
             )
         }
 

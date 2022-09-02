@@ -46,8 +46,8 @@ import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import kotlin.time.Duration.Companion.seconds
 
-object DockerContainerCreationRequestFactorySpec : Spek({
-    describe("a Docker container creation request factory") {
+object DockerContainerCreationSpecFactorySpec : Spek({
+    describe("a Docker container creation spec factory") {
         val image = batect.dockerclient.ImageReference("some-image")
         val network = NetworkReference("some-network")
         val command = Command.parse("some-app some-arg")
@@ -74,7 +74,7 @@ object DockerContainerCreationRequestFactorySpec : Spek({
             on { disablePortMappings } doReturn false
         }
 
-        val factory = DockerContainerCreationRequestFactory(environmentVariablesProvider, nameGenerator, commandLineOptions)
+        val factory = DockerContainerCreationSpecFactory(environmentVariablesProvider, nameGenerator, commandLineOptions)
 
         given("a container") {
             on("creating a creation request") {
@@ -95,7 +95,8 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                     additionalHosts = mapOf("does.not.exist" to "1.2.3.4"),
                     logDriver = "the-log-driver",
                     logOptions = mapOf("option-1" to "value-1"),
-                    shmSize = BinarySize.of(2, BinaryUnit.Megabyte)
+                    shmSize = BinarySize.of(2, BinaryUnit.Megabyte),
+                    labels = mapOf("some.key" to "some_value")
                 )
 
                 val userAndGroup = UserAndGroup(123, 456)
@@ -217,6 +218,10 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                 it("populates the shm size with the value from the container") {
                     assertThat(spec.shmSizeInBytes, equalTo(container.shmSize!!.bytes))
                 }
+
+                it("populates the labels with the labels from the container") {
+                    assertThat(spec.labels, equalTo(container.labels))
+                }
             }
         }
 
@@ -225,7 +230,7 @@ object DockerContainerCreationRequestFactorySpec : Spek({
                 on { disablePortMappings } doReturn true
             }
 
-            val newFactory = DockerContainerCreationRequestFactory(environmentVariablesProvider, nameGenerator, commandLineOptionsWithDisabledPorts)
+            val newFactory = DockerContainerCreationSpecFactory(environmentVariablesProvider, nameGenerator, commandLineOptionsWithDisabledPorts)
 
             on("creating the request") {
                 val container = Container(

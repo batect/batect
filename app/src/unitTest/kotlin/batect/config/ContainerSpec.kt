@@ -217,6 +217,9 @@ object ContainerSpec : Spek({
                   option_1: value_1
                 image_pull_policy: Always
                 shm_size: 2G
+                labels:
+                  some.key: some_value
+                  some.other.key: some_other_value
             """.trimIndent()
 
             on("loading the configuration from the config file") {
@@ -291,6 +294,7 @@ object ContainerSpec : Spek({
                     assertThat(result.logDriver, equalTo("my_log_driver"))
                     assertThat(result.logOptions, equalTo(mapOf("option_1" to "value_1")))
                     assertThat(result.shmSize, equalTo(BinarySize.of(2, BinaryUnit.Gigabyte)))
+                    assertThat(result.labels, equalTo(mapOf("some.key" to "some_value", "some.other.key" to "some_other_value")))
                 }
             }
         }

@@ -179,18 +179,14 @@ class KotlinPlugin : Plugin<Project> {
 
     private fun configureJourneyTestNameCheck(project: Project) {
         val checkJourneyTestNamingExtension = project.extensions.create<JourneyTestNamingCheckExtension>("checkJourneyTestNaming")
+        val kotlin = project.extensions.getByType<KotlinJvmProjectExtension>()
+        val journeyTestSourceSets = kotlin.sourceSets.matching { it.name == "journeyTest" }
 
-        project.afterEvaluate {
-            val kotlin = project.extensions.getByType<KotlinJvmProjectExtension>()
-
-            if (!kotlin.sourceSets.names.contains("journeyTest")) {
-                return@afterEvaluate
-            }
-
+        journeyTestSourceSets.all {
             val checkJourneyTestNamingTask = project.tasks.register<JourneyTestNamingCheckTask>("checkJourneyTestNaming") {
                 mustRunAfter("test")
 
-                files.set(kotlin.sourceSets.named("journeyTest").get().kotlin)
+                files.set(it.kotlin)
                 ignoreFileNameCheck.set(checkJourneyTestNamingExtension.ignoreFileNameCheck)
             }
 

@@ -34,6 +34,11 @@ containers:
         name: my-other-cache
         container: /root/.other-cache
         options: ro
+      - type: tmpfs
+        container: /root/tmp-1
+      - type: tmpfs
+        container: /root/tmp-2
+        options: ro
     ports:
       - 1000:2000
       - 1001:2001/udp

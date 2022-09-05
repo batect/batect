@@ -28,6 +28,7 @@ import batect.dockerclient.ExposedPort
 import batect.dockerclient.ExtraHost
 import batect.dockerclient.HostMount
 import batect.dockerclient.NetworkReference
+import batect.dockerclient.TmpfsMount
 import batect.dockerclient.UserAndGroup
 import batect.dockerclient.VolumeMount
 import batect.dockerclient.VolumeReference
@@ -55,9 +56,10 @@ object DockerContainerCreationSpecFactorySpec : Spek({
         val workingDirectory = "some-specific-working-directory"
         val terminalType = "some-term"
 
-        val volumeMounts = setOf(
+        val resolvedMounts = setOf(
             HostMount("local".toPath(), "remote-host", "mode"),
-            VolumeMount(VolumeReference("some-volume"), "remote-volume", "mode")
+            VolumeMount(VolumeReference("some-volume"), "remote-volume", "mode"),
+            TmpfsMount("container-tmpfs", "tmpfs-options")
         )
 
         val expectedEnvironmentVariables = mapOf("SOME_VAR" to "some resolved value")
@@ -104,7 +106,7 @@ object DockerContainerCreationSpecFactorySpec : Spek({
                     container,
                     image,
                     network,
-                    volumeMounts,
+                    resolvedMounts,
                     userAndGroup,
                     terminalType,
                     useTTY = false,
@@ -151,13 +153,24 @@ object DockerContainerCreationSpecFactorySpec : Spek({
                     assertThat(spec.workingDirectory, equalTo(workingDirectory))
                 }
 
-                it("populates the volume mounts on the request with the volume mounts provided") {
+                it("populates the bind mounts on the request with the mounts provided") {
                     assertThat(
                         spec.bindMounts,
                         equalTo(
                             setOf(
                                 HostMount("local".toPath(), "remote-host", "mode"),
                                 VolumeMount(VolumeReference("some-volume"), "remote-volume", "mode")
+                            )
+                        )
+                    )
+                }
+
+                it("populates the tmpfs mounts on the request with the mounts provides") {
+                    assertThat(
+                        spec.tmpfsMounts,
+                        equalTo(
+                            setOf(
+                                TmpfsMount("container-tmpfs", "tmpfs-options")
                             )
                         )
                     )
@@ -239,7 +252,7 @@ object DockerContainerCreationSpecFactorySpec : Spek({
                     portMappings = setOf(PortMapping(123, 456))
                 )
 
-                val spec = newFactory.create(container, image, network, volumeMounts, null, terminalType, useTTY = false, attachStdin = false)
+                val spec = newFactory.create(container, image, network, resolvedMounts, null, terminalType, useTTY = false, attachStdin = false)
 
                 it("yields an empty port mapping") {
                     assertThat(spec.exposedPorts, equalTo(emptySet()))

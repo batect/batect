@@ -119,7 +119,7 @@ object CreateContainerStepRunnerSpec : Spek({
 
             itSuspend("creates any missing local volume mount directories before creating the container") {
                 inOrder(runAsCurrentUserConfigurationProvider, dockerClient) {
-                    verify(runAsCurrentUserConfigurationProvider).createMissingVolumeMountDirectories(resolvedMounts, container)
+                    verify(runAsCurrentUserConfigurationProvider).createMissingMountDirectories(resolvedMounts, container)
                     verify(dockerClient).createContainer(any())
                 }
             }

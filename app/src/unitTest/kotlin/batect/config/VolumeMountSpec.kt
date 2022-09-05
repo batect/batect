@@ -39,6 +39,7 @@ import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.has
+import com.natpryce.hamkrest.isA
 import com.natpryce.hamkrest.throws
 import kotlinx.serialization.modules.serializersModuleOf
 import org.araqnid.hamkrest.json.equivalentTo
@@ -401,6 +402,91 @@ object VolumeMountSpec : Spek({
                 }
             }
 
+            on("deserializing a tmpfs mount from expanded form") {
+                on("parsing a valid tmpfs mount definition") {
+                    val yaml = """
+                        type: tmpfs
+                        container: /container
+                    """.trimIndent()
+
+                    val volumeMount by runForEachTest { parser.decodeFromString(VolumeMount.Companion, yaml) }
+
+                    it("returns a tmpfs mount instance") {
+                        assertThat(volumeMount, isA<TmpfsMount>())
+                    }
+
+                    it("returns the correct container path") {
+                        assertThat(volumeMount.containerPath, equalTo("/container"))
+                    }
+
+                    it("returns the correct options") {
+                        assertThat(volumeMount.options, absent())
+                    }
+                }
+
+                on("parsing a valid tmpfs mount definition with options") {
+                    val yaml = """
+                        type: tmpfs
+                        container: /container
+                        options: some_options
+                    """.trimIndent()
+
+                    val volumeMount by runForEachTest { parser.decodeFromString(VolumeMount.Companion, yaml) }
+
+                    it("returns a tmpfs mount instance") {
+                        assertThat(volumeMount, isA<TmpfsMount>())
+                    }
+
+                    it("returns the correct container path") {
+                        assertThat(volumeMount.containerPath, equalTo("/container"))
+                    }
+
+                    it("returns the correct options") {
+                        assertThat(volumeMount.options, equalTo("some_options"))
+                    }
+                }
+
+                on("parsing a volume mount definition containing the 'name' field") {
+                    val yaml = """
+                        type: tmpfs
+                        name: blah
+                        container: /container
+                    """.trimIndent()
+
+                    it("fails with an appropriate error message") {
+                        assertThat(
+                            { parser.decodeFromString(VolumeMount.Companion, yaml) },
+                            throws(
+                                withMessage("Field 'name' is not permitted for tmpfs mounts.")
+                                    and withLineNumber(1)
+                                    and withColumn(1)
+                                    and withPath("<root>")
+                            )
+                        )
+                    }
+                }
+
+                on("parsing a volume mount definition containing the 'local' field") {
+                    val yaml = """
+                        type: tmpfs
+                        local: /local
+                        container: /container
+                    """.trimIndent()
+
+                    it("fails with an appropriate error message") {
+                        assertThat(
+                            { parser.decodeFromString(VolumeMount.Companion, yaml) },
+                            throws(
+                                withMessage("Field 'local' is not permitted for tmpfs mounts.")
+                                    and withLineNumber(1)
+                                    and withColumn(1)
+                                    and withPath("<root>")
+                            )
+                        )
+                    }
+                }
+            }
+
             describe("deserializing a mount from expanded form with an unknown type") {
                 val yaml = """
                     type: blah
@@ -411,7 +497,7 @@ object VolumeMountSpec : Spek({
                     assertThat(
                         { parser.decodeFromString(VolumeMount.Companion, yaml) },
                         throws<InvalidPropertyValueException>(
-                            withMessage("Value for 'type' is invalid: Value 'blah' is not a valid option, permitted choices are: cache, local")
+                            withMessage("Value for 'type' is invalid: Value 'blah' is not a valid option, permitted choices are: cache, local, tmpfs")
                                 and has(InvalidPropertyValueException::line, equalTo(1))
                                 and has(InvalidPropertyValueException::column, equalTo(7))
                         )
@@ -506,6 +592,25 @@ object VolumeMountSpec : Spek({
                             |{
                             |   "type": "cache",
                             |   "name": "my-cache",
+                            |   "container": "/container",
+                            |   "options": "ro"
+                            |}
+                            """.trimMargin()
+                        )
+                    )
+                }
+            }
+
+            describe("serializing a tmpfs mount") {
+                val mount = TmpfsMount("/container", "ro")
+
+                it("serializes to the expected format") {
+                    assertThat(
+                        Json.forLogging.encodeToString(VolumeMount.serializer(), mount),
+                        equivalentTo(
+                            """
+                            |{
+                            |   "type": "tmpfs",
                             |   "container": "/container",
                             |   "options": "ro"
                             |}

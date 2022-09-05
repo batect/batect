@@ -135,6 +135,18 @@ sealed class VolumeMount(
 
                     CacheMount(name, containerPath, options)
                 }
+
+                VolumeMountType.Tmpfs -> {
+                    if (name != null) {
+                        throw ConfigurationException("Field '${objectDescriptor.getElementName(nameFieldIndex)}' is not permitted for tmpfs mounts.", input.node)
+                    }
+
+                    if (localPath != null) {
+                        throw ConfigurationException("Field '${objectDescriptor.getElementName(localPathFieldIndex)}' is not permitted for tmpfs mounts.", input.node)
+                    }
+
+                    TmpfsMount(containerPath, options)
+                }
             }
         }
 
@@ -147,6 +159,7 @@ sealed class VolumeMount(
             val type = when (value) {
                 is LocalMount -> "local"
                 is CacheMount -> "cache"
+                is TmpfsMount -> "tmpfs"
             }
 
             output.encodeStringElement(objectDescriptor, typeFieldIndex, type)
@@ -169,7 +182,10 @@ sealed class VolumeMount(
             Local,
 
             @SerialName("cache")
-            Cache
+            Cache,
+
+            @SerialName("tmpfs")
+            Tmpfs
         }
     }
 }
@@ -205,4 +221,12 @@ data class CacheMount(
     override fun serialize(output: CompositeEncoder) {
         output.encodeStringElement(descriptor, descriptor.getElementIndex("name"), name)
     }
+}
+
+data class TmpfsMount(
+    override val containerPath: String,
+    override val options: String? = null
+) : VolumeMount(containerPath, options) {
+    @OptIn(ExperimentalSerializationApi::class)
+    override fun serialize(output: CompositeEncoder) {}
 }

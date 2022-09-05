@@ -480,6 +480,32 @@
               "name",
               "container"
             ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "type": {
+                "type": "string",
+                "description": "Type of volume mount",
+                "enum": [
+                  "tmpfs"
+                ]
+              },
+              "container": {
+                "type": "string",
+                "description": "Path inside the container to mount the tmpfs filesystem at",
+                "minLength": 1
+              },
+              "options": {
+                "type": "string",
+                "description": "Docker tmpfs mount options to use when creating mount"
+              }
+            },
+            "required": [
+              "type",
+              "container"
+            ]
           }
         ]
       }

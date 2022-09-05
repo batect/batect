@@ -50,7 +50,7 @@ class CreateContainerStepRunner(
             val resolvedMounts = volumeMountResolver.resolve(container.volumeMounts)
             val userAndGroup = runAsCurrentUserConfigurationProvider.determineUserAndGroup(container)
 
-            runAsCurrentUserConfigurationProvider.createMissingVolumeMountDirectories(resolvedMounts, container)
+            runAsCurrentUserConfigurationProvider.createMissingMountDirectories(resolvedMounts, container)
 
             val creationSpec = creationRequestFactory.create(
                 container,

@@ -21,7 +21,7 @@ import batect.config.Container
 import batect.config.RunAsCurrentUserConfig
 import batect.docker.DockerContainer
 import batect.docker.DockerContainerType
-import batect.dockerclient.BindMount
+import batect.dockerclient.ContainerMount
 import batect.dockerclient.DockerClient
 import batect.dockerclient.DockerClientException
 import batect.dockerclient.HostMount
@@ -175,7 +175,7 @@ class RunAsCurrentUserConfigurationProvider(
         }
     }
 
-    fun createMissingVolumeMountDirectories(mounts: Set<BindMount>, container: Container) {
+    fun createMissingMountDirectories(mounts: Set<ContainerMount>, container: Container) {
         if (containerType == DockerContainerType.Linux && container.runAsCurrentUserConfig is RunAsCurrentUserConfig.RunAsDefaultContainerUser) {
             return
         }
@@ -203,7 +203,7 @@ class RunAsCurrentUserConfigurationProvider(
         }
     }
 
-    private fun Set<BindMount>.findClosestParentMount(mount: BindMount): BindMount? {
+    private fun Set<ContainerMount>.findClosestParentMount(mount: ContainerMount): ContainerMount? {
         val thisPath = mount.containerPath.splitToPathSegments()
 
         return this

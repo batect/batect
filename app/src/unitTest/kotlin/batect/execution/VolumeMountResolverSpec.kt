@@ -22,6 +22,7 @@ import batect.config.ExpressionEvaluationContext
 import batect.config.LiteralValue
 import batect.config.LocalMount
 import batect.config.ProjectPaths
+import batect.config.TmpfsMount
 import batect.dockerclient.HostMount
 import batect.dockerclient.VolumeMount
 import batect.dockerclient.VolumeReference
@@ -34,6 +35,7 @@ import batect.os.PathType
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given
+import batect.testutils.runForEachTest
 import batect.testutils.withMessage
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
@@ -219,6 +221,28 @@ object VolumeMountResolverSpec : Spek({
                         assertThat(Files.isDirectory(fileSystem.getPath("/caches/cache-1")), equalTo(true))
                         assertThat(Files.isDirectory(fileSystem.getPath("/caches/cache-2")), equalTo(true))
                     }
+                }
+            }
+        }
+
+        describe("resolving tmpfs mounts") {
+            val resolver by createForEachTest { VolumeMountResolver(mock(), mock(), mock(), mock()) }
+
+            given("the mount has options specified") {
+                val mount = TmpfsMount("/some/container/path", "some-options")
+                val resolvedMounts by runForEachTest { resolver.resolve(setOf(mount)) }
+
+                it("returns a tmpfs mount configuration") {
+                    assertThat(resolvedMounts, equalTo(setOf(batect.dockerclient.TmpfsMount("/some/container/path", "some-options"))))
+                }
+            }
+
+            given("the mount has no options specified") {
+                val mount = TmpfsMount("/some/container/path")
+                val resolvedMounts by runForEachTest { resolver.resolve(setOf(mount)) }
+
+                it("returns a tmpfs mount configuration with no options") {
+                    assertThat(resolvedMounts, equalTo(setOf(batect.dockerclient.TmpfsMount("/some/container/path", ""))))
                 }
             }
         }

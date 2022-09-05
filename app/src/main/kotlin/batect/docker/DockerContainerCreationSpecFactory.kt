@@ -21,12 +21,13 @@ import batect.config.Capability
 import batect.config.Container
 import batect.config.HealthCheckConfig
 import batect.config.PortMapping
-import batect.dockerclient.BindMount
 import batect.dockerclient.ContainerCreationSpec
+import batect.dockerclient.ContainerMount
 import batect.dockerclient.DeviceMount
 import batect.dockerclient.HostMount
 import batect.dockerclient.ImageReference
 import batect.dockerclient.NetworkReference
+import batect.dockerclient.TmpfsMount
 import batect.dockerclient.UserAndGroup
 import batect.dockerclient.VolumeMount
 import batect.primitives.mapToSet
@@ -41,7 +42,7 @@ class DockerContainerCreationSpecFactory(
         container: Container,
         image: ImageReference,
         network: NetworkReference,
-        volumeMounts: Set<BindMount>,
+        resolvedMounts: Set<ContainerMount>,
         userAndGroup: UserAndGroup?,
         terminalType: String?,
         useTTY: Boolean,
@@ -76,15 +77,17 @@ class DockerContainerCreationSpecFactory(
             builder.withWorkingDirectory(container.workingDirectory)
         }
 
-        volumeMounts.forEach {
+        resolvedMounts.forEach {
             when (it) {
                 is HostMount -> builder.withHostMount(it)
                 is VolumeMount -> builder.withVolumeMount(it)
+                is TmpfsMount -> builder.withTmpfsMount(it)
+                is DeviceMount -> throw UnsupportedOperationException("Received unexpected resolved device mount.") // We should never get resolved device mounts.
             }
         }
 
-        container.additionalHosts.forEach { (name, address) -> builder.withExtraHost(name, address) }
         container.deviceMounts.forEach { builder.withDeviceMount(it.localPath.toPath(), it.containerPath, it.options ?: DeviceMount.defaultPermissions) }
+        container.additionalHosts.forEach { (name, address) -> builder.withExtraHost(name, address) }
 
         if (userAndGroup != null) {
             builder.withUserAndGroup(userAndGroup)

@@ -25,6 +25,7 @@ import batect.dockerclient.ContainerReference
 import batect.dockerclient.DockerClient
 import batect.dockerclient.DockerClientException
 import batect.dockerclient.HostMount
+import batect.dockerclient.TmpfsMount
 import batect.dockerclient.UploadDirectory
 import batect.dockerclient.UploadFile
 import batect.dockerclient.UserAndGroup
@@ -123,9 +124,9 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                     val containerType = DockerContainerType.Linux
                     val provider by createForEachTest { RunAsCurrentUserConfigurationProvider(systemInfo, nativeMethods, fileSystem, containerType, dockerClient) }
 
-                    beforeEachTest { provider.createMissingVolumeMountDirectories(volumeMounts, container) }
+                    beforeEachTest { provider.createMissingMountDirectories(volumeMounts, container) }
 
-                    it("does not create a directory for the volume mount path that does not exist") {
+                    it("does not create a directory for the local mount path that does not exist") {
                         assertThat(Files.exists(fileSystem.getPath(directoryThatDoesNotExist)), equalTo(false))
                     }
                 }
@@ -134,9 +135,9 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                     val containerType = DockerContainerType.Windows
                     val provider by createForEachTest { RunAsCurrentUserConfigurationProvider(systemInfo, nativeMethods, fileSystem, containerType, dockerClient) }
 
-                    beforeEachTest { provider.createMissingVolumeMountDirectories(volumeMounts, container) }
+                    beforeEachTest { provider.createMissingMountDirectories(volumeMounts, container) }
 
-                    it("creates a directory for the volume mount path that does not exist") {
+                    it("creates a directory for the local mount path that does not exist") {
                         assertThat(Files.exists(fileSystem.getPath(directoryThatDoesNotExist)), equalTo(true))
                     }
                 }
@@ -487,7 +488,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                 val fileSystem by createForEachTest { Jimfs.newFileSystem(Configuration.unix()) }
                 val provider by createForEachTest { RunAsCurrentUserConfigurationProvider(mock(), mock(), fileSystem, mock(), mock()) }
 
-                describe("creating missing volume mount directories") {
+                describe("creating missing local mount directories") {
                     given("mounts for existing local directories and files and a non-existent local path") {
                         val directoryThatExists = "/existing/directory"
                         val fileThatExists = "/existing/file"
@@ -504,9 +505,9 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                             Files.createFile(fileSystem.getPath(fileThatExists))
                         }
 
-                        beforeEachTest { provider.createMissingVolumeMountDirectories(volumeMounts, container) }
+                        beforeEachTest { provider.createMissingMountDirectories(volumeMounts, container) }
 
-                        it("creates a directory for the volume mount path that does not exist") {
+                        it("creates a directory for the local mount path that does not exist") {
                             assertThat(Files.exists(fileSystem.getPath(directoryThatDoesNotExist)), equalTo(true))
                         }
                     }
@@ -520,7 +521,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                             HostMount(innerLocalPath.toPath(), "/container/local-mount/path", null)
                         )
 
-                        beforeEachTest { provider.createMissingVolumeMountDirectories(volumeMounts, container) }
+                        beforeEachTest { provider.createMissingMountDirectories(volumeMounts, container) }
 
                         it("creates a directory for the local paths that does not exist") {
                             assertThat(Files.exists(fileSystem.getPath(outerLocalPath)), equalTo(true))
@@ -539,7 +540,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                             VolumeMount(VolumeReference("my-volume"), "/container/volume", null)
                         )
 
-                        beforeEachTest { provider.createMissingVolumeMountDirectories(volumeMounts, container) }
+                        beforeEachTest { provider.createMissingMountDirectories(volumeMounts, container) }
 
                         it("creates a directory for the local path that does not exist") {
                             assertThat(Files.exists(fileSystem.getPath(localPath)), equalTo(true))
@@ -557,7 +558,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                             VolumeMount(VolumeReference("my-volume"), "/container/volume", null)
                         )
 
-                        beforeEachTest { provider.createMissingVolumeMountDirectories(volumeMounts, container) }
+                        beforeEachTest { provider.createMissingMountDirectories(volumeMounts, container) }
 
                         it("creates a directory for the local path that does not exist") {
                             assertThat(Files.exists(fileSystem.getPath(localPath)), equalTo(true))
@@ -575,7 +576,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                             VolumeMount(VolumeReference("my-volume"), "/container/local-mount/volume", null)
                         )
 
-                        beforeEachTest { provider.createMissingVolumeMountDirectories(volumeMounts, container) }
+                        beforeEachTest { provider.createMissingMountDirectories(volumeMounts, container) }
 
                         it("creates a directory for the local path that does not exist") {
                             assertThat(Files.exists(fileSystem.getPath(localPath)), equalTo(true))
@@ -586,6 +587,24 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                         }
                     }
 
+                    given("a tmpfs filesystem is mounted within a local mount's container path") {
+                        val localPath = "/local/source"
+                        val volumeMounts = setOf(
+                            HostMount(localPath.toPath(), "/container/local-mount", null),
+                            TmpfsMount("/container/local-mount/tmpfs", "")
+                        )
+
+                        beforeEachTest { provider.createMissingMountDirectories(volumeMounts, container) }
+
+                        it("creates a directory for the local path that does not exist") {
+                            assertThat(Files.exists(fileSystem.getPath(localPath)), equalTo(true))
+                        }
+
+                        it("creates directories within the local path for the tmpfs filesystem's mount point") {
+                            assertThat(Files.exists(fileSystem.getPath(localPath, "tmpfs")), equalTo(true))
+                        }
+                    }
+
                     given("a volume is mounted nested within a local mount's container path") {
                         val localPath = "/local/source"
                         val volumeMounts = setOf(
@@ -593,7 +612,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                             VolumeMount(VolumeReference("my-volume"), "/container/local-mount/path/to/volume", null)
                         )
 
-                        beforeEachTest { provider.createMissingVolumeMountDirectories(volumeMounts, container) }
+                        beforeEachTest { provider.createMissingMountDirectories(volumeMounts, container) }
 
                         it("creates a directory for the local path that does not exist") {
                             assertThat(Files.exists(fileSystem.getPath(localPath)), equalTo(true))
@@ -601,6 +620,24 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
 
                         it("creates directories within the local path for the volume's mount point") {
                             assertThat(Files.exists(fileSystem.getPath(localPath, "path", "to", "volume")), equalTo(true))
+                        }
+                    }
+
+                    given("a tmpfs filesystem is mounted nested within a local mount's container path") {
+                        val localPath = "/local/source"
+                        val volumeMounts = setOf(
+                            HostMount(localPath.toPath(), "/container/local-mount", null),
+                            TmpfsMount("/container/local-mount/path/to/tmpfs", "")
+                        )
+
+                        beforeEachTest { provider.createMissingMountDirectories(volumeMounts, container) }
+
+                        it("creates a directory for the local path that does not exist") {
+                            assertThat(Files.exists(fileSystem.getPath(localPath)), equalTo(true))
+                        }
+
+                        it("creates directories within the local path for the volume's mount point") {
+                            assertThat(Files.exists(fileSystem.getPath(localPath, "path", "to", "tmpfs")), equalTo(true))
                         }
                     }
 
@@ -614,7 +651,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                             VolumeMount(VolumeReference("my-volume"), "/container/local-mount/path/to/volume", null)
                         )
 
-                        beforeEachTest { provider.createMissingVolumeMountDirectories(volumeMounts, container) }
+                        beforeEachTest { provider.createMissingMountDirectories(volumeMounts, container) }
 
                         it("creates a directory for the local paths that does not exist") {
                             assertThat(Files.exists(fileSystem.getPath(outerLocalPath)), equalTo(true))
@@ -638,7 +675,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                             VolumeMount(VolumeReference("volume-2"), "/container/local-mount/volume-1/volume-2", null)
                         )
 
-                        beforeEachTest { provider.createMissingVolumeMountDirectories(volumeMounts, container) }
+                        beforeEachTest { provider.createMissingMountDirectories(volumeMounts, container) }
 
                         it("creates a directory for the local path that does not exist") {
                             assertThat(Files.exists(fileSystem.getPath(localPath)), equalTo(true))
@@ -661,7 +698,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                             VolumeMount(VolumeReference("volume-2"), "/container/volume-1/local-mount/volume-2", null)
                         )
 
-                        beforeEachTest { provider.createMissingVolumeMountDirectories(volumeMounts, container) }
+                        beforeEachTest { provider.createMissingMountDirectories(volumeMounts, container) }
 
                         it("creates a directory for the local path that does not exist") {
                             assertThat(Files.exists(fileSystem.getPath(localPath)), equalTo(true))

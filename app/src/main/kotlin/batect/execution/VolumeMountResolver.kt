@@ -22,8 +22,10 @@ import batect.config.ExpressionEvaluationException
 import batect.config.LiteralValue
 import batect.config.LocalMount
 import batect.config.ProjectPaths
+import batect.config.TmpfsMount
 import batect.config.VolumeMount
 import batect.dockerclient.BindMount
+import batect.dockerclient.ContainerMount
 import batect.dockerclient.HostMount
 import batect.dockerclient.VolumeReference
 import batect.os.PathResolutionResult
@@ -39,10 +41,11 @@ class VolumeMountResolver(
     private val cacheManager: CacheManager,
     private val projectPaths: ProjectPaths
 ) {
-    fun resolve(mounts: Set<VolumeMount>): Set<BindMount> = mounts.mapToSet {
+    fun resolve(mounts: Set<VolumeMount>): Set<ContainerMount> = mounts.mapToSet {
         when (it) {
             is LocalMount -> resolve(it)
             is CacheMount -> resolve(it)
+            is TmpfsMount -> batect.dockerclient.TmpfsMount(it.containerPath, it.options ?: "")
         }
     }
 

@@ -22,12 +22,14 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class ConfigurationFile(
-    @SerialName("project_name") @Serializable(with = ProjectNameSerializer::class)
+    @SerialName("project_name")
+    @Serializable(with = ProjectNameSerializer::class)
     val projectName: String? = null,
     @SerialName("forbid_telemetry") val forbidTelemetry: Boolean = false,
     val tasks: TaskMap = TaskMap(),
     val containers: ContainerMap = ContainerMap(),
     @SerialName("config_variables") val configVariables: ConfigVariableMap = ConfigVariableMap(),
-    @SerialName("include") @Serializable(with = IncludeSetConfigSerializer::class)
+    @SerialName("include")
+    @Serializable(with = IncludeSetConfigSerializer::class)
     val includes: Set<Include> = emptySet()
 )

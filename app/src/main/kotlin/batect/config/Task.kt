@@ -146,9 +146,11 @@ data class Task(
 
 @Serializable
 data class TaskContainerCustomisation(
-    @SerialName("environment") @Serializable(with = EnvironmentSerializer::class)
+    @SerialName("environment")
+    @Serializable(with = EnvironmentSerializer::class)
     val additionalEnvironmentVariables: Map<String, Expression> = emptyMap(),
-    @SerialName("ports") @Serializable(with = PortMappingConfigSetSerializer::class)
+    @SerialName("ports")
+    @Serializable(with = PortMappingConfigSetSerializer::class)
     val additionalPortMappings: Set<PortMapping> = emptySet(),
     @SerialName("working_directory") val workingDirectory: String? = null
 )

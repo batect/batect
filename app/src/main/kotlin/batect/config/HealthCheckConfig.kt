@@ -28,7 +28,8 @@ data class HealthCheckConfig(
 
     val retries: Int? = null,
 
-    @SerialName("start_period") @Serializable(with = DurationSerializer::class)
+    @SerialName("start_period")
+    @Serializable(with = DurationSerializer::class)
     val startPeriod: Duration? = null,
 
     @Serializable(with = DurationSerializer::class)

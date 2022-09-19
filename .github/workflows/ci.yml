@@ -48,7 +48,7 @@ jobs:
         run: ./gradlew -DgenerateCoverage=true app:check jacocoTestReport
 
       - name: Upload coverage to codecov.io
-        uses: codecov/codecov-action@v3.1.0
+        uses: codecov/codecov-action@v3.1.1
         with:
           flags: windows
 
@@ -212,7 +212,7 @@ jobs:
         run: unset JAVA_TOOL_OPTIONS && ./gradlew -DgenerateCoverage=true check libs:git-client:integrationTest jacocoTestReport spotlessCheck -x wrapper:unix:check -x wrapper:windows:check
 
       - name: Upload coverage to codecov.io
-        uses: codecov/codecov-action@v3.1.0
+        uses: codecov/codecov-action@v3.1.1
         with:
           flags: linux
 
@@ -410,7 +410,7 @@ jobs:
         run: unset JAVA_TOOL_OPTIONS && ./gradlew -DgenerateCoverage=true check libs:git-client:integrationTest jacocoTestReport -x wrapper:unix:check -x wrapper:windows:check
 
       - name: Upload coverage to codecov.io
-        uses: codecov/codecov-action@v3.1.0
+        uses: codecov/codecov-action@v3.1.1
         with:
           flags: mac
 

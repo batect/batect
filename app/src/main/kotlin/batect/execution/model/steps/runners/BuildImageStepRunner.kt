@@ -18,15 +18,20 @@ package batect.execution.model.steps.runners
 
 import batect.cli.CommandLineOptions
 import batect.config.BuildImage
+import batect.config.BuildSecret
+import batect.config.EnvironmentSecret
 import batect.config.Expression
 import batect.config.ExpressionEvaluationContext
 import batect.config.ExpressionEvaluationException
+import batect.config.FileSecret
 import batect.config.SSHAgent
 import batect.config.TaskSpecialisedConfiguration
 import batect.docker.ImageBuildProgressAggregator
 import batect.dockerclient.BuilderVersion
 import batect.dockerclient.DockerClient
 import batect.dockerclient.DockerClientException
+import batect.dockerclient.EnvironmentBuildSecret
+import batect.dockerclient.FileBuildSecret
 import batect.dockerclient.ImageBuildFailedException
 import batect.dockerclient.ImageBuildSpec
 import batect.dockerclient.io.SinkTextOutput
@@ -146,6 +151,10 @@ class BuildImageStepRunner(
             builder.withSSHAgent(resolveSSHAgent(agent, pathResolver))
         }
 
+        buildConfig.secrets.forEach { id, secret ->
+            builder.withSecret(id, resolveSecret(id, secret, pathResolver))
+        }
+
         return builder.build()
     }
 
@@ -188,6 +197,17 @@ class BuildImageStepRunner(
         return resolvedDockerfilePath
     }
 
+    private fun substituteBuildArgs(original: Map<String, Expression>): Map<String, String> =
+        original.mapValues { (name, value) -> evaluateBuildArgValue(name, value) }
+
+    private fun evaluateBuildArgValue(name: String, expression: Expression): String {
+        try {
+            return expression.evaluate(expressionEvaluationContext)
+        } catch (e: ExpressionEvaluationException) {
+            throw ImageBuildFailedException("The value for the build arg '$name' cannot be evaluated: ${e.message}", e)
+        }
+    }
+
     private fun resolveSSHAgent(agent: SSHAgent, pathResolver: PathResolver): batect.dockerclient.SSHAgent {
         val resolvedPaths = agent.paths.mapIndexed { index, path -> resolveSSHAgentPath(agent, path, index, pathResolver).toOkioPath() }
 
@@ -207,14 +227,27 @@ class BuildImageStepRunner(
         }
     }
 
-    private fun substituteBuildArgs(original: Map<String, Expression>): Map<String, String> =
-        original.mapValues { (name, value) -> evaluateBuildArgValue(name, value) }
+    private fun resolveSecret(id: String, secret: BuildSecret, pathResolver: PathResolver): batect.dockerclient.BuildSecret {
+        return when (secret) {
+            is EnvironmentSecret -> EnvironmentBuildSecret(secret.sourceEnvironmentVariableName)
+            is FileSecret -> FileBuildSecret(resolveFileSecretPath(id, secret, pathResolver).toOkioPath())
+        }
+    }
 
-    private fun evaluateBuildArgValue(name: String, expression: Expression): String {
+    private fun resolveFileSecretPath(id: String, secret: FileSecret, pathResolver: PathResolver): Path {
         try {
-            return expression.evaluate(expressionEvaluationContext)
+            val evaluated = secret.sourceFile.evaluate(expressionEvaluationContext)
+
+            when (val resolved = pathResolver.resolve(evaluated)) {
+                is PathResolutionResult.Resolved -> when (resolved.pathType) {
+                    PathType.File -> return resolved.absolutePath
+                    PathType.DoesNotExist -> throw ImageBuildFailedException("Path '${resolved.originalPath}' (${resolved.resolutionDescription}) for secret '$id' does not exist.")
+                    else -> throw ImageBuildFailedException("Path '${resolved.originalPath}' (${resolved.resolutionDescription}) for secret '$id' is not a directory.")
+                }
+                is PathResolutionResult.InvalidPath -> throw ImageBuildFailedException("Path '$evaluated' for secret '$id' is not a valid path.")
+            }
         } catch (e: ExpressionEvaluationException) {
-            throw ImageBuildFailedException("The value for the build arg '$name' cannot be evaluated: ${e.message}", e)
+            throw ImageBuildFailedException("Path for secret '$id' cannot be evaluated: ${e.message}", e)
         }
     }
 

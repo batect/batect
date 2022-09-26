@@ -233,7 +233,11 @@ object TaskSpecialisedConfigurationSpec : Spek({
                         "some-dockerfile",
                         ImagePullPolicy.Always,
                         "the-target-stage",
-                        setOf(SSHAgent("some-agent", setOf(LiteralValue("some-ssh-path"))))
+                        setOf(SSHAgent("some-agent", setOf(LiteralValue("some-ssh-path")))),
+                        mapOf(
+                            "environment-secret" to EnvironmentSecret("SOME_PASSWORD"),
+                            "file-secret" to FileSecret(LiteralValue("some-secret.txt"))
+                        )
                     ),
                     runAsCurrentUserConfig = RunAsCurrentUserConfig.RunAsDefaultContainerUser
                 )
@@ -264,6 +268,10 @@ object TaskSpecialisedConfigurationSpec : Spek({
                                                 "paths": [{"type":"LiteralValue","value":"some-ssh-path"}]
                                             }
                                         ],
+                                        "build_secrets": {
+                                            "environment-secret": { "environment": "SOME_PASSWORD" },
+                                            "file-secret": { "path": {"type":"LiteralValue","value":"some-secret.txt"} }
+                                        },
                                         "command": null,
                                         "entrypoint": null,
                                         "environment": {},

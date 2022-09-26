@@ -171,6 +171,11 @@ containers:
       - id: with-specific-paths
         paths:
           - /some/ssh.agent
+    build_secrets:
+      env-secret:
+        environment: SOME_PASSWORD
+      file-secret:
+        path: some-secret.txt
     run_as_current_user:
       enabled: false
     image_pull_policy: IfNotPresent

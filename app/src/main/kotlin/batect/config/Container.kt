@@ -75,6 +75,7 @@ data class Container(
         private const val buildTargetFieldName = "build_target"
         private const val dockerfileFieldName = "dockerfile"
         private const val buildSSHFieldName = "build_ssh"
+        private const val buildSecretsFieldName = "build_secrets"
         private const val imageNameFieldName = "image"
         private const val commandFieldName = "command"
         private const val entrypointFieldName = "entrypoint"
@@ -105,6 +106,7 @@ data class Container(
             element(buildTargetFieldName, String.serializer().descriptor, isOptional = true)
             element(dockerfileFieldName, String.serializer().descriptor, isOptional = true)
             element(buildSSHFieldName, ListSerializer(SSHAgent.serializer()).descriptor, isOptional = true)
+            element(buildSecretsFieldName, MapSerializer(String.serializer(), BuildSecret.serializer()).descriptor, isOptional = true)
             element(imageNameFieldName, String.serializer().descriptor, isOptional = true)
             element(commandFieldName, CommandSerializer.descriptor, isOptional = true)
             element(entrypointFieldName, String.serializer().descriptor, isOptional = true)
@@ -135,6 +137,7 @@ data class Container(
         private val buildTargetFieldIndex = descriptor.getElementIndex(buildTargetFieldName)
         private val dockerfileFieldIndex = descriptor.getElementIndex(dockerfileFieldName)
         private val buildSSHFieldIndex = descriptor.getElementIndex(buildSSHFieldName)
+        private val buildSecretsFieldIndex = descriptor.getElementIndex(buildSecretsFieldName)
         private val imageNameFieldIndex = descriptor.getElementIndex(imageNameFieldName)
         private val commandFieldIndex = descriptor.getElementIndex(commandFieldName)
         private val entrypointFieldIndex = descriptor.getElementIndex(entrypointFieldName)
@@ -171,6 +174,7 @@ data class Container(
             var buildTarget: String? = null
             var dockerfilePath: String? = null
             var buildSSHAgents: Set<SSHAgent>? = null
+            var buildSecrets: Map<String, BuildSecret>? = null
             var imageName: String? = null
             var command: Command? = null
             var entrypoint: Command? = null
@@ -210,6 +214,7 @@ data class Container(
                         // We only convert to a set at this point to ensure that two identical agents can be caught by checkForDuplicateSSHAgents() above.
                         buildSSHAgents = agents.toSet()
                     }
+                    buildSecretsFieldIndex -> buildSecrets = input.decodeSerializableElement(descriptor, i, MapSerializer(String.serializer(), BuildSecret.serializer()))
                     imageNameFieldIndex -> imageName = input.decodeStringElement(descriptor, i)
                     commandFieldIndex -> command = input.decodeSerializableElement(descriptor, i, CommandSerializer)
                     entrypointFieldIndex -> entrypoint = input.decodeSerializableElement(descriptor, i, CommandSerializer)
@@ -240,7 +245,7 @@ data class Container(
 
             return Container(
                 "UNNAMED-FROM-CONFIG-FILE",
-                resolveImageSource(input, buildDirectory, buildArgs, buildTarget, dockerfilePath, buildSSHAgents, imageName, imagePullPolicy, input.node.path),
+                resolveImageSource(input, buildDirectory, buildArgs, buildTarget, dockerfilePath, buildSSHAgents, buildSecrets, imageName, imagePullPolicy, input.node.path),
                 command,
                 entrypoint,
                 environment,
@@ -272,6 +277,7 @@ data class Container(
             buildTarget: String?,
             dockerfilePath: String?,
             buildSSHAgents: Set<SSHAgent>?,
+            buildSecrets: Map<String, BuildSecret>?,
             imageName: String?,
             imagePullPolicy: ImagePullPolicy,
             path: YamlPath
@@ -300,6 +306,10 @@ data class Container(
                 throw ConfigurationException("build_ssh cannot be used with image, but both have been provided.", path)
             }
 
+            if (imageName != null && buildSecrets != null) {
+                throw ConfigurationException("build_secrets cannot be used with image, but both have been provided.", path)
+            }
+
             return if (buildDirectory != null) {
                 val loader = input.serializersModule.getContextual(PathResolutionResult::class)!! as PathDeserializer
                 val context = loader.pathResolver.context
@@ -311,7 +321,8 @@ data class Container(
                     dockerfilePath ?: "Dockerfile",
                     imagePullPolicy,
                     buildTarget,
-                    buildSSHAgents ?: emptySet()
+                    buildSSHAgents ?: emptySet(),
+                    buildSecrets ?: emptyMap()
                 )
             } else {
                 PullImage(imageName!!, imagePullPolicy)
@@ -345,6 +356,7 @@ data class Container(
                     output.encodeSerializableElement(descriptor, dockerfileFieldIndex, String.serializer().nullable, value.imageSource.dockerfilePath)
                     output.encodeSerializableElement(descriptor, buildTargetFieldIndex, String.serializer().nullable, value.imageSource.targetStage)
                     output.encodeSerializableElement(descriptor, buildSSHFieldIndex, SetSerializer(SSHAgent.serializer()), value.imageSource.sshAgents)
+                    output.encodeSerializableElement(descriptor, buildSecretsFieldIndex, MapSerializer(String.serializer(), BuildSecret.serializer()), value.imageSource.secrets)
                 }
             }
 

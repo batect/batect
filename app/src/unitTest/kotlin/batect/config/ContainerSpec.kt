@@ -183,6 +183,60 @@ object ContainerSpec : Spek({
             }
         }
 
+        given("the config file has both an image and build secrets") {
+            val yaml = """
+                image: some_image
+                build_secrets:
+                  secret:
+                    environment: PASSWORD
+            """.trimIndent()
+
+            on("loading the configuration from the config file") {
+                it("throws an appropriate exception") {
+                    assertThat(
+                        { parser.decodeFromString(Container.Companion, yaml) },
+                        throws(withMessage("build_secrets cannot be used with image, but both have been provided.") and withLineNumber(1) and withColumn(1) and withPath("<root>"))
+                    )
+                }
+            }
+        }
+
+        given("the config file has a build secret with both a file path and an environment variable name") {
+            val yaml = """
+                image: some_image
+                build_secrets:
+                  secret:
+                    environment: PASSWORD
+                    path: some-secret.txt
+            """.trimIndent()
+
+            on("loading the configuration from the config file") {
+                it("throws an appropriate exception") {
+                    assertThat(
+                        { parser.decodeFromString(Container.Companion, yaml) },
+                        throws(withMessage("A secret can have either 'environment' or 'path', but both have been provided.") and withLineNumber(4) and withColumn(5) and withPath("build_secrets.secret"))
+                    )
+                }
+            }
+        }
+
+        given("the config file has a build secret with neither a file path nor an environment variable name") {
+            val yaml = """
+                image: some_image
+                build_secrets:
+                  secret: {}
+            """.trimIndent()
+
+            on("loading the configuration from the config file") {
+                it("throws an appropriate exception") {
+                    assertThat(
+                        { parser.decodeFromString(Container.Companion, yaml) },
+                        throws(withMessage("A secret must have either 'environment' or 'path', but neither has been provided.") and withLineNumber(3) and withColumn(11) and withPath("build_secrets.secret"))
+                    )
+                }
+            }
+        }
+
         given("the config file has neither a build directory nor an image") {
             val yaml = """
                 command: do-the-thing
@@ -211,6 +265,11 @@ object ContainerSpec : Spek({
                   - id: custom
                     paths:
                       - /some-ssh-agent
+                build_secrets:
+                  from-environment:
+                    environment: SECRET_PASSWORD
+                  from-file:
+                    path: some-secret.txt
                 command: do-the-thing.sh some-param
                 entrypoint: sh
                 environment:
@@ -276,7 +335,11 @@ object ContainerSpec : Spek({
                                 "some-Dockerfile",
                                 ImagePullPolicy.Always,
                                 "some-build-stage",
-                                setOf(SSHAgent("default"), SSHAgent("custom", setOf(LiteralValue("/some-ssh-agent"))))
+                                setOf(SSHAgent("default"), SSHAgent("custom", setOf(LiteralValue("/some-ssh-agent")))),
+                                mapOf(
+                                    "from-environment" to EnvironmentSecret("SECRET_PASSWORD"),
+                                    "from-file" to FileSecret(LiteralValue("some-secret.txt"))
+                                )
                             )
                         )
                     )

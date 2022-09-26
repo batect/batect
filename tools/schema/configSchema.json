@@ -65,6 +65,10 @@
           "description": "List of SSH agents to forward to the image build process when building the image in build_directory",
           "$ref": "#/definitions/buildSSHAgentList"
         },
+        "build_secrets": {
+          "description": "Secrets to expose to the image build process when building the image in build_directory",
+          "$ref": "#/definitions/buildSecretsList"
+        },
         "dockerfile": {
           "type": "string",
           "description": "Dockerfile (relative to build_directory) to use when building the image. Defaults to Dockerfile if not set.",
@@ -363,6 +367,46 @@
         },
         "required": ["id"]
       }
+    },
+    "buildSecretsList": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/buildSecret"
+      }
+    },
+    "buildSecret": {
+      "oneOf": [
+        {
+          "$ref": "#/definitions/environmentSecret"
+        },
+        {
+          "$ref": "#/definitions/fileSecret"
+        }
+      ]
+    },
+    "environmentSecret": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "environment": {
+          "type": "string",
+          "description": "Name of the environment variable to expose as a secret",
+          "minLength": 1
+        }
+      },
+      "required": ["environment"]
+    },
+    "fileSecret": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "Path to the file to expose as a secret",
+          "minLength": 1
+        }
+      },
+      "required": ["path"]
     },
     "portMappingList": {
       "type": "array",

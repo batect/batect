@@ -19,10 +19,12 @@ package batect.execution.model.steps.runners
 import batect.cli.CommandLineOptions
 import batect.config.BuildImage
 import batect.config.Container
+import batect.config.EnvironmentSecret
 import batect.config.EnvironmentVariableReference
 import batect.config.Expression
 import batect.config.ExpressionEvaluationContext
 import batect.config.ExpressionEvaluationException
+import batect.config.FileSecret
 import batect.config.ImagePullPolicy
 import batect.config.LiteralValue
 import batect.config.SSHAgent
@@ -31,6 +33,8 @@ import batect.docker.ActiveImageBuildStep
 import batect.docker.AggregatedImageBuildProgress
 import batect.dockerclient.BuilderVersion
 import batect.dockerclient.DockerClient
+import batect.dockerclient.EnvironmentBuildSecret
+import batect.dockerclient.FileBuildSecret
 import batect.dockerclient.ImageBuildFailedException
 import batect.dockerclient.ImageBuildProgressReceiver
 import batect.dockerclient.ImageReference
@@ -85,7 +89,21 @@ object BuildImageStepRunnerSpec : Spek({
         val dockerfilePath = "some-Dockerfile"
         val targetStage = "some-target-stage"
         val sshAgents = setOf(SSHAgent("some-agent", setOf(LiteralValue("/some-ssh-agent.sock"))))
-        val container = Container("some-container", BuildImage(buildDirectory, pathResolutionContext, buildArgs, dockerfilePath, targetStage = targetStage, sshAgents = sshAgents))
+        val secrets = mapOf("environment-secret" to EnvironmentSecret("SOME_PASSWORD"), "file-secret" to FileSecret(LiteralValue("some-secret.txt")))
+
+        val container = Container(
+            "some-container",
+            BuildImage(
+                buildDirectory,
+                pathResolutionContext,
+                buildArgs,
+                dockerfilePath,
+                targetStage = targetStage,
+                sshAgents = sshAgents,
+                secrets = secrets
+            )
+        )
+
         val step = BuildImageStep(container)
         val outputSink by createForEachTest { Buffer() }
         val builderVersion = BuilderVersion.BuildKit
@@ -100,11 +118,13 @@ object BuildImageStepRunnerSpec : Spek({
         val resolvedBuildDirectory = Paths.get("src", "unitTest", "kotlin", "batect", "execution", "model", "steps", "runners", "test-fixtures", "build-context").toAbsolutePath()
         val resolvedDockerfile = resolvedBuildDirectory.resolve(dockerfilePath)
         val resolvedSSHAgentSocketPath = Paths.get("resolved", "some-ssh-agent.sock")
+        val resolvedSecretPath = Paths.get("resolved", "some-secret.txt")
 
         val pathResolver by createForEachTest {
             mock<PathResolver> {
                 on { resolve(buildDirectory.value) } doReturn PathResolutionResult.Resolved("/some-build-dir", resolvedBuildDirectory, PathType.Directory, "described as '$resolvedBuildDirectory'")
                 on { resolve("/some-ssh-agent.sock") } doReturn PathResolutionResult.Resolved("/some-ssh-agent.sock", resolvedSSHAgentSocketPath, PathType.Other, "described as '$resolvedSSHAgentSocketPath'")
+                on { resolve("some-secret.txt") } doReturn PathResolutionResult.Resolved("some-secret.txt", resolvedSecretPath, PathType.File, "described as '$resolvedSecretPath'")
             }
         }
 
@@ -190,6 +210,15 @@ object BuildImageStepRunnerSpec : Spek({
 
                     itSuspend("runs the build with the specified SSH agents") {
                         verify(dockerClient).buildImage(argWhere { it.sshAgents == setOf(batect.dockerclient.SSHAgent("some-agent", setOf(resolvedSSHAgentSocketPath.toOkioPath()))) }, any(), any())
+                    }
+
+                    itSuspend("runs the build with the specified secrets") {
+                        val expectedSecrets = mapOf(
+                            "environment-secret" to EnvironmentBuildSecret("SOME_PASSWORD"),
+                            "file-secret" to FileBuildSecret(resolvedSecretPath.toOkioPath())
+                        )
+
+                        verify(dockerClient).buildImage(argWhere { it.secrets == expectedSecrets }, any(), any())
                     }
 
                     it("propagates output to the provided stdout stream") {
@@ -479,6 +508,58 @@ object BuildImageStepRunnerSpec : Spek({
 
             it("emits a 'image build failed' event") {
                 verify(eventSink).postEvent(ImageBuildFailedEvent(containerWithInvalidSSHAgentPath, "The value for path 1 for SSH agent 'some-agent' cannot be evaluated: Couldn't evaluate expression."))
+            }
+        }
+
+        on("when the expression for a secret path cannot be evaluated") {
+            val invalidReference = mock<Expression> {
+                on { evaluate(expressionEvaluationContext) } doThrow ExpressionEvaluationException("Couldn't evaluate expression.")
+            }
+
+            val imageSourceWithInvalidSecret = BuildImage(buildDirectory, pathResolutionContext, dockerfilePath = dockerfilePath, secrets = mapOf("the-secret" to FileSecret(invalidReference)))
+            val containerWithInvalidSecret = Container("some-container", imageSourceWithInvalidSecret)
+
+            val stepWithInvalidSecret = BuildImageStep(containerWithInvalidSecret)
+
+            beforeEachTest {
+                runner.run(stepWithInvalidSecret, eventSink)
+            }
+
+            it("emits a 'image build failed' event") {
+                verify(eventSink).postEvent(ImageBuildFailedEvent(containerWithInvalidSecret, "Path for secret 'the-secret' cannot be evaluated: Couldn't evaluate expression."))
+            }
+        }
+
+        on("when the path for a secret does not refer to a file") {
+            beforeEachTest {
+                whenever(pathResolver.resolve("some-secret.txt")).doReturn(PathResolutionResult.Resolved("some-secret.txt", resolvedSecretPath, PathType.Directory, "described as 'a directory'"))
+                runner.run(step, eventSink)
+            }
+
+            it("emits a 'image build failed' event") {
+                verify(eventSink).postEvent(ImageBuildFailedEvent(container, "Path 'some-secret.txt' (described as 'a directory') for secret 'file-secret' is not a directory."))
+            }
+        }
+
+        on("when the file for a secret does not exist") {
+            beforeEachTest {
+                whenever(pathResolver.resolve("some-secret.txt")).doReturn(PathResolutionResult.Resolved("some-secret.txt", resolvedSecretPath, PathType.DoesNotExist, "described as 'a non-existent thing'"))
+                runner.run(step, eventSink)
+            }
+
+            it("emits a 'image build failed' event") {
+                verify(eventSink).postEvent(ImageBuildFailedEvent(container, "Path 'some-secret.txt' (described as 'a non-existent thing') for secret 'file-secret' does not exist."))
+            }
+        }
+
+        on("when the path for a secret is an invalid path") {
+            beforeEachTest {
+                whenever(pathResolver.resolve("some-secret.txt")).doReturn(PathResolutionResult.InvalidPath("some-secret.txt"))
+                runner.run(step, eventSink)
+            }
+
+            it("emits a 'image build failed' event") {
+                verify(eventSink).postEvent(ImageBuildFailedEvent(container, "Path 'some-secret.txt' for secret 'file-secret' is not a valid path."))
             }
         }
     }

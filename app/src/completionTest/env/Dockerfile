@@ -5,7 +5,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl=7.81.0-1ubuntu1.4 \
     fish=3.3.1+ds-3 \
     openjdk-11-jre-headless=11.0.14.1+1-0ubuntu1 \
-    python3=3.10.4-0ubuntu2 \
+    python3=3.10.6-1~22.04 \
     python3-pip=22.0.2+dfsg-1 \
     zsh=5.8.1-1 \
     && apt-get clean && \

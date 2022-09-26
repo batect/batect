@@ -148,6 +148,41 @@ object ContainerSpec : Spek({
             }
         }
 
+        given("the config file has both an image and an image build SSH agent") {
+            val yaml = """
+                image: some_image
+                build_ssh:
+                  - id: default
+            """.trimIndent()
+
+            on("loading the configuration from the config file") {
+                it("throws an appropriate exception") {
+                    assertThat(
+                        { parser.decodeFromString(Container.Companion, yaml) },
+                        throws(withMessage("build_ssh cannot be used with image, but both have been provided.") and withLineNumber(1) and withColumn(1) and withPath("<root>"))
+                    )
+                }
+            }
+        }
+
+        given("the config file has multiple image build SSH agents with the same name") {
+            val yaml = """
+                build_directory: /some_build_dir
+                build_ssh:
+                  - id: default
+                  - id: default
+            """.trimIndent()
+
+            on("loading the configuration from the config file") {
+                it("throws an appropriate exception") {
+                    assertThat(
+                        { parser.decodeFromString(Container.Companion, yaml) },
+                        throws(withMessage("Each image build SSH agent must have a unique ID, but there are multiple agents with the ID 'default'.") and withLineNumber(3) and withColumn(3) and withPath("build_ssh"))
+                    )
+                }
+            }
+        }
+
         given("the config file has neither a build directory nor an image") {
             val yaml = """
                 command: do-the-thing
@@ -171,6 +206,11 @@ object ContainerSpec : Spek({
                   SOME_DYNAMIC_VALUE: ${'$'}{host_var}
                 build_target: some-build-stage
                 dockerfile: some-Dockerfile
+                build_ssh:
+                  - id: default
+                  - id: custom
+                    paths:
+                      - /some-ssh-agent
                 command: do-the-thing.sh some-param
                 entrypoint: sh
                 environment:
@@ -235,7 +275,8 @@ object ContainerSpec : Spek({
                                 mapOf("SOME_ARG" to LiteralValue("some_value"), "SOME_DYNAMIC_VALUE" to EnvironmentVariableReference("host_var")),
                                 "some-Dockerfile",
                                 ImagePullPolicy.Always,
-                                "some-build-stage"
+                                "some-build-stage",
+                                setOf(SSHAgent("default"), SSHAgent("custom", setOf(LiteralValue("/some-ssh-agent"))))
                             )
                         )
                     )

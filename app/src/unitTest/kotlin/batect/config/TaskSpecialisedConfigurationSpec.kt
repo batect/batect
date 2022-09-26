@@ -230,7 +230,10 @@ object TaskSpecialisedConfigurationSpec : Spek({
                         mapOf(
                             "SOME_VAR" to LiteralValue("blah")
                         ),
-                        "some-dockerfile"
+                        "some-dockerfile",
+                        ImagePullPolicy.Always,
+                        "the-target-stage",
+                        setOf(SSHAgent("some-agent", setOf(LiteralValue("some-ssh-path"))))
                     ),
                     runAsCurrentUserConfig = RunAsCurrentUserConfig.RunAsDefaultContainerUser
                 )
@@ -254,6 +257,13 @@ object TaskSpecialisedConfigurationSpec : Spek({
                                             "SOME_VAR": {"type":"LiteralValue", "value":"blah"}
                                         },
                                         "dockerfile": "some-dockerfile",
+                                        "build_target": "the-target-stage",
+                                        "build_ssh": [
+                                            {
+                                                "id": "some-agent",
+                                                "paths": [{"type":"LiteralValue","value":"some-ssh-path"}]
+                                            }
+                                        ],
                                         "command": null,
                                         "entrypoint": null,
                                         "environment": {},
@@ -281,7 +291,7 @@ object TaskSpecialisedConfigurationSpec : Spek({
                                         "setup_commands": [],
                                         "log_driver": "json-file",
                                         "log_options": {},
-                                        "image_pull_policy": "IfNotPresent",
+                                        "image_pull_policy": "Always",
                                         "shm_size": null
                                     }
                                 },

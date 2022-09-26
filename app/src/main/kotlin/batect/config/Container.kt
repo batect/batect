@@ -74,6 +74,7 @@ data class Container(
         private const val buildArgsFieldName = "build_args"
         private const val buildTargetFieldName = "build_target"
         private const val dockerfileFieldName = "dockerfile"
+        private const val buildSSHFieldName = "build_ssh"
         private const val imageNameFieldName = "image"
         private const val commandFieldName = "command"
         private const val entrypointFieldName = "entrypoint"
@@ -99,10 +100,11 @@ data class Container(
         private const val labelsFieldName = "labels"
 
         override val descriptor: SerialDescriptor = buildClassSerialDescriptor("Container") {
-            element(buildDirectoryFieldName, String.serializer().descriptor, isOptional = true)
+            element(buildDirectoryFieldName, Expression.serializer().descriptor, isOptional = true)
             element(buildArgsFieldName, EnvironmentSerializer.descriptor, isOptional = true)
             element(buildTargetFieldName, String.serializer().descriptor, isOptional = true)
             element(dockerfileFieldName, String.serializer().descriptor, isOptional = true)
+            element(buildSSHFieldName, ListSerializer(SSHAgent.serializer()).descriptor, isOptional = true)
             element(imageNameFieldName, String.serializer().descriptor, isOptional = true)
             element(commandFieldName, CommandSerializer.descriptor, isOptional = true)
             element(entrypointFieldName, String.serializer().descriptor, isOptional = true)
@@ -132,6 +134,7 @@ data class Container(
         private val buildArgsFieldIndex = descriptor.getElementIndex(buildArgsFieldName)
         private val buildTargetFieldIndex = descriptor.getElementIndex(buildTargetFieldName)
         private val dockerfileFieldIndex = descriptor.getElementIndex(dockerfileFieldName)
+        private val buildSSHFieldIndex = descriptor.getElementIndex(buildSSHFieldName)
         private val imageNameFieldIndex = descriptor.getElementIndex(imageNameFieldName)
         private val commandFieldIndex = descriptor.getElementIndex(commandFieldName)
         private val entrypointFieldIndex = descriptor.getElementIndex(entrypointFieldName)
@@ -167,6 +170,7 @@ data class Container(
             var buildArgs: Map<String, Expression>? = null
             var buildTarget: String? = null
             var dockerfilePath: String? = null
+            var buildSSHAgents: Set<SSHAgent>? = null
             var imageName: String? = null
             var command: Command? = null
             var entrypoint: Command? = null
@@ -198,6 +202,14 @@ data class Container(
                     buildArgsFieldIndex -> buildArgs = input.decodeSerializableElement(descriptor, i, EnvironmentSerializer)
                     buildTargetFieldIndex -> buildTarget = input.decodeStringElement(descriptor, i)
                     dockerfileFieldIndex -> dockerfilePath = input.decodeStringElement(descriptor, i)
+                    buildSSHFieldIndex -> {
+                        val path = input.getCurrentPath()
+                        val agents = input.decodeSerializableElement(descriptor, i, ListSerializer(SSHAgent.serializer()))
+                        checkForDuplicateSSHAgents(agents, path)
+
+                        // We only convert to a set at this point to ensure that two identical agents can be caught by checkForDuplicateSSHAgents() above.
+                        buildSSHAgents = agents.toSet()
+                    }
                     imageNameFieldIndex -> imageName = input.decodeStringElement(descriptor, i)
                     commandFieldIndex -> command = input.decodeSerializableElement(descriptor, i, CommandSerializer)
                     entrypointFieldIndex -> entrypoint = input.decodeSerializableElement(descriptor, i, CommandSerializer)
@@ -228,7 +240,7 @@ data class Container(
 
             return Container(
                 "UNNAMED-FROM-CONFIG-FILE",
-                resolveImageSource(input, buildDirectory, buildArgs, buildTarget, dockerfilePath, imageName, imagePullPolicy, input.node.path),
+                resolveImageSource(input, buildDirectory, buildArgs, buildTarget, dockerfilePath, buildSSHAgents, imageName, imagePullPolicy, input.node.path),
                 command,
                 entrypoint,
                 environment,
@@ -259,6 +271,7 @@ data class Container(
             buildArgs: Map<String, Expression>?,
             buildTarget: String?,
             dockerfilePath: String?,
+            buildSSHAgents: Set<SSHAgent>?,
             imageName: String?,
             imagePullPolicy: ImagePullPolicy,
             path: YamlPath
@@ -283,13 +296,41 @@ data class Container(
                 throw ConfigurationException("dockerfile cannot be used with image, but both have been provided.", path)
             }
 
+            if (imageName != null && buildSSHAgents != null) {
+                throw ConfigurationException("build_ssh cannot be used with image, but both have been provided.", path)
+            }
+
             return if (buildDirectory != null) {
                 val loader = input.serializersModule.getContextual(PathResolutionResult::class)!! as PathDeserializer
                 val context = loader.pathResolver.context
 
-                BuildImage(buildDirectory, context, buildArgs ?: emptyMap(), dockerfilePath ?: "Dockerfile", imagePullPolicy, buildTarget)
+                BuildImage(
+                    buildDirectory,
+                    context,
+                    buildArgs ?: emptyMap(),
+                    dockerfilePath ?: "Dockerfile",
+                    imagePullPolicy,
+                    buildTarget,
+                    buildSSHAgents ?: emptySet()
+                )
             } else {
                 PullImage(imageName!!, imagePullPolicy)
+            }
+        }
+
+        private fun checkForDuplicateSSHAgents(buildSSHAgents: Iterable<SSHAgent>?, path: YamlPath) {
+            if (buildSSHAgents == null) {
+                return
+            }
+
+            val idsAlreadySeen = mutableSetOf<String>()
+
+            buildSSHAgents.forEach { agent ->
+                if (idsAlreadySeen.contains(agent.id)) {
+                    throw ConfigurationException("Each image build SSH agent must have a unique ID, but there are multiple agents with the ID '${agent.id}'.", path)
+                }
+
+                idsAlreadySeen.add(agent.id)
             }
         }
 
@@ -302,11 +343,12 @@ data class Container(
                     output.encodeSerializableElement(descriptor, buildDirectoryFieldIndex, Expression.serializer(), value.imageSource.buildDirectory)
                     output.encodeSerializableElement(descriptor, buildArgsFieldIndex, EnvironmentSerializer, value.imageSource.buildArgs)
                     output.encodeSerializableElement(descriptor, dockerfileFieldIndex, String.serializer().nullable, value.imageSource.dockerfilePath)
+                    output.encodeSerializableElement(descriptor, buildTargetFieldIndex, String.serializer().nullable, value.imageSource.targetStage)
+                    output.encodeSerializableElement(descriptor, buildSSHFieldIndex, SetSerializer(SSHAgent.serializer()), value.imageSource.sshAgents)
                 }
             }
 
             output.encodeSerializableElement(descriptor, imagePullPolicyFieldIndex, ImagePullPolicy.serializer(), value.imageSource.imagePullPolicy)
-
             output.encodeSerializableElement(descriptor, commandFieldIndex, CommandSerializer.nullable, value.command)
             output.encodeSerializableElement(descriptor, entrypointFieldIndex, CommandSerializer.nullable, value.entrypoint)
             output.encodeSerializableElement(descriptor, environmentFieldIndex, EnvironmentSerializer, value.environment)

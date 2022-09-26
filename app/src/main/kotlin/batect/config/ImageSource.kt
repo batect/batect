@@ -29,8 +29,15 @@ data class BuildImage(
     val buildArgs: Map<String, Expression> = emptyMap(),
     val dockerfilePath: String = "Dockerfile",
     override val imagePullPolicy: ImagePullPolicy = ImagePullPolicy.IfNotPresent,
-    val targetStage: String? = null
+    val targetStage: String? = null,
+    val sshAgents: Set<SSHAgent> = emptySet()
 ) : ImageSource()
+
+@Serializable
+data class SSHAgent(
+    val id: String,
+    val paths: Set<Expression> = emptySet()
+)
 
 @Serializable
 data class PullImage(

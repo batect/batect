@@ -18,8 +18,6 @@ package batect.config
 
 import batect.config.io.ConfigurationException
 import com.charleskorn.kaml.YamlInput
-import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
@@ -27,9 +25,7 @@ import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.descriptors.SerialKind
 import kotlinx.serialization.descriptors.buildClassSerialDescriptor
-import kotlinx.serialization.descriptors.buildSerialDescriptor
 import kotlinx.serialization.encoding.CompositeEncoder
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
@@ -200,11 +196,7 @@ sealed class Expression(open val originalExpression: String) {
             element("type", String.serializer().descriptor)
         }
 
-        @OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)
-        override val descriptor: SerialDescriptor = buildSerialDescriptor(Expression::class.qualifiedName!!, SerialKind.CONTEXTUAL) {
-            element("string", deserializationDescriptor)
-            element("object", serializationDescriptor)
-        }
+        override val descriptor: SerialDescriptor = deserializationDescriptor
 
         override fun deserialize(decoder: Decoder): Expression {
             try {

@@ -25,6 +25,7 @@ import batect.config.ExpressionEvaluationContext
 import batect.config.ExpressionEvaluationException
 import batect.config.ImagePullPolicy
 import batect.config.LiteralValue
+import batect.config.SSHAgent
 import batect.config.TaskSpecialisedConfiguration
 import batect.docker.ActiveImageBuildStep
 import batect.docker.AggregatedImageBuildProgress
@@ -83,7 +84,8 @@ object BuildImageStepRunnerSpec : Spek({
         val buildArgs = mapOf("some_arg" to LiteralValue("some_value"), "SOME_PROXY_CONFIG" to LiteralValue("overridden"), "SOME_HOST_VAR" to EnvironmentVariableReference("SOME_ENV_VAR"))
         val dockerfilePath = "some-Dockerfile"
         val targetStage = "some-target-stage"
-        val container = Container("some-container", BuildImage(buildDirectory, pathResolutionContext, buildArgs, dockerfilePath, targetStage = targetStage))
+        val sshAgents = setOf(SSHAgent("some-agent", setOf(LiteralValue("/some-ssh-agent.sock"))))
+        val container = Container("some-container", BuildImage(buildDirectory, pathResolutionContext, buildArgs, dockerfilePath, targetStage = targetStage, sshAgents = sshAgents))
         val step = BuildImageStep(container)
         val outputSink by createForEachTest { Buffer() }
         val builderVersion = BuilderVersion.BuildKit
@@ -97,10 +99,12 @@ object BuildImageStepRunnerSpec : Spek({
 
         val resolvedBuildDirectory = Paths.get("src", "unitTest", "kotlin", "batect", "execution", "model", "steps", "runners", "test-fixtures", "build-context").toAbsolutePath()
         val resolvedDockerfile = resolvedBuildDirectory.resolve(dockerfilePath)
+        val resolvedSSHAgentSocketPath = Paths.get("resolved", "some-ssh-agent.sock")
 
         val pathResolver by createForEachTest {
             mock<PathResolver> {
                 on { resolve(buildDirectory.value) } doReturn PathResolutionResult.Resolved("/some-build-dir", resolvedBuildDirectory, PathType.Directory, "described as '$resolvedBuildDirectory'")
+                on { resolve("/some-ssh-agent.sock") } doReturn PathResolutionResult.Resolved("/some-ssh-agent.sock", resolvedSSHAgentSocketPath, PathType.Other, "described as '$resolvedSSHAgentSocketPath'")
             }
         }
 
@@ -182,6 +186,10 @@ object BuildImageStepRunnerSpec : Spek({
 
                     itSuspend("generates a tag for the image based on the project and container names, and includes any additional image tags provided on the command line") {
                         verify(dockerClient).buildImage(argWhere { it.imageTags == setOf("some-project-some-container", "some-extra-image-tag") }, any(), any())
+                    }
+
+                    itSuspend("runs the build with the specified SSH agents") {
+                        verify(dockerClient).buildImage(argWhere { it.sshAgents == setOf(batect.dockerclient.SSHAgent("some-agent", setOf(resolvedSSHAgentSocketPath.toOkioPath()))) }, any(), any())
                     }
 
                     it("propagates output to the provided stdout stream") {
@@ -453,6 +461,24 @@ object BuildImageStepRunnerSpec : Spek({
                 it("emits a 'image build failed' event") {
                     verify(eventSink).postEvent(ImageBuildFailedEvent(containerWithExternalDockerfile, "The Dockerfile '../Dockerfile-outside-context' is not a child of the build directory (a description of the build directory)"))
                 }
+            }
+        }
+
+        on("when the expression for an SSH agent path cannot be evaluated") {
+            val invalidReference = mock<Expression> {
+                on { evaluate(expressionEvaluationContext) } doThrow ExpressionEvaluationException("Couldn't evaluate expression.")
+            }
+
+            val imageSourceWithInvalidSSHAgentPath = BuildImage(buildDirectory, pathResolutionContext, dockerfilePath = dockerfilePath, sshAgents = setOf(SSHAgent("some-agent", setOf(invalidReference))))
+            val containerWithInvalidSSHAgentPath = Container("some-container", imageSourceWithInvalidSSHAgentPath)
+            val stepWithInvalidSSHAgentPath = BuildImageStep(containerWithInvalidSSHAgentPath)
+
+            beforeEachTest {
+                runner.run(stepWithInvalidSSHAgentPath, eventSink)
+            }
+
+            it("emits a 'image build failed' event") {
+                verify(eventSink).postEvent(ImageBuildFailedEvent(containerWithInvalidSSHAgentPath, "The value for path 1 for SSH agent 'some-agent' cannot be evaluated: Couldn't evaluate expression."))
             }
         }
     }

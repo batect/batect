@@ -61,6 +61,10 @@
           "description": "Dockerfile stage name to build and use for this container",
           "minLength": 1
         },
+        "build_ssh": {
+          "description": "List of SSH agents to forward to the image build process when building the image in build_directory",
+          "$ref": "#/definitions/buildSSHAgentList"
+        },
         "dockerfile": {
           "type": "string",
           "description": "Dockerfile (relative to build_directory) to use when building the image. Defaults to Dockerfile if not set.",
@@ -175,7 +179,9 @@
           "not": {
             "required": [
               "build_args",
-              "dockerfile"
+              "dockerfile",
+              "build_target",
+              "build_ssh"
             ]
           }
         },
@@ -333,6 +339,29 @@
       "type": "object",
       "additionalProperties": {
         "type": "string"
+      }
+    },
+    "buildSSHAgentList": {
+      "type": "array",
+      "items": {
+        "minLength": 1,
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "ID used to refer to agent from Dockerfile",
+            "minimum": 1
+          },
+          "paths": {
+            "type": "array",
+            "description": "Paths to keys or SSH agent sockets to expose to image build process",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": ["id"]
       }
     },
     "portMappingList": {

@@ -166,6 +166,11 @@ containers:
       SOME_ARG: some value
     build_target: some-stage
     dockerfile: some-dockerfile
+    build_ssh:
+      - id: with-default
+      - id: with-specific-paths
+        paths:
+          - /some/ssh.agent
     run_as_current_user:
       enabled: false
     image_pull_policy: IfNotPresent

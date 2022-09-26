@@ -21,6 +21,7 @@ import batect.config.BuildImage
 import batect.config.Expression
 import batect.config.ExpressionEvaluationContext
 import batect.config.ExpressionEvaluationException
+import batect.config.SSHAgent
 import batect.config.TaskSpecialisedConfiguration
 import batect.docker.ImageBuildProgressAggregator
 import batect.dockerclient.BuilderVersion
@@ -38,6 +39,7 @@ import batect.io.Tee
 import batect.logging.Logger
 import batect.os.PathResolutionContext
 import batect.os.PathResolutionResult
+import batect.os.PathResolver
 import batect.os.PathResolverFactory
 import batect.os.PathType
 import batect.os.SystemInfo
@@ -120,9 +122,10 @@ class BuildImageStepRunner(
 
     private fun createImageBuildSpec(step: BuildImageStep): ImageBuildSpec {
         val buildConfig = step.container.imageSource as BuildImage
+        val pathResolver = pathResolverFactory.createResolver(buildConfig.pathResolutionContext)
         val buildArgs = buildTimeProxyEnvironmentVariablesForOptions() + substituteBuildArgs(buildConfig.buildArgs)
         val imageTags = commandLineOptions.imageTags.getOrDefault(step.container.name, emptySet()) + imageTagFor(step)
-        val buildDirectory = resolveBuildDirectory(buildConfig)
+        val buildDirectory = resolveBuildDirectory(buildConfig, pathResolver)
         val dockerfilePath = resolveDockerfilePath(buildDirectory, buildConfig.dockerfilePath, buildConfig.pathResolutionContext)
 
         val builder = ImageBuildSpec.Builder(buildDirectory.toOkioPath())
@@ -139,11 +142,14 @@ class BuildImageStepRunner(
             builder.withTargetBuildStage(buildConfig.targetStage)
         }
 
+        buildConfig.sshAgents.forEach { agent ->
+            builder.withSSHAgent(resolveSSHAgent(agent, pathResolver))
+        }
+
         return builder.build()
     }
 
-    private fun resolveBuildDirectory(source: BuildImage): Path {
-        val pathResolver = pathResolverFactory.createResolver(source.pathResolutionContext)
+    private fun resolveBuildDirectory(source: BuildImage, pathResolver: PathResolver): Path {
         val evaluatedBuildDirectory = evaluateBuildDirectory(source.buildDirectory)
 
         when (val resolutionResult = pathResolver.resolve(evaluatedBuildDirectory)) {
@@ -180,6 +186,25 @@ class BuildImageStepRunner(
         }
 
         return resolvedDockerfilePath
+    }
+
+    private fun resolveSSHAgent(agent: SSHAgent, pathResolver: PathResolver): batect.dockerclient.SSHAgent {
+        val resolvedPaths = agent.paths.mapIndexed { index, path -> resolveSSHAgentPath(agent, path, index, pathResolver).toOkioPath() }
+
+        return batect.dockerclient.SSHAgent(agent.id, resolvedPaths.toSet())
+    }
+
+    private fun resolveSSHAgentPath(agent: SSHAgent, pathExpression: Expression, index: Int, pathResolver: PathResolver): Path {
+        try {
+            val evaluated = pathExpression.evaluate(expressionEvaluationContext)
+
+            when (val resolved = pathResolver.resolve(evaluated)) {
+                is PathResolutionResult.Resolved -> return resolved.absolutePath
+                is PathResolutionResult.InvalidPath -> throw ImageBuildFailedException("The value '$evaluated' for path ${index + 1} for SSH agent '${agent.id}' is not a valid path.")
+            }
+        } catch (e: ExpressionEvaluationException) {
+            throw ImageBuildFailedException("The value for path ${index + 1} for SSH agent '${agent.id}' cannot be evaluated: ${e.message}", e)
+        }
     }
 
     private fun substituteBuildArgs(original: Map<String, Expression>): Map<String, String> =

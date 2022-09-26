@@ -26,7 +26,6 @@ import batect.dockerclient.DockerClient
 import batect.dockerclient.DockerClientException
 import batect.dockerclient.PingResponse
 import batect.ioc.DockerConfigurationKodeinFactory
-import batect.primitives.Version
 import batect.telemetry.DockerTelemetryCollector
 import batect.telemetry.TestTelemetryCaptor
 import batect.testutils.beforeEachTestSuspend
@@ -100,7 +99,7 @@ object DockerConnectivitySpec : Spek({
                 whenever(dockerClient.getDaemonVersionInformation()).doReturn(DaemonVersionInformation(version, "1.37", "", "", "linux", "", experimental))
             }
 
-            return DockerConnectivityCheckResult.Succeeded(DockerContainerType.Linux, Version.parse(version), builderVersion, experimental)
+            return DockerConnectivityCheckResult.Succeeded(DockerContainerType.Linux, version, builderVersion, experimental)
         }
 
         fun Suite.itRunsTheTaskWithBuilder(version: String, builderVersion: BuilderVersion, experimental: Boolean, expectedBuilderVersion: BuilderVersion) {
@@ -224,6 +223,10 @@ object DockerConnectivitySpec : Spek({
                     beforeEachTest { setUpScenario("17.6.0", BuilderVersion.BuildKit, true) }
 
                     itDoesNotRunTheTaskAndFailsWithError("BuildKit has been enabled with --enable-buildkit or the DOCKER_BUILDKIT environment variable, but the current version of Docker does not support BuildKit, even with experimental features enabled.")
+                }
+
+                given("the builder reports an untagged version number") {
+                    itRunsTheTaskWithBuilder("master-dockerproject-2022-03-26", BuilderVersion.BuildKit, true, BuilderVersion.BuildKit)
                 }
             }
         }

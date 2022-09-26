@@ -80,15 +80,23 @@ class DockerConnectivity(
             null -> connectivityCheckResult.builderVersion
             false -> BuilderVersion.Legacy
             true -> {
-                if (connectivityCheckResult.dockerVersion.compareTo(minimumDockerVersionWithBuildKitSupport, VersionComparisonMode.DockerStyle) < 0) {
-                    return error("BuildKit has been enabled with --${CommandLineOptionsParser.enableBuildKitFlagName} or the ${CommandLineOptionsParser.enableBuildKitEnvironmentVariableName} environment variable, but the current version of Docker does not support BuildKit, even with experimental features enabled.")
-                }
+                if (isUntaggedDaemonVersion(connectivityCheckResult.dockerVersion)) {
+                    // Assume that untagged Docker daemon versions (such as those seen on GitHub Actions' Windows runners) support BuildKit.
+                    // See https://github.com/actions/runner-images/pull/6220.
+                    BuilderVersion.BuildKit
+                } else {
+                    val dockerVersion = Version.parse(connectivityCheckResult.dockerVersion)
 
-                if (connectivityCheckResult.dockerVersion.compareTo(minimumDockerVersionWithNonExperimentalBuildKitSupport, VersionComparisonMode.DockerStyle) < 0 && !connectivityCheckResult.experimentalFeaturesEnabled) {
-                    return error("BuildKit has been enabled with --${CommandLineOptionsParser.enableBuildKitFlagName} or the ${CommandLineOptionsParser.enableBuildKitEnvironmentVariableName} environment variable, but the current version of Docker requires experimental features to be enabled to use BuildKit and experimental features are currently disabled.")
-                }
+                    if (dockerVersion.isBefore(minimumDockerVersionWithBuildKitSupport)) {
+                        return error("BuildKit has been enabled with --${CommandLineOptionsParser.enableBuildKitFlagName} or the ${CommandLineOptionsParser.enableBuildKitEnvironmentVariableName} environment variable, but the current version of Docker does not support BuildKit, even with experimental features enabled.")
+                    }
 
-                BuilderVersion.BuildKit
+                    if (dockerVersion.isBefore(minimumDockerVersionWithNonExperimentalBuildKitSupport) && !connectivityCheckResult.experimentalFeaturesEnabled) {
+                        return error("BuildKit has been enabled with --${CommandLineOptionsParser.enableBuildKitFlagName} or the ${CommandLineOptionsParser.enableBuildKitEnvironmentVariableName} environment variable, but the current version of Docker requires experimental features to be enabled to use BuildKit and experimental features are currently disabled.")
+                    }
+
+                    BuilderVersion.BuildKit
+                }
             }
         }
 
@@ -97,6 +105,12 @@ class DockerConnectivity(
 
         return task(kodein)
     }
+
+    private fun Version.isBefore(minimumVersion: Version): Boolean {
+        return this.compareTo(minimumVersion, VersionComparisonMode.DockerStyle) < 0
+    }
+
+    private fun isUntaggedDaemonVersion(version: String): Boolean = untaggedDaemonVersionRegex.matches(version)
 
     private fun handleFailedConnectivityCheck(connectivityCheckResult: DockerConnectivityCheckResult.Failed): Int {
         return error("Docker is not installed, not running or not compatible with Batect: ${connectivityCheckResult.message}")
@@ -132,7 +146,7 @@ class DockerConnectivity(
 
                 DockerConnectivityCheckResult.Succeeded(
                     osType,
-                    Version.parse(versionInfo.version),
+                    versionInfo.version,
                     pingResponse.builderVersion,
                     pingResponse.experimental
                 )
@@ -151,6 +165,7 @@ class DockerConnectivity(
     companion object {
         private val minimumDockerVersionWithBuildKitSupport = Version(17, 7, 0)
         private val minimumDockerVersionWithNonExperimentalBuildKitSupport = Version(18, 9, 0)
+        private val untaggedDaemonVersionRegex = """^[^-]+-dockerproject-\d{4}-\d{2}-\d{2}$""".toRegex()
 
         private const val minimumDockerAPIVersion = "1.37"
         private const val minimumDockerVersion = "18.03.1" // This should be kept in sync with the above API version (see https://docs.docker.com/develop/sdk/#api-version-matrix for table)

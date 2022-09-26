@@ -21,7 +21,6 @@ import batect.docker.DockerContainerType
 import batect.dockerclient.BuilderVersion
 import batect.execution.CacheManager
 import batect.execution.CacheType
-import batect.primitives.Version
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import com.natpryce.hamkrest.assertion.assertThat
@@ -43,7 +42,7 @@ object DockerTelemetryCollectorSpec : Spek({
         val dockerTelemetryCollector by createForEachTest { DockerTelemetryCollector(cacheManager, telemetryCaptor) }
 
         describe("when collecting telemetry") {
-            val checkResult = DockerConnectivityCheckResult.Succeeded(DockerContainerType.Linux, Version(19, 3, 1), BuilderVersion.BuildKit, false)
+            val checkResult = DockerConnectivityCheckResult.Succeeded(DockerContainerType.Linux, "19.3.1", BuilderVersion.BuildKit, false)
             beforeEachTest { dockerTelemetryCollector.collectTelemetry(checkResult, BuilderVersion.Legacy) }
 
             it("adds the Docker version as an attribute on the telemetry session") {

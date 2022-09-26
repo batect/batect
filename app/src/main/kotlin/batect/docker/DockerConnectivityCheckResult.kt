@@ -17,10 +17,9 @@
 package batect.docker
 
 import batect.dockerclient.BuilderVersion
-import batect.primitives.Version
 
 sealed class DockerConnectivityCheckResult {
-    data class Succeeded(val containerType: DockerContainerType, val dockerVersion: Version, val builderVersion: BuilderVersion, val experimentalFeaturesEnabled: Boolean) : DockerConnectivityCheckResult()
+    data class Succeeded(val containerType: DockerContainerType, val dockerVersion: String, val builderVersion: BuilderVersion, val experimentalFeaturesEnabled: Boolean) : DockerConnectivityCheckResult()
 
     data class Failed(val message: String) : DockerConnectivityCheckResult()
 }

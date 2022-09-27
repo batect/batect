@@ -326,10 +326,20 @@ object SimpleEventLoggerSpec : Spek({
         }
 
         on("when the task finishes") {
-            beforeEachTest { logger.onTaskFinished("some-task", 234, Duration.ofMillis(2500)) }
+            given("the task finished with a non-zero exit code") {
+                beforeEachTest { logger.onTaskFinished("some-task", 234, Duration.ofMillis(2500)) }
 
-            it("prints a message to the output") {
-                verify(console).println(Text.white(Text.bold("some-task") + Text(" finished with exit code 234 in 2.5s.")))
+                it("prints a message to the console with the exit code in red") {
+                    verify(console).println(Text.white(Text.bold("some-task") + Text(" finished with exit code ") + Text.red(Text.bold("234")) + Text(" in 2.5s.")))
+                }
+            }
+
+            given("the task finished with a zero exit code") {
+                beforeEachTest { logger.onTaskFinished("some-task", 0, Duration.ofMillis(2500)) }
+
+                it("prints a message to the console with the exit code in green") {
+                    verify(console).println(Text.white(Text.bold("some-task") + Text(" finished with exit code ") + Text.green(Text.bold("0")) + Text(" in 2.5s.")))
+                }
             }
         }
 

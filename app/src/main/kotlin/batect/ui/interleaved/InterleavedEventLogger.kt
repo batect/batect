@@ -68,7 +68,13 @@ class InterleavedEventLogger(
     }
 
     override fun onTaskFinished(taskName: String, exitCode: Long, duration: Duration) {
-        output.printForTask(batectPrefix + Text.bold(taskName) + Text(" finished with exit code $exitCode in ${duration.humanise()}."))
+        val exitCodeText = if (exitCode == 0L) {
+            Text.green(exitCode.toString())
+        } else {
+            Text.red(exitCode.toString())
+        }
+
+        output.printForTask(batectPrefix + Text.bold(taskName) + Text(" finished with exit code ") + Text.bold(exitCodeText) + Text(" in ${duration.humanise()}."))
     }
 
     override fun onTaskFinishedWithCleanupDisabled(postTaskManualCleanup: PostTaskManualCleanup.Required, allEvents: Set<TaskEvent>) {

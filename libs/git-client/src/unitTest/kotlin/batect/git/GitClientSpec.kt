@@ -22,7 +22,6 @@ import batect.os.ProcessRunner
 import batect.testutils.createForEachTest
 import batect.testutils.equalTo
 import batect.testutils.given
-import batect.testutils.osIndependentPath
 import batect.testutils.withMessage
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.throws
@@ -33,24 +32,27 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.nio.file.Files
 
 object GitClientSpec : Spek({
     describe("a Git client") {
         val processRunner by createForEachTest { mock<ProcessRunner>() }
-        val client by createForEachTest { GitClient(processRunner) }
+        val temporaryDirectory by createForEachTest { Files.createTempDirectory("git-client-spec-tmp") }
+        val temporaryDirectoryCreator = { temporaryDirectory }
+        val client by createForEachTest { GitClient(processRunner, temporaryDirectoryCreator) }
 
         describe("cloning a repository") {
             val repo = "http://github.com/me/my-repo.git"
             val ref = "the-reference"
-            val directory = osIndependentPath("/some/directory")
-            val cloneCommand = listOf("git", "clone", "--quiet", "--no-checkout", "--", repo, "/some/directory")
+            val directory by createForEachTest { Files.createTempDirectory("git-client-spec-target") }
+            val cloneCommand by createForEachTest { listOf("git", "clone", "--quiet", "--no-checkout", "--", repo, temporaryDirectory.toString()) }
 
             given("cloning the repository succeeds") {
                 beforeEachTest {
                     whenever(processRunner.runWithConsoleAttached(cloneCommand)).doReturn(0)
                 }
 
-                val checkoutCommand = listOf("git", "-c", "advice.detachedHead=false", "-C", "/some/directory", "checkout", "--quiet", "--recurse-submodules", ref)
+                val checkoutCommand by createForEachTest { listOf("git", "-c", "advice.detachedHead=false", "-C", temporaryDirectory.toString(), "checkout", "--quiet", "--recurse-submodules", ref) }
 
                 given("checking out the reference succeeds") {
                     beforeEachTest {

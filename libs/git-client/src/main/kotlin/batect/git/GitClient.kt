@@ -18,24 +18,32 @@ package batect.git
 
 import batect.os.ExecutableDoesNotExistException
 import batect.os.ProcessRunner
+import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.StandardCopyOption
 
 class GitClient(
-    private val processRunner: ProcessRunner
+    private val processRunner: ProcessRunner,
+    private val temporaryDirectoryCreator: () -> Path = { Files.createTempDirectory("batect-git-") }
 ) {
     fun clone(repo: String, ref: String, destination: Path) {
         try {
-            val cloneExitCode = processRunner.runWithConsoleAttached(listOf("git", "clone", "--quiet", "--no-checkout", "--", repo, destination.toString()))
+            val temporaryDirectory = temporaryDirectoryCreator()
+            temporaryDirectory.toFile().deleteOnExit()
+
+            val cloneExitCode = processRunner.runWithConsoleAttached(listOf("git", "clone", "--quiet", "--no-checkout", "--", repo, temporaryDirectory.toString()))
 
             if (cloneExitCode != 0) {
                 throw GitException("Could not clone repository '$repo': Git command exited with code $cloneExitCode.")
             }
 
-            val checkoutResult = processRunner.runAndCaptureOutput(listOf("git", "-c", "advice.detachedHead=false", "-C", destination.toString(), "checkout", "--quiet", "--recurse-submodules", ref))
+            val checkoutResult = processRunner.runAndCaptureOutput(listOf("git", "-c", "advice.detachedHead=false", "-C", temporaryDirectory.toString(), "checkout", "--quiet", "--recurse-submodules", ref))
 
             if (checkoutResult.exitCode != 0) {
                 throw GitException("Could not check out reference '$ref' for repository '$repo': Git command exited with code ${checkoutResult.exitCode}: ${checkoutResult.output.trim()}")
             }
+
+            Files.move(temporaryDirectory, destination, StandardCopyOption.ATOMIC_MOVE)
         } catch (e: ExecutableDoesNotExistException) {
             throw GitException("Could not clone repository: ${e.message}", e)
         }

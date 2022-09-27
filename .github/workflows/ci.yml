@@ -3,6 +3,9 @@ on: [push, pull_request]
 env:
   GRADLE_OPTS: "-Dorg.gradle.internal.launcher.welcomeMessageEnabled=false"
 
+permissions:
+  contents: read
+
 jobs:
   validate-gradle-wrapper:
     name: "Validate Gradle wrapper"

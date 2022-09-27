@@ -316,26 +316,31 @@ jobs:
         run: unset JAVA_TOOL_OPTIONS && ./gradlew completionTest
 
   journey-test-linux:
-    name: "Run journey tests (Linux, Docker ${{ matrix.docker_version }}, BuildKit enabled: ${{ matrix.enable_buildkit }})"
-    runs-on: ubuntu-22.04
+    name: "Run journey tests (Linux, Docker ${{ matrix.docker_version }} on ${{ matrix.run_on }}, BuildKit enabled: ${{ matrix.enable_buildkit }})"
+    runs-on: ${{ matrix.run_on }}
 
     strategy:
       matrix:
         include:
           - docker_version: latest
             enable_buildkit: false
+            run_on: ubuntu-22.04
 
           - docker_version: latest
             enable_buildkit: true
+            run_on: ubuntu-22.04
 
           - docker_version: 5:19.03.14~3-0~ubuntu-bionic # 20.04 introduced some breaking changes, this is the last version before 20.04
             enable_buildkit: false
+            run_on: ubuntu-20.04
 
           - docker_version: 5:19.03.14~3-0~ubuntu-bionic # 20.04 introduced some breaking changes, this is the last version before 20.04
             enable_buildkit: true
+            run_on: ubuntu-20.04
 
           - docker_version: 18.03.1~ce~3-0~ubuntu
             enable_buildkit: false
+            run_on: ubuntu-20.04
 
       fail-fast: false
 

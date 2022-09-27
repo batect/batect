@@ -330,16 +330,12 @@ jobs:
             enable_buildkit: true
             run_on: ubuntu-22.04
 
-          - docker_version: 5:19.03.14~3-0~ubuntu-bionic # 20.04 introduced some breaking changes, this is the last version before 20.04
+          - docker_version: 5:19.03.14~3-0~ubuntu-focal # 20.04 introduced some breaking changes, this is the last version before 20.04
             enable_buildkit: false
             run_on: ubuntu-20.04
 
-          - docker_version: 5:19.03.14~3-0~ubuntu-bionic # 20.04 introduced some breaking changes, this is the last version before 20.04
+          - docker_version: 5:19.03.14~3-0~ubuntu-focal # 20.04 introduced some breaking changes, this is the last version before 20.04
             enable_buildkit: true
-            run_on: ubuntu-20.04
-
-          - docker_version: 18.03.1~ce~3-0~ubuntu
-            enable_buildkit: false
             run_on: ubuntu-20.04
 
       fail-fast: false

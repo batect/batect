@@ -37,14 +37,26 @@ import java.nio.file.Files
 object GitClientSpec : Spek({
     describe("a Git client") {
         val processRunner by createForEachTest { mock<ProcessRunner>() }
-        val temporaryDirectory by createForEachTest { Files.createTempDirectory("git-client-spec-tmp") }
+
+        val temporaryDirectory by createForEachTest {
+            val dir = Files.createTempDirectory("git-client-spec-tmp")
+            dir.toFile().deleteOnExit()
+            dir
+        }
+
         val temporaryDirectoryCreator = { temporaryDirectory }
         val client by createForEachTest { GitClient(processRunner, temporaryDirectoryCreator) }
 
         describe("cloning a repository") {
             val repo = "http://github.com/me/my-repo.git"
             val ref = "the-reference"
-            val directory by createForEachTest { Files.createTempDirectory("git-client-spec-target") }
+
+            val targetDirectory by createForEachTest {
+                val root = Files.createTempDirectory("git-client-spec-target")
+                root.toFile().deleteOnExit()
+                root.resolve("repo")
+            }
+
             val cloneCommand by createForEachTest { listOf("git", "clone", "--quiet", "--no-checkout", "--", repo, temporaryDirectory.toString()) }
 
             given("cloning the repository succeeds") {
@@ -58,7 +70,7 @@ object GitClientSpec : Spek({
                     beforeEachTest {
                         whenever(processRunner.runAndCaptureOutput(checkoutCommand)).doReturn(ProcessOutput(0, ""))
 
-                        client.clone(repo, ref, directory)
+                        client.clone(repo, ref, targetDirectory)
                     }
 
                     it("clones the repo before checking out the provided reference") {
@@ -75,7 +87,7 @@ object GitClientSpec : Spek({
                     }
 
                     it("throws an appropriate exception") {
-                        assertThat({ client.clone(repo, ref, directory) }, throws<GitException>(withMessage("Could not check out reference 'the-reference' for repository 'http://github.com/me/my-repo.git': Git command exited with code 1: Something went wrong.")))
+                        assertThat({ client.clone(repo, ref, targetDirectory) }, throws<GitException>(withMessage("Could not check out reference 'the-reference' for repository 'http://github.com/me/my-repo.git': Git command exited with code 1: Something went wrong.")))
                     }
                 }
             }
@@ -86,7 +98,7 @@ object GitClientSpec : Spek({
                 }
 
                 it("throws an appropriate exception") {
-                    assertThat({ client.clone(repo, ref, directory) }, throws<GitException>(withMessage("Could not clone repository 'http://github.com/me/my-repo.git': Git command exited with code 2.")))
+                    assertThat({ client.clone(repo, ref, targetDirectory) }, throws<GitException>(withMessage("Could not clone repository 'http://github.com/me/my-repo.git': Git command exited with code 2.")))
                 }
             }
 
@@ -96,7 +108,7 @@ object GitClientSpec : Spek({
                 }
 
                 it("throws an appropriate exception") {
-                    assertThat({ client.clone(repo, ref, directory) }, throws<GitException>(withMessage("Could not clone repository: The executable 'git' could not be found or is not executable.")))
+                    assertThat({ client.clone(repo, ref, targetDirectory) }, throws<GitException>(withMessage("Could not clone repository: The executable 'git' could not be found or is not executable.")))
                 }
             }
         }

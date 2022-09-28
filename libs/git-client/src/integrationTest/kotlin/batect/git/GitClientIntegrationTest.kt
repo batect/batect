@@ -45,7 +45,11 @@ object GitClientIntegrationTest : Spek({
                 Scenario("a tag", "the-tag", "This is the first version")
             ).forEach { scenario ->
                 describe("cloning ${scenario.description}") {
-                    val targetDirectory by createForEachTest { Files.createTempDirectory("batect-git-integration-test") }
+                    val targetDirectory by createForEachTest {
+                        val root = Files.createTempDirectory("batect-git-integration-test")
+                        root.toFile().deleteOnExit()
+                        root.resolve("repo")
+                    }
 
                     beforeEachTest {
                         client.clone("https://github.com/batect/test-git-repo.git", scenario.reference, targetDirectory)

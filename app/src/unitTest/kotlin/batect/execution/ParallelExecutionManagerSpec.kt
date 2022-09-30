@@ -212,7 +212,7 @@ object ParallelExecutionManagerSpec : Spek({
 
                             val event = telemetryCaptor.allEvents.single()
                             assertThat(event.type, equalTo(CommonEvents.UnhandledException))
-                            assertThat(event.attributes[CommonAttributes.ExceptionCaughtAt], equalTo(JsonPrimitive("batect.execution.ParallelExecutionManager.runStep\$lambda-3")))
+                            assertThat(event.attributes[CommonAttributes.ExceptionCaughtAt], equalTo(JsonPrimitive("batect.execution.ParallelExecutionManager.runStep\$lambda\$3")))
                         }
                     }
                 }

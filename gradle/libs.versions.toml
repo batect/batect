@@ -2,7 +2,7 @@
 batect-dockerclient = "0.8.1"
 bouncycastle = "1.70"
 commons-codec = "1.15"
-google-cloud-storage = "2.12.0"
+google-cloud-storage = "2.13.1"
 hamkrest = "1.8.0.1"
 hamkrestjson = "1.1.2"
 jackson-yaml = "2.13.4"

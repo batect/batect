@@ -2,7 +2,7 @@ project_name: additional-hosts-test
 
 containers:
   build-env:
-    image: alpine:3.16.2
+    image: alpine:3.16.3
     additional_hosts:
       additionalhost.batect.dev: 1.2.3.4
 

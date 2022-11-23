@@ -2,7 +2,7 @@ project_name: container-with-mount
 
 containers:
   build-env:
-    image: alpine:3.16.3
+    image: alpine:3.17.0
     volumes:
       - ./task.sh:/task.sh
 

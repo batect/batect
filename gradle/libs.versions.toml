@@ -28,7 +28,7 @@ osplatformfinder = "1.2.3"
 reckon = "0.16.1"
 shadow = "7.1.2"
 spek = "2.0.19"
-spotless = "6.11.0"
+spotless = "6.12.0"
 
 [libraries]
 batect-dockerclient = { group = "dev.batect.docker", name = "client", version.ref = "batect-dockerclient" }

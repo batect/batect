@@ -34,7 +34,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up JDK
-        uses: actions/setup-java@v3.6.0
+        uses: actions/setup-java@v3.7.0
         with:
           java-version: 11 # We must use Java 15 or earlier until https://youtrack.jetbrains.com/issue/KT-47039 is fixed.
           distribution: adopt
@@ -84,7 +84,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up JDK
-        uses: actions/setup-java@v3.6.0
+        uses: actions/setup-java@v3.7.0
         with:
           java-version: 11 # We must use Java 15 or earlier until https://youtrack.jetbrains.com/issue/KT-47039 is fixed.
           distribution: adopt
@@ -134,7 +134,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up JDK
-        uses: actions/setup-java@v3.6.0
+        uses: actions/setup-java@v3.7.0
         with:
           java-version: 11 # We must use Java 15 or earlier until https://youtrack.jetbrains.com/issue/KT-47039 is fixed.
           distribution: adopt
@@ -183,7 +183,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up JDK
-        uses: actions/setup-java@v3.6.0
+        uses: actions/setup-java@v3.7.0
         with:
           java-version: 11 # We must use Java 15 or earlier until https://youtrack.jetbrains.com/issue/KT-47039 is fixed.
           distribution: adopt
@@ -251,7 +251,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up JDK
-        uses: actions/setup-java@v3.6.0
+        uses: actions/setup-java@v3.7.0
         with:
           java-version: 11 # We must use Java 15 or earlier until https://youtrack.jetbrains.com/issue/KT-47039 is fixed.
           distribution: adopt
@@ -285,7 +285,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up JDK
-        uses: actions/setup-java@v3.6.0
+        uses: actions/setup-java@v3.7.0
         with:
           java-version: 11 # We must use Java 15 or earlier until https://youtrack.jetbrains.com/issue/KT-47039 is fixed.
           distribution: adopt
@@ -343,7 +343,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up JDK
-        uses: actions/setup-java@v3.6.0
+        uses: actions/setup-java@v3.7.0
         with:
           java-version: 11 # We must use Java 15 or earlier until https://youtrack.jetbrains.com/issue/KT-47039 is fixed.
           distribution: adopt
@@ -380,7 +380,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up JDK
-        uses: actions/setup-java@v3.6.0
+        uses: actions/setup-java@v3.7.0
         with:
           java-version: 11 # We must use Java 15 or earlier until https://youtrack.jetbrains.com/issue/KT-47039 is fixed.
           distribution: adopt
@@ -452,7 +452,7 @@ jobs:
         run: git fetch -f origin ${{ github.ref }}:${{ github.ref }}
 
       - name: Set up JDK
-        uses: actions/setup-java@v3.6.0
+        uses: actions/setup-java@v3.7.0
         with:
           java-version: 11 # We must use Java 15 or earlier until https://youtrack.jetbrains.com/issue/KT-47039 is fixed.
           distribution: adopt

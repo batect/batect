@@ -49,6 +49,7 @@ import batect.execution.ConfigVariablesProvider
 import batect.execution.InterruptionTrap
 import batect.execution.TaskSuggester
 import batect.git.GitClient
+import batect.git.LockingRepositoryCloner
 import batect.io.ApplicationPaths
 import batect.logging.ApplicationInfoLogger
 import batect.logging.HttpLoggingInterceptor
@@ -162,6 +163,7 @@ private val dockerModule = DI.Module("docker") {
 
 private val gitModule = DI.Module("git") {
     bind<GitClient>() with singleton { GitClient(instance()) }
+    bind<LockingRepositoryCloner>() with singleton { LockingRepositoryCloner(instance()) }
 }
 
 private val ioModule = DI.Module("io") {

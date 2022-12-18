@@ -17,7 +17,7 @@
 package batect.config.includes
 
 import batect.VersionInfo
-import batect.git.GitClient
+import batect.git.LockingRepositoryCloner
 import batect.io.ApplicationPaths
 import batect.primitives.Version
 import batect.testutils.createForEachTest
@@ -52,7 +52,7 @@ object GitRepositoryCacheSpec : Spek({
         val fileSystem by createForEachTest { Jimfs.newFileSystem(Configuration.unix()) }
         val rootLocalStorageDirectory by createForEachTest { fileSystem.getPath("/some/.batect/dir") }
         val paths by createForEachTest { ApplicationPaths(rootLocalStorageDirectory) }
-        val gitClient by createForEachTest { mock<GitClient>() }
+        val cloner by createForEachTest { mock<LockingRepositoryCloner>() }
         val versionInfo by createForEachTest {
             mock<VersionInfo> {
                 on { version } doReturn Version(1, 2, 3)
@@ -60,7 +60,7 @@ object GitRepositoryCacheSpec : Spek({
         }
 
         val currentTime = ZonedDateTime.of(2020, 7, 5, 1, 2, 3, 456789012, ZoneOffset.UTC)
-        val cache by createForEachTest { GitRepositoryCache(paths, gitClient, versionInfo, { currentTime }) }
+        val cache by createForEachTest { GitRepositoryCache(paths, cloner, versionInfo, { currentTime }) }
 
         describe("ensuring a repository is cached") {
             val listener by createForEachTest { mock<GitRepositoryCacheNotificationListener>() }
@@ -95,13 +95,13 @@ object GitRepositoryCacheSpec : Spek({
 
             fun Suite.itClonesTheRepository() {
                 it("clones the repository into the expected directory") {
-                    verify(gitClient).clone(repo.remote, repo.ref, expectedWorkingCopyDirectory)
+                    verify(cloner).clone(repo.remote, repo.ref, expectedWorkingCopyDirectory)
                 }
 
                 it("notifies the listener that the repository is being cloned before cloning the repository, and after the clone has finished") {
-                    inOrder(listener, gitClient) {
+                    inOrder(listener, cloner) {
                         verify(listener).onCloning(repo)
-                        verify(gitClient).clone(any(), any(), any())
+                        verify(cloner).clone(any(), any(), any())
                         verify(listener).onCloneComplete()
                     }
                 }
@@ -109,7 +109,7 @@ object GitRepositoryCacheSpec : Spek({
 
             fun Suite.itDoesNotCloneTheRepository() {
                 it("does not clone the repository") {
-                    verify(gitClient, never()).clone(any(), any(), any())
+                    verify(cloner, never()).clone(any(), any(), any())
                 }
 
                 it("does not notify the listener that the repository is being cloned or has finished cloning") {

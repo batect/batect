@@ -25,4 +25,5 @@ dependencies {
     implementation(project(":libs:os"))
 
     testImplementation(project(":libs:test-utils"))
+    testImplementation(libs.kotlinx.coroutines.core)
 }

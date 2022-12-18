@@ -17,7 +17,7 @@
 package batect.config.includes
 
 import batect.VersionInfo
-import batect.git.GitClient
+import batect.git.LockingRepositoryCloner
 import batect.io.ApplicationPaths
 import batect.os.deleteDirectory
 import batect.primitives.mapToSet
@@ -38,7 +38,7 @@ import java.util.stream.Stream
 
 class GitRepositoryCache(
     private val applicationPaths: ApplicationPaths,
-    private val gitClient: GitClient,
+    private val repoCloner: LockingRepositoryCloner,
     private val versionInfo: VersionInfo,
     private val timeSource: TimeSource = ZonedDateTime::now
 ) {
@@ -60,7 +60,7 @@ class GitRepositoryCache(
     private fun cloneRepoIfMissing(repo: GitRepositoryReference, workingCopyPath: Path, listener: GitRepositoryCacheNotificationListener) {
         if (!Files.exists(workingCopyPath)) {
             listener.onCloning(repo)
-            gitClient.clone(repo.remote, repo.ref, workingCopyPath)
+            repoCloner.clone(repo.remote, repo.ref, workingCopyPath)
             listener.onCloneComplete()
         }
     }

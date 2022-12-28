@@ -33,6 +33,8 @@ import org.mockito.kotlin.whenever
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.nio.file.Files
+import java.nio.file.Path
+import kotlin.io.path.name
 
 object GitClientSpec : Spek({
     describe("a Git client") {
@@ -44,18 +46,24 @@ object GitClientSpec : Spek({
             dir
         }
 
-        val temporaryDirectoryCreator = { temporaryDirectory }
+        val targetDirectory by createForEachTest {
+            val root = Files.createTempDirectory("git-client-spec-target")
+            root.toFile().deleteOnExit()
+            root.resolve("repo")
+        }
+
+        val temporaryDirectoryCreator = { parent: Path, name: String ->
+            assertThat(parent, equalTo(targetDirectory.parent))
+            assertThat(name, equalTo(targetDirectory.name))
+
+            temporaryDirectory
+        }
+
         val client by createForEachTest { GitClient(processRunner, temporaryDirectoryCreator) }
 
         describe("cloning a repository") {
             val repo = "http://github.com/me/my-repo.git"
             val ref = "the-reference"
-
-            val targetDirectory by createForEachTest {
-                val root = Files.createTempDirectory("git-client-spec-target")
-                root.toFile().deleteOnExit()
-                root.resolve("repo")
-            }
 
             val cloneCommand by createForEachTest { listOf("git", "clone", "--quiet", "--no-checkout", "--", repo, temporaryDirectory.toString()) }
 

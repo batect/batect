@@ -21,14 +21,15 @@ import batect.os.ProcessRunner
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
+import kotlin.io.path.name
 
 class GitClient(
     private val processRunner: ProcessRunner,
-    private val temporaryDirectoryCreator: () -> Path = { Files.createTempDirectory("batect-git-") }
+    private val temporaryDirectoryCreator: (parent: Path, name: String) -> Path = { parent, name -> Files.createTempDirectory(parent, name) }
 ) {
     fun clone(repo: String, ref: String, destination: Path) {
         try {
-            val temporaryDirectory = temporaryDirectoryCreator()
+            val temporaryDirectory = temporaryDirectoryCreator(destination.parent, destination.name)
             temporaryDirectory.toFile().deleteOnExit()
 
             val cloneExitCode = processRunner.runWithConsoleAttached(listOf("git", "clone", "--quiet", "--no-checkout", "--", repo, temporaryDirectory.toString()))

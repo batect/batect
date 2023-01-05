@@ -2,7 +2,7 @@ FROM --platform=linux/amd64 ubuntu:22.04@sha256:06b5d30fabc1fc574f2ecab873756922
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates=20211016 \
-    curl=7.81.0-1ubuntu1.6 \
+    curl=7.81.0-1ubuntu1.7 \
     fish=3.3.1+ds-3 \
     openjdk-11-jre-headless=11.0.14.1+1-0ubuntu1 \
     python3=3.10.6-1~22.04 \

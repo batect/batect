@@ -473,7 +473,7 @@ jobs:
           restore-keys: gradle-packages-${{ runner.os }}
 
       - name: Download binaries
-        uses: actions/download-artifact@v3.0.1
+        uses: actions/download-artifact@v3.0.2
         with:
           name: Binaries
           path: build/release

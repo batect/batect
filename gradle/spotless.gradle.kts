@@ -36,7 +36,7 @@ val licenseText by extra(
 
 val kotlinLicenseHeader = "/*$licenseText*/\n\n"
 val javaLicenseHeader = "/*$licenseText*/\n\n"
-val ktlintVersion = "0.47.1"
+val ktlintVersion = "0.48.1"
 
 configure<SpotlessExtension> {
     format("misc") {

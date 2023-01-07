@@ -40,8 +40,8 @@ object ContainerBecameHealthyEventSpec : Spek({
                         |   "type": "${event::class.qualifiedName}",
                         |   "container": "container-a"
                         |}
-                        """.trimMargin()
-                    )
+                        """.trimMargin(),
+                    ),
                 )
             }
         }

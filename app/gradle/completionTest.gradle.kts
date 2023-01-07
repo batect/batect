@@ -39,7 +39,7 @@ tasks.register<Exec>("buildCompletionTestEnvironmentImage") {
         "build",
         "-t",
         testEnvironmentImageName,
-        imageDirectory.path
+        imageDirectory.path,
     )
 
     doLast {
@@ -68,7 +68,7 @@ tasks.register<Exec>("completionTest") {
         "-v", "$buildDir/install/app-shadow:/app",
         "-w", "/tests",
         "-e", "BATECT_ENABLE_TELEMETRY=false",
-        testEnvironmentImageName, "./tests.py"
+        testEnvironmentImageName, "./tests.py",
     )
 
     if (project.hasProperty("focusCompletionTests")) {

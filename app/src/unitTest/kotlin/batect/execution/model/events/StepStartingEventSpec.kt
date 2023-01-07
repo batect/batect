@@ -38,8 +38,8 @@ object StepStartingEventSpec : Spek({
                         |   "type": "${event::class.qualifiedName}",
                         |   "step": {"type": "${PrepareTaskNetworkStep::class.qualifiedName}"}
                         |}
-                        """.trimMargin()
-                    )
+                        """.trimMargin(),
+                    ),
                 )
             }
         }

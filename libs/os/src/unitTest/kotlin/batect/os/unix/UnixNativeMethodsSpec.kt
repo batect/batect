@@ -125,7 +125,7 @@ object UnixNativeMethodsSpec : Spek({
                             it("throws an appropriate exception") {
                                 assertThat(
                                     { nativeMethods.getConsoleDimensions() },
-                                    throws<UnixNativeMethodException>(withMethod("ioctl") and withError(Errno.ENOENT))
+                                    throws<UnixNativeMethodException>(withMethod("ioctl") and withError(Errno.ENOENT)),
                                 )
                             }
                         }
@@ -163,7 +163,7 @@ object UnixNativeMethodsSpec : Spek({
                         it("throws an appropriate exception") {
                             assertThat(
                                 { nativeMethods.getConsoleDimensions() },
-                                throws<UnsupportedOperationException>(withMessage("The platform WINDOWS is not supported."))
+                                throws<UnsupportedOperationException>(withMessage("The platform WINDOWS is not supported.")),
                             )
                         }
                     }

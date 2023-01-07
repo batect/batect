@@ -49,68 +49,68 @@ object AggregatedImageBuildProgressSpec : Spek({
                         TestCase(
                             "the download has not started",
                             ActiveImageBuildStep.Downloading(1, "step 2 of 3: FROM postgres:13.0", DownloadOperation.Downloading, 0, 200),
-                            "step 2 of 3: FROM postgres:13.0: downloading: 0 B of 200 B (0%)"
+                            "step 2 of 3: FROM postgres:13.0: downloading: 0 B of 200 B (0%)",
                         ),
                         TestCase(
                             "the download is for a file larger than 1 KB",
                             ActiveImageBuildStep.Downloading(1, "step 2 of 3: FROM postgres:13.0", DownloadOperation.Downloading, 1500, 2000),
-                            "step 2 of 3: FROM postgres:13.0: downloading: 1.5 KB of 2.0 KB (75%)"
+                            "step 2 of 3: FROM postgres:13.0: downloading: 1.5 KB of 2.0 KB (75%)",
                         ),
                         TestCase(
                             "the download is for a file larger than 1 MB",
                             ActiveImageBuildStep.Downloading(1, "step 2 of 3: FROM postgres:13.0", DownloadOperation.Downloading, 1_750_000, 2_000_000),
-                            "step 2 of 3: FROM postgres:13.0: downloading: 1.8 MB of 2.0 MB (88%)"
+                            "step 2 of 3: FROM postgres:13.0: downloading: 1.8 MB of 2.0 MB (88%)",
                         ),
                         TestCase(
                             "the download is for a file larger than 1 GB",
                             ActiveImageBuildStep.Downloading(1, "step 2 of 3: FROM postgres:13.0", DownloadOperation.Downloading, 1_750_000_000, 2_000_000_000),
-                            "step 2 of 3: FROM postgres:13.0: downloading: 1.8 GB of 2.0 GB (88%)"
+                            "step 2 of 3: FROM postgres:13.0: downloading: 1.8 GB of 2.0 GB (88%)",
                         ),
                         TestCase(
                             "the download is for a file larger than 1 TB",
                             ActiveImageBuildStep.Downloading(1, "step 2 of 3: FROM postgres:13.0", DownloadOperation.Downloading, 1_750_000_000_000, 2_000_000_000_000),
-                            "step 2 of 3: FROM postgres:13.0: downloading: 1.8 TB of 2.0 TB (88%)"
+                            "step 2 of 3: FROM postgres:13.0: downloading: 1.8 TB of 2.0 TB (88%)",
                         ),
                         TestCase(
                             "the download has finished",
                             ActiveImageBuildStep.Downloading(1, "step 2 of 3: FROM postgres:13.0", DownloadOperation.Downloading, 200, 200),
-                            "step 2 of 3: FROM postgres:13.0: downloading: 200 B of 200 B (100%)"
+                            "step 2 of 3: FROM postgres:13.0: downloading: 200 B of 200 B (100%)",
                         ),
                         TestCase(
                             "the download is verifying the checksum",
                             ActiveImageBuildStep.Downloading(1, "step 2 of 3: FROM postgres:13.0", DownloadOperation.VerifyingChecksum, 50, 200),
-                            "step 2 of 3: FROM postgres:13.0: verifying checksum: 50 B of 200 B (25%)"
+                            "step 2 of 3: FROM postgres:13.0: verifying checksum: 50 B of 200 B (25%)",
                         ),
                         TestCase(
                             "the download is extracting",
                             ActiveImageBuildStep.Downloading(1, "step 2 of 3: FROM postgres:13.0", DownloadOperation.Extracting, 50, 200),
-                            "step 2 of 3: FROM postgres:13.0: extracting: 50 B of 200 B (25%)"
+                            "step 2 of 3: FROM postgres:13.0: extracting: 50 B of 200 B (25%)",
                         ),
                         TestCase(
                             "the download is complete",
                             ActiveImageBuildStep.Downloading(1, "step 2 of 3: FROM postgres:13.0", DownloadOperation.DownloadComplete, 200, 200),
-                            "step 2 of 3: FROM postgres:13.0: download complete: 200 B of 200 B (100%)"
+                            "step 2 of 3: FROM postgres:13.0: download complete: 200 B of 200 B (100%)",
                         ),
                         TestCase(
                             "the download is for an image pull that is complete",
                             ActiveImageBuildStep.Downloading(1, "step 2 of 3: FROM postgres:13.0", DownloadOperation.PullComplete, 200, 200),
-                            "step 2 of 3: FROM postgres:13.0: pull complete: 200 B of 200 B (100%)"
+                            "step 2 of 3: FROM postgres:13.0: pull complete: 200 B of 200 B (100%)",
                         ),
                         TestCase(
                             "the download has an invalid total size",
                             ActiveImageBuildStep.Downloading(1, "step 2 of 3: FROM postgres:13.0", DownloadOperation.Downloading, 200, 0),
-                            "step 2 of 3: FROM postgres:13.0: downloading: 200 B"
+                            "step 2 of 3: FROM postgres:13.0: downloading: 200 B",
                         ),
                         TestCase(
                             "the download has no total size",
                             ActiveImageBuildStep.Downloading(1, "step 2 of 3: FROM postgres:13.0", DownloadOperation.Downloading, 200, null),
-                            "step 2 of 3: FROM postgres:13.0: downloading: 200 B"
+                            "step 2 of 3: FROM postgres:13.0: downloading: 200 B",
                         ),
                         TestCase(
                             "the download has no total size and has not started",
                             ActiveImageBuildStep.Downloading(1, "step 2 of 3: FROM postgres:13.0", DownloadOperation.Downloading, 0, null),
-                            "step 2 of 3: FROM postgres:13.0: downloading"
-                        )
+                            "step 2 of 3: FROM postgres:13.0: downloading",
+                        ),
                     ).forEach { testCase ->
                         given(testCase.description) {
                             val event = AggregatedImageBuildProgress(setOf(testCase.step))
@@ -127,8 +127,8 @@ object AggregatedImageBuildProgressSpec : Spek({
                 val event = AggregatedImageBuildProgress(
                     setOf(
                         ActiveImageBuildStep.NotDownloading(1, "step 2 of 30: RUN blah.sh"),
-                        ActiveImageBuildStep.NotDownloading(4, "step 5 of 30: RUN foo.sh")
-                    )
+                        ActiveImageBuildStep.NotDownloading(4, "step 5 of 30: RUN foo.sh"),
+                    ),
                 )
 
                 it("returns a description of the earliest step and indicates another step is running") {
@@ -141,8 +141,8 @@ object AggregatedImageBuildProgressSpec : Spek({
                     setOf(
                         ActiveImageBuildStep.NotDownloading(1, "step 2 of 30: RUN blah.sh"),
                         ActiveImageBuildStep.NotDownloading(4, "step 5 of 30: RUN foo.sh"),
-                        ActiveImageBuildStep.NotDownloading(9, "step 10 of 30: RUN bar.sh")
-                    )
+                        ActiveImageBuildStep.NotDownloading(9, "step 10 of 30: RUN bar.sh"),
+                    ),
                 )
 
                 it("returns a description of the earliest step and indicates other steps are running") {

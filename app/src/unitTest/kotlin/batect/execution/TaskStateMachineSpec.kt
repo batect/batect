@@ -700,7 +700,7 @@ object TaskStateMachineSpec : Spek({
 fun Suite.regardlessOfWhetherThereAreStepsRunning(check: Suite.(stepsStillRunning: Boolean) -> Unit) {
     mapOf(
         "there are steps still running" to true,
-        "there are no steps running" to false
+        "there are no steps running" to false,
     ).forEach { (description, stepsStillRunning) ->
         given(description) {
             check(stepsStillRunning)

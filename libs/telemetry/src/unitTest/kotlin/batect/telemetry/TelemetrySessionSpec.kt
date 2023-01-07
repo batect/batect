@@ -86,7 +86,7 @@ object TelemetrySessionSpec : Spek({
                     "someString" to JsonPrimitive("string"),
                     "someNumber" to JsonPrimitive(123),
                     "someBoolean" to JsonPrimitive(false),
-                    "someNull" to JsonNull
+                    "someNull" to JsonNull,
                 ),
                 listOf(
                     TelemetryEvent(
@@ -96,9 +96,9 @@ object TelemetrySessionSpec : Spek({
                             "someString" to JsonPrimitive("string"),
                             "someNumber" to JsonPrimitive(123),
                             "someBoolean" to JsonPrimitive(false),
-                            "someNull" to JsonNull
-                        )
-                    )
+                            "someNull" to JsonNull,
+                        ),
+                    ),
                 ),
                 listOf(
                     TelemetrySpan(
@@ -109,10 +109,10 @@ object TelemetrySessionSpec : Spek({
                             "someString" to JsonPrimitive("string"),
                             "someNumber" to JsonPrimitive(123),
                             "someBoolean" to JsonPrimitive(false),
-                            "someNull" to JsonNull
-                        )
-                    )
-                )
+                            "someNull" to JsonNull,
+                        ),
+                    ),
+                ),
             )
 
             it("serializes to the expected JSON") {
@@ -159,8 +159,8 @@ object TelemetrySessionSpec : Spek({
                                     }
                                 ]
                             }
-                        """.trimIndent()
-                    )
+                        """.trimIndent(),
+                    ),
                 )
             }
         }

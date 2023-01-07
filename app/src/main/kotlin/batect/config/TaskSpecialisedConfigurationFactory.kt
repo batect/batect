@@ -25,7 +25,7 @@ import batect.os.Command
 class TaskSpecialisedConfigurationFactory(
     private val rawConfiguration: RawConfiguration,
     private val commandLineOptions: CommandLineOptions,
-    private val logger: Logger
+    private val logger: Logger,
 ) {
     fun create(task: Task): TaskSpecialisedConfiguration {
         val overrides = commandLineOptions.imageOverrides.mapValues { PullImage(it.value) }
@@ -61,7 +61,7 @@ class TaskSpecialisedConfigurationFactory(
             entrypoint = task.runConfiguration.entrypoint ?: originalContainer.entrypoint,
             workingDirectory = task.runConfiguration.workingDiretory ?: originalContainer.workingDirectory,
             environment = originalContainer.environment + task.runConfiguration.additionalEnvironmentVariables,
-            portMappings = originalContainer.portMappings + task.runConfiguration.additionalPortMappings
+            portMappings = originalContainer.portMappings + task.runConfiguration.additionalPortMappings,
         )
 
         return ContainerMap(values - originalContainer + updatedContainer)
@@ -90,7 +90,7 @@ class TaskSpecialisedConfigurationFactory(
         container.copy(
             workingDirectory = customisation.workingDirectory ?: container.workingDirectory,
             environment = container.environment + customisation.additionalEnvironmentVariables,
-            portMappings = container.portMappings + customisation.additionalPortMappings
+            portMappings = container.portMappings + customisation.additionalPortMappings,
         )
     }
 

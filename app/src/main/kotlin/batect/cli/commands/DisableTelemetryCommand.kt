@@ -26,7 +26,7 @@ import java.util.UUID
 class DisableTelemetryCommand(
     private val telemetryConfigurationStore: TelemetryConfigurationStore,
     private val telemetryUploadQueue: TelemetryUploadQueue,
-    private val console: Console
+    private val console: Console,
 ) : Command {
     override fun run(): Int {
         console.println("Disabling telemetry and removing user ID...")

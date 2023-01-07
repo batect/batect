@@ -24,7 +24,7 @@ class SetOption(
     longName: String,
     description: String,
     shortName: Char? = null,
-    override val valueFormatForHelp: String = "<name>=<value1,value2,value3>"
+    override val valueFormatForHelp: String = "<name>=<value1,value2,value3>",
 ) : OptionDefinition(group, longName, description, true, shortName, true), ReadOnlyProperty<OptionParserContainer, Set<String>> {
     private val values: MutableSet<String> = mutableSetOf()
     override var valueSource: OptionValueSource = OptionValueSource.Default

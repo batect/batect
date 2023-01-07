@@ -42,7 +42,7 @@ object ProxyEnvironmentVariablesProviderSpec : Spek({
 
             mapOf(
                 "there are no additional 'don't proxy' entries" to emptySet(),
-                "there are some additional 'don't proxy' entries" to setOf("host-1", "host-2")
+                "there are some additional 'don't proxy' entries" to setOf("host-1", "host-2"),
             ).forEach { (description, extraNoProxyEntries) ->
                 given(description) {
                     on("getting proxy environment variables") {
@@ -59,14 +59,14 @@ object ProxyEnvironmentVariablesProviderSpec : Spek({
         given("there are no proxy-related environment variables defined") {
             val environmentVariables = HostEnvironmentVariables(
                 "PATH" to "/usr/bin:/blah",
-                "HOME" to "/home/someuser"
+                "HOME" to "/home/someuser",
             )
 
             val provider = ProxyEnvironmentVariablesProvider(preprocessor, environmentVariables)
 
             mapOf(
                 "there are no additional 'don't proxy' entries" to emptySet(),
-                "there are some additional 'don't proxy' entries" to setOf("host-1", "host-2")
+                "there are some additional 'don't proxy' entries" to setOf("host-1", "host-2"),
             ).forEach { (description, extraNoProxyEntries) ->
                 given(description) {
                     on("getting proxy environment variables") {
@@ -91,7 +91,7 @@ object ProxyEnvironmentVariablesProviderSpec : Spek({
                         val environmentVariables = HostEnvironmentVariables(
                             "PATH" to "/usr/bin:/blah",
                             "HOME" to "/home/someuser",
-                            lowercaseName to "http://proxy:1234"
+                            lowercaseName to "http://proxy:1234",
                         )
 
                         val provider = ProxyEnvironmentVariablesProvider(preprocessor, environmentVariables)
@@ -105,9 +105,9 @@ object ProxyEnvironmentVariablesProviderSpec : Spek({
                                     equalTo(
                                         mapOf(
                                             lowercaseName to "http://proxy:1234_processed",
-                                            uppercaseName to "http://proxy:1234_processed"
-                                        )
-                                    )
+                                            uppercaseName to "http://proxy:1234_processed",
+                                        ),
+                                    ),
                                 )
                             }
                         }
@@ -117,7 +117,7 @@ object ProxyEnvironmentVariablesProviderSpec : Spek({
                         val environmentVariables = HostEnvironmentVariables(
                             "PATH" to "/usr/bin:/blah",
                             "HOME" to "/home/someuser",
-                            uppercaseName to "http://proxy:1234"
+                            uppercaseName to "http://proxy:1234",
                         )
 
                         val provider = ProxyEnvironmentVariablesProvider(preprocessor, environmentVariables)
@@ -131,9 +131,9 @@ object ProxyEnvironmentVariablesProviderSpec : Spek({
                                     equalTo(
                                         mapOf(
                                             lowercaseName to "http://proxy:1234_processed",
-                                            uppercaseName to "http://proxy:1234_processed"
-                                        )
-                                    )
+                                            uppercaseName to "http://proxy:1234_processed",
+                                        ),
+                                    ),
                                 )
                             }
                         }
@@ -144,7 +144,7 @@ object ProxyEnvironmentVariablesProviderSpec : Spek({
                             "PATH" to "/usr/bin:/blah",
                             "HOME" to "/home/someuser",
                             lowercaseName to "http://lowercase-proxy:1234",
-                            uppercaseName to "http://uppercase_proxy:1234"
+                            uppercaseName to "http://uppercase_proxy:1234",
                         )
 
                         val provider = ProxyEnvironmentVariablesProvider(preprocessor, environmentVariables)
@@ -158,9 +158,9 @@ object ProxyEnvironmentVariablesProviderSpec : Spek({
                                     equalTo(
                                         mapOf(
                                             lowercaseName to "http://lowercase-proxy:1234_processed",
-                                            uppercaseName to "http://uppercase_proxy:1234_processed"
-                                        )
-                                    )
+                                            uppercaseName to "http://uppercase_proxy:1234_processed",
+                                        ),
+                                    ),
                                 )
                             }
                         }
@@ -174,7 +174,7 @@ object ProxyEnvironmentVariablesProviderSpec : Spek({
                         val environmentVariables = HostEnvironmentVariables(
                             "PATH" to "/usr/bin:/blah",
                             "HOME" to "/home/someuser",
-                            lowercaseName to "http://proxy:1234"
+                            lowercaseName to "http://proxy:1234",
                         )
 
                         val provider = ProxyEnvironmentVariablesProvider(preprocessor, environmentVariables)
@@ -190,9 +190,9 @@ object ProxyEnvironmentVariablesProviderSpec : Spek({
                                             lowercaseName to "http://proxy:1234_processed",
                                             uppercaseName to "http://proxy:1234_processed",
                                             "no_proxy" to "host-1,host-2",
-                                            "NO_PROXY" to "host-1,host-2"
-                                        )
-                                    )
+                                            "NO_PROXY" to "host-1,host-2",
+                                        ),
+                                    ),
                                 )
                             }
                         }
@@ -202,7 +202,7 @@ object ProxyEnvironmentVariablesProviderSpec : Spek({
                         val environmentVariables = HostEnvironmentVariables(
                             "PATH" to "/usr/bin:/blah",
                             "HOME" to "/home/someuser",
-                            uppercaseName to "http://proxy:1234"
+                            uppercaseName to "http://proxy:1234",
                         )
 
                         val provider = ProxyEnvironmentVariablesProvider(preprocessor, environmentVariables)
@@ -218,9 +218,9 @@ object ProxyEnvironmentVariablesProviderSpec : Spek({
                                             lowercaseName to "http://proxy:1234_processed",
                                             uppercaseName to "http://proxy:1234_processed",
                                             "no_proxy" to "host-1,host-2",
-                                            "NO_PROXY" to "host-1,host-2"
-                                        )
-                                    )
+                                            "NO_PROXY" to "host-1,host-2",
+                                        ),
+                                    ),
                                 )
                             }
                         }
@@ -231,7 +231,7 @@ object ProxyEnvironmentVariablesProviderSpec : Spek({
                             "PATH" to "/usr/bin:/blah",
                             "HOME" to "/home/someuser",
                             lowercaseName to "http://lowercase-proxy:1234",
-                            uppercaseName to "http://uppercase-proxy:1234"
+                            uppercaseName to "http://uppercase-proxy:1234",
                         )
 
                         val provider = ProxyEnvironmentVariablesProvider(preprocessor, environmentVariables)
@@ -247,9 +247,9 @@ object ProxyEnvironmentVariablesProviderSpec : Spek({
                                             lowercaseName to "http://lowercase-proxy:1234_processed",
                                             uppercaseName to "http://uppercase-proxy:1234_processed",
                                             "no_proxy" to "host-1,host-2",
-                                            "NO_PROXY" to "host-1,host-2"
-                                        )
-                                    )
+                                            "NO_PROXY" to "host-1,host-2",
+                                        ),
+                                    ),
                                 )
                             }
                         }
@@ -266,7 +266,7 @@ object ProxyEnvironmentVariablesProviderSpec : Spek({
                     val environmentVariables = HostEnvironmentVariables(
                         "PATH" to "/usr/bin:/blah",
                         "HOME" to "/home/someuser",
-                        "no_proxy" to "host-1"
+                        "no_proxy" to "host-1",
                     )
 
                     val provider = ProxyEnvironmentVariablesProvider(preprocessor, environmentVariables)
@@ -280,9 +280,9 @@ object ProxyEnvironmentVariablesProviderSpec : Spek({
                                 equalTo(
                                     mapOf(
                                         "no_proxy" to "host-1",
-                                        "NO_PROXY" to "host-1"
-                                    )
-                                )
+                                        "NO_PROXY" to "host-1",
+                                    ),
+                                ),
                             )
                         }
                     }
@@ -292,7 +292,7 @@ object ProxyEnvironmentVariablesProviderSpec : Spek({
                     val environmentVariables = HostEnvironmentVariables(
                         "PATH" to "/usr/bin:/blah",
                         "HOME" to "/home/someuser",
-                        "NO_PROXY" to "host-1"
+                        "NO_PROXY" to "host-1",
                     )
 
                     val provider = ProxyEnvironmentVariablesProvider(preprocessor, environmentVariables)
@@ -306,9 +306,9 @@ object ProxyEnvironmentVariablesProviderSpec : Spek({
                                 equalTo(
                                     mapOf(
                                         "NO_PROXY" to "host-1",
-                                        "no_proxy" to "host-1"
-                                    )
-                                )
+                                        "no_proxy" to "host-1",
+                                    ),
+                                ),
                             )
                         }
                     }
@@ -319,7 +319,7 @@ object ProxyEnvironmentVariablesProviderSpec : Spek({
                         "PATH" to "/usr/bin:/blah",
                         "HOME" to "/home/someuser",
                         "no_proxy" to "lowercase-host-1",
-                        "NO_PROXY" to "uppercase-host-1"
+                        "NO_PROXY" to "uppercase-host-1",
                     )
 
                     val provider = ProxyEnvironmentVariablesProvider(preprocessor, environmentVariables)
@@ -333,9 +333,9 @@ object ProxyEnvironmentVariablesProviderSpec : Spek({
                                 equalTo(
                                     mapOf(
                                         "no_proxy" to "lowercase-host-1",
-                                        "NO_PROXY" to "uppercase-host-1"
-                                    )
-                                )
+                                        "NO_PROXY" to "uppercase-host-1",
+                                    ),
+                                ),
                             )
                         }
                     }
@@ -349,7 +349,7 @@ object ProxyEnvironmentVariablesProviderSpec : Spek({
                     val environmentVariables = HostEnvironmentVariables(
                         "PATH" to "/usr/bin:/blah",
                         "HOME" to "/home/someuser",
-                        "no_proxy" to "existing-host"
+                        "no_proxy" to "existing-host",
                     )
 
                     val provider = ProxyEnvironmentVariablesProvider(preprocessor, environmentVariables)
@@ -363,9 +363,9 @@ object ProxyEnvironmentVariablesProviderSpec : Spek({
                                 equalTo(
                                     mapOf(
                                         "no_proxy" to "existing-host,host-1,host-2",
-                                        "NO_PROXY" to "existing-host,host-1,host-2"
-                                    )
-                                )
+                                        "NO_PROXY" to "existing-host,host-1,host-2",
+                                    ),
+                                ),
                             )
                         }
                     }
@@ -375,7 +375,7 @@ object ProxyEnvironmentVariablesProviderSpec : Spek({
                     val environmentVariables = HostEnvironmentVariables(
                         "PATH" to "/usr/bin:/blah",
                         "HOME" to "/home/someuser",
-                        "NO_PROXY" to "existing-host"
+                        "NO_PROXY" to "existing-host",
                     )
 
                     val provider = ProxyEnvironmentVariablesProvider(preprocessor, environmentVariables)
@@ -389,9 +389,9 @@ object ProxyEnvironmentVariablesProviderSpec : Spek({
                                 equalTo(
                                     mapOf(
                                         "no_proxy" to "existing-host,host-1,host-2",
-                                        "NO_PROXY" to "existing-host,host-1,host-2"
-                                    )
-                                )
+                                        "NO_PROXY" to "existing-host,host-1,host-2",
+                                    ),
+                                ),
                             )
                         }
                     }
@@ -402,7 +402,7 @@ object ProxyEnvironmentVariablesProviderSpec : Spek({
                         "PATH" to "/usr/bin:/blah",
                         "HOME" to "/home/someuser",
                         "no_proxy" to "lowercase-host",
-                        "NO_PROXY" to "uppercase-host"
+                        "NO_PROXY" to "uppercase-host",
                     )
 
                     val provider = ProxyEnvironmentVariablesProvider(preprocessor, environmentVariables)
@@ -416,9 +416,9 @@ object ProxyEnvironmentVariablesProviderSpec : Spek({
                                 equalTo(
                                     mapOf(
                                         "no_proxy" to "lowercase-host,host-1,host-2",
-                                        "NO_PROXY" to "uppercase-host,host-1,host-2"
-                                    )
-                                )
+                                        "NO_PROXY" to "uppercase-host,host-1,host-2",
+                                    ),
+                                ),
                             )
                         }
                     }

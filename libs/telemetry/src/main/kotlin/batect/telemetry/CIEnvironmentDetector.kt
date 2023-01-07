@@ -20,7 +20,7 @@ import batect.os.HostEnvironmentVariables
 
 // This class is based on https://github.com/watson/ci-info.
 class CIEnvironmentDetector(
-    private val hostEnvironmentVariables: HostEnvironmentVariables
+    private val hostEnvironmentVariables: HostEnvironmentVariables,
 ) {
     private val knownSystems = mapOf(
         "AWS CodeBuild" to setOf("CODEBUILD_BUILD_ARN"),
@@ -52,14 +52,14 @@ class CIEnvironmentDetector(
         "TeamCity" to setOf("TEAMCITY_VERSION"),
         "Travis CI" to setOf("TRAVIS"),
         "ZEIT Now" to setOf("NOW_BUILDER"),
-        "dsari" to setOf("DSARI")
+        "dsari" to setOf("DSARI"),
     )
 
     private val genericCIIndicators = setOf(
         "CI",
         "CONTINUOUS_INTEGRATION",
         "BUILD_NUMBER",
-        "RUN_ID"
+        "RUN_ID",
     )
 
     fun detect(): CIDetectionResult {

@@ -19,5 +19,5 @@ package batect.cli.commands.completion
 enum class Shell {
     Bash,
     Fish,
-    Zsh
+    Zsh,
 }

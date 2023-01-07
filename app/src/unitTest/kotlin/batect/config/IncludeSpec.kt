@@ -86,8 +86,8 @@ object IncludeSpec : Spek({
                                     withMessage("'../some/path.yml' (described as '/resolved/some/path.yml') is not a file.") and
                                         withLineNumber(1) and
                                         withColumn(1) and
-                                        withPath("<root>")
-                                )
+                                        withPath("<root>"),
+                                ),
                             )
                         }
                     }
@@ -102,8 +102,8 @@ object IncludeSpec : Spek({
                                     withMessage("Included file '../some/path.yml' (described as '/resolved/some/path.yml') does not exist.") and
                                         withLineNumber(1) and
                                         withColumn(1) and
-                                        withPath("<root>")
-                                )
+                                        withPath("<root>"),
+                                ),
                             )
                         }
                     }
@@ -135,8 +135,8 @@ object IncludeSpec : Spek({
                                     withMessage("'../some/path.yml' (described as '/resolved/some/path.yml') is not a file.") and
                                         withLineNumber(2) and
                                         withColumn(7) and
-                                        withPath("path")
-                                )
+                                        withPath("path"),
+                                ),
                             )
                         }
                     }
@@ -151,8 +151,8 @@ object IncludeSpec : Spek({
                                     withMessage("Included file '../some/path.yml' (described as '/resolved/some/path.yml') does not exist.") and
                                         withLineNumber(2) and
                                         withColumn(7) and
-                                        withPath("path")
-                                )
+                                        withPath("path"),
+                                ),
                             )
                         }
                     }
@@ -202,8 +202,8 @@ object IncludeSpec : Spek({
                         equivalentTo(
                             """
                                 { "type": "file", "path": "/some/path" }
-                            """.trimIndent()
-                        )
+                            """.trimIndent(),
+                        ),
                     )
                 }
             }
@@ -223,8 +223,8 @@ object IncludeSpec : Spek({
                                     "ref": "v1.2.3",
                                     "path": "some-file.yml"
                                 }
-                            """.trimIndent()
-                        )
+                            """.trimIndent(),
+                        ),
                     )
                 }
             }

@@ -90,5 +90,5 @@ data class ApplicationRunner(val testName: String) {
 
 data class ApplicationResult(
     val exitCode: Int,
-    val output: String
+    val output: String,
 )

@@ -47,7 +47,7 @@ class RunContainerSetupCommandsStepRunner(
     private val runAsCurrentUserConfigurationProvider: RunAsCurrentUserConfigurationProvider,
     private val cancellationContext: CancellationContext,
     private val ioStreamingOptions: ContainerIOStreamingOptions,
-    private val logger: Logger
+    private val logger: Logger,
 ) {
     fun run(step: RunContainerSetupCommandsStep, eventSink: TaskEventSink) {
         if (step.container.setupCommands.isEmpty()) {
@@ -91,7 +91,7 @@ class RunContainerSetupCommandsStepRunner(
         environmentVariables: Map<String, String>,
         userAndGroup: UserAndGroup?,
         container: Container,
-        dockerContainer: ContainerReference
+        dockerContainer: ContainerReference,
     ): ExecutionResult {
         val builder = ContainerExecSpec.Builder(dockerContainer)
             .withCommand(setupCommand.command.parsedCommand)
@@ -125,7 +125,7 @@ class RunContainerSetupCommandsStepRunner(
                 true,
                 SinkTextOutput(combinedStdout),
                 SinkTextOutput(combinedStdout),
-                null
+                null,
             )
 
             dockerClient.inspectExec(exec).exitCode!!

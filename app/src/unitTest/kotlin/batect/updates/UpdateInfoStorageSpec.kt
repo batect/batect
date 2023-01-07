@@ -81,7 +81,7 @@ object UpdateInfoStorageSpec : Spek({
                                     }
                                 ]
                             }
-                        """.trimIndent().toByteArray()
+                        """.trimIndent().toByteArray(),
                     )
                 }
 
@@ -101,7 +101,7 @@ object UpdateInfoStorageSpec : Spek({
                 Version(2, 3, 4),
                 "https://www.something.com/batect-updates/abc",
                 ZonedDateTime.of(2017, 10, 3, 11, 31, 12, 0, ZoneOffset.UTC),
-                listOf(ScriptInfo("batect", "https://www.something.com/batect-updates/abc/wrapper"))
+                listOf(ScriptInfo("batect", "https://www.something.com/batect-updates/abc/wrapper")),
             )
 
             val expectedFileContents = """

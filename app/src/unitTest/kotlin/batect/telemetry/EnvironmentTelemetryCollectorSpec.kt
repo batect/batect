@@ -270,7 +270,7 @@ object EnvironmentTelemetryCollectorSpec : Spek({
                             imageOverrides = mapOf("container-1" to "image-1"),
                             existingNetworkToUse = "some-network",
                             skipPrerequisites = true,
-                            maximumLevelOfParallelism = 3
+                            maximumLevelOfParallelism = 3,
                         )
 
                         val environmentCollector by createEnvironmentCollector(hostEnvironmentVariables, commandLineOptions)

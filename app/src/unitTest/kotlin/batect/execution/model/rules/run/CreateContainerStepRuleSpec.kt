@@ -181,8 +181,8 @@ object CreateContainerStepRuleSpec : Spek({
                         |   "type": "${rule::class.qualifiedName}",
                         |   "container": "the-container"
                         |}
-                        """.trimMargin()
-                    )
+                        """.trimMargin(),
+                    ),
                 )
             }
         }

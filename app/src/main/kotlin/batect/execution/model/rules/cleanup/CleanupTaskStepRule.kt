@@ -29,5 +29,5 @@ abstract class CleanupTaskStepRule : TaskStepRule() {
 enum class ManualCleanupSortOrder(val order: Int) {
     RemoveContainers(1),
     DeleteTemporaryFiles(RemoveContainers.order + 1),
-    DeleteTaskNetwork(DeleteTemporaryFiles.order + 1)
+    DeleteTaskNetwork(DeleteTemporaryFiles.order + 1),
 }

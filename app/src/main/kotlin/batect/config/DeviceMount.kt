@@ -26,7 +26,7 @@ import kotlinx.serialization.Serializable
 data class DeviceMount(
     @SerialName("local") val localPath: String,
     @SerialName("container") val containerPath: String,
-    @SerialName("options") val options: String? = null
+    @SerialName("options") val options: String? = null,
 ) {
     override fun toString(): String {
         return if (options == null) {
@@ -62,6 +62,6 @@ object DeviceMountConfigSerializer : SimpleStringOrObjectSerializer<DeviceMount>
     private fun invalidMountDefinitionException(value: String, input: YamlInput) =
         ConfigurationException(
             "Device mount definition '$value' is invalid. It must be in the form 'local_path:container_path' or 'local_path:container_path:options'.",
-            input.node
+            input.node,
         )
 }

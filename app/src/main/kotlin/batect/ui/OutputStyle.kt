@@ -20,5 +20,5 @@ enum class OutputStyle {
     Quiet,
     Simple,
     Fancy,
-    All
+    All,
 }

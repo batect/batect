@@ -82,7 +82,7 @@ object PortRangeSpec : Spek({
             mapOf(
                 "123" to PortRange(123),
                 "123-123" to PortRange(123),
-                "123-456" to PortRange(123, 456)
+                "123-456" to PortRange(123, 456),
             ).forEach { (input, expectedValue) ->
                 given("the input string '$input'") {
                     it("parses to the expected value") {
@@ -101,7 +101,7 @@ object PortRangeSpec : Spek({
                 "1-",
                 "-1",
                 "a",
-                "-1-10"
+                "-1-10",
             ).forEach { input ->
                 given("the input string '$input'") {
                     it("throws an appropriate exception when parsed") {
@@ -126,7 +126,7 @@ object PortRangeSpec : Spek({
 
             setOf(
                 "0-10",
-                "0"
+                "0",
             ).forEach { input ->
                 given("the input string '$input' representing an invalid port range") {
                     it("throws an appropriate exception when parsed") {

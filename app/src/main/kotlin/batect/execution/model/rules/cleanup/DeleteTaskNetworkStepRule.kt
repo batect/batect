@@ -15,8 +15,9 @@
 */
 
 @file:UseSerializers(
-    NetworkReferenceSerializer::class
+    NetworkReferenceSerializer::class,
 )
+
 package batect.execution.model.rules.cleanup
 
 import batect.config.Container
@@ -35,7 +36,7 @@ import kotlinx.serialization.UseSerializers
 @Serializable
 data class DeleteTaskNetworkStepRule(
     val network: NetworkReference,
-    @Serializable(with = ContainerNameSetSerializer::class) val containersThatMustBeRemovedFirst: Set<Container>
+    @Serializable(with = ContainerNameSetSerializer::class) val containersThatMustBeRemovedFirst: Set<Container>,
 ) : CleanupTaskStepRule() {
     override fun evaluate(pastEvents: Set<TaskEvent>): TaskStepRuleEvaluationResult {
         val removedContainers = pastEvents

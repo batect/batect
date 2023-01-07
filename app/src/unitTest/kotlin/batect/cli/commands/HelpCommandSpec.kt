@@ -65,7 +65,7 @@ object HelpCommandSpec : Spek({
                     createOption(group2, "booster-level", "Level of boosters to use.", acceptsValue = true),
                     createOption(group1, "file", "File name to use.", acceptsValue = true, shortName = 'f'),
                     createOption(group1, "enable-extra-stuff", "Something you can enable if you want.", acceptsValue = false),
-                    createOption(group1, "super-secret-command", "You should never see this", acceptsValue = false, showInHelp = false)
+                    createOption(group1, "super-secret-command", "You should never see this", acceptsValue = false, showInHelp = false),
                 )
             }
 
@@ -97,8 +97,8 @@ object HelpCommandSpec : Spek({
                         |For documentation and further information on Batect, visit https://github.com/batect/batect.
                         |
                         |
-                        """.trimMargin().withPlatformSpecificLineSeparator()
-                    )
+                        """.trimMargin().withPlatformSpecificLineSeparator(),
+                    ),
                 )
             }
 

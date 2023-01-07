@@ -87,8 +87,8 @@ object RunStagePlannerSpec : Spek({
                             "create the task container" to CreateContainerStepRule(container),
                             "run the task container" to RunContainerStepRule(container, emptySet()),
                             "wait for the task container to become healthy" to WaitForContainerToBecomeHealthyStepRule(container),
-                            "run setup commands for the task container" to RunContainerSetupCommandsStepRule(container)
-                        )
+                            "run setup commands for the task container" to RunContainerSetupCommandsStepRule(container),
+                        ),
                     )
                 }
 
@@ -106,8 +106,8 @@ object RunStagePlannerSpec : Spek({
                             "create the task container" to CreateContainerStepRule(container),
                             "run the task container" to RunContainerStepRule(container, emptySet()),
                             "wait for the task container to become healthy" to WaitForContainerToBecomeHealthyStepRule(container),
-                            "run setup commands for the task container" to RunContainerSetupCommandsStepRule(container)
-                        )
+                            "run setup commands for the task container" to RunContainerSetupCommandsStepRule(container),
+                        ),
                     )
                 }
             }
@@ -151,8 +151,8 @@ object RunStagePlannerSpec : Spek({
                         "run setup commands for the task container" to RunContainerSetupCommandsStepRule(taskContainer),
                         "run setup commands for container 1" to RunContainerSetupCommandsStepRule(container1),
                         "run setup commands for container 2" to RunContainerSetupCommandsStepRule(container2),
-                        "run setup commands for container 3" to RunContainerSetupCommandsStepRule(container3)
-                    )
+                        "run setup commands for container 3" to RunContainerSetupCommandsStepRule(container3),
+                    ),
                 )
             }
 
@@ -182,8 +182,8 @@ object RunStagePlannerSpec : Spek({
                         "wait for container 2 to become healthy" to WaitForContainerToBecomeHealthyStepRule(container2),
                         "run setup commands for the task container" to RunContainerSetupCommandsStepRule(taskContainer),
                         "run setup commands for container 1" to RunContainerSetupCommandsStepRule(container1),
-                        "run setup commands for container 2" to RunContainerSetupCommandsStepRule(container2)
-                    )
+                        "run setup commands for container 2" to RunContainerSetupCommandsStepRule(container2),
+                    ),
                 )
             }
         }

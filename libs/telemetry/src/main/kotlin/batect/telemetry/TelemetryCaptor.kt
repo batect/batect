@@ -32,7 +32,7 @@ interface TelemetryCaptor {
 fun <R> TelemetryCaptor.addSpan(
     type: String,
     timeSource: TimeSource = ZonedDateTime::now,
-    process: (TelemetrySpanBuilder) -> R
+    process: (TelemetrySpanBuilder) -> R,
 ): R {
     fun nowInUTC(): ZonedDateTime = timeSource().withZoneSameInstant(ZoneOffset.UTC)
 
@@ -58,7 +58,7 @@ fun TelemetryCaptor.addUnhandledExceptionEvent(e: Throwable, isUserFacing: Boole
         mapOf(
             CommonAttributes.Exception to AttributeValue(e),
             CommonAttributes.ExceptionCaughtAt to AttributeValue("${stackFrame.className}.${stackFrame.methodName}"),
-            CommonAttributes.IsUserFacingException to AttributeValue(isUserFacing)
-        )
+            CommonAttributes.IsUserFacingException to AttributeValue(isUserFacing),
+        ),
     )
 }

@@ -79,58 +79,58 @@ object FailureErrorMessageFormatterSpec : Spek({
                 Scenario(
                     "task network creation failed",
                     TaskNetworkCreationFailedEvent("Something went wrong."),
-                    Text.red(Text.bold("Error: ") + Text("Could not create network for task.\n")) + Text("Something went wrong.")
+                    Text.red(Text.bold("Error: ") + Text("Could not create network for task.\n")) + Text("Something went wrong."),
                 ),
                 Scenario(
                     "checking custom task network failed",
                     CustomTaskNetworkCheckFailedEvent("my-network", "Something went wrong."),
-                    Text.red(Text.bold("Error: ") + Text("Could not check details of network ") + Text.bold("my-network") + Text(".\n")) + Text("Something went wrong.")
+                    Text.red(Text.bold("Error: ") + Text("Could not check details of network ") + Text.bold("my-network") + Text(".\n")) + Text("Something went wrong."),
                 ),
                 Scenario(
                     "image build failed",
                     ImageBuildFailedEvent(container, "Something went wrong."),
-                    Text.red(Text.bold("Error: ") + Text("Could not build image for container ") + Text.bold("the-container") + Text(".\n")) + Text("Something went wrong.")
+                    Text.red(Text.bold("Error: ") + Text("Could not build image for container ") + Text.bold("the-container") + Text(".\n")) + Text("Something went wrong."),
                 ),
                 Scenario(
                     "image pull failed",
                     ImagePullFailedEvent(PullImage("the-image"), "Something went wrong."),
-                    Text.red(Text.bold("Error: ") + Text("Could not pull image ") + Text.bold("the-image") + Text(".\n")) + Text("Something went wrong.")
+                    Text.red(Text.bold("Error: ") + Text("Could not pull image ") + Text.bold("the-image") + Text(".\n")) + Text("Something went wrong."),
                 ),
                 Scenario(
                     "container creation failed",
                     ContainerCreationFailedEvent(container, "Something went wrong."),
-                    Text.red(Text.bold("Error: ") + Text("Could not create container ") + Text.bold("the-container") + Text(".\n")) + Text("Something went wrong.")
+                    Text.red(Text.bold("Error: ") + Text("Could not create container ") + Text.bold("the-container") + Text(".\n")) + Text("Something went wrong."),
                 ),
                 Scenario(
                     "task network deletion failed",
                     TaskNetworkDeletionFailedEvent("Something went wrong."),
-                    Text.red(Text.bold("Error: ") + Text("Could not delete the task network.\n")) + Text("Something went wrong.")
+                    Text.red(Text.bold("Error: ") + Text("Could not delete the task network.\n")) + Text("Something went wrong."),
                 ),
                 Scenario(
                     "container run failed",
                     ContainerRunFailedEvent(container, "Something went wrong."),
-                    Text.red(Text.bold("Error: ") + Text("Could not run container ") + Text.bold("the-container") + Text(".\n")) + Text("Something went wrong.")
+                    Text.red(Text.bold("Error: ") + Text("Could not run container ") + Text.bold("the-container") + Text(".\n")) + Text("Something went wrong."),
                 ),
                 Scenario(
                     "container stop failed",
                     ContainerStopFailedEvent(container, "Something went wrong."),
-                    Text.red(Text.bold("Error: ") + Text("Could not stop container ") + Text.bold("the-container") + Text(".\n")) + Text("Something went wrong.")
+                    Text.red(Text.bold("Error: ") + Text("Could not stop container ") + Text.bold("the-container") + Text(".\n")) + Text("Something went wrong."),
                 ),
                 Scenario(
                     "container removal failed",
                     ContainerRemovalFailedEvent(container, "Something went wrong."),
-                    Text.red(Text.bold("Error: ") + Text("Could not remove container ") + Text.bold("the-container") + Text(".\n")) + Text("Something went wrong.")
+                    Text.red(Text.bold("Error: ") + Text("Could not remove container ") + Text.bold("the-container") + Text(".\n")) + Text("Something went wrong."),
                 ),
                 Scenario(
                     "execution failed",
                     ExecutionFailedEvent("Something went wrong."),
-                    Text.red(Text.bold("Error: ") + Text("An unexpected exception occurred during execution.\n")) + Text("Something went wrong.")
+                    Text.red(Text.bold("Error: ") + Text("An unexpected exception occurred during execution.\n")) + Text("Something went wrong."),
                 ),
                 Scenario(
                     "user interrupted execution",
                     UserInterruptedExecutionEvent,
-                    Text.red(Text.bold("Task cancelled: ") + Text("Interrupt received during execution.\n")) + Text("Waiting for outstanding operations to stop or finish before cleaning up...")
-                )
+                    Text.red(Text.bold("Task cancelled: ") + Text("Interrupt received during execution.\n")) + Text("Waiting for outstanding operations to stop or finish before cleaning up..."),
+                ),
             ).forEach { (description, event, expectedMessage) ->
                 given("a '$description' event") {
                     on("getting the message for that event") {
@@ -148,23 +148,23 @@ object FailureErrorMessageFormatterSpec : Spek({
                 Scenario(
                     "a 'container did not become healthy' event",
                     ContainerDidNotBecomeHealthyEvent(container, "Something went wrong."),
-                    Text.red(Text.bold("Error: ") + Text("Container ") + Text.bold("the-container") + Text(" did not become healthy.\n")) + Text("Something went wrong.")
+                    Text.red(Text.bold("Error: ") + Text("Container ") + Text.bold("the-container") + Text(" did not become healthy.\n")) + Text("Something went wrong."),
                 ),
                 Scenario(
                     "a 'setup command execution error' event",
                     SetupCommandExecutionErrorEvent(container, SetupCommand(Command.parse("./do the-thing")), "Something went wrong."),
-                    Text.red(Text.bold("Error: ") + Text("Could not run setup command ") + Text.bold("./do the-thing") + Text(" in container ") + Text.bold("the-container") + Text(".\n")) + Text("Something went wrong.")
+                    Text.red(Text.bold("Error: ") + Text("Could not run setup command ") + Text.bold("./do the-thing") + Text(" in container ") + Text.bold("the-container") + Text(".\n")) + Text("Something went wrong."),
                 ),
                 Scenario(
                     "a 'setup command failed' event where the command emitted some output",
                     SetupCommandFailedEvent(container, SetupCommand(Command.parse("./do the-thing")), 123, "Something went wrong."),
-                    Text.red(Text.bold("Error: ") + Text("Setup command ") + Text.bold("./do the-thing") + Text(" in container ") + Text.bold("the-container") + Text(" failed.\n")) + Text("The command exited with code 123 and output:\nSomething went wrong.")
+                    Text.red(Text.bold("Error: ") + Text("Setup command ") + Text.bold("./do the-thing") + Text(" in container ") + Text.bold("the-container") + Text(" failed.\n")) + Text("The command exited with code 123 and output:\nSomething went wrong."),
                 ),
                 Scenario(
                     "a 'setup command failed' event where the command did not emit any output",
                     SetupCommandFailedEvent(container, SetupCommand(Command.parse("./do the-thing")), 123, ""),
-                    Text.red(Text.bold("Error: ") + Text("Setup command ") + Text.bold("./do the-thing") + Text(" in container ") + Text.bold("the-container") + Text(" failed.\n")) + Text("The command exited with code 123 and did not produce any output.")
-                )
+                    Text.red(Text.bold("Error: ") + Text("Setup command ") + Text.bold("./do the-thing") + Text(" in container ") + Text.bold("the-container") + Text(" failed.\n")) + Text("The command exited with code 123 and did not produce any output."),
+                ),
             ).forEach { (description, event, expectedMessage) ->
                 given(description) {
                     given("cleanup after failure is disabled") {
@@ -195,7 +195,7 @@ object FailureErrorMessageFormatterSpec : Spek({
                             it("returns an appropriate error message with a message mentioning that the task can be re-run with cleanup disabled") {
                                 assertThat(
                                     message,
-                                    equivalentTo(expectedMessageWithCleanupInfo.withPlatformSpecificLineSeparator())
+                                    equivalentTo(expectedMessageWithCleanupInfo.withPlatformSpecificLineSeparator()),
                                 )
                             }
                         }
@@ -211,7 +211,7 @@ object FailureErrorMessageFormatterSpec : Spek({
 
             mapOf(
                 "failed" to TestCase({ PostTaskManualCleanup.Required.DueToTaskFailureWithCleanupDisabled(it) }, "--no-cleanup-after-failure", "Once you have finished investigating the issue"),
-                "succeeded" to TestCase({ PostTaskManualCleanup.Required.DueToTaskSuccessWithCleanupDisabled(it) }, "--no-cleanup-after-success", "Once you have finished using the containers")
+                "succeeded" to TestCase({ PostTaskManualCleanup.Required.DueToTaskSuccessWithCleanupDisabled(it) }, "--no-cleanup-after-success", "Once you have finished using the containers"),
             ).forEach { (description, case) ->
                 val (cleanupGenerator, argumentName, cleanupPhrase) = case
 
@@ -264,7 +264,7 @@ object FailureErrorMessageFormatterSpec : Spek({
 
                             val events = setOf(
                                 ContainerCreatedEvent(container, DockerContainer(ContainerReference("http-server-container-id"), "http-server-container-name")),
-                                ContainerStartedEvent(container)
+                                ContainerStartedEvent(container),
                             )
 
                             given("there are no cleanup commands") {
@@ -284,7 +284,7 @@ object FailureErrorMessageFormatterSpec : Spek({
 
                             given("there is one cleanup command") {
                                 val cleanupCommands = listOf(
-                                    "docker network rm some-network"
+                                    "docker network rm some-network",
                                 )
 
                                 on("formatting the message") {
@@ -305,7 +305,7 @@ object FailureErrorMessageFormatterSpec : Spek({
                             given("there are multiple cleanup commands") {
                                 val cleanupCommands = listOf(
                                     "docker rm some-container",
-                                    "docker network rm some-network"
+                                    "docker network rm some-network",
                                 )
 
                                 on("formatting the message") {
@@ -329,12 +329,12 @@ object FailureErrorMessageFormatterSpec : Spek({
                         given("the container never started") {
                             val container = Container("http-server", imageSourceDoesNotMatter())
                             val events = setOf(
-                                ContainerCreatedEvent(container, DockerContainer(ContainerReference("http-server-container-id"), "http-server-container-name"))
+                                ContainerCreatedEvent(container, DockerContainer(ContainerReference("http-server-container-id"), "http-server-container-name")),
                             )
 
                             given("there is one cleanup command") {
                                 val cleanupCommands = listOf(
-                                    "docker network rm some-network"
+                                    "docker network rm some-network",
                                 )
 
                                 on("formatting the message") {
@@ -358,12 +358,12 @@ object FailureErrorMessageFormatterSpec : Spek({
                             val events = setOf(
                                 ContainerCreatedEvent(container, DockerContainer(ContainerReference("http-server-container-id"), "http-server-container-name")),
                                 ContainerStartedEvent(container),
-                                RunningContainerExitedEvent(container, 123)
+                                RunningContainerExitedEvent(container, 123),
                             )
 
                             given("there is one cleanup command") {
                                 val cleanupCommands = listOf(
-                                    "docker network rm some-network"
+                                    "docker network rm some-network",
                                 )
 
                                 on("formatting the message") {
@@ -387,12 +387,12 @@ object FailureErrorMessageFormatterSpec : Spek({
                             val events = setOf(
                                 ContainerCreatedEvent(container, DockerContainer(ContainerReference("http-server-container-id"), "http-server-container-name")),
                                 ContainerStartedEvent(container),
-                                ContainerStoppedEvent(container)
+                                ContainerStoppedEvent(container),
                             )
 
                             given("there is one cleanup command") {
                                 val cleanupCommands = listOf(
-                                    "docker network rm some-network"
+                                    "docker network rm some-network",
                                 )
 
                                 on("formatting the message") {
@@ -420,7 +420,7 @@ object FailureErrorMessageFormatterSpec : Spek({
                             ContainerCreatedEvent(container1, DockerContainer(ContainerReference("http-server-container-id"), "http-server-container-name")),
                             ContainerStartedEvent(container1),
                             ContainerCreatedEvent(container2, DockerContainer(ContainerReference("database-container-id"), "database-container-name")),
-                            ContainerStartedEvent(container2)
+                            ContainerStartedEvent(container2),
                         )
 
                         given("there are no cleanup commands") {
@@ -442,7 +442,7 @@ object FailureErrorMessageFormatterSpec : Spek({
 
                         given("there is one cleanup command") {
                             val cleanupCommands = listOf(
-                                "docker network rm some-network"
+                                "docker network rm some-network",
                             )
 
                             on("formatting the message") {
@@ -466,7 +466,7 @@ object FailureErrorMessageFormatterSpec : Spek({
                         given("there are multiple cleanup commands") {
                             val cleanupCommands = listOf(
                                 "docker rm some-container",
-                                "docker network rm some-network"
+                                "docker network rm some-network",
                             )
 
                             on("formatting the message") {
@@ -509,7 +509,7 @@ object FailureErrorMessageFormatterSpec : Spek({
 
             given("there is one cleanup command") {
                 val cleanupCommands = listOf(
-                    "docker network rm some-network"
+                    "docker network rm some-network",
                 )
 
                 on("formatting the message") {
@@ -528,7 +528,7 @@ object FailureErrorMessageFormatterSpec : Spek({
                 val cleanupCommands = listOf(
                     "rm -rf /tmp/the-thing",
                     "docker rm some-container",
-                    "docker network rm some-network"
+                    "docker network rm some-network",
                 )
 
                 on("formatting the message") {

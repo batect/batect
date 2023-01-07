@@ -18,5 +18,5 @@ package batect.execution
 
 enum class CleanupOption {
     Cleanup,
-    DontCleanup
+    DontCleanup,
 }

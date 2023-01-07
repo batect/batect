@@ -71,7 +71,7 @@ object MultiValueMapOptionSpec : Spek({
                         "a",
                         "a=",
                         "=a",
-                        "="
+                        "=",
                     ).forEach { value ->
                         on("parsing a list of arguments where the option is given an invalid key/value pair") {
                             val result by runForEachTest { option.parse(listOf(format, value, "do-stuff")) }

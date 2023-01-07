@@ -40,7 +40,7 @@ class RunAsCurrentUserConfigurationProvider(
     private val nativeMethods: NativeMethods,
     private val fileSystem: FileSystem,
     private val containerType: DockerContainerType,
-    private val dockerClient: DockerClient
+    private val dockerClient: DockerClient,
 ) {
     private val userId: Int by lazy {
         when (systemInfo.operatingSystem) {
@@ -106,9 +106,9 @@ class RunAsCurrentUserConfigurationProvider(
             dockerContainer.reference,
             setOf(
                 UploadFile("passwd", 0, 0, "644".toInt(8), passwdContents.toByteArray(Charsets.UTF_8)),
-                UploadFile("group", 0, 0, "644".toInt(8), groupContents.toByteArray(Charsets.UTF_8))
+                UploadFile("group", 0, 0, "644".toInt(8), groupContents.toByteArray(Charsets.UTF_8)),
             ),
-            "/etc"
+            "/etc",
         )
     }
 
@@ -136,7 +136,7 @@ class RunAsCurrentUserConfigurationProvider(
         dockerClient.uploadToContainer(
             dockerContainer.reference,
             setOf(UploadDirectory(leafDirectoryNameOf(path), userId, groupId, "755".toInt(8))),
-            parentDirectoryOf(path)
+            parentDirectoryOf(path),
         )
     }
 

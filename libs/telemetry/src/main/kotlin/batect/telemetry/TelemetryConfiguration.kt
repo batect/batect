@@ -15,7 +15,7 @@
 */
 
 @file:UseSerializers(
-    UUIDSerializer::class
+    UUIDSerializer::class,
 )
 
 package batect.telemetry
@@ -37,5 +37,5 @@ enum class ConsentState {
     TelemetryDisabled,
 
     @SerialName("allowed")
-    TelemetryAllowed
+    TelemetryAllowed,
 }

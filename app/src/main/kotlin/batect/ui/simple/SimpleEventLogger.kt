@@ -49,7 +49,7 @@ class SimpleEventLogger(
     val failureErrorMessageFormatter: FailureErrorMessageFormatter,
     val console: Console,
     val errorConsole: Console,
-    override val ioStreamingOptions: TaskContainerOnlyIOStreamingOptions
+    override val ioStreamingOptions: TaskContainerOnlyIOStreamingOptions,
 ) : EventLogger {
     private var haveStartedCleanUp = false
     private val lock = Object()

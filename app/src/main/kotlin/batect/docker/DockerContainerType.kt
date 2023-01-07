@@ -18,5 +18,5 @@ package batect.docker
 
 enum class DockerContainerType {
     Linux,
-    Windows
+    Windows,
 }

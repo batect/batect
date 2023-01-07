@@ -20,7 +20,7 @@ import batect.os.SystemInfo
 import java.nio.file.Path
 
 data class ApplicationPaths(
-    val rootLocalStorageDirectory: Path
+    val rootLocalStorageDirectory: Path,
 ) {
     constructor(systemInfo: SystemInfo) : this(systemInfo.homeDirectory.resolve(".batect"))
 }

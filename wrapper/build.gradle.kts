@@ -30,7 +30,7 @@ evaluationDependsOnChildren()
 
 val sourceTasks = setOf(
     project("unix").tasks.named("build"),
-    project("windows").tasks.named("build")
+    project("windows").tasks.named("build"),
 )
 
 val createChecksumsFile by tasks.registering {

@@ -41,8 +41,8 @@ object RunningContainerExitedEventSpec : Spek({
                         |   "container": "container-1",
                         |   "exitCode": 123
                         |}
-                        """.trimMargin()
-                    )
+                        """.trimMargin(),
+                    ),
                 )
             }
         }

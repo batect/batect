@@ -39,7 +39,7 @@ class FancyEventLogger(
     val startupProgressDisplay: StartupProgressDisplay,
     val cleanupProgressDisplay: CleanupProgressDisplay,
     val taskContainer: Container,
-    override val ioStreamingOptions: TaskContainerOnlyIOStreamingOptions
+    override val ioStreamingOptions: TaskContainerOnlyIOStreamingOptions,
 ) : EventLogger {
     private val lock = Object()
     private var keepUpdatingStartupProgress = true

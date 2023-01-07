@@ -41,8 +41,8 @@ object ContainerDidNotBecomeHealthyEventSpec : Spek({
                         |   "container": "container-1",
                         |   "message": "Something went wrong"
                         |}
-                        """.trimMargin()
-                    )
+                        """.trimMargin(),
+                    ),
                 )
             }
         }

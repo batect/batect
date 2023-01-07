@@ -94,8 +94,8 @@ object ConfigVariablesProviderSpec : Spek({
                                 { provider.build(config) },
                                 throws<ConfigurationFileException>(
                                     withMessage("The config variable 'some_var' has not been defined.")
-                                        and withLineNumber(1) and withFileName(sourceFile.toString())
-                                )
+                                        and withLineNumber(1) and withFileName(sourceFile.toString()),
+                                ),
                             )
                         }
                     }
@@ -129,8 +129,8 @@ object ConfigVariablesProviderSpec : Spek({
                             { provider.build(config) },
                             throws<ConfigurationFileException>(
                                 withMessage("Expected a map, but got a scalar value")
-                                    and withLineNumber(1) and withFileName(sourceFile.toString())
-                            )
+                                    and withLineNumber(1) and withFileName(sourceFile.toString()),
+                            ),
                         )
                     }
                 }

@@ -50,8 +50,8 @@ object PullImageStepRuleSpec : Spek({
                         |   "type": "${rule::class.qualifiedName}",
                         |   "source": {"imageName": "the-image", "imagePullPolicy": "IfNotPresent"}
                         |}
-                        """.trimMargin()
-                    )
+                        """.trimMargin(),
+                    ),
                 )
             }
         }

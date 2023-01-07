@@ -15,7 +15,7 @@
 */
 
 @file:UseSerializers(
-    PathSerializer::class
+    PathSerializer::class,
 )
 
 package batect.os

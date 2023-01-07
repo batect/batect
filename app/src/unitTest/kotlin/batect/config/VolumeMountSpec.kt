@@ -110,7 +110,7 @@ object VolumeMountSpec : Spek({
 
                 mapOf(
                     "c:\\local" to "a lowercase drive letter",
-                    "C:\\local" to "an uppercase drive letter"
+                    "C:\\local" to "an uppercase drive letter",
                 ).forEach { (local, description) ->
                     on("parsing a valid Windows volume mount definition with $description") {
                         val volumeMount by runForEachTest { parser.decodeFromString(VolumeMount.Companion, "'$local:/container'") }
@@ -166,7 +166,7 @@ object VolumeMountSpec : Spek({
                     " ",
                     ":",
                     "thing:thing:",
-                    "thing:thing:options:"
+                    "thing:thing:options:",
                 ).map {
                     on("parsing the invalid volume mount definition '$it'") {
                         it("fails with an appropriate error message") {
@@ -176,8 +176,8 @@ object VolumeMountSpec : Spek({
                                     withMessage("Volume mount definition '$it' is invalid. It must be in the form 'local_path:container_path' or 'local_path:container_path:options'.")
                                         and withLineNumber(1)
                                         and withColumn(1)
-                                        and withPath("<root>")
-                                )
+                                        and withPath("<root>"),
+                                ),
                             )
                         }
                     }
@@ -272,8 +272,8 @@ object VolumeMountSpec : Spek({
                                 withMessage("Field 'local' is required for local path mounts but it is missing.")
                                     and withLineNumber(1)
                                     and withColumn(1)
-                                    and withPath("<root>")
-                            )
+                                    and withPath("<root>"),
+                            ),
                         )
                     }
                 }
@@ -288,8 +288,8 @@ object VolumeMountSpec : Spek({
                                 withMessage("Field 'container' is required but it is missing.")
                                     and withLineNumber(1)
                                     and withColumn(1)
-                                    and withPath("<root>")
-                            )
+                                    and withPath("<root>"),
+                            ),
                         )
                     }
                 }
@@ -308,8 +308,8 @@ object VolumeMountSpec : Spek({
                                 withMessage("Field 'name' is not permitted for local path mounts.")
                                     and withLineNumber(1)
                                     and withColumn(1)
-                                    and withPath("<root>")
-                            )
+                                    and withPath("<root>"),
+                            ),
                         )
                     }
                 }
@@ -374,8 +374,8 @@ object VolumeMountSpec : Spek({
                                 withMessage("Field 'name' is required for cache mounts but it is missing.")
                                     and withLineNumber(1)
                                     and withColumn(1)
-                                    and withPath("<root>")
-                            )
+                                    and withPath("<root>"),
+                            ),
                         )
                     }
                 }
@@ -395,8 +395,8 @@ object VolumeMountSpec : Spek({
                                 withMessage("Field 'local' is not permitted for cache mounts.")
                                     and withLineNumber(1)
                                     and withColumn(1)
-                                    and withPath("<root>")
-                            )
+                                    and withPath("<root>"),
+                            ),
                         )
                     }
                 }
@@ -460,8 +460,8 @@ object VolumeMountSpec : Spek({
                                 withMessage("Field 'name' is not permitted for tmpfs mounts.")
                                     and withLineNumber(1)
                                     and withColumn(1)
-                                    and withPath("<root>")
-                            )
+                                    and withPath("<root>"),
+                            ),
                         )
                     }
                 }
@@ -480,8 +480,8 @@ object VolumeMountSpec : Spek({
                                 withMessage("Field 'local' is not permitted for tmpfs mounts.")
                                     and withLineNumber(1)
                                     and withColumn(1)
-                                    and withPath("<root>")
-                            )
+                                    and withPath("<root>"),
+                            ),
                         )
                     }
                 }
@@ -499,8 +499,8 @@ object VolumeMountSpec : Spek({
                         throws<InvalidPropertyValueException>(
                             withMessage("Value for 'type' is invalid: Value 'blah' is not a valid option, permitted choices are: cache, local, tmpfs")
                                 and has(InvalidPropertyValueException::line, equalTo(1))
-                                and has(InvalidPropertyValueException::column, equalTo(7))
-                        )
+                                and has(InvalidPropertyValueException::column, equalTo(7)),
+                        ),
                     )
                 }
             }
@@ -514,8 +514,8 @@ object VolumeMountSpec : Spek({
                     assertThat(
                         { parser.decodeFromString(VolumeMount.Companion, yaml) },
                         throws(
-                            withMessage("Volume mount definition is invalid. It must either be an object or a literal in the form 'local_path:container_path' or 'local_path:container_path:options'.")
-                        )
+                            withMessage("Volume mount definition is invalid. It must either be an object or a literal in the form 'local_path:container_path' or 'local_path:container_path:options'."),
+                        ),
                     )
                 }
             }
@@ -542,8 +542,8 @@ object VolumeMountSpec : Spek({
                                 |   "container": "/container",
                                 |   "options": "ro"
                                 |}
-                                """.trimMargin()
-                            )
+                                """.trimMargin(),
+                            ),
                         )
                     }
                 }
@@ -574,8 +574,8 @@ object VolumeMountSpec : Spek({
                                 |   "container": "/container",
                                 |   "options": "ro"
                                 |}
-                                """.trimMargin()
-                            )
+                                """.trimMargin(),
+                            ),
                         )
                     }
                 }
@@ -595,8 +595,8 @@ object VolumeMountSpec : Spek({
                             |   "container": "/container",
                             |   "options": "ro"
                             |}
-                            """.trimMargin()
-                        )
+                            """.trimMargin(),
+                        ),
                     )
                 }
             }
@@ -614,8 +614,8 @@ object VolumeMountSpec : Spek({
                             |   "container": "/container",
                             |   "options": "ro"
                             |}
-                            """.trimMargin()
-                        )
+                            """.trimMargin(),
+                        ),
                     )
                 }
             }

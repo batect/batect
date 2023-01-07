@@ -30,7 +30,7 @@ object RunOptionsSpec : Spek({
             val disableCleanupAfterSuccessOnCommandLine: Boolean,
             val disableCleanupAfterFailureOnCommandLine: Boolean,
             val expectedBehaviourAfterSuccess: CleanupOption,
-            val expectedBehaviourAfterFailure: CleanupOption
+            val expectedBehaviourAfterFailure: CleanupOption,
         ) {
             val description =
                 "the task ${if (isMainTask) "is" else "isn't"} the main task, cleanup after success ${if (disableCleanupAfterSuccessOnCommandLine) "is" else "isn't"} disabled and cleanup after failure ${if (disableCleanupAfterFailureOnCommandLine) "is" else "isn't"} disabled"
@@ -42,57 +42,57 @@ object RunOptionsSpec : Spek({
                 disableCleanupAfterSuccessOnCommandLine = false,
                 disableCleanupAfterFailureOnCommandLine = false,
                 expectedBehaviourAfterSuccess = CleanupOption.Cleanup,
-                expectedBehaviourAfterFailure = CleanupOption.Cleanup
+                expectedBehaviourAfterFailure = CleanupOption.Cleanup,
             ),
             TestCase(
                 isMainTask = false,
                 disableCleanupAfterSuccessOnCommandLine = false,
                 disableCleanupAfterFailureOnCommandLine = true,
                 expectedBehaviourAfterSuccess = CleanupOption.Cleanup,
-                expectedBehaviourAfterFailure = CleanupOption.DontCleanup
+                expectedBehaviourAfterFailure = CleanupOption.DontCleanup,
             ),
             TestCase(
                 isMainTask = false,
                 disableCleanupAfterSuccessOnCommandLine = true,
                 disableCleanupAfterFailureOnCommandLine = false,
                 expectedBehaviourAfterSuccess = CleanupOption.Cleanup,
-                expectedBehaviourAfterFailure = CleanupOption.Cleanup
+                expectedBehaviourAfterFailure = CleanupOption.Cleanup,
             ),
             TestCase(
                 isMainTask = false,
                 disableCleanupAfterSuccessOnCommandLine = true,
                 disableCleanupAfterFailureOnCommandLine = true,
                 expectedBehaviourAfterSuccess = CleanupOption.Cleanup,
-                expectedBehaviourAfterFailure = CleanupOption.DontCleanup
+                expectedBehaviourAfterFailure = CleanupOption.DontCleanup,
             ),
             TestCase(
                 isMainTask = true,
                 disableCleanupAfterSuccessOnCommandLine = false,
                 disableCleanupAfterFailureOnCommandLine = false,
                 expectedBehaviourAfterSuccess = CleanupOption.Cleanup,
-                expectedBehaviourAfterFailure = CleanupOption.Cleanup
+                expectedBehaviourAfterFailure = CleanupOption.Cleanup,
             ),
             TestCase(
                 isMainTask = true,
                 disableCleanupAfterSuccessOnCommandLine = false,
                 disableCleanupAfterFailureOnCommandLine = true,
                 expectedBehaviourAfterSuccess = CleanupOption.Cleanup,
-                expectedBehaviourAfterFailure = CleanupOption.DontCleanup
+                expectedBehaviourAfterFailure = CleanupOption.DontCleanup,
             ),
             TestCase(
                 isMainTask = true,
                 disableCleanupAfterSuccessOnCommandLine = true,
                 disableCleanupAfterFailureOnCommandLine = false,
                 expectedBehaviourAfterSuccess = CleanupOption.DontCleanup,
-                expectedBehaviourAfterFailure = CleanupOption.Cleanup
+                expectedBehaviourAfterFailure = CleanupOption.Cleanup,
             ),
             TestCase(
                 isMainTask = true,
                 disableCleanupAfterSuccessOnCommandLine = true,
                 disableCleanupAfterFailureOnCommandLine = true,
                 expectedBehaviourAfterSuccess = CleanupOption.DontCleanup,
-                expectedBehaviourAfterFailure = CleanupOption.DontCleanup
-            )
+                expectedBehaviourAfterFailure = CleanupOption.DontCleanup,
+            ),
         ).forEach { testCase ->
             given(testCase.description) {
                 val commandLineOptions = CommandLineOptions(disableCleanupAfterSuccess = testCase.disableCleanupAfterSuccessOnCommandLine, disableCleanupAfterFailure = testCase.disableCleanupAfterFailureOnCommandLine)

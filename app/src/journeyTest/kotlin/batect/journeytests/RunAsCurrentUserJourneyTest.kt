@@ -35,7 +35,7 @@ import java.nio.file.Paths
 object RunAsCurrentUserJourneyTest : Spek({
     mapOf(
         "run-as-current-user" to "a task with 'run as current user' enabled",
-        "run-as-current-user-with-mount" to "a task with 'run as current user' enabled that has a mount inside the home directory"
+        "run-as-current-user-with-mount" to "a task with 'run as current user' enabled that has a mount inside the home directory",
     ).forEach { (name, description) ->
         describe(description) {
             val runner by createForGroup { ApplicationRunner(name) }
@@ -62,7 +62,7 @@ object RunAsCurrentUserJourneyTest : Spek({
                         "Home directory exists",
                         "Home directory owned by user: $expectedContainerUserName",
                         "Home directory owned by group: $expectedContainerGroupName",
-                        "/etc/hosts exists"
+                        "/etc/hosts exists",
                     ).joinToString("\n")
 
                     result.asClue { it.output shouldContain expectedOutput }

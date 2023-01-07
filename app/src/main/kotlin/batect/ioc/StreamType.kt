@@ -19,5 +19,5 @@ package batect.ioc
 enum class StreamType {
     Input,
     Output,
-    Error
+    Error,
 }

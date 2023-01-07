@@ -258,7 +258,7 @@ object ParallelExecutionManagerSpec : Spek({
                         whenever(taskStepRunner.run(eq(step), eq(executionManager))).then {
                             throw ExecutionException(
                                 "Something went wrong",
-                                CancellationException("The step was cancelled")
+                                CancellationException("The step was cancelled"),
                             )
                         }
                     }

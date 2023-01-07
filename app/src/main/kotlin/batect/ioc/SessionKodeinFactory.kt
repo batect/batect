@@ -24,7 +24,7 @@ import org.kodein.di.instance
 import org.kodein.di.subDI
 
 class SessionKodeinFactory(
-    private val baseKodein: DirectDI
+    private val baseKodein: DirectDI,
 ) {
     fun create(rawConfiguration: RawConfiguration): DirectDI = subDI(baseKodein.di) {
         bind<RawConfiguration>() with instance(rawConfiguration)

@@ -60,7 +60,7 @@ class ConfigurationLoader(
     private val telemetryCaptor: TelemetryCaptor,
     private val telemetryConsent: TelemetryConsent,
     private val defaultGitRepositoryCacheNotificationListener: GitRepositoryCacheNotificationListener,
-    private val logger: Logger
+    private val logger: Logger,
 ) {
     fun loadConfig(rootConfigFilePath: Path, gitRepositoryCacheNotificationListener: GitRepositoryCacheNotificationListener = defaultGitRepositoryCacheNotificationListener): ConfigurationLoadResult {
         return telemetryCaptor.addSpan("LoadConfiguration") { span ->
@@ -201,7 +201,7 @@ class ConfigurationLoader(
         if (!ImageNameValidator.isValidImageName(inferredProjectName)) {
             throw ConfigurationFileException(
                 "The inferred project name '$inferredProjectName' is invalid. The project name must be a valid Docker reference: it ${ImageNameValidator.validNameDescription}. Provide a valid project name explicitly with 'project_name'.",
-                pathToRootConfigFile.toString()
+                pathToRootConfigFile.toString(),
             )
         }
 
@@ -283,7 +283,7 @@ class ConfigurationLoader(
                 } else {
                     include
                 }
-            }
+            },
         )
 }
 
@@ -293,5 +293,5 @@ private fun LogMessageBuilder.data(key: String, value: Include) = this.data(key,
 
 data class ConfigurationLoadResult(
     val configuration: RawConfiguration,
-    val pathsLoaded: Set<Path>
+    val pathsLoaded: Set<Path>,
 )

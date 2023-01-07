@@ -117,8 +117,8 @@ object GitRepositoryCacheCleanupTaskSpec : Spek({
                             withLogMessage("Deleting repository as it has not been used in over 30 days.")
                                 and withSeverity(Severity.Info)
                                 and withAdditionalData("repo", repo.repo)
-                                and withAdditionalData("lastUsed", repo.lastUsed)
-                        )
+                                and withAdditionalData("lastUsed", repo.lastUsed),
+                        ),
                     )
                 }
 
@@ -128,8 +128,8 @@ object GitRepositoryCacheCleanupTaskSpec : Spek({
                         hasMessage(
                             withLogMessage("Repository deletion completed.")
                                 and withSeverity(Severity.Info)
-                                and withAdditionalData("repo", repo.repo)
-                        )
+                                and withAdditionalData("repo", repo.repo),
+                        ),
                     )
                 }
 
@@ -154,8 +154,8 @@ object GitRepositoryCacheCleanupTaskSpec : Spek({
                             withLogMessage("Repository deletion failed.")
                                 and withSeverity(Severity.Warning)
                                 and withAdditionalData("repo", repo.repo)
-                                and withException(exception)
-                        )
+                                and withException(exception),
+                        ),
                     )
                 }
 
@@ -219,8 +219,8 @@ object GitRepositoryCacheCleanupTaskSpec : Spek({
                         hasMessage(
                             withLogMessage("Repository deletion failed.")
                                 and withSeverity(Severity.Warning)
-                                and withException(exception)
-                        )
+                                and withException(exception),
+                        ),
                     )
                 }
 

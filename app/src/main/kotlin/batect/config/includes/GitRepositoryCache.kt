@@ -40,7 +40,7 @@ class GitRepositoryCache(
     private val applicationPaths: ApplicationPaths,
     private val repoCloner: LockingRepositoryCloner,
     private val versionInfo: VersionInfo,
-    private val timeSource: TimeSource = ZonedDateTime::now
+    private val timeSource: TimeSource = ZonedDateTime::now,
 ) {
     private val gitCacheDirectory = applicationPaths.rootLocalStorageDirectory.resolve("incl").toAbsolutePath()
 
@@ -83,8 +83,8 @@ class GitRepositoryCache(
 
         val info = JsonObject(
             existingContent + mapOf(
-                "lastUsed" to JsonPrimitive(lastUsed.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME))
-            )
+                "lastUsed" to JsonPrimitive(lastUsed.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)),
+            ),
         )
 
         Files.write(infoPath, info.toString().toByteArray(Charsets.UTF_8))
@@ -116,7 +116,7 @@ class GitRepositoryCache(
                 repo,
                 lastUsed,
                 if (haveWorkingCopy) expectedWorkingCopyPath else { null },
-                infoFilePath
+                infoFilePath,
             )
         } catch (e: IllegalArgumentException) {
             throw GitRepositoryCacheException("The file $infoFilePath could not be loaded: ${e.message}", e)

@@ -39,7 +39,7 @@ object CacheMountJourneyTest : Spek({
 
         mapOf(
             "running the task with caches set to use volume mounts" to "--cache-type=volume",
-            "running the task with caches set to use directory mounts" to "--cache-type=directory"
+            "running the task with caches set to use directory mounts" to "--cache-type=directory",
         ).forEach { (description, arg) ->
             describe(description) {
                 on("running the task twice") {

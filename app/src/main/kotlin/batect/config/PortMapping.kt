@@ -29,7 +29,7 @@ import kotlinx.serialization.builtins.SetSerializer
 data class PortMapping(
     val local: PortRange,
     val container: PortRange,
-    val protocol: String = defaultProtocol
+    val protocol: String = defaultProtocol,
 ) {
     constructor(localPort: Int, containerPort: Int, protocol: String = defaultProtocol) : this(PortRange(localPort), PortRange(containerPort), protocol)
 
@@ -94,14 +94,14 @@ object PortMappingConfigSerializer : SimpleStringOrObjectSerializer<PortMapping>
         ConfigurationException(
             "Port mapping definition '$value' is invalid. It must be in the form 'local:container', 'local:container/protocol', 'from-to:from-to' or 'from-to:from-to/protocol' and each port must be a positive integer.",
             input.node,
-            cause
+            cause,
         )
 
     override fun validateDeserializedObject(value: PortMapping, path: YamlPath) {
         if (value.local.size != value.container.size) {
             throw ConfigurationException(
                 "Port mapping definition is invalid. The local port range has ${pluralize(value.local.size, "port")} and the container port range has ${pluralize(value.container.size, "port")}, but the ranges must be the same size.",
-                path
+                path,
             )
         }
     }

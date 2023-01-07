@@ -38,7 +38,7 @@ object EditDistanceCalculator {
                     minOf(
                         prefixes[i - 1][j] + 1,
                         prefixes[i][j - 1] + 1,
-                        prefixes[i - 1][j - 1] + 1
+                        prefixes[i - 1][j - 1] + 1,
                     )
                 }
             }

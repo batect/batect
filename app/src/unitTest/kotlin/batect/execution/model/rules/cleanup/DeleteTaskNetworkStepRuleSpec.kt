@@ -55,7 +55,7 @@ object DeleteTaskNetworkStepRuleSpec : Spek({
             given("those containers have been removed") {
                 val events = setOf(
                     ContainerRemovedEvent(container1),
-                    ContainerRemovedEvent(container2)
+                    ContainerRemovedEvent(container2),
                 )
 
                 on("evaluating the rule") {
@@ -103,8 +103,8 @@ object DeleteTaskNetworkStepRuleSpec : Spek({
                         |   "containersThatMustBeRemovedFirst": ["container-1", "container-2"],
                         |   "manualCleanupCommand": "docker network rm the-network"
                         |}
-                        """.trimMargin()
-                    )
+                        """.trimMargin(),
+                    ),
                 )
             }
         }

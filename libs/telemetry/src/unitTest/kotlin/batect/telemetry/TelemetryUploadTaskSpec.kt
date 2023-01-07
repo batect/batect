@@ -92,7 +92,7 @@ object TelemetryUploadTaskSpec : Spek({
                 "1.0.0",
                 emptyMap(),
                 emptyList(),
-                emptyList()
+                emptyList(),
             )
 
             val bytes = Json.Default.encodeToString(TelemetrySession.serializer(), session).toByteArray(Charsets.UTF_8)
@@ -172,8 +172,8 @@ object TelemetryUploadTaskSpec : Spek({
                             hasMessage(
                                 withLogMessage("Session uploaded successfully.")
                                     and withSeverity(Severity.Info)
-                                    and withAdditionalData("sessionPath", sessionPath.toString())
-                            )
+                                    and withAdditionalData("sessionPath", sessionPath.toString()),
+                            ),
                         )
                     }
                 }
@@ -211,8 +211,8 @@ object TelemetryUploadTaskSpec : Spek({
                                     withLogMessage("Session upload failed. Session is less than 30 days old and so won't be deleted.")
                                         and withSeverity(Severity.Warning)
                                         and withAdditionalData("sessionPath", sessionPath.toString())
-                                        and withException(exception)
-                                )
+                                        and withException(exception),
+                                ),
                             )
                         }
 
@@ -222,8 +222,8 @@ object TelemetryUploadTaskSpec : Spek({
                                 mapOf(
                                     CommonAttributes.Exception to AttributeValue(exception),
                                     CommonAttributes.ExceptionCaughtAt to AttributeValue("batect.telemetry.TelemetryUploadTask.upload"),
-                                    CommonAttributes.IsUserFacingException to AttributeValue(false)
-                                )
+                                    CommonAttributes.IsUserFacingException to AttributeValue(false),
+                                ),
                             )
                         }
                     }
@@ -254,8 +254,8 @@ object TelemetryUploadTaskSpec : Spek({
                                     withLogMessage("Session upload failed. Session is more than 30 days old and so has been deleted.")
                                         and withSeverity(Severity.Warning)
                                         and withAdditionalData("sessionPath", sessionPath.toString())
-                                        and withException(exception)
-                                )
+                                        and withException(exception),
+                                ),
                             )
                         }
 
@@ -265,8 +265,8 @@ object TelemetryUploadTaskSpec : Spek({
                                 mapOf(
                                     CommonAttributes.Exception to AttributeValue(exception),
                                     CommonAttributes.ExceptionCaughtAt to AttributeValue("batect.telemetry.TelemetryUploadTask.upload"),
-                                    CommonAttributes.IsUserFacingException to AttributeValue(false)
-                                )
+                                    CommonAttributes.IsUserFacingException to AttributeValue(false),
+                                ),
                             )
                         }
 
@@ -304,8 +304,8 @@ object TelemetryUploadTaskSpec : Spek({
                                         and withSeverity(Severity.Error)
                                         and withAdditionalData("sessionPath", sessionPath.toString())
                                         and withException("uploadException", exception)
-                                        and withAdditionalDataAndAnyValue("parsingException")
-                                )
+                                        and withAdditionalDataAndAnyValue("parsingException"),
+                                ),
                             )
                         }
 
@@ -315,8 +315,8 @@ object TelemetryUploadTaskSpec : Spek({
                                 mapOf(
                                     CommonAttributes.Exception to AttributeValue(exception),
                                     CommonAttributes.ExceptionCaughtAt to AttributeValue("batect.telemetry.TelemetryUploadTask.upload"),
-                                    CommonAttributes.IsUserFacingException to AttributeValue(false)
-                                )
+                                    CommonAttributes.IsUserFacingException to AttributeValue(false),
+                                ),
                             )
                         }
                     }

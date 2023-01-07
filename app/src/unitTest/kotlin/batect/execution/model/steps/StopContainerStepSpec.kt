@@ -44,8 +44,8 @@ object StopContainerStepSpec : Spek({
                         |   "container": "the-container",
                         |   "dockerContainer": {"reference": {"id": "the-container-id"}, "name": "the-container-name"}
                         |}
-                        """.trimMargin()
-                    )
+                        """.trimMargin(),
+                    ),
                 )
             }
         }

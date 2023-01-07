@@ -72,7 +72,7 @@ class BuildImageStepRunner(
     private val builderVersion: BuilderVersion,
     private val systemInfo: SystemInfo,
     private val telemetryCaptor: TelemetryCaptor,
-    private val logger: Logger
+    private val logger: Logger,
 ) {
     fun run(step: BuildImageStep, eventSink: TaskEventSink) {
         val stdoutBuffer = Buffer()

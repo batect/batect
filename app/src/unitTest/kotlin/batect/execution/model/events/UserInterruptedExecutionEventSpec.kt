@@ -36,8 +36,8 @@ object UserInterruptedExecutionEventSpec : Spek({
                         |{
                         |   "type": "${event::class.qualifiedName}"
                         |}
-                        """.trimMargin()
-                    )
+                        """.trimMargin(),
+                    ),
                 )
             }
         }

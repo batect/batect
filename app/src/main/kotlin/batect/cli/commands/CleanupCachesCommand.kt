@@ -32,7 +32,7 @@ class CleanupCachesCommand(
     private val dockerConnectivity: DockerConnectivity,
     private val projectPaths: ProjectPaths,
     private val console: Console,
-    private val cachesToClean: Set<String>
+    private val cachesToClean: Set<String>,
 ) : Command {
     override fun run(): Int = dockerConnectivity.checkAndRun { kodein ->
         runBlocking {

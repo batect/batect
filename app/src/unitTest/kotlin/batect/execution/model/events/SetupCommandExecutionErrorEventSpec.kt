@@ -45,8 +45,8 @@ object SetupCommandExecutionErrorEventSpec : Spek({
                         |   "command": {"command": ["./do", "the-thing"], "working_directory": null},
                         |   "message": "Something went wrong"
                         |}
-                        """.trimMargin()
-                    )
+                        """.trimMargin(),
+                    ),
                 )
             }
         }

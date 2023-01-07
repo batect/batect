@@ -41,7 +41,7 @@ import java.nio.ByteBuffer
 class WindowsNativeMethods(
     private val posix: POSIX,
     private val win32: Win32,
-    private val runtime: Runtime
+    private val runtime: Runtime,
 ) : NativeMethods {
     constructor(posix: POSIX) : this(
         LibraryLoader.create(Win32::class.java)
@@ -50,13 +50,13 @@ class WindowsNativeMethods(
             .library("kernel32")
             .library("Advapi32")
             .load(),
-        posix
+        posix,
     )
 
     constructor(win32: Win32, posix: POSIX) : this(
         posix,
         win32,
-        Runtime.getRuntime(win32)
+        Runtime.getRuntime(win32),
     )
 
     override fun getConsoleDimensions(): Dimensions {
@@ -172,7 +172,7 @@ class WindowsNativeMethods(
             hConsoleOutput: HANDLE,
 
             @Out @Transient
-            lpConsoleScreenBufferInfo: ConsoleScreenBufferInfo
+            lpConsoleScreenBufferInfo: ConsoleScreenBufferInfo,
         ): Boolean
 
         @SaveError
@@ -189,7 +189,7 @@ class WindowsNativeMethods(
             lpBuffer: ByteBuffer,
 
             @In @Out
-            pcbBuffer: IntByReference
+            pcbBuffer: IntByReference,
         ): Boolean
     }
 

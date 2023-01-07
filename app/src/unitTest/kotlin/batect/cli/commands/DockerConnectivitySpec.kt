@@ -89,7 +89,7 @@ object DockerConnectivitySpec : Spek({
                 errorConsole,
                 commandLineOptions,
                 telemetryCaptor,
-                logger
+                logger,
             )
         }
 

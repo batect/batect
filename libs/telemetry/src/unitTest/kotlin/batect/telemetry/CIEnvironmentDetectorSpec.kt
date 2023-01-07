@@ -94,7 +94,7 @@ object CIEnvironmentDetectorSpec : Spek({
             "CI",
             "CONTINUOUS_INTEGRATION",
             "BUILD_NUMBER",
-            "RUN_ID"
+            "RUN_ID",
         ).forEach { name ->
             given("the generic environment variable '$name' is set without any other information") {
                 val hostEnvironmentVariables = HostEnvironmentVariables(name to "1")

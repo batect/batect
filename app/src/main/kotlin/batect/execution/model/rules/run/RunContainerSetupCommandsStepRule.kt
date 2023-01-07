@@ -28,7 +28,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class RunContainerSetupCommandsStepRule(
-    @Serializable(with = ContainerNameOnlySerializer::class) val container: Container
+    @Serializable(with = ContainerNameOnlySerializer::class) val container: Container,
 ) : TaskStepRule() {
     override fun evaluate(pastEvents: Set<TaskEvent>): TaskStepRuleEvaluationResult {
         if (!containerHasBecomeHealthy(pastEvents)) {

@@ -23,7 +23,7 @@ import batect.primitives.mapToSet
 
 data class ContainerDependencyGraph(
     private val config: TaskSpecialisedConfiguration,
-    private val task: Task
+    private val task: Task,
 ) {
     private val runConfiguration = task.runConfiguration ?: throw IllegalArgumentException("Cannot create a container dependency graph for a task that only has prerequisites.")
     private val nodesMap = createNodes()
@@ -83,7 +83,7 @@ data class ContainerDependencyGraph(
                 container,
                 isRootNode,
                 dependencyNodes,
-                this
+                this,
             )
         }
     }

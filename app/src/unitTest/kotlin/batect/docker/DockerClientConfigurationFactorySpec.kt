@@ -51,9 +51,9 @@ object DockerClientConfigurationFactorySpec : Spek({
                                     dockerHost,
                                     null,
                                     TLSVerification.Enabled,
-                                    configDirectory.toOkioPath()
-                                )
-                            )
+                                    configDirectory.toOkioPath(),
+                                ),
+                            ),
                         )
                     }
                 }
@@ -71,9 +71,9 @@ object DockerClientConfigurationFactorySpec : Spek({
                                     dockerHost,
                                     null,
                                     TLSVerification.Enabled,
-                                    null
-                                )
-                            )
+                                    null,
+                                ),
+                            ),
                         )
                     }
                 }
@@ -99,8 +99,8 @@ object DockerClientConfigurationFactorySpec : Spek({
                                 verifyTLS = true,
                                 tlsCACertificatePath = caCertPath,
                                 tlsCertificatePath = certPath,
-                                tlsKeyPath = keyPath
-                            )
+                                tlsKeyPath = keyPath,
+                            ),
                         )
                     }
 
@@ -114,9 +114,9 @@ object DockerClientConfigurationFactorySpec : Spek({
                                     dockerHost,
                                     DockerClientTLSConfiguration(expectedCACertContents, expectedCertContents, expectedKeyContents),
                                     TLSVerification.Enabled,
-                                    configDirectory.toOkioPath()
-                                )
-                            )
+                                    configDirectory.toOkioPath(),
+                                ),
+                            ),
                         )
                     }
                 }
@@ -132,8 +132,8 @@ object DockerClientConfigurationFactorySpec : Spek({
                                 verifyTLS = false,
                                 tlsCACertificatePath = caCertPath,
                                 tlsCertificatePath = certPath,
-                                tlsKeyPath = keyPath
-                            )
+                                tlsKeyPath = keyPath,
+                            ),
                         )
                     }
 
@@ -147,9 +147,9 @@ object DockerClientConfigurationFactorySpec : Spek({
                                     dockerHost,
                                     DockerClientTLSConfiguration(expectedCACertContents, expectedCertContents, expectedKeyContents),
                                     TLSVerification.InsecureDisabled,
-                                    configDirectory.toOkioPath()
-                                )
-                            )
+                                    configDirectory.toOkioPath(),
+                                ),
+                            ),
                         )
                     }
                 }
@@ -171,8 +171,8 @@ object DockerClientConfigurationFactorySpec : Spek({
                         verifyTLS = false,
                         tlsCACertificatePath = caCertPath,
                         tlsCertificatePath = certPath,
-                        tlsKeyPath = keyPath
-                    )
+                        tlsKeyPath = keyPath,
+                    ),
                 )
             }
 
@@ -186,9 +186,9 @@ object DockerClientConfigurationFactorySpec : Spek({
                             "unix:///Users/theuser/some/docker.sock",
                             null,
                             TLSVerification.Enabled,
-                            configDirectory.toOkioPath()
-                        )
-                    )
+                            configDirectory.toOkioPath(),
+                        ),
+                    ),
                 )
             }
         }

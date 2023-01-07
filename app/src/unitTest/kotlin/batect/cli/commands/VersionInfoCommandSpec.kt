@@ -92,8 +92,8 @@ object VersionInfoCommandSpec : Spek({
                         |For documentation and further information on Batect, visit https://github.com/batect/batect.
                         |
                         |
-                        """.trimMargin().withPlatformSpecificLineSeparator()
-                    )
+                        """.trimMargin().withPlatformSpecificLineSeparator(),
+                    ),
                 )
             }
 
@@ -134,8 +134,8 @@ object VersionInfoCommandSpec : Spek({
                         |For documentation and further information on Batect, visit https://github.com/batect/batect.
                         |
                         |
-                        """.trimMargin().withPlatformSpecificLineSeparator()
-                    )
+                        """.trimMargin().withPlatformSpecificLineSeparator(),
+                    ),
                 )
             }
 
@@ -172,8 +172,8 @@ object VersionInfoCommandSpec : Spek({
                         |For documentation and further information on Batect, visit https://github.com/batect/batect.
                         |
                         |
-                        """.trimMargin().withPlatformSpecificLineSeparator()
-                    )
+                        """.trimMargin().withPlatformSpecificLineSeparator(),
+                    ),
                 )
             }
 

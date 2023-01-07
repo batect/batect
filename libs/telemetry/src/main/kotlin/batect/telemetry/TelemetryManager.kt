@@ -27,7 +27,7 @@ class TelemetryManager(
     private val telemetryConfigurationStore: TelemetryConfigurationStore,
     private val ciEnvironmentDetector: CIEnvironmentDetector,
     private val abacusClient: AbacusClient,
-    private val logger: Logger
+    private val logger: Logger,
 ) {
     fun finishSession(sessionBuilder: TelemetrySessionBuilder) {
         if (!telemetryConsent.telemetryAllowed) {

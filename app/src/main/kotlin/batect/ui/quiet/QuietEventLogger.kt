@@ -28,7 +28,7 @@ import java.time.Duration
 class QuietEventLogger(
     val failureErrorMessageFormatter: FailureErrorMessageFormatter,
     val errorConsole: Console,
-    override val ioStreamingOptions: TaskContainerOnlyIOStreamingOptions
+    override val ioStreamingOptions: TaskContainerOnlyIOStreamingOptions,
 ) : EventLogger {
     override fun postEvent(event: TaskEvent) {
         if (event is TaskFailedEvent) {

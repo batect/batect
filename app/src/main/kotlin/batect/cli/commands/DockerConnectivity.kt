@@ -45,7 +45,7 @@ class DockerConnectivity(
     private val errorConsole: Console,
     private val commandLineOptions: CommandLineOptions,
     private val telemetryCaptor: TelemetryCaptor,
-    private val logger: Logger
+    private val logger: Logger,
 ) {
     fun checkAndRun(task: TaskWithKodein): Int {
         val client = try {
@@ -148,7 +148,7 @@ class DockerConnectivity(
                     osType,
                     versionInfo.version,
                     pingResponse.builderVersion,
-                    pingResponse.experimental
+                    pingResponse.experimental,
                 )
             } catch (e: DockerClientException) {
                 logger.warn {

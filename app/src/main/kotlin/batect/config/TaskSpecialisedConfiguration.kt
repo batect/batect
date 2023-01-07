@@ -25,5 +25,5 @@ data class TaskSpecialisedConfiguration(
     @SerialName("project_name") val projectName: String,
     val tasks: TaskMap = TaskMap(),
     val containers: ContainerMap = ContainerMap(),
-    @SerialName("config_variables") val configVariables: ConfigVariableMap = ConfigVariableMap()
+    @SerialName("config_variables") val configVariables: ConfigVariableMap = ConfigVariableMap(),
 )

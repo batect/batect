@@ -97,6 +97,6 @@ tasks.named<JourneyTestNamingCheckTask>("checkJourneyTestNaming").configure {
     ignoreFileNameCheck.set(
         fileTree("src/journeyTest/kotlin") {
             include("batect/journeytests/testutils/**")
-        }
+        },
     )
 }

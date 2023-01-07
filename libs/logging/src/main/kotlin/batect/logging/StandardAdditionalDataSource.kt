@@ -21,7 +21,7 @@ import kotlinx.serialization.builtins.serializer
 
 class StandardAdditionalDataSource(
     private val posix: POSIX,
-    private val threadSource: () -> Thread = { Thread.currentThread() }
+    private val threadSource: () -> Thread = { Thread.currentThread() },
 ) {
     private val pid by lazy { posix.getpid() }
 
@@ -31,7 +31,7 @@ class StandardAdditionalDataSource(
         return mapOf(
             "@processId" to JsonableObject(pid, Int.serializer()),
             "@threadId" to JsonableObject(thread.id, Long.serializer()),
-            "@threadName" to JsonableObject(thread.name, String.serializer())
+            "@threadName" to JsonableObject(thread.name, String.serializer()),
         )
     }
 }

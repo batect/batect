@@ -101,7 +101,7 @@ object OptionDefinitionSpec : Spek({
                 name: String,
                 description: String,
                 shortName: Char? = null,
-                allowMultiple: Boolean = false
+                allowMultiple: Boolean = false,
             ) : OptionDefinition(OptionGroup("the group"), name, description, false, shortName, allowMultiple) {
                 override fun parseValue(args: Iterable<String>): OptionParsingResult = OptionParsingResult.ReadOption(1234)
                 override fun checkDefaultValue(): DefaultApplicationResult = throw NotImplementedError()
@@ -138,7 +138,7 @@ object OptionDefinitionSpec : Spek({
                     listOf("--value"),
                     listOf("-v=thing"),
                     listOf("-v", "thing"),
-                    listOf("-v")
+                    listOf("-v"),
                 ).forEach { (first, second) ->
                     on("parsing a list of arguments where the option is valid but given twice in the form ${first + second}") {
                         beforeEachTest { option.parse(first + second + "do-stuff") }

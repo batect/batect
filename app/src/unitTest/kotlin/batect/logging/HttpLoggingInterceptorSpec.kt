@@ -83,8 +83,8 @@ object HttpLoggingInterceptorSpec : Spek({
                             withAdditionalData("url", "http://www.awesomestuff.com/thing") and
                             withAdditionalData("method", "GET") and
                             withAdditionalData("contentLength", 0L) and
-                            withAdditionalData("contentType", null)
-                    )
+                            withAdditionalData("contentType", null),
+                    ),
                 )
             }
 
@@ -99,8 +99,8 @@ object HttpLoggingInterceptorSpec : Spek({
                             withAdditionalData("code", 418) and
                             withAdditionalData("message", "I'm a teapot") and
                             withAdditionalData("contentLength", 0L) and
-                            withAdditionalData("contentType", null)
-                    )
+                            withAdditionalData("contentType", null),
+                    ),
                 )
             }
         }
@@ -133,8 +133,8 @@ object HttpLoggingInterceptorSpec : Spek({
                     hasMessage(
                         withLogMessage("HTTP request starting.") and
                             withAdditionalData("contentLength", "Some body content".length.toLong()) and
-                            withAdditionalData("contentType", "text/plain; charset=utf-8")
-                    )
+                            withAdditionalData("contentType", "text/plain; charset=utf-8"),
+                    ),
                 )
             }
         }
@@ -167,8 +167,8 @@ object HttpLoggingInterceptorSpec : Spek({
                     hasMessage(
                         withLogMessage("HTTP response received.") and
                             withAdditionalData("contentLength", "Some body content".length.toLong()) and
-                            withAdditionalData("contentType", "text/plain; charset=utf-8")
-                    )
+                            withAdditionalData("contentType", "text/plain; charset=utf-8"),
+                    ),
                 )
             }
         }

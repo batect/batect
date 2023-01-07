@@ -39,7 +39,7 @@ class ContainerMap(contents: Iterable<Container>) : NamedObjectMap<Container>("c
             if (!ImageNameValidator.isValidImageName(name)) {
                 throw ConfigurationException(
                     "Invalid container name '$name'. Container names must be valid Docker references: they ${ImageNameValidator.validNameDescription}.",
-                    path
+                    path,
                 )
             }
         }

@@ -78,18 +78,18 @@ checkUnitTestLayout {
             include(
                 "batect/cli/commands/FakeDockerConnectivity.kt",
                 "batect/testutils/**",
-                "batect/config/ExceptionMatchers.kt"
+                "batect/config/ExceptionMatchers.kt",
             )
-        }
+        },
     )
 
     ignoreMissingMainFile.set(
         fileTree("src/unitTest/kotlin") {
             include(
                 "batect/execution/model/steps/*.kt",
-                "batect/execution/model/events/*.kt"
+                "batect/execution/model/events/*.kt",
             )
-        }
+        },
     )
 }
 

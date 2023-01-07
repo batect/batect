@@ -30,7 +30,7 @@ import kotlinx.serialization.Transient
 data class RemoveContainerStepRule(
     @Serializable(with = ContainerNameOnlySerializer::class) val container: Container,
     val dockerContainer: DockerContainer,
-    val containerWasStarted: Boolean
+    val containerWasStarted: Boolean,
 ) : CleanupTaskStepRule() {
     override fun evaluate(pastEvents: Set<TaskEvent>): TaskStepRuleEvaluationResult {
         if (containerWasStarted && !containerHasStopped(pastEvents)) {

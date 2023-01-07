@@ -29,13 +29,13 @@ class DockerContainerEnvironmentVariableProvider(
     private val proxyEnvironmentVariablesProvider: ProxyEnvironmentVariablesProvider,
     private val expressionEvaluationContext: ExpressionEvaluationContext,
     private val containerDependencyGraph: ContainerDependencyGraph,
-    private val commandLineOptions: CommandLineOptions
+    private val commandLineOptions: CommandLineOptions,
 ) {
     private val allContainersInNetwork = containerDependencyGraph.allContainers
 
     fun environmentVariablesFor(
         container: Container,
-        terminalType: String?
+        terminalType: String?,
     ): Map<String, String> =
         terminalEnvironmentVariablesFor(terminalType) +
             proxyEnvironmentVariables() +

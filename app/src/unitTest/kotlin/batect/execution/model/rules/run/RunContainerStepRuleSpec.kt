@@ -57,10 +57,10 @@ object RunContainerStepRuleSpec : Spek({
                                 TaskStepRuleEvaluationResult.Ready(
                                     RunContainerStep(
                                         container,
-                                        dockerContainer
-                                    )
-                                )
-                            )
+                                        dockerContainer,
+                                    ),
+                                ),
+                            ),
                         )
                     }
                 }
@@ -141,10 +141,10 @@ object RunContainerStepRuleSpec : Spek({
                                     TaskStepRuleEvaluationResult.Ready(
                                         RunContainerStep(
                                             container,
-                                            dockerContainer
-                                        )
-                                    )
-                                )
+                                            dockerContainer,
+                                        ),
+                                    ),
+                                ),
                             )
                         }
                     }
@@ -179,8 +179,8 @@ object RunContainerStepRuleSpec : Spek({
                         |   "container": "the-container",
                         |   "dependencies": ["dependency-1", "dependency-2"]
                         |}
-                        """.trimMargin()
-                    )
+                        """.trimMargin(),
+                    ),
                 )
             }
         }

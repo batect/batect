@@ -59,5 +59,5 @@ enum class Capability {
     SYS_TTY_CONFIG,
     SYSLOG,
     WAKE_ALARM,
-    ALL;
+    ALL,
 }

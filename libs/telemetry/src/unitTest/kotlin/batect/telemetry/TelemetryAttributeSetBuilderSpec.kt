@@ -133,9 +133,9 @@ object TelemetryAttributeSetBuilderSpec : Spek({
                             "thingType" to JsonPrimitive("stuff"),
                             "thingCount" to JsonPrimitive(12),
                             "thingEnabled" to JsonPrimitive(false),
-                            "thing" to JsonNull
-                        )
-                    )
+                            "thing" to JsonNull,
+                        ),
+                    ),
                 )
             }
         }

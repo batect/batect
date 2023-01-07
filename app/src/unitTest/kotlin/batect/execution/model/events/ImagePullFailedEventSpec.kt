@@ -40,8 +40,8 @@ object ImagePullFailedEventSpec : Spek({
                         |   "source": {"imageName": "some-image", "imagePullPolicy": "IfNotPresent"},
                         |   "message": "Something went wrong"
                         |}
-                        """.trimMargin()
-                    )
+                        """.trimMargin(),
+                    ),
                 )
             }
         }

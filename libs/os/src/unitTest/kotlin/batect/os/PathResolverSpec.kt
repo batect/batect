@@ -172,9 +172,9 @@ object PathResolverSpec : Spek({
                             "somefile.txt",
                             fileSystem.getPath("/some-work-dir/somefile.txt"),
                             PathType.DoesNotExist,
-                            "resolved to '/some-work-dir/somefile.txt'"
-                        )
-                    )
+                            "resolved to '/some-work-dir/somefile.txt'",
+                        ),
+                    ),
                 )
             }
         }

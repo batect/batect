@@ -58,14 +58,14 @@ object DockerResourceNameGeneratorSpec : Spek({
             it("truncates the project name if the name would be longer than the limit") {
                 assertThat(
                     generator.generateNameFor("batect-cache-init-with-a-really-really-long-name", limitTo = 63),
-                    startsWith("my_proj-batect-cache-init-with-a-really-really-long-name-") and has(String::length, equalTo(63))
+                    startsWith("my_proj-batect-cache-init-with-a-really-really-long-name-") and has(String::length, equalTo(63)),
                 )
             }
 
             it("throws an exception if the name provided would cause the generated name to be too long") {
                 assertThat(
                     { generator.generateNameFor("batect-cache-init-with-a-really-really-incredibly-long-name", limitTo = 63) },
-                    throws<IllegalArgumentException>(withMessage("Can't generate name for 'batect-cache-init-with-a-really-really-incredibly-long-name' because it would exceed the desired limit of 63 characters."))
+                    throws<IllegalArgumentException>(withMessage("Can't generate name for 'batect-cache-init-with-a-really-really-incredibly-long-name' because it would exceed the desired limit of 63 characters.")),
                 )
             }
         }

@@ -37,7 +37,7 @@ object BinarySizeSpec : Spek({
                 BinaryUnit.Byte to 2,
                 BinaryUnit.Kilobyte to 2048,
                 BinaryUnit.Megabyte to 2_097_152,
-                BinaryUnit.Gigabyte to 2_147_483_648
+                BinaryUnit.Gigabyte to 2_147_483_648,
             ).forEach { (unit, expectedBytes) ->
                 given("an amount in ${unit.name.lowercase()}s") {
                     it("correctly calculates the equivalent number of bytes") {
@@ -100,7 +100,7 @@ object BinarySizeSpec : Spek({
                 "5 gb" to BinarySize.of(5, BinaryUnit.Gigabyte),
                 "5 gB" to BinarySize.of(5, BinaryUnit.Gigabyte),
                 "5 Gb" to BinarySize.of(5, BinaryUnit.Gigabyte),
-                "5 GB" to BinarySize.of(5, BinaryUnit.Gigabyte)
+                "5 GB" to BinarySize.of(5, BinaryUnit.Gigabyte),
             ).forEach { (input, expectedSize) ->
                 given("the input '$input'") {
                     it("correctly deserializes to the expected value") {
@@ -113,13 +113,13 @@ object BinarySizeSpec : Spek({
                 "",
                 "-2",
                 "2X",
-                "2 X"
+                "2 X",
             ).forEach { input ->
                 given("the invalid input '$input'") {
                     it("throws an exception") {
                         assertThat(
                             { Yaml.default.decodeFromString(BinarySize.serializer(), """"$input"""") },
-                            throws<ConfigurationException>(withMessage("Invalid size '$input'. It must be in the format '123', '123b', '123k', '123m' or '123g'.") and withLineNumber(1) and withColumn(1))
+                            throws<ConfigurationException>(withMessage("Invalid size '$input'. It must be in the format '123', '123b', '123k', '123m' or '123g'.") and withLineNumber(1) and withColumn(1)),
                         )
                     }
                 }

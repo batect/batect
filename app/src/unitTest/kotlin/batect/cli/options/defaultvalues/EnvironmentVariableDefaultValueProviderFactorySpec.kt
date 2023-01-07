@@ -29,7 +29,7 @@ import org.spekframework.spek2.style.specification.describe
 object EnvironmentVariableDefaultValueProviderFactorySpec : Spek({
     describe("an environment variable default value provider") {
         val environment = HostEnvironmentVariables(
-            "SOME_VAR" to "some value"
+            "SOME_VAR" to "some value",
         )
 
         val factory = EnvironmentVariableDefaultValueProviderFactory(environment)

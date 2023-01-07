@@ -30,7 +30,7 @@ class TelemetryUploadTask(
     private val telemetrySessionBuilder: TelemetrySessionBuilder,
     private val logger: Logger,
     private val threadRunner: ThreadRunner = defaultThreadRunner,
-    private val timeSource: TimeSource = ZonedDateTime::now
+    private val timeSource: TimeSource = ZonedDateTime::now,
 ) {
     private val json = Json.Default
     private val circuitBreaker = CircuitBreaker(5)

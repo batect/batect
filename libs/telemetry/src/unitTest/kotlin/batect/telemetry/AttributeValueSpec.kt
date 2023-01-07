@@ -40,8 +40,8 @@ object AttributeValueSpec : Spek({
                                 |java.lang.RuntimeException
                                 |${tab}at batect.telemetry.AttributeValueSpec${'$'}1${'$'}1${'$'}1${'$'}1.invoke(AttributeValueSpec.kt:32)
                                 |${tab}at batect.telemetry.AttributeValueSpec${'$'}1${'$'}1${'$'}1${'$'}1.invoke(AttributeValueSpec.kt:31)
-                            """.trimMargin()
-                        )
+                            """.trimMargin(),
+                        ),
                     )
                 }
             }
@@ -59,8 +59,8 @@ object AttributeValueSpec : Spek({
                                 |java.lang.RuntimeException
                                 |${tab}at batect.telemetry.AttributeValueSpec${'$'}1${'$'}1${'$'}1${'$'}2.invoke(AttributeValueSpec.kt:51)
                                 |${tab}at batect.telemetry.AttributeValueSpec${'$'}1${'$'}1${'$'}1${'$'}2.invoke(AttributeValueSpec.kt:49)
-                            """.trimMargin()
-                        )
+                            """.trimMargin(),
+                        ),
                     )
                 }
 
@@ -87,8 +87,8 @@ object AttributeValueSpec : Spek({
                                 |java.lang.RuntimeException
                                 |${tab}at batect.telemetry.AttributeValueSpec${'$'}1${'$'}1${'$'}1${'$'}3.invoke(AttributeValueSpec.kt:79)
                                 |${tab}at batect.telemetry.AttributeValueSpec${'$'}1${'$'}1${'$'}1${'$'}3.invoke(AttributeValueSpec.kt:76)
-                            """.trimMargin()
-                        )
+                            """.trimMargin(),
+                        ),
                     )
                 }
 

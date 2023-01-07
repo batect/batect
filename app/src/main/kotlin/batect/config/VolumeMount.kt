@@ -38,7 +38,7 @@ import kotlinx.serialization.encoding.Encoder
 @Serializable(with = VolumeMount.Companion::class)
 sealed class VolumeMount(
     open val containerPath: String,
-    open val options: String? = null
+    open val options: String? = null,
 ) {
     protected abstract fun serialize(output: CompositeEncoder)
 
@@ -85,7 +85,7 @@ sealed class VolumeMount(
         private fun invalidMountDefinitionException(value: String, input: YamlInput) =
             ConfigurationException(
                 "Volume mount definition '$value' is invalid. It must be in the form 'local_path:container_path' or 'local_path:container_path:options'.",
-                input.node
+                input.node,
             )
 
         override fun deserializeFromObject(input: YamlInput): VolumeMount {
@@ -185,7 +185,7 @@ sealed class VolumeMount(
             Cache,
 
             @SerialName("tmpfs")
-            Tmpfs
+            Tmpfs,
         }
     }
 }
@@ -194,7 +194,7 @@ data class LocalMount(
     val localPath: Expression,
     val pathResolutionContext: PathResolutionContext,
     override val containerPath: String,
-    override val options: String? = null
+    override val options: String? = null,
 ) : VolumeMount(containerPath, options) {
     private val descriptor: SerialDescriptor = buildClassSerialDescriptor("VolumeMount") {
         element("local", Expression.serializer().descriptor)
@@ -211,7 +211,7 @@ data class LocalMount(
 data class CacheMount(
     val name: String,
     override val containerPath: String,
-    override val options: String? = null
+    override val options: String? = null,
 ) : VolumeMount(containerPath, options) {
     private val descriptor: SerialDescriptor = buildClassSerialDescriptor("VolumeMount") {
         element("name", Expression.serializer().descriptor)
@@ -225,7 +225,7 @@ data class CacheMount(
 
 data class TmpfsMount(
     override val containerPath: String,
-    override val options: String? = null
+    override val options: String? = null,
 ) : VolumeMount(containerPath, options) {
     @OptIn(ExperimentalSerializationApi::class)
     override fun serialize(output: CompositeEncoder) {}

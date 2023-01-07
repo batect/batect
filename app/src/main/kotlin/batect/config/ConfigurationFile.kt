@@ -31,5 +31,5 @@ data class ConfigurationFile(
     @SerialName("config_variables") val configVariables: ConfigVariableMap = ConfigVariableMap(),
     @SerialName("include")
     @Serializable(with = IncludeSetConfigSerializer::class)
-    val includes: Set<Include> = emptySet()
+    val includes: Set<Include> = emptySet(),
 )

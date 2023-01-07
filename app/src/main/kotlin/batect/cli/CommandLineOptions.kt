@@ -65,7 +65,7 @@ data class CommandLineOptions(
     val generateShellTabCompletionScript: Shell? = null,
     val generateShellTabCompletionTaskInformation: Shell? = null,
     val maximumLevelOfParallelism: Int? = null,
-    val cleanCaches: Set<String> = emptySet()
+    val cleanCaches: Set<String> = emptySet(),
 ) {
     fun extend(originalKodein: DirectDI): DirectDI = subDI(originalKodein.di) {
         bind<CommandLineOptions>() with instance(this@CommandLineOptions)
@@ -90,5 +90,5 @@ data class DockerCommandLineOptions(
     val tlsCACertificatePath: Path = Paths.get("set-to-default-value-in", "CommandLineOptionsParser"),
     val tlsCertificatePath: Path = Paths.get("set-to-default-value-in", "CommandLineOptionsParser"),
     val tlsKeyPath: Path = Paths.get("set-to-default-value-in", "CommandLineOptionsParser"),
-    val configDirectory: Path = Paths.get("set-to-default-value-in", "CommandLineOptionsParser")
+    val configDirectory: Path = Paths.get("set-to-default-value-in", "CommandLineOptionsParser"),
 )

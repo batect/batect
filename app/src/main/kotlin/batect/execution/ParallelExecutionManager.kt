@@ -47,7 +47,7 @@ class ParallelExecutionManager(
     private val stateMachine: TaskStateMachine,
     private val telemetryCaptor: TelemetryCaptor,
     private val maximumLevelOfParallelism: Int?,
-    private val logger: Logger
+    private val logger: Logger,
 ) : TaskEventSink {
     private val threadPool = createThreadPool()
     private val workManagementLock = Object()

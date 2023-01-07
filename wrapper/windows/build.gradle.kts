@@ -63,7 +63,7 @@ tasks.register("build") {
         scriptFile.writeText(
             batchTemplateFile.readText()
                 .replace("POWERSHELL-SCRIPT-GOES-HERE", escapedPowershellScript)
-                .replace("VERSION-GOES-HERE", version.toString())
+                .replace("VERSION-GOES-HERE", version.toString()),
         )
     }
 }

@@ -24,7 +24,7 @@ import batect.ui.text.TextRun
 
 class StartupProgressDisplay(
     val containerLines: List<ContainerStartupProgressLine>,
-    val consoleDimensions: ConsoleDimensions
+    val consoleDimensions: ConsoleDimensions,
 ) {
     private var lastStatus = mutableListOf<TextRun>()
     private var lastConsoleDimensions: Dimensions? = null

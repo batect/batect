@@ -39,8 +39,8 @@ object PullImageStepSpec : Spek({
                         |   "type": "${step::class.qualifiedName}",
                         |   "source": {"imageName": "the-image", "imagePullPolicy": "IfNotPresent"}
                         |}
-                        """.trimMargin()
-                    )
+                        """.trimMargin(),
+                    ),
                 )
             }
         }

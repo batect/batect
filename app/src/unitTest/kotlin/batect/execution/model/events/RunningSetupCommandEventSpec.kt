@@ -45,8 +45,8 @@ object RunningSetupCommandEventSpec : Spek({
                         |   "command": {"command": ["./do", "the-thing"], "working_directory": null},
                         |   "commandIndex": 2
                         |}
-                        """.trimMargin()
-                    )
+                        """.trimMargin(),
+                    ),
                 )
             }
         }

@@ -77,8 +77,8 @@ object LogMessageWriterSpec : Spek({
                 messageTime,
                 mapOf(
                     "some-text" to JsonableObject("This is some text", String.serializer()),
-                    "some-int" to JsonableObject(123, Int.serializer())
-                )
+                    "some-int" to JsonableObject(123, Int.serializer()),
+                ),
             )
 
             val output = CloseableByteArrayOutputStream()

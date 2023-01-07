@@ -77,7 +77,7 @@ private val schemaLogLevelsToGradleLogLevels = mapOf(
     LogLevel.FATAL to org.gradle.api.logging.LogLevel.ERROR,
     LogLevel.INFO to org.gradle.api.logging.LogLevel.INFO,
     LogLevel.NONE to org.gradle.api.logging.LogLevel.INFO,
-    LogLevel.WARNING to org.gradle.api.logging.LogLevel.WARN
+    LogLevel.WARNING to org.gradle.api.logging.LogLevel.WARN,
 )
 
 fun printReport(report: ProcessingReport, sourceFile: File) {

@@ -33,7 +33,7 @@ class RunTaskCommand(
     private val telemetryConsentPrompt: TelemetryConsentPrompt,
     private val updateNotifier: UpdateNotifier,
     private val backgroundTaskManager: BackgroundTaskManager,
-    private val dockerConnectivity: DockerConnectivity
+    private val dockerConnectivity: DockerConnectivity,
 ) : Command {
     override fun run(): Int {
         val config = configLoader.loadConfig(commandLineOptions.configurationFileName).configuration

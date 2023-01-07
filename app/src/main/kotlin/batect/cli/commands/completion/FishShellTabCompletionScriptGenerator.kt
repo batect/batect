@@ -21,7 +21,7 @@ import java.io.InputStreamReader
 
 // This class is tested primarily by the tests in the app/src/completionTest directory.
 class FishShellTabCompletionScriptGenerator(
-    private val lineGenerator: FishShellTabCompletionLineGenerator
+    private val lineGenerator: FishShellTabCompletionLineGenerator,
 ) : ShellTabCompletionScriptGenerator {
     override fun generate(options: Set<OptionDefinition>, registerAs: String): String {
         val builder = StringBuilder()

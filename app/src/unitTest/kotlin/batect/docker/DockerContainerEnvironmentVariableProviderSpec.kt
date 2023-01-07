@@ -46,7 +46,7 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
             mock<ContainerDependencyGraph> {
                 on { allContainers } doReturn setOf(
                     Container("container-1", imageSourceDoesNotMatter()),
-                    Container("container-2", imageSourceDoesNotMatter())
+                    Container("container-2", imageSourceDoesNotMatter()),
                 )
             }
         }
@@ -68,7 +68,7 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
                 val container = Container(
                     "some-container",
                     imageSourceDoesNotMatter(),
-                    environment = mapOf("SOME_VAR" to LiteralValue("SOME_VALUE"))
+                    environment = mapOf("SOME_VAR" to LiteralValue("SOME_VALUE")),
                 )
 
                 val environmentVariables by createForEachTest { provider.environmentVariablesFor(container, terminalType) }
@@ -92,7 +92,7 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
                 val container = Container(
                     "some-container",
                     imageSourceDoesNotMatter(),
-                    environment = mapOf("SOME_VAR" to LiteralValue("SOME_VALUE"))
+                    environment = mapOf("SOME_VAR" to LiteralValue("SOME_VALUE")),
                 )
 
                 on("getting environment variables for the container") {
@@ -104,9 +104,9 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
                             equalTo(
                                 mapOf(
                                     "SOME_VAR" to "SOME_VALUE",
-                                    "TERM" to "some-term"
-                                )
-                            )
+                                    "TERM" to "some-term",
+                                ),
+                            ),
                         )
                     }
                 }
@@ -118,8 +118,8 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
                     imageSourceDoesNotMatter(),
                     environment = mapOf(
                         "SOME_VAR" to LiteralValue("SOME_VALUE"),
-                        "TERM" to LiteralValue("some-other-term")
-                    )
+                        "TERM" to LiteralValue("some-other-term"),
+                    ),
                 )
 
                 on("getting environment variables for the container") {
@@ -131,9 +131,9 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
                             equalTo(
                                 mapOf(
                                     "SOME_VAR" to "SOME_VALUE",
-                                    "TERM" to "some-other-term"
-                                )
-                            )
+                                    "TERM" to "some-other-term",
+                                ),
+                            ),
                         )
                     }
                 }
@@ -156,7 +156,7 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
                 val container = Container(
                     "some-container",
                     imageSourceDoesNotMatter(),
-                    environment = mapOf("SOME_VAR" to LiteralValue("SOME_VALID_VALUE"))
+                    environment = mapOf("SOME_VAR" to LiteralValue("SOME_VALID_VALUE")),
                 )
 
                 on("getting environment variables for the container") {
@@ -167,9 +167,9 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
                             environmentVariables,
                             equalTo(
                                 mapOf(
-                                    "SOME_VAR" to "SOME_VALID_VALUE"
-                                )
-                            )
+                                    "SOME_VAR" to "SOME_VALID_VALUE",
+                                ),
+                            ),
                         )
                     }
                 }
@@ -179,14 +179,14 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
                 val container = Container(
                     "some-container",
                     imageSourceDoesNotMatter(),
-                    environment = mapOf("SOME_VAR" to invalidReference)
+                    environment = mapOf("SOME_VAR" to invalidReference),
                 )
 
                 on("getting environment variables for the container") {
                     it("throws an appropriate exception") {
                         assertThat(
                             { provider.environmentVariablesFor(container, terminalType) },
-                            throws<ExpressionEvaluationException>(withMessage("The value for the environment variable 'SOME_VAR' cannot be evaluated: Couldn't evaluate expression."))
+                            throws<ExpressionEvaluationException>(withMessage("The value for the environment variable 'SOME_VAR' cannot be evaluated: Couldn't evaluate expression.")),
                         )
                     }
                 }
@@ -198,7 +198,7 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
             val proxyEnvironmentVariablesProvider = mock<ProxyEnvironmentVariablesProvider> {
                 on { getProxyEnvironmentVariables(setOf("container-1", "container-2")) } doReturn mapOf(
                     "HTTP_PROXY" to "http://some-proxy",
-                    "NO_PROXY" to "dont-proxy-this"
+                    "NO_PROXY" to "dont-proxy-this",
                 )
             }
 
@@ -210,7 +210,7 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
                 given("the container environment variables do not override the proxy settings") {
                     val container = Container(
                         "some-container",
-                        imageSourceDoesNotMatter()
+                        imageSourceDoesNotMatter(),
                     )
 
                     on("getting environment variables for the container") {
@@ -222,9 +222,9 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
                                 equalTo(
                                     mapOf(
                                         "HTTP_PROXY" to "http://some-proxy",
-                                        "NO_PROXY" to "dont-proxy-this"
-                                    )
-                                )
+                                        "NO_PROXY" to "dont-proxy-this",
+                                    ),
+                                ),
                             )
                         }
                     }
@@ -235,8 +235,8 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
                         "some-container",
                         imageSourceDoesNotMatter(),
                         environment = mapOf(
-                            "HTTP_PROXY" to LiteralValue("http://some-other-proxy")
-                        )
+                            "HTTP_PROXY" to LiteralValue("http://some-other-proxy"),
+                        ),
                     )
 
                     on("getting environment variables for the container") {
@@ -248,9 +248,9 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
                                 equalTo(
                                     mapOf(
                                         "HTTP_PROXY" to "http://some-other-proxy",
-                                        "NO_PROXY" to "dont-proxy-this"
-                                    )
-                                )
+                                        "NO_PROXY" to "dont-proxy-this",
+                                    ),
+                                ),
                             )
                         }
                     }
@@ -263,7 +263,7 @@ object DockerContainerEnvironmentVariableProviderSpec : Spek({
                 on("getting environment variables for the container") {
                     val container = Container(
                         "some-container",
-                        imageSourceDoesNotMatter()
+                        imageSourceDoesNotMatter(),
                     )
 
                     val environmentVariables by createForEachTest { provider.environmentVariablesFor(container, terminalType) }

@@ -24,5 +24,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class SetupCommand(
     @Serializable(with = CommandSerializer::class) val command: Command,
-    @SerialName("working_directory") val workingDirectory: String? = null
+    @SerialName("working_directory") val workingDirectory: String? = null,
 )

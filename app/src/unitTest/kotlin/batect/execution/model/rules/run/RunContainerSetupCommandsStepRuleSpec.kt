@@ -44,7 +44,7 @@ object RunContainerSetupCommandsStepRuleSpec : Spek({
             val events = setOf(
                 ContainerCreatedEvent(container, dockerContainer),
                 ContainerStartedEvent(container),
-                ContainerBecameHealthyEvent(container)
+                ContainerBecameHealthyEvent(container),
             )
 
             on("evaluating the rule") {
@@ -55,9 +55,9 @@ object RunContainerSetupCommandsStepRuleSpec : Spek({
                         result,
                         equalTo(
                             TaskStepRuleEvaluationResult.Ready(
-                                RunContainerSetupCommandsStep(container, dockerContainer)
-                            )
-                        )
+                                RunContainerSetupCommandsStep(container, dockerContainer),
+                            ),
+                        ),
                     )
                 }
             }
@@ -96,8 +96,8 @@ object RunContainerSetupCommandsStepRuleSpec : Spek({
                         |   "type": "${rule::class.qualifiedName}",
                         |   "container": "the-container"
                         |}
-                        """.trimMargin()
-                    )
+                        """.trimMargin(),
+                    ),
                 )
             }
         }

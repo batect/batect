@@ -46,7 +46,7 @@ fun OkHttpClient.mock(
     url: String,
     responseBody: String,
     statusCode: Int = 200,
-    responseHeaders: Headers = noHeaders
+    responseHeaders: Headers = noHeaders,
 ): Call {
     val parsedUrl = url.toHttpUrl()
 
@@ -58,7 +58,7 @@ fun OkHttpClient.mock(
     urlMatcher: Matcher<HttpUrl>,
     responseBody: String,
     statusCode: Int = 200,
-    responseHeaders: Headers = noHeaders
+    responseHeaders: Headers = noHeaders,
 ): Call {
     val jsonMediaType = "application/json; charset=utf-8".toMediaType()
     val parsedResponseBody = responseBody.toResponseBody(jsonMediaType)
@@ -88,7 +88,7 @@ fun OkHttpClient.mock(
                 .code(statusCode)
                 .message("Something happened")
                 .headers(responseHeaders)
-                .build()
+                .build(),
         )
 
         call

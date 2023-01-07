@@ -31,7 +31,7 @@ import kotlinx.serialization.Serializable
 data class StopContainerStepRule(
     @Serializable(with = ContainerNameOnlySerializer::class) val container: Container,
     val dockerContainer: DockerContainer,
-    @Serializable(with = ContainerNameSetSerializer::class) val containersThatMustBeStoppedFirst: Set<Container>
+    @Serializable(with = ContainerNameSetSerializer::class) val containersThatMustBeStoppedFirst: Set<Container>,
 ) : CleanupTaskStepRule() {
     override fun evaluate(pastEvents: Set<TaskEvent>): TaskStepRuleEvaluationResult {
         val stoppedContainers = pastEvents

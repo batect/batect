@@ -20,7 +20,7 @@ import java.io.InputStream
 
 class Prompt(
     private val console: Console,
-    private val stdin: InputStream
+    private val stdin: InputStream,
 ) {
     fun askYesNoQuestion(questionText: String): YesNoAnswer {
         val reader = stdin.bufferedReader(Charsets.UTF_8)
@@ -46,5 +46,5 @@ class Prompt(
 
 enum class YesNoAnswer {
     Yes,
-    No
+    No,
 }

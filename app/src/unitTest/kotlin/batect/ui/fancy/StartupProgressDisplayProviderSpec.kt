@@ -64,9 +64,9 @@ object StartupProgressDisplayProviderSpec : Spek({
                     equalTo(
                         setOf(
                             ContainerStartupProgressLine(container1, container1Dependencies, true),
-                            ContainerStartupProgressLine(container2, container2Dependencies, false)
-                        )
-                    )
+                            ContainerStartupProgressLine(container2, container2Dependencies, false),
+                        ),
+                    ),
                 )
             }
         }

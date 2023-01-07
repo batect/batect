@@ -114,7 +114,7 @@ private fun <T : Any?> LifecycleAware.produceNullableValueForEachTest(descriptio
 
 private enum class ValueScope(val beforeEachFunctionName: String) {
     EachTest("beforeEachTest"),
-    Group("beforeGroup")
+    Group("beforeGroup"),
 }
 
 fun <T : Any> LifecycleAware.createForEachTest(creator: () -> T): ReadOnlyProperty<Any?, T> = produceNonNullValueForEachTest("createForEachTest", ValueScope.EachTest, creator)

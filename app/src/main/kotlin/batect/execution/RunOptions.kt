@@ -21,7 +21,7 @@ import batect.cli.CommandLineOptions
 data class RunOptions(
     val isMainTask: Boolean,
     val behaviourAfterSuccess: CleanupOption,
-    val behaviourAfterFailure: CleanupOption
+    val behaviourAfterFailure: CleanupOption,
 ) {
     constructor(isMainTask: Boolean, commandLineOptions: CommandLineOptions) : this(
         isMainTask,
@@ -29,6 +29,6 @@ data class RunOptions(
             true -> if (commandLineOptions.disableCleanupAfterSuccess) CleanupOption.DontCleanup else CleanupOption.Cleanup
             false -> CleanupOption.Cleanup
         },
-        if (commandLineOptions.disableCleanupAfterFailure) CleanupOption.DontCleanup else CleanupOption.Cleanup
+        if (commandLineOptions.disableCleanupAfterFailure) CleanupOption.DontCleanup else CleanupOption.Cleanup,
     )
 }

@@ -34,7 +34,7 @@ object ImageNameValidatorSpec : Spek({
             "a__b",
             "a-b",
             "a--b",
-            "a---b"
+            "a---b",
         ).forEach { name ->
             given("the name '$name'") {
                 it("reports that '$name' is a valid image name") {
@@ -55,7 +55,7 @@ object ImageNameValidatorSpec : Spek({
             "-a",
             "a-",
             "a#b",
-            "a!b"
+            "a!b",
         ).forEach { name ->
             given("the name '$name'") {
                 it("reports that '$name' is not a valid image name") {

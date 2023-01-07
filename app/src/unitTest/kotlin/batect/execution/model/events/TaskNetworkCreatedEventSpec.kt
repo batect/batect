@@ -39,8 +39,8 @@ object TaskNetworkCreatedEventSpec : Spek({
                         |   "type": "${event::class.qualifiedName}",
                         |   "network": {"id": "some-network"}
                         |}
-                        """.trimMargin()
-                    )
+                        """.trimMargin(),
+                    ),
                 )
             }
         }

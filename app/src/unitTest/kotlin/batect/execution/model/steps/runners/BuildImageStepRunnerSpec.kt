@@ -100,8 +100,8 @@ object BuildImageStepRunnerSpec : Spek({
                 dockerfilePath,
                 targetStage = targetStage,
                 sshAgents = sshAgents,
-                secrets = secrets
-            )
+                secrets = secrets,
+            ),
         )
 
         val step = BuildImageStep(container)
@@ -165,7 +165,7 @@ object BuildImageStepRunnerSpec : Spek({
                 builderVersion,
                 systemInfo,
                 telemetryCaptor,
-                logger
+                logger,
             )
         }
 
@@ -215,7 +215,7 @@ object BuildImageStepRunnerSpec : Spek({
                     itSuspend("runs the build with the specified secrets") {
                         val expectedSecrets = mapOf(
                             "environment-secret" to EnvironmentBuildSecret("SOME_PASSWORD"),
-                            "file-secret" to FileBuildSecret(resolvedSecretPath.toOkioPath())
+                            "file-secret" to FileBuildSecret(resolvedSecretPath.toOkioPath()),
                         )
 
                         verify(dockerClient).buildImage(argWhere { it.secrets == expectedSecrets }, any(), any())
@@ -234,7 +234,7 @@ object BuildImageStepRunnerSpec : Spek({
                             "some_arg" to "some_value",
                             "SOME_PROXY_CONFIG" to "overridden",
                             "SOME_OTHER_PROXY_CONFIG" to "some_other_value",
-                            "SOME_HOST_VAR" to "some env var value"
+                            "SOME_HOST_VAR" to "some env var value",
                         )
 
                         verify(dockerClient).buildImage(argWhere { it.buildArgs == expectedArgs }, any(), any())
@@ -315,7 +315,7 @@ object BuildImageStepRunnerSpec : Spek({
                         builderVersion,
                         systemInfo,
                         telemetryCaptor,
-                        logger
+                        logger,
                     )
                 }
 
@@ -329,7 +329,7 @@ object BuildImageStepRunnerSpec : Spek({
                     val expectedArgs = mapOf(
                         "some_arg" to "some_value",
                         "SOME_PROXY_CONFIG" to "overridden",
-                        "SOME_HOST_VAR" to "some env var value"
+                        "SOME_HOST_VAR" to "some env var value",
                     )
 
                     verify(dockerClient).buildImage(argWhere { it.buildArgs == expectedArgs }, any(), any())

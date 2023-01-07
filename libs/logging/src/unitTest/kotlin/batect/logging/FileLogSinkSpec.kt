@@ -68,8 +68,8 @@ object FileLogSinkSpec : Spek({
                 mapOf(
                     "someAdditionalInfo" to JsonableObject("someValue", String.serializer()),
                     "someLocalInfo" to JsonableObject(888, Int.serializer()),
-                    "someStandardInfo" to JsonableObject(false, Boolean.serializer())
-                )
+                    "someStandardInfo" to JsonableObject(false, Boolean.serializer()),
+                ),
             )
 
             it("calls the builder function to create the log message and passes it to the writer") {

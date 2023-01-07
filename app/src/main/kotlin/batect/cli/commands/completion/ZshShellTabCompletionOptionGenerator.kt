@@ -29,7 +29,7 @@ class ZshShellTabCompletionOptionGenerator {
         return if (option.shortOption != null) {
             setOf(
                 "(${option.shortOption})$repetitionModifier${option.longOption}${option.valueDefinition}",
-                "(${option.longOption})$repetitionModifier${option.shortOption}${option.valueDefinition}"
+                "(${option.longOption})$repetitionModifier${option.shortOption}${option.valueDefinition}",
             )
         } else {
             setOf("$repetitionModifier${option.longOption}${option.valueDefinition}")

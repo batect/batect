@@ -26,7 +26,7 @@ class FileLogSink(
     val path: Path,
     private val writer: LogMessageWriter,
     private val standardAdditionalDataSource: StandardAdditionalDataSource,
-    private val timestampSource: () -> ZonedDateTime
+    private val timestampSource: () -> ZonedDateTime,
 ) : LogSink {
     private val lock = Object()
     private val fileStream = Files.newOutputStream(path, StandardOpenOption.CREATE, StandardOpenOption.APPEND)

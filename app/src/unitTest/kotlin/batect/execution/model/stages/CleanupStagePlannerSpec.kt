@@ -110,8 +110,8 @@ object CleanupStagePlannerSpec : Spek({
                         itHasExactlyTheRules(
                             { stage },
                             mapOf(
-                                "delete the task network" to DeleteTaskNetworkStepRule(network, emptySet())
-                            )
+                                "delete the task network" to DeleteTaskNetworkStepRule(network, emptySet()),
+                            ),
                         )
 
                         it("provides a manual cleanup instruction to remove the network") {
@@ -150,8 +150,8 @@ object CleanupStagePlannerSpec : Spek({
                                 { stage },
                                 mapOf(
                                     "delete the task network" to DeleteTaskNetworkStepRule(network, setOf(taskContainer)),
-                                    "remove the container" to RemoveContainerStepRule(taskContainer, dockerContainer, false)
-                                )
+                                    "remove the container" to RemoveContainerStepRule(taskContainer, dockerContainer, false),
+                                ),
                             )
 
                             it("provides manual cleanup commands to remove the network and the container") {
@@ -187,8 +187,8 @@ object CleanupStagePlannerSpec : Spek({
                                 mapOf(
                                     "delete the task network" to DeleteTaskNetworkStepRule(network, setOf(taskContainer)),
                                     "stop the container" to StopContainerStepRule(taskContainer, dockerContainer, emptySet()),
-                                    "remove the container after it is stopped" to RemoveContainerStepRule(taskContainer, dockerContainer, true)
-                                )
+                                    "remove the container after it is stopped" to RemoveContainerStepRule(taskContainer, dockerContainer, true),
+                                ),
                             )
 
                             it("provides manual cleanup commands to remove the network and the container") {
@@ -204,8 +204,8 @@ object CleanupStagePlannerSpec : Spek({
                             itHasExactlyTheRules(
                                 { stage },
                                 mapOf(
-                                    "stop the container" to StopContainerStepRule(taskContainer, dockerContainer, emptySet())
-                                )
+                                    "stop the container" to StopContainerStepRule(taskContainer, dockerContainer, emptySet()),
+                                ),
                             )
 
                             it("provides manual cleanup commands to remove the network and the container") {
@@ -231,7 +231,7 @@ object CleanupStagePlannerSpec : Spek({
                     "docker rm --force --volumes task-container-id",
                     "docker rm --force --volumes container-1-id",
                     "docker rm --force --volumes container-2-id",
-                    "docker network rm the-network"
+                    "docker network rm the-network",
                 )
 
                 given("none of the containers were started") {
@@ -245,8 +245,8 @@ object CleanupStagePlannerSpec : Spek({
                                     "delete the task network" to DeleteTaskNetworkStepRule(network, setOf(taskContainer, container1, container2)),
                                     "remove the task container" to RemoveContainerStepRule(taskContainer, taskDockerContainer, false),
                                     "remove the first dependency container" to RemoveContainerStepRule(container1, container1DockerContainer, false),
-                                    "remove the second dependency container" to RemoveContainerStepRule(container2, container2DockerContainer, false)
-                                )
+                                    "remove the second dependency container" to RemoveContainerStepRule(container2, container2DockerContainer, false),
+                                ),
                             )
 
                             it("provides manual cleanup commands to remove the network and the containers") {
@@ -286,8 +286,8 @@ object CleanupStagePlannerSpec : Spek({
                                     "stop the first dependency container" to StopContainerStepRule(container1, container1DockerContainer, emptySet()),
                                     "remove the task container" to RemoveContainerStepRule(taskContainer, taskDockerContainer, false),
                                     "remove the first dependency container after it is stopped" to RemoveContainerStepRule(container1, container1DockerContainer, true),
-                                    "remove the second dependency container" to RemoveContainerStepRule(container2, container2DockerContainer, false)
-                                )
+                                    "remove the second dependency container" to RemoveContainerStepRule(container2, container2DockerContainer, false),
+                                ),
                             )
 
                             it("provides manual cleanup commands to remove the network and the containers") {
@@ -303,8 +303,8 @@ object CleanupStagePlannerSpec : Spek({
                             itHasExactlyTheRules(
                                 { stage },
                                 mapOf(
-                                    "stop the first dependency container" to StopContainerStepRule(container1, container1DockerContainer, emptySet())
-                                )
+                                    "stop the first dependency container" to StopContainerStepRule(container1, container1DockerContainer, emptySet()),
+                                ),
                             )
 
                             it("provides manual cleanup commands to remove the network and the containers") {
@@ -334,8 +334,8 @@ object CleanupStagePlannerSpec : Spek({
                                     "stop the second dependency container" to StopContainerStepRule(container2, container2DockerContainer, setOf(taskContainer)),
                                     "remove the task container after it is stopped" to RemoveContainerStepRule(taskContainer, taskDockerContainer, true),
                                     "remove the first dependency container after it is stopped" to RemoveContainerStepRule(container1, container1DockerContainer, true),
-                                    "remove the second dependency container after it is stopped" to RemoveContainerStepRule(container2, container2DockerContainer, true)
-                                )
+                                    "remove the second dependency container after it is stopped" to RemoveContainerStepRule(container2, container2DockerContainer, true),
+                                ),
                             )
 
                             it("provides manual cleanup commands to remove the network and the containers") {
@@ -353,8 +353,8 @@ object CleanupStagePlannerSpec : Spek({
                                 mapOf(
                                     "stop the task container" to StopContainerStepRule(taskContainer, taskDockerContainer, emptySet()),
                                     "stop the first dependency container" to StopContainerStepRule(container1, container1DockerContainer, setOf(container2, taskContainer)),
-                                    "stop the second dependency container" to StopContainerStepRule(container2, container2DockerContainer, setOf(taskContainer))
-                                )
+                                    "stop the second dependency container" to StopContainerStepRule(container2, container2DockerContainer, setOf(taskContainer)),
+                                ),
                             )
 
                             it("provides manual cleanup commands to remove the network and the containers") {

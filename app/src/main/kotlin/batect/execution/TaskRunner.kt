@@ -35,7 +35,7 @@ data class TaskRunner(
     private val interruptionTrap: InterruptionTrap,
     private val console: Console,
     private val telemetryCaptor: TelemetryCaptor,
-    private val logger: Logger
+    private val logger: Logger,
 ) {
     fun run(task: Task, runOptions: RunOptions): TaskRunResult {
         return telemetryCaptor.addSpan("RunTask") { span ->

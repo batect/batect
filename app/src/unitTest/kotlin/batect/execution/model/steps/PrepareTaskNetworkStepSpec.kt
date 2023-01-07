@@ -36,8 +36,8 @@ object PrepareTaskNetworkStepSpec : Spek({
                         |{
                         |   "type": "${step::class.qualifiedName}"
                         |}
-                        """.trimMargin()
-                    )
+                        """.trimMargin(),
+                    ),
                 )
             }
         }

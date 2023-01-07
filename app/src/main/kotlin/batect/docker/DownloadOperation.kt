@@ -23,7 +23,7 @@ enum class DownloadOperation {
     VerifyingChecksum,
     DownloadComplete,
     Extracting,
-    PullComplete
+    PullComplete,
 }
 
 internal fun humanReadableStringForDownloadProgress(currentOperation: DownloadOperation, completedBytes: Long, totalBytes: Long?): String {

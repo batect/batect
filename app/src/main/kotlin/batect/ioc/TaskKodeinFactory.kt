@@ -35,7 +35,7 @@ class TaskKodeinFactory(
     private val baseKodein: DirectDI,
     private val hostEnvironmentVariables: HostEnvironmentVariables,
     private val configVariablesProvider: ConfigVariablesProvider,
-    private val taskSpecialisedConfigurationFactory: TaskSpecialisedConfigurationFactory
+    private val taskSpecialisedConfigurationFactory: TaskSpecialisedConfigurationFactory,
 ) {
     fun create(task: Task, runOptions: RunOptions): TaskKodein {
         val taskSpecialisedConfiguration = taskSpecialisedConfigurationFactory.create(task)
@@ -49,7 +49,7 @@ class TaskKodeinFactory(
                 bind<ExpressionEvaluationContext>() with scoped(TaskScope).singleton { expressionEvaluationContext }
 
                 import(taskScopeModule)
-            }.direct.on(task)
+            }.direct.on(task),
         )
     }
 }

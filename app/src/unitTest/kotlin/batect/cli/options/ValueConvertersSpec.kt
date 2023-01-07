@@ -37,7 +37,7 @@ object ValueConvertersSpec : Spek({
             it("returns the value passed to it") {
                 assertThat(
                     ValueConverters.string.convert("some-value"),
-                    equalTo(ValueConversionResult.ConversionSucceeded("some-value"))
+                    equalTo(ValueConversionResult.ConversionSucceeded("some-value")),
                 )
             }
         }
@@ -48,7 +48,7 @@ object ValueConvertersSpec : Spek({
                 "yes",
                 "YES",
                 "true",
-                "TRUE"
+                "TRUE",
             ).forEach { value ->
                 given("the value '$value'") {
                     it("returns the value 'true'") {
@@ -62,7 +62,7 @@ object ValueConvertersSpec : Spek({
                 "no",
                 "NO",
                 "false",
-                "FALSE"
+                "FALSE",
             ).forEach { value ->
                 given("the value '$value'") {
                     it("returns the value 'false'") {
@@ -84,7 +84,7 @@ object ValueConvertersSpec : Spek({
                 "yes",
                 "YES",
                 "true",
-                "TRUE"
+                "TRUE",
             ).forEach { value ->
                 given("the value '$value'") {
                     it("returns the value 'false'") {
@@ -98,7 +98,7 @@ object ValueConvertersSpec : Spek({
                 "no",
                 "NO",
                 "false",
-                "FALSE"
+                "FALSE",
             ).forEach { value ->
                 given("the value '$value'") {
                     it("returns the value 'true'") {
@@ -119,7 +119,7 @@ object ValueConvertersSpec : Spek({
                 it("returns the parsed representation of that integer") {
                     assertThat(
                         ValueConverters.positiveInteger.convert("1"),
-                        equalTo(ValueConversionResult.ConversionSucceeded(1))
+                        equalTo(ValueConversionResult.ConversionSucceeded(1)),
                     )
                 }
             }
@@ -128,7 +128,7 @@ object ValueConvertersSpec : Spek({
                 it("returns an error") {
                     assertThat(
                         ValueConverters.positiveInteger.convert("0"),
-                        equalTo(ValueConversionResult.ConversionFailed("Value must be positive."))
+                        equalTo(ValueConversionResult.ConversionFailed("Value must be positive.")),
                     )
                 }
             }
@@ -137,7 +137,7 @@ object ValueConvertersSpec : Spek({
                 it("returns an error") {
                     assertThat(
                         ValueConverters.positiveInteger.convert("-1"),
-                        equalTo(ValueConversionResult.ConversionFailed("Value must be positive."))
+                        equalTo(ValueConversionResult.ConversionFailed("Value must be positive.")),
                     )
                 }
             }
@@ -146,7 +146,7 @@ object ValueConvertersSpec : Spek({
                 it("returns an error") {
                     assertThat(
                         ValueConverters.positiveInteger.convert(""),
-                        equalTo(ValueConversionResult.ConversionFailed("Value is not a valid integer."))
+                        equalTo(ValueConversionResult.ConversionFailed("Value is not a valid integer.")),
                     )
                 }
             }
@@ -155,7 +155,7 @@ object ValueConvertersSpec : Spek({
                 it("returns an error") {
                     assertThat(
                         ValueConverters.positiveInteger.convert("123AAA"),
-                        equalTo(ValueConversionResult.ConversionFailed("Value is not a valid integer."))
+                        equalTo(ValueConversionResult.ConversionFailed("Value is not a valid integer.")),
                     )
                 }
             }
@@ -164,7 +164,7 @@ object ValueConvertersSpec : Spek({
                 it("returns an error") {
                     assertThat(
                         ValueConverters.positiveInteger.convert("x"),
-                        equalTo(ValueConversionResult.ConversionFailed("Value is not a valid integer."))
+                        equalTo(ValueConversionResult.ConversionFailed("Value is not a valid integer.")),
                     )
                 }
             }

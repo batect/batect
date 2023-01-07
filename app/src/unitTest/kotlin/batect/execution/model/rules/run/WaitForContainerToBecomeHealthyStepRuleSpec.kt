@@ -42,7 +42,7 @@ object WaitForContainerToBecomeHealthyStepRuleSpec : Spek({
             val dockerContainer = DockerContainer(ContainerReference("some-container-id"), "some-container-name")
             val events = setOf(
                 ContainerCreatedEvent(container, dockerContainer),
-                ContainerStartedEvent(container)
+                ContainerStartedEvent(container),
             )
 
             on("evaluating the rule") {
@@ -55,10 +55,10 @@ object WaitForContainerToBecomeHealthyStepRuleSpec : Spek({
                             TaskStepRuleEvaluationResult.Ready(
                                 WaitForContainerToBecomeHealthyStep(
                                     container,
-                                    dockerContainer
-                                )
-                            )
-                        )
+                                    dockerContainer,
+                                ),
+                            ),
+                        ),
                     )
                 }
             }
@@ -97,8 +97,8 @@ object WaitForContainerToBecomeHealthyStepRuleSpec : Spek({
                         |   "type": "${rule::class.qualifiedName}",
                         |   "container": "the-container"
                         |}
-                        """.trimMargin()
-                    )
+                        """.trimMargin(),
+                    ),
                 )
             }
         }

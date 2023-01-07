@@ -19,7 +19,7 @@ package batect.config
 import java.nio.file.Path
 
 data class ProjectPaths(
-    val configurationFileName: Path
+    val configurationFileName: Path,
 ) {
     val projectRootDirectory: Path by lazy { configurationFileName.toAbsolutePath().parent }
     val batectDirectory: Path by lazy { projectRootDirectory.resolve(".batect") }

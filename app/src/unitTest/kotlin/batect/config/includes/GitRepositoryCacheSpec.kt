@@ -89,7 +89,7 @@ object GitRepositoryCacheSpec : Spek({
                     |    "otherInfo": "some value",
                     |    "clonedWithVersion": "4.5.6"
                     |}
-                    """.trimMargin().toByteArray(Charsets.UTF_8)
+                    """.trimMargin().toByteArray(Charsets.UTF_8),
                 )
             }
 
@@ -138,8 +138,8 @@ object GitRepositoryCacheSpec : Spek({
                             |    "lastUsed": "2020-07-05T01:02:03.456789012Z",
                             |    "clonedWithVersion": "1.2.3"
                             |}
-                            """.trimMargin()
-                        )
+                            """.trimMargin(),
+                        ),
                     )
                 }
             }
@@ -161,8 +161,8 @@ object GitRepositoryCacheSpec : Spek({
                             |    "otherInfo": "some value",
                             |    "clonedWithVersion": "4.5.6"
                             |}
-                            """.trimMargin()
-                        )
+                            """.trimMargin(),
+                        ),
                     )
                 }
             }
@@ -245,7 +245,7 @@ object GitRepositoryCacheSpec : Spek({
                                     |    "lastUsed": "2020-07-05T01:02:03.456789012Z",
                                     |    "otherInfo": "some value"
                                     |}
-                                """.trimMargin().toByteArray(Charsets.UTF_8)
+                                """.trimMargin().toByteArray(Charsets.UTF_8),
                             )
                         }
 
@@ -257,9 +257,9 @@ object GitRepositoryCacheSpec : Spek({
                                     cachedRepos,
                                     equalTo(
                                         setOf(
-                                            CachedGitRepository(GitRepositoryReference("https://github.com/me/my-bundle.git", "my-tag"), ZonedDateTime.of(2020, 7, 5, 1, 2, 3, 456789012, ZoneOffset.UTC), null, infoPath)
-                                        )
-                                    )
+                                            CachedGitRepository(GitRepositoryReference("https://github.com/me/my-bundle.git", "my-tag"), ZonedDateTime.of(2020, 7, 5, 1, 2, 3, 456789012, ZoneOffset.UTC), null, infoPath),
+                                        ),
+                                    ),
                                 )
                             }
                         }
@@ -275,9 +275,9 @@ object GitRepositoryCacheSpec : Spek({
                                     cachedRepos,
                                     equalTo(
                                         setOf(
-                                            CachedGitRepository(GitRepositoryReference("https://github.com/me/my-bundle.git", "my-tag"), ZonedDateTime.of(2020, 7, 5, 1, 2, 3, 456789012, ZoneOffset.UTC), workingCopyPath, infoPath)
-                                        )
-                                    )
+                                            CachedGitRepository(GitRepositoryReference("https://github.com/me/my-bundle.git", "my-tag"), ZonedDateTime.of(2020, 7, 5, 1, 2, 3, 456789012, ZoneOffset.UTC), workingCopyPath, infoPath),
+                                        ),
+                                    ),
                                 )
                             }
                         }
@@ -294,9 +294,9 @@ object GitRepositoryCacheSpec : Spek({
                                     cachedRepos,
                                     equalTo(
                                         setOf(
-                                            CachedGitRepository(GitRepositoryReference("https://github.com/me/my-bundle.git", "my-tag"), ZonedDateTime.of(2020, 7, 5, 1, 2, 3, 456789012, ZoneOffset.UTC), null, infoPath)
-                                        )
-                                    )
+                                            CachedGitRepository(GitRepositoryReference("https://github.com/me/my-bundle.git", "my-tag"), ZonedDateTime.of(2020, 7, 5, 1, 2, 3, 456789012, ZoneOffset.UTC), null, infoPath),
+                                        ),
+                                    ),
                                 )
                             }
                         }
@@ -323,7 +323,7 @@ object GitRepositoryCacheSpec : Spek({
                                     |    },
                                     |    "lastUsed": "2020-07-05T01:02:03.456789012Z"
                                     |}
-                                """.trimMargin().toByteArray(Charsets.UTF_8)
+                                """.trimMargin().toByteArray(Charsets.UTF_8),
                             )
                         }
 
@@ -348,7 +348,7 @@ object GitRepositoryCacheSpec : Spek({
                                 |    },
                                 |    "lastUsed": "2020-07-05T01:02:03.456789012Z"
                                 |}
-                            """.trimMargin().toByteArray(Charsets.UTF_8)
+                            """.trimMargin().toByteArray(Charsets.UTF_8),
                         )
 
                         Files.write(
@@ -361,7 +361,7 @@ object GitRepositoryCacheSpec : Spek({
                                 |    },
                                 |    "lastUsed": "2020-07-05T01:02:03.456789012Z"
                                 |}
-                            """.trimMargin().toByteArray(Charsets.UTF_8)
+                            """.trimMargin().toByteArray(Charsets.UTF_8),
                         )
                     }
 
@@ -374,9 +374,9 @@ object GitRepositoryCacheSpec : Spek({
                                 equalTo(
                                     setOf(
                                         CachedGitRepository(GitRepositoryReference("https://github.com/me/my-bundle-1.git", "my-tag"), ZonedDateTime.of(2020, 7, 5, 1, 2, 3, 456789012, ZoneOffset.UTC), null, infoPath1),
-                                        CachedGitRepository(GitRepositoryReference("https://github.com/me/my-bundle-2.git", "my-tag"), ZonedDateTime.of(2020, 7, 5, 1, 2, 3, 456789012, ZoneOffset.UTC), null, infoPath2)
-                                    )
-                                )
+                                        CachedGitRepository(GitRepositoryReference("https://github.com/me/my-bundle-2.git", "my-tag"), ZonedDateTime.of(2020, 7, 5, 1, 2, 3, 456789012, ZoneOffset.UTC), null, infoPath2),
+                                    ),
+                                ),
                             )
                         }
                     }
@@ -398,9 +398,9 @@ object GitRepositoryCacheSpec : Spek({
                                 equalTo(
                                     setOf(
                                         CachedGitRepository(GitRepositoryReference("https://github.com/me/my-bundle-1.git", "my-tag"), ZonedDateTime.of(2020, 7, 5, 1, 2, 3, 456789012, ZoneOffset.UTC), workingCopyPath1, infoPath1),
-                                        CachedGitRepository(GitRepositoryReference("https://github.com/me/my-bundle-2.git", "my-tag"), ZonedDateTime.of(2020, 7, 5, 1, 2, 3, 456789012, ZoneOffset.UTC), workingCopyPath2, infoPath2)
-                                    )
-                                )
+                                        CachedGitRepository(GitRepositoryReference("https://github.com/me/my-bundle-2.git", "my-tag"), ZonedDateTime.of(2020, 7, 5, 1, 2, 3, 456789012, ZoneOffset.UTC), workingCopyPath2, infoPath2),
+                                    ),
+                                ),
                             )
                         }
                     }

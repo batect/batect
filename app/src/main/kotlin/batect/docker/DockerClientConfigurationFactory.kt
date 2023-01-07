@@ -23,7 +23,7 @@ import okio.Path.Companion.toOkioPath
 import java.nio.file.Files
 
 class DockerClientConfigurationFactory(
-    private val commandLineOptions: CommandLineOptions
+    private val commandLineOptions: CommandLineOptions,
 ) {
     fun createConfiguration(): DockerClientConfiguration {
         return when (commandLineOptions.docker.contextName) {
@@ -47,7 +47,7 @@ class DockerClientConfigurationFactory(
             builder.withTLSConfiguration(
                 options.tlsCACertificatePath.toOkioPath(),
                 options.tlsCertificatePath.toOkioPath(),
-                options.tlsKeyPath.toOkioPath()
+                options.tlsKeyPath.toOkioPath(),
             )
 
             if (!options.verifyTLS) {

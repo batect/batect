@@ -67,7 +67,7 @@ object LockingRepositoryClonerIntegrationTest : Spek({
 
             assertThat(
                 { cloner.clone(testRepo, testReference, targetDirectory) },
-                throws<GitException>(withMessage("Could not clone repository '$testRepo' into '$targetDirectory': timed out after 1s, another process may be using '$lockFile'"))
+                throws<GitException>(withMessage("Could not clone repository '$testRepo' into '$targetDirectory': timed out after 1s, another process may be using '$lockFile'")),
             )
         }
 

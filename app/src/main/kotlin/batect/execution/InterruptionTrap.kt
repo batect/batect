@@ -22,7 +22,7 @@ import batect.os.SignalListener
 import jnr.constants.platform.Signal
 
 class InterruptionTrap(
-    val signalListener: SignalListener
+    val signalListener: SignalListener,
 ) {
     fun trapInterruptions(eventSink: TaskEventSink): AutoCloseable = signalListener.start(Signal.SIGINT) {
         eventSink.postEvent(UserInterruptedExecutionEvent)

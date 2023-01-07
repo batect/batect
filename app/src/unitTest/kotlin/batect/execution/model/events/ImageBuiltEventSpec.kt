@@ -43,8 +43,8 @@ object ImageBuiltEventSpec : Spek({
                         |   "container": "the-container",
                         |   "image": {"id": "image-1"}
                         |}
-                        """.trimMargin()
-                    )
+                        """.trimMargin(),
+                    ),
                 )
             }
         }

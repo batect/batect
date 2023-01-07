@@ -85,7 +85,7 @@ object WaitForContainerToBecomeHealthyStepRunnerSpec : Spek({
                 "some-name",
                 ContainerHostConfig(ContainerLogConfig("some-logger", emptyMap())),
                 ContainerState(state),
-                ContainerConfig(emptyMap(), config)
+                ContainerConfig(emptyMap(), config),
             )
 
         given("the container has no health check") {
@@ -119,10 +119,10 @@ object WaitForContainerToBecomeHealthyStepRunnerSpec : Spek({
                                 "this should not be used",
                                 listOf(
                                     ContainerHealthLogEntry(Instant.DISTANT_PAST, Instant.DISTANT_PAST, 456, "This is a previous health check"),
-                                    ContainerHealthLogEntry(Clock.System.now(), Clock.System.now(), exitCode, output)
-                                )
-                            )
-                        )
+                                    ContainerHealthLogEntry(Clock.System.now(), Clock.System.now(), exitCode, output),
+                                ),
+                            ),
+                        ),
                     )
                 }
             }
@@ -156,7 +156,7 @@ object WaitForContainerToBecomeHealthyStepRunnerSpec : Spek({
                     itSuspend("waits for events with the correct set of filters") {
                         val expectedFilters = mapOf(
                             "container" to setOf("some-id"),
-                            "event" to setOf("health_status", "die")
+                            "event" to setOf("health_status", "die"),
                         )
 
                         verify(dockerClient).streamEvents(eq(Instant.fromEpochMilliseconds(0)), eq(null), eq(expectedFilters), any())
@@ -184,8 +184,8 @@ object WaitForContainerToBecomeHealthyStepRunnerSpec : Spek({
                                 verify(eventSink).postEvent(
                                     ContainerDidNotBecomeHealthyEvent(
                                         container,
-                                        "The configured health check did not indicate that the container was healthy within the timeout period. The last health check exited with code 123 but did not produce any output."
-                                    )
+                                        "The configured health check did not indicate that the container was healthy within the timeout period. The last health check exited with code 123 but did not produce any output.",
+                                    ),
                                 )
                             }
                         }
@@ -205,8 +205,8 @@ object WaitForContainerToBecomeHealthyStepRunnerSpec : Spek({
                                 verify(eventSink).postEvent(
                                     ContainerDidNotBecomeHealthyEvent(
                                         container,
-                                        "The configured health check did not indicate that the container was healthy within the timeout period. The last health check exited with code 123 and output:SYSTEM_LINE_SEPARATORSomething's not ready yet.SYSTEM_LINE_SEPARATORMore output on next line."
-                                    )
+                                        "The configured health check did not indicate that the container was healthy within the timeout period. The last health check exited with code 123 and output:SYSTEM_LINE_SEPARATORSomething's not ready yet.SYSTEM_LINE_SEPARATORMore output on next line.",
+                                    ),
                                 )
                             }
                         }
@@ -227,8 +227,8 @@ object WaitForContainerToBecomeHealthyStepRunnerSpec : Spek({
                             verify(eventSink).postEvent(
                                 ContainerDidNotBecomeHealthyEvent(
                                     container,
-                                    "The configured health check did not indicate that the container was healthy within the timeout period. The most recent health check exited with code 0, which usually indicates that the container became healthy just after the timeout period expired."
-                                )
+                                    "The configured health check did not indicate that the container was healthy within the timeout period. The most recent health check exited with code 0, which usually indicates that the container became healthy just after the timeout period expired.",
+                                ),
                             )
                         }
                     }

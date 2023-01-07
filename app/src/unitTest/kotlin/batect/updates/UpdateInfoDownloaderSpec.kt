@@ -92,9 +92,9 @@ object UpdateInfoDownloaderSpec : Spek({
                     equalTo(
                         listOf(
                             ScriptInfo("batect", "https://github.com/batect/batect/releases/download/0.3/batect"),
-                            ScriptInfo("batect.cmd", "https://github.com/batect/batect/releases/download/0.3/batect.cmd")
-                        )
-                    )
+                            ScriptInfo("batect.cmd", "https://github.com/batect/batect/releases/download/0.3/batect.cmd"),
+                        ),
+                    ),
                 )
             }
         }
@@ -148,7 +148,7 @@ object UpdateInfoDownloaderSpec : Spek({
             it("throws an appropriate exception") {
                 assertThat(
                     { downloader.getLatestVersionInfo() },
-                    throws(withMessage("Could not download latest release information from https://updates.batect.dev/v1/latest: The server returned HTTP 404."))
+                    throws(withMessage("Could not download latest release information from https://updates.batect.dev/v1/latest: The server returned HTTP 404.")),
                 )
             }
         }
@@ -169,8 +169,8 @@ object UpdateInfoDownloaderSpec : Spek({
                     { downloader.getLatestVersionInfo() },
                     throws(
                         withMessage("Could not download latest release information from https://updates.batect.dev/v1/latest: Could not do what you asked because stuff happened.")
-                            and withCause(exception)
-                    )
+                            and withCause(exception),
+                    ),
                 )
             }
         }

@@ -75,8 +75,8 @@ object WrapperCacheSpec : Spek({
                                     withLogMessage("Cache directory for version does not exist, not storing last used time.") and
                                         withAdditionalData("version", version) and
                                         withAdditionalData("versionDirectory", versionDirectory.toString()) and
-                                        withSeverity(Severity.Warning)
-                                )
+                                        withSeverity(Severity.Warning),
+                                ),
                             )
                         }
                     }
@@ -125,8 +125,8 @@ object WrapperCacheSpec : Spek({
                                         withLogMessage("Version cache directory does not contain a last used time file.") and
                                             withAdditionalData("version", version) and
                                             withAdditionalData("versionDirectory", versionDirectory.toString()) and
-                                            withSeverity(Severity.Warning)
-                                    )
+                                            withSeverity(Severity.Warning),
+                                    ),
                                 )
                             }
                         }
@@ -165,8 +165,8 @@ object WrapperCacheSpec : Spek({
                                                 withAdditionalData("version", version) and
                                                 withAdditionalData("versionDirectory", versionDirectory.toString()) and
                                                 withAdditionalData("lastUsedFilePath", lastUsedFilePath.toString()) and
-                                                withSeverity(Severity.Warning)
-                                        )
+                                                withSeverity(Severity.Warning),
+                                        ),
                                     )
                                 }
                             }
@@ -188,8 +188,8 @@ object WrapperCacheSpec : Spek({
                                                 withAdditionalData("version", version) and
                                                 withAdditionalData("versionDirectory", versionDirectory.toString()) and
                                                 withAdditionalData("lastUsedFilePath", lastUsedFilePath.toString()) and
-                                                withSeverity(Severity.Warning)
-                                        )
+                                                withSeverity(Severity.Warning),
+                                        ),
                                     )
                                 }
                             }
@@ -219,9 +219,9 @@ object WrapperCacheSpec : Spek({
                                 equalTo(
                                     setOf(
                                         CachedWrapperVersion(version1, ZonedDateTime.of(2020, 5, 10, 11, 12, 13, 123456789, ZoneOffset.UTC), version1Directory),
-                                        CachedWrapperVersion(version2, ZonedDateTime.of(2021, 6, 10, 11, 12, 13, 123456789, ZoneOffset.UTC), version2Directory)
-                                    )
-                                )
+                                        CachedWrapperVersion(version2, ZonedDateTime.of(2021, 6, 10, 11, 12, 13, 123456789, ZoneOffset.UTC), version2Directory),
+                                    ),
+                                ),
                             )
                         }
                     }
@@ -250,8 +250,8 @@ object WrapperCacheSpec : Spek({
                                 hasMessage(
                                     withLogMessage("Directory name cannot be parsed as a version, ignoring directory.") and
                                         withAdditionalData("directory", nonVersionDirectory.toString()) and
-                                        withSeverity(Severity.Warning)
-                                )
+                                        withSeverity(Severity.Warning),
+                                ),
                             )
                         }
                     }
@@ -277,8 +277,8 @@ object WrapperCacheSpec : Spek({
                                 withLogMessage("Cache directory for version does not exist, not storing last used time.") and
                                     withAdditionalData("version", version) and
                                     withAdditionalData("versionDirectory", versionDirectory.toString()) and
-                                    withSeverity(Severity.Warning)
-                            )
+                                    withSeverity(Severity.Warning),
+                            ),
                         )
                     }
                 }
@@ -296,8 +296,8 @@ object WrapperCacheSpec : Spek({
                             hasMessage(
                                 withLogMessage("Cache directory does not exist, returning empty list of versions.") and
                                     withAdditionalData("cacheDirectory", cacheDirectory.toString()) and
-                                    withSeverity(Severity.Warning)
-                            )
+                                    withSeverity(Severity.Warning),
+                            ),
                         )
                     }
                 }

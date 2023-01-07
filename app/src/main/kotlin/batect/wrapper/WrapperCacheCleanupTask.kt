@@ -32,7 +32,7 @@ class WrapperCacheCleanupTask(
     private val telemetryCaptor: TelemetryCaptor,
     private val logger: Logger,
     private val threadRunner: ThreadRunner = defaultThreadRunner,
-    private val timeSource: TimeSource = ZonedDateTime::now
+    private val timeSource: TimeSource = ZonedDateTime::now,
 ) {
     fun start() {
         if (!enabled) {

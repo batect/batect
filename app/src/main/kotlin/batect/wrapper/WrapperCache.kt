@@ -33,7 +33,7 @@ import kotlin.streams.toList
 class WrapperCache(
     fileSystem: FileSystem,
     environmentVariables: HostEnvironmentVariables,
-    private val logger: Logger
+    private val logger: Logger,
 ) {
     private val cacheDirectory: Path? = resolveCacheDirectory(fileSystem, environmentVariables)
 

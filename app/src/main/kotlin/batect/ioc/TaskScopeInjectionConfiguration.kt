@@ -103,7 +103,7 @@ private val uiModule = DI.Module("Task scope: ui") {
             instance(),
             instance(),
             commandLineOptions().requestedOutputStyle,
-            commandLineOptions().disableColorOutput
+            commandLineOptions().disableColorOutput,
         )
     }
 }

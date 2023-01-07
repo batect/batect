@@ -80,7 +80,7 @@ class KotlinPlugin : Plugin<Project> {
                 freeCompilerArgs = listOf(
                     "-progressive",
                     "-opt-in=kotlin.RequiresOptIn",
-                    "-Xjvm-default=all" // Required to workaround https://youtrack.jetbrains.com/issue/KT-45919 until Kotlin 1.6.20 is released
+                    "-Xjvm-default=all", // Required to workaround https://youtrack.jetbrains.com/issue/KT-45919 until Kotlin 1.6.20 is released
                 )
             }
         }

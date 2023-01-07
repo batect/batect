@@ -211,7 +211,7 @@ object OptionParserSpec : Spek({
                     it("throws an exception") {
                         assertThat(
                             { parser.addOption(ValueOption(group, "value", "The other value", defaultValueProvider, ValueConverters.string)) },
-                            throws<IllegalArgumentException>(withMessage("An option with the name 'value' has already been added."))
+                            throws<IllegalArgumentException>(withMessage("An option with the name 'value' has already been added.")),
                         )
                     }
                 }
@@ -220,7 +220,7 @@ object OptionParserSpec : Spek({
                     it("throws an exception") {
                         assertThat(
                             { parser.addOption(ValueOption(group, "other-value", "The other value", defaultValueProvider, ValueConverters.string, 'v')) },
-                            throws<IllegalArgumentException>(withMessage("An option with the name 'v' has already been added."))
+                            throws<IllegalArgumentException>(withMessage("An option with the name 'v' has already been added.")),
                         )
                     }
                 }

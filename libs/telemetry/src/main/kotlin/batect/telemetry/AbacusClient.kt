@@ -25,7 +25,7 @@ import java.time.Duration
 
 class AbacusClient(
     private val client: OkHttpClient,
-    private val logger: Logger
+    private val logger: Logger,
 ) {
     private val host = System.getenv().getOrDefault("BATECT_TELEMETRY_HOST", "api.abacus.batect.dev")
     private val url = "https://$host/v1/sessions"

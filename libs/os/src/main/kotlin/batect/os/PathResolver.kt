@@ -63,7 +63,7 @@ sealed class PathResolutionResult(open val originalPath: String) {
         override val originalPath: String,
         val absolutePath: Path,
         val pathType: PathType,
-        val resolutionDescription: String
+        val resolutionDescription: String,
     ) : PathResolutionResult(originalPath)
 
     data class InvalidPath(override val originalPath: String) : PathResolutionResult(originalPath)
@@ -73,5 +73,5 @@ enum class PathType {
     DoesNotExist,
     File,
     Directory,
-    Other
+    Other,
 }

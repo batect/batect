@@ -46,7 +46,7 @@ sealed class ActiveImageBuildStep {
     @SerialName("NotDownloading")
     data class NotDownloading(
         override val stepIndex: Long,
-        override val name: String
+        override val name: String,
     ) : ActiveImageBuildStep() {
         override fun toHumanReadableString(): String = name
     }
@@ -58,7 +58,7 @@ sealed class ActiveImageBuildStep {
         override val name: String,
         val operation: DownloadOperation,
         val completedBytes: Long,
-        val totalBytes: Long?
+        val totalBytes: Long?,
     ) : ActiveImageBuildStep() {
         override fun toHumanReadableString(): String {
             return "$name: ${humanReadableStringForDownloadProgress(operation, completedBytes, totalBytes)}"

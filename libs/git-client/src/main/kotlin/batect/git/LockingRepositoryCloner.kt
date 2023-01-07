@@ -28,7 +28,7 @@ import kotlin.time.TimeSource
 @OptIn(ExperimentalTime::class)
 class LockingRepositoryCloner(
     private val client: GitClient,
-    private val cloneTimeout: Duration = 5.minutes
+    private val cloneTimeout: Duration = 5.minutes,
 ) {
     fun clone(repo: String, ref: String, destination: Path) {
         val lockFile = destination.resolveSibling("${destination.name}.lock")
@@ -72,6 +72,6 @@ class LockingRepositoryCloner(
 
     private enum class LockState {
         Acquired,
-        NotAcquired
+        NotAcquired,
     }
 }

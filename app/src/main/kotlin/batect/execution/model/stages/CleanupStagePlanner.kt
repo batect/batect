@@ -36,7 +36,7 @@ import batect.primitives.mapToSet
 
 class CleanupStagePlanner(
     private val graph: ContainerDependencyGraph,
-    private val logger: Logger
+    private val logger: Logger,
 ) {
     fun createStage(pastEvents: Set<TaskEvent>, cleanupType: CleanupOption): CleanupStage {
         val containersCreated = pastEvents

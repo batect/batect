@@ -35,5 +35,5 @@ data class HealthCheckConfig(
     @Serializable(with = DurationSerializer::class)
     val timeout: Duration? = null,
 
-    val command: String? = null
+    val command: String? = null,
 )

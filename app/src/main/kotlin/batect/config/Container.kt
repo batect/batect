@@ -64,7 +64,7 @@ data class Container(
     val logDriver: String = defaultLogDriver,
     val logOptions: Map<String, String> = emptyMap(),
     val shmSize: BinarySize? = null,
-    val labels: Map<String, String> = emptyMap()
+    val labels: Map<String, String> = emptyMap(),
 ) {
     @OptIn(ExperimentalSerializationApi::class)
     companion object : KSerializer<Container> {
@@ -266,7 +266,7 @@ data class Container(
                 logDriver,
                 logOptions,
                 shmSize,
-                labels
+                labels,
             )
         }
 
@@ -280,7 +280,7 @@ data class Container(
             buildSecrets: Map<String, BuildSecret>?,
             imageName: String?,
             imagePullPolicy: ImagePullPolicy,
-            path: YamlPath
+            path: YamlPath,
         ): ImageSource {
             if (buildDirectory == null && imageName == null) {
                 throw ConfigurationException("One of either build_directory or image must be specified for each container, but neither have been provided for this container.", path)
@@ -322,7 +322,7 @@ data class Container(
                     imagePullPolicy,
                     buildTarget,
                     buildSSHAgents ?: emptySet(),
-                    buildSecrets ?: emptyMap()
+                    buildSecrets ?: emptyMap(),
                 )
             } else {
                 PullImage(imageName!!, imagePullPolicy)

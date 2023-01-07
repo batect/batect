@@ -126,8 +126,8 @@ object AbacusClientSpec : Spek({
                         { client.upload(sessionBytes) },
                         throws<AbacusClientException>(
                             withMessage("HTTP PUT $uploadUrl failed: Something went wrong.")
-                                and withCause(exception)
-                        )
+                                and withCause(exception),
+                        ),
                     )
                 }
             }

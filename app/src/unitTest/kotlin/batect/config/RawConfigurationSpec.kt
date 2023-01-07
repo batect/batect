@@ -43,10 +43,10 @@ object RawConfigurationSpec : Spek({
                             "SOME_VAR" to LiteralValue("blah"),
                             "SOME_REFERENCE" to EnvironmentVariableReference("REFERENCE_TO"),
                             "SOME_REFERENCE_WITH_DEFAULT" to EnvironmentVariableReference("REF_2", "the-default"),
-                            "SOME_CONFIG_VAR" to ConfigVariableReference("REF_3")
+                            "SOME_CONFIG_VAR" to ConfigVariableReference("REF_3"),
                         ),
                         setOf(PortMapping(123, 456)),
-                        "/some/work/dir"
+                        "/some/work/dir",
                     ),
                     "Does the thing",
                     "Group 1",
@@ -56,9 +56,9 @@ object RawConfigurationSpec : Spek({
                         "other-container" to TaskContainerCustomisation(
                             workingDirectory = "/blah",
                             additionalEnvironmentVariables = mapOf("SOME_CONFIG" to LiteralValue("blah")),
-                            additionalPortMappings = setOf(PortMapping(123, 456))
-                        )
-                    )
+                            additionalPortMappings = setOf(PortMapping(123, 456)),
+                        ),
+                    ),
                 )
 
                 val configuration = RawConfiguration("the-project", TaskMap(task), ContainerMap())
@@ -109,8 +109,8 @@ object RawConfigurationSpec : Spek({
                                 "containers": {},
                                 "config_variables": {}
                             }
-                            """.trimIndent()
-                        )
+                            """.trimIndent(),
+                        ),
                     )
                 }
             }
@@ -140,7 +140,7 @@ object RawConfigurationSpec : Spek({
                     listOf(SetupCommand(Command.parse("some-command"), "/some/dir")),
                     "the-log-driver",
                     mapOf("option-1" to "value-1"),
-                    BinarySize.of(2, BinaryUnit.Megabyte)
+                    BinarySize.of(2, BinaryUnit.Megabyte),
                 )
 
                 val configuration = RawConfiguration("the-project", TaskMap(), ContainerMap(container))
@@ -215,8 +215,8 @@ object RawConfigurationSpec : Spek({
                                 },
                                 "config_variables": {}
                             }
-                            """.trimIndent()
-                        )
+                            """.trimIndent(),
+                        ),
                     )
                 }
             }
@@ -228,7 +228,7 @@ object RawConfigurationSpec : Spek({
                         LiteralValue("/some/build/dir"),
                         pathResolutionContextDoesNotMatter(),
                         mapOf(
-                            "SOME_VAR" to LiteralValue("blah")
+                            "SOME_VAR" to LiteralValue("blah"),
                         ),
                         "some-dockerfile",
                         ImagePullPolicy.Always,
@@ -236,10 +236,10 @@ object RawConfigurationSpec : Spek({
                         setOf(SSHAgent("some-agent", setOf(LiteralValue("some-ssh-path")))),
                         mapOf(
                             "environment-secret" to EnvironmentSecret("SOME_PASSWORD"),
-                            "file-secret" to FileSecret(LiteralValue("some-secret.txt"))
-                        )
+                            "file-secret" to FileSecret(LiteralValue("some-secret.txt")),
+                        ),
                     ),
-                    runAsCurrentUserConfig = RunAsCurrentUserConfig.RunAsDefaultContainerUser
+                    runAsCurrentUserConfig = RunAsCurrentUserConfig.RunAsDefaultContainerUser,
                 )
 
                 val configuration = RawConfiguration("the-project", TaskMap(), ContainerMap(container))
@@ -305,8 +305,8 @@ object RawConfigurationSpec : Spek({
                                 },
                                 "config_variables": {}
                             }
-                            """.trimIndent()
-                        )
+                            """.trimIndent(),
+                        ),
                     )
                 }
             }
@@ -332,8 +332,8 @@ object RawConfigurationSpec : Spek({
                                     }
                                 }
                             }
-                            """.trimIndent()
-                        )
+                            """.trimIndent(),
+                        ),
                     )
                 }
             }

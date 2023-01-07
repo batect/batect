@@ -72,8 +72,8 @@ object ImageBuildProgressAggregatorSpec : Spek({
                 assertThat(
                     nextUpdate,
                     equalTo(
-                        AggregatedImageBuildProgress(setOf(ActiveImageBuildStep.NotDownloading(1, "FROM postgres:13.0")))
-                    )
+                        AggregatedImageBuildProgress(setOf(ActiveImageBuildStep.NotDownloading(1, "FROM postgres:13.0"))),
+                    ),
                 )
             }
         }
@@ -103,8 +103,8 @@ object ImageBuildProgressAggregatorSpec : Spek({
                 assertThat(
                     nextUpdate,
                     equalTo(
-                        AggregatedImageBuildProgress(setOf(ActiveImageBuildStep.NotDownloading(1, "FROM postgres:13.0")))
-                    )
+                        AggregatedImageBuildProgress(setOf(ActiveImageBuildStep.NotDownloading(1, "FROM postgres:13.0"))),
+                    ),
                 )
             }
         }
@@ -124,10 +124,10 @@ object ImageBuildProgressAggregatorSpec : Spek({
                         AggregatedImageBuildProgress(
                             setOf(
                                 ActiveImageBuildStep.NotDownloading(1, "FROM postgres:13.0"),
-                                ActiveImageBuildStep.NotDownloading(2, "HEALTHCHECK --interval=0.1s CMD echo -n \\\"Hello from the healthcheck\\\"")
-                            )
-                        )
-                    )
+                                ActiveImageBuildStep.NotDownloading(2, "HEALTHCHECK --interval=0.1s CMD echo -n \\\"Hello from the healthcheck\\\""),
+                            ),
+                        ),
+                    ),
                 )
             }
         }
@@ -144,8 +144,8 @@ object ImageBuildProgressAggregatorSpec : Spek({
                 assertThat(
                     nextUpdate,
                     equalTo(
-                        AggregatedImageBuildProgress(setOf(ActiveImageBuildStep.NotDownloading(2, "FROM postgres:14.0")))
-                    )
+                        AggregatedImageBuildProgress(setOf(ActiveImageBuildStep.NotDownloading(2, "FROM postgres:14.0"))),
+                    ),
                 )
             }
         }
@@ -164,10 +164,10 @@ object ImageBuildProgressAggregatorSpec : Spek({
                     equalTo(
                         AggregatedImageBuildProgress(
                             setOf(
-                                ActiveImageBuildStep.Downloading(1, "ADD http://httpbin.org/get test.txt", DownloadOperation.Downloading, 329, 4159)
-                            )
-                        )
-                    )
+                                ActiveImageBuildStep.Downloading(1, "ADD http://httpbin.org/get test.txt", DownloadOperation.Downloading, 329, 4159),
+                            ),
+                        ),
+                    ),
                 )
             }
         }
@@ -186,10 +186,10 @@ object ImageBuildProgressAggregatorSpec : Spek({
                     equalTo(
                         AggregatedImageBuildProgress(
                             setOf(
-                                ActiveImageBuildStep.Downloading(1, "ADD http://httpbin.org/get test.txt", DownloadOperation.Downloading, 329, null)
-                            )
-                        )
-                    )
+                                ActiveImageBuildStep.Downloading(1, "ADD http://httpbin.org/get test.txt", DownloadOperation.Downloading, 329, null),
+                            ),
+                        ),
+                    ),
                 )
             }
         }
@@ -211,10 +211,10 @@ object ImageBuildProgressAggregatorSpec : Spek({
                         AggregatedImageBuildProgress(
                             setOf(
                                 ActiveImageBuildStep.Downloading(1, "ADD http://httpbin.org/get test.txt", DownloadOperation.Downloading, 329, 4159),
-                                ActiveImageBuildStep.Downloading(2, "ADD http://httpbin.org/get test2.txt", DownloadOperation.Downloading, 100, 2059)
-                            )
-                        )
-                    )
+                                ActiveImageBuildStep.Downloading(2, "ADD http://httpbin.org/get test2.txt", DownloadOperation.Downloading, 100, 2059),
+                            ),
+                        ),
+                    ),
                 )
             }
         }
@@ -233,10 +233,10 @@ object ImageBuildProgressAggregatorSpec : Spek({
                     equalTo(
                         AggregatedImageBuildProgress(
                             setOf(
-                                ActiveImageBuildStep.Downloading(1, "FROM postgres:13.0", DownloadOperation.Downloading, 123, 456)
-                            )
-                        )
-                    )
+                                ActiveImageBuildStep.Downloading(1, "FROM postgres:13.0", DownloadOperation.Downloading, 123, 456),
+                            ),
+                        ),
+                    ),
                 )
             }
         }
@@ -257,10 +257,10 @@ object ImageBuildProgressAggregatorSpec : Spek({
                     equalTo(
                         AggregatedImageBuildProgress(
                             setOf(
-                                ActiveImageBuildStep.Downloading(1, "FROM postgres:13.0", DownloadOperation.Downloading, 123 + 789, 456 + 1000)
-                            )
-                        )
-                    )
+                                ActiveImageBuildStep.Downloading(1, "FROM postgres:13.0", DownloadOperation.Downloading, 123 + 789, 456 + 1000),
+                            ),
+                        ),
+                    ),
                 )
             }
         }
@@ -282,10 +282,10 @@ object ImageBuildProgressAggregatorSpec : Spek({
                         AggregatedImageBuildProgress(
                             setOf(
                                 ActiveImageBuildStep.Downloading(1, "FROM postgres:13.0", DownloadOperation.Downloading, 123, 456),
-                                ActiveImageBuildStep.Downloading(2, "FROM postgres:14.0", DownloadOperation.Downloading, 789, 1000)
-                            )
-                        )
-                    )
+                                ActiveImageBuildStep.Downloading(2, "FROM postgres:14.0", DownloadOperation.Downloading, 789, 1000),
+                            ),
+                        ),
+                    ),
                 )
             }
         }

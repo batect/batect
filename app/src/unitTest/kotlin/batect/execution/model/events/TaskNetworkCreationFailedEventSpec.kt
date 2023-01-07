@@ -37,8 +37,8 @@ object TaskNetworkCreationFailedEventSpec : Spek({
                         |   "type": "${event::class.qualifiedName}",
                         |   "message": "Something went wrong"
                         |}
-                        """.trimMargin()
-                    )
+                        """.trimMargin(),
+                    ),
                 )
             }
         }

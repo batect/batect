@@ -27,7 +27,7 @@ interface GitRepositoryCacheNotificationListener {
 
 class DefaultGitRepositoryCacheNotificationListener(
     private val console: Console,
-    private val outputStyle: OutputStyle?
+    private val outputStyle: OutputStyle?,
 ) : GitRepositoryCacheNotificationListener {
     override fun onCloning(repo: GitRepositoryReference) {
         if (outputStyle == OutputStyle.Quiet) {

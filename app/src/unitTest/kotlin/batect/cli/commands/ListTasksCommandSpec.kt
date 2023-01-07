@@ -105,7 +105,7 @@ object ListTasksCommandSpec : Spek({
                     |- first-task
                     |- other-task
                     |
-                    """.trimMargin()
+                    """.trimMargin(),
                 )
 
                 whenRunningWithQuietOutputModeItProducesOutput(
@@ -114,7 +114,7 @@ object ListTasksCommandSpec : Spek({
                     |first-task
                     |other-task
                     |
-                    """.trimMargin()
+                    """.trimMargin(),
                 )
             }
         }
@@ -135,7 +135,7 @@ object ListTasksCommandSpec : Spek({
                     |- first-task
                     |- other-task
                     |
-                    """.trimMargin()
+                    """.trimMargin(),
                 )
 
                 whenRunningWithQuietOutputModeItProducesOutput(
@@ -144,7 +144,7 @@ object ListTasksCommandSpec : Spek({
                     |first-task
                     |other-task
                     |
-                    """.trimMargin()
+                    """.trimMargin(),
                 )
             }
         }
@@ -167,7 +167,7 @@ object ListTasksCommandSpec : Spek({
                     |Test tasks:
                     |- first-task
                     |
-                    """.trimMargin()
+                    """.trimMargin(),
                 )
 
                 whenRunningWithQuietOutputModeItProducesOutput(
@@ -176,7 +176,7 @@ object ListTasksCommandSpec : Spek({
                     |first-task
                     |other-task
                     |
-                    """.trimMargin()
+                    """.trimMargin(),
                 )
             }
         }
@@ -199,7 +199,7 @@ object ListTasksCommandSpec : Spek({
                     |Ungrouped tasks:
                     |- first-task
                     |
-                    """.trimMargin()
+                    """.trimMargin(),
                 )
 
                 whenRunningWithQuietOutputModeItProducesOutput(
@@ -208,7 +208,7 @@ object ListTasksCommandSpec : Spek({
                     |first-task
                     |other-task
                     |
-                    """.trimMargin()
+                    """.trimMargin(),
                 )
             }
         }

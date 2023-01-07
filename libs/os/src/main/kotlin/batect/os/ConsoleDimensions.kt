@@ -23,7 +23,7 @@ import java.util.concurrent.atomic.AtomicReference
 class ConsoleDimensions(
     private val nativeMethods: NativeMethods,
     private val signalListener: SignalListener,
-    private val logger: Logger
+    private val logger: Logger,
 ) {
     private val currentDimensions: AtomicReference<Result<Dimensions?>> = AtomicReference(Result.success(null))
     private val listeners = mutableListOf<Listener>()

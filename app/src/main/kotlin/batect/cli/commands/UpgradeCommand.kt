@@ -44,7 +44,7 @@ class UpgradeCommand(
     private val errorConsole: Console,
     private val environmentVariables: HostEnvironmentVariables,
     private val telemetryCaptor: TelemetryCaptor,
-    private val logger: Logger
+    private val logger: Logger,
 ) : Command {
     override fun run(): Int {
         val wrapperScriptDir = environmentVariables["BATECT_WRAPPER_SCRIPT_DIR"]

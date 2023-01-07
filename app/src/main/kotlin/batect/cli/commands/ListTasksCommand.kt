@@ -26,7 +26,7 @@ import java.io.PrintStream
 class ListTasksCommand(
     val configLoader: ConfigurationLoader,
     val commandLineOptions: CommandLineOptions,
-    val outputStream: PrintStream
+    val outputStream: PrintStream,
 ) : Command {
     override fun run(): Int {
         val config = configLoader.loadConfig(commandLineOptions.configurationFileName).configuration

@@ -92,7 +92,7 @@ object DeviceMountSpec : Spek({
                     " ",
                     ":",
                     "thing:thing:",
-                    "thing:thing:options:"
+                    "thing:thing:options:",
                 ).map {
                     on("parsing the invalid device mount definition '$it'") {
                         it("fails with an appropriate error message") {
@@ -102,8 +102,8 @@ object DeviceMountSpec : Spek({
                                     withMessage("Device mount definition '$it' is invalid. It must be in the form 'local_path:container_path' or 'local_path:container_path:options'.")
                                         and withLineNumber(1)
                                         and withColumn(1)
-                                        and withPath("<root>")
-                                )
+                                        and withPath("<root>"),
+                                ),
                             )
                         }
                     }
@@ -188,8 +188,8 @@ object DeviceMountSpec : Spek({
                     assertThat(
                         { parser.decodeFromString(DeviceMountConfigSerializer, yaml) },
                         throws(
-                            withMessage("Device mount definition is invalid. It must either be an object or a literal in the form 'local_path:container_path' or 'local_path:container_path:options'.")
-                        )
+                            withMessage("Device mount definition is invalid. It must either be an object or a literal in the form 'local_path:container_path' or 'local_path:container_path:options'."),
+                        ),
                     )
                 }
             }

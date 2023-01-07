@@ -76,7 +76,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                 "some-container",
                 imageSourceDoesNotMatter(),
                 runAsCurrentUserConfig = RunAsCurrentUserConfig.RunAsDefaultContainerUser,
-                volumeMounts = setOf(CacheMount("some-cache", "/my-cache"))
+                volumeMounts = setOf(CacheMount("some-cache", "/my-cache")),
             )
 
             val systemInfo by createForEachTest { mock<SystemInfo>() }
@@ -112,7 +112,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                     HostMount(directoryThatExists.toPath(), "/container/existing-directory", null),
                     HostMount(fileThatExists.toPath(), "/container/existing-file", null),
                     HostMount(directoryThatDoesNotExist.toPath(), "/container/new-directory", null),
-                    VolumeMount(VolumeReference("my-volume"), "/container/volume", null)
+                    VolumeMount(VolumeReference("my-volume"), "/container/volume", null),
                 )
 
                 beforeEachTest {
@@ -152,7 +152,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                 "some-container",
                 imageSourceDoesNotMatter(),
                 runAsCurrentUserConfig = runAsCurrentUserConfig,
-                volumeMounts = setOf(CacheMount("some-cache", "/caches/first-cache"))
+                volumeMounts = setOf(CacheMount("some-cache", "/caches/first-cache")),
             )
 
             given("the application is running on Windows") {
@@ -190,9 +190,9 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                                 dockerContainer.reference,
                                 setOf(
                                     UploadFile("passwd", 0, 0, "644".toInt(8), passwdContent.toByteArray(Charsets.UTF_8)),
-                                    UploadFile("group", 0, 0, "644".toInt(8), groupContent.toByteArray(Charsets.UTF_8))
+                                    UploadFile("group", 0, 0, "644".toInt(8), groupContent.toByteArray(Charsets.UTF_8)),
                                 ),
-                                "/etc"
+                                "/etc",
                             )
                         }
 
@@ -200,9 +200,9 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                             verify(dockerClient).uploadToContainer(
                                 dockerContainer.reference,
                                 setOf(
-                                    UploadDirectory("some-user", 0, 0, "755".toInt(8))
+                                    UploadDirectory("some-user", 0, 0, "755".toInt(8)),
                                 ),
-                                "/home"
+                                "/home",
                             )
                         }
 
@@ -210,9 +210,9 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                             verify(dockerClient).uploadToContainer(
                                 dockerContainer.reference,
                                 setOf(
-                                    UploadDirectory("first-cache", 0, 0, "755".toInt(8))
+                                    UploadDirectory("first-cache", 0, 0, "755".toInt(8)),
                                 ),
-                                "/caches"
+                                "/caches",
                             )
                         }
                     }
@@ -275,9 +275,9 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                                     dockerContainer.reference,
                                     setOf(
                                         UploadFile("passwd", 0, 0, "644".toInt(8), passwdContent.toByteArray(Charsets.UTF_8)),
-                                        UploadFile("group", 0, 0, "644".toInt(8), groupContent.toByteArray(Charsets.UTF_8))
+                                        UploadFile("group", 0, 0, "644".toInt(8), groupContent.toByteArray(Charsets.UTF_8)),
                                     ),
-                                    "/etc"
+                                    "/etc",
                                 )
                             }
 
@@ -285,9 +285,9 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                                 verify(dockerClient).uploadToContainer(
                                     dockerContainer.reference,
                                     setOf(
-                                        UploadDirectory("some-user", 123, 456, "755".toInt(8))
+                                        UploadDirectory("some-user", 123, 456, "755".toInt(8)),
                                     ),
-                                    "/home"
+                                    "/home",
                                 )
                             }
 
@@ -295,9 +295,9 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                                 verify(dockerClient).uploadToContainer(
                                     dockerContainer.reference,
                                     setOf(
-                                        UploadDirectory("first-cache", 123, 456, "755".toInt(8))
+                                        UploadDirectory("first-cache", 123, 456, "755".toInt(8)),
                                     ),
-                                    "/caches"
+                                    "/caches",
                                 )
                             }
                         }
@@ -321,9 +321,9 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                                 verify(dockerClient).uploadToContainer(
                                     dockerContainer.reference,
                                     setOf(
-                                        UploadDirectory("my-home", 123, 456, "755".toInt(8))
+                                        UploadDirectory("my-home", 123, 456, "755".toInt(8)),
                                     ),
-                                    "/"
+                                    "/",
                                 )
                             }
                         }
@@ -344,7 +344,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                             "some-container",
                             imageSourceDoesNotMatter(),
                             runAsCurrentUserConfig = RunAsCurrentUserConfig.RunAsCurrentUser("/home/some-user/"),
-                            volumeMounts = setOf(CacheMount("some-cache", "/caches/first-cache/"))
+                            volumeMounts = setOf(CacheMount("some-cache", "/caches/first-cache/")),
                         )
 
                         on("applying configuration to the container") {
@@ -354,9 +354,9 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                                 verify(dockerClient).uploadToContainer(
                                     dockerContainer.reference,
                                     setOf(
-                                        UploadDirectory("some-user", 123, 456, "755".toInt(8))
+                                        UploadDirectory("some-user", 123, 456, "755".toInt(8)),
                                     ),
-                                    "/home"
+                                    "/home",
                                 )
                             }
 
@@ -364,9 +364,9 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                                 verify(dockerClient).uploadToContainer(
                                     dockerContainer.reference,
                                     setOf(
-                                        UploadDirectory("first-cache", 123, 456, "755".toInt(8))
+                                        UploadDirectory("first-cache", 123, 456, "755".toInt(8)),
                                     ),
-                                    "/caches"
+                                    "/caches",
                                 )
                             }
                         }
@@ -382,9 +382,9 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                                 verify(dockerClient).uploadToContainer(
                                     dockerContainer.reference,
                                     setOf(
-                                        UploadDirectory("first-cache", 123, 456, "755".toInt(8))
+                                        UploadDirectory("first-cache", 123, 456, "755".toInt(8)),
                                     ),
-                                    "/"
+                                    "/",
                                 )
                             }
                         }
@@ -413,8 +413,8 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                                     { provider.applyConfigurationToContainer(container, dockerContainer) },
                                     throws<RunAsCurrentUserConfigurationException>(
                                         withMessage("Could not apply 'run as current user' configuration to container 'some-container': Something went wrong.") and
-                                            withCause(exception)
-                                    )
+                                            withCause(exception),
+                                    ),
                                 )
                             }
                         }
@@ -447,9 +447,9 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                                 dockerContainer.reference,
                                 setOf(
                                     UploadFile("passwd", 0, 0, "644".toInt(8), passwdContent.toByteArray(Charsets.UTF_8)),
-                                    UploadFile("group", 0, 0, "644".toInt(8), groupContent.toByteArray(Charsets.UTF_8))
+                                    UploadFile("group", 0, 0, "644".toInt(8), groupContent.toByteArray(Charsets.UTF_8)),
                                 ),
-                                "/etc"
+                                "/etc",
                             )
                         }
 
@@ -457,9 +457,9 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                             verify(dockerClient).uploadToContainer(
                                 dockerContainer.reference,
                                 setOf(
-                                    UploadDirectory("some-user", 0, 0, "755".toInt(8))
+                                    UploadDirectory("some-user", 0, 0, "755".toInt(8)),
                                 ),
-                                "/home"
+                                "/home",
                             )
                         }
 
@@ -467,9 +467,9 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                             verify(dockerClient).uploadToContainer(
                                 dockerContainer.reference,
                                 setOf(
-                                    UploadDirectory("first-cache", 0, 0, "755".toInt(8))
+                                    UploadDirectory("first-cache", 0, 0, "755".toInt(8)),
                                 ),
-                                "/caches"
+                                "/caches",
                             )
                         }
                     }
@@ -497,7 +497,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                             HostMount(directoryThatExists.toPath(), "/container/existing-directory", null),
                             HostMount(fileThatExists.toPath(), "/container/existing-file", null),
                             HostMount(directoryThatDoesNotExist.toPath(), "/container/new-directory", null),
-                            VolumeMount(VolumeReference("my-volume"), "/container/volume", null)
+                            VolumeMount(VolumeReference("my-volume"), "/container/volume", null),
                         )
 
                         beforeEachTest {
@@ -518,7 +518,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
 
                         val volumeMounts = setOf(
                             HostMount(outerLocalPath.toPath(), "/container/local-mount", null),
-                            HostMount(innerLocalPath.toPath(), "/container/local-mount/path", null)
+                            HostMount(innerLocalPath.toPath(), "/container/local-mount/path", null),
                         )
 
                         beforeEachTest { provider.createMissingMountDirectories(volumeMounts, container) }
@@ -537,7 +537,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                         val localPath = "/local/source"
                         val volumeMounts = setOf(
                             HostMount(localPath.toPath(), "/container/local-mount", null),
-                            VolumeMount(VolumeReference("my-volume"), "/container/volume", null)
+                            VolumeMount(VolumeReference("my-volume"), "/container/volume", null),
                         )
 
                         beforeEachTest { provider.createMissingMountDirectories(volumeMounts, container) }
@@ -555,7 +555,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                         val localPath = "/local/source"
                         val volumeMounts = setOf(
                             HostMount(localPath.toPath(), "/container/volume/local-mount", null),
-                            VolumeMount(VolumeReference("my-volume"), "/container/volume", null)
+                            VolumeMount(VolumeReference("my-volume"), "/container/volume", null),
                         )
 
                         beforeEachTest { provider.createMissingMountDirectories(volumeMounts, container) }
@@ -573,7 +573,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                         val localPath = "/local/source"
                         val volumeMounts = setOf(
                             HostMount(localPath.toPath(), "/container/local-mount", null),
-                            VolumeMount(VolumeReference("my-volume"), "/container/local-mount/volume", null)
+                            VolumeMount(VolumeReference("my-volume"), "/container/local-mount/volume", null),
                         )
 
                         beforeEachTest { provider.createMissingMountDirectories(volumeMounts, container) }
@@ -591,7 +591,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                         val localPath = "/local/source"
                         val volumeMounts = setOf(
                             HostMount(localPath.toPath(), "/container/local-mount", null),
-                            TmpfsMount("/container/local-mount/tmpfs", "")
+                            TmpfsMount("/container/local-mount/tmpfs", ""),
                         )
 
                         beforeEachTest { provider.createMissingMountDirectories(volumeMounts, container) }
@@ -609,7 +609,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                         val localPath = "/local/source"
                         val volumeMounts = setOf(
                             HostMount(localPath.toPath(), "/container/local-mount", null),
-                            VolumeMount(VolumeReference("my-volume"), "/container/local-mount/path/to/volume", null)
+                            VolumeMount(VolumeReference("my-volume"), "/container/local-mount/path/to/volume", null),
                         )
 
                         beforeEachTest { provider.createMissingMountDirectories(volumeMounts, container) }
@@ -627,7 +627,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                         val localPath = "/local/source"
                         val volumeMounts = setOf(
                             HostMount(localPath.toPath(), "/container/local-mount", null),
-                            TmpfsMount("/container/local-mount/path/to/tmpfs", "")
+                            TmpfsMount("/container/local-mount/path/to/tmpfs", ""),
                         )
 
                         beforeEachTest { provider.createMissingMountDirectories(volumeMounts, container) }
@@ -648,7 +648,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                         val volumeMounts = setOf(
                             HostMount(outerLocalPath.toPath(), "/container/local-mount", null),
                             HostMount(innerLocalPath.toPath(), "/container/local-mount/path", null),
-                            VolumeMount(VolumeReference("my-volume"), "/container/local-mount/path/to/volume", null)
+                            VolumeMount(VolumeReference("my-volume"), "/container/local-mount/path/to/volume", null),
                         )
 
                         beforeEachTest { provider.createMissingMountDirectories(volumeMounts, container) }
@@ -672,7 +672,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                         val volumeMounts = setOf(
                             HostMount(localPath.toPath(), "/container/local-mount", null),
                             VolumeMount(VolumeReference("volume-1"), "/container/local-mount/volume-1", null),
-                            VolumeMount(VolumeReference("volume-2"), "/container/local-mount/volume-1/volume-2", null)
+                            VolumeMount(VolumeReference("volume-2"), "/container/local-mount/volume-1/volume-2", null),
                         )
 
                         beforeEachTest { provider.createMissingMountDirectories(volumeMounts, container) }
@@ -695,7 +695,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                         val volumeMounts = setOf(
                             VolumeMount(VolumeReference("volume-1"), "/container/volume-1", null),
                             HostMount(localPath.toPath(), "/container/volume-1/local-mount", null),
-                            VolumeMount(VolumeReference("volume-2"), "/container/volume-1/local-mount/volume-2", null)
+                            VolumeMount(VolumeReference("volume-2"), "/container/volume-1/local-mount/volume-2", null),
                         )
 
                         beforeEachTest { provider.createMissingMountDirectories(volumeMounts, container) }

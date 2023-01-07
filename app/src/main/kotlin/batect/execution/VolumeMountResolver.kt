@@ -39,7 +39,7 @@ class VolumeMountResolver(
     private val pathResolverFactory: PathResolverFactory,
     private val expressionEvaluationContext: ExpressionEvaluationContext,
     private val cacheManager: CacheManager,
-    private val projectPaths: ProjectPaths
+    private val projectPaths: ProjectPaths,
 ) {
     fun resolve(mounts: Set<VolumeMount>): Set<ContainerMount> = mounts.mapToSet {
         when (it) {
@@ -84,7 +84,7 @@ class VolumeMountResolver(
         CacheType.Volume -> batect.dockerclient.VolumeMount(
             VolumeReference("batect-cache-${cacheManager.projectCacheKey}-${mount.name}"),
             mount.containerPath,
-            mount.options
+            mount.options,
         )
         CacheType.Directory -> {
             val path = projectPaths.cacheDirectory.resolve(mount.name)

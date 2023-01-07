@@ -22,7 +22,7 @@ import batect.execution.CacheManager
 
 class DockerTelemetryCollector(
     private val cacheManager: CacheManager,
-    private val telemetryCaptor: TelemetryCaptor
+    private val telemetryCaptor: TelemetryCaptor,
 ) {
     fun collectTelemetry(result: DockerConnectivityCheckResult.Succeeded, builderVersion: BuilderVersion) {
         telemetryCaptor.addAttribute("dockerBuilderVersionInUse", builderVersion.toString())

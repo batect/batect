@@ -120,7 +120,7 @@ object CancellationExtensionsSpec : Spek({
                         {
                             call.executeInCancellationContext(cancellationContext) { throw RuntimeException("This should not be reached") }
                         },
-                        throws<CancellationException>()
+                        throws<CancellationException>(),
                     )
                 }
             }
@@ -128,7 +128,7 @@ object CancellationExtensionsSpec : Spek({
             given("the request is cancelled after the response headers are received") {
                 beforeEachTest {
                     testServer.enqueue(
-                        MockResponse().setBody("a".repeat(20000))
+                        MockResponse().setBody("a".repeat(20000)),
                     )
 
                     testServer.startSilently()
@@ -146,7 +146,7 @@ object CancellationExtensionsSpec : Spek({
                                 throw RuntimeException("This should not be reached, reading the body above should trigger an exception from OkHttp because the call is cancelled")
                             }
                         },
-                        throws<CancellationException>()
+                        throws<CancellationException>(),
                     )
                 }
             }

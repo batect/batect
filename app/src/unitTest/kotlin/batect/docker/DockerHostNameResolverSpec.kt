@@ -45,7 +45,7 @@ object DockerHostNameResolverSpec : Spek({
             on("the Docker version being less than 17.06") {
                 beforeEachTestSuspend {
                     whenever(dockerClient.getDaemonVersionInformation()).doReturn(
-                        createDockerVersionInfoWithServerVersion("17.5.0")
+                        createDockerVersionInfoWithServerVersion("17.5.0"),
                     )
                 }
 
@@ -64,12 +64,12 @@ object DockerHostNameResolverSpec : Spek({
                 Scenario("17.12.0", "docker.for.mac.host.internal", "the Docker version being 17.12"),
                 Scenario("17.12.0-mac2", "docker.for.mac.host.internal", "the Docker version being above 17.12 but less than 18.03"),
                 Scenario("18.3.0", "host.docker.internal", "the Docker version being 18.03"),
-                Scenario("18.3.0-mac3", "host.docker.internal", "the Docker version being above 18.03")
+                Scenario("18.3.0-mac3", "host.docker.internal", "the Docker version being above 18.03"),
             ).forEach { (dockerVersion, expectedHostName, description) ->
                 on(description) {
                     beforeEachTestSuspend {
                         whenever(dockerClient.getDaemonVersionInformation()).doReturn(
-                            createDockerVersionInfoWithServerVersion(dockerVersion)
+                            createDockerVersionInfoWithServerVersion(dockerVersion),
                         )
                     }
 
@@ -88,7 +88,7 @@ object DockerHostNameResolverSpec : Spek({
             on("the Docker version being less than 17.06") {
                 beforeEachTestSuspend {
                     whenever(dockerClient.getDaemonVersionInformation()).doReturn(
-                        createDockerVersionInfoWithServerVersion("17.5.0")
+                        createDockerVersionInfoWithServerVersion("17.5.0"),
                     )
                 }
 
@@ -107,12 +107,12 @@ object DockerHostNameResolverSpec : Spek({
                 Scenario("17.12.0", "docker.for.win.host.internal", "the Docker version being 17.12"),
                 Scenario("17.12.0-windows2", "docker.for.win.host.internal", "the Docker version being above 17.12 but less than 18.03"),
                 Scenario("18.3.0", "host.docker.internal", "the Docker version being 18.03"),
-                Scenario("18.3.0-windows3", "host.docker.internal", "the Docker version being above 18.03")
+                Scenario("18.3.0-windows3", "host.docker.internal", "the Docker version being above 18.03"),
             ).forEach { (dockerVersion, expectedHostName, description) ->
                 on(description) {
                     beforeEachTestSuspend {
                         whenever(dockerClient.getDaemonVersionInformation()).doReturn(
-                            createDockerVersionInfoWithServerVersion(dockerVersion)
+                            createDockerVersionInfoWithServerVersion(dockerVersion),
                         )
                     }
 

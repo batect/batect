@@ -24,7 +24,7 @@ class MultiValueMapOption(
     longName: String,
     description: String,
     shortName: Char? = null,
-    override val valueFormatForHelp: String = "<name>=<value>"
+    override val valueFormatForHelp: String = "<name>=<value>",
 ) : OptionDefinition(group, longName, description, true, shortName, true), ReadOnlyProperty<OptionParserContainer, Map<String, Set<String>>> {
     private val values: MutableMap<String, Set<String>> = mutableMapOf()
 

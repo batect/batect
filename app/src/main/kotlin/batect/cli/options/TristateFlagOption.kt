@@ -26,7 +26,7 @@ class TristateFlagOption(
     longName: String,
     description: String,
     val defaultValueProvider: DefaultValueProvider<Boolean?>,
-    shortName: Char? = null
+    shortName: Char? = null,
 ) : OptionDefinition(group, longName, description, false, shortName), ReadOnlyProperty<OptionParserContainer, Boolean?> {
     private var value: PossibleValue<Boolean?> = defaultValueProvider.value
     override var valueSource: OptionValueSource = defaultValueProvider.valueSource

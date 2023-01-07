@@ -23,7 +23,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class DockerContainer(
     @Serializable(with = ContainerReferenceSerializer::class) val reference: ContainerReference,
-    val name: String
+    val name: String,
 )
 
 fun LogMessageBuilder.data(key: String, value: DockerContainer) = this.data(key, value, DockerContainer.serializer())

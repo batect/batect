@@ -69,7 +69,7 @@ object ExpressionSpec : Spek({
                 "<{a}\$b" to ConcatenatedExpression(ConfigVariableReference("a"), EnvironmentVariableReference("b", originalExpression = "\$b"), originalExpression = "<{a}\$b"),
                 "<a\${b}" to ConcatenatedExpression(ConfigVariableReference("a", originalExpression = "<a"), EnvironmentVariableReference("b"), originalExpression = "<a\${b}"),
                 "<{a}\${b}" to ConcatenatedExpression(ConfigVariableReference("a"), EnvironmentVariableReference("b"), originalExpression = "<{a}\${b}"),
-                "\$a<b" to ConcatenatedExpression(EnvironmentVariableReference("a", originalExpression = "\$a"), ConfigVariableReference("b", originalExpression = "<b"), originalExpression = "\$a<b")
+                "\$a<b" to ConcatenatedExpression(EnvironmentVariableReference("a", originalExpression = "\$a"), ConfigVariableReference("b", originalExpression = "<b"), originalExpression = "\$a<b"),
             ).forEach { (source, expectedExpression) ->
                 on("parsing the input '$source'") {
                     val expression = Expression.parse(source)
@@ -98,7 +98,7 @@ object ExpressionSpec : Spek({
                 "<" to "invalid config variable reference: '<' at column 1 must be followed by a variable name",
                 "<{" to "invalid config variable reference: '{' at column 2 must be followed by a closing '}'",
                 "<{some" to "invalid config variable reference: '{' at column 2 must be followed by a closing '}'",
-                "<{}" to "invalid config variable reference: '<{}' at column 1 does not contain a variable name"
+                "<{}" to "invalid config variable reference: '<{}' at column 1 does not contain a variable name",
             ).forEach { (source, error) ->
                 on("parsing the input '$source'") {
                     it("throws an appropriate exception") {
@@ -152,7 +152,7 @@ object ExpressionSpec : Spek({
                     it("throws an appropriate exception") {
                         assertThat(
                             { expression.evaluate(ExpressionEvaluationContext(hostEnvironmentVariables, emptyMap())) },
-                            throws<ExpressionEvaluationException>(withMessage("The host environment variable 'THE_VAR' is not set, and no default value has been provided."))
+                            throws<ExpressionEvaluationException>(withMessage("The host environment variable 'THE_VAR' is not set, and no default value has been provided.")),
                         )
                     }
                 }
@@ -214,7 +214,7 @@ object ExpressionSpec : Spek({
                 it("throws an appropriate exception") {
                     assertThat(
                         { expression.evaluate(ExpressionEvaluationContext(HostEnvironmentVariables(), configVariables)) },
-                        throws<ExpressionEvaluationException>(withMessage("The config variable 'THE_VAR' has not been defined."))
+                        throws<ExpressionEvaluationException>(withMessage("The config variable 'THE_VAR' has not been defined.")),
                     )
                 }
             }
@@ -227,7 +227,7 @@ object ExpressionSpec : Spek({
                 it("throws an appropriate exception") {
                     assertThat(
                         { expression.evaluate(ExpressionEvaluationContext(HostEnvironmentVariables(), configVariables)) },
-                        throws<ExpressionEvaluationException>(withMessage("The config variable 'THE_VAR' is not set and has no default value."))
+                        throws<ExpressionEvaluationException>(withMessage("The config variable 'THE_VAR' is not set and has no default value.")),
                     )
                 }
             }
@@ -326,8 +326,8 @@ object ExpressionSpec : Spek({
                             |    {"type":"LiteralValue","value":" value"}
                             |  ]
                             |}
-                            """.trimMargin()
-                        )
+                            """.trimMargin(),
+                        ),
                     )
                 }
             }

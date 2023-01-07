@@ -26,7 +26,7 @@ import kotlinx.serialization.builtins.SetSerializer
 import kotlinx.serialization.builtins.serializer
 
 class ContainerDependencyGraphProvider(
-    private val logger: Logger
+    private val logger: Logger,
 ) {
     fun createGraph(config: TaskSpecialisedConfiguration, task: Task): ContainerDependencyGraph {
         val graph = ContainerDependencyGraph(config, task)

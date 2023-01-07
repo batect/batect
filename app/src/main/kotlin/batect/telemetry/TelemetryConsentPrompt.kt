@@ -31,7 +31,7 @@ class TelemetryConsentPrompt(
     private val consoleInfo: ConsoleInfo,
     private val ciEnvironmentDetector: CIEnvironmentDetector,
     private val console: Console,
-    private val prompt: Prompt
+    private val prompt: Prompt,
 ) {
     fun askForConsentIfRequired() {
         if (!shouldPromptForConsent) {

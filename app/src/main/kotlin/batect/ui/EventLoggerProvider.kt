@@ -39,7 +39,7 @@ class EventLoggerProvider(
     private val consoleInfo: ConsoleInfo,
     private val consoleDimensions: ConsoleDimensions,
     private val requestedOutputStyle: OutputStyle?,
-    private val disableColorOutput: Boolean
+    private val disableColorOutput: Boolean,
 ) {
     fun getEventLogger(task: Task, graph: ContainerDependencyGraph): EventLogger {
         return when (requestedOutputStyle) {

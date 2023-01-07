@@ -78,7 +78,7 @@ object TaskRunnerSpec : Spek({
                 val containers = setOf(
                     container,
                     Container("some-other-container", imageSourceDoesNotMatter()),
-                    Container("some-third-container", imageSourceDoesNotMatter())
+                    Container("some-third-container", imageSourceDoesNotMatter()),
                 )
 
                 val eventLogger by createForEachTest { mock<EventLogger>() }
@@ -107,8 +107,8 @@ object TaskRunnerSpec : Spek({
                                 bind<TaskStateMachine>() with instance(stateMachine)
                                 bind<ParallelExecutionManager>() with instance(executionManager)
                                 bind<ContainerDependencyGraph>() with instance(dependencyGraph)
-                            }
-                        )
+                            },
+                        ),
                     )
                 }
 

@@ -56,9 +56,9 @@ object LogMessageBuilderSpec : Spek({
                     message.additionalData,
                     equalTo(
                         mapOf<String, Any?>(
-                            "@something" to JsonableObject(456, Int.serializer())
-                        )
-                    )
+                            "@something" to JsonableObject(456, Int.serializer()),
+                        ),
+                    ),
                 )
             }
 
@@ -86,9 +86,9 @@ object LogMessageBuilderSpec : Spek({
                     message.additionalData,
                     equalTo(
                         mapOf<String, Jsonable>(
-                            "@something" to JsonableObject(456, Int.serializer())
-                        )
-                    )
+                            "@something" to JsonableObject(456, Int.serializer()),
+                        ),
+                    ),
                 )
             }
 
@@ -119,9 +119,9 @@ object LogMessageBuilderSpec : Spek({
                         mapOf<String, Jsonable>(
                             "some-key" to JsonableObject(123, Int.serializer()),
                             "some-other-data" to JsonableObject("value", String.serializer()),
-                            "@something" to JsonableObject(456, Int.serializer())
-                        )
-                    )
+                            "@something" to JsonableObject(456, Int.serializer()),
+                        ),
+                    ),
                 )
             }
 
@@ -153,9 +153,9 @@ object LogMessageBuilderSpec : Spek({
                             "some-key" to JsonableObject(123, Int.serializer()),
                             "some-other-data" to JsonableObject("value", String.serializer()),
                             "@something" to JsonableObject(456, Int.serializer()),
-                            "@source" to JsonableObject("some.class.name", String.serializer())
-                        )
-                    )
+                            "@source" to JsonableObject("some.class.name", String.serializer()),
+                        ),
+                    ),
                 )
             }
 

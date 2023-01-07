@@ -38,8 +38,8 @@ object CustomTaskNetworkCheckFailedEventSpec : Spek({
                         |   "networkIdentifier": "my-network",
                         |   "message": "Something went wrong"
                         |}
-                        """.trimMargin()
-                    )
+                        """.trimMargin(),
+                    ),
                 )
             }
         }

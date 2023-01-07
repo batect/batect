@@ -51,8 +51,8 @@ object GenerateShellTabCompletionTaskInformationCommandSpec : Spek({
                 Task("third-task", null, description = "This task has\nnew lines"),
                 Task("fourth-task", null, description = "This task has\t tabs"),
                 Task("task-with-no-description", null),
-                Task("task:with:colons", null, description = "A task")
-            )
+                Task("task:with:colons", null, description = "A task"),
+            ),
         )
 
         val fileSystem by createForEachTest { Jimfs.newFileSystem(com.google.common.jimfs.Configuration.unix()) }
@@ -67,8 +67,8 @@ object GenerateShellTabCompletionTaskInformationCommandSpec : Spek({
                     setOf(
                         configurationFileName,
                         includedFile1,
-                        includedFile2
-                    )
+                        includedFile2,
+                    ),
                 )
             }
         }
@@ -115,8 +115,8 @@ object GenerateShellTabCompletionTaskInformationCommandSpec : Spek({
                         |task:with:colons
                         |third-task
                         |
-                        """.trimMargin().withPlatformSpecificLineSeparator()
-                    )
+                        """.trimMargin().withPlatformSpecificLineSeparator(),
+                    ),
                 )
             }
 
@@ -160,8 +160,8 @@ object GenerateShellTabCompletionTaskInformationCommandSpec : Spek({
                         |task:with:colons${tab}A task
                         |third-task${tab}This task has new lines
                         |
-                        """.trimMargin().withPlatformSpecificLineSeparator()
-                    )
+                        """.trimMargin().withPlatformSpecificLineSeparator(),
+                    ),
                 )
             }
 
@@ -203,8 +203,8 @@ object GenerateShellTabCompletionTaskInformationCommandSpec : Spek({
                         |task\:with\:colons:A task
                         |third-task:This task has new lines
                         |
-                        """.trimMargin().withPlatformSpecificLineSeparator()
-                    )
+                        """.trimMargin().withPlatformSpecificLineSeparator(),
+                    ),
                 )
             }
 

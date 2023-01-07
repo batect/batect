@@ -61,8 +61,8 @@ object ProxyEnvironmentVariablePreprocessorSpec : Spek({
                         hasMessage(
                             withSeverity(Severity.Info) and
                                 withLogMessage("Not attempting to preprocess proxy environment variable value because getting the local Docker hostname is not supported.") and
-                                withAdditionalData("value", "http://proxy.mycompany.com")
-                        )
+                                withAdditionalData("value", "http://proxy.mycompany.com"),
+                        ),
                     )
                 }
             }
@@ -80,8 +80,8 @@ object ProxyEnvironmentVariablePreprocessorSpec : Spek({
                         hasMessage(
                             withSeverity(Severity.Info) and
                                 withLogMessage("Not attempting to preprocess proxy environment variable value because getting the local Docker hostname is not supported.") and
-                                withAdditionalData("value", "http://localhost")
-                        )
+                                withAdditionalData("value", "http://localhost"),
+                        ),
                     )
                 }
             }
@@ -103,8 +103,8 @@ object ProxyEnvironmentVariablePreprocessorSpec : Spek({
                         hasMessage(
                             withSeverity(Severity.Info) and
                                 withLogMessage("Not preprocessing proxy environment variable value because it does not refer to the local machine.") and
-                                withAdditionalData("value", "http://proxy.mycompany.com")
-                        )
+                                withAdditionalData("value", "http://proxy.mycompany.com"),
+                        ),
                     )
                 }
             }
@@ -112,7 +112,7 @@ object ProxyEnvironmentVariablePreprocessorSpec : Spek({
             listOf(
                 "localhost",
                 "127.0.0.1",
-                "[::1]" // See https://serverfault.com/questions/205793/how-can-one-distinguish-the-host-and-the-port-in-an-ipv6-url for an explanation of why the square brackets are required.
+                "[::1]", // See https://serverfault.com/questions/205793/how-can-one-distinguish-the-host-and-the-port-in-an-ipv6-url for an explanation of why the square brackets are required.
             ).forEach { localhostAddress ->
                 mapOf(
                     "http://$localhostAddress" to "http://local.docker/",
@@ -121,7 +121,7 @@ object ProxyEnvironmentVariablePreprocessorSpec : Spek({
                     "http://$localhostAddress:1234" to "http://local.docker:1234/",
                     "http://$localhostAddress/thing" to "http://local.docker/thing",
                     "http://user@$localhostAddress" to "http://user@local.docker/",
-                    "http://user:password@$localhostAddress" to "http://user:password@local.docker/"
+                    "http://user:password@$localhostAddress" to "http://user:password@local.docker/",
                 ).forEach { (originalValue, expectedValue) ->
                     on("processing a variable that refers to the local machine through '$originalValue'") {
                         val result by runForEachTest { preprocessor.process(originalValue) }
@@ -137,8 +137,8 @@ object ProxyEnvironmentVariablePreprocessorSpec : Spek({
                                     withSeverity(Severity.Info) and
                                         withLogMessage("Modified proxy environment variable that referred to the local machine.") and
                                         withAdditionalData("originalValue", originalValue) and
-                                        withAdditionalData("newValue", expectedValue)
-                                )
+                                        withAdditionalData("newValue", expectedValue),
+                                ),
                             )
                         }
                     }
@@ -151,7 +151,7 @@ object ProxyEnvironmentVariablePreprocessorSpec : Spek({
                 "127.0.0.1",
                 "::1",
                 "[::1]",
-                "http://::1"
+                "http://::1",
             ).forEach { address ->
                 on("processing a variable that is in the invalid format '$address'") {
                     val result by runForEachTest { preprocessor.process(address) }
@@ -166,8 +166,8 @@ object ProxyEnvironmentVariablePreprocessorSpec : Spek({
                             hasMessage(
                                 withSeverity(Severity.Warning) and
                                     withLogMessage("Not attempting to preprocess proxy environment variable value because it is not a valid URL.") and
-                                    withAdditionalData("value", address)
-                            )
+                                    withAdditionalData("value", address),
+                            ),
                         )
                     }
                 }

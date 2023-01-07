@@ -58,7 +58,7 @@ class InterleavedEventLogger(
     val taskContainer: Container,
     val containers: Set<Container>,
     private val output: InterleavedOutput,
-    val failureErrorMessageFormatter: FailureErrorMessageFormatter
+    val failureErrorMessageFormatter: FailureErrorMessageFormatter,
 ) : EventLogger {
     private val haveStartedCleanup = AtomicBoolean(false)
     private val batectPrefix = Text.white("Batect | ")

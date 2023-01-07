@@ -195,7 +195,7 @@ object CleanupProgressDisplayLineSpec : Spek({
                     it("prints that all of the containers still need to be cleaned up") {
                         assertThat(
                             output,
-                            equivalentTo(Text.white(Text("Cleaning up: 4 containers (") + Text.bold("container-1") + Text(", ") + Text.bold("container-2") + Text(", ") + Text.bold("container-3") + Text(" and ") + Text.bold("container-4") + Text(") left to remove...")))
+                            equivalentTo(Text.white(Text("Cleaning up: 4 containers (") + Text.bold("container-1") + Text(", ") + Text.bold("container-2") + Text(", ") + Text.bold("container-3") + Text(" and ") + Text.bold("container-4") + Text(") left to remove..."))),
                         )
                     }
                 }

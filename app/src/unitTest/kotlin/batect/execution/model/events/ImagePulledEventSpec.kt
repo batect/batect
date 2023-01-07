@@ -42,8 +42,8 @@ object ImagePulledEventSpec : Spek({
                         |   "source": {"imageName": "image-1", "imagePullPolicy": "IfNotPresent"},
                         |   "image": {"id": "image-1-id"}
                         |}
-                        """.trimMargin()
-                    )
+                        """.trimMargin(),
+                    ),
                 )
             }
         }

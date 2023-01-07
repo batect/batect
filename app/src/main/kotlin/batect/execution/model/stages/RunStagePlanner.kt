@@ -35,7 +35,7 @@ import batect.primitives.flatMapToSet
 
 class RunStagePlanner(
     private val graph: ContainerDependencyGraph,
-    private val logger: Logger
+    private val logger: Logger,
 ) {
     fun createStage(): RunStage {
         val rules = graph.allNodes.flatMapToSet { executionStepsFor(it) } +
@@ -54,7 +54,7 @@ class RunStagePlanner(
         CreateContainerStepRule(node.container),
         RunContainerStepRule(node.container, node.dependsOnContainers),
         WaitForContainerToBecomeHealthyStepRule(node.container),
-        RunContainerSetupCommandsStepRule(node.container)
+        RunContainerSetupCommandsStepRule(node.container),
     )
 
     private fun imageCreationRuleFor(container: Container): TaskStepRule = when (container.imageSource) {

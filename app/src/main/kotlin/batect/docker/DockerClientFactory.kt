@@ -19,7 +19,7 @@ package batect.docker
 import batect.dockerclient.DockerClient
 
 class DockerClientFactory(
-    private val dockerClientConfigurationFactory: DockerClientConfigurationFactory
+    private val dockerClientConfigurationFactory: DockerClientConfigurationFactory,
 ) {
     fun create(): DockerClient {
         return DockerClient.create(dockerClientConfigurationFactory.createConfiguration())

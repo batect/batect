@@ -41,7 +41,7 @@ sealed class Include
 @Serializable
 @SerialName("file")
 data class FileInclude(
-    @Serializable(with = FileIncludePathSerializer::class) val path: Path
+    @Serializable(with = FileIncludePathSerializer::class) val path: Path,
 ) : Include() {
     override fun toString(): String = path.toString()
 }
@@ -51,7 +51,7 @@ data class FileInclude(
 data class GitInclude(
     val repo: String,
     val ref: String,
-    val path: String = "batect-bundle.yml"
+    val path: String = "batect-bundle.yml",
 ) : Include() {
     override fun toString(): String = "$repo@$ref: $path"
 

@@ -110,7 +110,7 @@ object WindowsNativeMethodsSpec : Spek({
                         it("throws an appropriate exception") {
                             assertThat(
                                 { nativeMethods.getConsoleDimensions() },
-                                throws<WindowsNativeMethodException>(withMethod("GetConsoleScreenBufferInfo") and withError(LastError.ERROR_FILE_NOT_FOUND))
+                                throws<WindowsNativeMethodException>(withMethod("GetConsoleScreenBufferInfo") and withError(LastError.ERROR_FILE_NOT_FOUND)),
                             )
                         }
                     }

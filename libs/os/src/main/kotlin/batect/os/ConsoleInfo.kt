@@ -32,7 +32,7 @@ class ConsoleInfo(
     private val nativeMethods: NativeMethods,
     private val systemInfo: SystemInfo,
     private val environment: HostEnvironmentVariables,
-    private val logger: Logger
+    private val logger: Logger,
 ) {
     val stdinIsTTY: Boolean by lazy {
         val result = nativeMethods.determineIfStdinIsTTY()

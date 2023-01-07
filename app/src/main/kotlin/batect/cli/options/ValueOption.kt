@@ -32,7 +32,7 @@ class ValueOption<StorageType, ValueType : StorageType>(
     val defaultValueProvider: DefaultValueProvider<StorageType>,
     val valueConverter: ValueConverter<ValueType>,
     shortName: Char? = null,
-    showInHelp: Boolean = true
+    showInHelp: Boolean = true,
 ) : OptionDefinition(group, longName, description, true, shortName, showInHelp = showInHelp), ReadOnlyProperty<OptionParserContainer, StorageType> {
 
     private var value: PossibleValue<StorageType> = defaultValueProvider.value

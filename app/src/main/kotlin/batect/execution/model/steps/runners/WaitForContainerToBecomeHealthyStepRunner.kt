@@ -35,7 +35,7 @@ class WaitForContainerToBecomeHealthyStepRunner(
     private val dockerClient: DockerClient,
     private val cancellationContext: CancellationContext,
     private val systemInfo: SystemInfo,
-    private val logger: Logger
+    private val logger: Logger,
 ) {
     fun run(step: WaitForContainerToBecomeHealthyStep, eventSink: TaskEventSink) {
         try {
@@ -82,7 +82,7 @@ class WaitForContainerToBecomeHealthyStepRunner(
     private suspend fun waitForHealthStatus(container: DockerContainer): HealthStatus {
         val filters = mapOf(
             "event" to setOf("die", "health_status"),
-            "container" to setOf(container.reference.id)
+            "container" to setOf(container.reference.id),
         )
 
         var eventReceived: Event? = null
@@ -125,7 +125,7 @@ class WaitForContainerToBecomeHealthyStepRunner(
 private enum class HealthStatus {
     BecameHealthy,
     BecameUnhealthy,
-    Exited
+    Exited,
 }
 
 private class ContainerHealthCheckException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)

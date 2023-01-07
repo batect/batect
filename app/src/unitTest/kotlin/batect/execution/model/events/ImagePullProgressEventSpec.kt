@@ -46,8 +46,8 @@ object ImagePullProgressEventSpec : Spek({
                         |       "totalBytes": 30
                         |   }
                         |}
-                        """.trimMargin()
-                    )
+                        """.trimMargin(),
+                    ),
                 )
             }
         }

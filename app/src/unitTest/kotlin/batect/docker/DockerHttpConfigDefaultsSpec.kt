@@ -34,7 +34,7 @@ object DockerHttpConfigDefaultsSpec : Spek({
         mapOf(
             OperatingSystem.Linux to "unix:///var/run/docker.sock",
             OperatingSystem.Mac to "unix:///var/run/docker.sock",
-            OperatingSystem.Windows to "npipe:////./pipe/docker_engine"
+            OperatingSystem.Windows to "npipe:////./pipe/docker_engine",
         ).forEach { (os, expected) ->
             given("the application is running on $os") {
                 val systemInfo by createForEachTest {

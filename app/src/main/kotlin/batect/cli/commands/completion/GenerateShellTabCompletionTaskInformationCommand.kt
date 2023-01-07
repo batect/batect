@@ -36,7 +36,7 @@ class GenerateShellTabCompletionTaskInformationCommand(
     private val outputStream: PrintStream,
     private val configurationLoader: ConfigurationLoader,
     private val telemetryCaptor: TelemetryCaptor,
-    private val hostEnvironmentVariables: HostEnvironmentVariables
+    private val hostEnvironmentVariables: HostEnvironmentVariables,
 ) : Command {
     override fun run(): Int {
         val loadResult = configurationLoader.loadConfig(commandLineOptions.configurationFileName, SilentGitRepositoryCacheNotificationListener)
@@ -52,8 +52,8 @@ class GenerateShellTabCompletionTaskInformationCommand(
             "GeneratedShellTabCompletionTaskInformation",
             mapOf(
                 "shell" to AttributeValue(commandLineOptions.generateShellTabCompletionTaskInformation.toString()),
-                "proxyCompletionScriptVersion" to AttributeValue(hostEnvironmentVariables["BATECT_COMPLETION_PROXY_VERSION"])
-            )
+                "proxyCompletionScriptVersion" to AttributeValue(hostEnvironmentVariables["BATECT_COMPLETION_PROXY_VERSION"]),
+            ),
         )
     }
 

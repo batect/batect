@@ -109,13 +109,13 @@ data class Command(val originalCommand: String, val parsedCommand: List<String>)
 
         private fun danglingBackslash(command: String): Throwable = invalidCommandLine(
             command,
-            """it ends with a backslash (backslashes always escape the following character, for a literal backslash, use '\\')"""
+            """it ends with a backslash (backslashes always escape the following character, for a literal backslash, use '\\')""",
         )
 
         private enum class CommandParsingState {
             Normal,
             SingleQuote,
-            DoubleQuote
+            DoubleQuote,
         }
     }
 }

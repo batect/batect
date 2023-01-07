@@ -23,7 +23,7 @@ import batect.os.ConsoleManager
 class WindowsConsoleManager(
     private val consoleInfo: ConsoleInfo,
     private val nativeMethods: WindowsNativeMethods,
-    private val logger: Logger
+    private val logger: Logger,
 ) : ConsoleManager {
     override fun enableConsoleEscapeSequences() {
         if (!consoleInfo.stdoutIsTTY) {

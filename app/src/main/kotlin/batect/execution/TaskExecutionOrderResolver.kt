@@ -26,7 +26,7 @@ class TaskExecutionOrderResolver(
     private val config: RawConfiguration,
     private val commandLineOptions: CommandLineOptions,
     private val suggester: TaskSuggester,
-    private val logger: Logger
+    private val logger: Logger,
 ) {
     fun resolveExecutionOrder(taskName: String): List<Task> {
         val task = config.tasks[taskName]

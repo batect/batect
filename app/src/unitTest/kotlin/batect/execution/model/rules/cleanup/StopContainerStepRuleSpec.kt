@@ -61,8 +61,8 @@ object StopContainerStepRuleSpec : Spek({
                             |   "containersThatMustBeStoppedFirst": [],
                             |   "manualCleanupCommand": null
                             |}
-                            """.trimMargin()
-                        )
+                            """.trimMargin(),
+                        ),
                     )
                 }
             }
@@ -76,7 +76,7 @@ object StopContainerStepRuleSpec : Spek({
             given("those containers have been stopped") {
                 val events = setOf(
                     ContainerStoppedEvent(container1),
-                    ContainerStoppedEvent(container2)
+                    ContainerStoppedEvent(container2),
                 )
 
                 on("evaluating the rule") {
@@ -111,8 +111,8 @@ object StopContainerStepRuleSpec : Spek({
                             |   "containersThatMustBeStoppedFirst": ["container-1", "container-2"],
                             |   "manualCleanupCommand": null
                             |}
-                            """.trimMargin()
-                        )
+                            """.trimMargin(),
+                        ),
                     )
                 }
             }

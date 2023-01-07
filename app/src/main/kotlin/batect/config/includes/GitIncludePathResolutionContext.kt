@@ -15,7 +15,7 @@
 */
 
 @file:UseSerializers(
-    PathSerializer::class
+    PathSerializer::class,
 )
 
 package batect.config.includes
@@ -33,7 +33,7 @@ import java.nio.file.Path
 data class GitIncludePathResolutionContext(
     override val relativeTo: Path,
     val repoRootDirectory: Path,
-    val include: GitInclude
+    val include: GitInclude,
 ) : PathResolutionContext {
     override fun getResolutionDescription(absolutePath: Path): String {
         if (absolutePath.startsWith(repoRootDirectory)) {

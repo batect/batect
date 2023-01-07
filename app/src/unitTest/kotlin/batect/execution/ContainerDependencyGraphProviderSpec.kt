@@ -63,10 +63,10 @@ object ContainerDependencyGraphProviderSpec : Spek({
                                 mapOf(
                                     mainContainer.name to setOf(dependencyForContainer.name, dependencyForTask.name),
                                     dependencyForContainer.name to emptySet(),
-                                    dependencyForTask.name to emptySet()
-                                )
-                            )
-                    )
+                                    dependencyForTask.name to emptySet(),
+                                ),
+                            ),
+                    ),
                 )
             }
         }

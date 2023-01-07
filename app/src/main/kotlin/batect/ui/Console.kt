@@ -25,7 +25,7 @@ import java.io.PrintStream
 class Console(
     private val outputStream: PrintStream,
     private val enableComplexOutput: Boolean,
-    private val consoleDimensions: ConsoleDimensions
+    private val consoleDimensions: ConsoleDimensions,
 ) {
     fun print(text: String) = outputStream.print(text)
     fun println(text: String) = outputStream.println(text)
@@ -131,5 +131,5 @@ enum class ConsoleColor(val code: Int) {
     Blue(34),
     Magenta(35),
     Cyan(36),
-    White(37)
+    White(37),
 }

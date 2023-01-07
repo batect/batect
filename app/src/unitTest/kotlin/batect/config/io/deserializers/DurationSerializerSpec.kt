@@ -82,7 +82,7 @@ object DurationSerializerSpec : Spek({
                 "39h9m14.425s" to 39.hours + 9.minutes + 14.seconds + 425.milliseconds,
                 "52763797000ns" to 52763797000.nanoseconds,
                 "0.100000000000000000000h" to 6.minutes,
-                "0.830103483285477580700h" to 49.minutes + 48.seconds + 372539828.nanoseconds
+                "0.830103483285477580700h" to 49.minutes + 48.seconds + 372539828.nanoseconds,
             ).forEach { (input, expectedOutput) ->
                 given("the string '$input'") {
                     val decoder = mock<YamlInput> {
@@ -105,7 +105,7 @@ object DurationSerializerSpec : Spek({
                 ".",
                 "-.",
                 ".s",
-                "+.s"
+                "+.s",
             ).forEach { input ->
                 given("the invalid string '$input'") {
                     val decoder = mock<YamlInput> {
@@ -120,8 +120,8 @@ object DurationSerializerSpec : Spek({
                                 withMessage("The value '$input' is not a valid duration.") and
                                     withLineNumber(3) and
                                     withColumn(4) and
-                                    withPath("[0]")
-                            )
+                                    withPath("[0]"),
+                            ),
                         )
                     }
                 }
@@ -151,7 +151,7 @@ object DurationSerializerSpec : Spek({
                 -2.minutes + -3.seconds + -400.milliseconds to "-2m 3.4s",
                 1.hours + 2.minutes + 3.seconds + 4.milliseconds + 5.microseconds + 6.nanoseconds to "1h 2m 3.004005006s",
                 39.hours + 9.minutes + 14.seconds + 425.milliseconds to "1d 15h 9m 14.425s",
-                52763797000.nanoseconds to "52.763797s"
+                52763797000.nanoseconds to "52.763797s",
             ).forEach { (duration, expectedOutput) ->
                 given("the duration $duration") {
                     val encoder = mock<Encoder>()

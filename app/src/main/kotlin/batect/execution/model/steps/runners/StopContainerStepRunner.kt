@@ -28,7 +28,7 @@ import kotlin.time.Duration.Companion.seconds
 
 class StopContainerStepRunner(
     private val client: DockerClient,
-    private val logger: Logger
+    private val logger: Logger,
 ) {
     fun run(step: StopContainerStep, eventSink: TaskEventSink) {
         try {

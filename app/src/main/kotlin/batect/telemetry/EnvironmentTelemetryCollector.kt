@@ -40,7 +40,7 @@ class EnvironmentTelemetryCollector(
     private val ciEnvironmentDetector: CIEnvironmentDetector,
     private val systemInfo: SystemInfo,
     private val runtimeMXBean: RuntimeMXBean = ManagementFactory.getRuntimeMXBean(),
-    private val systemProperties: Properties = System.getProperties()
+    private val systemProperties: Properties = System.getProperties(),
 ) {
     fun collect(commandType: KClass<out Command>) {
         addCommandAttributes(commandType)

@@ -24,5 +24,5 @@ import kotlinx.serialization.Transient
 data class ConfigVariableDefinition(
     @Transient val name: String = "",
     val description: String? = null,
-    @SerialName("default") val defaultValue: String? = null
+    @SerialName("default") val defaultValue: String? = null,
 )

@@ -44,8 +44,8 @@ object ContainerCreatedEventSpec : Spek({
                         |   "container": "container-1",
                         |   "dockerContainer": {"reference": {"id": "docker-container-1"}, "name": "docker-container-1-name"}
                         |}
-                        """.trimMargin()
-                    )
+                        """.trimMargin(),
+                    ),
                 )
             }
         }

@@ -24,7 +24,7 @@ import java.util.concurrent.ConcurrentLinkedQueue
 
 class TelemetrySessionBuilder(
     private val versionInfo: ApplicationVersionInfoProvider,
-    private val timeSource: TimeSource = ZonedDateTime::now
+    private val timeSource: TimeSource = ZonedDateTime::now,
 ) : TelemetryCaptor {
     private val sessionId: UUID = UUID.randomUUID()
     private val sessionStartTime: ZonedDateTime = nowInUTC()
@@ -64,7 +64,7 @@ class TelemetrySessionBuilder(
             applicationVersion,
             attributesBuilder.build(),
             events.toList(),
-            spans.toList()
+            spans.toList(),
         )
     }
 

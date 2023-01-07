@@ -16,7 +16,7 @@
 
 @file:UseSerializers(
     UUIDSerializer::class,
-    ZonedDateTimeSerializer::class
+    ZonedDateTimeSerializer::class,
 )
 
 package batect.telemetry
@@ -39,7 +39,7 @@ data class TelemetrySession(
     val applicationVersion: String,
     val attributes: Map<String, JsonPrimitive>,
     val events: List<TelemetryEvent>,
-    val spans: List<TelemetrySpan>
+    val spans: List<TelemetrySpan>,
 ) {
     init {
         if (sessionId.version() != 4) {

@@ -41,7 +41,7 @@ object CommandLineOptionsSpec : Spek({
             val options = CommandLineOptions(
                 taskName = "some-task",
                 configVariablesSourceFile = Paths.get("somefile.yml"),
-                configVariableOverrides = mapOf("a" to "b")
+                configVariableOverrides = mapOf("a" to "b"),
             )
 
             on("extending an existing Kodein configuration") {

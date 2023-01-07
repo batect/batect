@@ -45,7 +45,7 @@ tasks.register<Exec>("shellcheck") {
         "docker", "run", "--rm", "-t",
         "-v", "$projectDir:/code",
         "-w", "/code",
-        "koalaman/shellcheck:$shellcheckVersion", templateFilePath
+        "koalaman/shellcheck:$shellcheckVersion", templateFilePath,
     )
 
     doLast {
@@ -80,7 +80,7 @@ tasks.register<Exec>("buildTestEnvironmentImage") {
         "build",
         "-t",
         testEnvironmentImageName,
-        imageDirectory.path
+        imageDirectory.path,
     )
 
     doLast {
@@ -133,7 +133,7 @@ tasks.register<Exec>("test") {
         "docker", "run", "--rm", "-t",
         "-v", "$projectDir:/code",
         "-w", "/code",
-        testEnvironmentImageName, "./test/tests.py"
+        testEnvironmentImageName, "./test/tests.py",
     )
 
     doLast {

@@ -34,7 +34,7 @@ class RunContainerStepRunner(
     private val client: DockerClient,
     private val ioStreamingOptions: ContainerIOStreamingOptions,
     private val cancellationContext: CancellationContext,
-    private val logger: Logger
+    private val logger: Logger,
 ) {
     fun run(step: RunContainerStep, eventSink: TaskEventSink) {
         try {
@@ -55,7 +55,7 @@ class RunContainerStepRunner(
                     stdout,
                     stdout,
                     stdin,
-                    startedNotification
+                    startedNotification,
                 )
 
                 eventSink.postEvent(RunningContainerExitedEvent(step.container, exitCode))

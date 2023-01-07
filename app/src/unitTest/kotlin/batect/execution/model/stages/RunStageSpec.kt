@@ -58,7 +58,7 @@ object RunStageSpec : Spek({
 
                 mapOf(
                     "all steps have finished" to false,
-                    "some steps are still running" to true
+                    "some steps are still running" to true,
                 ).forEach { description, stepsStillRunning ->
                     given(description) {
                         it("reports as complete") {

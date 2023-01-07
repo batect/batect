@@ -26,7 +26,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class BuildImageStepRule(
-    @Serializable(with = ContainerNameOnlySerializer::class) val container: Container
+    @Serializable(with = ContainerNameOnlySerializer::class) val container: Container,
 ) : TaskStepRule() {
     override fun evaluate(pastEvents: Set<TaskEvent>): TaskStepRuleEvaluationResult {
         return TaskStepRuleEvaluationResult.Ready(BuildImageStep(container))

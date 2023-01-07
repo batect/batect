@@ -47,7 +47,7 @@ object RunAsCurrentUserWithCacheJourneyTest : Spek({
                     "/home/special-place/cache exists",
                     "/home/special-place/cache/created-file created",
                     "/home/special-place/subdir/cache exists",
-                    "/home/special-place/subdir/cache/created-file created"
+                    "/home/special-place/subdir/cache/created-file created",
                 ).joinToString("\n")
 
                 result.asClue { it.output shouldContain expectedOutput }

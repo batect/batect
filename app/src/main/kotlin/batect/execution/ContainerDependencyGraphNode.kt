@@ -22,7 +22,7 @@ data class ContainerDependencyGraphNode(
     val container: Container,
     val isRootNode: Boolean,
     val dependsOn: Set<ContainerDependencyGraphNode>,
-    val graph: ContainerDependencyGraph
+    val graph: ContainerDependencyGraph,
 ) {
     val dependedOnBy: Set<ContainerDependencyGraphNode> by lazy { graph.allNodes.filter { it.dependsOn.contains(this) }.toSet() }
 

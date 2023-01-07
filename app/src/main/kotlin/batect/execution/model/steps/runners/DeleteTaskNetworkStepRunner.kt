@@ -28,7 +28,7 @@ import kotlinx.coroutines.runBlocking
 
 class DeleteTaskNetworkStepRunner(
     private val client: DockerClient,
-    private val logger: Logger
+    private val logger: Logger,
 ) {
     fun run(step: DeleteTaskNetworkStep, eventSink: TaskEventSink) {
         try {

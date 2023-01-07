@@ -30,7 +30,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class RunContainerStepRule(
     @Serializable(with = ContainerNameOnlySerializer::class) val container: Container,
-    @Serializable(with = ContainerNameSetSerializer::class) val dependencies: Set<Container>
+    @Serializable(with = ContainerNameSetSerializer::class) val dependencies: Set<Container>,
 ) : TaskStepRule() {
     override fun evaluate(pastEvents: Set<TaskEvent>): TaskStepRuleEvaluationResult {
         val dockerContainer = findDockerContainer(pastEvents)

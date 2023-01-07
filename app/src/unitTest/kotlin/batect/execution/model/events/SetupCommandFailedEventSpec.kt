@@ -46,8 +46,8 @@ object SetupCommandFailedEventSpec : Spek({
                         |   "exitCode": 123,
                         |   "output": "Something went wrong"
                         |}
-                        """.trimMargin()
-                    )
+                        """.trimMargin(),
+                    ),
                 )
             }
         }

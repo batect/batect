@@ -40,8 +40,8 @@ object ContainerRemovedEventSpec : Spek({
                         |   "type": "${event::class.qualifiedName}",
                         |   "container": "container-1"
                         |}
-                        """.trimMargin()
-                    )
+                        """.trimMargin(),
+                    ),
                 )
             }
         }

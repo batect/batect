@@ -92,7 +92,7 @@ object RunContainerSetupCommandsStepRunnerSpec : Spek({
                 runAsCurrentUserConfigurationProvider,
                 cancellationContext,
                 ioStreamingOptions,
-                logger
+                logger,
             )
         }
 

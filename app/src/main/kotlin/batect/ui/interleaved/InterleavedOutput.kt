@@ -26,7 +26,7 @@ import kotlin.math.max
 data class InterleavedOutput(
     private val taskName: String,
     private val containers: Set<Container>,
-    private val console: Console
+    private val console: Console,
 ) {
     private val lock = Object()
 

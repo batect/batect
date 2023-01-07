@@ -37,7 +37,7 @@ import java.nio.file.Path
 class ConfigVariablesProvider(
     private val commandLineOverrides: Map<String, String>,
     private val sourceFile: Path?,
-    private val projectPaths: ProjectPaths
+    private val projectPaths: ProjectPaths,
 ) {
     fun build(config: TaskSpecialisedConfiguration): Map<String, String?> {
         val defaults = defaultValues(config)
@@ -46,7 +46,7 @@ class ConfigVariablesProvider(
         validateCommandLineOverrides(config)
 
         val builtIns = mapOf(
-            "batect.project_directory" to projectPaths.projectRootDirectory.toString()
+            "batect.project_directory" to projectPaths.projectRootDirectory.toString(),
         )
 
         return defaults + fromFile + commandLineOverrides + builtIns

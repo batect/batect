@@ -47,7 +47,7 @@ object ImagePullProgressAggregatorSpec : Spek({
             "a 'waiting to pull layer' event" to ImagePullProgressUpdate("Waiting", null, "4c60885e4f94"),
             "an 'image digest' event" to ImagePullProgressUpdate("Digest: sha256:e6b798f4eeb4e6334d195cdeabc18d07dc5158aa88ad5d83670462852b431a71", null, ""),
             "a 'downloaded newer image' event" to ImagePullProgressUpdate("Status: Downloaded newer image for node:10-stretch", null, ""),
-            "an 'image up to date' event" to ImagePullProgressUpdate("Status: Image is up to date for node:10-stretch", null, "")
+            "an 'image up to date' event" to ImagePullProgressUpdate("Status: Image is up to date for node:10-stretch", null, ""),
         ).forEach { (description, raw) ->
             given(description) {
                 on("processing the event") {
@@ -176,7 +176,7 @@ object ImagePullProgressAggregatorSpec : Spek({
                         "verifying checksum" to ImagePullProgressUpdate("Verifying Checksum", null, "b59856e9f0ab"),
                         "download complete" to ImagePullProgressUpdate("Download complete", null, "b59856e9f0ab"),
                         "extracting" to ImagePullProgressUpdate("Extracting", ImagePullProgressDetail(1000, 7000), "b59856e9f0ab"),
-                        "pull complete" to ImagePullProgressUpdate("Pull complete", null, "b59856e9f0ab")
+                        "pull complete" to ImagePullProgressUpdate("Pull complete", null, "b59856e9f0ab"),
                     ).forEach { (eventType, raw) ->
                         on("processing a '$eventType' event for that other layer") {
                             val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }
@@ -459,7 +459,7 @@ object ImagePullProgressAggregatorSpec : Spek({
 
                     mapOf(
                         "download complete" to ImagePullProgressUpdate("done", null, "b59856e9f0ab"),
-                        "extracting" to ImagePullProgressUpdate("extract", ImagePullProgressDetail(0, 0), "b59856e9f0ab")
+                        "extracting" to ImagePullProgressUpdate("extract", ImagePullProgressDetail(0, 0), "b59856e9f0ab"),
                     ).forEach { (eventType, raw) ->
                         on("processing a '$eventType' event for that other layer") {
                             val progressUpdate by runNullableForEachTest { aggregator.processProgressUpdate(raw) }

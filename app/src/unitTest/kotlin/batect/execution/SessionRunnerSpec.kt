@@ -66,7 +66,7 @@ object SessionRunnerSpec : Spek({
 
             given("that task returns a zero exit code") {
                 val containers = setOf(
-                    Container("the-container", imageSourceDoesNotMatter())
+                    Container("the-container", imageSourceDoesNotMatter()),
                 )
 
                 beforeEachTest {
@@ -146,11 +146,11 @@ object SessionRunnerSpec : Spek({
             given("the dependency finishes with an exit code of 0") {
                 val expectedTaskExitCode = 123
                 val mainTaskContainers = setOf(
-                    Container("the-main-container", imageSourceDoesNotMatter())
+                    Container("the-main-container", imageSourceDoesNotMatter()),
                 )
 
                 val prerequisiteContainers = setOf(
-                    Container("the-prerequisite-container", imageSourceDoesNotMatter())
+                    Container("the-prerequisite-container", imageSourceDoesNotMatter()),
                 )
 
                 beforeEachTest {

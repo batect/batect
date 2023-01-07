@@ -38,7 +38,7 @@ object TaskUsingLogDriverJourneyTest : Spek({
                 // On versions prior to 20.10, retrieving output from a container using a log driver fails.
                 result.output.lines() shouldContainAnyOf setOf(
                     "Error attaching: configured logging driver does not support reading",
-                    "This is some output from the task"
+                    "This is some output from the task",
                 )
             }
 

@@ -28,7 +28,7 @@ class SessionRunner(
     private val taskRunner: TaskRunner,
     private val console: Console,
     private val imageTaggingValidator: ImageTaggingValidator,
-    private val telemetryCaptor: TelemetryCaptor
+    private val telemetryCaptor: TelemetryCaptor,
 ) {
     fun runTaskAndPrerequisites(taskName: String): Int {
         val tasks = taskExecutionOrderResolver.resolveExecutionOrder(taskName)

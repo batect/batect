@@ -61,8 +61,8 @@ object ProcessRunnerSpec : Spek({
                         hasMessage(
                             withSeverity(Severity.Debug) and
                                 withLogMessage("Starting process.") and
-                                withAdditionalData("command", command)
-                        )
+                                withAdditionalData("command", command),
+                        ),
                     )
                 }
 
@@ -73,8 +73,8 @@ object ProcessRunnerSpec : Spek({
                             withSeverity(Severity.Debug) and
                                 withLogMessage("Process exited.") and
                                 withAdditionalData("command", command) and
-                                withAdditionalData("exitCode", 201)
-                        )
+                                withAdditionalData("exitCode", 201),
+                        ),
                     )
                 }
             }
@@ -103,8 +103,8 @@ object ProcessRunnerSpec : Spek({
                         hasMessage(
                             withSeverity(Severity.Debug) and
                                 withLogMessage("Starting process.") and
-                                withAdditionalData("command", command)
-                        )
+                                withAdditionalData("command", command),
+                        ),
                     )
                 }
 
@@ -115,8 +115,8 @@ object ProcessRunnerSpec : Spek({
                             withSeverity(Severity.Debug) and
                                 withLogMessage("Process exited.") and
                                 withAdditionalData("command", command) and
-                                withAdditionalData("exitCode", 201)
-                        )
+                                withAdditionalData("exitCode", 201),
+                        ),
                     )
                 }
             }
@@ -151,8 +151,8 @@ object ProcessRunnerSpec : Spek({
                                 hasMessage(
                                     withSeverity(Severity.Debug) and
                                         withLogMessage("Starting process.") and
-                                        withAdditionalData("command", command)
-                                )
+                                        withAdditionalData("command", command),
+                                ),
                             )
                         }
 
@@ -163,8 +163,8 @@ object ProcessRunnerSpec : Spek({
                                     withSeverity(Severity.Debug) and
                                         withLogMessage("Process exited.") and
                                         withAdditionalData("command", command) and
-                                        withAdditionalData("exitCode", 201)
-                                )
+                                        withAdditionalData("exitCode", 201),
+                                ),
                             )
                         }
                     }

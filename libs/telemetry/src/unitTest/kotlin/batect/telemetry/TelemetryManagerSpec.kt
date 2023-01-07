@@ -135,8 +135,8 @@ object TelemetryManagerSpec : Spek({
                                 withLogMessage("Immediate upload of telemetry session failed, will be queued to upload in the background next time.")
                                     and withSeverity(Severity.Error)
                                     and withAdditionalData("sessionPath", sessionPath.toString())
-                                    and withException(exception)
-                            )
+                                    and withException(exception),
+                            ),
                         )
                     }
                 }

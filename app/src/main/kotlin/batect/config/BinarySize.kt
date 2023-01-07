@@ -27,7 +27,7 @@ import kotlinx.serialization.encoding.Encoder
 
 @Serializable(with = BinarySize.Companion::class)
 data class BinarySize(
-    val bytes: Long
+    val bytes: Long,
 ) {
     companion object : KSerializer<BinarySize> {
         fun of(count: Long, unit: BinaryUnit) = BinarySize(count * unit.bytes)
@@ -66,5 +66,5 @@ enum class BinaryUnit(val bytes: Long) {
     Byte(1),
     Kilobyte(1024),
     Megabyte(1024 * Kilobyte.bytes),
-    Gigabyte(1024 * Megabyte.bytes)
+    Gigabyte(1024 * Megabyte.bytes),
 }

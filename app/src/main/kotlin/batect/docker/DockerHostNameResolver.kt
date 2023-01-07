@@ -25,7 +25,7 @@ import kotlinx.coroutines.runBlocking
 
 class DockerHostNameResolver(
     private val systemInfo: SystemInfo,
-    private val dockerClient: DockerClient
+    private val dockerClient: DockerClient,
 ) {
     private val dockerVersionInfoRetrievalResult by lazy { runBlocking { dockerClient.getDaemonVersionInformation() } }
 

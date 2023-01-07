@@ -78,14 +78,14 @@ object CommandLineOptionsParserSpec : Spek({
         fun parse(
             args: List<String>,
             environmentVariables: HostEnvironmentVariables = HostEnvironmentVariables(),
-            activeDockerContextResolver: ActiveDockerContextResolver = { DockerCLIContext.default }
+            activeDockerContextResolver: ActiveDockerContextResolver = { DockerCLIContext.default },
         ): CommandLineOptionsParsingResult {
             val parser = CommandLineOptionsParser(
                 pathResolverFactory,
                 EnvironmentVariableDefaultValueProviderFactory(environmentVariables),
                 dockerHttpConfigDefaults,
                 systemInfo,
-                activeDockerContextResolver
+                activeDockerContextResolver,
             )
 
             return parser.parse(args)
@@ -94,7 +94,7 @@ object CommandLineOptionsParserSpec : Spek({
         fun parseAndExpectSuccess(
             args: List<String>,
             environmentVariables: HostEnvironmentVariables = HostEnvironmentVariables(),
-            activeDockerContextResolver: ActiveDockerContextResolver = { DockerCLIContext.default }
+            activeDockerContextResolver: ActiveDockerContextResolver = { DockerCLIContext.default },
         ): CommandLineOptions {
             val result = parse(args, environmentVariables, activeDockerContextResolver)
             assertThat(result, isA<CommandLineOptionsParsingResult.Succeeded>())
@@ -109,8 +109,8 @@ object CommandLineOptionsParserSpec : Spek({
                 configDirectory = fileSystem.getPath("home-dir", ".docker"),
                 tlsCACertificatePath = fileSystem.getPath("home-dir", ".docker", "ca.pem"),
                 tlsCertificatePath = fileSystem.getPath("home-dir", ".docker", "cert.pem"),
-                tlsKeyPath = fileSystem.getPath("home-dir", ".docker", "key.pem")
-            )
+                tlsKeyPath = fileSystem.getPath("home-dir", ".docker", "key.pem"),
+            ),
         )
 
         given("no arguments") {
@@ -123,9 +123,9 @@ object CommandLineOptionsParserSpec : Spek({
                         equalTo(
                             CommandLineOptionsParsingResult.Failed(
                                 "No task name provided. Re-run Batect and provide a task name, for example, './batect build'.\n" +
-                                    "Run './batect --list-tasks' for a list of all tasks in this project, or './batect --help' for help."
-                            )
-                        )
+                                    "Run './batect --list-tasks' for a list of all tasks in this project, or './batect --help' for help.",
+                            ),
+                        ),
                     )
                 }
             }
@@ -140,9 +140,9 @@ object CommandLineOptionsParserSpec : Spek({
                         result,
                         equalTo(
                             defaultCommandLineOptions.copy(
-                                taskName = "some-task"
-                            )
-                        )
+                                taskName = "some-task",
+                            ),
+                        ),
                     )
                 }
             }
@@ -159,9 +159,9 @@ object CommandLineOptionsParserSpec : Spek({
                             CommandLineOptionsParsingResult.Failed(
                                 "Too many arguments provided. The task name must be the last argument, with all Batect options appearing before the task name.\n" +
                                     "'some-task' was selected as the task name, and the first extra argument is 'some-extra-arg'.\n" +
-                                    "To pass additional arguments to the task command, separate them from the task name with '--', for example, './batect my-task -- --log-level debug'."
-                            )
-                        )
+                                    "To pass additional arguments to the task command, separate them from the task name with '--', for example, './batect my-task -- --log-level debug'.",
+                            ),
+                        ),
                     )
                 }
             }
@@ -177,9 +177,9 @@ object CommandLineOptionsParserSpec : Spek({
                         equalTo(
                             defaultCommandLineOptions.copy(
                                 taskName = "some-task",
-                                additionalTaskCommandArguments = listOf("some-extra-arg")
-                            )
-                        )
+                                additionalTaskCommandArguments = listOf("some-extra-arg"),
+                            ),
+                        ),
                     )
                 }
             }
@@ -195,9 +195,9 @@ object CommandLineOptionsParserSpec : Spek({
                         equalTo(
                             defaultCommandLineOptions.copy(
                                 disableColorOutput = true,
-                                taskName = "some-task"
-                            )
-                        )
+                                taskName = "some-task",
+                            ),
+                        ),
                     )
                 }
             }
@@ -214,9 +214,9 @@ object CommandLineOptionsParserSpec : Spek({
                             CommandLineOptionsParsingResult.Failed(
                                 "Too many arguments provided. The task name must be the last argument, with all Batect options appearing before the task name.\n" +
                                     "'some-task' was selected as the task name, and the first extra argument is 'some-extra-arg'.\n" +
-                                    "To pass additional arguments to the task command, separate them from the task name with '--', for example, './batect my-task -- --log-level debug'."
-                            )
-                        )
+                                    "To pass additional arguments to the task command, separate them from the task name with '--', for example, './batect my-task -- --log-level debug'.",
+                            ),
+                        ),
                     )
                 }
             }
@@ -282,53 +282,53 @@ object CommandLineOptionsParserSpec : Spek({
                 docker = defaultCommandLineOptions.docker.copy(
                     tlsCACertificatePath = fileSystem.getPath("/resolved/some-cert-dir/ca.pem"),
                     tlsCertificatePath = fileSystem.getPath("/resolved/some-cert-dir/cert.pem"),
-                    tlsKeyPath = fileSystem.getPath("/resolved/some-cert-dir/key.pem")
+                    tlsKeyPath = fileSystem.getPath("/resolved/some-cert-dir/key.pem"),
                 ),
-                taskName = "some-task"
+                taskName = "some-task",
             ),
             listOf("--docker-config=some-config-dir", "some-task") to defaultCommandLineOptions.copy(
                 docker = defaultCommandLineOptions.docker.copy(
                     configDirectory = fileSystem.getPath("/resolved/some-config-dir"),
                     tlsCACertificatePath = fileSystem.getPath("/resolved/some-config-dir/ca.pem"),
                     tlsCertificatePath = fileSystem.getPath("/resolved/some-config-dir/cert.pem"),
-                    tlsKeyPath = fileSystem.getPath("/resolved/some-config-dir/key.pem")
+                    tlsKeyPath = fileSystem.getPath("/resolved/some-config-dir/key.pem"),
                 ),
-                taskName = "some-task"
+                taskName = "some-task",
             ),
             listOf("--docker-cert-path=some-cert-dir", "--docker-config=some-config-dir", "some-task") to defaultCommandLineOptions.copy(
                 docker = defaultCommandLineOptions.docker.copy(
                     configDirectory = fileSystem.getPath("/resolved/some-config-dir"),
                     tlsCACertificatePath = fileSystem.getPath("/resolved/some-cert-dir/ca.pem"),
                     tlsCertificatePath = fileSystem.getPath("/resolved/some-cert-dir/cert.pem"),
-                    tlsKeyPath = fileSystem.getPath("/resolved/some-cert-dir/key.pem")
+                    tlsKeyPath = fileSystem.getPath("/resolved/some-cert-dir/key.pem"),
                 ),
-                taskName = "some-task"
+                taskName = "some-task",
             ),
             listOf("--docker-cert-path=some-cert-dir", "--docker-tls-ca-cert=some-ca-cert", "--docker-tls-cert=some-cert", "--docker-tls-key=some-key", "some-task") to defaultCommandLineOptions.copy(
                 docker = defaultCommandLineOptions.docker.copy(
                     tlsCACertificatePath = fileSystem.getPath("/resolved/some-ca-cert"),
                     tlsCertificatePath = fileSystem.getPath("/resolved/some-cert"),
-                    tlsKeyPath = fileSystem.getPath("/resolved/some-key")
+                    tlsKeyPath = fileSystem.getPath("/resolved/some-key"),
                 ),
-                taskName = "some-task"
+                taskName = "some-task",
             ),
             listOf("--docker-config=some-config-dir", "--docker-tls-ca-cert=some-ca-cert", "--docker-tls-cert=some-cert", "--docker-tls-key=some-key", "some-task") to defaultCommandLineOptions.copy(
                 docker = defaultCommandLineOptions.docker.copy(
                     configDirectory = fileSystem.getPath("/resolved/some-config-dir"),
                     tlsCACertificatePath = fileSystem.getPath("/resolved/some-ca-cert"),
                     tlsCertificatePath = fileSystem.getPath("/resolved/some-cert"),
-                    tlsKeyPath = fileSystem.getPath("/resolved/some-key")
+                    tlsKeyPath = fileSystem.getPath("/resolved/some-key"),
                 ),
-                taskName = "some-task"
+                taskName = "some-task",
             ),
             listOf("--docker-cert-path=some-cert-dir", "--docker-config=some-config-dir", "--docker-tls-ca-cert=some-ca-cert", "--docker-tls-cert=some-cert", "--docker-tls-key=some-key", "some-task") to defaultCommandLineOptions.copy(
                 docker = defaultCommandLineOptions.docker.copy(
                     configDirectory = fileSystem.getPath("/resolved/some-config-dir"),
                     tlsCACertificatePath = fileSystem.getPath("/resolved/some-ca-cert"),
                     tlsCertificatePath = fileSystem.getPath("/resolved/some-cert"),
-                    tlsKeyPath = fileSystem.getPath("/resolved/some-key")
+                    tlsKeyPath = fileSystem.getPath("/resolved/some-key"),
                 ),
-                taskName = "some-task"
+                taskName = "some-task",
             ),
             listOf("--cache-type=volume", "some-task") to defaultCommandLineOptions.copy(cacheType = CacheType.Volume, taskName = "some-task"),
             listOf("--cache-type=directory", "some-task") to defaultCommandLineOptions.copy(cacheType = CacheType.Directory, taskName = "some-task"),
@@ -346,7 +346,7 @@ object CommandLineOptionsParserSpec : Spek({
             listOf("--tag-image", "some-container=some-container:abc123", "--tag-image", "some-container=some-other-container:abc123", "some-task") to defaultCommandLineOptions.copy(imageTags = mapOf("some-container" to setOf("some-container:abc123", "some-other-container:abc123")), taskName = "some-task"),
             listOf("--tag-image", "some-container=some-container:abc123", "--tag-image", "some-other-container=some-other-container:abc123", "some-task") to defaultCommandLineOptions.copy(imageTags = mapOf("some-container" to setOf("some-container:abc123"), "some-other-container" to setOf("some-other-container:abc123")), taskName = "some-task"),
             listOf("--tag-image", "some-container=some-container:abc123", "--override-image", "some-other-container=some-other-container:abc123", "some-task") to defaultCommandLineOptions.copy(imageTags = mapOf("some-container" to setOf("some-container:abc123")), imageOverrides = mapOf("some-other-container" to "some-other-container:abc123"), taskName = "some-task"),
-            listOf("--clean-cache=some-cache-name") to defaultCommandLineOptions.copy(cleanCaches = setOf("some-cache-name"))
+            listOf("--clean-cache=some-cache-name") to defaultCommandLineOptions.copy(cleanCaches = setOf("some-cache-name")),
         ).forEach { (args, expectedResult) ->
             given("the arguments $args") {
                 on("parsing the command line") {
@@ -486,7 +486,7 @@ object CommandLineOptionsParserSpec : Spek({
                 configDirectoryDescription: String,
                 expectedConfigDirectory: Path,
                 certificatesDirectoryDescription: String,
-                defaultCertificatesDirectory: Path
+                defaultCertificatesDirectory: Path,
             ) {
                 val expectedTlsCACertificatePath = defaultCertificatesDirectory.resolve("ca.pem")
                 val expectedTLSCertificatePath = defaultCertificatesDirectory.resolve("cert.pem")
@@ -502,7 +502,7 @@ object CommandLineOptionsParserSpec : Spek({
                             hasConfigDirectory(expectedConfigDirectory)
                                 and hasTlsCACertificatePath(expectedTlsCACertificatePath)
                                 and hasTLSCertificatePath(expectedTLSCertificatePath)
-                                and hasTLSKeyPath(expectedTLSKey)
+                                and hasTLSKeyPath(expectedTLSKey),
                         )
                     }
                 }
@@ -517,7 +517,7 @@ object CommandLineOptionsParserSpec : Spek({
                             hasConfigDirectory(expectedConfigDirectory)
                                 and hasTlsCACertificatePath(fileSystem.getPath("/resolved/some-tls-ca-cert"))
                                 and hasTLSCertificatePath(expectedTLSCertificatePath)
-                                and hasTLSKeyPath(expectedTLSKey)
+                                and hasTLSKeyPath(expectedTLSKey),
                         )
                     }
                 }
@@ -532,7 +532,7 @@ object CommandLineOptionsParserSpec : Spek({
                             hasConfigDirectory(expectedConfigDirectory)
                                 and hasTlsCACertificatePath(expectedTlsCACertificatePath)
                                 and hasTLSCertificatePath(fileSystem.getPath("/resolved/some-tls-cert"))
-                                and hasTLSKeyPath(expectedTLSKey)
+                                and hasTLSKeyPath(expectedTLSKey),
                         )
                     }
                 }
@@ -547,7 +547,7 @@ object CommandLineOptionsParserSpec : Spek({
                             hasConfigDirectory(expectedConfigDirectory)
                                 and hasTlsCACertificatePath(expectedTlsCACertificatePath)
                                 and hasTLSCertificatePath(expectedTLSCertificatePath)
-                                and hasTLSKeyPath(fileSystem.getPath("/resolved/some-tls-key"))
+                                and hasTLSKeyPath(fileSystem.getPath("/resolved/some-tls-key")),
                         )
                     }
                 }
@@ -573,7 +573,7 @@ object CommandLineOptionsParserSpec : Spek({
                                 configDirectoryDescription,
                                 expectedConfigDirectory,
                                 configDirectoryDescription,
-                                expectedConfigDirectory
+                                expectedConfigDirectory,
                             )
                         }
 
@@ -586,7 +586,7 @@ object CommandLineOptionsParserSpec : Spek({
                                 configDirectoryDescription,
                                 expectedConfigDirectory,
                                 "the certificates directory provided on the command line",
-                                fileSystem.getPath("/resolved/some-cert-dir")
+                                fileSystem.getPath("/resolved/some-cert-dir"),
                             )
                         }
                     }
@@ -594,7 +594,7 @@ object CommandLineOptionsParserSpec : Spek({
                     given("the DOCKER_CERT_PATH environment variable is set") {
                         val environmentVariables = HostEnvironmentVariables(
                             configDirectoryEnvironmentVariable +
-                                ("DOCKER_CERT_PATH" to "some-environment-cert-dir")
+                                ("DOCKER_CERT_PATH" to "some-environment-cert-dir"),
                         )
 
                         given("the --docker-cert-path argument is not provided") {
@@ -606,7 +606,7 @@ object CommandLineOptionsParserSpec : Spek({
                                 configDirectoryDescription,
                                 expectedConfigDirectory,
                                 "the certificates directory configured in the DOCKER_CERT_PATH environment variable",
-                                fileSystem.getPath("/resolved/some-environment-cert-dir")
+                                fileSystem.getPath("/resolved/some-environment-cert-dir"),
                             )
                         }
 
@@ -619,7 +619,7 @@ object CommandLineOptionsParserSpec : Spek({
                                 configDirectoryDescription,
                                 expectedConfigDirectory,
                                 "the certificates directory provided on the command line",
-                                fileSystem.getPath("/resolved/some-cert-dir")
+                                fileSystem.getPath("/resolved/some-cert-dir"),
                             )
                         }
                     }
@@ -642,7 +642,7 @@ object CommandLineOptionsParserSpec : Spek({
                                 configDirectoryDescription,
                                 expectedConfigDirectory,
                                 configDirectoryDescription,
-                                expectedConfigDirectory
+                                expectedConfigDirectory,
                             )
                         }
 
@@ -655,7 +655,7 @@ object CommandLineOptionsParserSpec : Spek({
                                 configDirectoryDescription,
                                 expectedConfigDirectory,
                                 "the certificates directory provided on the command line",
-                                fileSystem.getPath("/resolved/some-cert-dir")
+                                fileSystem.getPath("/resolved/some-cert-dir"),
                             )
                         }
                     }
@@ -663,7 +663,7 @@ object CommandLineOptionsParserSpec : Spek({
                     given("the DOCKER_CERT_PATH environment variable is set") {
                         val environmentVariables = HostEnvironmentVariables(
                             configDirectoryEnvironmentVariable +
-                                ("DOCKER_CERT_PATH" to "some-environment-cert-dir")
+                                ("DOCKER_CERT_PATH" to "some-environment-cert-dir"),
                         )
 
                         given("the --docker-cert-path argument is not provided") {
@@ -675,7 +675,7 @@ object CommandLineOptionsParserSpec : Spek({
                                 configDirectoryDescription,
                                 expectedConfigDirectory,
                                 "the certificates directory configured in the DOCKER_CERT_PATH environment variable",
-                                fileSystem.getPath("/resolved/some-environment-cert-dir")
+                                fileSystem.getPath("/resolved/some-environment-cert-dir"),
                             )
                         }
 
@@ -688,7 +688,7 @@ object CommandLineOptionsParserSpec : Spek({
                                 configDirectoryDescription,
                                 expectedConfigDirectory,
                                 "the certificates directory provided on the command line",
-                                fileSystem.getPath("/resolved/some-cert-dir")
+                                fileSystem.getPath("/resolved/some-cert-dir"),
                             )
                         }
                     }
@@ -715,7 +715,7 @@ object CommandLineOptionsParserSpec : Spek({
                                 configDirectoryDescription,
                                 expectedConfigDirectory,
                                 configDirectoryDescription,
-                                expectedConfigDirectory
+                                expectedConfigDirectory,
                             )
                         }
 
@@ -728,7 +728,7 @@ object CommandLineOptionsParserSpec : Spek({
                                 configDirectoryDescription,
                                 expectedConfigDirectory,
                                 "the certificates directory provided on the command line",
-                                fileSystem.getPath("/resolved/some-cert-dir")
+                                fileSystem.getPath("/resolved/some-cert-dir"),
                             )
                         }
                     }
@@ -736,7 +736,7 @@ object CommandLineOptionsParserSpec : Spek({
                     given("the DOCKER_CERT_PATH environment variable is set") {
                         val environmentVariables = HostEnvironmentVariables(
                             configDirectoryEnvironmentVariable +
-                                ("DOCKER_CERT_PATH" to "some-environment-cert-dir")
+                                ("DOCKER_CERT_PATH" to "some-environment-cert-dir"),
                         )
 
                         given("the --docker-cert-path argument is not provided") {
@@ -748,7 +748,7 @@ object CommandLineOptionsParserSpec : Spek({
                                 configDirectoryDescription,
                                 expectedConfigDirectory,
                                 "the certificates directory configured in the DOCKER_CERT_PATH environment variable",
-                                fileSystem.getPath("/resolved/some-environment-cert-dir")
+                                fileSystem.getPath("/resolved/some-environment-cert-dir"),
                             )
                         }
 
@@ -761,7 +761,7 @@ object CommandLineOptionsParserSpec : Spek({
                                 configDirectoryDescription,
                                 expectedConfigDirectory,
                                 "the certificates directory provided on the command line",
-                                fileSystem.getPath("/resolved/some-cert-dir")
+                                fileSystem.getPath("/resolved/some-cert-dir"),
                             )
                         }
                     }
@@ -784,7 +784,7 @@ object CommandLineOptionsParserSpec : Spek({
                                 configDirectoryDescription,
                                 expectedConfigDirectory,
                                 configDirectoryDescription,
-                                expectedConfigDirectory
+                                expectedConfigDirectory,
                             )
                         }
 
@@ -797,7 +797,7 @@ object CommandLineOptionsParserSpec : Spek({
                                 configDirectoryDescription,
                                 expectedConfigDirectory,
                                 "the certificates directory provided on the command line",
-                                fileSystem.getPath("/resolved/some-cert-dir")
+                                fileSystem.getPath("/resolved/some-cert-dir"),
                             )
                         }
                     }
@@ -805,7 +805,7 @@ object CommandLineOptionsParserSpec : Spek({
                     given("the DOCKER_CERT_PATH environment variable is set") {
                         val environmentVariables = HostEnvironmentVariables(
                             configDirectoryEnvironmentVariable +
-                                ("DOCKER_CERT_PATH" to "some-environment-cert-dir")
+                                ("DOCKER_CERT_PATH" to "some-environment-cert-dir"),
                         )
 
                         given("the --docker-cert-path argument is not provided") {
@@ -817,7 +817,7 @@ object CommandLineOptionsParserSpec : Spek({
                                 configDirectoryDescription,
                                 expectedConfigDirectory,
                                 "the certificates directory configured in the DOCKER_CERT_PATH environment variable",
-                                fileSystem.getPath("/resolved/some-environment-cert-dir")
+                                fileSystem.getPath("/resolved/some-environment-cert-dir"),
                             )
                         }
 
@@ -830,7 +830,7 @@ object CommandLineOptionsParserSpec : Spek({
                                 configDirectoryDescription,
                                 expectedConfigDirectory,
                                 "the certificates directory provided on the command line",
-                                fileSystem.getPath("/resolved/some-cert-dir")
+                                fileSystem.getPath("/resolved/some-cert-dir"),
                             )
                         }
                     }

@@ -129,7 +129,7 @@ object PortMappingSpec : Spek({
                     "1:2/",
                     ":2/thing",
                     "1:/thing",
-                    "1/2:thing"
+                    "1/2:thing",
                 ).map {
                     on("parsing the invalid port mapping definition '$it'") {
                         it("fails with an appropriate error message") {
@@ -145,7 +145,7 @@ object PortMappingSpec : Spek({
                         """
                             local: 123
                             container: 456
-                        """.trimIndent()
+                        """.trimIndent(),
                     )
 
                     it("returns the provided local port") {
@@ -167,7 +167,7 @@ object PortMappingSpec : Spek({
                             local: 123
                             container: 456
                             protocol: abc
-                        """.trimIndent()
+                        """.trimIndent(),
                     )
 
                     it("returns the provided local port") {
@@ -188,7 +188,7 @@ object PortMappingSpec : Spek({
                         """
                             local: 123-126
                             container: 456-459
-                        """.trimIndent()
+                        """.trimIndent(),
                     )
 
                     it("returns the provided local ports") {
@@ -210,7 +210,7 @@ object PortMappingSpec : Spek({
                             local: 123-126
                             container: 456-459
                             protocol: abc
-                        """.trimIndent()
+                        """.trimIndent(),
                     )
 
                     it("returns the provided local ports") {
@@ -239,8 +239,8 @@ object PortMappingSpec : Spek({
                                 withMessage("Port range '0' is invalid. Ports must be positive integers.")
                                     and withLineNumber(1)
                                     and withColumn(8)
-                                    and withPath("local")
-                            )
+                                    and withPath("local"),
+                            ),
                         )
                     }
                 }
@@ -258,8 +258,8 @@ object PortMappingSpec : Spek({
                                 withMessage("Port range '0' is invalid. Ports must be positive integers.")
                                     and withLineNumber(2)
                                     and withColumn(12)
-                                    and withPath("container")
-                            )
+                                    and withPath("container"),
+                            ),
                         )
                     }
                 }
@@ -301,8 +301,8 @@ object PortMappingSpec : Spek({
                     assertThat(
                         { fromYaml(yaml) },
                         throws(
-                            withMessage("Port mapping definition is invalid. It must either be an object or a literal in the form 'local:container', 'local:container/protocol', 'from-to:from-to' or 'from-to:from-to/protocol'.") and withLineNumber(1) and withColumn(1) and withPath("<root>")
-                        )
+                            withMessage("Port mapping definition is invalid. It must either be an object or a literal in the form 'local:container', 'local:container/protocol', 'from-to:from-to' or 'from-to:from-to/protocol'.") and withLineNumber(1) and withColumn(1) and withPath("<root>"),
+                        ),
                     )
                 }
             }

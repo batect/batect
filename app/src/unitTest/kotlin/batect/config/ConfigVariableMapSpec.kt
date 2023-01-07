@@ -40,7 +40,7 @@ object ConfigVariableMapSpec : Spek({
                 "a.a",
                 "a-a",
                 "a1",
-                "a_a"
+                "a_a",
             ).forEach { name ->
                 given("the valid name '$name'") {
                     it("does not throw an exception") {
@@ -65,7 +65,7 @@ object ConfigVariableMapSpec : Spek({
                 "-a",
                 "1a",
                 "_a",
-                "a\\a"
+                "a\\a",
             ).forEach { name ->
                 given("the invalid name '$name'") {
                     it("throws an appropriate exception") {
@@ -75,8 +75,8 @@ object ConfigVariableMapSpec : Spek({
                                 withMessage("Invalid config variable name '$name'. Config variable names must start with a letter, contain only letters, digits, dashes, periods and underscores, and must not start with 'batect'.")
                                     and withLineNumber(2)
                                     and withColumn(3)
-                                    and withPath("[0]")
-                            )
+                                    and withPath("[0]"),
+                            ),
                         )
                     }
                 }

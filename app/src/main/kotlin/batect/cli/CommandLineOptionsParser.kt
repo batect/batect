@@ -40,7 +40,7 @@ class CommandLineOptionsParser(
     environmentVariableDefaultValueProviderFactory: EnvironmentVariableDefaultValueProviderFactory,
     dockerHttpConfigDefaults: DockerHttpConfigDefaults,
     systemInfo: SystemInfo,
-    private val activeDockerContextResolver: ActiveDockerContextResolver = DockerCLIContext.Companion::getSelectedCLIContext
+    private val activeDockerContextResolver: ActiveDockerContextResolver = DockerCLIContext.Companion::getSelectedCLIContext,
 ) : OptionParserContainer {
     override val optionParser: OptionParser = OptionParser()
 
@@ -86,7 +86,7 @@ class CommandLineOptionsParser(
         "The configuration file to use.",
         Paths.get("batect.yml"),
         ValueConverters.pathToFile(pathResolverFactory, mustExist = true),
-        'f'
+        'f',
     )
 
     private val configVariablesSourceFileNameOption = valueOption(
@@ -94,7 +94,7 @@ class CommandLineOptionsParser(
         "config-vars-file",
         "YAML file containing values for config variables. Values in file take precedence over default values.",
         FileDefaultValueProvider("batect.local.yml", pathResolverFactory),
-        ValueConverters.pathToFile(pathResolverFactory, mustExist = true)
+        ValueConverters.pathToFile(pathResolverFactory, mustExist = true),
     )
 
     private val configVariablesSourceFileName: Path? by configVariablesSourceFileNameOption
@@ -102,28 +102,28 @@ class CommandLineOptionsParser(
     private val configVariableOverrides: Map<String, String> by singleValueMapOption(
         executionOptionsGroup,
         configVariableOptionName,
-        "Set a value for a config variable. Takes precedence over default values and values in file provided to ${configVariablesSourceFileNameOption.longOption}."
+        "Set a value for a config variable. Takes precedence over default values and values in file provided to ${configVariablesSourceFileNameOption.longOption}.",
     )
 
     private val imageOverrides: Map<String, String> by singleValueMapOption(
         executionOptionsGroup,
         "override-image",
         "Override the image used by a container.",
-        "<container>=<image>"
+        "<container>=<image>",
     )
 
     private val imageTags: Map<String, Set<String>> by multiValueMapOption(
         executionOptionsGroup,
         imageTagsOptionName,
         "Tag the image built by a container during task execution.",
-        "<container>=<image>"
+        "<container>=<image>",
     )
 
     private val logFileName: Path? by valueOption(
         helpOptionsGroup,
         "log-file",
         "Write internal Batect logs to file.",
-        ValueConverters.pathToFile(pathResolverFactory)
+        ValueConverters.pathToFile(pathResolverFactory),
     )
 
     private val requestedOutputStyle: OutputStyle? by valueOption<OutputStyle?, OutputStyle>(
@@ -132,7 +132,7 @@ class CommandLineOptionsParser(
         "Force a particular style of output from Batect. Does not affect task command output. Valid values are: fancy (default value if your console supports this), simple (no updating text), all (interleaved output from all containers) or quiet (only error messages).",
         null,
         ValueConverters.enum(),
-        'o'
+        'o',
     )
 
     private val disableCleanupAfterFailure: Boolean by flagOption(executionOptionsGroup, disableCleanupAfterFailureFlagName, "If an error occurs before any task can start, leave all containers created for that task running so that the issue can be investigated.")
@@ -145,14 +145,14 @@ class CommandLineOptionsParser(
         "cache-type",
         "Storage mechanism to use for caches. Valid values are: 'volume' (use Docker volumes) or 'directory' (use directories mounted from the host). Ignored for Windows containers (directory mounts are always used).",
         environmentVariableDefaultValueProviderFactory.create("BATECT_CACHE_TYPE", CacheType.Volume, CacheType.Volume.name.lowercase(), ValueConverters.enum()),
-        ValueConverters.enum()
+        ValueConverters.enum(),
     )
 
     val dockerHostOption = valueOption(
         dockerConnectionOptionsGroup,
         "docker-host",
         "Docker host to use, in the format 'unix:///var/run/docker.sock', 'npipe:////./pipe/docker_engine' or 'tcp://1.2.3.4:5678'.",
-        environmentVariableDefaultValueProviderFactory.create("DOCKER_HOST", dockerHttpConfigDefaults.defaultDockerHost, ValueConverters.string)
+        environmentVariableDefaultValueProviderFactory.create("DOCKER_HOST", dockerHttpConfigDefaults.defaultDockerHost, ValueConverters.string),
     )
 
     private val dockerHost: String by dockerHostOption
@@ -162,7 +162,7 @@ class CommandLineOptionsParser(
         "docker-context",
         "Docker CLI context to use.",
         environmentVariableDefaultValueProviderFactory.create("DOCKER_CONTEXT", null, "the active Docker context", ValueConverters.string),
-        ValueConverters.string
+        ValueConverters.string,
     )
 
     private val dockerContext: String? by dockerContextOption
@@ -170,7 +170,7 @@ class CommandLineOptionsParser(
     private val dockerUseTLSOption = flagOption(
         dockerConnectionOptionsGroup,
         "docker-tls",
-        "Use TLS when communicating with the Docker host, but don't verify the certificate presented by the Docker host."
+        "Use TLS when communicating with the Docker host, but don't verify the certificate presented by the Docker host.",
     )
 
     private val dockerUseTLS: Boolean by dockerUseTLSOption
@@ -179,7 +179,7 @@ class CommandLineOptionsParser(
         dockerConnectionOptionsGroup,
         "docker-tls-verify",
         "Use TLS when communicating with the Docker host and verify the certificate presented by the Docker host. Implies ${dockerUseTLSOption.longOption}.",
-        environmentVariableDefaultValueProviderFactory.create("DOCKER_TLS_VERIFY", false, ValueConverters.boolean)
+        environmentVariableDefaultValueProviderFactory.create("DOCKER_TLS_VERIFY", false, ValueConverters.boolean),
     )
 
     private val dockerVerifyTLS: Boolean by dockerVerifyTLSOption
@@ -191,7 +191,7 @@ class CommandLineOptionsParser(
         "docker-config",
         "Path to directory containing Docker client configuration files.",
         environmentVariableDefaultValueProviderFactory.create("DOCKER_CONFIG", defaultDockerConfigDirectory, ValueConverters.pathToDirectory(pathResolverFactory, mustExist = true)),
-        ValueConverters.pathToDirectory(pathResolverFactory, mustExist = true)
+        ValueConverters.pathToDirectory(pathResolverFactory, mustExist = true),
     )
 
     private val dockerConfigDirectory: Path by dockerConfigDirectoryOption
@@ -201,7 +201,7 @@ class CommandLineOptionsParser(
         "docker-cert-path",
         "Path to directory containing certificates to use to provide authentication to the Docker host and authenticate the Docker host. Has no effect if ${dockerUseTLSOption.longOption} is not set, and takes precedence over ${dockerConfigDirectoryOption.longOption}.",
         environmentVariableDefaultValueProviderFactory.create("DOCKER_CERT_PATH", defaultDockerConfigDirectory, ValueConverters.pathToDirectory(pathResolverFactory, mustExist = true)),
-        ValueConverters.pathToDirectory(pathResolverFactory, mustExist = true)
+        ValueConverters.pathToDirectory(pathResolverFactory, mustExist = true),
     )
 
     private val dockerCertificateDirectory: Path by dockerCertificateDirectoryOption
@@ -211,7 +211,7 @@ class CommandLineOptionsParser(
         "docker-tls-ca-cert",
         "Path to TLS CA certificate file that should be used to verify certificates presented by the Docker host. Has no effect if ${dockerVerifyTLSOption.longOption} is not set, and takes precedence over ${dockerCertificateDirectoryOption.longOption}.",
         defaultDockerConfigDirectory.resolve("ca.pem"),
-        ValueConverters.pathToFile(pathResolverFactory, mustExist = true)
+        ValueConverters.pathToFile(pathResolverFactory, mustExist = true),
     )
 
     private val dockerTlsCACertificatePath: Path by dockerTLSCACertificatePathOption
@@ -221,7 +221,7 @@ class CommandLineOptionsParser(
         "docker-tls-cert",
         "Path to TLS certificate file to use to authenticate to the Docker host. Has no effect if ${dockerUseTLSOption.longOption} is not set, and takes precedence over ${dockerCertificateDirectoryOption.longOption}.",
         defaultDockerConfigDirectory.resolve("cert.pem"),
-        ValueConverters.pathToFile(pathResolverFactory, mustExist = true)
+        ValueConverters.pathToFile(pathResolverFactory, mustExist = true),
     )
 
     private val dockerTLSCertificatePath: Path by dockerTLSCertificatePathOption
@@ -231,7 +231,7 @@ class CommandLineOptionsParser(
         "docker-tls-key",
         "Path to TLS key file to use to authenticate to the Docker host. Has no effect if ${dockerUseTLSOption.longOption} is not set, and takes precedence over ${dockerCertificateDirectoryOption.longOption}.",
         defaultDockerConfigDirectory.resolve("key.pem"),
-        ValueConverters.pathToFile(pathResolverFactory, mustExist = true)
+        ValueConverters.pathToFile(pathResolverFactory, mustExist = true),
     )
 
     private val dockerTLSKeyPath: Path by dockerTLSKeyPathOption
@@ -245,7 +245,7 @@ class CommandLineOptionsParser(
         telemetryOptionsGroup,
         "no-telemetry",
         "Disable telemetry for this command line invocation.",
-        environmentVariableDefaultValueProviderFactory.create("BATECT_ENABLE_TELEMETRY", null, ValueConverters.invertingBoolean)
+        environmentVariableDefaultValueProviderFactory.create("BATECT_ENABLE_TELEMETRY", null, ValueConverters.invertingBoolean),
     )
 
     private val generateShellTabCompletionScript: Shell? by valueOption(hiddenOptionsGroup, "generate-completion-script", "Generate shell tab completion script for given shell.", ValueConverters.enum<Shell>(), showInHelp = false)
@@ -254,7 +254,7 @@ class CommandLineOptionsParser(
     private val cleanCaches: Set<String> by setOption(
         group = cacheOptionsGroup,
         longName = "clean-cache",
-        description = "Clean given cache(s) and exit."
+        description = "Clean given cache(s) and exit.",
     )
 
     fun parse(args: Iterable<String>): CommandLineOptionsParsingResult {
@@ -288,7 +288,7 @@ class CommandLineOptionsParser(
                 dockerTLSCACertificatePathOption,
                 dockerTLSCertificatePathOption,
                 dockerTLSKeyPathOption,
-                dockerCertificateDirectoryOption
+                dockerCertificateDirectoryOption,
             )
 
             forbiddenOptionsWithDockerContext.forEach {
@@ -320,7 +320,7 @@ class CommandLineOptionsParser(
         when (remainingArgs.count()) {
             0 -> return CommandLineOptionsParsingResult.Failed(
                 "No task name provided. Re-run Batect and provide a task name, for example, './batect build'.\n" +
-                    "Run './batect --list-tasks' for a list of all tasks in this project, or './batect --help' for help."
+                    "Run './batect --list-tasks' for a list of all tasks in this project, or './batect --help' for help.",
             )
             1 -> {
                 return CommandLineOptionsParsingResult.Succeeded(createOptionsObject(remainingArgs.first(), emptyList()))
@@ -333,7 +333,7 @@ class CommandLineOptionsParser(
                     return CommandLineOptionsParsingResult.Failed(
                         "Too many arguments provided. The task name must be the last argument, with all Batect options appearing before the task name.\n" +
                             "'$taskName' was selected as the task name, and the first extra argument is '${additionalArgs.first()}'.\n" +
-                            "To pass additional arguments to the task command, separate them from the task name with '--', for example, './batect my-task -- --log-level debug'."
+                            "To pass additional arguments to the task command, separate them from the task name with '--', for example, './batect my-task -- --log-level debug'.",
                     )
                 }
 
@@ -398,7 +398,7 @@ class CommandLineOptionsParser(
             tlsKeyPath = resolvePathToDockerCertificate(dockerTLSKeyPath, dockerTLSKeyPathOption.valueSource, "key.pem"),
             tlsCertificatePath = resolvePathToDockerCertificate(dockerTLSCertificatePath, dockerTLSCertificatePathOption.valueSource, "cert.pem"),
             tlsCACertificatePath = resolvePathToDockerCertificate(dockerTlsCACertificatePath, dockerTLSCACertificatePathOption.valueSource, "ca.pem"),
-            configDirectory = dockerConfigDirectory
+            configDirectory = dockerConfigDirectory,
         ),
         cacheType = cacheType,
         existingNetworkToUse = existingNetworkToUse,
@@ -408,7 +408,7 @@ class CommandLineOptionsParser(
         generateShellTabCompletionScript = generateShellTabCompletionScript,
         generateShellTabCompletionTaskInformation = generateShellTabCompletionTaskInformation,
         maximumLevelOfParallelism = maximumLevelOfParallelism,
-        cleanCaches = cleanCaches
+        cleanCaches = cleanCaches,
     )
 }
 

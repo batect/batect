@@ -82,7 +82,7 @@ object VolumeMountResolverSpec : Spek({
                         LocalMount(LiteralValue("file"), context, "/container-1"),
                         LocalMount(LiteralValue("directory"), context, "/container-2", "options-2"),
                         LocalMount(LiteralValue("other"), context, "/container-3"),
-                        LocalMount(LiteralValue("does-not-exist"), context, "/container-4")
+                        LocalMount(LiteralValue("does-not-exist"), context, "/container-4"),
                     )
                 }
 
@@ -94,9 +94,9 @@ object VolumeMountResolverSpec : Spek({
                                 HostMount("/resolved/file".toPath(), "/container-1"),
                                 HostMount("/resolved/directory".toPath(), "/container-2", "options-2"),
                                 HostMount("/resolved/other".toPath(), "/container-3"),
-                                HostMount("/resolved/does-not-exist".toPath(), "/container-4")
-                            )
-                        )
+                                HostMount("/resolved/does-not-exist".toPath(), "/container-4"),
+                            ),
+                        ),
                     )
                 }
             }
@@ -104,7 +104,7 @@ object VolumeMountResolverSpec : Spek({
             given("a volume mount for the Docker socket") {
                 val mounts by createForEachTest {
                     setOf(
-                        LocalMount(LiteralValue("/var/run/docker.sock"), context, "/container-1", "some-options")
+                        LocalMount(LiteralValue("/var/run/docker.sock"), context, "/container-1", "some-options"),
                     )
                 }
 
@@ -113,9 +113,9 @@ object VolumeMountResolverSpec : Spek({
                         resolver.resolve(mounts),
                         equalTo(
                             setOf(
-                                HostMount("/var/run/docker.sock".toPath(), "/container-1", "some-options")
-                            )
-                        )
+                                HostMount("/var/run/docker.sock".toPath(), "/container-1", "some-options"),
+                            ),
+                        ),
                     )
                 }
             }
@@ -124,7 +124,7 @@ object VolumeMountResolverSpec : Spek({
                 given("the path does not contain an expression") {
                     val mounts by createForEachTest {
                         setOf(
-                            LocalMount(LiteralValue("invalid"), context, "/container-1")
+                            LocalMount(LiteralValue("invalid"), context, "/container-1"),
                         )
                     }
 
@@ -136,7 +136,7 @@ object VolumeMountResolverSpec : Spek({
                 given("the path contains an expression") {
                     val mounts by createForEachTest {
                         setOf(
-                            LocalMount(EnvironmentVariableReference("INVALID", originalExpression = "the-original-invalid-expression"), context, "/container-1")
+                            LocalMount(EnvironmentVariableReference("INVALID", originalExpression = "the-original-invalid-expression"), context, "/container-1"),
                         )
                     }
 
@@ -149,14 +149,14 @@ object VolumeMountResolverSpec : Spek({
             given("a volume mount with an expression that cannot be evaluated") {
                 val mounts by createForEachTest {
                     setOf(
-                        LocalMount(EnvironmentVariableReference("DOES_NOT_EXIST", originalExpression = "the-original-expression"), context, "/container-1")
+                        LocalMount(EnvironmentVariableReference("DOES_NOT_EXIST", originalExpression = "the-original-expression"), context, "/container-1"),
                     )
                 }
 
                 it("throws an appropriate exception") {
                     assertThat(
                         { resolver.resolve(mounts) },
-                        throws<VolumeMountResolutionException>(withMessage("Could not resolve volume mount path: expression 'the-original-expression' could not be evaluated: The host environment variable 'DOES_NOT_EXIST' is not set, and no default value has been provided."))
+                        throws<VolumeMountResolutionException>(withMessage("Could not resolve volume mount path: expression 'the-original-expression' could not be evaluated: The host environment variable 'DOES_NOT_EXIST' is not set, and no default value has been provided.")),
                     )
                 }
             }
@@ -172,7 +172,7 @@ object VolumeMountResolverSpec : Spek({
             given("a cache mount") {
                 val mounts = setOf(
                     CacheMount("cache-1", "/container-1"),
-                    CacheMount("cache-2", "/container-2", "options-2")
+                    CacheMount("cache-2", "/container-2", "options-2"),
                 )
 
                 given("the current cache type is volumes") {
@@ -186,9 +186,9 @@ object VolumeMountResolverSpec : Spek({
                             equalTo(
                                 setOf(
                                     VolumeMount(VolumeReference("batect-cache-abc123-cache-1"), "/container-1"),
-                                    VolumeMount(VolumeReference("batect-cache-abc123-cache-2"), "/container-2", "options-2")
-                                )
-                            )
+                                    VolumeMount(VolumeReference("batect-cache-abc123-cache-2"), "/container-2", "options-2"),
+                                ),
+                            ),
                         )
                     }
                 }
@@ -211,9 +211,9 @@ object VolumeMountResolverSpec : Spek({
                             equalTo(
                                 setOf(
                                     HostMount("/caches/cache-1".toPath(), "/container-1"),
-                                    HostMount("/caches/cache-2".toPath(), "/container-2", "options-2")
-                                )
-                            )
+                                    HostMount("/caches/cache-2".toPath(), "/container-2", "options-2"),
+                                ),
+                            ),
                         )
                     }
 

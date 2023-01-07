@@ -90,7 +90,7 @@ object UpgradeCommandSpec : Spek({
             val newWrapperScriptLocation = "${wrapperScriptDirectory}new-wrapper.sh"
 
             val environmentVariables = HostEnvironmentVariables(
-                "BATECT_WRAPPER_SCRIPT_DIR" to wrapperScriptDirectory
+                "BATECT_WRAPPER_SCRIPT_DIR" to wrapperScriptDirectory,
             )
 
             given("downloading the update information succeeds") {
@@ -115,8 +115,8 @@ object UpgradeCommandSpec : Spek({
                             ZonedDateTime.now(),
                             listOf(
                                 ScriptInfo("existing-wrapper.sh", existingScriptDownloadUrl),
-                                ScriptInfo("new-wrapper.sh", newScriptDownloadUrl)
-                            )
+                                ScriptInfo("new-wrapper.sh", newScriptDownloadUrl),
+                            ),
                         )
                     }
 

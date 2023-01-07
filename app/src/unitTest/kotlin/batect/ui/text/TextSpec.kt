@@ -92,7 +92,7 @@ object TextSpec : Spek({
                 ConsoleColor.Blue to ::blue,
                 ConsoleColor.Magenta to ::magenta,
                 ConsoleColor.Cyan to ::cyan,
-                ConsoleColor.White to ::white
+                ConsoleColor.White to ::white,
             ).forEach { (color, producer) ->
                 val colorName = color.name.lowercase()
 
@@ -113,7 +113,7 @@ object TextSpec : Spek({
                 ConsoleColor.Blue to ::blue,
                 ConsoleColor.Magenta to ::magenta,
                 ConsoleColor.Cyan to ::cyan,
-                ConsoleColor.White to ::white
+                ConsoleColor.White to ::white,
             ).forEach { (color, producer) ->
                 val colorName = color.name.lowercase()
 
@@ -134,7 +134,7 @@ object TextSpec : Spek({
                 ConsoleColor.Blue to ::blue,
                 ConsoleColor.Magenta to ::magenta,
                 ConsoleColor.Cyan to ::cyan,
-                ConsoleColor.White to ::white
+                ConsoleColor.White to ::white,
             ).forEach { (color, producer) ->
                 val colorName = color.name.lowercase()
                 val anotherColor = ConsoleColor.values().toList().filterNot { it == color }.first()

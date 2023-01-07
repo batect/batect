@@ -77,7 +77,7 @@ data class Version(val major: Int, val minor: Int, val patch: Int, val suffix: S
 
 enum class VersionComparisonMode {
     Normal,
-    DockerStyle
+    DockerStyle,
 }
 
 class VersionParseException(val invalidValue: String) : IllegalArgumentException("The value '$invalidValue' is not recognised as a valid version.")

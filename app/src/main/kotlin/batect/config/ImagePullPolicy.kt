@@ -21,5 +21,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 enum class ImagePullPolicy(val forciblyPull: Boolean) {
     IfNotPresent(forciblyPull = false),
-    Always(forciblyPull = true)
+    Always(forciblyPull = true),
 }

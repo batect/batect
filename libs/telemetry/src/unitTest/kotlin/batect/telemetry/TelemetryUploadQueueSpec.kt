@@ -67,7 +67,7 @@ object TelemetryUploadQueueSpec : Spek({
                     "someString" to JsonPrimitive("string"),
                     "someNumber" to JsonPrimitive(123),
                     "someBoolean" to JsonPrimitive(false),
-                    "someNull" to JsonNull
+                    "someNull" to JsonNull,
                 ),
                 listOf(
                     TelemetryEvent(
@@ -77,9 +77,9 @@ object TelemetryUploadQueueSpec : Spek({
                             "someString" to JsonPrimitive("string"),
                             "someNumber" to JsonPrimitive(123),
                             "someBoolean" to JsonPrimitive(false),
-                            "someNull" to JsonNull
-                        )
-                    )
+                            "someNull" to JsonNull,
+                        ),
+                    ),
                 ),
                 listOf(
                     TelemetrySpan(
@@ -90,10 +90,10 @@ object TelemetryUploadQueueSpec : Spek({
                             "someString" to JsonPrimitive("string"),
                             "someNumber" to JsonPrimitive(123),
                             "someBoolean" to JsonPrimitive(false),
-                            "someNull" to JsonNull
-                        )
-                    )
-                )
+                            "someNull" to JsonNull,
+                        ),
+                    ),
+                ),
             )
 
             fun Suite.itSavesTheSessionToDisk() {
@@ -144,8 +144,8 @@ object TelemetryUploadQueueSpec : Spek({
                                         }
                                     ]
                                 }
-                            """.trimIndent()
-                        )
+                            """.trimIndent(),
+                        ),
                     )
                 }
 

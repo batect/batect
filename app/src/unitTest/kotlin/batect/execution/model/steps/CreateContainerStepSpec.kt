@@ -46,8 +46,8 @@ object CreateContainerStepSpec : Spek({
                         |   "image": {"id": "the-image"},
                         |   "network": {"id": "the-network"}
                         |}
-                        """.trimMargin()
-                    )
+                        """.trimMargin(),
+                    ),
                 )
             }
         }

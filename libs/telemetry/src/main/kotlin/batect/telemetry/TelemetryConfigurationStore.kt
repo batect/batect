@@ -25,7 +25,7 @@ import java.util.UUID
 
 class TelemetryConfigurationStore(
     private val applicationPaths: ApplicationPaths,
-    private val logger: Logger
+    private val logger: Logger,
 ) {
     private val configFilePath = applicationPaths.rootLocalStorageDirectory.resolve("telemetry").resolve("config.json")
     private val json = Json.Default

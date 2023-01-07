@@ -33,7 +33,7 @@ import batect.primitives.runBlocking
 class PullImageStepRunner(
     private val dockerClient: DockerClient,
     private val cancellationContext: CancellationContext,
-    private val logger: Logger
+    private val logger: Logger,
 ) {
     fun run(step: PullImageStep, eventSink: TaskEventSink) {
         try {

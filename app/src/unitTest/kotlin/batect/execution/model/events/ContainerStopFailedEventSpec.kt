@@ -41,8 +41,8 @@ object ContainerStopFailedEventSpec : Spek({
                         |   "container": "some-container",
                         |   "message": "Something went wrong"
                         |}
-                        """.trimMargin()
-                    )
+                        """.trimMargin(),
+                    ),
                 )
             }
         }

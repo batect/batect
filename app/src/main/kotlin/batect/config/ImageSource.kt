@@ -43,13 +43,13 @@ data class BuildImage(
     override val imagePullPolicy: ImagePullPolicy = ImagePullPolicy.IfNotPresent,
     val targetStage: String? = null,
     val sshAgents: Set<SSHAgent> = emptySet(),
-    val secrets: Map<String, BuildSecret> = emptyMap()
+    val secrets: Map<String, BuildSecret> = emptyMap(),
 ) : ImageSource()
 
 @Serializable
 data class SSHAgent(
     val id: String,
-    val paths: Set<Expression> = emptySet()
+    val paths: Set<Expression> = emptySet(),
 )
 
 @Serializable(with = BuildSecret.Companion::class)
@@ -111,16 +111,16 @@ sealed interface BuildSecret {
 
 @Serializable
 data class EnvironmentSecret(
-    @SerialName("environment") val sourceEnvironmentVariableName: String
+    @SerialName("environment") val sourceEnvironmentVariableName: String,
 ) : BuildSecret
 
 @Serializable
 data class FileSecret(
-    @SerialName("path") val sourceFile: Expression
+    @SerialName("path") val sourceFile: Expression,
 ) : BuildSecret
 
 @Serializable
 data class PullImage(
     val imageName: String,
-    override val imagePullPolicy: ImagePullPolicy = ImagePullPolicy.IfNotPresent
+    override val imagePullPolicy: ImagePullPolicy = ImagePullPolicy.IfNotPresent,
 ) : ImageSource()

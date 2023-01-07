@@ -34,8 +34,8 @@ object ImageBuildProgressEventSpec : Spek({
         val progress = AggregatedImageBuildProgress(
             setOf(
                 ActiveImageBuildStep.NotDownloading(3, "step 4 of 10: RUN the-thing.sh"),
-                ActiveImageBuildStep.Downloading(7, "step 8 of 10: FROM postgres:13.0", DownloadOperation.Extracting, 12, 20)
-            )
+                ActiveImageBuildStep.Downloading(7, "step 8 of 10: FROM postgres:13.0", DownloadOperation.Extracting, 12, 20),
+            ),
         )
 
         val event = ImageBuildProgressEvent(container, progress)
@@ -67,8 +67,8 @@ object ImageBuildProgressEventSpec : Spek({
                         |       ]
                         |   }
                         |}
-                        """.trimMargin()
-                    )
+                        """.trimMargin(),
+                    ),
                 )
             }
         }

@@ -20,7 +20,7 @@ import batect.os.OperatingSystem
 import batect.os.SystemInfo
 
 class DockerHttpConfigDefaults(
-    private val systemInfo: SystemInfo
+    private val systemInfo: SystemInfo,
 ) {
     val defaultDockerHost by lazy {
         when (systemInfo.operatingSystem) {

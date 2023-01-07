@@ -24,7 +24,7 @@ class SingleValueMapOption(
     longName: String,
     description: String,
     shortName: Char? = null,
-    override val valueFormatForHelp: String = "<name>=<value>"
+    override val valueFormatForHelp: String = "<name>=<value>",
 ) : OptionDefinition(group, longName, description, true, shortName, true), ReadOnlyProperty<OptionParserContainer, Map<String, String>> {
     private val values: MutableMap<String, String> = mutableMapOf()
     override var valueSource: OptionValueSource = OptionValueSource.Default

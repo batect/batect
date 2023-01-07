@@ -36,7 +36,7 @@ class UpdateNotifier(
     private val console: Console,
     private val telemetryCaptor: TelemetryCaptor,
     private val logger: Logger,
-    private val timeSource: () -> ZonedDateTime
+    private val timeSource: () -> ZonedDateTime,
 ) {
     constructor(disableUpdateNotification: Boolean, updateInfoStorage: UpdateInfoStorage, updateInfoUpdater: UpdateInfoUpdater, versionInfo: VersionInfo, console: Console, telemetrySessionBuilder: TelemetrySessionBuilder, logger: Logger) :
         this(disableUpdateNotification, updateInfoStorage, updateInfoUpdater, versionInfo, console, telemetrySessionBuilder, logger, { ZonedDateTime.now(ZoneOffset.UTC) })
@@ -94,8 +94,8 @@ class UpdateNotifier(
                 "UpdateAvailableNotificationShown",
                 mapOf(
                     "currentVersion" to AttributeValue(versionInfo.version.toString()),
-                    "newVersion" to AttributeValue(updateInfo.version.toString())
-                )
+                    "newVersion" to AttributeValue(updateInfo.version.toString()),
+                ),
             )
 
             console.println("Version ${updateInfo.version} of Batect is now available (you have ${versionInfo.version}).")

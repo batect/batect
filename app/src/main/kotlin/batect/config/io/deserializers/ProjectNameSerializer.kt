@@ -35,7 +35,7 @@ object ProjectNameSerializer : KSerializer<String> {
         if (!ImageNameValidator.isValidImageName(projectName)) {
             throw ConfigurationException(
                 "Invalid project name '$projectName'. The project name must be a valid Docker reference: it ${ImageNameValidator.validNameDescription}.",
-                decoder as YamlInput
+                decoder as YamlInput,
             )
         }
 

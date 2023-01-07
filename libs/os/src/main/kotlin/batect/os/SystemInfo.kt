@@ -36,7 +36,7 @@ class SystemInfo(
     val jvmVersion: String,
     val userName: String,
     @Serializable(with = PathSerializer::class) val homeDirectory: Path,
-    @Serializable(with = PathSerializer::class) val tempDirectory: Path
+    @Serializable(with = PathSerializer::class) val tempDirectory: Path,
 ) {
     constructor(nativeMethods: NativeMethods, fileSystem: FileSystem, osInfo: OS, systemProperties: Properties = System.getProperties()) : this(
         determineOperatingSystem(systemProperties.getProperty("os.name")),
@@ -49,7 +49,7 @@ class SystemInfo(
         nativeMethods.getUserName(),
         fileSystem.getPath(systemProperties.getProperty("user.home")),
         systemProperties,
-        fileSystem
+        fileSystem,
     )
 
     constructor(
@@ -63,7 +63,7 @@ class SystemInfo(
         userName: String,
         homeDirectory: Path,
         systemProperties: Properties,
-        fileSystem: FileSystem
+        fileSystem: FileSystem,
     ) : this(
         operatingSystem,
         osName,
@@ -77,7 +77,7 @@ class SystemInfo(
         when (operatingSystem) {
             OperatingSystem.Mac, OperatingSystem.Linux -> fileSystem.getPath("/tmp")
             else -> fileSystem.getPath(systemProperties.getProperty("java.io.tmpdir"))
-        }
+        },
     )
 
     @Transient

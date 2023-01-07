@@ -42,7 +42,7 @@ object GitClientIntegrationTest : Spek({
                 Scenario("a short commit hash", "da73710", "This is the first version"),
                 Scenario("a full commit hash", "da73710ec475b32ac2e623d8c69f10c3f0c71a7f", "This is the first version"),
                 Scenario("a branch", "the-branch", "This is the file on the branch"),
-                Scenario("a tag", "the-tag", "This is the first version")
+                Scenario("a tag", "the-tag", "This is the first version"),
             ).forEach { scenario ->
                 describe("cloning ${scenario.description}") {
                     val targetDirectory by createForEachTest {

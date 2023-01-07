@@ -41,7 +41,7 @@ class CreateContainerStepRunner(
     private val runAsCurrentUserConfigurationProvider: RunAsCurrentUserConfigurationProvider,
     private val creationRequestFactory: DockerContainerCreationSpecFactory,
     private val ioStreamingOptions: ContainerIOStreamingOptions,
-    private val logger: Logger
+    private val logger: Logger,
 ) {
     fun run(step: CreateContainerStep, eventSink: TaskEventSink) {
         val container = step.container
@@ -60,7 +60,7 @@ class CreateContainerStepRunner(
                 userAndGroup,
                 ioStreamingOptions.terminalTypeForContainer(container),
                 ioStreamingOptions.useTTYForContainer(container),
-                ioStreamingOptions.attachStdinForContainer(container)
+                ioStreamingOptions.attachStdinForContainer(container),
             )
 
             runBlocking {

@@ -93,7 +93,7 @@ object ContainerSpec : Spek({
                 it("throws an appropriate exception") {
                     assertThat(
                         { parser.decodeFromString(Container.Companion, yaml) },
-                        throws(withMessage("Only one of build_directory or image can be specified for a container, but both have been provided for this container.") and withLineNumber(1) and withColumn(1) and withPath("<root>"))
+                        throws(withMessage("Only one of build_directory or image can be specified for a container, but both have been provided for this container.") and withLineNumber(1) and withColumn(1) and withPath("<root>")),
                     )
                 }
             }
@@ -110,7 +110,7 @@ object ContainerSpec : Spek({
                 it("throws an appropriate exception") {
                     assertThat(
                         { parser.decodeFromString(Container.Companion, yaml) },
-                        throws(withMessage("build_args cannot be used with image, but both have been provided.") and withLineNumber(1) and withColumn(1) and withPath("<root>"))
+                        throws(withMessage("build_args cannot be used with image, but both have been provided.") and withLineNumber(1) and withColumn(1) and withPath("<root>")),
                     )
                 }
             }
@@ -126,7 +126,7 @@ object ContainerSpec : Spek({
                 it("throws an appropriate exception") {
                     assertThat(
                         { parser.decodeFromString(Container.Companion, yaml) },
-                        throws(withMessage("dockerfile cannot be used with image, but both have been provided.") and withLineNumber(1) and withColumn(1) and withPath("<root>"))
+                        throws(withMessage("dockerfile cannot be used with image, but both have been provided.") and withLineNumber(1) and withColumn(1) and withPath("<root>")),
                     )
                 }
             }
@@ -142,7 +142,7 @@ object ContainerSpec : Spek({
                 it("throws an appropriate exception") {
                     assertThat(
                         { parser.decodeFromString(Container.Companion, yaml) },
-                        throws(withMessage("build_target cannot be used with image, but both have been provided.") and withLineNumber(1) and withColumn(1) and withPath("<root>"))
+                        throws(withMessage("build_target cannot be used with image, but both have been provided.") and withLineNumber(1) and withColumn(1) and withPath("<root>")),
                     )
                 }
             }
@@ -159,7 +159,7 @@ object ContainerSpec : Spek({
                 it("throws an appropriate exception") {
                     assertThat(
                         { parser.decodeFromString(Container.Companion, yaml) },
-                        throws(withMessage("build_ssh cannot be used with image, but both have been provided.") and withLineNumber(1) and withColumn(1) and withPath("<root>"))
+                        throws(withMessage("build_ssh cannot be used with image, but both have been provided.") and withLineNumber(1) and withColumn(1) and withPath("<root>")),
                     )
                 }
             }
@@ -177,7 +177,7 @@ object ContainerSpec : Spek({
                 it("throws an appropriate exception") {
                     assertThat(
                         { parser.decodeFromString(Container.Companion, yaml) },
-                        throws(withMessage("Each image build SSH agent must have a unique ID, but there are multiple agents with the ID 'default'.") and withLineNumber(3) and withColumn(3) and withPath("build_ssh"))
+                        throws(withMessage("Each image build SSH agent must have a unique ID, but there are multiple agents with the ID 'default'.") and withLineNumber(3) and withColumn(3) and withPath("build_ssh")),
                     )
                 }
             }
@@ -195,7 +195,7 @@ object ContainerSpec : Spek({
                 it("throws an appropriate exception") {
                     assertThat(
                         { parser.decodeFromString(Container.Companion, yaml) },
-                        throws(withMessage("build_secrets cannot be used with image, but both have been provided.") and withLineNumber(1) and withColumn(1) and withPath("<root>"))
+                        throws(withMessage("build_secrets cannot be used with image, but both have been provided.") and withLineNumber(1) and withColumn(1) and withPath("<root>")),
                     )
                 }
             }
@@ -214,7 +214,7 @@ object ContainerSpec : Spek({
                 it("throws an appropriate exception") {
                     assertThat(
                         { parser.decodeFromString(Container.Companion, yaml) },
-                        throws(withMessage("A secret can have either 'environment' or 'path', but both have been provided.") and withLineNumber(4) and withColumn(5) and withPath("build_secrets.secret"))
+                        throws(withMessage("A secret can have either 'environment' or 'path', but both have been provided.") and withLineNumber(4) and withColumn(5) and withPath("build_secrets.secret")),
                     )
                 }
             }
@@ -231,7 +231,7 @@ object ContainerSpec : Spek({
                 it("throws an appropriate exception") {
                     assertThat(
                         { parser.decodeFromString(Container.Companion, yaml) },
-                        throws(withMessage("A secret must have either 'environment' or 'path', but neither has been provided.") and withLineNumber(3) and withColumn(11) and withPath("build_secrets.secret"))
+                        throws(withMessage("A secret must have either 'environment' or 'path', but neither has been provided.") and withLineNumber(3) and withColumn(11) and withPath("build_secrets.secret")),
                     )
                 }
             }
@@ -246,7 +246,7 @@ object ContainerSpec : Spek({
                 it("throws an appropriate exception") {
                     assertThat(
                         { parser.decodeFromString(Container.Companion, yaml) },
-                        throws(withMessage("One of either build_directory or image must be specified for each container, but neither have been provided for this container.") and withLineNumber(1) and withColumn(1) and withPath("<root>"))
+                        throws(withMessage("One of either build_directory or image must be specified for each container, but neither have been provided for this container.") and withLineNumber(1) and withColumn(1) and withPath("<root>")),
                     )
                 }
             }
@@ -338,10 +338,10 @@ object ContainerSpec : Spek({
                                 setOf(SSHAgent("default"), SSHAgent("custom", setOf(LiteralValue("/some-ssh-agent")))),
                                 mapOf(
                                     "from-environment" to EnvironmentSecret("SECRET_PASSWORD"),
-                                    "from-file" to FileSecret(LiteralValue("some-secret.txt"))
-                                )
-                            )
-                        )
+                                    "from-file" to FileSecret(LiteralValue("some-secret.txt")),
+                                ),
+                            ),
+                        ),
                     )
 
                     assertThat(result.command, equalTo(Command.parse("do-the-thing.sh some-param")))
@@ -354,9 +354,9 @@ object ContainerSpec : Spek({
                                 "INT_VALUE" to LiteralValue("1"),
                                 "FLOAT_VALUE" to LiteralValue("12.6000"),
                                 "BOOL_VALUE" to LiteralValue("true"),
-                                "OTHER_VALUE" to LiteralValue("the value")
-                            )
-                        )
+                                "OTHER_VALUE" to LiteralValue("the value"),
+                            ),
+                        ),
                     )
                     assertThat(result.workingDirectory, equalTo("/here"))
                     assertThat(
@@ -364,18 +364,18 @@ object ContainerSpec : Spek({
                         equalTo(
                             setOf(
                                 LocalMount(LiteralValue("/volume1"), pathResolverContext, "/here", null),
-                                LocalMount(LiteralValue("/somewhere"), pathResolverContext, "/else", "ro")
-                            )
-                        )
+                                LocalMount(LiteralValue("/somewhere"), pathResolverContext, "/else", "ro"),
+                            ),
+                        ),
                     )
                     assertThat(
                         result.deviceMounts,
                         equalTo(
                             setOf(
                                 DeviceMount("/dev/ttyUSB0", "/dev/ttyUSB0", null),
-                                DeviceMount("/dev/sda", "/dev/xvdc", "r")
-                            )
-                        )
+                                DeviceMount("/dev/sda", "/dev/xvdc", "r"),
+                            ),
+                        ),
                     )
                     assertThat(result.portMappings, equalTo(setOf(PortMapping(1234, 5678), PortMapping(9012, 3456))))
                     assertThat(result.healthCheckConfig, equalTo(HealthCheckConfig(2.seconds, 10, 1.seconds, 4.seconds, "exit 0")))
@@ -391,9 +391,9 @@ object ContainerSpec : Spek({
                         equalTo(
                             listOf(
                                 SetupCommand(Command.parse("/do/the/thing.sh")),
-                                SetupCommand(Command.parse("/some/other/thing.sh"), "/some/dir")
-                            )
-                        )
+                                SetupCommand(Command.parse("/some/other/thing.sh"), "/some/dir"),
+                            ),
+                        ),
                     )
                     assertThat(result.logDriver, equalTo("my_log_driver"))
                     assertThat(result.logOptions, equalTo(mapOf("option_1" to "value_1")))

@@ -30,7 +30,7 @@ class ApplicationInfoLogger(
     private val systemInfo: SystemInfo,
     private val consoleInfo: ConsoleInfo,
     private val gitClient: GitClient,
-    private val environmentVariables: HostEnvironmentVariables
+    private val environmentVariables: HostEnvironmentVariables,
 ) {
     fun logApplicationInfo(commandLineArgs: Iterable<String>) {
         logger.info {

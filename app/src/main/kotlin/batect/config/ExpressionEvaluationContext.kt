@@ -20,5 +20,5 @@ import batect.os.HostEnvironmentVariables
 
 data class ExpressionEvaluationContext(
     val hostEnvironmentVariables: HostEnvironmentVariables,
-    val configVariables: Map<String, String?>
+    val configVariables: Map<String, String?>,
 )

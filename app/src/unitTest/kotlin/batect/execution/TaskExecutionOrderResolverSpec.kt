@@ -79,8 +79,8 @@ object TaskExecutionOrderResolverSpec : Spek({
                             withSeverity(Severity.Info) and
                                 withLogMessage("Resolved task execution order.") and
                                 withAdditionalData("executionOrder", listOf(task.name)) and
-                                withAdditionalData("skipPrerequisites", false)
-                        )
+                                withAdditionalData("skipPrerequisites", false),
+                        ),
                     )
                 }
             }
@@ -94,7 +94,7 @@ object TaskExecutionOrderResolverSpec : Spek({
                     it("throws an appropriate exception without any correction suggestions") {
                         assertThat(
                             { resolveExecutionOrder(config, "some-task") },
-                            throws<TaskDoesNotExistException>(withMessage("The task 'some-task' does not exist. (Run './batect --list-tasks' for a list of all tasks in this project, or './batect --help' for help.)"))
+                            throws<TaskDoesNotExistException>(withMessage("The task 'some-task' does not exist. (Run './batect --list-tasks' for a list of all tasks in this project, or './batect --help' for help.)")),
                         )
                     }
                 }
@@ -105,7 +105,7 @@ object TaskExecutionOrderResolverSpec : Spek({
                     it("throws an appropriate exception without any correction suggestions") {
                         assertThat(
                             { resolveExecutionOrder(config, "some-task") },
-                            throws<TaskDoesNotExistException>(withMessage("The task 'some-task' does not exist. Did you mean 'some-other-task'? (Run './batect --list-tasks' for a list of all tasks in this project, or './batect --help' for help.)"))
+                            throws<TaskDoesNotExistException>(withMessage("The task 'some-task' does not exist. Did you mean 'some-other-task'? (Run './batect --list-tasks' for a list of all tasks in this project, or './batect --help' for help.)")),
                         )
                     }
                 }
@@ -116,7 +116,7 @@ object TaskExecutionOrderResolverSpec : Spek({
                     it("throws an appropriate exception without any correction suggestions") {
                         assertThat(
                             { resolveExecutionOrder(config, "some-task") },
-                            throws<TaskDoesNotExistException>(withMessage("The task 'some-task' does not exist. Did you mean 'some-other-task' or 'some-other-task-2'? (Run './batect --list-tasks' for a list of all tasks in this project, or './batect --help' for help.)"))
+                            throws<TaskDoesNotExistException>(withMessage("The task 'some-task' does not exist. Did you mean 'some-other-task' or 'some-other-task-2'? (Run './batect --list-tasks' for a list of all tasks in this project, or './batect --help' for help.)")),
                         )
                     }
                 }
@@ -127,7 +127,7 @@ object TaskExecutionOrderResolverSpec : Spek({
                     it("throws an appropriate exception without any correction suggestions") {
                         assertThat(
                             { resolveExecutionOrder(config, "some-task") },
-                            throws<TaskDoesNotExistException>(withMessage("The task 'some-task' does not exist. Did you mean 'some-other-task', 'some-other-task-2' or 'some-other-task-3'? (Run './batect --list-tasks' for a list of all tasks in this project, or './batect --help' for help.)"))
+                            throws<TaskDoesNotExistException>(withMessage("The task 'some-task' does not exist. Did you mean 'some-other-task', 'some-other-task-2' or 'some-other-task-3'? (Run './batect --list-tasks' for a list of all tasks in this project, or './batect --help' for help.)")),
                         )
                     }
                 }
@@ -142,7 +142,7 @@ object TaskExecutionOrderResolverSpec : Spek({
                     "the dependent task's name is given with a wildcard that matches a single character at the start of the dependent task's name" to "*ependency-task",
                     "the dependent task's name is given with a wildcard that matches a single character at the end of the dependent task's name" to "dependency-tas*",
                     "the dependent task's name is given with a wildcard that matches a single character in the middle of the dependent task's name" to "dependenc*-task",
-                    "the dependent task's name is given with a wildcard that matches no characters of the dependent task's name" to "dependency-task*"
+                    "the dependent task's name is given with a wildcard that matches no characters of the dependent task's name" to "dependency-task*",
                 ).forEach { description, prerequisiteSpec ->
                     given(description) {
                         val dependencyTask = Task("dependency-task", taskRunConfiguration)
@@ -162,8 +162,8 @@ object TaskExecutionOrderResolverSpec : Spek({
                                     withSeverity(Severity.Info) and
                                         withLogMessage("Resolved task execution order.") and
                                         withAdditionalData("executionOrder", listOf(dependencyTask.name, mainTask.name)) and
-                                        withAdditionalData("skipPrerequisites", false)
-                                )
+                                        withAdditionalData("skipPrerequisites", false),
+                                ),
                             )
                         }
                     }
@@ -174,7 +174,7 @@ object TaskExecutionOrderResolverSpec : Spek({
                 mapOf(
                     "the pattern has a different case to a defined task" to "Dependency-*",
                     "the pattern does not match the full name of a defined task from the start" to "pendency-*",
-                    "the pattern does not match the full name of a defined task to the end" to "*-ta"
+                    "the pattern does not match the full name of a defined task to the end" to "*-ta",
                 ).forEach { description, prerequisiteSpec ->
                     given(description) {
                         val dependencyTask = Task("dependency-task", taskRunConfiguration)
@@ -194,8 +194,8 @@ object TaskExecutionOrderResolverSpec : Spek({
                                     withSeverity(Severity.Info) and
                                         withLogMessage("Resolved task execution order.") and
                                         withAdditionalData("executionOrder", listOf(mainTask.name)) and
-                                        withAdditionalData("skipPrerequisites", false)
-                                )
+                                        withAdditionalData("skipPrerequisites", false),
+                                ),
                             )
                         }
                     }
@@ -212,7 +212,7 @@ object TaskExecutionOrderResolverSpec : Spek({
                     it("throws an appropriate exception without any correction suggestions") {
                         assertThat(
                             { resolveExecutionOrder(config, mainTask.name) },
-                            throws<PrerequisiteTaskDoesNotExistException>(withMessage("The task 'dependency-task' given as a prerequisite of 'main-task' does not exist."))
+                            throws<PrerequisiteTaskDoesNotExistException>(withMessage("The task 'dependency-task' given as a prerequisite of 'main-task' does not exist.")),
                         )
                     }
                 }
@@ -223,7 +223,7 @@ object TaskExecutionOrderResolverSpec : Spek({
                     it("throws an appropriate exception without any correction suggestions") {
                         assertThat(
                             { resolveExecutionOrder(config, mainTask.name) },
-                            throws<PrerequisiteTaskDoesNotExistException>(withMessage("The task 'dependency-task' given as a prerequisite of 'main-task' does not exist. Did you mean 'some-other-task'?"))
+                            throws<PrerequisiteTaskDoesNotExistException>(withMessage("The task 'dependency-task' given as a prerequisite of 'main-task' does not exist. Did you mean 'some-other-task'?")),
                         )
                     }
                 }
@@ -234,7 +234,7 @@ object TaskExecutionOrderResolverSpec : Spek({
                     it("throws an appropriate exception without any correction suggestions") {
                         assertThat(
                             { resolveExecutionOrder(config, mainTask.name) },
-                            throws<PrerequisiteTaskDoesNotExistException>(withMessage("The task 'dependency-task' given as a prerequisite of 'main-task' does not exist. Did you mean 'some-other-task' or 'some-other-task-2'?"))
+                            throws<PrerequisiteTaskDoesNotExistException>(withMessage("The task 'dependency-task' given as a prerequisite of 'main-task' does not exist. Did you mean 'some-other-task' or 'some-other-task-2'?")),
                         )
                     }
                 }
@@ -245,7 +245,7 @@ object TaskExecutionOrderResolverSpec : Spek({
                     it("throws an appropriate exception without any correction suggestions") {
                         assertThat(
                             { resolveExecutionOrder(config, mainTask.name) },
-                            throws<PrerequisiteTaskDoesNotExistException>(withMessage("The task 'dependency-task' given as a prerequisite of 'main-task' does not exist. Did you mean 'some-other-task', 'some-other-task-2' or 'some-other-task-3'?"))
+                            throws<PrerequisiteTaskDoesNotExistException>(withMessage("The task 'dependency-task' given as a prerequisite of 'main-task' does not exist. Did you mean 'some-other-task', 'some-other-task-2' or 'some-other-task-3'?")),
                         )
                     }
                 }
@@ -257,7 +257,7 @@ object TaskExecutionOrderResolverSpec : Spek({
                     "the tasks are given with a wildcard" to listOf("dependency-task-*"),
                     "the tasks are given with a wildcard and both are also specified before the entry with a wildcard" to listOf("dependency-task-1", "dependency-task-2", "dependency-task-*"),
                     "the tasks are given with a wildcard and one is also specified before the entry with a wildcard" to listOf("dependency-task-1", "dependency-task-*"),
-                    "the tasks are given with a wildcard and one is also specified after the entry with a wildcard" to listOf("dependency-task-*", "dependency-task-2")
+                    "the tasks are given with a wildcard and one is also specified after the entry with a wildcard" to listOf("dependency-task-*", "dependency-task-2"),
                 ).forEach { description, prerequisites ->
                     given(description) {
                         val dependencyTask1 = Task("dependency-task-1", taskRunConfiguration)
@@ -336,7 +336,7 @@ object TaskExecutionOrderResolverSpec : Spek({
                 it("throws an appropriate exception") {
                     assertThat(
                         { resolveExecutionOrder(config, mainTask.name) },
-                        throws<TaskDependencyCycleException>(withMessage("There is a dependency cycle between tasks: task 'main-task' has 'main-task' as a prerequisite."))
+                        throws<TaskDependencyCycleException>(withMessage("There is a dependency cycle between tasks: task 'main-task' has 'main-task' as a prerequisite.")),
                     )
                 }
             }
@@ -422,7 +422,7 @@ object TaskExecutionOrderResolverSpec : Spek({
                 it("throws an appropriate exception") {
                     assertThat(
                         { resolveExecutionOrder(config, mainTask.name) },
-                        throws<TaskDependencyCycleException>(withMessage("There is a dependency cycle between tasks: task 'main-task' has 'other-task' as a prerequisite, which has 'main-task' as a prerequisite."))
+                        throws<TaskDependencyCycleException>(withMessage("There is a dependency cycle between tasks: task 'main-task' has 'other-task' as a prerequisite, which has 'main-task' as a prerequisite.")),
                     )
                 }
             }
@@ -436,7 +436,7 @@ object TaskExecutionOrderResolverSpec : Spek({
                 it("throws an appropriate exception") {
                     assertThat(
                         { resolveExecutionOrder(config, mainTask.name) },
-                        throws<TaskDependencyCycleException>(withMessage("There is a dependency cycle between tasks: task 'main-task' has 'task-A' as a prerequisite, which has 'task-B' as a prerequisite, which has 'main-task' as a prerequisite."))
+                        throws<TaskDependencyCycleException>(withMessage("There is a dependency cycle between tasks: task 'main-task' has 'task-A' as a prerequisite, which has 'task-B' as a prerequisite, which has 'main-task' as a prerequisite.")),
                     )
                 }
             }
@@ -450,7 +450,7 @@ object TaskExecutionOrderResolverSpec : Spek({
                 it("throws an appropriate exception") {
                     assertThat(
                         { resolveExecutionOrder(config, mainTask.name) },
-                        throws<TaskDependencyCycleException>(withMessage("There is a dependency cycle between tasks: task 'main-task' has 'task-A' as a prerequisite, which has 'task-B' as a prerequisite, which has 'task-A' as a prerequisite."))
+                        throws<TaskDependencyCycleException>(withMessage("There is a dependency cycle between tasks: task 'main-task' has 'task-A' as a prerequisite, which has 'task-B' as a prerequisite, which has 'task-A' as a prerequisite.")),
                     )
                 }
             }
@@ -481,8 +481,8 @@ object TaskExecutionOrderResolverSpec : Spek({
                             withSeverity(Severity.Info) and
                                 withLogMessage("Resolved task execution order.") and
                                 withAdditionalData("executionOrder", listOf(task.name)) and
-                                withAdditionalData("skipPrerequisites", true)
-                        )
+                                withAdditionalData("skipPrerequisites", true),
+                        ),
                     )
                 }
             }
@@ -506,8 +506,8 @@ object TaskExecutionOrderResolverSpec : Spek({
                             withSeverity(Severity.Info) and
                                 withLogMessage("Resolved task execution order.") and
                                 withAdditionalData("executionOrder", listOf(mainTask.name)) and
-                                withAdditionalData("skipPrerequisites", true)
-                        )
+                                withAdditionalData("skipPrerequisites", true),
+                        ),
                     )
                 }
             }

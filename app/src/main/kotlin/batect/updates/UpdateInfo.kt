@@ -27,13 +27,13 @@ data class UpdateInfo(
     val version: Version,
     val url: String,
     @Serializable(with = ZonedDateTimeSerializer::class) val lastUpdated: ZonedDateTime,
-    val scripts: List<ScriptInfo>
+    val scripts: List<ScriptInfo>,
 )
 
 @Serializable
 data class ScriptInfo(
     val name: String,
-    val downloadUrl: String
+    val downloadUrl: String,
 )
 
 fun LogMessageBuilder.data(key: String, value: UpdateInfo) = data(key, value, UpdateInfo.serializer())

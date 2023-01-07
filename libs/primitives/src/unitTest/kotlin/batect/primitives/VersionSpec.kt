@@ -215,7 +215,7 @@ object VersionSpec : Spek({
                 "1-thing",
                 "1.2-",
                 "1.2-thing",
-                "1.2.3-"
+                "1.2.3-",
             ).forEach { value ->
                 on("when the value '$value' is parsed") {
                     it("throws an appropriate exception") {

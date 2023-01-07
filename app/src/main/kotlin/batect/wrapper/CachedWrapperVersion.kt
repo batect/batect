@@ -23,5 +23,5 @@ import java.time.ZonedDateTime
 data class CachedWrapperVersion(
     val version: Version,
     val lastUsed: ZonedDateTime?,
-    val cacheDirectory: Path
+    val cacheDirectory: Path,
 )

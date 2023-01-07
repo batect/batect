@@ -47,8 +47,8 @@ object PrepareTaskNetworkStepRuleSpec : Spek({
                         |{
                         |   "type": "${rule::class.qualifiedName}"
                         |}
-                        """.trimMargin()
-                    )
+                        """.trimMargin(),
+                    ),
                 )
             }
         }

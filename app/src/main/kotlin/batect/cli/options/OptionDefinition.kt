@@ -23,7 +23,7 @@ abstract class OptionDefinition(
     val acceptsValue: Boolean,
     val shortName: Char? = null,
     val allowMultiple: Boolean = false,
-    val showInHelp: Boolean = true
+    val showInHelp: Boolean = true,
 ) {
     private var alreadySeen: Boolean = false
     abstract val valueSource: OptionValueSource

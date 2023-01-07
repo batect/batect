@@ -42,7 +42,7 @@ class TaskStateMachine(
     private val runStagePlanner: RunStagePlanner,
     private val cleanupStagePlanner: CleanupStagePlanner,
     private val cancellationContext: CancellationContext,
-    private val logger: Logger
+    private val logger: Logger,
 ) : TaskEventSink {
     var taskHasFailed: Boolean = false
         private set

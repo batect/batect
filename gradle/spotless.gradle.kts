@@ -31,12 +31,12 @@ val licenseText by extra(
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-"""
+""",
 )
 
 val kotlinLicenseHeader = "/*$licenseText*/\n\n"
 val javaLicenseHeader = "/*$licenseText*/\n\n"
-val ktlintVersion = "0.47.1"
+val ktlintVersion = "0.48.1"
 
 configure<SpotlessExtension> {
     format("misc") {
@@ -44,10 +44,10 @@ configure<SpotlessExtension> {
             fileTree(".") {
                 include(
                     "**/*.gradle", "**/*.md", "**/.gitignore", "**/*.yaml", "**/*.yml", "**/*.sh",
-                    "**/Dockerfile", "**/*.py", "**/*.json", "**/*.ps1", "**/*.cmd"
+                    "**/Dockerfile", "**/*.py", "**/*.json", "**/*.ps1", "**/*.cmd",
                 )
                 exclude("**/node_modules/*", "**/build/*", "**/.devcontainer/*")
-            }
+            },
         )
 
         trimTrailingWhitespace()

@@ -73,9 +73,9 @@ object InterleavedContainerIOStreamingOptionsSpec : Spek({
                     options.stdoutForContainer(container),
                     present(
                         isA<SinkTextOutput>(
-                            has(SinkTextOutput::sink, equalTo(InterleavedContainerOutputSink(container, output)))
-                        )
-                    )
+                            has(SinkTextOutput::sink, equalTo(InterleavedContainerOutputSink(container, output))),
+                        ),
+                    ),
                 )
             }
         }

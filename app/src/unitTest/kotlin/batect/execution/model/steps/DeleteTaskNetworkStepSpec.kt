@@ -39,8 +39,8 @@ object DeleteTaskNetworkStepSpec : Spek({
                         |   "type": "${step::class.qualifiedName}",
                         |   "network": {"id": "the-network"}
                         |}
-                        """.trimMargin()
-                    )
+                        """.trimMargin(),
+                    ),
                 )
             }
         }

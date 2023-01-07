@@ -282,7 +282,7 @@ object InterleavedEventLoggerSpec : Spek({
                             Scenario("container did not become healthy", ContainerDidNotBecomeHealthyEvent(container1, "Container did not become healthy."), container1),
                             Scenario("container run failed", ContainerRunFailedEvent(container1, "Couldn't run container."), container1),
                             Scenario("container stop failed", ContainerStopFailedEvent(container1, "Couldn't stop container."), container1),
-                            Scenario("container removal failed", ContainerRemovalFailedEvent(container1, "Couldn't remove container."), container1)
+                            Scenario("container removal failed", ContainerRemovalFailedEvent(container1, "Couldn't remove container."), container1),
                         ).forEach { (description, event, container) ->
                             on("when a '$description' event is posted") {
                                 beforeEachTest {
@@ -295,7 +295,7 @@ object InterleavedEventLoggerSpec : Spek({
                                     verify(output).printErrorForContainer(
                                         container,
                                         Text.white("Batect | ") + TextRun("Something went wrong.") + Text("\n") +
-                                            Text.white("Batect | ") + TextRun("Another line.")
+                                            Text.white("Batect | ") + TextRun("Another line."),
                                     )
                                 }
                             }
@@ -313,7 +313,7 @@ object InterleavedEventLoggerSpec : Spek({
                             it("prints the message to the output for the task") {
                                 verify(output).printErrorForTask(
                                     Text.white("Batect | ") + TextRun("Something went wrong.") + Text("\n") +
-                                        Text.white("Batect | ") + TextRun("Another line.")
+                                        Text.white("Batect | ") + TextRun("Another line."),
                                 )
                             }
                         }
@@ -324,7 +324,7 @@ object InterleavedEventLoggerSpec : Spek({
                             "execution failed" to ExecutionFailedEvent("Couldn't do the thing."),
                             "network creation failed" to TaskNetworkCreationFailedEvent("Couldn't create the network."),
                             "network deletion failed" to TaskNetworkDeletionFailedEvent("Couldn't delete the network."),
-                            "user interrupted execution" to UserInterruptedExecutionEvent
+                            "user interrupted execution" to UserInterruptedExecutionEvent,
                         ).forEach { (description, event) ->
                             on("when a '$description' event is posted") {
                                 beforeEachTest {
@@ -336,7 +336,7 @@ object InterleavedEventLoggerSpec : Spek({
                                 it("prints the message to the output") {
                                     verify(output).printErrorForTask(
                                         Text.white("Batect | ") + TextRun("Something went wrong.") + Text("\n") +
-                                            Text.white("Batect | ") + TextRun("Another line.")
+                                            Text.white("Batect | ") + TextRun("Another line."),
                                     )
                                 }
                             }
@@ -409,7 +409,7 @@ object InterleavedEventLoggerSpec : Spek({
                     inOrder(output) {
                         verify(output).printErrorForTask(
                             Text.white("Batect | ") + Text("Some instructions") + Text("\n") +
-                                Text.white("Batect | ") + Text("Another line")
+                                Text.white("Batect | ") + Text("Another line"),
                         )
                     }
                 }
@@ -449,7 +449,7 @@ object InterleavedEventLoggerSpec : Spek({
                                 Text.white("Batect | ") + TextRun("Do this to clean up.") + Text("\n") +
                                     Text.white("Batect | ") + TextRun("Another line") + Text("\n") +
                                     Text.white("Batect | ") + Text("\n") +
-                                    Text.white("Batect | ") + Text.red(Text("The task ") + Text.bold("some-task") + Text(" failed. See above for details."))
+                                    Text.white("Batect | ") + Text.red(Text("The task ") + Text.bold("some-task") + Text(" failed. See above for details.")),
                             )
                         }
                     }

@@ -26,7 +26,7 @@ import org.kodein.di.instance
 import org.kodein.di.subDI
 
 class DockerConfigurationKodeinFactory(
-    private val baseKodein: DirectDI
+    private val baseKodein: DirectDI,
 ) {
     fun create(client: DockerClient, containerType: DockerContainerType, builderVersion: BuilderVersion): DirectDI = subDI(baseKodein.di) {
         bind<DockerClient>() with instance(client)

@@ -50,7 +50,7 @@ object UpdateInfoUpdaterSpec : Spek({
             Version(0, 1, 2),
             "https://something.com/batect/0.1.2",
             ZonedDateTime.now(ZoneOffset.UTC),
-            listOf(ScriptInfo("batect", "https://something.com/batect/0.1.2/wrapper"))
+            listOf(ScriptInfo("batect", "https://something.com/batect/0.1.2/wrapper")),
         )
 
         val updateInfoDownloader by createForEachTest { mock<UpdateInfoDownloader>() }
@@ -110,8 +110,8 @@ object UpdateInfoUpdaterSpec : Spek({
                     hasMessage(
                         withLogMessage("Could not update cached update information.")
                             and withSeverity(Severity.Warning)
-                            and withException(exception)
-                    )
+                            and withException(exception),
+                    ),
                 )
             }
 
@@ -142,8 +142,8 @@ object UpdateInfoUpdaterSpec : Spek({
                     hasMessage(
                         withLogMessage("Could not update cached update information.")
                             and withSeverity(Severity.Warning)
-                            and withException(exception)
-                    )
+                            and withException(exception),
+                    ),
                 )
             }
 

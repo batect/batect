@@ -64,8 +64,8 @@ object TelemetryConfigurationStoreSpec : Spek({
                         equivalentTo(
                             """
                                 { "state": "none", "userId": "${config.userId}" }
-                            """.trimIndent()
-                        )
+                            """.trimIndent(),
+                        ),
                     )
                 }
             }
@@ -116,8 +116,8 @@ object TelemetryConfigurationStoreSpec : Spek({
                         equivalentTo(
                             """
                                 { "state": "allowed", "userId": "00001111-2222-3333-4444-555566667777" }
-                            """.trimIndent()
-                        )
+                            """.trimIndent(),
+                        ),
                     )
                 }
 
@@ -144,8 +144,8 @@ object TelemetryConfigurationStoreSpec : Spek({
                             listOf(
                                 """
                                     { "state": "disabled", "userId": "aaaabbbb-cccc-dddd-4444-555566667777" }
-                                """.trimIndent()
-                            )
+                                """.trimIndent(),
+                            ),
                         )
                     }
 

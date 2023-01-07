@@ -197,9 +197,9 @@ object TelemetrySessionBuilderSpec : Spek({
                             "thingType" to JsonPrimitive("stuff"),
                             "thingCount" to JsonPrimitive(12),
                             "thingEnabled" to JsonPrimitive(false),
-                            "thing" to JsonNull
-                        )
-                    )
+                            "thing" to JsonNull,
+                        ),
+                    ),
                 )
             }
         }
@@ -216,8 +216,8 @@ object TelemetrySessionBuilderSpec : Spek({
                     mapOf(
                         "thingType" to AttributeValue("stuff"),
                         "thingCount" to AttributeValue(12),
-                        "thingEnabled" to AttributeValue(false)
-                    )
+                        "thingEnabled" to AttributeValue(false),
+                    ),
                 )
 
                 builder.build(telemetryConfigurationStore)
@@ -234,11 +234,11 @@ object TelemetrySessionBuilderSpec : Spek({
                                 mapOf(
                                     "thingType" to JsonPrimitive("stuff"),
                                     "thingCount" to JsonPrimitive(12),
-                                    "thingEnabled" to JsonPrimitive(false)
-                                )
-                            )
-                        )
-                    )
+                                    "thingEnabled" to JsonPrimitive(false),
+                                ),
+                            ),
+                        ),
+                    ),
                 )
             }
         }
@@ -254,8 +254,8 @@ object TelemetrySessionBuilderSpec : Spek({
                 mapOf(
                     "thingType" to JsonPrimitive("stuff"),
                     "thingCount" to JsonPrimitive(12),
-                    "thingEnabled" to JsonPrimitive(false)
-                )
+                    "thingEnabled" to JsonPrimitive(false),
+                ),
             )
 
             given("the span function does not throw") {

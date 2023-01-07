@@ -22,7 +22,7 @@ import batect.ui.Console
 
 class EnableTelemetryCommand(
     private val telemetryConfigurationStore: TelemetryConfigurationStore,
-    private val console: Console
+    private val console: Console,
 ) : Command {
     override fun run(): Int {
         if (telemetryConfigurationStore.currentConfiguration.state == ConsentState.TelemetryAllowed) {

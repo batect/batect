@@ -23,7 +23,7 @@ import batect.wrapper.WrapperCacheCleanupTask
 class BackgroundTaskManager(
     private val wrapperCacheCleanupTask: WrapperCacheCleanupTask,
     private val gitRepositoryCacheCleanupTask: GitRepositoryCacheCleanupTask,
-    private val telemetryUploadTask: TelemetryUploadTask
+    private val telemetryUploadTask: TelemetryUploadTask,
 ) {
     fun startBackgroundTasks() {
         wrapperCacheCleanupTask.start()

@@ -23,5 +23,5 @@ enum class OperatingSystem {
     Linux,
     Mac,
     Windows,
-    Other
+    Other,
 }

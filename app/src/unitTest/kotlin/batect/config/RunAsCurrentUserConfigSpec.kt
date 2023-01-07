@@ -38,7 +38,7 @@ object RunAsCurrentUserConfigSpec : Spek({
                     """
                         enabled: true
                         home_directory: /home/the_user
-                    """.trimIndent()
+                    """.trimIndent(),
                 )
 
                 it("returns a configuration that runs as the current user") {
@@ -54,7 +54,7 @@ object RunAsCurrentUserConfigSpec : Spek({
                 val config = fromYaml(
                     """
                         enabled: false
-                    """.trimIndent()
+                    """.trimIndent(),
                 )
 
                 it("returns a configuration that runs as the default container user") {

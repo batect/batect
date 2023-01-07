@@ -15,7 +15,7 @@
 */
 
 @file:UseSerializers(
-    ZonedDateTimeSerializer::class
+    ZonedDateTimeSerializer::class,
 )
 
 package batect.telemetry
@@ -32,7 +32,7 @@ data class TelemetrySpan(
     val type: String,
     val startTime: ZonedDateTime,
     val endTime: ZonedDateTime,
-    val attributes: Map<String, JsonPrimitive>
+    val attributes: Map<String, JsonPrimitive>,
 ) {
     init {
         if (startTime.zone != ZoneOffset.UTC) {

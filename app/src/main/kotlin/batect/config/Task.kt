@@ -45,7 +45,7 @@ data class Task(
     val group: String = "",
     val dependsOnContainers: Set<String> = emptySet(),
     val prerequisiteTasks: List<String> = emptyList(),
-    val customisations: Map<String, TaskContainerCustomisation> = emptyMap()
+    val customisations: Map<String, TaskContainerCustomisation> = emptyMap(),
 ) {
     @OptIn(ExperimentalSerializationApi::class)
     companion object : KSerializer<Task> {
@@ -125,7 +125,7 @@ data class Task(
                 group = group,
                 dependsOnContainers = dependsOnContainers,
                 prerequisiteTasks = prerequisiteTasks,
-                customisations = customisations
+                customisations = customisations,
             )
         }
 
@@ -152,5 +152,5 @@ data class TaskContainerCustomisation(
     @SerialName("ports")
     @Serializable(with = PortMappingConfigSetSerializer::class)
     val additionalPortMappings: Set<PortMapping> = emptySet(),
-    @SerialName("working_directory") val workingDirectory: String? = null
+    @SerialName("working_directory") val workingDirectory: String? = null,
 )

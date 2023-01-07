@@ -25,14 +25,14 @@ class EnvironmentVariableDefaultValueProviderFactory(private val environment: Ho
     fun <StorageType, ValueType : StorageType> create(
         name: String,
         fallback: StorageType,
-        valueConverter: ValueConverter<ValueType>
+        valueConverter: ValueConverter<ValueType>,
     ) = create(name, fallback, fallback.toString(), valueConverter)
 
     fun <StorageType, ValueType : StorageType> create(
         name: String,
         fallback: StorageType,
         fallbackDisplay: String = fallback.toString(),
-        valueConverter: ValueConverter<ValueType>
+        valueConverter: ValueConverter<ValueType>,
     ): DefaultValueProvider<StorageType> = object : DefaultValueProvider<StorageType> {
         override val value: PossibleValue<StorageType>
             get() {

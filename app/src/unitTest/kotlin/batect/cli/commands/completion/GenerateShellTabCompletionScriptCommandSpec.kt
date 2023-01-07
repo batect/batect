@@ -84,7 +84,7 @@ object GenerateShellTabCompletionScriptCommandSpec : Spek({
             val environmentVariables by createForEachTest {
                 HostEnvironmentVariables(
                     "BATECT_COMPLETION_PROXY_REGISTER_AS" to "batect-1.2.3",
-                    "BATECT_COMPLETION_PROXY_VERSION" to "4.5.6"
+                    "BATECT_COMPLETION_PROXY_VERSION" to "4.5.6",
                 )
             }
 
@@ -93,7 +93,7 @@ object GenerateShellTabCompletionScriptCommandSpec : Spek({
             setOf(
                 TestCase(Shell.Bash, { bashGenerator }, "bash-shell-completion-script"),
                 TestCase(Shell.Fish, { fishGenerator }, "fish-shell-completion-script"),
-                TestCase(Shell.Zsh, { zshGenerator }, "zsh-shell-completion-script")
+                TestCase(Shell.Zsh, { zshGenerator }, "zsh-shell-completion-script"),
             ).forEach { testCase ->
                 given("the requested shell is ${testCase.shell}") {
                     val commandLineOptions = CommandLineOptions(generateShellTabCompletionScript = testCase.shell)
@@ -107,7 +107,7 @@ object GenerateShellTabCompletionScriptCommandSpec : Spek({
                             zshGenerator,
                             PrintStream(outputStream),
                             environmentVariables,
-                            telemetryCaptor
+                            telemetryCaptor,
                         )
                     }
 
@@ -149,7 +149,7 @@ object GenerateShellTabCompletionScriptCommandSpec : Spek({
                     zshGenerator,
                     PrintStream(outputStream),
                     environmentVariables,
-                    telemetryCaptor
+                    telemetryCaptor,
                 )
             }
 

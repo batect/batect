@@ -293,9 +293,9 @@ object ConfigurationLoaderSpec : Spek({
                             "INT_VALUE" to LiteralValue("1"),
                             "FLOAT_VALUE" to LiteralValue("12.6000"),
                             "BOOL_VALUE" to LiteralValue("true"),
-                            "OTHER_VALUE" to LiteralValue("the value")
-                        )
-                    )
+                            "OTHER_VALUE" to LiteralValue("the value"),
+                        ),
+                    ),
                 )
                 assertThat(task.runConfiguration!!.additionalPortMappings, equalTo(setOf(PortMapping(123, 456), PortMapping(1000, 2000))))
                 assertThat(task.runConfiguration!!.workingDiretory, equalTo("/some/dir"))
@@ -629,9 +629,9 @@ object ConfigurationLoaderSpec : Spek({
                             "INT_VALUE" to LiteralValue("1"),
                             "FLOAT_VALUE" to LiteralValue("12.6000"),
                             "BOOL_VALUE" to LiteralValue("true"),
-                            "OTHER_VALUE" to LiteralValue("the value")
-                        )
-                    )
+                            "OTHER_VALUE" to LiteralValue("the value"),
+                        ),
+                    ),
                 )
                 assertThat(container.workingDirectory, equalTo("/here"))
                 assertThat(container.portMappings, equalTo(setOf(PortMapping(1234, 5678), PortMapping(9012, 3456))))
@@ -642,9 +642,9 @@ object ConfigurationLoaderSpec : Spek({
                     equalTo(
                         setOf(
                             LocalMount(LiteralValue("../"), DefaultPathResolutionContext(fileSystem.getPath("/")), "/here", null),
-                            LocalMount(LiteralValue("/somewhere"), DefaultPathResolutionContext(fileSystem.getPath("/")), "/else", "ro")
-                        )
-                    )
+                            LocalMount(LiteralValue("/somewhere"), DefaultPathResolutionContext(fileSystem.getPath("/")), "/else", "ro"),
+                        ),
+                    ),
                 )
             }
 
@@ -685,9 +685,9 @@ object ConfigurationLoaderSpec : Spek({
                     equalTo(
                         setOf(
                             LocalMount(LiteralValue("../"), DefaultPathResolutionContext(fileSystem.getPath("/")), "/here", null),
-                            LocalMount(LiteralValue("/somewhere"), DefaultPathResolutionContext(fileSystem.getPath("/")), "/else", "ro")
-                        )
-                    )
+                            LocalMount(LiteralValue("/somewhere"), DefaultPathResolutionContext(fileSystem.getPath("/")), "/else", "ro"),
+                        ),
+                    ),
                 )
             }
 
@@ -1329,8 +1329,8 @@ object ConfigurationLoaderSpec : Spek({
                             and withLineNumber(2)
                             and withColumn(3)
                             and withFileName(testFileName)
-                            and withPath("containers.-invalid")
-                    )
+                            and withPath("containers.-invalid"),
+                    ),
                 )
             }
         }
@@ -1348,8 +1348,8 @@ object ConfigurationLoaderSpec : Spek({
                             and withLineNumber(1)
                             and withColumn(15)
                             and withFileName(testFileName)
-                            and withPath("project_name")
-                    )
+                            and withPath("project_name"),
+                    ),
                 )
             }
         }
@@ -1368,8 +1368,8 @@ object ConfigurationLoaderSpec : Spek({
                             and withLineNumber(2)
                             and withColumn(4)
                             and withFileName(testFileName)
-                            and withPath("include[0]")
-                    )
+                            and withPath("include[0]"),
+                    ),
                 )
             }
         }
@@ -1398,7 +1398,7 @@ object ConfigurationLoaderSpec : Spek({
                     fileSystem.getPath("/project/3.yml") to """
                         |config_variables:
                         |  config-var-1: {}
-                    """.trimMargin()
+                    """.trimMargin(),
                 )
             }
 
@@ -1429,9 +1429,9 @@ object ConfigurationLoaderSpec : Spek({
                             rootConfigPath,
                             fileSystem.getPath("/project/1.yml"),
                             fileSystem.getPath("/project/2.yml"),
-                            fileSystem.getPath("/project/3.yml")
-                        )
-                    )
+                            fileSystem.getPath("/project/3.yml"),
+                        ),
+                    ),
                 )
             }
 
@@ -1459,7 +1459,7 @@ object ConfigurationLoaderSpec : Spek({
                         |
                         |config_variables:
                         |  config-var-1: {}
-                    """.trimMargin()
+                    """.trimMargin(),
                 )
             }
 
@@ -1505,7 +1505,7 @@ object ConfigurationLoaderSpec : Spek({
                         |containers:
                         |  container-1:
                         |    image: alpine:1.2.3
-                    """.trimMargin()
+                    """.trimMargin(),
                 )
             }
 
@@ -1558,7 +1558,7 @@ object ConfigurationLoaderSpec : Spek({
                         |
                         |config_variables:
                         |  config-var-2: {}
-                    """.trimMargin()
+                    """.trimMargin(),
                 )
             }
 
@@ -1570,9 +1570,9 @@ object ConfigurationLoaderSpec : Spek({
                     equalTo(
                         TaskMap(
                             Task("task-1", TaskRunConfiguration("container-1")),
-                            Task("task-2", TaskRunConfiguration("container-2"))
-                        )
-                    )
+                            Task("task-2", TaskRunConfiguration("container-2")),
+                        ),
+                    ),
                 )
             }
 
@@ -1582,9 +1582,9 @@ object ConfigurationLoaderSpec : Spek({
                     equalTo(
                         ContainerMap(
                             Container("container-1", PullImage("alpine:1.2.3")),
-                            Container("container-2", PullImage("alpine:4.5.6"))
-                        )
-                    )
+                            Container("container-2", PullImage("alpine:4.5.6")),
+                        ),
+                    ),
                 )
             }
 
@@ -1594,9 +1594,9 @@ object ConfigurationLoaderSpec : Spek({
                     equalTo(
                         ConfigVariableMap(
                             ConfigVariableDefinition("config-var-1"),
-                            ConfigVariableDefinition("config-var-2")
-                        )
-                    )
+                            ConfigVariableDefinition("config-var-2"),
+                        ),
+                    ),
                 )
             }
 
@@ -1618,7 +1618,7 @@ object ConfigurationLoaderSpec : Spek({
                     """.trimMargin(),
                     fileSystem.getPath("/project/1.yml") to """
                         |containers: {}
-                    """.trimMargin()
+                    """.trimMargin(),
                 )
             }
 
@@ -1639,7 +1639,7 @@ object ConfigurationLoaderSpec : Spek({
                     """.trimMargin(),
                     fileSystem.getPath("/project/1.yml") to """
                         |project_name: some_project
-                    """.trimMargin()
+                    """.trimMargin(),
                 )
             }
 
@@ -1658,7 +1658,7 @@ object ConfigurationLoaderSpec : Spek({
                     """.trimMargin(),
                     fileSystem.getPath("/project/1.yml") to """
                         |forbid_telemetry: true
-                    """.trimMargin()
+                    """.trimMargin(),
                 )
             }
 
@@ -1684,7 +1684,7 @@ object ConfigurationLoaderSpec : Spek({
                         |
                         |include:
                         | - 1.yml
-                    """.trimMargin()
+                    """.trimMargin(),
                 )
             }
 
@@ -1696,9 +1696,9 @@ object ConfigurationLoaderSpec : Spek({
                     equalTo(
                         ConfigVariableMap(
                             ConfigVariableDefinition("config-var-1"),
-                            ConfigVariableDefinition("config-var-2")
-                        )
-                    )
+                            ConfigVariableDefinition("config-var-2"),
+                        ),
+                    ),
                 )
             }
 
@@ -1721,7 +1721,7 @@ object ConfigurationLoaderSpec : Spek({
                         |containers:
                         |  container-1:
                         |    image: alpine:4.5.6
-                    """.trimMargin()
+                    """.trimMargin(),
                 )
             }
 
@@ -1748,7 +1748,7 @@ object ConfigurationLoaderSpec : Spek({
                         |  task-1:
                         |    run:
                         |      container: container-2
-                    """.trimMargin()
+                    """.trimMargin(),
                 )
             }
 
@@ -1771,7 +1771,7 @@ object ConfigurationLoaderSpec : Spek({
                     fileSystem.getPath("/project/1.yml") to """
                         |config_variables:
                         |  config-var-1: {}
-                    """.trimMargin()
+                    """.trimMargin(),
                 )
             }
 
@@ -1796,7 +1796,7 @@ object ConfigurationLoaderSpec : Spek({
                         |    volumes:
                         |      - local: some_mount_directory
                         |        container: /mount
-                    """.trimMargin()
+                    """.trimMargin(),
                 )
             }
 
@@ -1810,10 +1810,10 @@ object ConfigurationLoaderSpec : Spek({
                             "container-1",
                             BuildImage(LiteralValue("some_build_directory"), DefaultPathResolutionContext(fileSystem.getPath("/project/includes"))),
                             volumeMounts = setOf(
-                                LocalMount(LiteralValue("some_mount_directory"), DefaultPathResolutionContext(fileSystem.getPath("/project/includes")), "/mount")
-                            )
-                        )
-                    )
+                                LocalMount(LiteralValue("some_mount_directory"), DefaultPathResolutionContext(fileSystem.getPath("/project/includes")), "/mount"),
+                            ),
+                        ),
+                    ),
                 )
             }
         }
@@ -1842,7 +1842,7 @@ object ConfigurationLoaderSpec : Spek({
                         |
                         |config_variables:
                         |  config-var-1: {}
-                    """.trimMargin()
+                    """.trimMargin(),
                 )
             }
 
@@ -1871,9 +1871,9 @@ object ConfigurationLoaderSpec : Spek({
                     equalTo(
                         setOf(
                             rootConfigPath,
-                            pathForGitInclude("https://myrepo.com/bundles/bundle.git", "v1.2.3", "1.yml")
-                        )
-                    )
+                            pathForGitInclude("https://myrepo.com/bundles/bundle.git", "v1.2.3", "1.yml"),
+                        ),
+                    ),
                 )
             }
 
@@ -1908,7 +1908,7 @@ object ConfigurationLoaderSpec : Spek({
                         |
                         |config_variables:
                         |  config-var-1: {}
-                    """.trimMargin()
+                    """.trimMargin(),
                 )
             }
 
@@ -1964,7 +1964,7 @@ object ConfigurationLoaderSpec : Spek({
                         |
                         |config_variables:
                         |  config-var-1: {}
-                    """.trimMargin()
+                    """.trimMargin(),
                 )
             }
 
@@ -2003,7 +2003,7 @@ object ConfigurationLoaderSpec : Spek({
                     """.trimMargin(),
                     pathForGitInclude("https://myrepo.com/bundles/bundle.git", "v1.2.3", "1.yml") to """
                         |blah: thing
-                    """.trimMargin()
+                    """.trimMargin(),
                 )
             }
 
@@ -2011,8 +2011,8 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat(
                     { loadConfiguration(files, rootConfigPath) },
                     throws(
-                        withLineNumber(1) and withColumn(1) and withFileName("https://myrepo.com/bundles/bundle.git@v1.2.3: 1.yml")
-                    )
+                        withLineNumber(1) and withColumn(1) and withFileName("https://myrepo.com/bundles/bundle.git@v1.2.3: 1.yml"),
+                    ),
                 )
             }
         }
@@ -2035,7 +2035,7 @@ object ConfigurationLoaderSpec : Spek({
                     """.trimMargin(),
                     pathForGitInclude("https://myrepo.com/bundles/bundle.git", "v1.2.3", "2.yml") to """
                         |blah: blah
-                    """.trimMargin()
+                    """.trimMargin(),
                 )
             }
 
@@ -2044,8 +2044,8 @@ object ConfigurationLoaderSpec : Spek({
                     { loadConfiguration(files, rootConfigPath) },
                     throws(
                         withMessage("Unknown property 'blah'. Known properties are: config_variables, containers, forbid_telemetry, include, project_name, tasks") and
-                            withFileName("https://myrepo.com/bundles/bundle.git@v1.2.3: 2.yml")
-                    )
+                            withFileName("https://myrepo.com/bundles/bundle.git@v1.2.3: 2.yml"),
+                    ),
                 )
             }
         }
@@ -2068,7 +2068,7 @@ object ConfigurationLoaderSpec : Spek({
                     """.trimMargin(),
                     pathForGitInclude("https://myrepo.com/bundles/bundle.git", "v1.2.3", "thing/2.yml") to """
                         |blah: blah
-                    """.trimMargin()
+                    """.trimMargin(),
                 )
             }
 
@@ -2077,8 +2077,8 @@ object ConfigurationLoaderSpec : Spek({
                     { loadConfiguration(files, rootConfigPath) },
                     throws(
                         withMessage("Unknown property 'blah'. Known properties are: config_variables, containers, forbid_telemetry, include, project_name, tasks") and
-                            withFileName("https://myrepo.com/bundles/bundle.git@v1.2.3: thing/2.yml")
-                    )
+                            withFileName("https://myrepo.com/bundles/bundle.git@v1.2.3: thing/2.yml"),
+                    ),
                 )
             }
         }
@@ -2101,7 +2101,7 @@ object ConfigurationLoaderSpec : Spek({
                     """.trimMargin(),
                     pathForGitInclude("https://myrepo.com/bundles/bundle.git", "v1.2.3", "otherthings/2.yml") to """
                         |blah: blah
-                    """.trimMargin()
+                    """.trimMargin(),
                 )
             }
 
@@ -2110,8 +2110,8 @@ object ConfigurationLoaderSpec : Spek({
                     { loadConfiguration(files, rootConfigPath) },
                     throws(
                         withMessage("Unknown property 'blah'. Known properties are: config_variables, containers, forbid_telemetry, include, project_name, tasks") and
-                            withFileName("https://myrepo.com/bundles/bundle.git@v1.2.3: otherthings/2.yml")
-                    )
+                            withFileName("https://myrepo.com/bundles/bundle.git@v1.2.3: otherthings/2.yml"),
+                    ),
                 )
             }
         }
@@ -2130,7 +2130,7 @@ object ConfigurationLoaderSpec : Spek({
                     """.trimMargin(),
                     pathForGitInclude("https://myrepo.com/bundles/bundle.git", "v1.2.3", "1.yml") to """
                         |project_name: not-allowed
-                    """.trimMargin()
+                    """.trimMargin(),
                 )
             }
 
@@ -2139,8 +2139,8 @@ object ConfigurationLoaderSpec : Spek({
                     { loadConfiguration(files, rootConfigPath) },
                     throws(
                         withMessage("Only the root configuration file can contain the project name, but this file has a project name.") and
-                            withFileName("https://myrepo.com/bundles/bundle.git@v1.2.3: 1.yml")
-                    )
+                            withFileName("https://myrepo.com/bundles/bundle.git@v1.2.3: 1.yml"),
+                    ),
                 )
             }
         }
@@ -2163,7 +2163,7 @@ object ConfigurationLoaderSpec : Spek({
                     """.trimMargin(),
                     pathForGitInclude("https://myrepo.com/bundles/bundle.git", "v1.2.3", "2.yml") to """
                         |project_name: blah
-                    """.trimMargin()
+                    """.trimMargin(),
                 )
             }
 
@@ -2172,8 +2172,8 @@ object ConfigurationLoaderSpec : Spek({
                     { loadConfiguration(files, rootConfigPath) },
                     throws(
                         withMessage("Only the root configuration file can contain the project name, but this file has a project name.") and
-                            withFileName("https://myrepo.com/bundles/bundle.git@v1.2.3: 2.yml")
-                    )
+                            withFileName("https://myrepo.com/bundles/bundle.git@v1.2.3: 2.yml"),
+                    ),
                 )
             }
         }
@@ -2192,7 +2192,7 @@ object ConfigurationLoaderSpec : Spek({
                     """.trimMargin(),
                     pathForGitInclude("https://myrepo.com/bundles/bundle.git", "v1.2.3", "1.yml") to """
                         |forbid_telemetry: true
-                    """.trimMargin()
+                    """.trimMargin(),
                 )
             }
 
@@ -2201,8 +2201,8 @@ object ConfigurationLoaderSpec : Spek({
                     { loadConfiguration(files, rootConfigPath) },
                     throws(
                         withMessage("Only the root configuration file can forbid telemetry, but this file forbids telemetry.") and
-                            withFileName("https://myrepo.com/bundles/bundle.git@v1.2.3: 1.yml")
-                    )
+                            withFileName("https://myrepo.com/bundles/bundle.git@v1.2.3: 1.yml"),
+                    ),
                 )
             }
         }
@@ -2225,7 +2225,7 @@ object ConfigurationLoaderSpec : Spek({
                     """.trimMargin(),
                     pathForGitInclude("https://myrepo.com/bundles/bundle.git", "v1.2.3", "2.yml") to """
                         |forbid_telemetry: true
-                    """.trimMargin()
+                    """.trimMargin(),
                 )
             }
 
@@ -2234,8 +2234,8 @@ object ConfigurationLoaderSpec : Spek({
                     { loadConfiguration(files, rootConfigPath) },
                     throws(
                         withMessage("Only the root configuration file can forbid telemetry, but this file forbids telemetry.") and
-                            withFileName("https://myrepo.com/bundles/bundle.git@v1.2.3: 2.yml")
-                    )
+                            withFileName("https://myrepo.com/bundles/bundle.git@v1.2.3: 2.yml"),
+                    ),
                 )
             }
         }
@@ -2254,7 +2254,7 @@ object ConfigurationLoaderSpec : Spek({
                     """.trimMargin(),
                     pathForGitInclude("https://myrepo.com/bundles/bundle.git", "v1.2.3", "somethingelse.yml") to """
                         |containers: []
-                    """.trimMargin()
+                    """.trimMargin(),
                 )
             }
 
@@ -2263,8 +2263,8 @@ object ConfigurationLoaderSpec : Spek({
                     { loadConfiguration(files, rootConfigPath) },
                     throws(
                         withMessage("Included file 'something.yml' (something.yml from https://myrepo.com/bundles/bundle.git@v1.2.3) does not exist.") and
-                            withFileName("/project/batect.yml")
-                    )
+                            withFileName("/project/batect.yml"),
+                    ),
                 )
             }
         }
@@ -2284,7 +2284,7 @@ object ConfigurationLoaderSpec : Spek({
                     pathForGitInclude("https://myrepo.com/bundles/bundle.git", "v1.2.3", "1.yml") to """
                         |include:
                         | - 2.yml
-                    """.trimMargin()
+                    """.trimMargin(),
                 )
             }
 
@@ -2296,8 +2296,8 @@ object ConfigurationLoaderSpec : Spek({
                             withFileName("https://myrepo.com/bundles/bundle.git@v1.2.3: 1.yml") and
                             withLineNumber(2) and
                             withColumn(4) and
-                            withPath("include[0]")
-                    )
+                            withPath("include[0]"),
+                    ),
                 )
             }
         }
@@ -2317,7 +2317,7 @@ object ConfigurationLoaderSpec : Spek({
                     pathForGitInclude("https://myrepo.com/bundles/bundle.git", "v1.2.3", "things/1.yml") to """
                         |include:
                         | - ../2.yml
-                    """.trimMargin()
+                    """.trimMargin(),
                 )
             }
 
@@ -2329,8 +2329,8 @@ object ConfigurationLoaderSpec : Spek({
                             withFileName("https://myrepo.com/bundles/bundle.git@v1.2.3: things/1.yml") and
                             withLineNumber(2) and
                             withColumn(4) and
-                            withPath("include[0]")
-                    )
+                            withPath("include[0]"),
+                    ),
                 )
             }
         }
@@ -2354,7 +2354,7 @@ object ConfigurationLoaderSpec : Spek({
                         |containers:
                         |  container-1:
                         |    image: alpine:4.5.6
-                    """.trimMargin()
+                    """.trimMargin(),
                 )
             }
 
@@ -2384,7 +2384,7 @@ object ConfigurationLoaderSpec : Spek({
                         |  task-1:
                         |    run:
                         |      container: container-2
-                    """.trimMargin()
+                    """.trimMargin(),
                 )
             }
 
@@ -2410,7 +2410,7 @@ object ConfigurationLoaderSpec : Spek({
                     pathForGitInclude("https://myrepo.com/bundles/bundle.git", "v1.2.3", "1.yml") to """
                         |config_variables:
                         |  config-var-1: {}
-                    """.trimMargin()
+                    """.trimMargin(),
                 )
             }
 
@@ -2434,7 +2434,7 @@ object ConfigurationLoaderSpec : Spek({
                         |   repo: https://myrepo.com/bundles/bundle.git
                         |   ref: v1.2.3
                         |   path: 1.yml
-                    """.trimMargin()
+                    """.trimMargin(),
                 )
             }
 
@@ -2442,8 +2442,8 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat(
                     { loadConfiguration(files, rootConfigPath) },
                     throws(
-                        withMessage("Could not load include '1.yml' from https://myrepo.com/bundles/bundle.git@v1.2.3: Something went wrong.") and withFileName("/project/batect.yml")
-                    )
+                        withMessage("Could not load include '1.yml' from https://myrepo.com/bundles/bundle.git@v1.2.3: Something went wrong.") and withFileName("/project/batect.yml"),
+                    ),
                 )
             }
         }

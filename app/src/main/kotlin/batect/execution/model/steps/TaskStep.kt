@@ -18,7 +18,7 @@
     ContainerNameOnlySerializer::class,
     PathSerializer::class,
     ImageReferenceSerializer::class,
-    NetworkReferenceSerializer::class
+    NetworkReferenceSerializer::class,
 )
 
 package batect.execution.model.steps
@@ -39,7 +39,7 @@ import kotlinx.serialization.UseSerializers
 
 @Serializable
 sealed class TaskStep(
-    @Transient val countsAgainstParallelismCap: Boolean = true
+    @Transient val countsAgainstParallelismCap: Boolean = true,
 )
 
 @Serializable
@@ -55,7 +55,7 @@ object PrepareTaskNetworkStep : TaskStep()
 data class CreateContainerStep(
     val container: Container,
     val image: ImageReference,
-    val network: NetworkReference
+    val network: NetworkReference,
 ) : TaskStep()
 
 @Serializable
@@ -64,7 +64,7 @@ data class RunContainerStep(val container: Container, val dockerContainer: Docke
 @Serializable
 data class RunContainerSetupCommandsStep(
     val container: Container,
-    val dockerContainer: DockerContainer
+    val dockerContainer: DockerContainer,
 ) : TaskStep()
 
 @Serializable

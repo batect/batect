@@ -61,8 +61,8 @@ object ImageTaggingValidatorSpec : Spek({
             val commandLineOptions = CommandLineOptions(
                 imageTags = mapOf(
                     "some-container" to setOf("some-container:abc123"),
-                    "another-container" to setOf("another-container:abc123")
-                )
+                    "another-container" to setOf("another-container:abc123"),
+                ),
             )
             val validator by createForEachTest { ImageTaggingValidator(commandLineOptions) }
 
@@ -95,8 +95,8 @@ object ImageTaggingValidatorSpec : Spek({
                     validator.notifyContainersUsed(
                         setOf(
                             Container("some-container", builtImage),
-                            Container("another-container", builtImage)
-                        )
+                            Container("another-container", builtImage),
+                        ),
                     )
                 }
 

@@ -21,7 +21,7 @@ import batect.config.BuildImage
 import batect.config.Container
 
 class ImageTaggingValidator(
-    private val commandLineOptions: CommandLineOptions
+    private val commandLineOptions: CommandLineOptions,
 ) {
     private val usedContainerNames = mutableSetOf<String>()
 

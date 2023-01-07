@@ -26,7 +26,7 @@ class UpdateInfoUpdater(
     private val updateInfoStorage: UpdateInfoStorage,
     private val telemetryCaptor: TelemetryCaptor,
     private val logger: Logger,
-    private val threadRunner: ThreadRunner = defaultThreadRunner
+    private val threadRunner: ThreadRunner = defaultThreadRunner,
 ) {
     fun updateCachedInfo() {
         threadRunner {

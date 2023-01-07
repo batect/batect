@@ -15,7 +15,7 @@
 */
 
 @file:UseSerializers(
-    ZonedDateTimeSerializer::class
+    ZonedDateTimeSerializer::class,
 )
 
 package batect.telemetry
@@ -31,7 +31,7 @@ import java.time.ZonedDateTime
 data class TelemetryEvent(
     val type: String,
     val time: ZonedDateTime,
-    val attributes: Map<String, JsonPrimitive>
+    val attributes: Map<String, JsonPrimitive>,
 ) {
     init {
         if (time.zone != ZoneOffset.UTC) {

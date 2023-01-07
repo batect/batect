@@ -34,7 +34,7 @@ class VersionInfoCommand(
     private val dockerClientFactory: DockerClientFactory,
     private val gitClient: GitClient,
     private val updateNotifier: UpdateNotifier,
-    private val logger: Logger
+    private val logger: Logger,
 ) : Command {
     override fun run(): Int {
         outputStream.println("Batect version:    ${versionInfo.version}")

@@ -40,8 +40,8 @@ object BuildImageStepSpec : Spek({
                         |   "type": "${step::class.qualifiedName}",
                         |   "container": "the-container"
                         |}
-                        """.trimMargin()
-                    )
+                        """.trimMargin(),
+                    ),
                 )
             }
         }

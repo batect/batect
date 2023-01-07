@@ -21,7 +21,7 @@ import batect.config.TaskSpecialisedConfiguration
 import batect.utils.generateId
 
 class DockerResourceNameGenerator(
-    private val config: TaskSpecialisedConfiguration
+    private val config: TaskSpecialisedConfiguration,
 ) {
     fun generateNameFor(container: Container): String = generateNameFor(container.name)
 

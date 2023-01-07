@@ -27,7 +27,7 @@ import java.io.PrintStream
 data class TaskContainerOnlyIOStreamingOptions(
     private val taskContainer: Container,
     private val stdout: PrintStream,
-    private val consoleInfo: ConsoleInfo
+    private val consoleInfo: ConsoleInfo,
 ) : ContainerIOStreamingOptions {
     override fun terminalTypeForContainer(container: Container): String? = consoleInfo.terminalType
     override fun attachStdinForContainer(container: Container): Boolean = container == taskContainer

@@ -58,7 +58,7 @@ object RunTaskCommandSpec : Spek({
 
             val baseCommandLineOptions = CommandLineOptions(
                 configurationFileName = configFile,
-                taskName = taskName
+                taskName = taskName,
             )
 
             val configLoader by createForEachTest {
@@ -90,7 +90,7 @@ object RunTaskCommandSpec : Spek({
                 fakeDockerConnectivity(
                     DI.direct {
                         bind<SessionKodeinFactory>() with instance(sessionKodeinFactory)
-                    }
+                    },
                 )
             }
 

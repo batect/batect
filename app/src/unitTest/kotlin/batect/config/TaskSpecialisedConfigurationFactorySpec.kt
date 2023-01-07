@@ -52,8 +52,8 @@ object TaskSpecialisedConfigurationFactorySpec : Spek({
         given("a single override") {
             val commandLineOptions = CommandLineOptions(
                 imageOverrides = mapOf(
-                    container1.name to "another-image"
-                )
+                    container1.name to "another-image",
+                ),
             )
 
             val factory by createForEachTest { TaskSpecialisedConfigurationFactory(rawConfig, commandLineOptions, logger) }
@@ -67,8 +67,8 @@ object TaskSpecialisedConfigurationFactorySpec : Spek({
             val commandLineOptions = CommandLineOptions(
                 imageOverrides = mapOf(
                     container1.name to "another-image",
-                    container2.name to "another-other-image"
-                )
+                    container2.name to "another-other-image",
+                ),
             )
 
             val factory by createForEachTest { TaskSpecialisedConfigurationFactory(rawConfig, commandLineOptions, logger) }
@@ -79,9 +79,9 @@ object TaskSpecialisedConfigurationFactorySpec : Spek({
                     equalTo(
                         createTaskSpecialisedConfiguration(
                             Container("container-1", PullImage("another-image")),
-                            Container("container-2", PullImage("another-other-image"))
-                        )
-                    )
+                            Container("container-2", PullImage("another-other-image")),
+                        ),
+                    ),
                 )
             }
         }
@@ -89,8 +89,8 @@ object TaskSpecialisedConfigurationFactorySpec : Spek({
         given("an override for a container that doesn't exist") {
             val commandLineOptions = CommandLineOptions(
                 imageOverrides = mapOf(
-                    "another-container" to "another-image"
-                )
+                    "another-container" to "another-image",
+                ),
             )
 
             val factory by createForEachTest { TaskSpecialisedConfigurationFactory(rawConfig, commandLineOptions, logger) }
@@ -98,7 +98,7 @@ object TaskSpecialisedConfigurationFactorySpec : Spek({
             it("throws an appropriate exception") {
                 assertThat(
                     { factory.create(task) },
-                    throws<ConfigurationException>(withMessage("Cannot override image for container 'another-container' because there is no container named 'another-container' defined."))
+                    throws<ConfigurationException>(withMessage("Cannot override image for container 'another-container' because there is no container named 'another-container' defined.")),
                 )
             }
         }
@@ -112,7 +112,7 @@ object TaskSpecialisedConfigurationFactorySpec : Spek({
             entrypoint = Command.parse("original container-1 entrypoint"),
             workingDirectory = "/some/work/dir",
             portMappings = setOf(PortMapping(123, 456)),
-            environment = mapOf("SOME_VAR" to LiteralValue("SOME_VAR_VALUE"), "SOME_OTHER_VAR" to LiteralValue("SOME_OTHER_VAR_VALUE"))
+            environment = mapOf("SOME_VAR" to LiteralValue("SOME_VAR_VALUE"), "SOME_OTHER_VAR" to LiteralValue("SOME_OTHER_VAR_VALUE")),
         )
 
         val container2 = Container(
@@ -122,13 +122,13 @@ object TaskSpecialisedConfigurationFactorySpec : Spek({
             entrypoint = Command.parse("original container-2 entrypoint"),
             workingDirectory = "/some/other/work/dir",
             portMappings = setOf(PortMapping(789, 1000)),
-            environment = mapOf("SOME_VAR" to LiteralValue("SOME_VAR_VALUE"), "SOME_OTHER_VAR" to LiteralValue("SOME_OTHER_VAR_VALUE"))
+            environment = mapOf("SOME_VAR" to LiteralValue("SOME_VAR_VALUE"), "SOME_OTHER_VAR" to LiteralValue("SOME_OTHER_VAR_VALUE")),
         )
 
         val container3 = Container(
             "container-3",
             PullImage("some-other-image"),
-            command = null
+            command = null,
         )
 
         val rawConfig = createRawConfiguration(container1, container2, container3)
@@ -177,8 +177,8 @@ object TaskSpecialisedConfigurationFactorySpec : Spek({
                         Command.parse("overridden entrypoint"),
                         mapOf("SOME_VAR" to LiteralValue("SOME_VAR_REPLACED"), "SOME_NEW_VAR" to LiteralValue("SOME_NEW_VALUE")),
                         setOf(PortMapping(2000, 3000)),
-                        "/task/specific/work/dir"
-                    )
+                        "/task/specific/work/dir",
+                    ),
                 )
 
                 val taskSpecialisedConfig by createForEachTest { factory.create(task) }
@@ -197,10 +197,10 @@ object TaskSpecialisedConfigurationFactorySpec : Spek({
                                 environment = mapOf(
                                     "SOME_VAR" to LiteralValue("SOME_VAR_REPLACED"),
                                     "SOME_OTHER_VAR" to LiteralValue("SOME_OTHER_VAR_VALUE"),
-                                    "SOME_NEW_VAR" to LiteralValue("SOME_NEW_VALUE")
-                                )
-                            )
-                        )
+                                    "SOME_NEW_VAR" to LiteralValue("SOME_NEW_VALUE"),
+                                ),
+                            ),
+                        ),
                     )
                 }
 
@@ -287,7 +287,7 @@ object TaskSpecialisedConfigurationFactorySpec : Spek({
             entrypoint = Command.parse("original container-1 entrypoint"),
             workingDirectory = "/some/work/dir",
             portMappings = setOf(PortMapping(123, 456)),
-            environment = mapOf("SOME_VAR" to LiteralValue("SOME_VAR_VALUE"), "SOME_OTHER_VAR" to LiteralValue("SOME_OTHER_VAR_VALUE"))
+            environment = mapOf("SOME_VAR" to LiteralValue("SOME_VAR_VALUE"), "SOME_OTHER_VAR" to LiteralValue("SOME_OTHER_VAR_VALUE")),
         )
 
         val container2 = Container(
@@ -297,13 +297,13 @@ object TaskSpecialisedConfigurationFactorySpec : Spek({
             entrypoint = Command.parse("original container-2 entrypoint"),
             workingDirectory = "/some/other/work/dir",
             portMappings = setOf(PortMapping(789, 1000)),
-            environment = mapOf("SOME_VAR" to LiteralValue("SOME_VAR_VALUE"), "SOME_OTHER_VAR" to LiteralValue("SOME_OTHER_VAR_VALUE"))
+            environment = mapOf("SOME_VAR" to LiteralValue("SOME_VAR_VALUE"), "SOME_OTHER_VAR" to LiteralValue("SOME_OTHER_VAR_VALUE")),
         )
 
         val container3 = Container(
             "container-3",
             PullImage("some-other-image"),
-            command = null
+            command = null,
         )
 
         val rawConfig = createRawConfiguration(container1, container2, container3)
@@ -333,9 +333,9 @@ object TaskSpecialisedConfigurationFactorySpec : Spek({
                     "container-2" to TaskContainerCustomisation(
                         mapOf("SOME_VAR" to LiteralValue("SOME_VAR_REPLACED"), "SOME_NEW_VAR" to LiteralValue("SOME_NEW_VALUE")),
                         setOf(PortMapping(2000, 3000)),
-                        "/task/specific/work/dir"
-                    )
-                )
+                        "/task/specific/work/dir",
+                    ),
+                ),
             )
 
             val taskSpecialisedConfig by createForEachTest { factory.create(task) }
@@ -352,12 +352,12 @@ object TaskSpecialisedConfigurationFactorySpec : Spek({
                             environment = mapOf(
                                 "SOME_VAR" to LiteralValue("SOME_VAR_REPLACED"),
                                 "SOME_NEW_VAR" to LiteralValue("SOME_NEW_VALUE"),
-                                "SOME_OTHER_VAR" to LiteralValue("SOME_OTHER_VAR_VALUE")
+                                "SOME_OTHER_VAR" to LiteralValue("SOME_OTHER_VAR_VALUE"),
                             ),
                             portMappings = setOf(PortMapping(789, 1000), PortMapping(2000, 3000)),
-                            workingDirectory = "/task/specific/work/dir"
-                        )
-                    )
+                            workingDirectory = "/task/specific/work/dir",
+                        ),
+                    ),
                 )
             }
 
@@ -371,8 +371,8 @@ object TaskSpecialisedConfigurationFactorySpec : Spek({
                 mainTaskName,
                 TaskRunConfiguration("container-1"),
                 customisations = mapOf(
-                    "container-2" to TaskContainerCustomisation()
-                )
+                    "container-2" to TaskContainerCustomisation(),
+                ),
             )
 
             val taskSpecialisedConfig by createForEachTest { factory.create(task) }
@@ -395,8 +395,8 @@ object TaskSpecialisedConfigurationFactorySpec : Spek({
                 mainTaskName,
                 TaskRunConfiguration("container-1"),
                 customisations = mapOf(
-                    "container-5" to TaskContainerCustomisation()
-                )
+                    "container-5" to TaskContainerCustomisation(),
+                ),
             )
 
             it("throws an appropriate exception") {

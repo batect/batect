@@ -25,7 +25,7 @@ import kotlin.io.path.name
 
 class GitClient(
     private val processRunner: ProcessRunner,
-    private val temporaryDirectoryCreator: (parent: Path, name: String) -> Path = { parent, name -> Files.createTempDirectory(parent, name) }
+    private val temporaryDirectoryCreator: (parent: Path, name: String) -> Path = { parent, name -> Files.createTempDirectory(parent, name) },
 ) {
     fun clone(repo: String, ref: String, destination: Path) {
         try {

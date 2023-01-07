@@ -43,8 +43,8 @@ object ProxyVariablesJourneyTest : Spek({
                         "http_proxy" to httpProxy,
                         "https_proxy" to httpsProxy,
                         "ftp_proxy" to ftpProxy,
-                        "no_proxy" to noProxy
-                    )
+                        "no_proxy" to noProxy,
+                    ),
                 )
             }
 

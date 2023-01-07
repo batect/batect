@@ -18,7 +18,7 @@
     ContainerNameOnlySerializer::class,
     PathSerializer::class,
     ImageReferenceSerializer::class,
-    NetworkReferenceSerializer::class
+    NetworkReferenceSerializer::class,
 )
 
 package batect.execution.model.events
@@ -44,7 +44,7 @@ import kotlinx.serialization.builtins.SetSerializer
 
 @Serializable
 sealed class TaskEvent(
-    @Transient val isInformationalEvent: Boolean = false
+    @Transient val isInformationalEvent: Boolean = false,
 )
 
 @Serializable

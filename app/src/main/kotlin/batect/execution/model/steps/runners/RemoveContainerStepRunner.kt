@@ -27,7 +27,7 @@ import kotlinx.coroutines.runBlocking
 
 class RemoveContainerStepRunner(
     private val client: DockerClient,
-    private val logger: Logger
+    private val logger: Logger,
 ) {
     fun run(step: RemoveContainerStep, eventSink: TaskEventSink) {
         try {

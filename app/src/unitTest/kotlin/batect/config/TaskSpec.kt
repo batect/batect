@@ -49,9 +49,9 @@ object TaskSpec : Spek({
                         task,
                         equalTo(
                             Task(
-                                runConfiguration = TaskRunConfiguration("the-container")
-                            )
-                        )
+                                runConfiguration = TaskRunConfiguration("the-container"),
+                            ),
+                        ),
                     )
                 }
             }
@@ -91,11 +91,11 @@ object TaskSpec : Spek({
                                     "some-other-container" to TaskContainerCustomisation(
                                         workingDirectory = "/blah",
                                         additionalEnvironmentVariables = mapOf("SOME_CONFIG" to LiteralValue("blah")),
-                                        additionalPortMappings = setOf(PortMapping(123, 456))
-                                    )
-                                )
-                            )
-                        )
+                                        additionalPortMappings = setOf(PortMapping(123, 456)),
+                                    ),
+                                ),
+                            ),
+                        ),
                     )
                 }
             }
@@ -151,9 +151,9 @@ object TaskSpec : Spek({
                     "some-other-container" to TaskContainerCustomisation(
                         workingDirectory = "/blah",
                         additionalEnvironmentVariables = mapOf("SOME_CONFIG" to LiteralValue("blah")),
-                        additionalPortMappings = setOf(PortMapping(123, 456))
-                    )
-                )
+                        additionalPortMappings = setOf(PortMapping(123, 456)),
+                    ),
+                ),
             )
 
             it("serializes to the expected JSON") {
@@ -186,8 +186,8 @@ object TaskSpec : Spek({
                                 }
                             }
                         }
-                        """.trimIndent()
-                    )
+                        """.trimIndent(),
+                    ),
                 )
             }
         }

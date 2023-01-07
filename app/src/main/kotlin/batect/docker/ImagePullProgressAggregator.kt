@@ -70,7 +70,7 @@ class ImagePullProgressAggregator {
                 layerStates[key] = value.copy(
                     currentOperation = DownloadOperation.PullComplete,
                     completedBytes = value.totalBytes,
-                    totalBytes = value.totalBytes
+                    totalBytes = value.totalBytes,
                 )
             }
     }

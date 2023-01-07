@@ -27,7 +27,7 @@ enum class Severity {
     Debug,
     Info,
     Warning,
-    Error
+    Error,
 }
 
 interface Jsonable {

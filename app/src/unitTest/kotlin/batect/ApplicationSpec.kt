@@ -208,8 +208,8 @@ object ApplicationSpec : Spek({
                                 mapOf(
                                     CommonAttributes.Exception to AttributeValue(exception),
                                     CommonAttributes.ExceptionCaughtAt to AttributeValue("batect.Application.runCommand"),
-                                    CommonAttributes.IsUserFacingException to AttributeValue(true)
-                                )
+                                    CommonAttributes.IsUserFacingException to AttributeValue(true),
+                                ),
                             )
                         }
 

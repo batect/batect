@@ -59,7 +59,7 @@ object DockerContainerCreationSpecFactorySpec : Spek({
         val resolvedMounts = setOf(
             HostMount("local".toPath(), "remote-host", "mode"),
             VolumeMount(VolumeReference("some-volume"), "remote-volume", "mode"),
-            TmpfsMount("container-tmpfs", "tmpfs-options")
+            TmpfsMount("container-tmpfs", "tmpfs-options"),
         )
 
         val expectedEnvironmentVariables = mapOf("SOME_VAR" to "some resolved value")
@@ -98,7 +98,7 @@ object DockerContainerCreationSpecFactorySpec : Spek({
                     logDriver = "the-log-driver",
                     logOptions = mapOf("option-1" to "value-1"),
                     shmSize = BinarySize.of(2, BinaryUnit.Megabyte),
-                    labels = mapOf("some.key" to "some_value")
+                    labels = mapOf("some.key" to "some_value"),
                 )
 
                 val userAndGroup = UserAndGroup(123, 456)
@@ -110,7 +110,7 @@ object DockerContainerCreationSpecFactorySpec : Spek({
                     userAndGroup,
                     terminalType,
                     useTTY = false,
-                    attachStdin = true
+                    attachStdin = true,
                 )
 
                 it("populates the container name on the request") {
@@ -159,9 +159,9 @@ object DockerContainerCreationSpecFactorySpec : Spek({
                         equalTo(
                             setOf(
                                 HostMount("local".toPath(), "remote-host", "mode"),
-                                VolumeMount(VolumeReference("some-volume"), "remote-volume", "mode")
-                            )
-                        )
+                                VolumeMount(VolumeReference("some-volume"), "remote-volume", "mode"),
+                            ),
+                        ),
                     )
                 }
 
@@ -170,9 +170,9 @@ object DockerContainerCreationSpecFactorySpec : Spek({
                         spec.tmpfsMounts,
                         equalTo(
                             setOf(
-                                TmpfsMount("container-tmpfs", "tmpfs-options")
-                            )
-                        )
+                                TmpfsMount("container-tmpfs", "tmpfs-options"),
+                            ),
+                        ),
                     )
                 }
 
@@ -249,7 +249,7 @@ object DockerContainerCreationSpecFactorySpec : Spek({
                 val container = Container(
                     "some-container",
                     imageSourceDoesNotMatter(),
-                    portMappings = setOf(PortMapping(123, 456))
+                    portMappings = setOf(PortMapping(123, 456)),
                 )
 
                 val spec = newFactory.create(container, image, network, resolvedMounts, null, terminalType, useTTY = false, attachStdin = false)

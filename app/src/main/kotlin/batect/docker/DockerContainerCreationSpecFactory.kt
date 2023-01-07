@@ -36,7 +36,7 @@ import okio.Path.Companion.toPath
 class DockerContainerCreationSpecFactory(
     private val environmentVariableProvider: DockerContainerEnvironmentVariableProvider,
     private val resourceNameGenerator: DockerResourceNameGenerator,
-    private val commandLineOptions: CommandLineOptions
+    private val commandLineOptions: CommandLineOptions,
 ) {
     fun create(
         container: Container,
@@ -46,7 +46,7 @@ class DockerContainerCreationSpecFactory(
         userAndGroup: UserAndGroup?,
         terminalType: String?,
         useTTY: Boolean,
-        attachStdin: Boolean
+        attachStdin: Boolean,
     ): ContainerCreationSpec {
         val builder = ContainerCreationSpec.Builder(image)
             .withName(resourceNameGenerator.generateNameFor(container))

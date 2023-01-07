@@ -25,7 +25,7 @@ import kotlin.streams.asSequence
 
 class TelemetryUploadQueue(
     private val applicationPaths: ApplicationPaths,
-    private val logger: Logger
+    private val logger: Logger,
 ) {
     private val telemetryDirectory = applicationPaths.rootLocalStorageDirectory.resolve("telemetry")
     private val json = Json.Default

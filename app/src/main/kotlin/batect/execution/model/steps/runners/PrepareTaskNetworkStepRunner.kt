@@ -35,7 +35,7 @@ class PrepareTaskNetworkStepRunner(
     private val containerType: DockerContainerType,
     private val client: DockerClient,
     private val commandLineOptions: CommandLineOptions,
-    private val logger: Logger
+    private val logger: Logger,
 ) {
     fun run(eventSink: TaskEventSink) {
         if (commandLineOptions.existingNetworkToUse == null) {

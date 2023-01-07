@@ -42,7 +42,7 @@ object RemoveContainerStepRuleSpec : Spek({
 
             given("the container has been stopped") {
                 val events = setOf(
-                    ContainerStoppedEvent(containerToRemove)
+                    ContainerStoppedEvent(containerToRemove),
                 )
 
                 on("evaluating the rule") {
@@ -56,7 +56,7 @@ object RemoveContainerStepRuleSpec : Spek({
 
             given("another container has been stopped") {
                 val events = setOf(
-                    ContainerStoppedEvent(Container("some-other-container", imageSourceDoesNotMatter()))
+                    ContainerStoppedEvent(Container("some-other-container", imageSourceDoesNotMatter())),
                 )
 
                 on("evaluating the rule") {
@@ -115,8 +115,8 @@ object RemoveContainerStepRuleSpec : Spek({
                         |   "containerWasStarted": true,
                         |   "manualCleanupCommand": "docker rm --force --volumes some-container-id"
                         |}
-                        """.trimMargin()
-                    )
+                        """.trimMargin(),
+                    ),
                 )
             }
         }

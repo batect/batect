@@ -22,7 +22,7 @@ import java.util.TreeSet
 
 class ProxyEnvironmentVariablesProvider(
     private val preprocessor: ProxyEnvironmentVariablePreprocessor,
-    private val hostEnvironmentVariables: HostEnvironmentVariables
+    private val hostEnvironmentVariables: HostEnvironmentVariables,
 ) {
     private val proxyEnvironmentVariablesNeedingPreprocessing = setOf("http_proxy", "https_proxy", "ftp_proxy")
         .toCollection(TreeSet(String.CASE_INSENSITIVE_ORDER))
@@ -48,7 +48,7 @@ class ProxyEnvironmentVariablesProvider(
 
         val noProxyVariables = mapOf(
             "no_proxy" to addExtraNoProxyEntries(variables["no_proxy"], extraNoProxyEntries),
-            "NO_PROXY" to addExtraNoProxyEntries(variables["NO_PROXY"], extraNoProxyEntries)
+            "NO_PROXY" to addExtraNoProxyEntries(variables["NO_PROXY"], extraNoProxyEntries),
         )
 
         return variables + noProxyVariables

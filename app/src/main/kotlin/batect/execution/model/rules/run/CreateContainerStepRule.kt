@@ -33,7 +33,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class CreateContainerStepRule(
-    @Serializable(with = ContainerNameOnlySerializer::class) val container: Container
+    @Serializable(with = ContainerNameOnlySerializer::class) val container: Container,
 ) : TaskStepRule() {
     override fun evaluate(pastEvents: Set<TaskEvent>): TaskStepRuleEvaluationResult {
         val network = findNetwork(pastEvents)
@@ -47,8 +47,8 @@ data class CreateContainerStepRule(
             CreateContainerStep(
                 container,
                 image,
-                network
-            )
+                network,
+            ),
         )
     }
 

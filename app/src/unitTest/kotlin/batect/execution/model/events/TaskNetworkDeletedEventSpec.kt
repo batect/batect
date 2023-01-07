@@ -36,8 +36,8 @@ object TaskNetworkDeletedEventSpec : Spek({
                         |{
                         |   "type": "${event::class.qualifiedName}"
                         |}
-                        """.trimMargin()
-                    )
+                        """.trimMargin(),
+                    ),
                 )
             }
         }

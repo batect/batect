@@ -37,19 +37,19 @@ class UnixNativeMethods(
     private val libc: LibC,
     private val runtime: Runtime,
     private val platform: Platform,
-    private val posix: POSIX
+    private val posix: POSIX,
 ) : NativeMethods {
     constructor(posix: POSIX) : this(
         LibraryLoader.create(LibC::class.java).load("c"),
         Platform.getNativePlatform(),
-        posix
+        posix,
     )
 
     private constructor(libc: LibC, platform: Platform, posix: POSIX) : this(
         libc,
         Runtime.getRuntime(libc),
         platform,
-        posix
+        posix,
     )
 
     private val STDOUT_FILENO = 1
@@ -121,7 +121,7 @@ class UnixNativeMethods(
             fd: Int,
             request: Int,
             @Out @Transient
-            winsize: WindowSize
+            winsize: WindowSize,
         ): Int
     }
 

@@ -15,7 +15,7 @@
 */
 
 @file:UseSerializers(
-    CommandSerializer::class
+    CommandSerializer::class,
 )
 
 package batect.config
@@ -38,5 +38,5 @@ data class TaskRunConfiguration(
     @SerialName("ports")
     @Serializable(with = PortMappingConfigSetSerializer::class)
     val additionalPortMappings: Set<PortMapping> = emptySet(),
-    @SerialName("working_directory") val workingDiretory: String? = null
+    @SerialName("working_directory") val workingDiretory: String? = null,
 )

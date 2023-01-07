@@ -41,8 +41,8 @@ object ImageBuildFailedEventSpec : Spek({
                         |   "container": "the-container",
                         |   "message": "Something went wrong"
                         |}
-                        """.trimMargin()
-                    )
+                        """.trimMargin(),
+                    ),
                 )
             }
         }

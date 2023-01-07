@@ -85,13 +85,13 @@ class UpdateInfoDownloader(private val client: OkHttpClient, private val logger:
     private data class VersionInfo(
         val version: String,
         val url: String,
-        val files: List<VersionFile>
+        val files: List<VersionFile>,
     )
 
     @Serializable
     private data class VersionFile(
         val name: String,
-        val url: String
+        val url: String,
     )
 }
 

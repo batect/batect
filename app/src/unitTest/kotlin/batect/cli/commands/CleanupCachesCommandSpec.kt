@@ -53,7 +53,7 @@ object CleanupCachesCommandSpec : Spek({
                     VolumeReference("batect-cache-this-project-abc123"),
                     VolumeReference("batect-cache-this-project-def456"),
                     VolumeReference("batect-cache-other-project-abc123"),
-                    VolumeReference("something-else")
+                    VolumeReference("something-else"),
                 )
             }
         }
@@ -87,7 +87,7 @@ object CleanupCachesCommandSpec : Spek({
                 DI.direct {
                     bind<CacheManager>() with instance(cacheManager)
                     bind<DockerClient>() with instance(dockerClient)
-                }
+                },
             )
         }
 
@@ -130,9 +130,9 @@ object CleanupCachesCommandSpec : Spek({
                             fileSystem.getPath("/caches", "empty-cache"),
                             fileSystem.getPath("/caches", "cache-with-file"),
                             fileSystem.getPath("/caches", "cache-with-sub-directory"),
-                            fileSystem.getPath("/caches", "file-that-should-not-be-deleted")
-                        )
-                    )
+                            fileSystem.getPath("/caches", "file-that-should-not-be-deleted"),
+                        ),
+                    ),
                 )
             }
         }
@@ -175,9 +175,9 @@ object CleanupCachesCommandSpec : Spek({
                             fileSystem.getPath("/caches", "empty-cache"),
                             fileSystem.getPath("/caches", "cache-with-file"),
                             fileSystem.getPath("/caches", "cache-with-sub-directory"),
-                            fileSystem.getPath("/caches", "file-that-should-not-be-deleted")
-                        )
-                    )
+                            fileSystem.getPath("/caches", "file-that-should-not-be-deleted"),
+                        ),
+                    ),
                 )
             }
         }

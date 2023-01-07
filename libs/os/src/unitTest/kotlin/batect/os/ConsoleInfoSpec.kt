@@ -169,7 +169,7 @@ object ConsoleInfoSpec : Spek({
                             nativeMethods,
                             genericSystemInfo,
                             HostEnvironmentVariables("TERM" to "other-terminal", "TERM_PROGRAM" to "mintty"),
-                            logger
+                            logger,
                         )
                     }
 
@@ -221,8 +221,8 @@ object ConsoleInfoSpec : Spek({
                             "supportsInteractivity": false,
                             "terminalType": null
                         }
-                        """.trimIndent()
-                    )
+                        """.trimIndent(),
+                    ),
                 )
             }
         }

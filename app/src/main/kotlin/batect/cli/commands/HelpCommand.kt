@@ -25,7 +25,7 @@ import java.io.PrintStream
 class HelpCommand(
     private val optionsParser: CommandLineOptionsParser,
     private val outputStream: PrintStream,
-    private val consoleDimensions: ConsoleDimensions
+    private val consoleDimensions: ConsoleDimensions,
 ) : Command {
     private val consoleWidth: Int = consoleDimensions.current?.width ?: Int.MAX_VALUE
 

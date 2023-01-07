@@ -80,7 +80,7 @@ object CommandSpec : Spek({
                 """echo 'hello "world"'""" to listOf("echo", """hello "world""""),
                 """echo can\'t""" to listOf("echo", "can't"),
                 // This next example comes from http://stackoverflow.com/a/28640859/1668119
-                """sh -c 'echo "\"un'\''kno\"wn\$\$\$'\'' with \$\"\$\$. \"zzz\""'""" to listOf("sh", "-c", """echo "\"un'kno\"wn\$\$\$' with \$\"\$\$. \"zzz\""""")
+                """sh -c 'echo "\"un'\''kno\"wn\$\$\$'\'' with \$\"\$\$. \"zzz\""'""" to listOf("sh", "-c", """echo "\"un'kno\"wn\$\$\$' with \$\"\$\$. \"zzz\"""""),
             ).forEach { (originalCommand, expectedSplit) ->
                 given("the command '$originalCommand'") {
                     on("parsing the command") {
@@ -105,14 +105,14 @@ object CommandSpec : Spek({
                 """echo "hello""" to "it contains an unbalanced double quote",
                 """echo 'hello""" to "it contains an unbalanced single quote",
                 """echo hello\""" to """it ends with a backslash (backslashes always escape the following character, for a literal backslash, use '\\')""",
-                """echo "hello\""" to """it ends with a backslash (backslashes always escape the following character, for a literal backslash, use '\\')"""
+                """echo "hello\""" to """it ends with a backslash (backslashes always escape the following character, for a literal backslash, use '\\')""",
             ).forEach { (command, expectedErrorMessage) ->
                 given("the command '$command'") {
                     on("parsing the command") {
                         it("throws an exception with the message '$expectedErrorMessage'") {
                             assertThat(
                                 { Command.parse(command) },
-                                throws<InvalidCommandLineException>(withMessage("Command `$command` is invalid: $expectedErrorMessage"))
+                                throws<InvalidCommandLineException>(withMessage("Command `$command` is invalid: $expectedErrorMessage")),
                             )
                         }
                     }

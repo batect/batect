@@ -41,8 +41,8 @@ object ContainerRemovalFailedEventSpec : Spek({
                         |   "container": "some-container",
                         |   "message": "Something went wrong"
                         |}
-                        """.trimMargin()
-                    )
+                        """.trimMargin(),
+                    ),
                 )
             }
         }

@@ -708,6 +708,33 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                             assertThat(Files.exists(fileSystem.getPath(localPath, "volume-2")), equalTo(true))
                         }
                     }
+
+                    // See https://github.com/batect/batect/issues/1435#issuecomment-1400286103 for explanation.
+                    given("special Docker Desktop sockets are being mounted") {
+                        val guestService = "/run/guest-services/some-guest-service.sock"
+                        val hostService = "/run/host-services/some-host-service.sock"
+                        val notSpecial = "/run/host-services-not/some-other.sock"
+
+                        val volumeMounts = setOf(
+                            HostMount(guestService.toPath(), "/container/guest-service.sock", null),
+                            HostMount(hostService.toPath(), "/container/host-service.sock", null),
+                            HostMount(notSpecial.toPath(), "/container/not-special", null),
+                        )
+
+                        beforeEachTest { provider.createMissingMountDirectories(volumeMounts, container) }
+
+                        it("does not create a directory for the Docker Desktop guest service") {
+                            assertThat(Files.exists(fileSystem.getPath(guestService)), equalTo(false))
+                        }
+
+                        it("does not create a directory for the Docker Desktop host service") {
+                            assertThat(Files.exists(fileSystem.getPath(hostService)), equalTo(false))
+                        }
+
+                        it("creates a directory for the path that is not a known Docker Desktop path") {
+                            assertThat(Files.exists(fileSystem.getPath(notSpecial)), equalTo(true))
+                        }
+                    }
                 }
             }
         }

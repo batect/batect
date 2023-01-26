@@ -34,6 +34,7 @@ import batect.os.SystemInfo
 import kotlinx.coroutines.runBlocking
 import java.nio.file.FileSystem
 import java.nio.file.Files
+import java.nio.file.Path
 
 class RunAsCurrentUserConfigurationProvider(
     private val systemInfo: SystemInfo,
@@ -183,7 +184,7 @@ class RunAsCurrentUserConfigurationProvider(
         mounts.filterIsInstance<HostMount>().forEach { mount ->
             val path = fileSystem.getPath(mount.localPath.toString())
 
-            if (!Files.exists(path)) {
+            if (!Files.exists(path) && !path.isSpecialDockerDesktopPath) {
                 Files.createDirectories(path)
             }
         }
@@ -215,6 +216,11 @@ class RunAsCurrentUserConfigurationProvider(
             .maxByOrNull { it.value.size }
             ?.key
     }
+
+    private val Path.isSpecialDockerDesktopPath: Boolean
+        get() {
+            return this.startsWith("/run/host-services") || this.startsWith("/run/guest-services")
+        }
 
     private fun List<String>.relativePathTo(other: List<String>) = other.subList(this.lastIndex + 1, other.lastIndex + 1)
 

@@ -55,13 +55,6 @@ configure<SpotlessExtension> {
         endWithNewline()
     }
 
-    format("gradle") {
-        target("**/*.gradle")
-
-        // Check what values are really required with: find . -name '*.gradle' -type f -exec sed -n 17p {} \; | cut -d' ' -f1 | sort | uniq
-        licenseHeader("/*$licenseText*/\n\n", "(//|apply|def|ext|import|plugins|rootProject|sourceSets|tasks|buildscript|pluginManagement)")
-    }
-
     kotlinGradle {
         target("**/*.gradle.kts")
 

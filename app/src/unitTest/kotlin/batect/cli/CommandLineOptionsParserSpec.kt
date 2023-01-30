@@ -270,7 +270,10 @@ object CommandLineOptionsParserSpec : Spek({
             listOf("--no-cleanup", "some-task") to defaultCommandLineOptions.copy(disableCleanupAfterFailure = true, disableCleanupAfterSuccess = true, taskName = "some-task"),
             listOf("--no-proxy-vars", "some-task") to defaultCommandLineOptions.copy(dontPropagateProxyEnvironmentVariables = true, taskName = "some-task"),
             listOf("--config-var", "a=b", "--config-var", "c=d", "some-task") to defaultCommandLineOptions.copy(configVariableOverrides = mapOf("a" to "b", "c" to "d"), taskName = "some-task"),
-            listOf("--override-image", "container-1=image-1", "--override-image", "container-2=image-2", "some-task") to defaultCommandLineOptions.copy(imageOverrides = mapOf("container-1" to "image-1", "container-2" to "image-2"), taskName = "some-task"),
+            listOf("--override-image", "container-1=image-1", "--override-image", "container-2=image-2", "some-task") to defaultCommandLineOptions.copy(
+                imageOverrides = mapOf("container-1" to "image-1", "container-2" to "image-2"),
+                taskName = "some-task",
+            ),
             listOf("--docker-host=some-host", "some-task") to defaultCommandLineOptions.copy(docker = defaultCommandLineOptions.docker.copy(host = "some-host"), taskName = "some-task"),
             listOf("--docker-context=some-context", "some-task") to defaultCommandLineOptions.copy(docker = defaultCommandLineOptions.docker.copy(contextName = "some-context"), taskName = "some-task"),
             listOf("--docker-tls", "some-task") to defaultCommandLineOptions.copy(docker = defaultCommandLineOptions.docker.copy(useTLS = true), taskName = "some-task"),
@@ -343,9 +346,19 @@ object CommandLineOptionsParserSpec : Spek({
             listOf("--generate-completion-task-info=fish") to defaultCommandLineOptions.copy(generateShellTabCompletionTaskInformation = Shell.Fish),
             listOf("--max-parallelism=3", "some-task") to defaultCommandLineOptions.copy(maximumLevelOfParallelism = 3, taskName = "some-task"),
             listOf("--tag-image", "some-container=some-container:abc123", "some-task") to defaultCommandLineOptions.copy(imageTags = mapOf("some-container" to setOf("some-container:abc123")), taskName = "some-task"),
-            listOf("--tag-image", "some-container=some-container:abc123", "--tag-image", "some-container=some-other-container:abc123", "some-task") to defaultCommandLineOptions.copy(imageTags = mapOf("some-container" to setOf("some-container:abc123", "some-other-container:abc123")), taskName = "some-task"),
-            listOf("--tag-image", "some-container=some-container:abc123", "--tag-image", "some-other-container=some-other-container:abc123", "some-task") to defaultCommandLineOptions.copy(imageTags = mapOf("some-container" to setOf("some-container:abc123"), "some-other-container" to setOf("some-other-container:abc123")), taskName = "some-task"),
-            listOf("--tag-image", "some-container=some-container:abc123", "--override-image", "some-other-container=some-other-container:abc123", "some-task") to defaultCommandLineOptions.copy(imageTags = mapOf("some-container" to setOf("some-container:abc123")), imageOverrides = mapOf("some-other-container" to "some-other-container:abc123"), taskName = "some-task"),
+            listOf("--tag-image", "some-container=some-container:abc123", "--tag-image", "some-container=some-other-container:abc123", "some-task") to defaultCommandLineOptions.copy(
+                imageTags = mapOf("some-container" to setOf("some-container:abc123", "some-other-container:abc123")),
+                taskName = "some-task",
+            ),
+            listOf("--tag-image", "some-container=some-container:abc123", "--tag-image", "some-other-container=some-other-container:abc123", "some-task") to defaultCommandLineOptions.copy(
+                imageTags = mapOf("some-container" to setOf("some-container:abc123"), "some-other-container" to setOf("some-other-container:abc123")),
+                taskName = "some-task",
+            ),
+            listOf("--tag-image", "some-container=some-container:abc123", "--override-image", "some-other-container=some-other-container:abc123", "some-task") to defaultCommandLineOptions.copy(
+                imageTags = mapOf("some-container" to setOf("some-container:abc123")),
+                imageOverrides = mapOf("some-other-container" to "some-other-container:abc123"),
+                taskName = "some-task",
+            ),
             listOf("--clean-cache=some-cache-name") to defaultCommandLineOptions.copy(cleanCaches = setOf("some-cache-name")),
         ).forEach { (args, expectedResult) ->
             given("the arguments $args") {

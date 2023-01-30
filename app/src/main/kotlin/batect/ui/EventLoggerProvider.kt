@@ -61,7 +61,15 @@ class EventLoggerProvider(
         QuietEventLogger(failureErrorMessageFormatter, errorConsole, createTaskContainerOnlyIOStreamingOptions(graph))
 
     private fun createFancyLogger(graph: ContainerDependencyGraph): FancyEventLogger =
-        FancyEventLogger(failureErrorMessageFormatter, console, errorConsole, startupProgressDisplayProvider.createForDependencyGraph(graph), CleanupProgressDisplay(), graph.taskContainerNode.container, createTaskContainerOnlyIOStreamingOptions(graph))
+        FancyEventLogger(
+            failureErrorMessageFormatter,
+            console,
+            errorConsole,
+            startupProgressDisplayProvider.createForDependencyGraph(graph),
+            CleanupProgressDisplay(),
+            graph.taskContainerNode.container,
+            createTaskContainerOnlyIOStreamingOptions(graph),
+        )
 
     private fun createSimpleLogger(graph: ContainerDependencyGraph): SimpleEventLogger {
         return SimpleEventLogger(graph.allContainers, graph.taskContainerNode.container, failureErrorMessageFormatter, console, errorConsole, createTaskContainerOnlyIOStreamingOptions(graph))

@@ -8,7 +8,8 @@ trim_trailing_whitespace = true
 [*.{kt,gradle,sh,zsh,bash,fish}]
 indent_style = space
 indent_size = 4
-max_line_length = 160
+max_line_length = 250
+ktlint_standard_max-line-length = disabled
 
 [*.{yml,yaml}]
 indent_style = space

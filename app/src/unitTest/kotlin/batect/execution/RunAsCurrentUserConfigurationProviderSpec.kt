@@ -231,7 +231,9 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
 
                     on("applying configuration to the container") {
                         it("throws an appropriate exception") {
-                            assertThat({ provider.applyConfigurationToContainer(container, dockerContainer) }, throws<RunAsCurrentUserConfigurationException>(withMessage("Container 'some-container' has run as current user enabled, but this is not supported for Windows containers.")))
+                            assertThat({
+                                provider.applyConfigurationToContainer(container, dockerContainer)
+                            }, throws<RunAsCurrentUserConfigurationException>(withMessage("Container 'some-container' has run as current user enabled, but this is not supported for Windows containers.")))
                         }
                     }
                 }
@@ -334,7 +336,9 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
 
                         on("applying configuration to the container") {
                             it("throws an appropriate exception") {
-                                assertThat({ provider.applyConfigurationToContainer(containerWithNonAbsoluteHomeDirectory, dockerContainer) }, throws<RunAsCurrentUserConfigurationException>(withMessage("Container 'some-container' has an invalid home directory configured: 'my-home' is not an absolute path.")))
+                                assertThat({
+                                    provider.applyConfigurationToContainer(containerWithNonAbsoluteHomeDirectory, dockerContainer)
+                                }, throws<RunAsCurrentUserConfigurationException>(withMessage("Container 'some-container' has an invalid home directory configured: 'my-home' is not an absolute path.")))
                             }
                         }
                     }
@@ -395,7 +399,9 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
 
                         on("applying configuration to the container") {
                             it("throws an appropriate exception") {
-                                assertThat({ provider.applyConfigurationToContainer(containerWithNonAbsoluteCacheDirectory, dockerContainer) }, throws<RunAsCurrentUserConfigurationException>(withMessage("Container 'some-container' has an invalid cache mount configured: 'first-cache' is not an absolute path.")))
+                                assertThat({
+                                    provider.applyConfigurationToContainer(containerWithNonAbsoluteCacheDirectory, dockerContainer)
+                                }, throws<RunAsCurrentUserConfigurationException>(withMessage("Container 'some-container' has an invalid cache mount configured: 'first-cache' is not an absolute path.")))
                             }
                         }
                     }

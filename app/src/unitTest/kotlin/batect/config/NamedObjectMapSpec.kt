@@ -156,7 +156,9 @@ object NamedObjectMapSpec : Spek({
                     val item3 = Thing(itemName2)
                     val item4 = Thing(itemName2)
 
-                    assertThat({ NamedObjectMapImplementation(item1, item2, item3, item4) }, throws(withMessage("Cannot create a NamedObjectMapImplementation where a thing name is used more than once. Duplicated thing names: $itemName1, $itemName2")))
+                    assertThat({
+                        NamedObjectMapImplementation(item1, item2, item3, item4)
+                    }, throws(withMessage("Cannot create a NamedObjectMapImplementation where a thing name is used more than once. Duplicated thing names: $itemName1, $itemName2")))
                 }
             }
         }

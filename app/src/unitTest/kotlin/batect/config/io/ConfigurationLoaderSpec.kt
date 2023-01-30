@@ -173,7 +173,9 @@ object ConfigurationLoaderSpec : Spek({
                 val path = "/config.yml"
 
                 it("should fail with an error message") {
-                    assertThat({ loadConfiguration(configString, path) }, throws(withMessage("No project name has been given explicitly, but the configuration file is in the root directory and so a project name cannot be inferred.") and withFileName(path)))
+                    assertThat({
+                        loadConfiguration(configString, path)
+                    }, throws(withMessage("No project name has been given explicitly, but the configuration file is in the root directory and so a project name cannot be inferred.") and withFileName(path)))
                 }
             }
 
@@ -218,7 +220,16 @@ object ConfigurationLoaderSpec : Spek({
                 val path = "/code/-project/config.yml"
 
                 it("should fail with an error message") {
-                    assertThat({ loadConfiguration(configString, path) }, throws(withMessage("The inferred project name '-project' is invalid. The project name must be a valid Docker reference: it must contain only lowercase letters, digits, dashes (-), single consecutive periods (.) or one or two consecutive underscores (_), and must not start or end with dashes, periods or underscores. Provide a valid project name explicitly with 'project_name'.") and withFileName(path)))
+                    assertThat(
+                        {
+                            loadConfiguration(configString, path)
+                        },
+                        throws(
+                            withMessage(
+                                "The inferred project name '-project' is invalid. The project name must be a valid Docker reference: it must contain only lowercase letters, digits, dashes (-), single consecutive periods (.) or one or two consecutive underscores (_), and must not start or end with dashes, periods or underscores. Provide a valid project name explicitly with 'project_name'.",
+                            ) and withFileName(path),
+                        ),
+                    )
                 }
             }
         }
@@ -555,7 +566,16 @@ object ConfigurationLoaderSpec : Spek({
             """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("One of either build_directory or image must be specified for each container, but neither have been provided for this container.") and withFileName(testFileName) and withLineNumber(5) and withPath("containers.container-1")))
+                assertThat(
+                    {
+                        loadConfiguration(config)
+                    },
+                    throws(
+                        withMessage("One of either build_directory or image must be specified for each container, but neither have been provided for this container.") and withFileName(testFileName) and withLineNumber(5) and withPath(
+                            "containers.container-1",
+                        ),
+                    ),
+                )
             }
         }
 
@@ -570,7 +590,14 @@ object ConfigurationLoaderSpec : Spek({
             """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Only one of build_directory or image can be specified for a container, but both have been provided for this container.") and withFileName(testFileName) and withLineNumber(5) and withPath("containers.container-1")))
+                assertThat(
+                    {
+                        loadConfiguration(config)
+                    },
+                    throws(
+                        withMessage("Only one of build_directory or image can be specified for a container, but both have been provided for this container.") and withFileName(testFileName) and withLineNumber(5) and withPath("containers.container-1"),
+                    ),
+                )
             }
         }
 
@@ -822,7 +849,9 @@ object ConfigurationLoaderSpec : Spek({
             """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Duplicate key 'my-config-var'. It was previously given at line 4, column 3.") and withLineNumber(5) and withFileName(testFileName) and withPath("config_variables.my-config-var")))
+                assertThat({
+                    loadConfiguration(config)
+                }, throws(withMessage("Duplicate key 'my-config-var'. It was previously given at line 4, column 3.") and withLineNumber(5) and withFileName(testFileName) and withPath("config_variables.my-config-var")))
             }
         }
 
@@ -844,7 +873,9 @@ object ConfigurationLoaderSpec : Spek({
             """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Unknown property 'thing'. Known properties are: config_variables, containers, forbid_telemetry, include, project_name, tasks") and withLineNumber(2) and withFileName(testFileName) and withPath("thing")))
+                assertThat({
+                    loadConfiguration(config)
+                }, throws(withMessage("Unknown property 'thing'. Known properties are: config_variables, containers, forbid_telemetry, include, project_name, tasks") and withLineNumber(2) and withFileName(testFileName) and withPath("thing")))
             }
         }
 
@@ -916,7 +947,9 @@ object ConfigurationLoaderSpec : Spek({
             """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Duplicate key 'THING'. It was previously given at line 7, column 7.") and withLineNumber(8) and withFileName(testFileName) and withPath("containers.container-1.environment.THING")))
+                assertThat({
+                    loadConfiguration(config)
+                }, throws(withMessage("Duplicate key 'THING'. It was previously given at line 7, column 7.") and withLineNumber(8) and withFileName(testFileName) and withPath("containers.container-1.environment.THING")))
             }
         }
 
@@ -934,7 +967,9 @@ object ConfigurationLoaderSpec : Spek({
             """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Duplicate key 'THING'. It was previously given at line 8, column 9.") and withLineNumber(9) and withFileName(testFileName) and withPath("tasks.the-task.run.environment.THING")))
+                assertThat({
+                    loadConfiguration(config)
+                }, throws(withMessage("Duplicate key 'THING'. It was previously given at line 8, column 9.") and withLineNumber(9) and withFileName(testFileName) and withPath("tasks.the-task.run.environment.THING")))
             }
         }
 
@@ -950,7 +985,9 @@ object ConfigurationLoaderSpec : Spek({
             """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Value for 'THING' is invalid: Unexpected null or empty value for non-null field.") and withLineNumber(7) and withFileName(testFileName) and withPath("containers.container-1.environment.THING")))
+                assertThat({
+                    loadConfiguration(config)
+                }, throws(withMessage("Value for 'THING' is invalid: Unexpected null or empty value for non-null field.") and withLineNumber(7) and withFileName(testFileName) and withPath("containers.container-1.environment.THING")))
             }
         }
 
@@ -967,7 +1004,9 @@ object ConfigurationLoaderSpec : Spek({
             """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Value for 'THING' is invalid: Unexpected null or empty value for non-null field.") and withLineNumber(8) and withFileName(testFileName) and withPath("tasks.the-task.run.environment.THING")))
+                assertThat({
+                    loadConfiguration(config)
+                }, throws(withMessage("Value for 'THING' is invalid: Unexpected null or empty value for non-null field.") and withLineNumber(8) and withFileName(testFileName) and withPath("tasks.the-task.run.environment.THING")))
             }
         }
 
@@ -984,7 +1023,16 @@ object ConfigurationLoaderSpec : Spek({
             """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Running as the current user has not been enabled, but a home directory for that user has been provided.") and withFileName(testFileName) and withLineNumber(7) and withPath("containers.container-1.run_as_current_user")))
+                assertThat(
+                    {
+                        loadConfiguration(config)
+                    },
+                    throws(
+                        withMessage("Running as the current user has not been enabled, but a home directory for that user has been provided.") and withFileName(testFileName) and withLineNumber(7) and withPath(
+                            "containers.container-1.run_as_current_user",
+                        ),
+                    ),
+                )
             }
         }
 
@@ -1000,7 +1048,16 @@ object ConfigurationLoaderSpec : Spek({
             """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Running as the current user has been enabled, but a home directory for that user has not been provided.") and withFileName(testFileName) and withLineNumber(7) and withPath("containers.container-1.run_as_current_user")))
+                assertThat(
+                    {
+                        loadConfiguration(config)
+                    },
+                    throws(
+                        withMessage("Running as the current user has been enabled, but a home directory for that user has not been provided.") and withFileName(testFileName) and withLineNumber(7) and withPath(
+                            "containers.container-1.run_as_current_user",
+                        ),
+                    ),
+                )
             }
         }
 
@@ -1016,7 +1073,16 @@ object ConfigurationLoaderSpec : Spek({
             """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Running as the current user has not been enabled, but a home directory for that user has been provided.") and withFileName(testFileName) and withLineNumber(7) and withPath("containers.container-1.run_as_current_user")))
+                assertThat(
+                    {
+                        loadConfiguration(config)
+                    },
+                    throws(
+                        withMessage("Running as the current user has not been enabled, but a home directory for that user has been provided.") and withFileName(testFileName) and withLineNumber(7) and withPath(
+                            "containers.container-1.run_as_current_user",
+                        ),
+                    ),
+                )
             }
         }
 
@@ -1038,7 +1104,9 @@ object ConfigurationLoaderSpec : Spek({
             """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Value for 'container-2' is invalid: Unexpected null or empty value for non-null field.") and withLineNumber(6) and withFileName(testFileName) and withPath("containers.container-2")))
+                assertThat({
+                    loadConfiguration(config)
+                }, throws(withMessage("Value for 'container-2' is invalid: Unexpected null or empty value for non-null field.") and withLineNumber(6) and withFileName(testFileName) and withPath("containers.container-2")))
             }
         }
 
@@ -1072,7 +1140,16 @@ object ConfigurationLoaderSpec : Spek({
             """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Port range 'abc123' is invalid. It must be in the form 'port' or 'from-to' and each port must be a positive integer.") and withLineNumber(7) and withFileName(testFileName) and withPath("containers.container-1.ports[0].local")))
+                assertThat(
+                    {
+                        loadConfiguration(config)
+                    },
+                    throws(
+                        withMessage("Port range 'abc123' is invalid. It must be in the form 'port' or 'from-to' and each port must be a positive integer.") and withLineNumber(7) and withFileName(testFileName) and withPath(
+                            "containers.container-1.ports[0].local",
+                        ),
+                    ),
+                )
             }
         }
 
@@ -1089,7 +1166,16 @@ object ConfigurationLoaderSpec : Spek({
             """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Port range 'abc123' is invalid. It must be in the form 'port' or 'from-to' and each port must be a positive integer.") and withLineNumber(8) and withFileName(testFileName) and withPath("containers.container-1.ports[0].container")))
+                assertThat(
+                    {
+                        loadConfiguration(config)
+                    },
+                    throws(
+                        withMessage("Port range 'abc123' is invalid. It must be in the form 'port' or 'from-to' and each port must be a positive integer.") and withLineNumber(8) and withFileName(testFileName) and withPath(
+                            "containers.container-1.ports[0].container",
+                        ),
+                    ),
+                )
             }
         }
 
@@ -1105,7 +1191,16 @@ object ConfigurationLoaderSpec : Spek({
             """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Port mapping definition 'abc123:1000' is invalid. It must be in the form 'local:container', 'local:container/protocol', 'from-to:from-to' or 'from-to:from-to/protocol' and each port must be a positive integer.") and withLineNumber(7) and withFileName(testFileName) and withPath("containers.container-1.ports[0]")))
+                assertThat(
+                    {
+                        loadConfiguration(config)
+                    },
+                    throws(
+                        withMessage("Port mapping definition 'abc123:1000' is invalid. It must be in the form 'local:container', 'local:container/protocol', 'from-to:from-to' or 'from-to:from-to/protocol' and each port must be a positive integer.") and withLineNumber(
+                            7,
+                        ) and withFileName(testFileName) and withPath("containers.container-1.ports[0]"),
+                    ),
+                )
             }
         }
 
@@ -1123,7 +1218,16 @@ object ConfigurationLoaderSpec : Spek({
             """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Port range 'abc123' is invalid. It must be in the form 'port' or 'from-to' and each port must be a positive integer.") and withLineNumber(8) and withFileName(testFileName) and withPath("tasks.task-1.run.ports[0].local")))
+                assertThat(
+                    {
+                        loadConfiguration(config)
+                    },
+                    throws(
+                        withMessage("Port range 'abc123' is invalid. It must be in the form 'port' or 'from-to' and each port must be a positive integer.") and withLineNumber(8) and withFileName(testFileName) and withPath(
+                            "tasks.task-1.run.ports[0].local",
+                        ),
+                    ),
+                )
             }
         }
 
@@ -1141,7 +1245,16 @@ object ConfigurationLoaderSpec : Spek({
             """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Port range 'abc123' is invalid. It must be in the form 'port' or 'from-to' and each port must be a positive integer.") and withLineNumber(9) and withFileName(testFileName) and withPath("tasks.task-1.run.ports[0].container")))
+                assertThat(
+                    {
+                        loadConfiguration(config)
+                    },
+                    throws(
+                        withMessage("Port range 'abc123' is invalid. It must be in the form 'port' or 'from-to' and each port must be a positive integer.") and withLineNumber(9) and withFileName(testFileName) and withPath(
+                            "tasks.task-1.run.ports[0].container",
+                        ),
+                    ),
+                )
             }
         }
 
@@ -1158,7 +1271,16 @@ object ConfigurationLoaderSpec : Spek({
             """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(config) }, throws(withMessage("Port mapping definition 'abc123:1000' is invalid. It must be in the form 'local:container', 'local:container/protocol', 'from-to:from-to' or 'from-to:from-to/protocol' and each port must be a positive integer.") and withLineNumber(8) and withFileName(testFileName) and withPath("tasks.task-1.run.ports[0]")))
+                assertThat(
+                    {
+                        loadConfiguration(config)
+                    },
+                    throws(
+                        withMessage("Port mapping definition 'abc123:1000' is invalid. It must be in the form 'local:container', 'local:container/protocol', 'from-to:from-to' or 'from-to:from-to/protocol' and each port must be a positive integer.") and withLineNumber(
+                            8,
+                        ) and withFileName(testFileName) and withPath("tasks.task-1.run.ports[0]"),
+                    ),
+                )
             }
         }
 
@@ -1205,7 +1327,16 @@ object ConfigurationLoaderSpec : Spek({
             """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(configString) }, throws(withMessage("Unknown property 'something_else'. Known properties are: container, local, name, options, type") and withLineNumber(7) and withFileName(testFileName) and withPath("containers.container-1.volumes[0].something_else")))
+                assertThat(
+                    {
+                        loadConfiguration(configString)
+                    },
+                    throws(
+                        withMessage("Unknown property 'something_else'. Known properties are: container, local, name, options, type") and withLineNumber(7) and withFileName(testFileName) and withPath(
+                            "containers.container-1.volumes[0].something_else",
+                        ),
+                    ),
+                )
             }
         }
 
@@ -1249,7 +1380,9 @@ object ConfigurationLoaderSpec : Spek({
             """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(configString) }, throws(withMessage("Unknown property 'something_else'. Known properties are: container, local, protocol") and withLineNumber(7) and withFileName(testFileName) and withPath("containers.container-1.ports[0].something_else")))
+                assertThat({
+                    loadConfiguration(configString)
+                }, throws(withMessage("Unknown property 'something_else'. Known properties are: container, local, protocol") and withLineNumber(7) and withFileName(testFileName) and withPath("containers.container-1.ports[0].something_else")))
             }
         }
 
@@ -1296,7 +1429,9 @@ object ConfigurationLoaderSpec : Spek({
             """.trimMargin()
 
             it("should fail with an error message") {
-                assertThat({ loadConfiguration(configString) }, throws(withMessage("Unknown property 'something_else'. Known properties are: container, local, protocol") and withLineNumber(8) and withFileName(testFileName) and withPath("tasks.task-1.run.ports[0].something_else")))
+                assertThat({
+                    loadConfiguration(configString)
+                }, throws(withMessage("Unknown property 'something_else'. Known properties are: container, local, protocol") and withLineNumber(8) and withFileName(testFileName) and withPath("tasks.task-1.run.ports[0].something_else")))
             }
         }
 
@@ -1325,7 +1460,9 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat(
                     { loadConfiguration(configString) },
                     throws(
-                        withMessage("Invalid container name '-invalid'. Container names must be valid Docker references: they must contain only lowercase letters, digits, dashes (-), single consecutive periods (.) or one or two consecutive underscores (_), and must not start or end with dashes, periods or underscores.")
+                        withMessage(
+                            "Invalid container name '-invalid'. Container names must be valid Docker references: they must contain only lowercase letters, digits, dashes (-), single consecutive periods (.) or one or two consecutive underscores (_), and must not start or end with dashes, periods or underscores.",
+                        )
                             and withLineNumber(2)
                             and withColumn(3)
                             and withFileName(testFileName)
@@ -1344,7 +1481,9 @@ object ConfigurationLoaderSpec : Spek({
                 assertThat(
                     { loadConfiguration(configString) },
                     throws(
-                        withMessage("Invalid project name '-invalid'. The project name must be a valid Docker reference: it must contain only lowercase letters, digits, dashes (-), single consecutive periods (.) or one or two consecutive underscores (_), and must not start or end with dashes, periods or underscores.")
+                        withMessage(
+                            "Invalid project name '-invalid'. The project name must be a valid Docker reference: it must contain only lowercase letters, digits, dashes (-), single consecutive periods (.) or one or two consecutive underscores (_), and must not start or end with dashes, periods or underscores.",
+                        )
                             and withLineNumber(1)
                             and withColumn(15)
                             and withFileName(testFileName)

@@ -135,7 +135,11 @@ class CommandLineOptionsParser(
         'o',
     )
 
-    private val disableCleanupAfterFailure: Boolean by flagOption(executionOptionsGroup, disableCleanupAfterFailureFlagName, "If an error occurs before any task can start, leave all containers created for that task running so that the issue can be investigated.")
+    private val disableCleanupAfterFailure: Boolean by flagOption(
+        executionOptionsGroup,
+        disableCleanupAfterFailureFlagName,
+        "If an error occurs before any task can start, leave all containers created for that task running so that the issue can be investigated.",
+    )
     private val disableCleanupAfterSuccess: Boolean by flagOption(executionOptionsGroup, disableCleanupAfterSuccessFlagName, "If the main task succeeds, leave all containers created for that task running.")
     private val disableCleanup: Boolean by flagOption(executionOptionsGroup, disableCleanupFlagName, "Equivalent to providing both --$disableCleanupAfterFailureFlagName and --$disableCleanupAfterSuccessFlagName.")
     private val dontPropagateProxyEnvironmentVariables: Boolean by flagOption(executionOptionsGroup, "no-proxy-vars", "Don't propagate proxy-related environment variables such as http_proxy and no_proxy to image builds or containers.")
@@ -236,7 +240,12 @@ class CommandLineOptionsParser(
 
     private val dockerTLSKeyPath: Path by dockerTLSKeyPathOption
 
-    private val enableBuildKit: Boolean? by tristateFlagOption(dockerConnectionOptionsGroup, enableBuildKitFlagName, "Use BuildKit for image builds.", environmentVariableDefaultValueProviderFactory.create(enableBuildKitEnvironmentVariableName, null, ValueConverters.boolean))
+    private val enableBuildKit: Boolean? by tristateFlagOption(
+        dockerConnectionOptionsGroup,
+        enableBuildKitFlagName,
+        "Use BuildKit for image builds.",
+        environmentVariableDefaultValueProviderFactory.create(enableBuildKitEnvironmentVariableName, null, ValueConverters.boolean),
+    )
 
     private val permanentlyDisableTelemetry: Boolean by flagOption(telemetryOptionsGroup, permanentlyDisableTelemetryFlagName, "Permanently disable telemetry collection and uploading, and remove any telemetry data queued for upload.")
     private val permanentlyEnableTelemetry: Boolean by flagOption(telemetryOptionsGroup, permanentlyEnableTelemetryFlagName, "Permanently enable telemetry collection and uploading.")
@@ -249,7 +258,13 @@ class CommandLineOptionsParser(
     )
 
     private val generateShellTabCompletionScript: Shell? by valueOption(hiddenOptionsGroup, "generate-completion-script", "Generate shell tab completion script for given shell.", ValueConverters.enum<Shell>(), showInHelp = false)
-    private val generateShellTabCompletionTaskInformation: Shell? by valueOption(hiddenOptionsGroup, "generate-completion-task-info", "Generate shell tab completion task information for given shell.", ValueConverters.enum<Shell>(), showInHelp = false)
+    private val generateShellTabCompletionTaskInformation: Shell? by valueOption(
+        hiddenOptionsGroup,
+        "generate-completion-task-info",
+        "Generate shell tab completion task information for given shell.",
+        ValueConverters.enum<Shell>(),
+        showInHelp = false,
+    )
 
     private val cleanCaches: Set<String> by setOption(
         group = cacheOptionsGroup,

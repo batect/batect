@@ -103,7 +103,15 @@ interface OptionParserContainer {
     fun valueOption(group: OptionGroup, longName: String, description: String, defaultValueProvider: DefaultValueProvider<String>, shortName: Char? = null) =
         valueOption(group, longName, description, defaultValueProvider, ValueConverters.string, shortName)
 
-    fun <StorageType, ValueType : StorageType> valueOption(group: OptionGroup, longName: String, description: String, defaultValueProvider: DefaultValueProvider<StorageType>, valueConverter: ValueConverter<ValueType>, shortName: Char? = null, showInHelp: Boolean = true) =
+    fun <StorageType, ValueType : StorageType> valueOption(
+        group: OptionGroup,
+        longName: String,
+        description: String,
+        defaultValueProvider: DefaultValueProvider<StorageType>,
+        valueConverter: ValueConverter<ValueType>,
+        shortName: Char? = null,
+        showInHelp: Boolean = true,
+    ) =
         ValueOption(group, longName, description, defaultValueProvider, valueConverter, shortName, showInHelp)
 
     fun flagOption(group: OptionGroup, longName: String, description: String, shortName: Char? = null) =

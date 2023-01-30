@@ -56,7 +56,10 @@ object UntaggedImagesExceptionSpec : Spek({
             val exception = UntaggedImagesException(setOf("container-1", "container-2", "container-3"))
 
             it("provides a user-friendly message") {
-                assertThat(exception.message, equalTo("The images for containers 'container-1', 'container-2' and 'container-3' were requested to be tagged with --tag-image, but these containers did not run as part of the task or its prerequisites."))
+                assertThat(
+                    exception.message,
+                    equalTo("The images for containers 'container-1', 'container-2' and 'container-3' were requested to be tagged with --tag-image, but these containers did not run as part of the task or its prerequisites."),
+                )
             }
         }
 
@@ -64,7 +67,10 @@ object UntaggedImagesExceptionSpec : Spek({
             val exception = UntaggedImagesException(setOf("container-1", "container-2", "container-3", "container-4"))
 
             it("provides a user-friendly message") {
-                assertThat(exception.message, equalTo("The images for containers 'container-1', 'container-2', 'container-3' and 'container-4' were requested to be tagged with --tag-image, but these containers did not run as part of the task or its prerequisites."))
+                assertThat(
+                    exception.message,
+                    equalTo("The images for containers 'container-1', 'container-2', 'container-3' and 'container-4' were requested to be tagged with --tag-image, but these containers did not run as part of the task or its prerequisites."),
+                )
             }
         }
     }

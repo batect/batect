@@ -158,12 +158,16 @@ object FailureErrorMessageFormatterSpec : Spek({
                 Scenario(
                     "a 'setup command failed' event where the command emitted some output",
                     SetupCommandFailedEvent(container, SetupCommand(Command.parse("./do the-thing")), 123, "Something went wrong."),
-                    Text.red(Text.bold("Error: ") + Text("Setup command ") + Text.bold("./do the-thing") + Text(" in container ") + Text.bold("the-container") + Text(" failed.\n")) + Text("The command exited with code 123 and output:\nSomething went wrong."),
+                    Text.red(Text.bold("Error: ") + Text("Setup command ") + Text.bold("./do the-thing") + Text(" in container ") + Text.bold("the-container") + Text(" failed.\n")) + Text(
+                        "The command exited with code 123 and output:\nSomething went wrong.",
+                    ),
                 ),
                 Scenario(
                     "a 'setup command failed' event where the command did not emit any output",
                     SetupCommandFailedEvent(container, SetupCommand(Command.parse("./do the-thing")), 123, ""),
-                    Text.red(Text.bold("Error: ") + Text("Setup command ") + Text.bold("./do the-thing") + Text(" in container ") + Text.bold("the-container") + Text(" failed.\n")) + Text("The command exited with code 123 and did not produce any output."),
+                    Text.red(Text.bold("Error: ") + Text("Setup command ") + Text.bold("./do the-thing") + Text(" in container ") + Text.bold("the-container") + Text(" failed.\n")) + Text(
+                        "The command exited with code 123 and did not produce any output.",
+                    ),
                 ),
             ).forEach { (description, event, expectedMessage) ->
                 given(description) {
@@ -236,7 +240,9 @@ object FailureErrorMessageFormatterSpec : Spek({
 
                             on("formatting the message") {
                                 val message = formatter.formatManualCleanupMessage(cleanupGenerator(cleanupCommands), events)
-                                val expectedMessage = Text.red(Text("As the task was run with ") + Text.bold(argumentName) + Text(" or ") + Text.bold("--no-cleanup") + Text(", the created containers and other temporary resources will not be cleaned up.")) +
+                                val expectedMessage = Text.red(
+                                    Text("As the task was run with ") + Text.bold(argumentName) + Text(" or ") + Text.bold("--no-cleanup") + Text(", the created containers and other temporary resources will not be cleaned up."),
+                                ) +
                                     Text("\n") +
                                     Text("\n") +
                                     Text("$cleanupPhrase, clean up all temporary resources created by Batect by running:\n") +
@@ -272,7 +278,9 @@ object FailureErrorMessageFormatterSpec : Spek({
 
                                 on("formatting the message") {
                                     val message = formatter.formatManualCleanupMessage(cleanupGenerator(cleanupCommands), events)
-                                    val expectedMessage = Text.red(Text("As the task was run with ") + Text.bold(argumentName) + Text(" or ") + Text.bold("--no-cleanup") + Text(", the created containers and other temporary resources will not be cleaned up.\n")) +
+                                    val expectedMessage = Text.red(
+                                        Text("As the task was run with ") + Text.bold(argumentName) + Text(" or ") + Text.bold("--no-cleanup") + Text(", the created containers and other temporary resources will not be cleaned up.\n"),
+                                    ) +
                                         Text("For container ") + Text.bold("http-server") + Text(", view its output by running '") + Text.bold("docker logs http-server-container-name") +
                                         Text("', or run a command in the container with '") + Text.bold("docker exec -it http-server-container-name <command>") + Text("'.")
 
@@ -289,7 +297,9 @@ object FailureErrorMessageFormatterSpec : Spek({
 
                                 on("formatting the message") {
                                     val message = formatter.formatManualCleanupMessage(cleanupGenerator(cleanupCommands), events)
-                                    val expectedMessage = Text.red(Text("As the task was run with ") + Text.bold(argumentName) + Text(" or ") + Text.bold("--no-cleanup") + Text(", the created containers and other temporary resources will not be cleaned up.\n")) +
+                                    val expectedMessage = Text.red(
+                                        Text("As the task was run with ") + Text.bold(argumentName) + Text(" or ") + Text.bold("--no-cleanup") + Text(", the created containers and other temporary resources will not be cleaned up.\n"),
+                                    ) +
                                         Text("For container ") + Text.bold("http-server") + Text(", view its output by running '") + Text.bold("docker logs http-server-container-name") +
                                         Text("', or run a command in the container with '") + Text.bold("docker exec -it http-server-container-name <command>") + Text("'.\n") +
                                         Text("\n") +
@@ -339,7 +349,9 @@ object FailureErrorMessageFormatterSpec : Spek({
 
                                 on("formatting the message") {
                                     val message = formatter.formatManualCleanupMessage(cleanupGenerator(cleanupCommands), events)
-                                    val expectedMessage = Text.red(Text("As the task was run with ") + Text.bold(argumentName) + Text(" or ") + Text.bold("--no-cleanup") + Text(", the created containers and other temporary resources will not be cleaned up.\n")) +
+                                    val expectedMessage = Text.red(
+                                        Text("As the task was run with ") + Text.bold(argumentName) + Text(" or ") + Text.bold("--no-cleanup") + Text(", the created containers and other temporary resources will not be cleaned up.\n"),
+                                    ) +
                                         Text("For container ") + Text.bold("http-server") + Text(", view its output by running '") + Text.bold("docker logs http-server-container-name") +
                                         Text("', or run a command in the container with '") + Text.bold("docker start http-server-container-name; docker exec -it http-server-container-name <command>") + Text("'.\n") +
                                         Text("\n") +
@@ -368,7 +380,9 @@ object FailureErrorMessageFormatterSpec : Spek({
 
                                 on("formatting the message") {
                                     val message = formatter.formatManualCleanupMessage(cleanupGenerator(cleanupCommands), events)
-                                    val expectedMessage = Text.red(Text("As the task was run with ") + Text.bold(argumentName) + Text(" or ") + Text.bold("--no-cleanup") + Text(", the created containers and other temporary resources will not be cleaned up.\n")) +
+                                    val expectedMessage = Text.red(
+                                        Text("As the task was run with ") + Text.bold(argumentName) + Text(" or ") + Text.bold("--no-cleanup") + Text(", the created containers and other temporary resources will not be cleaned up.\n"),
+                                    ) +
                                         Text("For container ") + Text.bold("http-server") + Text(", view its output by running '") + Text.bold("docker logs http-server-container-name") +
                                         Text("', or run a command in the container with '") + Text.bold("docker start http-server-container-name; docker exec -it http-server-container-name <command>") + Text("'.\n") +
                                         Text("\n") +
@@ -397,7 +411,9 @@ object FailureErrorMessageFormatterSpec : Spek({
 
                                 on("formatting the message") {
                                     val message = formatter.formatManualCleanupMessage(cleanupGenerator(cleanupCommands), events)
-                                    val expectedMessage = Text.red(Text("As the task was run with ") + Text.bold(argumentName) + Text(" or ") + Text.bold("--no-cleanup") + Text(", the created containers and other temporary resources will not be cleaned up.\n")) +
+                                    val expectedMessage = Text.red(
+                                        Text("As the task was run with ") + Text.bold(argumentName) + Text(" or ") + Text.bold("--no-cleanup") + Text(", the created containers and other temporary resources will not be cleaned up.\n"),
+                                    ) +
                                         Text("For container ") + Text.bold("http-server") + Text(", view its output by running '") + Text.bold("docker logs http-server-container-name") +
                                         Text("', or run a command in the container with '") + Text.bold("docker start http-server-container-name; docker exec -it http-server-container-name <command>") + Text("'.\n") +
                                         Text("\n") +
@@ -428,7 +444,9 @@ object FailureErrorMessageFormatterSpec : Spek({
 
                             on("formatting the message") {
                                 val message = formatter.formatManualCleanupMessage(cleanupGenerator(cleanupCommands), events)
-                                val expectedMessage = Text.red(Text("As the task was run with ") + Text.bold(argumentName) + Text(" or ") + Text.bold("--no-cleanup") + Text(", the created containers and other temporary resources will not be cleaned up.\n")) +
+                                val expectedMessage = Text.red(
+                                    Text("As the task was run with ") + Text.bold(argumentName) + Text(" or ") + Text.bold("--no-cleanup") + Text(", the created containers and other temporary resources will not be cleaned up.\n"),
+                                ) +
                                     Text("For container ") + Text.bold("database") + Text(", view its output by running '") + Text.bold("docker logs database-container-name") +
                                     Text("', or run a command in the container with '") + Text.bold("docker exec -it database-container-name <command>") + Text("'.\n") +
                                     Text("For container ") + Text.bold("http-server") + Text(", view its output by running '") + Text.bold("docker logs http-server-container-name") +

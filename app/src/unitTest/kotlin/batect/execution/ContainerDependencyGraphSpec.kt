@@ -53,7 +53,14 @@ object ContainerDependencyGraphSpec : Spek({
         given("a task with no dependencies") {
             given("the task does not override the container's working directory") {
                 val container = Container("some-container", imageSourceDoesNotMatter(), command = Command.parse("some-container-command"), entrypoint = Command.parse("some-task-entrypoint"), workingDirectory = "task-working-dir-that-wont-be-used")
-                val runConfig = TaskRunConfiguration(container.name, Command.parse("some-command"), Command.parse("some-entrypoint"), mapOf("SOME_EXTRA_VALUE" to LiteralValue("the value")), setOf(PortMapping(123, 456)), "some-task-specific-working-dir")
+                val runConfig = TaskRunConfiguration(
+                    container.name,
+                    Command.parse("some-command"),
+                    Command.parse("some-entrypoint"),
+                    mapOf("SOME_EXTRA_VALUE" to LiteralValue("the value")),
+                    setOf(PortMapping(123, 456)),
+                    "some-task-specific-working-dir",
+                )
                 val task = Task("the-task", runConfig, dependsOnContainers = emptySet())
                 val config = TaskSpecialisedConfiguration("the-project", TaskMap(task), ContainerMap(container))
                 val graph = ContainerDependencyGraph(config, task)
@@ -96,7 +103,14 @@ object ContainerDependencyGraphSpec : Spek({
 
                 on("creating the graph") {
                     it("throws an exception") {
-                        assertThat({ ContainerDependencyGraph(config, task) }, throws<CustomisationForContainerNotInTaskDependencyGraphException>(withMessage("The task 'the-task' has customisations for container 'some-other-container', but the container 'some-other-container' will not be started as part of the task.")))
+                        assertThat(
+                            {
+                                ContainerDependencyGraph(config, task)
+                            },
+                            throws<CustomisationForContainerNotInTaskDependencyGraphException>(
+                                withMessage("The task 'the-task' has customisations for container 'some-other-container', but the container 'some-other-container' will not be started as part of the task."),
+                            ),
+                        )
                     }
                 }
             }
@@ -117,7 +131,14 @@ object ContainerDependencyGraphSpec : Spek({
         given("a task with a dependency") {
             val taskContainer = Container("some-container", imageSourceDoesNotMatter(), command = Command.parse("task-command-that-wont-be-used"), entrypoint = Command.parse("sh"), workingDirectory = "task-working-dir-that-wont-be-used")
             val dependencyContainer = Container("dependency-container", imageSourceDoesNotMatter(), command = Command.parse("dependency-command"), workingDirectory = "dependency-working-dir")
-            val runConfig = TaskRunConfiguration(taskContainer.name, Command.parse("some-command"), Command.parse("some-entrypoint"), mapOf("SOME_EXTRA_VALUE" to LiteralValue("the value")), setOf(PortMapping(123, 456)), "some-task-specific-working-dir")
+            val runConfig = TaskRunConfiguration(
+                taskContainer.name,
+                Command.parse("some-command"),
+                Command.parse("some-entrypoint"),
+                mapOf("SOME_EXTRA_VALUE" to LiteralValue("the value")),
+                setOf(PortMapping(123, 456)),
+                "some-task-specific-working-dir",
+            )
             val task = Task("the-task", runConfig, dependsOnContainers = setOf(dependencyContainer.name))
             val config = TaskSpecialisedConfiguration("the-project", TaskMap(task), ContainerMap(taskContainer, dependencyContainer))
             val graph = ContainerDependencyGraph(config, task)
@@ -229,7 +250,9 @@ object ContainerDependencyGraphSpec : Spek({
 
             on("creating the graph") {
                 it("throws an exception") {
-                    assertThat({ ContainerDependencyGraph(config, task) }, throws<MainTaskContainerIsDependencyException>(withMessage("The task 'the-task' cannot have the container 'some-container' as both the main task container and also a dependency.")))
+                    assertThat({
+                        ContainerDependencyGraph(config, task)
+                    }, throws<MainTaskContainerIsDependencyException>(withMessage("The task 'the-task' cannot have the container 'some-container' as both the main task container and also a dependency.")))
                 }
             }
         }
@@ -642,7 +665,9 @@ object ContainerDependencyGraphSpec : Spek({
 
             on("creating the graph") {
                 it("throws an exception") {
-                    assertThat({ ContainerDependencyGraph(config, task) }, throws<ContainerDependencyCycleException>(withMessage("There is a dependency cycle in task 'the-task'. Container 'container-a' depends on 'container-b', which depends on 'container-a'.")))
+                    assertThat({
+                        ContainerDependencyGraph(config, task)
+                    }, throws<ContainerDependencyCycleException>(withMessage("There is a dependency cycle in task 'the-task'. Container 'container-a' depends on 'container-b', which depends on 'container-a'.")))
                 }
             }
         }
@@ -657,7 +682,9 @@ object ContainerDependencyGraphSpec : Spek({
 
             on("creating the graph") {
                 it("throws an exception") {
-                    assertThat({ ContainerDependencyGraph(config, task) }, throws<ContainerDependencyCycleException>(withMessage("There is a dependency cycle in task 'the-task'. Container 'container-a' depends on 'container-b', which depends on 'container-c', which depends on 'container-a'.")))
+                    assertThat({
+                        ContainerDependencyGraph(config, task)
+                    }, throws<ContainerDependencyCycleException>(withMessage("There is a dependency cycle in task 'the-task'. Container 'container-a' depends on 'container-b', which depends on 'container-c', which depends on 'container-a'.")))
                 }
             }
         }
@@ -671,7 +698,9 @@ object ContainerDependencyGraphSpec : Spek({
 
             on("creating the graph") {
                 it("throws an exception") {
-                    assertThat({ ContainerDependencyGraph(config, task) }, throws<ContainerDependencyCycleException>(withMessage("There is a dependency cycle in task 'the-task'. Container 'container-b' (which is explicitly started by the task) depends on the task container 'container-a'.")))
+                    assertThat({
+                        ContainerDependencyGraph(config, task)
+                    }, throws<ContainerDependencyCycleException>(withMessage("There is a dependency cycle in task 'the-task'. Container 'container-b' (which is explicitly started by the task) depends on the task container 'container-a'.")))
                 }
             }
         }
@@ -686,7 +715,14 @@ object ContainerDependencyGraphSpec : Spek({
 
             on("creating the graph") {
                 it("throws an exception") {
-                    assertThat({ ContainerDependencyGraph(config, task) }, throws<ContainerDependencyCycleException>(withMessage("There is a dependency cycle in task 'the-task'. Container 'container-b' (which is explicitly started by the task) depends on 'container-c', and 'container-c' depends on the task container 'container-a'.")))
+                    assertThat(
+                        {
+                            ContainerDependencyGraph(config, task)
+                        },
+                        throws<ContainerDependencyCycleException>(
+                            withMessage("There is a dependency cycle in task 'the-task'. Container 'container-b' (which is explicitly started by the task) depends on 'container-c', and 'container-c' depends on the task container 'container-a'."),
+                        ),
+                    )
                 }
             }
         }
@@ -702,7 +738,16 @@ object ContainerDependencyGraphSpec : Spek({
 
             on("creating the graph") {
                 it("throws an exception") {
-                    assertThat({ ContainerDependencyGraph(config, task) }, throws<ContainerDependencyCycleException>(withMessage("There is a dependency cycle in task 'the-task'. Container 'container-b' (which is explicitly started by the task) depends on 'container-c', and 'container-c' depends on 'container-d', and 'container-d' depends on the task container 'container-a'.")))
+                    assertThat(
+                        {
+                            ContainerDependencyGraph(config, task)
+                        },
+                        throws<ContainerDependencyCycleException>(
+                            withMessage(
+                                "There is a dependency cycle in task 'the-task'. Container 'container-b' (which is explicitly started by the task) depends on 'container-c', and 'container-c' depends on 'container-d', and 'container-d' depends on the task container 'container-a'.",
+                            ),
+                        ),
+                    )
                 }
             }
         }
@@ -717,7 +762,14 @@ object ContainerDependencyGraphSpec : Spek({
 
             on("creating the graph") {
                 it("throws an exception") {
-                    assertThat({ ContainerDependencyGraph(config, task) }, throws<ContainerDependencyCycleException>(withMessage("There is a dependency cycle in task 'the-task'. Container 'container-b' (which is explicitly started by the task) depends on 'container-c', and 'container-c' depends on 'container-b'.")))
+                    assertThat(
+                        {
+                            ContainerDependencyGraph(config, task)
+                        },
+                        throws<ContainerDependencyCycleException>(
+                            withMessage("There is a dependency cycle in task 'the-task'. Container 'container-b' (which is explicitly started by the task) depends on 'container-c', and 'container-c' depends on 'container-b'."),
+                        ),
+                    )
                 }
             }
         }

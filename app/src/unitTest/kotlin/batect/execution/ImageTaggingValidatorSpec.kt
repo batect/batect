@@ -86,7 +86,9 @@ object ImageTaggingValidatorSpec : Spek({
                 val container = Container("some-container", PullImage("some-image"))
 
                 it("throws an appropriate exception") {
-                    assertThat({ validator.notifyContainersUsed(setOf(container)) }, throws<ContainerUsesPulledImageException>(withMessage("The image built for container 'some-container' was requested to be tagged with --tag-image, but 'some-container' uses a pulled image.")))
+                    assertThat({
+                        validator.notifyContainersUsed(setOf(container))
+                    }, throws<ContainerUsesPulledImageException>(withMessage("The image built for container 'some-container' was requested to be tagged with --tag-image, but 'some-container' uses a pulled image.")))
                 }
             }
 

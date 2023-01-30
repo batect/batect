@@ -266,7 +266,14 @@ object ContainerStartupProgressLineSpec : Spek({
                         val output by runForEachTest { line.print() }
 
                         it("prints that the container is waiting for the dependencies to be ready") {
-                            assertThat(output, equivalentTo(Text.white(Text.bold(containerName) + Text(": waiting for dependencies ") + Text.bold(dependencyA.name) + Text(", ") + Text.bold(dependencyB.name) + Text(" and ") + Text.bold(dependencyC.name) + Text(" to be ready..."))))
+                            assertThat(
+                                output,
+                                equivalentTo(
+                                    Text.white(
+                                        Text.bold(containerName) + Text(": waiting for dependencies ") + Text.bold(dependencyA.name) + Text(", ") + Text.bold(dependencyB.name) + Text(" and ") + Text.bold(dependencyC.name) + Text(" to be ready..."),
+                                    ),
+                                ),
+                            )
                         }
                     }
 

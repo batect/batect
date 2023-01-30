@@ -215,14 +215,18 @@ object DockerConnectivitySpec : Spek({
                             setUpScenario(dockerVersion, BuilderVersion.Legacy, false)
                         }
 
-                        itDoesNotRunTheTaskAndFailsWithError("BuildKit has been enabled with --enable-buildkit or the DOCKER_BUILDKIT environment variable, but the current version of Docker requires experimental features to be enabled to use BuildKit and experimental features are currently disabled.")
+                        itDoesNotRunTheTaskAndFailsWithError(
+                            "BuildKit has been enabled with --enable-buildkit or the DOCKER_BUILDKIT environment variable, but the current version of Docker requires experimental features to be enabled to use BuildKit and experimental features are currently disabled.",
+                        )
                     }
                 }
 
                 given("the user is running a version of the Docker daemon that does not support BuildKit") {
                     beforeEachTest { setUpScenario("17.6.0", BuilderVersion.BuildKit, true) }
 
-                    itDoesNotRunTheTaskAndFailsWithError("BuildKit has been enabled with --enable-buildkit or the DOCKER_BUILDKIT environment variable, but the current version of Docker does not support BuildKit, even with experimental features enabled.")
+                    itDoesNotRunTheTaskAndFailsWithError(
+                        "BuildKit has been enabled with --enable-buildkit or the DOCKER_BUILDKIT environment variable, but the current version of Docker does not support BuildKit, even with experimental features enabled.",
+                    )
                 }
 
                 given("the builder reports an untagged version number") {

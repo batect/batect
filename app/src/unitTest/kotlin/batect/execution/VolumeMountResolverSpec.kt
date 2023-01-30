@@ -156,7 +156,9 @@ object VolumeMountResolverSpec : Spek({
                 it("throws an appropriate exception") {
                     assertThat(
                         { resolver.resolve(mounts) },
-                        throws<VolumeMountResolutionException>(withMessage("Could not resolve volume mount path: expression 'the-original-expression' could not be evaluated: The host environment variable 'DOES_NOT_EXIST' is not set, and no default value has been provided.")),
+                        throws<VolumeMountResolutionException>(
+                            withMessage("Could not resolve volume mount path: expression 'the-original-expression' could not be evaluated: The host environment variable 'DOES_NOT_EXIST' is not set, and no default value has been provided."),
+                        ),
                     )
                 }
             }

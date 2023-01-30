@@ -257,7 +257,14 @@ object TaskSpecialisedConfigurationFactorySpec : Spek({
                         val task = Task(mainTaskName, TaskRunConfiguration("container-3"))
 
                         it("throws an appropriate exception") {
-                            assertThat({ factory.create(task) }, throws<ContainerCommandResolutionException>(withMessage("Additional command line arguments for the task have been provided, but neither the task (task-1) nor the main task container (container-3) have an explicit command in the configuration file.")))
+                            assertThat(
+                                {
+                                    factory.create(task)
+                                },
+                                throws<ContainerCommandResolutionException>(
+                                    withMessage("Additional command line arguments for the task have been provided, but neither the task (task-1) nor the main task container (container-3) have an explicit command in the configuration file."),
+                                ),
+                            )
                         }
                     }
                 }

@@ -106,7 +106,16 @@ object PortMappingSpec : Spek({
 
                 on("parsing a port mapping definition with ranges of different sizes") {
                     it("fails with an appropriate error message") {
-                        assertThat({ fromYaml("10-11:20-23") }, throws(withMessage("Port mapping definition is invalid. The local port range has 2 ports and the container port range has 4 ports, but the ranges must be the same size.") and withLineNumber(1) and withColumn(1) and withPath("<root>")))
+                        assertThat(
+                            {
+                                fromYaml("10-11:20-23")
+                            },
+                            throws(
+                                withMessage("Port mapping definition is invalid. The local port range has 2 ports and the container port range has 4 ports, but the ranges must be the same size.") and withLineNumber(1) and withColumn(1) and withPath(
+                                    "<root>",
+                                ),
+                            ),
+                        )
                     }
                 }
 
@@ -133,7 +142,18 @@ object PortMappingSpec : Spek({
                 ).map {
                     on("parsing the invalid port mapping definition '$it'") {
                         it("fails with an appropriate error message") {
-                            assertThat({ fromYaml("'$it'") }, throws(withMessage("Port mapping definition '$it' is invalid. It must be in the form 'local:container', 'local:container/protocol', 'from-to:from-to' or 'from-to:from-to/protocol' and each port must be a positive integer.") and withLineNumber(1) and withColumn(1) and withPath("<root>")))
+                            assertThat(
+                                {
+                                    fromYaml("'$it'")
+                                },
+                                throws(
+                                    withMessage(
+                                        "Port mapping definition '$it' is invalid. It must be in the form 'local:container', 'local:container/protocol', 'from-to:from-to' or 'from-to:from-to/protocol' and each port must be a positive integer.",
+                                    ) and withLineNumber(
+                                        1,
+                                    ) and withColumn(1) and withPath("<root>"),
+                                ),
+                            )
                         }
                     }
                 }
@@ -287,7 +307,16 @@ object PortMappingSpec : Spek({
                     """.trimIndent()
 
                     it("fails with an appropriate error message") {
-                        assertThat({ fromYaml(yaml) }, throws(withMessage("Port mapping definition is invalid. The local port range has 2 ports and the container port range has 4 ports, but the ranges must be the same size.") and withLineNumber(1) and withColumn(1) and withPath("<root>")))
+                        assertThat(
+                            {
+                                fromYaml(yaml)
+                            },
+                            throws(
+                                withMessage("Port mapping definition is invalid. The local port range has 2 ports and the container port range has 4 ports, but the ranges must be the same size.") and withLineNumber(1) and withColumn(1) and withPath(
+                                    "<root>",
+                                ),
+                            ),
+                        )
                     }
                 }
             }
@@ -301,7 +330,9 @@ object PortMappingSpec : Spek({
                     assertThat(
                         { fromYaml(yaml) },
                         throws(
-                            withMessage("Port mapping definition is invalid. It must either be an object or a literal in the form 'local:container', 'local:container/protocol', 'from-to:from-to' or 'from-to:from-to/protocol'.") and withLineNumber(1) and withColumn(1) and withPath("<root>"),
+                            withMessage("Port mapping definition is invalid. It must either be an object or a literal in the form 'local:container', 'local:container/protocol', 'from-to:from-to' or 'from-to:from-to/protocol'.") and withLineNumber(1) and withColumn(
+                                1,
+                            ) and withPath("<root>"),
                         ),
                     )
                 }

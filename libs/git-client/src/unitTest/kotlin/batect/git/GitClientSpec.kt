@@ -95,7 +95,9 @@ object GitClientSpec : Spek({
                     }
 
                     it("throws an appropriate exception") {
-                        assertThat({ client.clone(repo, ref, targetDirectory) }, throws<GitException>(withMessage("Could not check out reference 'the-reference' for repository 'http://github.com/me/my-repo.git': Git command exited with code 1: Something went wrong.")))
+                        assertThat({
+                            client.clone(repo, ref, targetDirectory)
+                        }, throws<GitException>(withMessage("Could not check out reference 'the-reference' for repository 'http://github.com/me/my-repo.git': Git command exited with code 1: Something went wrong.")))
                     }
                 }
             }

@@ -88,11 +88,15 @@ class DockerConnectivity(
                     val dockerVersion = Version.parse(connectivityCheckResult.dockerVersion)
 
                     if (dockerVersion.isBefore(minimumDockerVersionWithBuildKitSupport)) {
-                        return error("BuildKit has been enabled with --${CommandLineOptionsParser.enableBuildKitFlagName} or the ${CommandLineOptionsParser.enableBuildKitEnvironmentVariableName} environment variable, but the current version of Docker does not support BuildKit, even with experimental features enabled.")
+                        return error(
+                            "BuildKit has been enabled with --${CommandLineOptionsParser.enableBuildKitFlagName} or the ${CommandLineOptionsParser.enableBuildKitEnvironmentVariableName} environment variable, but the current version of Docker does not support BuildKit, even with experimental features enabled.",
+                        )
                     }
 
                     if (dockerVersion.isBefore(minimumDockerVersionWithNonExperimentalBuildKitSupport) && !connectivityCheckResult.experimentalFeaturesEnabled) {
-                        return error("BuildKit has been enabled with --${CommandLineOptionsParser.enableBuildKitFlagName} or the ${CommandLineOptionsParser.enableBuildKitEnvironmentVariableName} environment variable, but the current version of Docker requires experimental features to be enabled to use BuildKit and experimental features are currently disabled.")
+                        return error(
+                            "BuildKit has been enabled with --${CommandLineOptionsParser.enableBuildKitFlagName} or the ${CommandLineOptionsParser.enableBuildKitEnvironmentVariableName} environment variable, but the current version of Docker requires experimental features to be enabled to use BuildKit and experimental features are currently disabled.",
+                        )
                     }
 
                     BuilderVersion.BuildKit

@@ -75,7 +75,9 @@ class TaskSpecialisedConfigurationFactory(
         }
 
         if (baseCommand == null) {
-            throw ContainerCommandResolutionException("Additional command line arguments for the task have been provided, but neither the task (${task.name}) nor the main task container (${container.name}) have an explicit command in the configuration file.")
+            throw ContainerCommandResolutionException(
+                "Additional command line arguments for the task have been provided, but neither the task (${task.name}) nor the main task container (${container.name}) have an explicit command in the configuration file.",
+            )
         }
 
         return baseCommand + commandLineOptions.additionalTaskCommandArguments

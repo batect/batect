@@ -106,7 +106,9 @@ object TaskSpec : Spek({
                 """.trimIndent()
 
                 it("throws an appropriate exception") {
-                    assertThat({ Yaml.default.decodeFromString(Task.serializer(), yaml) }, throws<ConfigurationException>(withMessage("At least one of 'run' or 'prerequisites' is required.") and withLineNumber(1) and withColumn(1) and withPath("<root>")))
+                    assertThat({
+                        Yaml.default.decodeFromString(Task.serializer(), yaml)
+                    }, throws<ConfigurationException>(withMessage("At least one of 'run' or 'prerequisites' is required.") and withLineNumber(1) and withColumn(1) and withPath("<root>")))
                 }
             }
 
@@ -134,7 +136,14 @@ object TaskSpec : Spek({
                 """.trimIndent()
 
                 it("throws an appropriate exception") {
-                    assertThat({ Yaml.default.decodeFromString(Task.serializer(), yaml) }, throws<ConfigurationException>(withMessage("Cannot apply customisations to main task container 'the-container'. Set the corresponding properties on 'run' instead.") and withLineNumber(3) and withColumn(1) and withPath("customise")))
+                    assertThat(
+                        {
+                            Yaml.default.decodeFromString(Task.serializer(), yaml)
+                        },
+                        throws<ConfigurationException>(
+                            withMessage("Cannot apply customisations to main task container 'the-container'. Set the corresponding properties on 'run' instead.") and withLineNumber(3) and withColumn(1) and withPath("customise"),
+                        ),
+                    )
                 }
             }
         }

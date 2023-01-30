@@ -308,7 +308,9 @@ object GitRepositoryCacheSpec : Spek({
                         }
 
                         it("throws an appropriate exception") {
-                            assertThat({ cache.listAll() }, throws<GitRepositoryCacheException>(withMessage("The file /some/.batect/dir/incl/some-key.json could not be loaded: Element class kotlinx.serialization.json.JsonLiteral is not a JsonObject")))
+                            assertThat({
+                                cache.listAll()
+                            }, throws<GitRepositoryCacheException>(withMessage("The file /some/.batect/dir/incl/some-key.json could not be loaded: Element class kotlinx.serialization.json.JsonLiteral is not a JsonObject")))
                         }
                     }
 

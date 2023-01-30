@@ -116,7 +116,9 @@ object TaskExecutionOrderResolverSpec : Spek({
                     it("throws an appropriate exception without any correction suggestions") {
                         assertThat(
                             { resolveExecutionOrder(config, "some-task") },
-                            throws<TaskDoesNotExistException>(withMessage("The task 'some-task' does not exist. Did you mean 'some-other-task' or 'some-other-task-2'? (Run './batect --list-tasks' for a list of all tasks in this project, or './batect --help' for help.)")),
+                            throws<TaskDoesNotExistException>(
+                                withMessage("The task 'some-task' does not exist. Did you mean 'some-other-task' or 'some-other-task-2'? (Run './batect --list-tasks' for a list of all tasks in this project, or './batect --help' for help.)"),
+                            ),
                         )
                     }
                 }
@@ -127,7 +129,11 @@ object TaskExecutionOrderResolverSpec : Spek({
                     it("throws an appropriate exception without any correction suggestions") {
                         assertThat(
                             { resolveExecutionOrder(config, "some-task") },
-                            throws<TaskDoesNotExistException>(withMessage("The task 'some-task' does not exist. Did you mean 'some-other-task', 'some-other-task-2' or 'some-other-task-3'? (Run './batect --list-tasks' for a list of all tasks in this project, or './batect --help' for help.)")),
+                            throws<TaskDoesNotExistException>(
+                                withMessage(
+                                    "The task 'some-task' does not exist. Did you mean 'some-other-task', 'some-other-task-2' or 'some-other-task-3'? (Run './batect --list-tasks' for a list of all tasks in this project, or './batect --help' for help.)",
+                                ),
+                            ),
                         )
                     }
                 }
@@ -400,7 +406,11 @@ object TaskExecutionOrderResolverSpec : Spek({
                 val takeABiteOfTheSandwichTask = Task("takeABiteOfTheSandwich", taskRunConfiguration, prerequisiteTasks = listOf("prepareTheTable"))
                 val eatTheSandwichTask = Task("eatTheSandwich", taskRunConfiguration, prerequisiteTasks = listOf("takeABiteOfTheSandwich"))
                 val sandwichHasBeenEatenTask = Task("sandwichHasBeenEaten", taskRunConfiguration, prerequisiteTasks = listOf("makeTheSandwich", "eatTheSandwich"))
-                val config = RawConfiguration("some-project", TaskMap(getSandwichContentsTask, putContentsInBreadTask, prepareTheTableTask, makeTheSandwichTask, takeABiteOfTheSandwichTask, eatTheSandwichTask, sandwichHasBeenEatenTask), ContainerMap())
+                val config = RawConfiguration(
+                    "some-project",
+                    TaskMap(getSandwichContentsTask, putContentsInBreadTask, prepareTheTableTask, makeTheSandwichTask, takeABiteOfTheSandwichTask, eatTheSandwichTask, sandwichHasBeenEatenTask),
+                    ContainerMap(),
+                )
 
                 val executionOrder by runForEachTest { resolveExecutionOrder(config, sandwichHasBeenEatenTask.name) }
 

@@ -62,7 +62,10 @@ class FailureErrorMessageFormatter(private val runOptions: RunOptions, systemInf
         is ContainerRemovalFailedEvent -> formatErrorMessage(Text("Could not remove container ") + Text.bold(event.container.name), event.message)
         is TaskNetworkDeletionFailedEvent -> formatErrorMessage("Could not delete the task network", event.message)
         is SetupCommandExecutionErrorEvent -> formatErrorMessage(Text("Could not run setup command ") + Text.bold(event.command.command.originalCommand) + Text(" in container ") + Text.bold(event.container.name), event.message) + hintToReRunWithCleanupDisabled
-        is SetupCommandFailedEvent -> formatErrorMessage(Text("Setup command ") + Text.bold(event.command.command.originalCommand) + Text(" in container ") + Text.bold(event.container.name) + Text(" failed"), setupCommandFailedBodyText(event.exitCode, event.output)) + hintToReRunWithCleanupDisabled
+        is SetupCommandFailedEvent -> formatErrorMessage(
+            Text("Setup command ") + Text.bold(event.command.command.originalCommand) + Text(" in container ") + Text.bold(event.container.name) + Text(" failed"),
+            setupCommandFailedBodyText(event.exitCode, event.output),
+        ) + hintToReRunWithCleanupDisabled
         is ExecutionFailedEvent -> formatErrorMessage("An unexpected exception occurred during execution", event.message)
         is UserInterruptedExecutionEvent -> formatMessage("Task cancelled", TextRun("Interrupt received during execution"), "Waiting for outstanding operations to stop or finish before cleaning up...")
     }
@@ -114,7 +117,9 @@ class FailureErrorMessageFormatter(private val runOptions: RunOptions, systemInf
 
         val newLineIfRequired = if (containerCreationEvents.isEmpty()) TextRun() else TextRun(newLine)
 
-        val baseMessage = Text.red(Text("As the task was run with ") + Text.bold("--$argumentName") + Text(" or ") + Text.bold("--${CommandLineOptionsParser.disableCleanupFlagName}") + Text(", the created containers and other temporary resources will not be cleaned up.") + newLineIfRequired) +
+        val baseMessage = Text.red(
+            Text("As the task was run with ") + Text.bold("--$argumentName") + Text(" or ") + Text.bold("--${CommandLineOptionsParser.disableCleanupFlagName}") + Text(", the created containers and other temporary resources will not be cleaned up.") + newLineIfRequired,
+        ) +
             containerMessages
 
         if (cleanupCommands.isEmpty()) {

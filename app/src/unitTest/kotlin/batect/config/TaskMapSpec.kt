@@ -73,7 +73,11 @@ object TaskMapSpec : Spek({
                     it("throws an appropriate exception") {
                         assertThat(
                             { TaskMap.validateName(name, YamlPath.root.withListEntry(0, Location(2, 3))) },
-                            throws<ConfigurationException>(withMessage("Invalid task name '$name'. Task names must contain only letters, digits, colons, dashes, periods and underscores, and must start and end with a letter or digit.") and withLineNumber(2) and withColumn(3) and withPath("[0]")),
+                            throws<ConfigurationException>(
+                                withMessage("Invalid task name '$name'. Task names must contain only letters, digits, colons, dashes, periods and underscores, and must start and end with a letter or digit.") and withLineNumber(2) and withColumn(3) and withPath(
+                                    "[0]",
+                                ),
+                            ),
                         )
                     }
                 }

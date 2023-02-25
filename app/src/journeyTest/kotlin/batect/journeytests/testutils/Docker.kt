@@ -94,7 +94,7 @@ object Docker {
             return
         }
 
-        if (output.trim() == "Error: No such image: $image") {
+        if (output.trim() == "Error: No such image: $image" || output.trim() == "Error response from daemon: No such image: $image") {
             return
         }
 

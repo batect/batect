@@ -3,4 +3,4 @@ project_name: git-include-test
 include:
   - type: git
     repo: https://github.com/batect/hello-world-bundle.git
-    ref: 0.7.0
+    ref: 0.8.0

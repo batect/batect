@@ -4,6 +4,8 @@ on:
     branches:
       - '**'
       - '!renovate/**'
+    tags:
+      - '**'
   pull_request:
 
 # Cancel PR builds if the PR is updated.

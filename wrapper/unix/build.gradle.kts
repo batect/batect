@@ -100,9 +100,10 @@ tasks.register("build") {
 
     inputs.file(templateFile)
     inputs.files(shadowJarTask)
-
     inputs.property("version") { version.toString() }
     outputs.file(scriptFile)
+
+    dependsOn(":app:jar")
 
     doLast {
         val hash = DigestUtils.sha256Hex(shadowJarTask.outputs.files.singleFile.readBytes())

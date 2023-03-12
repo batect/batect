@@ -17,10 +17,9 @@
 package batect.buildtools
 
 import org.gradle.api.DefaultTask
-import org.gradle.api.file.FileCollection
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.SourceDirectorySet
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
@@ -32,9 +31,9 @@ abstract class JourneyTestNamingCheckTask : DefaultTask() {
     @get:InputFiles
     abstract val files: Property<SourceDirectorySet>
 
-    @get:Input
+    @get:InputFiles
     @get:Optional
-    abstract val ignoreFileNameCheck: Property<FileCollection>
+    abstract val ignoreFileNameCheck: ConfigurableFileCollection
 
     @get:OutputFile
     abstract val upToDateFile: Property<File>
@@ -57,7 +56,7 @@ abstract class JourneyTestNamingCheckTask : DefaultTask() {
 
     private fun checkFile(file: File) {
         if (!endsWithAllowedSuffix(file)) {
-            if (ignoreFileNameCheck.isPresent && ignoreFileNameCheck.get().contains(file)) {
+            if (ignoreFileNameCheck.contains(file)) {
                 return
             }
 

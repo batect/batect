@@ -68,12 +68,13 @@ tasks.register<Exec>("buildTestEnvironmentImage") {
     description = "Build the Docker image used as a test environment."
     group = "Verification"
 
-    val imageDirectory = file("test/test-env")
+    val imageDirectory = file("test-env")
     inputs.dir(imageDirectory)
 
     standardOutput = ByteArrayOutputStream()
     errorOutput = standardOutput
     isIgnoreExitValue = true
+    workingDir = imageDirectory
 
     commandLine(
         "docker",
@@ -100,9 +101,10 @@ tasks.register("build") {
 
     inputs.file(templateFile)
     inputs.files(shadowJarTask)
-
     inputs.property("version") { version.toString() }
     outputs.file(scriptFile)
+
+    dependsOn(":app:jar")
 
     doLast {
         val hash = DigestUtils.sha256Hex(shadowJarTask.outputs.files.singleFile.readBytes())

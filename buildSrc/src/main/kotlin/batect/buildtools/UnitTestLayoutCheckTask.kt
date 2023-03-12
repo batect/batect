@@ -17,10 +17,9 @@
 package batect.buildtools
 
 import org.gradle.api.DefaultTask
-import org.gradle.api.file.FileCollection
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.SourceDirectorySet
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
@@ -38,13 +37,13 @@ abstract class UnitTestLayoutCheckTask : DefaultTask() {
     @get:InputFiles
     abstract val mainFiles: Property<SourceDirectorySet>
 
-    @get:Input
+    @get:InputFiles
     @get:Optional
-    abstract val ignoreFileNameCheck: Property<FileCollection>
+    abstract val ignoreFileNameCheck: ConfigurableFileCollection
 
-    @get:Input
+    @get:InputFiles
     @get:Optional
-    abstract val ignoreMissingMainFile: Property<FileCollection>
+    abstract val ignoreMissingMainFile: ConfigurableFileCollection
 
     @get:OutputFile
     abstract val upToDateFile: Property<File>
@@ -86,7 +85,7 @@ abstract class UnitTestLayoutCheckTask : DefaultTask() {
 
     private fun checkFile(testFile: File, testRoot: Path, mainRoot: Path) {
         if (!testFile.name.endsWith("Spec.kt")) {
-            if (ignoreFileNameCheck.isPresent && ignoreFileNameCheck.get().contains(testFile)) {
+            if (ignoreFileNameCheck.contains(testFile)) {
                 return
             }
 
@@ -100,7 +99,7 @@ abstract class UnitTestLayoutCheckTask : DefaultTask() {
         val expectedMainFilePath = mainRoot.resolve(relativeMainFilePath)
 
         if (!expectedMainFilePath.toFile().exists()) {
-            if (ignoreMissingMainFile.isPresent && ignoreMissingMainFile.get().contains(testFile)) {
+            if (ignoreMissingMainFile.contains(testFile)) {
                 return
             }
 

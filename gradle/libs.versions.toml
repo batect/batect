@@ -26,7 +26,7 @@ okhttp-systemkeystore = "1.0.0"
 okio-bom = "3.3.0"
 osplatformfinder = "1.2.3"
 reckon = "0.16.1"
-shadow = "7.1.2"
+shadow = "8.1.0"
 spek = "2.0.19"
 spotless = "6.16.0"
 

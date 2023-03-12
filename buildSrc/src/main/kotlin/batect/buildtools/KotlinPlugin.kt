@@ -164,12 +164,14 @@ class KotlinPlugin : Plugin<Project> {
 
     private fun configureUnitTestLayoutCheck(project: Project) {
         val checkUnitTestLayoutExtension = project.extensions.create<UnitTestLayoutCheckExtension>("checkUnitTestLayout")
+        checkUnitTestLayoutExtension.ignoreMissingMainFile.set(project.files())
+        checkUnitTestLayoutExtension.ignoreFileNameCheck.set(project.files())
 
         val checkUnitTestLayoutTask = project.tasks.register<UnitTestLayoutCheckTask>("checkUnitTestLayout") {
             mustRunAfter("test")
 
-            ignoreFileNameCheck.set(checkUnitTestLayoutExtension.ignoreFileNameCheck)
-            ignoreMissingMainFile.set(checkUnitTestLayoutExtension.ignoreMissingMainFile)
+            ignoreFileNameCheck.from(checkUnitTestLayoutExtension.ignoreFileNameCheck)
+            ignoreMissingMainFile.from(checkUnitTestLayoutExtension.ignoreMissingMainFile)
         }
 
         project.tasks.named<Task>("check") {
@@ -178,7 +180,6 @@ class KotlinPlugin : Plugin<Project> {
     }
 
     private fun configureJourneyTestNameCheck(project: Project) {
-        val checkJourneyTestNamingExtension = project.extensions.create<JourneyTestNamingCheckExtension>("checkJourneyTestNaming")
         val kotlin = project.extensions.getByType<KotlinJvmProjectExtension>()
         val journeyTestSourceSets = kotlin.sourceSets.matching { it.name == "journeyTest" }
 
@@ -187,7 +188,6 @@ class KotlinPlugin : Plugin<Project> {
                 mustRunAfter("test")
 
                 files.set(it.kotlin)
-                ignoreFileNameCheck.set(checkJourneyTestNamingExtension.ignoreFileNameCheck)
             }
 
             project.tasks.named<Task>("check") {

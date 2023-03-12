@@ -112,3 +112,7 @@ tasks.withType<Jar>().configureEach {
 tasks.withType<ShadowJar>().configureEach {
     archiveClassifier.set("")
 }
+
+tasks.named("startShadowScripts") {
+    dependsOn(tasks.named("jar"))
+}

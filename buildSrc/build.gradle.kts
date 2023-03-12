@@ -14,8 +14,6 @@
     limitations under the License.
 */
 
-import org.gradle.api.JavaVersion
-
 plugins {
     `java-gradle-plugin`
     alias(libs.plugins.kotlin.jvm)
@@ -44,8 +42,4 @@ gradlePlugin {
             implementationClass = "batect.buildtools.KotlinPlugin"
         }
     }
-}
-
-java {
-    targetCompatibility = JavaVersion.VERSION_11
 }

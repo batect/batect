@@ -54,7 +54,7 @@ jobs:
 
       - name: Cache packages
         id: cache-packages
-        uses: actions/cache@v3.3.0
+        uses: actions/cache@v3.3.1
         with:
           path: ~/.gradle/caches
           key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle', '**/*.gradle.kts', 'gradle.properties') }}
@@ -104,7 +104,7 @@ jobs:
 
       - name: Cache packages
         id: cache-packages
-        uses: actions/cache@v3.3.0
+        uses: actions/cache@v3.3.1
         with:
           path: ~/.gradle/caches
           key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle', '**/*.gradle.kts', 'gradle.properties') }}-wrappertests
@@ -154,7 +154,7 @@ jobs:
 
       - name: Cache packages
         id: cache-packages
-        uses: actions/cache@v3.3.0
+        uses: actions/cache@v3.3.1
         with:
           path: ~/.gradle/caches
           key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle', '**/*.gradle.kts', 'gradle.properties') }}-journeytests
@@ -202,7 +202,7 @@ jobs:
           distribution: adopt
 
       - name: Cache Gradle wrapper
-        uses: actions/cache@v3.3.0
+        uses: actions/cache@v3.3.1
         with:
           path: ~/.gradle/wrapper
           key: gradle-wrapper-${{ runner.os }}-${{ hashFiles('gradle/wrapper/**/*') }}
@@ -210,7 +210,7 @@ jobs:
 
       - name: Cache packages
         id: cache-packages
-        uses: actions/cache@v3.3.0
+        uses: actions/cache@v3.3.1
         with:
           path: ~/.gradle/caches
           key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle', '**/*.gradle.kts', 'gradle.properties') }}
@@ -270,7 +270,7 @@ jobs:
           distribution: adopt
 
       - name: Cache Gradle wrapper
-        uses: actions/cache@v3.3.0
+        uses: actions/cache@v3.3.1
         with:
           path: ~/.gradle/wrapper
           key: gradle-wrapper-${{ runner.os }}-${{ hashFiles('gradle/wrapper/**/*') }}
@@ -278,7 +278,7 @@ jobs:
 
       - name: Cache packages
         id: cache-packages
-        uses: actions/cache@v3.3.0
+        uses: actions/cache@v3.3.1
         with:
           path: ~/.gradle/caches
           key: gradle-wrapper-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle', '**/*.gradle.kts', 'gradle.properties') }}
@@ -304,7 +304,7 @@ jobs:
           distribution: adopt
 
       - name: Cache Gradle wrapper
-        uses: actions/cache@v3.3.0
+        uses: actions/cache@v3.3.1
         with:
           path: ~/.gradle/wrapper
           key: gradle-wrapper-${{ runner.os }}-${{ hashFiles('gradle/wrapper/**/*') }}
@@ -312,7 +312,7 @@ jobs:
 
       - name: Cache packages
         id: cache-packages
-        uses: actions/cache@v3.3.0
+        uses: actions/cache@v3.3.1
         with:
           path: ~/.gradle/caches
           key: gradle-wrapper-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle', '**/*.gradle.kts', 'gradle.properties') }}
@@ -362,7 +362,7 @@ jobs:
           distribution: adopt
 
       - name: Cache Gradle wrapper
-        uses: actions/cache@v3.3.0
+        uses: actions/cache@v3.3.1
         with:
           path: ~/.gradle/wrapper
           key: gradle-wrapper-${{ runner.os }}-${{ hashFiles('gradle/wrapper/**/*') }}
@@ -370,7 +370,7 @@ jobs:
 
       - name: Cache packages
         id: cache-packages
-        uses: actions/cache@v3.3.0
+        uses: actions/cache@v3.3.1
         with:
           path: ~/.gradle/caches
           key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle', '**/*.gradle.kts', 'gradle.properties') }}-journeytests
@@ -399,7 +399,7 @@ jobs:
           distribution: adopt
 
       - name: Cache Gradle wrapper
-        uses: actions/cache@v3.3.0
+        uses: actions/cache@v3.3.1
         with:
           path: ~/.gradle/wrapper
           key: gradle-wrapper-${{ runner.os }}-${{ hashFiles('gradle/wrapper/**/*') }}
@@ -407,7 +407,7 @@ jobs:
 
       - name: Cache packages
         id: cache-packages
-        uses: actions/cache@v3.3.0
+        uses: actions/cache@v3.3.1
         with:
           path: ~/.gradle/caches
           key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle', '**/*.gradle.kts', 'gradle.properties') }}
@@ -471,7 +471,7 @@ jobs:
           distribution: adopt
 
       - name: Cache Gradle wrapper
-        uses: actions/cache@v3.3.0
+        uses: actions/cache@v3.3.1
         with:
           path: ~/.gradle/wrapper
           key: gradle-wrapper-${{ runner.os }}-${{ hashFiles('gradle/wrapper/**/*') }}
@@ -479,7 +479,7 @@ jobs:
 
       - name: Cache packages
         id: cache-packages
-        uses: actions/cache@v3.3.0
+        uses: actions/cache@v3.3.1
         with:
           path: ~/.gradle/caches
           key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle', '**/*.gradle.kts', 'gradle.properties') }}

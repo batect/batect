@@ -134,7 +134,7 @@ class ConfigurationLoader(
         val pathResolver = pathResolverFor(path, includedAs, gitRepositoryCacheNotificationListener)
         val pathDeserializer = PathDeserializer(pathResolver)
         val module = serializersModuleOf(PathResolutionResult::class, pathDeserializer)
-        val config = YamlConfiguration(extensionDefinitionPrefix = ".", polymorphismStyle = PolymorphismStyle.Property)
+        val config = YamlConfiguration(extensionDefinitionPrefix = ".", polymorphismStyle = PolymorphismStyle.Property, allowAnchorsAndAliases = true)
         val parser = Yaml(configuration = config, serializersModule = module)
 
         try {

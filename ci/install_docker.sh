@@ -14,11 +14,11 @@ fi
 # See https://blog.packagecloud.io/eng/2016/03/21/apt-hash-sum-mismatch/ for more details.
 echo 'Acquire::CompressionTypes::Order:: "gz";' | sudo tee /etc/apt/apt.conf.d/99compression-workaround > /dev/null
 
-# This works around "gpg: can't connect to the agent: IPC connect call failed" errors that sometimes occur when calling "apt-key add".
-pkill -9 gpg-agent || true
-source <(gpg-agent --daemon)
+sudo apt-get remove -y docker docker-engine docker.io containerd runc
 
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+sudo mkdir -m 0755 -p /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+echo "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
 sudo apt-get update
 sudo apt-get -y -o Dpkg::Options::="--force-confnew" --allow-downgrades install "$PACKAGE"

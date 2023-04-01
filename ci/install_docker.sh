@@ -14,7 +14,7 @@ fi
 # See https://blog.packagecloud.io/eng/2016/03/21/apt-hash-sum-mismatch/ for more details.
 echo 'Acquire::CompressionTypes::Order:: "gz";' | sudo tee /etc/apt/apt.conf.d/99compression-workaround > /dev/null
 
-sudo apt-get remove -y docker docker-engine docker.io containerd runc
+sudo apt-get remove -y docker docker-engine docker.io containerd runc moby-runc containerd.io
 
 sudo mkdir -m 0755 -p /etc/apt/keyrings
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg

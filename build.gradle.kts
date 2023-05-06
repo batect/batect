@@ -26,8 +26,10 @@ repositories {
 }
 
 reckon {
-    scopeFromProp()
-    stageFromProp("dev", "final")
+    setDefaultInferredScope("patch")
+    stages("dev", "final")
+    setScopeCalc(calcScopeFromProp())
+    setStageCalc(calcStageFromProp())
 }
 
 apply(from = "$rootDir/gradle/spotless.gradle.kts")

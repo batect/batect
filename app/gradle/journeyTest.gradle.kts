@@ -15,8 +15,12 @@
 */
 
 import batect.buildtools.JourneyTestNamingCheckTask
+import org.gradle.accessors.dm.LibrariesForLibs
 
 val sourceSets = the<SourceSetContainer>()
+
+// This is a workaround for https://github.com/gradle/gradle/issues/24908.
+val libs = the<LibrariesForLibs>()
 
 val journeyTest by sourceSets.creating {
     compileClasspath += sourceSets["testCommon"].output

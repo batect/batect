@@ -57,8 +57,8 @@ class ImageBuildProgressAggregator {
         return calculateCurrentProgress()
     }
 
-    private fun processStepDownloadProgressUpdate(progressUpdate: StepDownloadProgressUpdate): AggregatedImageBuildProgress {
-        val previousValue = activeSteps.getValue(progressUpdate.stepNumber)
+    private fun processStepDownloadProgressUpdate(progressUpdate: StepDownloadProgressUpdate): AggregatedImageBuildProgress? {
+        val previousValue = activeSteps[progressUpdate.stepNumber] ?: return null
         val totalBytes = if (progressUpdate.totalBytes <= 0) null else progressUpdate.totalBytes
         val updatedValue = previousValue.copy(detail = StepDetail.Downloading(progressUpdate.bytesDownloaded, totalBytes))
         activeSteps[progressUpdate.stepNumber] = updatedValue
@@ -66,8 +66,8 @@ class ImageBuildProgressAggregator {
         return calculateCurrentProgress()
     }
 
-    private fun processStepPullProgressUpdate(progressUpdate: StepPullProgressUpdate): AggregatedImageBuildProgress {
-        val previousValue = activeSteps.getValue(progressUpdate.stepNumber)
+    private fun processStepPullProgressUpdate(progressUpdate: StepPullProgressUpdate): AggregatedImageBuildProgress? {
+        val previousValue = activeSteps[progressUpdate.stepNumber] ?: return null
         val aggregator = if (previousValue.detail is StepDetail.PullingImage) previousValue.detail.aggregator else ImagePullProgressAggregator()
         val updatedAggregation = aggregator.processProgressUpdate(progressUpdate.pullProgress)
 

@@ -289,5 +289,30 @@ object ImageBuildProgressAggregatorSpec : Spek({
                 )
             }
         }
+
+        // This case covers the issue reported in https://github.com/batect/batect/issues/1527
+        on("a step reporting image pull progress before reporting that it has started") {
+            val aggregator by createForEachTest { ImageBuildProgressAggregator() }
+
+            val nextUpdate by runNullableForEachTest {
+                aggregator.processProgressUpdate(StepPullProgressUpdate(1, ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(123, 456), "abc123")))
+            }
+
+            it("does not emit a new update") {
+                assertThat(nextUpdate, absent())
+            }
+        }
+
+        on("a step reporting download progress before reporting that it has started") {
+            val aggregator by createForEachTest { ImageBuildProgressAggregator() }
+
+            val nextUpdate by runNullableForEachTest {
+                aggregator.processProgressUpdate(StepDownloadProgressUpdate(1, 5, 100))
+            }
+
+            it("does not emit a new update") {
+                assertThat(nextUpdate, absent())
+            }
+        }
     }
 })

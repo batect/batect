@@ -1,5 +1,5 @@
 [versions]
-batect-dockerclient = "0.8.6"
+batect-dockerclient = "0.8.8"
 bouncycastle = "1.70"
 commons-codec = "1.15"
 google-cloud-storage = "2.22.3"

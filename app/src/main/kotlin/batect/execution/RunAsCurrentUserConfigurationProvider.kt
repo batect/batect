@@ -101,12 +101,14 @@ class RunAsCurrentUserConfigurationProvider(
 
     private suspend fun uploadFilesForConfiguration(configuration: RunAsCurrentUserConfig.RunAsCurrentUser, dockerContainer: DockerContainer) {
         val passwdContents = generatePasswdFile(configuration)
+        val shadowContents = generateShadowFile()
         val groupContents = generateGroupFile()
 
         dockerClient.uploadToContainer(
             dockerContainer.reference,
             setOf(
                 UploadFile("passwd", 0, 0, "644".toInt(8), passwdContents.toByteArray(Charsets.UTF_8)),
+                UploadFile("shadow", 0, 0, "640".toInt(8), shadowContents.toByteArray(Charsets.UTF_8)),
                 UploadFile("group", 0, 0, "644".toInt(8), groupContents.toByteArray(Charsets.UTF_8)),
             ),
             "/etc",
@@ -159,6 +161,17 @@ class RunAsCurrentUserConfigurationProvider(
             """
                 |root:x:0:0:root:/root:/bin/sh
                 |$userName:x:$userId:$groupId:$userName:$homeDirectory:/bin/sh
+            """.trimMargin()
+        }
+    }
+
+    private fun generateShadowFile(): String {
+        return if (userId == 0) {
+            "root:*:19500:0:99999:7:::"
+        } else {
+            """
+                |root:*:19500:0:99999:7:::
+                |$userName:*:19500:0:99999:7:::
             """.trimMargin()
         }
     }

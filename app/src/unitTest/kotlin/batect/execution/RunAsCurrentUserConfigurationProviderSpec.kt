@@ -177,9 +177,13 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                     on("applying configuration to the container") {
                         runForEachTest { provider.applyConfigurationToContainer(container, dockerContainer) }
 
-                        itSuspend("uploads /etc/passwd and /etc/group files for the root user and group to the container") {
+                        itSuspend("uploads /etc/passwd, /etc/shadow and /etc/group files for the root user and group to the container") {
                             val passwdContent = """
                                 |root:x:0:0:root:/home/some-user:/bin/sh
+                            """.trimMargin()
+
+                            val shadowContent = """
+                                |root:*:19500:0:99999:7:::
                             """.trimMargin()
 
                             val groupContent = """
@@ -190,6 +194,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                                 dockerContainer.reference,
                                 setOf(
                                     UploadFile("passwd", 0, 0, "644".toInt(8), passwdContent.toByteArray(Charsets.UTF_8)),
+                                    UploadFile("shadow", 0, 0, "640".toInt(8), shadowContent.toByteArray(Charsets.UTF_8)),
                                     UploadFile("group", 0, 0, "644".toInt(8), groupContent.toByteArray(Charsets.UTF_8)),
                                 ),
                                 "/etc",
@@ -262,10 +267,15 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                         on("applying configuration to the container") {
                             runForEachTest { provider.applyConfigurationToContainer(container, dockerContainer) }
 
-                            itSuspend("uploads /etc/passwd and /etc/group files for the root user and group and the current user's user and group to the container") {
+                            itSuspend("uploads /etc/passwd, /etc/shadow and /etc/group files for the root user and group and the current user's user and group to the container") {
                                 val passwdContent = """
                                     |root:x:0:0:root:/root:/bin/sh
                                     |the-user:x:123:456:the-user:/home/some-user:/bin/sh
+                                """.trimMargin()
+
+                                val shadowContent = """
+                                    |root:*:19500:0:99999:7:::
+                                    |the-user:*:19500:0:99999:7:::
                                 """.trimMargin()
 
                                 val groupContent = """
@@ -277,6 +287,7 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                                     dockerContainer.reference,
                                     setOf(
                                         UploadFile("passwd", 0, 0, "644".toInt(8), passwdContent.toByteArray(Charsets.UTF_8)),
+                                        UploadFile("shadow", 0, 0, "640".toInt(8), shadowContent.toByteArray(Charsets.UTF_8)),
                                         UploadFile("group", 0, 0, "644".toInt(8), groupContent.toByteArray(Charsets.UTF_8)),
                                     ),
                                     "/etc",
@@ -440,19 +451,24 @@ object RunAsCurrentUserConfigurationProviderSpec : Spek({
                     on("applying configuration to the container") {
                         runForEachTest { provider.applyConfigurationToContainer(container, dockerContainer) }
 
-                        itSuspend("uploads /etc/passwd and /etc/group files for the root user and group to the container") {
+                        itSuspend("uploads /etc/passwd, /etc/shadow and /etc/group files for the root user and group to the container") {
                             val passwdContent = """
-                                    |root:x:0:0:root:/home/some-user:/bin/sh
+                                |root:x:0:0:root:/home/some-user:/bin/sh
+                            """.trimMargin()
+
+                            val shadowContent = """
+                                |root:*:19500:0:99999:7:::
                             """.trimMargin()
 
                             val groupContent = """
-                                    |root:x:0:root
+                                |root:x:0:root
                             """.trimMargin()
 
                             verify(dockerClient).uploadToContainer(
                                 dockerContainer.reference,
                                 setOf(
                                     UploadFile("passwd", 0, 0, "644".toInt(8), passwdContent.toByteArray(Charsets.UTF_8)),
+                                    UploadFile("shadow", 0, 0, "640".toInt(8), shadowContent.toByteArray(Charsets.UTF_8)),
                                     UploadFile("group", 0, 0, "644".toInt(8), groupContent.toByteArray(Charsets.UTF_8)),
                                 ),
                                 "/etc",

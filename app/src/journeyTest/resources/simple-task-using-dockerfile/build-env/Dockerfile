@@ -1,1 +1,1 @@
-FROM alpine:3.18.2
+FROM alpine:3.18.3

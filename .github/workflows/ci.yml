@@ -384,7 +384,7 @@ jobs:
 
   build-mac:
     name: "Build (macOS)"
-    runs-on: macos-12
+    runs-on: macos-13
 
     steps:
       - name: Check out code

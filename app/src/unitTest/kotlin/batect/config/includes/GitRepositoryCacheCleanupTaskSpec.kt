@@ -58,7 +58,8 @@ object GitRepositoryCacheCleanupTaskSpec : Spek({
         var ranOnThread = false
 
         val threadRunner: ThreadRunner by createForEachTest {
-            { block: BackgroundProcess ->
+            {
+                    block: BackgroundProcess ->
                 ranOnThread = true
                 block()
             }

@@ -1,4 +1,4 @@
-FROM nginx:1.25.0
+FROM nginx:1.25.2
 
 COPY health-check.sh /tools/
 

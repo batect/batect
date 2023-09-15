@@ -40,7 +40,6 @@ import batect.git.GitException
 import batect.os.Command
 import batect.os.DefaultPathResolutionContext
 import batect.os.PathResolverFactory
-import batect.telemetry.TelemetryConsent
 import batect.telemetry.TestTelemetryCaptor
 import batect.testutils.createForEachTest
 import batect.testutils.createLoggerForEachTest
@@ -64,7 +63,6 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.doAnswer
 import org.mockito.kotlin.doThrow
 import org.mockito.kotlin.mock
-import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.Suite
@@ -98,11 +96,10 @@ object ConfigurationLoaderSpec : Spek({
         }
 
         val pathResolverFactory by createForEachTest { PathResolverFactory(fileSystem) }
-        val telemetryConsent by createForEachTest { mock<TelemetryConsent>() }
         val telemetryCaptor by createForEachTest { TestTelemetryCaptor() }
         val logger by createLoggerForEachTest()
         val testFileName = "/theTestFile.yml"
-        val loader by createForEachTest { ConfigurationLoader(includeResolver, pathResolverFactory, telemetryCaptor, telemetryConsent, gitRepositoryCacheNotificationListener, logger) }
+        val loader by createForEachTest { ConfigurationLoader(includeResolver, pathResolverFactory, telemetryCaptor, gitRepositoryCacheNotificationListener, logger) }
 
         fun createFile(path: Path, contents: String) {
             val directory = path.parent
@@ -192,10 +189,6 @@ object ConfigurationLoaderSpec : Spek({
                 }
 
                 itReportsTelemetryAboutTheConfigurationFile(taskCount = 1)
-
-                it("does not disable telemetry") {
-                    verify(telemetryConsent).forbiddenByProjectConfig = false
-                }
             }
 
             on("loading that file from a subdirectory") {
@@ -251,10 +244,6 @@ object ConfigurationLoaderSpec : Spek({
             """.trimMargin()
 
             beforeEachTest { loadConfiguration(config) }
-
-            it("disables telemetry for the session") {
-                verify(telemetryConsent).forbiddenByProjectConfig = true
-            }
         }
 
         on("loading a valid configuration file with a task with no dependencies") {

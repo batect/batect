@@ -41,7 +41,6 @@ import batect.os.PathResolverFactory
 import batect.primitives.flatMapToSet
 import batect.primitives.mapToSet
 import batect.telemetry.TelemetryCaptor
-import batect.telemetry.TelemetryConsent
 import batect.telemetry.addSpan
 import batect.utils.asHumanReadableList
 import com.charleskorn.kaml.EmptyYamlDocumentException
@@ -58,7 +57,6 @@ class ConfigurationLoader(
     private val includeResolver: IncludeResolver,
     private val pathResolverFactory: PathResolverFactory,
     private val telemetryCaptor: TelemetryCaptor,
-    private val telemetryConsent: TelemetryConsent,
     private val defaultGitRepositoryCacheNotificationListener: GitRepositoryCacheNotificationListener,
     private val logger: Logger,
 ) {
@@ -99,8 +97,6 @@ class ConfigurationLoader(
                 remainingIncludesToLoad += file.includes
                 remainingIncludesToLoad -= filesLoaded.keys
             }
-
-            telemetryConsent.forbiddenByProjectConfig = rootConfigFile.forbidTelemetry
 
             val projectName = rootConfigFile.projectName ?: inferProjectName(absolutePathToRootConfigFile)
             val config = RawConfiguration(projectName, mergeTasks(filesLoaded), mergeContainers(filesLoaded), mergeConfigVariables(filesLoaded))

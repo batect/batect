@@ -50,8 +50,6 @@ class CommandLineOptionsParser(
         const val disableCleanupFlagName = "no-cleanup"
         const val upgradeFlagName = "upgrade"
         const val configVariableOptionName = "config-var"
-        const val permanentlyDisableTelemetryFlagName = "permanently-disable-telemetry"
-        const val permanentlyEnableTelemetryFlagName = "permanently-enable-telemetry"
         const val enableBuildKitFlagName = "enable-buildkit"
         const val enableBuildKitEnvironmentVariableName = "DOCKER_BUILDKIT"
         const val imageTagsOptionName = "tag-image"
@@ -63,7 +61,6 @@ class CommandLineOptionsParser(
     private val executionOptionsGroup = OptionGroup("Execution options")
     private val outputOptionsGroup = OptionGroup("Output options")
     private val helpOptionsGroup = OptionGroup("Help options")
-    private val telemetryOptionsGroup = OptionGroup("Telemetry options")
     private val hiddenOptionsGroup = OptionGroup("Hidden options")
 
     private val showHelp: Boolean by flagOption(helpOptionsGroup, "help", "Show this help information and exit.", 'h')
@@ -247,16 +244,6 @@ class CommandLineOptionsParser(
         environmentVariableDefaultValueProviderFactory.create(enableBuildKitEnvironmentVariableName, null, ValueConverters.boolean),
     )
 
-    private val permanentlyDisableTelemetry: Boolean by flagOption(telemetryOptionsGroup, permanentlyDisableTelemetryFlagName, "Permanently disable telemetry collection and uploading, and remove any telemetry data queued for upload.")
-    private val permanentlyEnableTelemetry: Boolean by flagOption(telemetryOptionsGroup, permanentlyEnableTelemetryFlagName, "Permanently enable telemetry collection and uploading.")
-
-    private val disableTelemetry: Boolean? by tristateFlagOption(
-        telemetryOptionsGroup,
-        "no-telemetry",
-        "Disable telemetry for this command line invocation.",
-        environmentVariableDefaultValueProviderFactory.create("BATECT_ENABLE_TELEMETRY", null, ValueConverters.invertingBoolean),
-    )
-
     private val generateShellTabCompletionScript: Shell? by valueOption(hiddenOptionsGroup, "generate-completion-script", "Generate shell tab completion script for given shell.", ValueConverters.enum<Shell>(), showInHelp = false)
     private val generateShellTabCompletionTaskInformation: Shell? by valueOption(
         hiddenOptionsGroup,
@@ -323,8 +310,6 @@ class CommandLineOptionsParser(
             listTasks ||
             runUpgrade ||
             runCleanup ||
-            permanentlyDisableTelemetry ||
-            permanentlyEnableTelemetry ||
             generateShellTabCompletionScript != null ||
             generateShellTabCompletionTaskInformation != null ||
             cleanCaches.isNotEmpty()
@@ -387,8 +372,6 @@ class CommandLineOptionsParser(
         runUpgrade = runUpgrade,
         runCleanup = runCleanup,
         listTasks = listTasks,
-        permanentlyDisableTelemetry = permanentlyDisableTelemetry,
-        permanentlyEnableTelemetry = permanentlyEnableTelemetry,
         configurationFileName = configurationFileName,
         configVariablesSourceFile = configVariablesSourceFileName,
         imageOverrides = imageOverrides,
@@ -418,7 +401,6 @@ class CommandLineOptionsParser(
         cacheType = cacheType,
         existingNetworkToUse = existingNetworkToUse,
         skipPrerequisites = skipPrerequisites,
-        disableTelemetry = disableTelemetry,
         enableBuildKit = enableBuildKit,
         generateShellTabCompletionScript = generateShellTabCompletionScript,
         generateShellTabCompletionTaskInformation = generateShellTabCompletionTaskInformation,

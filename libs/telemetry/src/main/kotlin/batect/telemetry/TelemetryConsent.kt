@@ -16,26 +16,6 @@
 
 package batect.telemetry
 
-class TelemetryConsent(
-    private val disabledOnCommandLine: Boolean?,
-    private val configurationStore: TelemetryConfigurationStore,
-) {
-    var forbiddenByProjectConfig = false
-
-    val telemetryAllowed: Boolean
-        get() {
-            if (forbiddenByProjectConfig) {
-                return false
-            }
-
-            return when (disabledOnCommandLine) {
-                true -> false
-                false -> true
-                null -> when (configurationStore.currentConfiguration.state) {
-                    ConsentState.TelemetryAllowed -> true
-                    ConsentState.TelemetryDisabled -> false
-                    ConsentState.None -> false
-                }
-            }
-        }
+class TelemetryConsent {
+    val telemetryAllowed: Boolean = false
 }

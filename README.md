@@ -1,3 +1,7 @@
+:warning: Batect is no longer maintained. [More details](https://batect.dev/blog/2023/10/22/batect-is-no-longer-maintained)
+
+---
+
 ![Batect logo](./readme/logo.svg)
 
 [![Build Status](https://github.com/batect/batect/workflows/CI/badge.svg)](https://github.com/batect/batect/actions?query=workflow%3ACI+branch%3Amain)
